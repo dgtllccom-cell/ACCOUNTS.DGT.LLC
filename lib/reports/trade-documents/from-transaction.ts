@@ -31,6 +31,22 @@ const n = (v: any): number | undefined => {
   return Number.isFinite(x) ? x : undefined;
 };
 
+/** Document-number prefix per document type, so a Purchase Invoice is "PI-…", not the proforma's "PFI-…". */
+function docNoPrefix(docType: TradeDocType): string {
+  switch (docType) {
+    case "commercial_invoice": return "CI";
+    case "packing_list": return "PL";
+    case "contract": return "CT";
+    case "proforma_invoice": return "PFI";
+    case "purchase_invoice": return "PI";
+    case "sales_invoice": return "SI";
+    case "tax_invoice": return "TI";
+    case "export_invoice": return "EI";
+    case "purchase_order": return "PO";
+    default: return "DOC";
+  }
+}
+
 /**
  * A real company name for a party box. Branding falls back to the COUNTRY name when a scope has no
  * company name configured; printing "Pakistan" as the buyer/consignee company would be wrong, so the
@@ -173,7 +189,7 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
     tradeScope: scope,
     lang: opts.lang,
     branding: opts.branding,
-    docNo: `${opts.docType === "commercial_invoice" ? "CI" : opts.docType === "packing_list" ? "PL" : opts.docType === "contract" ? "CT" : "PFI"}-${refs.invoice || refs.contract || refs.po || refs.so || rec.id?.slice(0, 8) || "NEW"}`,
+    docNo: `${docNoPrefix(opts.docType)}-${refs.invoice || refs.contract || refs.po || refs.so || rec.id?.slice(0, 8) || "NEW"}`,
     docDate: pick(form, "purchaseDate", "orderDate", "bookingDate", "invoiceDate") || pick(rec, "created_at") || new Date().toISOString(),
     referenceNos: refs,
     seller: { ...seller, ...(opts.overrides?.seller || {}) },
@@ -242,7 +258,7 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
     tradeScope: "local",
     lang: opts.lang,
     branding: opts.branding,
-    docNo: `${opts.docType === "commercial_invoice" ? "CI" : opts.docType === "packing_list" ? "PL" : opts.docType === "contract" ? "CT" : "PFI"}-LP-${rec.id?.slice(0, 8) || "NEW"}`,
+    docNo: `${docNoPrefix(opts.docType)}-LP-${rec.id?.slice(0, 8) || "NEW"}`,
     docDate: rec.created_at || new Date().toISOString(),
     referenceNos: { invoice: rec.purchase_account_no, contract: rec.chassis_code },
     seller: { name: rec.supplier_name || undefined, ...(opts.overrides?.seller || {}) },
