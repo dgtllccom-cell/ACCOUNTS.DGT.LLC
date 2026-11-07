@@ -22,6 +22,8 @@
   [data-erp-density="compact"] [data-erp-dashboard-hero] [data-slot="hero-title"] { margin-top: 0; padding: .625rem; }
 }
 @media screen and (max-width: 1023.98px) {
+  /* CSS follows viewport changes, so rotating/resizing never leaves body scroll locked on desktop. */
+  body:has([data-erp-density="compact"] .erp-drawer-overlay) { overflow: hidden; }
   [data-erp-density="compact"] main[data-erp-content] { padding: .75rem; padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
   [data-erp-density="compact"] [data-erp-dashboard] { padding: 0; min-height: 0; }
   [data-erp-density="compact"] [data-erp-dashboard] > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }

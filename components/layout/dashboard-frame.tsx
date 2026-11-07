@@ -137,13 +137,6 @@ export function DashboardFrame({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [drawerOpen, mobileOpen]);
 
-  useEffect(() => {
-    if (!drawerOpen && !mobileOpen) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = previousOverflow; };
-  }, [drawerOpen, mobileOpen]);
-
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategoryTab, setSelectedCategoryTab] = useState<string>("All");
