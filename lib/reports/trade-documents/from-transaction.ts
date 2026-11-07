@@ -66,7 +66,9 @@ function goodsFrom(entries: AnyRec[]): TradeLineItem[] {
     const netW = n(pick(g, "netWeight", "net_weight", "totalNetWeight"));
     const grossW = n(pick(g, "grossWeight", "gross_weight", "totalGrossWeight", "total_gross_weight"));
     const rate = n(pick(g, "coursePrice", "unitPrice", "price", "priceRateC1", "purchase_rate", "rate"));
-    const amount = n(pick(g, "finalAmount", "totalAmount", "amount", "final_cost", "lineTotal"));
+    // totalAmount is the line value in the transaction (document) currency. finalAmount is the local-currency
+    // equivalent (value x exchange rate) and must not be printed under the document currency.
+    const amount = n(pick(g, "totalAmount", "finalAmount", "amount", "final_cost", "lineTotal"));
     const unit = pick(g, "qtyName", "unit", "quantity_name", "uom");
     const discount = n(pick(g, "discount", "discountAmount", "discount_amount"));
     const taxAmount = n(pick(g, "taxAmount", "tax_amount", "vatAmount", "gstAmount"));
@@ -150,7 +152,9 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
   const totalQty = goods.reduce((s, g) => s + (Number(g.quantity) || 0), 0);
   const totalPkg = goods.reduce((s, g) => s + (Number(g.packages) || 0), 0);
   const subTotal = goods.reduce((s, g) => s + (Number(g.amount) || 0), 0);
-  const grand = n(pick(rec, "order_total")) ?? n(pick(form, "orderTotal", "grandTotal")) ?? subTotal;
+  // The grand total is the sum of the lines in the document currency when the lines carry one; the stored
+  // order_total can be in the local currency, so it is only used when there are no lines to add up.
+  const grand = goods.length && subTotal > 0 ? subTotal : (n(pick(rec, "order_total")) ?? n(pick(form, "orderTotal", "grandTotal")) ?? subTotal);
   const advance = n(pick(rec, "advance_paid")) ?? n(pick(form, "advanceAmount"));
 
   const transport = scope === "international" ? {
