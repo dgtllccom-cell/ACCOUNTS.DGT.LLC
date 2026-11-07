@@ -128,7 +128,8 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
   const customer = pick(form, "customerName", "customer_name", "buyerName") || pick(rec, "customer_name");
   const isSales = kind === "sales";
   const seller: TradeParty = {
-    name: (isSales ? companyNameOrNull(opts.branding) : supplier) || undefined,
+    // A sale is issued by the selling company chosen on the booking; branding is the fallback.
+    name: (isSales ? (pick(form, "salesCompanyName") || companyNameOrNull(opts.branding)) : supplier) || undefined,
     address: isSales ? opts.branding.address : pick(form, "supplierAddress"),
     phone: isSales ? opts.branding.phone : pick(form, "supplierMobile", "supplierContact", "purchaseContact"),
     email: isSales ? opts.branding.email : pick(form, "supplierEmail"),
