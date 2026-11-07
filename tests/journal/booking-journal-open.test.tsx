@@ -5,7 +5,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 vi.mock("@/lib/i18n/use-active-language", () => ({ useActiveLanguage: () => "en" }));
 vi.mock("@/lib/hooks/use-erp-scope", () => ({ useErpScope: () => ({ loading: false, isSuperAdmin: true, canViewFinancials: true, countryIds: [], countryBranchIds: [], cityBranchIds: [], permissions: [], roles: [] }) }));
 vi.mock("@/lib/purchase-ui/use-usd-rates", () => ({ useUsdRates: () => ({}) }));
-vi.mock("@/features/journal/components/payment-module-approved-header", () => ({ PaymentModuleHeader: () => null, useModulePayments: () => [] }));
+vi.mock("@/features/journal/components/payment-module-approved-header", () => ({ PaymentModuleHeader: ({ toolbar }: any) => toolbar, useModulePayments: () => [] }));
 vi.mock("@/features/journal/components/payment-journal-v2-header", () => ({ PaymentJournalV2Header: () => null }));
 vi.mock("@/features/journal/components/payment-journal-v2-filter-modal", () => ({ PaymentJournalV2FilterModal: () => null }));
 import { PurchaseOrderPaymentJournal } from "@/features/journal/components/purchase-order-payment-journal";
@@ -20,8 +20,10 @@ let localRecords: any[] = [];
 let dueFailure = false;
 let batches = due.loadings;
 beforeEach(() => {
+  window.history.replaceState({}, "", "/dashboard/journal/purchase-order-payment/remaining");
   localRecords = []; dueFailure = false; batches = due.loadings;
   vi.stubGlobal("React", React);
+  vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
   HTMLElement.prototype.scrollIntoView = vi.fn();
   vi.stubGlobal("fetch", vi.fn(async (input: string, options?: RequestInit) => {
     if (options?.method === "POST") throw new Error("No writes expected");
@@ -40,7 +42,7 @@ beforeEach(() => {
     return { ok: true, json: async () => ({ ok: true, data }) };
   }));
 });
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => { window.history.replaceState({}, "", "/"); cleanup(); vi.unstubAllGlobals(); });
 it("opens the booking Remaining entry from the actual Journal button", async () => {
   render(<PurchaseOrderPaymentJournal mode="remaining" paymentPage />);
   const billCell = await screen.findByText("AE-001-0007");
@@ -102,5 +104,22 @@ it("keeps Local Purchase entry working and can return to a Booking entry", async
   fireEvent.click(within(booking).getByRole("button", { name: "Journal" }));
   expect(await screen.findByTestId("ppe-selected-loading-summary")).toBeTruthy();
   expect(screen.getAllByTestId("ppe-entry-slot")).toHaveLength(1);
+  expect(vi.mocked(fetch).mock.calls.some(([, options]) => options?.method === "POST")).toBe(false);
+});
+
+it("returns a settled loading to the Remaining register and clears stale entry URL hints", async () => {
+  window.history.replaceState({}, "", `/dashboard/journal/purchase-order-payment/remaining?purchaseOrderNo=${order.purchase_order_no}&fromLoading=true&loadingRecordId=${loading.id}&lang=ur`);
+  batches = [{ ...due.loadings[0], paid: 104287.5, outstanding: 0, complete: true } as any];
+  render(<PurchaseOrderPaymentJournal mode="remaining" paymentPage />);
+  expect(await screen.findByTestId("remaining-select-loading")).toBeTruthy();
+  expect(await screen.findByText(/Loading History · Paid in full/)).toBeTruthy();
+  expect(screen.queryByText(/No verified loaded quantity/)).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Back to Register" }));
+  expect(await screen.findByText("Journal / All Sources selected")).toBeTruthy();
+  expect(screen.queryByTestId("remaining-select-loading")).toBeNull();
+  expect(screen.queryByTestId("payment-entry-shell")).toBeNull();
+  expect(window.location.search).toBe("?lang=ur");
+  await act(async () => { fireEvent.click(screen.getByTitle("Refresh")); });
+  await waitFor(() => expect(screen.queryByTestId("payment-entry-shell")).toBeNull());
   expect(vi.mocked(fetch).mock.calls.some(([, options]) => options?.method === "POST")).toBe(false);
 });
