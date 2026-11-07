@@ -127,9 +127,9 @@ export function renderPremiumInvoice(input: TradeDocumentInput, flags: InvoiceTe
         ${d.notes ? `<div class="notes-card"><strong>${esc(tt("tdoc.notes", "Notes / Remarks"))}:</strong> ${esc(d.notes)}</div>` : "<div></div>"}
       </div>
       ${flags.showSignature ? `<div class="stamp-row">
-        <div class="sign">${esc(d.preparedByLabel)}</div>
+        <div class="sign">${esc(d.signLeft)}</div>
         <div class="stamp-box">${esc(tt("invtpl.stamp_here", "Stamp & Seal"))}</div>
-        <div class="sign">${esc(d.signatureName)}</div>
+        <div class="sign">${esc(d.signRight)}</div>
         ${flags.showQr ? `<div class="qr-box">${qrPlaceholderSvg(52)}<div>${esc(d.qrLabel)}</div></div>` : ""}
       </div>` : ""}
       ${flags.showHeaderFooter ? `<div class="foot"><span>${esc(d.brandName)} · ${esc(d.docTitle)} · ${esc(d.docNo)}</span><span>${esc(tt("tdoc.system_generated", "System-generated document"))} · ${esc(d.stamp)}</span></div>` : ""}

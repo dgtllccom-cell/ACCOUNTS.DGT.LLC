@@ -70,6 +70,7 @@ export type PreparedInvoice = {
   deliveryRows: Row[];
   transportRows: Row[];
   isPacking: boolean;
+  isContract: boolean;
   showPrices: boolean;
   goodsColumns: GoodsColumn[];
   goodsRows: string[][];
@@ -83,6 +84,9 @@ export type PreparedInvoice = {
   notes: string | null;
   signatureName: string;
   preparedByLabel: string;
+  /** signature captions: a contract is signed by the seller (left) and the buyer (right); other documents keep Prepared By / Authorized. */
+  signLeft: string;
+  signRight: string;
   currency: string;
   stamp: string;
   qrLabel: string;
@@ -102,11 +106,12 @@ function partyRows(p: TradeParty | null | undefined, tt: (k: string, f: string) 
   return rows;
 }
 
-function cellFor(li: TradeLineItem, key: string, tt: (k: string, f: string) => string): string {
+function cellFor(li: TradeLineItem, key: string): string {
   switch (key) {
     case "description": {
-      const bits = [li.description, li.brand ? `${tt("tdoc.brand", "Brand")}: ${li.brand}` : "", li.size ? `${tt("tdoc.size", "Size")}: ${li.size}` : ""].filter(isReal);
-      return bits.join(" — ");
+      // Customer-facing description = the main goods name only. Brand / size are internal ERP variant
+      // attributes and are never printed (same rule as build-trade-document.ts).
+      return isReal(li.description) ? String(li.description) : "";
     }
     case "hs": return String(li.hsCode || "");
     case "packing": return String(li.packing || "");
@@ -130,7 +135,11 @@ export function prepareInvoiceData(input: TradeDocumentInput, flags: InvoiceTemp
   const dir = isRtl ? "rtl" : "ltr";
 
   const b = input.branding;
-  const brandName = isReal(b.entityName) ? b.entityName! : tt("tdoc.brand_fallback", "Digital Dock ERP");
+  // Same header rule as build-trade-document.ts: never print the bare country name as the company brand.
+  const entityIsCountry = isReal(b.entityName) && isReal(b.countryName)
+    && String(b.entityName).trim().toLowerCase() === String(b.countryName).trim().toLowerCase();
+  const brandName = (isReal(b.entityName) && !entityIsCountry ? b.entityName! : isReal(b.legalName) ? b.legalName! : null)
+    || tt("tdoc.brand_fallback", "Digital Dock ERP");
   const brandLines = [b.address, [b.phone, b.email, b.website].filter(Boolean).join("  •  ") || null,
     [b.registrationNumber ? `Reg: ${b.registrationNumber}` : null, b.taxNumber ? `Tax/TRN: ${b.taxNumber}` : null].filter(Boolean).join("   ") || null]
     .filter((x): x is string => Boolean(x));
@@ -172,7 +181,8 @@ export function prepareInvoiceData(input: TradeDocumentInput, flags: InvoiceTemp
   const deliveryRows: Row[] = flags.showTerms ? [
     ...(isReal(d.incoterms) ? [{ label: tt("tdoc.incoterms", "Incoterms"), value: String(d.incoterms) }] : []),
     ...(isReal(d.deliveryTerms) ? [{ label: tt("tdoc.delivery_terms", "Delivery Terms"), value: String(d.deliveryTerms) }] : []),
-    ...(isReal(d.paymentTerms) ? [{ label: tt("tdoc.payment_terms", "Payment Terms"), value: String(d.paymentTerms) }] : []),
+    // Payment terms are payment details: a Packing List never carries them.
+    ...(!isPacking && isReal(d.paymentTerms) ? [{ label: tt("tdoc.payment_terms", "Payment Terms"), value: String(d.paymentTerms) }] : []),
     ...(isProforma && isReal(input.validity) ? [{ label: tt("tdoc.validity", "Validity"), value: String(input.validity) }] : []),
   ] : [];
 
@@ -201,16 +211,17 @@ export function prepareInvoiceData(input: TradeDocumentInput, flags: InvoiceTemp
       { key: "grossWt", label: tt("tdoc.col_gross_wt", "Gross Wt (KG)"), align: "r" },
     );
   } else {
-    goodsColumns.push(
-      { key: "qty", label: tt("tdoc.col_qty", "Quantity"), align: "r" },
-      { key: "unitPrice", label: tt("tdoc.col_unit_price", "Unit Price"), align: "r" },
-    );
+    goodsColumns.push({ key: "qty", label: tt("tdoc.col_qty", "Quantity"), align: "r" });
+    // Weights are printed when the source lines carry them (gross is never estimated).
+    if (input.goods.some((g) => isReal(g.netWeight))) goodsColumns.push({ key: "netWt", label: tt("tdoc.col_net_wt", "Net Wt (KG)"), align: "r" });
+    if (input.goods.some((g) => isReal(g.grossWeight))) goodsColumns.push({ key: "grossWt", label: tt("tdoc.col_gross_wt", "Gross Wt (KG)"), align: "r" });
+    goodsColumns.push({ key: "unitPrice", label: tt("tdoc.col_unit_price", "Unit Price"), align: "r" });
     if (hasDiscount) goodsColumns.push({ key: "discount", label: tt("invtpl.col_discount", "Discount"), align: "r" });
     if (hasLineTax) goodsColumns.push({ key: "tax", label: tt("tdoc.tax", "Tax / VAT"), align: "r" });
     goodsColumns.push({ key: "amount", label: tt("tdoc.col_amount", "Amount"), align: "r" });
   }
 
-  const goodsRows = input.goods.map((li) => goodsColumns.map((c) => cellFor(li, c.key, tt)));
+  const goodsRows = input.goods.map((li) => goodsColumns.map((c) => cellFor(li, c.key)));
 
   const totals = input.totals || {};
   const grand = Number(totals.grandTotal ?? totals.subTotal ?? input.goods.reduce((s, g) => s + (Number(g.amount) || 0), 0));
@@ -265,16 +276,20 @@ export function prepareInvoiceData(input: TradeDocumentInput, flags: InvoiceTemp
     metaRows,
     seller, buyer, notify,
     deliveryRows, transportRows,
-    isPacking, showPrices,
+    isPacking, isContract, showPrices,
     goodsColumns, goodsRows, totalsRowCells,
     financialRows,
     grandTotalLabel: tt("tdoc.grand_total", "Grand Total"),
     grandTotalValue: `${money(grand)} ${input.currency}`,
-    amountInWords: !isPacking ? `${tt("tdoc.amount_in_words", "Amount in words")}: ${numberToWords(Math.round(grand))} ${input.currency}` : null,
+    amountInWords: !isPacking ? `${tt("tdoc.amount_in_words", "Amount in words")}: ${numberToWords(grand)} ${input.currency}` : null,
     showBank, bankRows,
     notes: isReal(input.notes) ? String(input.notes) : null,
     signatureName: input.signatureName || tt("tdoc.sign_authorized", "Authorized Signature & Stamp"),
     preparedByLabel: tt("tdoc.sign_prepared", "Prepared By"),
+    signLeft: isContract ? tt("tdoc.sign_seller", "Seller — Authorized Signatory") : tt("tdoc.sign_prepared", "Prepared By"),
+    signRight: isContract
+      ? tt("tdoc.sign_buyer", "Buyer — Authorized Signatory")
+      : (input.signatureName || tt("tdoc.sign_authorized", "Authorized Signature & Stamp")),
     currency: input.currency,
     stamp,
     qrLabel: tt("invtpl.qr_placeholder", "Scan to verify"),

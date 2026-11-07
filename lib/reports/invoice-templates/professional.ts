@@ -116,8 +116,8 @@ export function renderProfessionalInvoice(input: TradeDocumentInput, flags: Invo
     ${d.notes ? `<div class="notes"><strong>${esc(tt("tdoc.notes", "Notes / Remarks"))}:</strong> ${esc(d.notes)}</div>` : ""}
     ${flags.showQr ? `<div class="qr-row"><div class="qr-box">${qrPlaceholderSvg(52)}<div>${esc(d.qrLabel)}</div></div></div>` : ""}
     ${flags.showSignature ? `<div class="sign-grid">
-      <div class="sign">${esc(d.preparedByLabel)}</div>
-      <div class="sign">${esc(tt("invtpl.sign_for", "For"))} ${esc(d.brandName)}<br/>${esc(d.signatureName)}</div>
+      <div class="sign">${esc(d.signLeft)}</div>
+      <div class="sign">${d.isContract ? esc(d.signRight) : `${esc(tt("invtpl.sign_for", "For"))} ${esc(d.brandName)}<br/>${esc(d.signRight)}`}</div>
     </div>` : ""}
     ${flags.showHeaderFooter ? `<div class="foot"><span>${esc(d.brandName)} · ${esc(d.docTitle)} · ${esc(d.docNo)}</span><span>${esc(tt("tdoc.system_generated", "System-generated document"))} · ${esc(d.stamp)}</span></div>` : ""}
   </div></div>`;

@@ -89,7 +89,7 @@ export function renderCompactInvoice(input: TradeDocumentInput, flags: InvoiceTe
     </div>` : ""}
     ${d.showBank && d.bankRows.length ? `<div class="mini-card"><div class="h">${esc(tt("tdoc.sec_bank", "Bank Details"))}</div>${d.bankRows.map((r) => `${esc(r.label)}: ${esc(r.value)}`).join(" · ")}</div>` : ""}
     ${d.notes ? `<div class="mini-card"><div class="h">${esc(tt("tdoc.notes", "Notes"))}</div>${esc(d.notes)}</div>` : ""}
-    ${flags.showSignature ? `<div class="sign-row"><div class="sign">${esc(d.preparedByLabel)}</div><div class="sign">${esc(d.signatureName)}</div></div>` : ""}
+    ${flags.showSignature ? `<div class="sign-row"><div class="sign">${esc(d.signLeft)}</div><div class="sign">${esc(d.signRight)}</div></div>` : ""}
     ${flags.showHeaderFooter ? `<div class="foot"><span>${esc(d.brandName)}</span><span>${esc(d.stamp)}</span></div>` : ""}
   </div></div></div>`;
 

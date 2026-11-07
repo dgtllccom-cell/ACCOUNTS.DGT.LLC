@@ -147,14 +147,16 @@ export function buildTradeDocumentHtml(input: TradeDocumentInput): string {
 
   // ---- delivery / transport ----------------------------------------------
   const d = input.delivery || {};
-  const deliveryHtml = (isReal(d.incoterms) || isReal(d.paymentTerms) || isReal(d.deliveryTerms) || showTransport)
+  // Payment terms are payment details: a Packing List never carries them (same rule as showBank).
+  const showPaymentTerms = !isPacking && isReal(d.paymentTerms);
+  const deliveryHtml = (isReal(d.incoterms) || showPaymentTerms || isReal(d.deliveryTerms) || showTransport)
     ? `<div class="section">
         <div class="section-h">${esc(tt("tdoc.sec_delivery", "Delivery & Terms"))}</div>
         <div class="grid2">
           <table class="kv">
             ${isReal(d.incoterms) ? `<tr><td>${tt("tdoc.incoterms", "Incoterms")}</td><td>${esc(d.incoterms)}</td></tr>` : ""}
             ${isReal(d.deliveryTerms) ? `<tr><td>${tt("tdoc.delivery_terms", "Delivery Terms")}</td><td>${esc(d.deliveryTerms)}</td></tr>` : ""}
-            ${isReal(d.paymentTerms) ? `<tr><td>${tt("tdoc.payment_terms", "Payment Terms")}</td><td>${esc(d.paymentTerms)}</td></tr>` : ""}
+            ${showPaymentTerms ? `<tr><td>${tt("tdoc.payment_terms", "Payment Terms")}</td><td>${esc(d.paymentTerms)}</td></tr>` : ""}
             ${isReal(input.validity) && isProforma ? `<tr><td>${tt("tdoc.validity", "Validity")}</td><td>${esc(input.validity)}</td></tr>` : ""}
           </table>
           ${showTransport ? `<table class="kv">
@@ -189,8 +191,10 @@ export function buildTradeDocumentHtml(input: TradeDocumentInput): string {
       ["tdoc.col_qty", "Quantity", "r"], ["tdoc.col_net_wt", "Net Wt (KG)", "r"], ["tdoc.col_gross_wt", "Gross Wt (KG)", "r"],
       ["tdoc.col_unit_price", "Unit Price", "r"], ["tdoc.col_amount", "Amount", "r"]);
   } else {
-    cols.push(["tdoc.col_qty", "Quantity", "r"], ["tdoc.col_net_wt", "Net Wt (KG)", "r"],
-      ["tdoc.col_unit_price", "Unit Price", "r"], ["tdoc.col_amount", "Amount", "r"]);
+    cols.push(["tdoc.col_qty", "Quantity", "r"], ["tdoc.col_net_wt", "Net Wt (KG)", "r"]);
+    // Gross weight is printed whenever the source lines carry it (it is never estimated from net weight).
+    if (input.goods.some((g) => isReal(g.grossWeight))) cols.push(["tdoc.col_gross_wt", "Gross Wt (KG)", "r"]);
+    cols.push(["tdoc.col_unit_price", "Unit Price", "r"], ["tdoc.col_amount", "Amount", "r"]);
   }
 
   const cell = (li: TradeLineItem, key: string): string => {
@@ -259,7 +263,7 @@ export function buildTradeDocumentHtml(input: TradeDocumentInput): string {
         ${isReal(totals.balanceAmount) ? `<tr><td>${tt("tdoc.balance", "Balance Due")}</td><td>${money(totals.balanceAmount)} ${esc(input.currency)}</td></tr>` : ""}
         ${fxLine}
       </table>
-      <div class="in-words">${esc(tt("tdoc.amount_in_words", "Amount in words"))}: <strong>${esc(numberToWords(Math.round(grand)))} ${esc(input.currency)}</strong></div>
+      <div class="in-words">${esc(tt("tdoc.amount_in_words", "Amount in words"))}: <strong>${esc(numberToWords(grand))} ${esc(input.currency)}</strong></div>
     </div>`;
   }
 
