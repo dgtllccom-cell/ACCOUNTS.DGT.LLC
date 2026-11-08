@@ -3383,8 +3383,13 @@ export function PurchaseOrderManagementDashboard() {
           onClose={() => setTradeDocsOpen(false)}
           initialDocType={tradeDocsInitialType}
           txnKind="purchase"
-          record={selected as any}
-          companyId={(selected as any).supplier_company_id || null}
+          record={{
+            ...(selected as any),
+            // The mapper reads snake_case fields; this list row carries camelCase, so the number and date are aliased here.
+            purchase_order_no: (selected as any).purchase_order_no || (selected as any).purchaseBookingOrderNumber || null,
+            created_at: (selected as any).created_at || (selected as any).createdAt || (selected as any).bookingDate || null,
+          }}
+          companyId={(selected as any).form_data?.form?.purchaseCompanyId || null}
           scope={{
             countryId: (selected as any).country_id || null,
             countryBranchId: (selected as any).country_branch_id || null,

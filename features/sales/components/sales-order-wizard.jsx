@@ -3412,8 +3412,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </button>
                       <button
                         type="button"
+                        disabled={!savedOrderId}
+                        title={savedOrderId ? undefined : t(lang, "tdoc.save_first", "Save the order first. Documents print only from a saved record.")}
                         onClick={() => { setViewDropdownOpen(false); setTradeDocsOpen(true); }}
-                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <FileText className="h-3.5 w-3.5 text-blue-500" />
                         <span>{t(lang, "tdoc.center_title", "Commercial Document Center")}</span>
