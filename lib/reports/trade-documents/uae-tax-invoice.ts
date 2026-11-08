@@ -44,6 +44,9 @@ const vatPercent = (li: TradeLineItem): number | null => {
   const amt = Number(li.amount), tax = Number(li.taxAmount);
   return Number.isFinite(amt) && amt > 0 && Number.isFinite(tax) && tax > 0 ? Math.round((tax / amt) * 10000) / 100 : null;
 };
+/** A value the record actually carries (a number, including 0). null/undefined/"" are not carried and print as a dash. */
+const carried = (v: unknown): number | null => (v === null || v === undefined || v === "" || !Number.isFinite(Number(v)) ? null : Number(v));
+const moneyOrDash = (v: number | null) => (v === null ? "—" : money(v));
 
 export function buildUaeTaxInvoiceHtml(input: TradeDocumentInput): string {
   const lang = (input.lang || "en") as SupportedLanguage;
@@ -58,11 +61,19 @@ export function buildUaeTaxInvoiceHtml(input: TradeDocumentInput): string {
   const tr = input.transport || {};
   const totals = input.totals || {};
   const currency = input.currency || "";
-  const grand = Number(totals.grandTotal ?? totals.subTotal ?? input.goods.reduce((s, g) => s + (Number(g.amount) || 0), 0));
-  const subTotal = Number(totals.subTotal ?? input.goods.reduce((s, g) => s + (Number(g.amount) || 0), 0));
-  const vatTotal = totals.taxAmount != null && Number.isFinite(Number(totals.taxAmount)) ? Number(totals.taxAmount) : null;
-  const hasVatData = input.goods.some((g) => isReal(g.taxAmount)) || vatTotal !== null;
+  // Amounts are printed only when the record carries them. A record with no lines has no taxable value, and a record
+  // with no total has no grand total: both print as a dash, never as 0.00.
+  const subTotal = carried(totals.subTotal) ?? (input.goods.some((g) => carried(g.amount) !== null)
+    ? input.goods.reduce((s, g) => s + (carried(g.amount) ?? 0), 0) : null);
+  const grand = carried(totals.grandTotal) ?? subTotal;
+  const vatTotal = carried(totals.taxAmount);
   const lineVatCell = (g: TradeLineItem) => (isReal(g.taxAmount) ? money(g.taxAmount) : "—");
+  // Exchange rate and functional-currency total, as on the standard layout: shown only when the sale is in a foreign currency.
+  const fxRate = carried(input.exchangeRate);
+  const fxLines = fxRate !== null && fxRate !== 1 && isReal(input.functionalCurrency) && input.functionalCurrency !== input.currency
+    ? `<tr><td>${esc(tt("tdoc.exchange_rate", "Exchange Rate (frozen)"))}</td><td>1 ${esc(input.currency)} = ${num(fxRate)} ${esc(input.functionalCurrency)}</td></tr>
+        <tr><td>${esc(tt("tdoc.functional_total", "Total in Functional Currency"))}</td><td>${grand !== null ? money(grand * fxRate) : "—"} ${esc(input.functionalCurrency)}</td></tr>`
+    : "";
   const brandLines = brandLinesFor(b);
   const trnSeller = isReal(b.taxNumber) ? b.taxNumber! : null;
 
@@ -73,7 +84,10 @@ export function buildUaeTaxInvoiceHtml(input: TradeDocumentInput): string {
     kv(tt("uae.reference_no", "Reference No."), isReal(refs.so || refs.po || refs.contract) ? esc(refs.so || refs.po || refs.contract) : "—"),
     kv(tt("uae.ship_mode", "Ship Mode"), isReal(tr.mode) ? esc(tr.mode) : "—"),
     kv(tt("uae.transport", "Transport"), isReal(tr.vessel) ? esc(tr.vessel) : "—"),
-    kv(tt("uae.import_export", "Import / Export"), input.txnKind === "sales" ? esc(tt("uae.export", "Export")) : esc(tt("uae.import", "Import"))),
+    // A domestic sale is not an export: it prints as a local sale, never as "Export".
+    kv(tt("uae.import_export", "Import / Export"), input.txnKind === "sales"
+      ? esc(input.tradeScope === "local" ? tt("uae.local_sale", "Local Sale") : tt("uae.export", "Export"))
+      : esc(tt("uae.import", "Import"))),
     kv(tt("uae.awb", "AWB / B/L No."), isReal(tr.blNumber) ? esc(tr.blNumber) : "—"),
     kv(tt("uae.loading_country", "Loading Country"), isReal(tr.loadingCountry) ? esc(tr.loadingCountry) : "—"),
     kv(tt("uae.receiving_country", "Receiving Country"), isReal(tr.dischargeCountry) ? esc(tr.dischargeCountry) : "—"),
@@ -91,24 +105,25 @@ export function buildUaeTaxInvoiceHtml(input: TradeDocumentInput): string {
   const lineRows = input.goods.length
     ? input.goods.map((g, i) => {
         const pct = vatPercent(g);
-        const total = Number(g.amount || 0) + Number(g.taxAmount || 0);
+        const amount = carried(g.amount);
+        const total = amount === null ? null : amount + (carried(g.taxAmount) ?? 0);
         return `<tr>
           <td class="c">${i + 1}</td>
           <td><strong>${esc(g.description || "—")}</strong></td>
           <td class="c">${isReal(g.hsCode) ? esc(g.hsCode) : "—"}</td>
           <td class="r">${num(g.quantity)}${isReal(g.unit) ? ` ${esc(g.unit)}` : ""}</td>
-          <td class="r">${money(g.unitPrice)}</td>
-          <td class="r">${money(g.amount)}</td>
+          <td class="r">${moneyOrDash(carried(g.unitPrice))}</td>
+          <td class="r">${moneyOrDash(amount)}</td>
           <td class="r">${pct !== null ? `${num(pct)}%` : "—"}</td>
           <td class="r">${lineVatCell(g)}</td>
-          <td class="r">${money(total)}</td>
+          <td class="r">${moneyOrDash(total)}</td>
         </tr>`;
       }).join("")
     : `<tr><td class="c" colspan="9">${esc(tt("tdoc.no_goods", "No goods lines on this transaction."))}</td></tr>`;
 
-  const totalQty = input.goods.reduce((s, g) => s + (Number(g.quantity) || 0), 0);
+  const totalQty = input.goods.length ? input.goods.reduce((s, g) => s + (Number(g.quantity) || 0), 0) : null;
   const taxableAmount = subTotal;
-  const totalTax = vatTotal ?? null;
+  const totalTax = vatTotal;
   const totalAfterTax = grand;
   const bank = input.bank || null;
   const bankKv = bank ? [
@@ -144,7 +159,8 @@ export function buildUaeTaxInvoiceHtml(input: TradeDocumentInput): string {
   body { color: #0f172a; font-family: 'Inter', 'Noto Naskh Arabic', Arial, sans-serif; font-size: 9.5px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   html[lang="ur"] body { font-family: 'Noto Nastaliq Urdu', 'Noto Naskh Arabic', serif; }
   html[lang="ar"] body, html[lang="fa"] body, html[lang="ps"] body { font-family: 'Noto Naskh Arabic', 'Inter', sans-serif; }
-  .page { width: ${orientation === "landscape" ? "277mm" : "190mm"}; margin: 12px auto; background: #fff; padding: 9mm; border: 1px solid #cbd5e1; }
+  /* The sheet is captured as one image when saved as PDF: no outer margin, and a tighter padding in landscape so the sheet stays on one page. */
+  .page { width: ${orientation === "landscape" ? "277mm" : "190mm"}; margin: 0 auto; background: #fff; padding: ${orientation === "landscape" ? "6mm" : "9mm"}; border: 1px solid #cbd5e1; }
   .top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; border-bottom: 2px solid #1e3a8a; padding-bottom: 6px; }
   .brand-name { font-size: 17px; font-weight: 900; color: #1e3a8a; }
   .brand-sub { font-size: 9px; font-weight: 800; color: #0f172a; text-transform: uppercase; }
@@ -203,7 +219,7 @@ export function buildUaeTaxInvoiceHtml(input: TradeDocumentInput): string {
     </div>
   </div>
 
-  <table class="items">
+  <table class="items data-table">
     <thead><tr>
       <th style="width:4%">${esc(tt("uae.sr", "Sr."))}</th>
       <th style="width:26%">${esc(tt("uae.product_service", "Name of Product / Service"))}</th>
@@ -218,16 +234,16 @@ export function buildUaeTaxInvoiceHtml(input: TradeDocumentInput): string {
     <tbody>${lineRows}</tbody>
     <tfoot><tr>
       <td colspan="3" class="r">${esc(tt("uae.total_qty", "Total Qty"))}</td>
-      <td class="r">${num(totalQty)}</td>
+      <td class="r">${totalQty === null ? "—" : num(totalQty)}</td>
       <td></td>
-      <td class="r">${money(taxableAmount)}</td>
+      <td class="r">${moneyOrDash(taxableAmount)}</td>
       <td></td>
-      <td class="r">${vatTotal !== null ? money(vatTotal) : hasVatData ? "—" : "—"}</td>
-      <td class="r">${money(grand)}</td>
+      <td class="r">${moneyOrDash(vatTotal)}</td>
+      <td class="r">${moneyOrDash(grand)}</td>
     </tr></tfoot>
   </table>
 
-  <div class="words"><strong>${esc(tt("tdoc.amount_in_words", "Amount in words"))}:</strong> ${esc(numberToWords(Math.round(grand)))} ${esc(currency)}</div>
+  <div class="words"><strong>${esc(tt("tdoc.amount_in_words", "Amount in words"))}:</strong> ${grand !== null ? `${esc(numberToWords(Number(grand.toFixed(2))))} ${esc(currency)}` : "—"}</div>
 
   <div class="lower">
     <div>
@@ -236,10 +252,11 @@ export function buildUaeTaxInvoiceHtml(input: TradeDocumentInput): string {
     </div>
     <div class="summary">
       <table>
-        <tr><td>${esc(tt("uae.summary_taxable", "Taxable Amount"))}</td><td>${money(taxableAmount)} ${esc(currency)}</td></tr>
+        <tr><td>${esc(tt("uae.summary_taxable", "Taxable Amount"))}</td><td>${taxableAmount !== null ? `${money(taxableAmount)} ${esc(currency)}` : "—"}</td></tr>
         <tr><td>${esc(tt("uae.add_vat", "Add: VAT"))}</td><td>${totalTax !== null ? `${money(totalTax)} ${esc(currency)}` : "—"}</td></tr>
         <tr><td>${esc(tt("uae.total_tax", "Total Tax"))}</td><td>${totalTax !== null ? `${money(totalTax)} ${esc(currency)}` : "—"}</td></tr>
-        <tr class="grand"><td>${esc(tt("uae.total_after_tax", "Total Amount After Tax"))}</td><td>${money(totalAfterTax)} ${esc(currency)}</td></tr>
+        ${fxLines}
+        <tr class="grand"><td>${esc(tt("uae.total_after_tax", "Total Amount After Tax"))}</td><td>${totalAfterTax !== null ? `${money(totalAfterTax)} ${esc(currency)}` : "—"}</td></tr>
       </table>
     </div>
   </div>
