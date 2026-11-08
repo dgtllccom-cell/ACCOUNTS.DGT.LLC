@@ -8,7 +8,7 @@
  */
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { numberToWords } from "@/lib/utils/number-to-words";
+import { documentAmountInWords } from "@/lib/utils/number-to-words-i18n";
 import { brandLinesFor } from "@/lib/reports/resolve-document-branding";
 import type { TradeDocumentInput, TradeLineItem } from "./types";
 
@@ -243,7 +243,7 @@ export function buildUaeTaxInvoiceHtml(input: TradeDocumentInput): string {
     </tr></tfoot>
   </table>
 
-  <div class="words"><strong>${esc(tt("tdoc.amount_in_words", "Amount in words"))}:</strong> ${grand !== null ? `${esc(numberToWords(Number(grand.toFixed(2))))} ${esc(currency)}` : "—"}</div>
+  <div class="words"><strong>${esc(tt("tdoc.amount_in_words", "Amount in words"))}:</strong> ${grand !== null ? esc(documentAmountInWords(Number(grand.toFixed(2)), currency, lang)) : "—"}</div>
 
   <div class="lower">
     <div>

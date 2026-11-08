@@ -250,7 +250,43 @@ export function salesOrderToTradeInput(rec: AnyRec, opts: MapOptions): TradeDocu
   return baseFromForm(rec, "sales", opts);
 }
 
-/** Local Purchase (`local_purchases` table) — a single-good, no-shipping record. */
+/** `line_items` (jsonb) holds the goods lines of a Local Purchase. Some rows have none, and a string is parsed. */
+function localPurchaseLines(rec: AnyRec): AnyRec[] {
+  let raw: unknown = rec.line_items;
+  if (typeof raw === "string") {
+    try { raw = JSON.parse(raw); } catch { raw = null; }
+  }
+  return Array.isArray(raw) ? raw.filter((x): x is AnyRec => !!x && typeof x === "object") : [];
+}
+
+/** Text the record actually carries. The "-" placeholder stored for an empty size or brand is not printed. */
+const realText = (v: any): string | undefined => {
+  const s = v === undefined || v === null ? "" : String(v).trim();
+  return s && s !== "-" ? s : undefined;
+};
+
+/** One printed row for one saved line. Quantities and amounts are that line's own values. */
+function localPurchaseLineToItem(rec: AnyRec, x: AnyRec): TradeLineItem {
+  const count = n(x.quantityCount) ?? n(x.numbers);
+  const amount = n(x.finalCost) ?? n(x.amount) ?? n(x.purchaseCost);
+  const unit = realText(x.quantityName) ?? realText(rec.quantity_name);
+  return {
+    description: realText(x.goodsName) ?? realText(rec.goods_name),
+    brand: realText(x.brand),
+    size: realText(x.size),
+    packing: count !== undefined && unit ? `${count} ${unit}` : undefined,
+    packages: count,
+    quantity: count,
+    unit,
+    // Derived from this line's own amount and count, so it matches the printed unit. Nothing is stored for it.
+    unitPrice: amount !== undefined && count ? Number((amount / count).toFixed(4)) : undefined,
+    netWeight: n(x.netWeight),
+    grossWeight: n(x.totalGrossWeight),
+    amount,
+  };
+}
+
+/** Local Purchase (`local_purchases` table) — one printed row per saved goods line; no shipping. */
 export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeDocumentInput {
   const qty = n(rec.numbers) ?? n(rec.quantity_kgs);
   const li: TradeLineItem = {
@@ -268,6 +304,9 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
     amount: n(rec.final_cost) ?? n(rec.purchase_cost),
   };
   const grand = n(rec.final_cost) ?? n(rec.purchase_cost) ?? (li.amount || 0);
+  const lines = localPurchaseLines(rec);
+  const goods: TradeLineItem[] = lines.length ? lines.map((x) => localPurchaseLineToItem(rec, x)) : [li];
+  const lineSum = goods.reduce((sum, g) => sum + (g.amount ?? 0), 0);
   return {
     docType: opts.docType,
     txnKind: "purchase",
@@ -276,13 +315,14 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
     branding: opts.branding,
     docNo: `${docNoPrefix(opts.docType)}-LP-${rec.id?.slice(0, 8) || "NEW"}`,
     docDate: rec.created_at || new Date().toISOString(),
-    referenceNos: { invoice: rec.purchase_account_no, contract: rec.chassis_code },
+    // The ledger code (purchase_account_no, e.g. 1002) is not an invoice number. The bill number is manual_bill_no.
+    referenceNos: { invoice: realText(rec.manual_bill_no), contract: rec.chassis_code },
     seller: { name: rec.supplier_name || undefined, ...(opts.overrides?.seller || {}) },
     buyer: { name: companyNameOrNull(opts.branding) || undefined, address: opts.branding.address, taxId: opts.branding.taxNumber, ...(opts.overrides?.buyer || {}) },
     notifyParty: null,
     delivery: { ...(opts.overrides?.delivery || {}) },
     transport: null,
-    goods: [li],
+    goods,
     currency: rec.purchase_currency || "USD",
     exchangeRate: n(rec.exchange_rate),
     functionalCurrency: rec.local_currency,
@@ -290,7 +330,7 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
       totalQuantity: qty || undefined,
       totalNetWeight: n(rec.net_weight) || undefined,
       totalGrossWeight: n(rec.total_gross_weight) || undefined,
-      subTotal: li.amount || undefined,
+      subTotal: (lines.length ? lineSum : li.amount) || undefined,
       grandTotal: grand || undefined,
     },
     bank: opts.bank ?? null,
@@ -300,7 +340,7 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
     missingFields: [
       ...(rec.supplier_name ? [] : ["Supplier"]),
       ...(companyNameOrNull(opts.branding) ? [] : ["Buyer (company name not set in company profile)"]),
-      ...(rec.goods_name ? [] : ["Goods"]),
+      ...(lines.length || rec.goods_name ? [] : ["Goods"]),
     ],
     orientation: opts.orientation,
     autoPrint: opts.autoPrint,
