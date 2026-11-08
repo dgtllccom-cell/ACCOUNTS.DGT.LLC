@@ -104,14 +104,20 @@ const btnCls =
 export function PurchaseTransitLaneView({
   lang,
   source,
+  session,
 }: {
   lang?: string;
   source?: "purchase_booking" | "local_purchase" | "sales_booking" | "local_sales" | null;
+  session?: any;
 }) {
   const s = useErpScreen("plane", lang);
   const T = useCallback((k: string, fb: string) => s.t(k, fb), [s]);
   const stLabel = (st: string) =>
     T(LANE_STATUS_LABEL[st as LaneStatus]?.key ?? st, LANE_STATUS_LABEL[st as LaneStatus]?.en ?? st);
+
+  const isSuperAdmin = Boolean(session?.isSuperAdmin || session?.roles?.includes("super_admin") || session?.scopes?.isSuperAdmin);
+  const isCountryAdmin = !isSuperAdmin && Boolean(session?.roles?.some((r: string) => r === "country_admin" || r === "country_user"));
+  const isBranchUser = !isSuperAdmin && !isCountryAdmin;
 
   const [rows, setRows] = useState<Row[]>([]);
   const [summary, setSummary] = useState<Record<string, number>>({});
@@ -294,7 +300,7 @@ export function PurchaseTransitLaneView({
               <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm shadow-blue-500/30">
                 <ArrowRightLeft className="h-4 w-4" />
               </span>
-              {T("title", "P/S General Transfer")}
+              {T("title_journal", "P/S General Transfer Journal")}
             </h1>
             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
               {T(
@@ -479,22 +485,43 @@ export function PurchaseTransitLaneView({
                 <thead className="border-b border-slate-200/80 bg-slate-50 text-[11px] font-black uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-300">
                   <tr>
                     <Th className="p-2.5 w-8" />
-                    <Th className="p-2.5 text-start">{T("col_bill_no", "Bill No. / Ref")}</Th>
-                    <Th className="p-2.5 text-start">{T("col_bill_type", "Bill Type")}</Th>
-                    <Th className="p-2.5 text-start">{T("col_party", "Party (Supplier/Customer)")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_source", "Source")}</Th>
+                    {isSuperAdmin && <Th className="p-2.5 text-start">{T("col_country", "Country")}</Th>}
+                    {(isSuperAdmin || isCountryAdmin) && <Th className="p-2.5 text-start">{T("col_branch", "Branch")}</Th>}
+                    <Th className="p-2.5 text-start">{T("col_bill_no", "Bill No.")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_loading_no", "Loading No.")}</Th>
                     <Th className="p-2.5 text-start">{T("col_goods", "Goods")}</Th>
-                    <Th className="p-2.5 text-start">{T("col_container", "BL / Container")}</Th>
                     <Th className="p-2.5 text-end">{T("col_qty", "Loaded Qty")}</Th>
-                    <Th className="p-2.5 text-end">{T("col_remaining_qty", "Remaining Qty")}</Th>
-                    <Th className="p-2.5 text-start">{T("col_status", "Transfer Status")}</Th>
-                    <Th className="p-2.5 text-start">{T("col_location", "Location / Assigned")}</Th>
-                    <Th className="p-2.5 text-end">{T("col_next", "Action / Routing")}</Th>
+                    <Th className="p-2.5 text-end">{T("col_balance_qty", "Balance Qty")}</Th>
+                    <Th className="p-2.5 text-center">{T("col_payment_status", "Payment Status")}</Th>
+                    <Th className="p-2.5 text-center">{T("col_expense_status", "Expense Status")}</Th>
+                    <Th className="p-2.5 text-end">{T("col_action", "Action")}</Th>
                   </tr>
                 </thead>
 
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                   {rows.map((r) => {
                     const na = nextAction(r);
+                    const rawPayStatus = String(r.payment_status || "pending").toLowerCase();
+                    const isPaid = rawPayStatus.includes("paid") || rawPayStatus.includes("completed");
+                    const isCredit = rawPayStatus.includes("credit");
+                    const isRemaining = rawPayStatus.includes("remaining") || rawPayStatus.includes("partial");
+                    const payBadgeTone = isPaid
+                      ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300"
+                      : isCredit
+                      ? "bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-950/60 dark:text-indigo-300"
+                      : isRemaining
+                      ? "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300"
+                      : "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300";
+                    const payLabel = isPaid
+                      ? T("st_paid", "Paid")
+                      : isCredit
+                      ? T("st_credit", "Credit")
+                      : isRemaining
+                      ? T("st_remaining", "Remaining")
+                      : T("st_pending", "Pending");
+
+                    const isTransferredExp = r.expense_status === "transferred" || r.transfer_destination === "general_purchase_expenses" || r.transfer_destination === "general_sales_expenses";
                     return (
                       <tr
                         key={r.id}
@@ -513,17 +540,7 @@ export function PurchaseTransitLaneView({
                           />
                         </td>
 
-                        {/* Bill No. / Ref */}
-                        <td className="p-2.5 font-mono font-bold text-blue-700 dark:text-blue-400" dir="ltr">
-                          {r.purchase_ref_no || "—"}
-                          {r.loading_record_no && (
-                            <div className="text-[10px] text-slate-400 font-normal">
-                              LR: {r.loading_record_no}
-                            </div>
-                          )}
-                        </td>
-
-                        {/* Bill Type Badge */}
+                        {/* Source */}
                         <td className="p-2.5">
                           <span
                             className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
@@ -534,71 +551,83 @@ export function PurchaseTransitLaneView({
                           </span>
                         </td>
 
-                        {/* Party */}
-                        <td className="p-2.5 font-semibold text-slate-800 dark:text-slate-100" dir="auto">
-                          {r.supplier_name || "—"}
+                        {/* Country (Super Admin only) */}
+                        {isSuperAdmin && (
+                          <td className="p-2.5 font-semibold text-slate-800 dark:text-slate-100 text-[11px]" dir="auto">
+                            {r.country_name || (r.country_iso2 ? r.country_iso2.toUpperCase() : "—")}
+                          </td>
+                        )}
+
+                        {/* Branch (Super Admin & Country Admin only) */}
+                        {(isSuperAdmin || isCountryAdmin) && (
+                          <td className="p-2.5 text-slate-600 dark:text-slate-300 text-[11px]" dir="auto">
+                            {r.branch_name || r.owner_country_branch_name || "—"}
+                          </td>
+                        )}
+
+                        {/* Bill No. */}
+                        <td className="p-2.5 font-mono font-bold text-blue-700 dark:text-blue-400 text-xs" dir="ltr">
+                          {r.purchase_ref_no || "—"}
+                        </td>
+
+                        {/* Loading No. */}
+                        <td className="p-2.5 font-mono text-[11px]" dir="ltr">
+                          {r.loading_record_no || r.container_number || r.bl_number || "—"}
                         </td>
 
                         {/* Goods */}
-                        <td className="p-2.5" dir="auto">
+                        <td className="p-2.5 text-xs" dir="auto">
                           <span className="font-medium text-slate-700 dark:text-slate-200">{r.goods_name || "—"}</span>
                         </td>
 
-                        {/* BL / Container */}
-                        <td className="p-2.5 font-mono text-[11px]" dir="ltr">
-                          <div>
-                            <span className="text-slate-400">BL:</span> {r.bl_number || "—"}
-                          </div>
-                          <div className="font-bold text-slate-700 dark:text-slate-300">
-                            <span className="text-slate-400 font-normal">CTN:</span> {r.container_number || "—"}
-                          </div>
-                        </td>
-
                         {/* Loaded Qty */}
-                        <td className="p-2.5 text-end font-mono font-bold text-slate-900 dark:text-white">
+                        <td className="p-2.5 text-end font-mono font-bold text-slate-900 dark:text-white text-xs">
                           {Number(r.loaded_quantity || 0).toLocaleString()} <span className="text-[10px] font-normal text-slate-400">{r.unit || ""}</span>
                         </td>
 
-                        {/* Remaining Qty */}
-                        <td className="p-2.5 text-end font-mono font-bold text-amber-700 dark:text-amber-400">
+                        {/* Balance Qty */}
+                        <td className="p-2.5 text-end font-mono font-bold text-amber-700 dark:text-amber-400 text-xs">
                           {Number(r.remaining_quantity || 0).toLocaleString()} <span className="text-[10px] font-normal text-slate-400">{r.unit || ""}</span>
                         </td>
 
-                        {/* Transfer Status */}
-                        <td className="p-2.5">
-                          <span
-                            className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                              STATUS_TONE[r.lane_status] ?? ""
-                            }`}
-                            data-testid="lane-status"
-                          >
-                            {stLabel(r.lane_status)}
+                        {/* Payment Status (READ-ONLY) */}
+                        <td className="p-2.5 text-center">
+                          <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${payBadgeTone}`}>
+                            {payLabel}
                           </span>
-                          {r.transfer_destination && (
-                            <div className="mt-0.5 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400">
-                              → {destinationName(r.transfer_destination, T)}
-                            </div>
-                          )}
-                          {r.leg_no > 1 && (
-                            <span className="ms-1 text-[10px] text-slate-400 font-normal">
-                              ({T("leg", "leg")} {r.leg_no})
-                            </span>
-                          )}
                         </td>
 
-                        {/* Location / Assigned */}
-                        <td className="p-2.5 text-[11px]" dir="auto">
-                          <div className="font-semibold text-slate-700 dark:text-slate-200">
-                            {r.current_location || r.expected_location || "—"}
-                          </div>
-                          <div className="text-[10px] text-slate-400">
-                            {ownerLabel(r, T)}
-                          </div>
+                        {/* Expense Status */}
+                        <td className="p-2.5 text-center">
+                          <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${
+                            isTransferredExp
+                              ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300"
+                              : "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300"
+                          }`}>
+                            {isTransferredExp ? T("st_transferred", "Transferred") : T("st_pending", "Pending")}
+                          </span>
                         </td>
 
                         {/* Actions */}
-                        <td className="p-2.5 text-end">
-                          {actionMenu(r, na)}
+                        <td className="p-2.5 text-end whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setTransferTargetLoads([r])}
+                              className={`${btnCls} bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm`}
+                              data-testid="transfer-general-expenses"
+                            >
+                              <ArrowRightLeft className="h-3 w-3" />
+                              {T("act_transfer_to_general_expenses", "Transfer to General Expenses")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openDetail(r.id)}
+                              className={`${btnCls} border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300`}
+                            >
+                              {T("act_view", "View")}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -852,7 +881,6 @@ function CenterTransferConfirmationModal({
   };
 
   const submit = async () => {
-    if (type === "remaining_payment" && loads.every(l => l.source_type === "purchase_booking") && !paymentReviewReady) return;
     const p = transferProblems(req);
     setProblems(p);
     if (p.length) return;
@@ -961,19 +989,9 @@ function CenterTransferConfirmationModal({
               data-testid="tr-type"
             >
               <optgroup label={T("group_erp_modules", "ERP Business Modules")}>
-                <option value="general_purchase_expenses">{s.tGlobal("utask.mod_journal", "Journal")} · {T("dest_expenses_p", "General Purchase Expenses")}</option>
-                <option value="general_sales_expenses">{T("dest_expenses_s", "General Sales Expenses")}</option>
-                <option value="remaining_payment">{T("dest_payment", "Remaining Payment")}</option>
-                <option value="jc_journal_voucher">{T("dest_jc", "JC (Journal Clearing / Voucher)")}</option>
-                <option value="pc_petty_cash">{T("dest_pc", "PC (Petty Cash / Payment Certificate)")}</option>
-              </optgroup>
-              <optgroup label={T("group_logistics_handover", "Branch & Logistics Hand-over")}>
-                <option value="other_branch">{T("tt_other_branch", "Another country or city branch")}</option>
-                <option value="own_branch">{T("tt_own_branch", "Own branch")}</option>
-                <option value="internal_agent">{T("tt_internal_agent", "Internal clearing agent")}</option>
-                <option value="external_agent">{T("tt_external_agent", "External clearing agent / logistics partner")}</option>
-                <option value="other_user">{T("tt_other_user", "Another authorised user")}</option>
-                <option value="self_managed">{T("tt_self", "Self-managed clearance")}</option>
+                <option value={primarySource === "sales_booking" || primarySource === "local_sales" ? "general_sales_expenses" : "general_purchase_expenses"}>
+                  {T("act_transfer_to_general_expenses", "Transfer to General Expenses Journal")}
+                </option>
               </optgroup>
             </select>
           </div>
@@ -1179,7 +1197,7 @@ function CenterTransferConfirmationModal({
           </button>
           <button
             type="button"
-            disabled={busy || (type === "remaining_payment" && loads.every(l => l.source_type === "purchase_booking") && !paymentReviewReady)}
+            disabled={busy}
             onClick={() => void submit()}
             className={`${btnCls} bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-500/20`}
             data-testid="tr-submit"

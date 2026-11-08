@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { loadingWeightProfile, loadingWeights } from "@/lib/purchases/loading-weights";
 import { Th } from "@/components/ui/translated-th";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { translateOptionLabel } from "@/lib/i18n/option-labels";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
@@ -190,6 +191,7 @@ function normalizeAdvanceToPurchaseCurrency(rawAdvance: number, contractPurchase
 export function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord; onClose: () => void; onSaved?: () => void }) {
   const activeLang = useActiveLanguage();
   const tt = buildTt(activeLang);
+  const th = (key: string) => translateHeader(activeLang, key);
   const poData = (Array.isArray(record.purchase_orders) ? record.purchase_orders[0] : record.purchase_orders)?.form_data || {};
   const poRow = (Array.isArray(record.purchase_orders) ? record.purchase_orders[0] : record.purchase_orders) || {};
   const form = poData.form || {};
@@ -2214,6 +2216,7 @@ const containerTypes = ["20 FT", "40 FT", "20 FT Reefer", "40 FT Reefer", "Non R
 function ReceivingModal({ record, onClose, onReceived }: { record: LoadingRecord; onClose: () => void; onReceived?: () => void }) {
   const activeLang = useActiveLanguage();
   const tt = buildTt(activeLang);
+  const th = (key: string) => translateHeader(activeLang, key);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang || "en");
 
   const loadedQuantity = Number(record.loaded_quantity || 0);
@@ -2361,6 +2364,7 @@ function emptyForm() {
 export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: string }) {
   const activeLang = useActiveLanguage();
   const tt = buildTt(activeLang);
+  const th = (key: string) => translateHeader(activeLang, key);
   const searchParams = useSearchParams();
   // Country Receiving nav entry links here with ?focus=receiving — same page, same data,
   // just pre-filtered to the records that still have something left to receive, instead of
@@ -2389,6 +2393,9 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
   const [setupMessage, setSetupMessage] = useState<string | null>(null);
   const [apiSession, setApiSession] = useState<LoadingApiSession | null>(null);
   const [apiScope, setApiScope] = useState<LoadingApiScope | null>(null);
+  const isSuperAdmin = Boolean(apiSession?.isSuperAdmin || apiSession?.roles?.includes("super_admin"));
+  const isCountryAdmin = !isSuperAdmin && Boolean(apiSession?.roles?.some(r => r === "country_admin" || r === "country_user") || apiScope?.type === "country");
+  const isBranchUser = !isSuperAdmin && !isCountryAdmin;
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"all" | LoadingStatus>("all");
   const [loading, setLoading] = useState(true);
@@ -3053,6 +3060,54 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
 
         return (
           <div className="flex flex-col mb-6 space-y-4">
+            {/* 3 Compact Dashboard Summary Cards */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  {th("TOTAL ORDERED")}
+                </div>
+                <div className="mt-1 flex items-baseline justify-between">
+                  <span className="font-mono text-2xl font-black text-slate-900 dark:text-white">
+                    {totalPoQty.toLocaleString()}
+                  </span>
+                  <span className="text-[11px] font-bold text-slate-400">Units</span>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div className="text-[11px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                  {th("TOTAL LOADED")}
+                </div>
+                <div className="mt-1 flex items-baseline justify-between">
+                  <span className="font-mono text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                    {totalLoadedQty.toLocaleString()}
+                  </span>
+                  <span className="text-[11px] font-bold text-emerald-500">
+                    {totalPoQty > 0 ? ((totalLoadedQty / totalPoQty) * 100).toFixed(1) : 0}%
+                  </span>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div className="text-[11px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">
+                  {th("REMAINING TO LOAD")}
+                </div>
+                <div className="mt-1 flex items-baseline justify-between">
+                  <span className="font-mono text-2xl font-black text-rose-600 dark:text-rose-400">
+                    {totalRemainingQty.toLocaleString()}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-2 w-16 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                      <div
+                        className="h-full bg-emerald-500 transition-all duration-300"
+                        style={{ width: `${Math.min(100, Math.round(totalPoQty > 0 ? (totalLoadedQty / totalPoQty) * 100 : 0))}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Collapsible Country Dashboard Section */}
             <details className="group border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
               <summary className="flex cursor-pointer items-center justify-between bg-slate-50 px-4 py-3 font-black text-slate-800 hover:bg-slate-100 dark:bg-slate-900/50 dark:text-slate-200 dark:hover:bg-slate-900/80 uppercase text-xs tracking-wider">
@@ -3181,22 +3236,18 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                     {[
                       "Expand",
                       "SR#",
-                      "Country",
-                      "Branch",
+                      ...(isSuperAdmin ? ["Country"] : []),
+                      ...(isSuperAdmin || isCountryAdmin ? ["Branch"] : []),
                       "Bill / Source",
-                      "Sales Account",
-                      "Purchase Account",
-                      "Goods",
-                      "Contract Qty",
-                      "Gross Wt",
-                      "Tare Wt (Empty)",
-                      "Net Wt",
-                      "Total Purchase Amount (FC)",
-                      "Purchase Advance (FC)",
-                      "Purchase Remaining (FC)",
-                      "Loaded Qty",
-                      "Remaining to Load",
-                      "Stage / Payment / Next Step",
+                      "Purchase Date",
+                      "Supplier / Purchase Account",
+                      "Goods Name",
+                      "Original Purchase Quantity",
+                      "Total Loaded Quantity",
+                      "Remaining Quantity",
+                      "Gross Weight",
+                      "Net Weight",
+                      "Loading Status",
                       "Action"
                     ].map((head) => (
                       <Th key={head} className="whitespace-nowrap px-4 py-3 border-b border-slate-100 dark:border-slate-800">
@@ -3208,18 +3259,16 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {loading ? (
                     <tr>
-                      <td colSpan={19} className="px-3 py-8 text-center text-muted-foreground">
+                      <td colSpan={isSuperAdmin ? 15 : isCountryAdmin ? 14 : 13} className="px-3 py-8 text-center text-muted-foreground">
                         {tt("plr.loading_records", "Loading records...")}
                       </td>
                     </tr>
                   ) : poGroups.length ? (
                     poGroups.map(([poNo, group], groupIdx) => {
-                      const { poRow, form, records, realRecords, totalContractQty, totalContractGrossWeight, totalContractNetWeight, totalContractAmount, currency, totalLoadedQty } = group;
+                      const { poRow, form, records, realRecords, totalContractQty, totalContractGrossWeight, totalContractNetWeight, totalLoadedQty } = group;
                       const isExpanded = !!expandedPoNos[poNo];
                       const displayRecords = realRecords;
 
-                      const salesAccountNo = form.salesAccountNumber || form.salesAccountNo || "-";
-                      const salesAccountName = form.salesAccountName || "-";
                       const purchaseAccountNo = form.purchaseAccountNumber || form.purchaseAccountNo || "-";
                       const purchaseAccountName = form.purchaseAccountName || "-";
 
@@ -3229,19 +3278,6 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                       const combinedGoods = goodsName !== "-" ? `${goodsName}${goodsDetails !== "-" ? ` - ${goodsDetails}` : ""}` : "-";
 
                       const remainingQtyToLoad = Math.max(0, totalContractQty - totalLoadedQty);
-                      const exRate = Number(poRow.exchange_rate || form.exchangeRate || 1);
-                      const rawAdvance = Number(poRow.advance_paid || form.advanceAmount || 0);
-
-                      const contractTareWeight = Math.max(0, totalContractGrossWeight - totalContractNetWeight);
-                      const priceRate = totalContractQty > 0 ? (totalContractAmount / totalContractQty) : 0;
-                      const purchaseAdvanceUSD = normalizeAdvanceToPurchaseCurrency(rawAdvance, totalContractAmount, exRate);
-                      const purchaseRemainingUSD = Math.max(0, totalContractAmount - purchaseAdvanceUSD);
-
-                      const localCurrencyCode = records[0]?.countries?.currency || form.branchCurrency || "PKR";
-                      const finalAmountLC = totalContractAmount * exRate;
-                      const finalAdvanceLC = purchaseAdvanceUSD * exRate;
-                      const finalRemainingLC = Math.max(0, finalAmountLC - finalAdvanceLC);
-                      const paymentStatus = String(poRow.payment_status || form.paymentStatus || form.payment_status || "pending");
                       const primaryLoadingRecord = realRecords[0] || records[0] || null;
                       const nextDestination = String(
                         primaryLoadingRecord?.receiving_location ||
@@ -3274,8 +3310,8 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                               </button>
                             </td>
                             <td className="whitespace-nowrap px-4 py-3 text-[11px] font-bold text-slate-400">{String(groupIdx + 1).padStart(2, "0")}</td>
-                            <td className="whitespace-nowrap px-4 py-3 font-semibold">{countryLabel}</td>
-                            <td className="whitespace-nowrap px-4 py-3 text-slate-500">{branchLabel}</td>
+                            {isSuperAdmin && <td className="whitespace-nowrap px-4 py-3 font-semibold">{countryLabel}</td>}
+                            {(isSuperAdmin || isCountryAdmin) && <td className="whitespace-nowrap px-4 py-3 text-slate-500">{branchLabel}</td>}
                             <td className="whitespace-nowrap px-4 py-3 leading-tight">
                               <div className="inline-flex items-center gap-1.5 font-bold text-blue-600">
                                 <Link2 className="h-3.5 w-3.5 text-blue-500" />
@@ -3285,9 +3321,8 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                 {primaryLoadingRecord?.loading_record_no || "Loading source pending"}
                               </div>
                             </td>
-                            <td className="whitespace-nowrap px-4 py-3 leading-tight">
-                              <div className="font-mono text-[11px] font-bold text-slate-700 dark:text-slate-300">{salesAccountNo}</div>
-                              <div className="text-slate-400 text-[11px] uppercase tracking-wider">{salesAccountName}</div>
+                            <td className="whitespace-nowrap px-4 py-3 font-mono text-[11px] text-slate-600 dark:text-slate-400">
+                              {String(poRow.created_at || form.orderDate || "-").slice(0, 10)}
                             </td>
                             <td className="whitespace-nowrap px-4 py-3 leading-tight">
                               <div className="font-mono text-[11px] font-bold text-slate-700 dark:text-slate-300">{purchaseAccountNo}</div>
@@ -3295,43 +3330,27 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                             </td>
                             <td className="min-w-[150px] px-4 py-3 text-[11px] text-slate-700 dark:text-slate-200">{combinedGoods}</td>
                             <td className="whitespace-nowrap px-4 py-3 font-mono font-black text-slate-900 dark:text-slate-100">{totalContractQty.toLocaleString()} Bags</td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono">{totalContractGrossWeight.toLocaleString()} kg</td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono text-slate-500">{contractTareWeight.toLocaleString()} kg</td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono">{totalContractNetWeight.toLocaleString()} kg</td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono font-black text-emerald-600 dark:text-emerald-400">
-                              {totalContractAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono font-bold text-amber-600">
-                              {purchaseAdvanceUSD > 0 ? `${purchaseAdvanceUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}` : "-"}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono font-bold text-rose-600">
-                              {purchaseRemainingUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
-                            </td>
                             <td className="whitespace-nowrap px-4 py-3 font-mono font-black text-teal-600 dark:text-teal-400">{totalLoadedQty.toLocaleString()} Bags</td>
                             <td className="whitespace-nowrap px-4 py-3 font-mono font-black text-rose-600">{remainingQtyToLoad.toLocaleString()} Bags</td>
+                            <td className="whitespace-nowrap px-4 py-3 font-mono">{totalContractGrossWeight.toLocaleString()} kg</td>
+                            <td className="whitespace-nowrap px-4 py-3 font-mono">{totalContractNetWeight.toLocaleString()} kg</td>
                             <td className="whitespace-nowrap px-4 py-3">
-                              <div className="flex flex-col gap-1.5">
+                              <div className="flex flex-col gap-1">
                                 {isFullyLoaded ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-black uppercase text-white shadow-sm dark:bg-black">
-                                    {tt("plr.fully_loaded_100", "100% Fully Loaded")}
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-black uppercase text-white shadow-sm dark:bg-black">
+                                    {tt("plr.fully_loaded_100", "Fully Loaded (100%)")}
                                   </span>
                                 ) : isPartiallyLoaded ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-black uppercase text-amber-950 shadow-sm">
-                                    {((totalLoadedQty / totalContractQty) * 100).toFixed(0)}% Partially Loaded
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-black uppercase text-amber-950 shadow-sm">
+                                    Partially Loaded ({((totalLoadedQty / totalContractQty) * 100).toFixed(0)}%)
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-600 px-2.5 py-1 text-[11px] font-black uppercase text-white shadow-sm animate-pulse">
-                                    0% Loaded (Pending)
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-600 px-2.5 py-1 text-[10px] font-black uppercase text-white shadow-sm">
+                                    Pending Loading (0%)
                                   </span>
                                 )}
-                                <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                                  Payment: <span className="text-slate-800 dark:text-slate-200">{paymentStatus.replace(/_/g, " ")}</span>
-                                </span>
-                                <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                                <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
                                   Next: <span className="text-blue-600 dark:text-blue-400">{nextDestination}</span>
-                                </span>
-                                <span className="text-[11px] font-mono font-black text-rose-600" data-testid="payable-balance">
-                                  {tt("plr.payable_balance", "Payable")}: {purchaseRemainingUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
                                 </span>
                               </div>
                             </td>
@@ -3367,7 +3386,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                           {/* Expanded Child Loading Breakdown Table */}
                           {isExpanded && (
                             <tr className="bg-slate-100/70 dark:bg-slate-950/60">
-                              <td colSpan={19} className="p-4">
+                              <td colSpan={isSuperAdmin ? 15 : isCountryAdmin ? 14 : 13} className="p-4">
                                 <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md dark:border-slate-800 dark:bg-slate-900 space-y-3">
                                   <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
                                     <div className="flex items-center gap-2">

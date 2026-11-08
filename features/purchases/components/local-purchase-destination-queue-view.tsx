@@ -20,6 +20,7 @@ import {
   Warehouse,
   Flag,
   FileText,
+  Plus,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -230,6 +231,10 @@ export function LocalPurchaseDestinationQueueView({
   const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
   const tt = (key: string, fb: string) => t(activeLang, key as never, fb);
 
+  const isSuperAdmin = Boolean(session?.isSuperAdmin || session?.roles?.includes("super_admin"));
+  const isCountryAdmin = !isSuperAdmin && Boolean(session?.roles?.some((r: string) => r === "country_admin" || r === "country_user"));
+  const isBranchUser = !isSuperAdmin && !isCountryAdmin;
+
   const [purchases, setPurchases] = useState<LocalPurchaseDestinationRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -436,6 +441,19 @@ export function LocalPurchaseDestinationQueueView({
     }
     return result;
   }, [purchases, searchQuery, selectedStatus, config.statusField]);
+
+  const loadingTotals = useMemo(() => {
+    let ordered = 0;
+    let loaded = 0;
+    filteredPurchases.forEach((p) => {
+      const stats = getLoadingStats(p);
+      ordered += stats.booked;
+      loaded += stats.loaded;
+    });
+    const remaining = Math.max(0, ordered - loaded);
+    const progressPct = ordered > 0 ? Math.min(100, Math.round((loaded / ordered) * 100)) : 0;
+    return { ordered, loaded, remaining, progressPct };
+  }, [filteredPurchases]);
 
   // Group by Country & Branch Breakdown
   const countryGroups = useMemo(() => {
@@ -707,8 +725,58 @@ export function LocalPurchaseDestinationQueueView({
         }
       />
 
-      {/* Country Specific Cards Grid (When records exist) */}
-      {countryGroups.length > 0 && (
+      {/* Loading Dashboard 3 Compact Summary Cards */}
+      {stage === "loading" && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              {th("TOTAL ORDERED")}
+            </div>
+            <div className="mt-1 flex items-baseline justify-between">
+              <span className="font-mono text-2xl font-black text-slate-900 dark:text-white">
+                {loadingTotals.ordered.toLocaleString()}
+              </span>
+              <span className="text-[11px] font-bold text-slate-400">Units</span>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="text-[11px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+              {th("TOTAL LOADED")}
+            </div>
+            <div className="mt-1 flex items-baseline justify-between">
+              <span className="font-mono text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                {loadingTotals.loaded.toLocaleString()}
+              </span>
+              <span className="text-[11px] font-bold text-emerald-500">
+                {loadingTotals.progressPct}%
+              </span>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="text-[11px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">
+              {th("REMAINING TO LOAD")}
+            </div>
+            <div className="mt-1 flex items-baseline justify-between">
+              <span className="font-mono text-2xl font-black text-rose-600 dark:text-rose-400">
+                {loadingTotals.remaining.toLocaleString()}
+              </span>
+              <div className="flex items-center gap-1.5">
+                <div className="h-2 w-16 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                  <div
+                    className="h-full bg-emerald-500 transition-all duration-300"
+                    style={{ width: `${loadingTotals.progressPct}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Country Specific Cards Grid (When records exist and not simple loading view) */}
+      {stage !== "loading" && countryGroups.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {countryGroups.map((cg) => (
             <Card
@@ -852,86 +920,134 @@ export function LocalPurchaseDestinationQueueView({
           <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-320px)]">
             <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
               <thead className="sticky top-0 z-10 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
-                <tr>
-                  <Th className="p-2.5 text-center border-r border-slate-200 dark:border-slate-700 w-8"></Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">
-                    {th("SUPER S/N")}
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">
-                    {th("CTY S/N")}
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">
-                    {th("BR S/N")}
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
-                    {th("VOUCHER NO")}
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
-                    {th("DATE")}
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
-                    {th("BRANCH NAME")}
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
-                    {th("COUNTRY")}
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
-                    PURCHASE ACC (DR)
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
-                    SALES ACC (CR)
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
-                    {th("GOODS NAME")}
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
-                    {th("BRAND")}
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
-                    {th("ORIGIN")}
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
-                    {th("QTY")}
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
-                    {th("UNIT")}
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
-                    {th("GROSS WT")}
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
-                    {th("NET WT")}
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
-                    {th("PRICE")}
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right font-black">
-                    {th("TOTAL COST")}
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
-                    {stage === "loading"
-                      ? th("TRUCK / DRIVER")
-                      : stage === "warehouse_transfer"
-                      ? th("WAREHOUSE")
-                      : th("DESTINATION")}
-                  </Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">
-                    {th("STATUS")}
-                  </Th>
-                  <Th className="p-2.5 text-center">{th("ACTIONS")}</Th>
-                </tr>
+                {stage === "loading" ? (
+                  <tr>
+                    <Th className="p-2.5 text-center border-r border-slate-200 dark:border-slate-700 w-8"></Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">
+                      {th("SR#")}
+                    </Th>
+                    {isSuperAdmin && (
+                      <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
+                        {th("COUNTRY")}
+                      </Th>
+                    )}
+                    {(isSuperAdmin || isCountryAdmin) && (
+                      <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
+                        {th("BRANCH NAME")}
+                      </Th>
+                    )}
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
+                      {th("VOUCHER NO")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
+                      {th("DATE")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
+                      {th("SUPPLIER / PURCHASE ACCOUNT")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
+                      {th("GOODS NAME")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
+                      {th("ORIGINAL PURCHASE QTY")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
+                      {th("TOTAL LOADED QTY")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
+                      {th("REMAINING QTY")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
+                      {th("GROSS WT")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
+                      {th("NET WT")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">
+                      {th("LOADING STATUS")}
+                    </Th>
+                    <Th className="p-2.5 text-center">{th("ACTIONS")}</Th>
+                  </tr>
+                ) : (
+                  <tr>
+                    <Th className="p-2.5 text-center border-r border-slate-200 dark:border-slate-700 w-8"></Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">
+                      {th("SUPER S/N")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">
+                      {th("CTY S/N")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">
+                      {th("BR S/N")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
+                      {th("VOUCHER NO")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
+                      {th("DATE")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
+                      {th("BRANCH NAME")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
+                      {th("COUNTRY")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
+                      PURCHASE ACC (DR)
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
+                      SALES ACC (CR)
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
+                      {th("GOODS NAME")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
+                      {th("BRAND")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
+                      {th("ORIGIN")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
+                      {th("QTY")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
+                      {th("UNIT")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
+                      {th("GROSS WT")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
+                      {th("NET WT")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
+                      {th("PRICE")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right font-black">
+                      {th("TOTAL COST")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
+                      {stage === "warehouse_transfer"
+                        ? th("WAREHOUSE")
+                        : th("DESTINATION")}
+                    </Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">
+                      {th("STATUS")}
+                    </Th>
+                    <Th className="p-2.5 text-center">{th("ACTIONS")}</Th>
+                  </tr>
+                )}
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[11px]">
                 {loading ? (
                   <tr>
-                    <td colSpan={22} className="p-8 text-center text-slate-400 font-mono">
+                    <td colSpan={stage === "loading" ? (11 + (isSuperAdmin ? 1 : 0) + (isSuperAdmin || isCountryAdmin ? 1 : 0)) : 22} className="p-8 text-center text-slate-400 font-mono">
                       <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600 mb-2" />
                       {th("LOADING PURCHASE RECORDS")}
                     </td>
                   </tr>
                 ) : filteredPurchases.length === 0 ? (
                   <tr>
-                    <td colSpan={22} className="p-12 text-center text-slate-400 font-sans">
+                    <td colSpan={stage === "loading" ? (11 + (isSuperAdmin ? 1 : 0) + (isSuperAdmin || isCountryAdmin ? 1 : 0)) : 22} className="p-12 text-center text-slate-400 font-sans">
                       <Package className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-700 mb-3" />
                       <p className="font-bold text-slate-700 dark:text-slate-300">
                         {tt("lpjr.no_transactions", "No local purchase transactions found")}
@@ -947,7 +1063,7 @@ export function LocalPurchaseDestinationQueueView({
                       {/* Country Group Header Row */}
                       <tr className="bg-slate-100 dark:bg-slate-800/80 font-black text-slate-800 dark:text-slate-200 text-[11px]">
                         <td
-                          colSpan={22}
+                          colSpan={stage === "loading" ? (11 + (isSuperAdmin ? 1 : 0) + (isSuperAdmin || isCountryAdmin ? 1 : 0)) : 22}
                           className="px-4 py-2 uppercase tracking-wider border-y border-slate-200 dark:border-slate-700"
                         >
                           <div className="flex items-center justify-between">
@@ -1009,6 +1125,201 @@ export function LocalPurchaseDestinationQueueView({
 
                         const isCompleted = (row as any)[config.statusField] === "completed";
                         const isExpanded = !!expandedRows[row.id];
+
+                        if (stage === "loading") {
+                          const stats = getLoadingStats(row);
+                          const isFullyLoaded = stats.loaded >= stats.booked && stats.booked > 0;
+                          const isPartiallyLoaded = stats.loaded > 0 && stats.loaded < stats.booked;
+
+                          return (
+                            <Fragment key={row.id}>
+                              <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                                {/* Expand toggle */}
+                                <td className="p-2 text-center border-r border-slate-150 dark:border-slate-800">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setExpandedRows((prev) => ({
+                                        ...prev,
+                                        [row.id]: !prev[row.id],
+                                      }))
+                                    }
+                                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                  >
+                                    {isExpanded ? (
+                                      <ChevronDown className="h-3.5 w-3.5" />
+                                    ) : (
+                                      <ChevronRight className="h-3.5 w-3.5" />
+                                    )}
+                                  </button>
+                                </td>
+
+                                {/* SR# */}
+                                <td className="p-2 font-mono text-center border-r border-slate-150 dark:border-slate-800 text-slate-600 dark:text-slate-400">
+                                  {isSuperAdmin ? superSerial : isCountryAdmin ? countrySerial : branchSerial}
+                                </td>
+
+                                {/* Country (Super Admin only) */}
+                                {isSuperAdmin && (
+                                  <td className="p-2 border-r border-slate-150 dark:border-slate-800 font-semibold">
+                                    {row.countryName || row.country_name || "-"}
+                                  </td>
+                                )}
+
+                                {/* Branch (Super Admin & Country Admin only) */}
+                                {(isSuperAdmin || isCountryAdmin) && (
+                                  <td className="p-2 border-r border-slate-150 dark:border-slate-800 text-slate-600 dark:text-slate-300">
+                                    {row.branchName || row.branch_name || "-"}
+                                  </td>
+                                )}
+
+                                {/* Bill Number */}
+                                <td className="p-2 font-mono font-bold text-blue-600 dark:text-blue-400 border-r border-slate-150 dark:border-slate-800">
+                                  {voucherCode}
+                                </td>
+
+                                {/* Purchase Date */}
+                                <td className="p-2 font-mono text-slate-500 border-r border-slate-150 dark:border-slate-800">
+                                  {new Date(
+                                    row.createdAt || row.created_at || Date.now()
+                                  ).toLocaleDateString("en-GB")}
+                                </td>
+
+                                {/* Supplier / Purchase Account */}
+                                <td className="p-2 border-r border-slate-150 dark:border-slate-800">
+                                  <div className="font-mono text-[11px] font-bold text-blue-600 dark:text-blue-400">
+                                    {row.purchaseAccountNo || row.purchase_account_no || "—"}
+                                  </div>
+                                  <div className="text-[10px] text-slate-500 truncate max-w-[120px]" title={row.supplierName || row.supplier_name || ""}>
+                                    {row.supplierName || row.supplier_name || ""}
+                                  </div>
+                                </td>
+
+                                {/* Goods Name */}
+                                <td className="p-2 font-bold text-slate-900 dark:text-slate-100 border-r border-slate-150 dark:border-slate-800">
+                                  {row.goodsName || row.goods_name || "-"}
+                                </td>
+
+                                {/* Original Local Purchase Qty */}
+                                <td className="p-2 text-right font-mono font-bold border-r border-slate-150 dark:border-slate-800">
+                                  {stats.booked.toLocaleString()} {row.quantityName || "Bags"}
+                                </td>
+
+                                {/* Total Loaded Qty */}
+                                <td className="p-2 text-right font-mono font-bold text-teal-600 dark:text-teal-400 border-r border-slate-150 dark:border-slate-800">
+                                  {stats.loaded.toLocaleString()} {row.quantityName || "Bags"}
+                                </td>
+
+                                {/* Remaining Qty */}
+                                <td className="p-2 text-right font-mono font-bold text-rose-600 border-r border-slate-150 dark:border-slate-800">
+                                  {stats.remaining.toLocaleString()} {row.quantityName || "Bags"}
+                                </td>
+
+                                {/* Gross Weight */}
+                                <td className="p-2 text-right font-mono border-r border-slate-150 dark:border-slate-800">
+                                  {grossWt.toLocaleString()} kg
+                                </td>
+
+                                {/* Net Weight */}
+                                <td className="p-2 text-right font-mono border-r border-slate-150 dark:border-slate-800">
+                                  {netWt.toLocaleString()} kg
+                                </td>
+
+                                {/* Loading Status */}
+                                <td className="p-2 text-center border-r border-slate-150 dark:border-slate-800">
+                                  {isFullyLoaded ? (
+                                    <span className="inline-flex items-center rounded-full bg-slate-900 px-2.5 py-0.5 text-[10px] font-black uppercase text-white dark:bg-black">
+                                      {th("FULLY LOADED")}
+                                    </span>
+                                  ) : isPartiallyLoaded ? (
+                                    <span className="inline-flex items-center rounded-full bg-amber-400 px-2.5 py-0.5 text-[10px] font-black uppercase text-amber-950">
+                                      {th("PARTIALLY LOADED")} ({((stats.loaded / stats.booked) * 100).toFixed(0)}%)
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center rounded-full bg-rose-600 px-2.5 py-0.5 text-[10px] font-black uppercase text-white">
+                                      {th("PENDING LOADING")}
+                                    </span>
+                                  )}
+                                </td>
+
+                                {/* Actions */}
+                                <td className="p-2 text-center">
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => openLoadingModal(row)}
+                                      disabled={isFullyLoaded}
+                                      title={isFullyLoaded ? "Everything is already loaded." : undefined}
+                                      className="h-6 px-2 text-[10px] font-bold uppercase text-emerald-700 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 gap-1 shadow-sm disabled:opacity-50"
+                                    >
+                                      <Plus className="h-3 w-3 text-emerald-600" />
+                                      {th("ADD LOADING")}
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => setSelectedRowForVoucher(row)}
+                                      className="h-6 px-2 text-[10px] font-bold uppercase tracking-wider gap-1"
+                                    >
+                                      <Eye className="h-3 w-3 text-blue-600" />
+                                      {th("VIEW")}
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+
+                              {/* Expanded Loading Sub-rows for this row */}
+                              {isExpanded && (
+                                <tr className="bg-slate-50/90 dark:bg-slate-900/60">
+                                  <td
+                                    colSpan={11 + (isSuperAdmin ? 1 : 0) + (isSuperAdmin || isCountryAdmin ? 1 : 0)}
+                                    className="p-3 border-r border-b border-slate-200 dark:border-slate-800"
+                                  >
+                                    {stats.entries.length === 0 ? (
+                                      <div className="text-center py-2 text-slate-400 font-mono text-[11px]">
+                                        No partial loading records created yet.
+                                      </div>
+                                    ) : (
+                                      <div className="space-y-1.5">
+                                        <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                          Recorded Loading Details ({stats.entries.length} entries):
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                                          {stats.entries.map((entry: any, eIdx: number) => (
+                                            <div
+                                              key={eIdx}
+                                              className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2 text-[11px] shadow-2xs"
+                                            >
+                                              <div className="flex justify-between items-center font-bold text-slate-800 dark:text-slate-200">
+                                                <span>#{eIdx + 1} · {entry.loadingDate || "—"}</span>
+                                                <span className="font-mono text-emerald-600 font-black">
+                                                  {Number(entry.loadedQuantity || 0).toLocaleString()} {row.quantityName || "Bags"}
+                                                </span>
+                                              </div>
+                                              <div className="mt-1 text-slate-500 space-y-0.5 text-[10px]">
+                                                <div>Truck: <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{entry.truckNo || "—"}</span></div>
+                                                <div>Driver: <span className="font-semibold text-slate-700 dark:text-slate-300">{entry.driverName || "—"}</span></div>
+                                                {entry.grossWeight && (
+                                                  <div>Gross: <span className="font-mono">{Number(entry.grossWeight).toLocaleString()} kg</span> | Net: <span className="font-mono">{Number(entry.netWeight || 0).toLocaleString()} kg</span></div>
+                                                )}
+                                                {entry.remarks && (
+                                                  <div className="italic text-slate-400 truncate">"{entry.remarks}"</div>
+                                                )}
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </td>
+                                </tr>
+                              )}
+                            </Fragment>
+                          );
+                        }
 
                         return (
                           <Fragment key={row.id}>
@@ -1078,18 +1389,7 @@ export function LocalPurchaseDestinationQueueView({
                                   "Local"}
                               </td>
                               <td className="p-2 text-right font-mono font-bold border-r border-slate-150 dark:border-slate-800">
-                                {stage === "loading" ? (
-                                  <div>
-                                    <div>{pkgCount.toLocaleString()}</div>
-                                    {getLoadingStats(row).entries.length > 0 && (
-                                      <div className="text-[10px] font-normal text-slate-500 whitespace-nowrap">
-                                        L: {getLoadingStats(row).loaded.toLocaleString()} | R: {getLoadingStats(row).remaining.toLocaleString()}
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : (
-                                  pkgCount.toLocaleString()
-                                )}
+                                {pkgCount.toLocaleString()}
                               </td>
                               <td className="p-2 border-r border-slate-150 dark:border-slate-800">
                                 {row.quantityName || row.quantity_name || "—"}
@@ -1113,16 +1413,7 @@ export function LocalPurchaseDestinationQueueView({
 
                               {/* Truck / Driver / Destination info */}
                               <td className="p-2 border-r border-slate-150 dark:border-slate-800 text-[11px]">
-                                {stage === "loading" ? (
-                                  <div>
-                                    <div className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                                      {row.truckNo || row.truck_no || "—"}
-                                    </div>
-                                    <div className="text-slate-500 text-[11px]">
-                                      {row.driverName || row.driver_name || "—"}
-                                    </div>
-                                  </div>
-                                ) : stage === "warehouse_transfer" ? (
+                                {stage === "warehouse_transfer" ? (
                                   <div>
                                     <div className="font-semibold text-slate-800 dark:text-slate-200">
                                       {row.warehouseName || row.warehouse_name || "—"}
@@ -1140,21 +1431,7 @@ export function LocalPurchaseDestinationQueueView({
 
                               {/* Status Badge */}
                               <td className="p-2 text-center border-r border-slate-150 dark:border-slate-800">
-                                {stage === "loading" ? (
-                                  getLoadingStats(row).remaining <= 0 || isCompleted ? (
-                                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[11px] font-black uppercase text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 whitespace-nowrap">
-                                      <CheckCircle2 className="h-2.5 w-2.5" /> {th("LOADED")}
-                                    </span>
-                                  ) : getLoadingStats(row).loaded > 0 ? (
-                                    <span className="inline-flex items-center gap-1 rounded-full border border-blue-300 bg-blue-50 px-2 py-0.5 text-[11px] font-black uppercase text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 whitespace-nowrap">
-                                      <Clock className="h-2.5 w-2.5" /> {th(`PARTIAL (${getLoadingStats(row).loaded}/${getLoadingStats(row).booked})`)}
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-black uppercase text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 whitespace-nowrap">
-                                      <Clock className="h-2.5 w-2.5" /> {th("PENDING LOADING")}
-                                    </span>
-                                  )
-                                ) : isCompleted ? (
+                                {isCompleted ? (
                                   <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[11px] font-black uppercase text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 whitespace-nowrap">
                                     <CheckCircle2 className="h-2.5 w-2.5" />{" "}
                                     {th(config.completedLabel.toUpperCase())}
@@ -1170,43 +1447,20 @@ export function LocalPurchaseDestinationQueueView({
                               {/* Actions */}
                               <td className="p-2 text-center">
                                 <div className="flex items-center justify-center gap-1.5">
-                                  {stage === "loading" ? (
-                                    getLoadingStats(row).remaining > 0 ? (
-                                      <Button
-                                        size="sm"
-                                        onClick={() => openLoadingModal(row)}
-                                        className="h-6 px-2 text-[11px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-md flex items-center gap-1 shadow-xs whitespace-nowrap"
-                                      >
-                                        <Truck className="h-3 w-3" />
-                                        {th("TRANSFER TO LOADING")}
-                                      </Button>
-                                    ) : null
-                                  ) : (
-                                    !isCompleted && (
-                                      <Button
-                                        size="sm"
-                                        disabled={actingId === row.id}
-                                        onClick={() => void markComplete(row.id)}
-                                        className="h-6 px-2 text-[11px] font-bold bg-slate-800 hover:bg-slate-900 text-white rounded-md flex items-center gap-1 shadow-xs whitespace-nowrap"
-                                      >
-                                        {actingId === row.id ? (
-                                          <Loader2 className="h-3 w-3 animate-spin" />
-                                        ) : (
-                                          <Send className="h-3 w-3" />
-                                        )}
-                                        {th(config.actionLabel.toUpperCase())}
-                                      </Button>
-                                    )
-                                  )}
-
-                                  {stage === "loading" && isCompleted && (
-                                    <a
-                                      href={`/dashboard/purchase/purchase-transit-lane?source=local_purchase&sourceId=${row.id}`}
-                                      data-testid="lp-open-lane"
-                                      className="inline-flex h-6 items-center gap-1 whitespace-nowrap rounded-md border border-indigo-300 bg-indigo-50 px-2 text-[11px] font-bold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300"
+                                  {!isCompleted && (
+                                    <Button
+                                      size="sm"
+                                      disabled={actingId === row.id}
+                                      onClick={() => void markComplete(row.id)}
+                                      className="h-6 px-2 text-[11px] font-bold bg-slate-800 hover:bg-slate-900 text-white rounded-md flex items-center gap-1 shadow-xs whitespace-nowrap"
                                     >
-                                      {t(activeLang as any, "plane.act_open_lane" as any, "Open in Purchase Lane")}
-                                    </a>
+                                      {actingId === row.id ? (
+                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                      ) : (
+                                        <Send className="h-3 w-3" />
+                                      )}
+                                      {th(config.actionLabel.toUpperCase())}
+                                    </Button>
                                   )}
 
                                   <Button
@@ -1276,83 +1530,6 @@ export function LocalPurchaseDestinationQueueView({
                                       </p>
                                     </div>
                                   </div>
-
-                                  {/* Loading Register Detail for stage === 'loading' */}
-                                  {stage === "loading" && (() => {
-                                    const { booked, loaded, remaining, entries } = getLoadingStats(row);
-                                    return (
-                                      <div className="mt-3 border-t border-slate-200 dark:border-slate-700 pt-3">
-                                        <div className="flex items-center justify-between mb-2">
-                                          <div className="flex items-center gap-2">
-                                            <Truck className="h-4 w-4 text-indigo-600" />
-                                            <span className="font-bold text-slate-800 dark:text-slate-100 uppercase text-xs">
-                                              {th("PARTIAL LOADING ENTRIES & VEHICLE MOVEMENTS")}
-                                            </span>
-                                            <span className="rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5">
-                                              {entries.length} {entries.length === 1 ? "Entry" : "Entries"}
-                                            </span>
-                                          </div>
-                                          <div className="text-xs font-mono">
-                                            <span className="font-bold text-slate-600 dark:text-slate-300">Booked: </span>
-                                            <span className="font-black text-slate-900 dark:text-slate-100">{booked.toLocaleString()}</span>
-                                            <span className="mx-2 text-slate-300">|</span>
-                                            <span className="font-bold text-blue-600">Loaded: </span>
-                                            <span className="font-black text-blue-700">{loaded.toLocaleString()}</span>
-                                            <span className="mx-2 text-slate-300">|</span>
-                                            <span className="font-bold text-amber-600">Remaining: </span>
-                                            <span className="font-black text-amber-700">{remaining.toLocaleString()}</span>
-                                          </div>
-                                        </div>
-
-                                        {entries.length > 0 ? (
-                                          <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-                                            <table className="w-full text-left text-xs">
-                                              <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10.5px] font-bold uppercase">
-                                                <tr>
-                                                  <th className="p-2 text-center w-8">#</th>
-                                                  <th className="p-2">Loading Number</th>
-                                                  <th className="p-2">Loading Date</th>
-                                                  <th className="p-2">Vehicle / Truck No</th>
-                                                  <th className="p-2">Driver Name</th>
-                                                  <th className="p-2">BL / Container</th>
-                                                  <th className="p-2 text-right">Loaded Qty</th>
-                                                  <th className="p-2 text-right">Remaining</th>
-                                                  <th className="p-2 text-right">Gross Wt (Kg)</th>
-                                                  <th className="p-2 text-right">Net Wt (Kg)</th>
-                                                  <th className="p-2">Route / Transport</th>
-                                                  <th className="p-2">Remarks</th>
-                                                  <th className="p-2">By</th>
-                                                </tr>
-                                              </thead>
-                                              <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900 font-mono text-[11px]">
-                                                {entries.map((ent: any, idx: number) => (
-                                                  <tr key={ent.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                                    <td className="p-2 text-center font-bold text-slate-500">{idx + 1}</td>
-                                                    <td className="p-2 font-bold text-indigo-600">{ent.loadingNumber || `LD-${idx + 1}`}</td>
-                                                    <td className="p-2 text-slate-700 dark:text-slate-300 font-sans">{ent.loadingDate || "—"}</td>
-                                                    <td className="p-2 font-bold text-slate-900 dark:text-slate-100">{ent.truckNo || "—"}</td>
-                                                    <td className="p-2 font-sans text-slate-700 dark:text-slate-300">{ent.driverName || "—"}</td>
-                                                    <td className="p-2 text-slate-600 dark:text-slate-400">{ent.blOrContainerNo || "—"}</td>
-                                                    <td className="p-2 text-right font-bold text-emerald-600">{Number(ent.loadedQuantity || 0).toLocaleString()}</td>
-                                                    <td className="p-2 text-right font-bold text-amber-600">{Number(ent.remainingQuantity ?? Math.max(0, booked - (idx + 1) * Number(ent.loadedQuantity || 0))).toLocaleString()}</td>
-                                                    <td className="p-2 text-right text-slate-700 dark:text-slate-300">{Number(ent.grossWeight || 0).toLocaleString()}</td>
-                                                    <td className="p-2 text-right text-slate-700 dark:text-slate-300">{Number(ent.netWeight || 0).toLocaleString()}</td>
-                                                    <td className="p-2 font-sans text-slate-600 dark:text-slate-400">{ent.route || ent.transportDetails || "—"}</td>
-                                                    <td className="p-2 font-sans text-slate-600 dark:text-slate-400">{ent.remarks || "—"}</td>
-                                                    <td className="p-2 font-sans text-slate-500 text-[10px]">{ent.responsibleUser || "Admin"}</td>
-                                                  </tr>
-                                                ))}
-                                              </tbody>
-                                            </table>
-                                          </div>
-                                        ) : (
-                                          <div className="rounded-lg border border-dashed border-slate-300 dark:border-slate-700 p-3 text-center text-slate-400 text-xs">
-                                            No partial loadings recorded yet. Click <span className="font-bold text-indigo-600">"Transfer to Loading"</span> to record the first loading entry.
-                                          </div>
-                                        )}
-                                      </div>
-                                    );
-                                  })()}
                                 </td>
                               </tr>
                             )}
