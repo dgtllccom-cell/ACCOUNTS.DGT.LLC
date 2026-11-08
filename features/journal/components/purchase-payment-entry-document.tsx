@@ -1,6 +1,8 @@
 "use client";
 
 import { PaymentSummaryStrip } from "@/features/journal/components/payment-summary-strip";
+import { PurchaseInvoiceSummaryPanel } from "./purchase-invoice-summary";
+import type { PurchaseInvoiceSummary } from "@/lib/journal/purchase-invoice-summary";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { useEffect, useState } from "react";
 import {
@@ -71,6 +73,7 @@ export type PaymentEntryDocumentProps = {
   isRtl: boolean;
   mode: PaymentEntryMode;
   model: EntryModel;
+  invoiceSummary?: PurchaseInvoiceSummary;
   limit: PaymentLimit | null;
   purchaseCurrency: string;
   baseCurrency: string;
@@ -184,6 +187,14 @@ export function PurchasePaymentEntryDocument(p: PaymentEntryDocumentProps) {
   const dateOf = (x: EntryPaymentRow) => String(x.entry_date || x.created_at || "");
   const shown = [...(p.mode === "remaining" ? p.payments.filter(payment => payment.kind === "remaining") : p.payments)].sort((a, b) => dateOf(a).localeCompare(dateOf(b)));
   const remainingAfter = new Map(m.breakdown.map((b) => [b.id, b.remainingAfter]));
+  const invoicePayment = new Map(p.invoiceSummary?.payments.map(payment => [payment.id, payment]));
+  const invoiceRemainingAfter = new Map<string, number | null>();
+  let invoiceRunning = p.invoiceSummary?.invoice.purchase ?? null;
+  for (const payment of p.invoiceSummary?.payments ?? []) {
+    invoiceRunning = invoiceRunning == null || payment.purchase == null ? null : Math.max(0, invoiceRunning - payment.purchase);
+    invoiceRemainingAfter.set(payment.id, invoiceRunning);
+  }
+  const invoiceFmt = (value: number | null | undefined, digits = 2) => value == null ? "—" : fmt(value, digits);
   const figures = paymentSummaryFigures(m, p.percent, p.rate);
   const shownTotals = shown.reduce((a, x) => ({ po: a.po + x.amtUSD, local: a.local + x.amtAED }), { po: 0, local: 0 });
   const entriesTitle = tt("breakdown_title", "Payment breakdown");
@@ -248,7 +259,9 @@ export function PurchasePaymentEntryDocument(p: PaymentEntryDocumentProps) {
       )}
 
       {/* compact payment summary: calculated advance vs paid vs outstanding, from the saved payment records */}
-      <PaymentSummaryStrip lang={p.lang} currency={p.purchaseCurrency} localCurrency={p.baseCurrency} figures={figures} loading={p.paymentsLoading} />
+      {p.invoiceSummary
+        ? <PurchaseInvoiceSummaryPanel lang={p.lang} summary={p.invoiceSummary} loading={p.paymentsLoading} />
+        : <PaymentSummaryStrip lang={p.lang} currency={p.purchaseCurrency} localCurrency={p.baseCurrency} figures={figures} loading={p.paymentsLoading} />}
 
       {/* payment breakdown: every saved payment in date order with the balance left after it */}
       <section className="overflow-hidden rounded-xl border border-rose-200 bg-white shadow-xs dark:border-rose-900/60 dark:bg-slate-900">
@@ -295,11 +308,11 @@ export function PurchasePaymentEntryDocument(p: PaymentEntryDocumentProps) {
                   <td className={cn(td, "max-w-[100px] truncate")} title={String(x.reference_no || x.roznamcha_entries?.super_admin_serial_number || "")}><span dir="ltr">{dash(x.reference_no || x.roznamcha_entries?.super_admin_serial_number)}</span></td>
                   <td className={td}>{kindOf(x)}</td>
                   <td className={cn(td, "max-w-[80px] truncate text-start")} title={x.narration || ""}>{dash(x.narration)}</td>
-                  <td className={td}>{dash(billCurrencyOf(x, p.purchaseCurrency))}</td>
-                  <td className={cn(td, num)} dir="ltr">{fmt(billAmountOf(x))}</td>
-                  <td className={cn(td, num)} dir="ltr">{fmt(x.exchange_rate, 4)}</td>
-                  <td className={cn(td, num, "font-bold")} dir="ltr">{fmt(x.amtAED)}</td>
-                  <td className={cn(td, num, "font-bold text-rose-700 dark:text-rose-300")} dir="ltr" data-testid="ppe-remaining-after">{fmt(remainingAfter.get(x.id) ?? m.balance)}</td>
+                  <td className={td}>{p.invoiceSummary ? dash(p.invoiceSummary.purchaseCurrency) : dash(billCurrencyOf(x, p.purchaseCurrency))}</td>
+                  <td className={cn(td, num)} dir="ltr">{p.invoiceSummary ? invoiceFmt(invoicePayment.get(x.id)?.purchase) : fmt(billAmountOf(x))}</td>
+                  <td className={cn(td, num)} dir="ltr">{p.invoiceSummary ? invoiceFmt(invoicePayment.get(x.id)?.rate, 4) : fmt(x.exchange_rate, 4)}</td>
+                  <td className={cn(td, num, "font-bold")} dir="ltr">{p.invoiceSummary ? invoiceFmt(invoicePayment.get(x.id)?.final) : fmt(x.amtAED)}</td>
+                  <td className={cn(td, num, "font-bold text-rose-700 dark:text-rose-300")} dir="ltr" data-testid="ppe-remaining-after">{p.invoiceSummary ? invoiceFmt(invoiceRemainingAfter.get(x.id)) : fmt(remainingAfter.get(x.id) ?? m.balance)}</td>
                   <td className={td}>
                     <button type="button" data-testid="ppe-cr-details" onClick={() => setCrPayment(x)} className="inline-grid h-8 w-8 place-items-center rounded-md text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40" title={tt("view_cr", "View CR / DR details")} aria-label={tt("view_cr", "View CR / DR details")}>
                       <Pin className="h-4 w-4" aria-hidden />
@@ -318,10 +331,10 @@ export function PurchasePaymentEntryDocument(p: PaymentEntryDocumentProps) {
               <tfoot>
                 <tr className="bg-rose-50 font-extrabold text-rose-900 dark:bg-rose-950/30 dark:text-rose-200">
                   <td className={td} colSpan={8}>{tt("col_total", "Total")}</td>
-                  <td className={cn(td, num)} dir="ltr">{fmt(shownTotals.po)} <span className="text-[10px] font-semibold">{p.purchaseCurrency}</span></td>
+                  <td className={cn(td, num)} dir="ltr">{p.invoiceSummary ? invoiceFmt(p.invoiceSummary.paid.purchase) : fmt(shownTotals.po)} <span className="text-[10px] font-semibold">{p.purchaseCurrency}</span></td>
                   <td className={td}>—</td>
-                  <td className={cn(td, num)} dir="ltr">{fmt(shownTotals.local)} <span className="text-[10px] font-semibold">{p.baseCurrency}</span></td>
-                  <td className={cn(td, num)} dir="ltr">{fmt(m.balance)} <span className="text-[10px] font-semibold">{p.purchaseCurrency}</span></td>
+                  <td className={cn(td, num)} dir="ltr">{p.invoiceSummary ? invoiceFmt(p.invoiceSummary.paid.final) : fmt(shownTotals.local)} <span className="text-[10px] font-semibold">{p.invoiceSummary?.finalCurrency || p.baseCurrency}</span></td>
+                  <td className={cn(td, num)} dir="ltr">{p.invoiceSummary ? invoiceFmt(p.invoiceSummary.remaining.purchase) : fmt(m.balance)} <span className="text-[10px] font-semibold">{p.purchaseCurrency}</span></td>
                   <td className={td} colSpan={2} />
                 </tr>
               </tfoot>

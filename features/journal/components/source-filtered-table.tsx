@@ -7,6 +7,10 @@ import { resolveAgreedDueDate } from "@/lib/services/payment-due-tracking";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { cn } from "@/lib/utils";
 import { LoadingReceivingCell } from "./loading-receiving-cell";
+import { purchaseInvoiceSummary } from "@/lib/journal/purchase-invoice-summary";
+import { PurchaseInvoiceSection } from "./purchase-invoice-summary";
+import { usePurchaseInvoiceHistory } from "./use-purchase-invoice-history";
+import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 type LanguageCode = string;
 import { WalletCards, Eye, Printer, FileSpreadsheet, ChevronRight } from "lucide-react";
 
@@ -21,6 +25,8 @@ export interface SourceFilteredTableProps {
   onPrintStatement: (row: any) => void;
   tGlobal: (lang: LanguageCode, key: string, fallback: string) => string;
   activeMode: string;
+  invoiceRefresh?: number;
+  invoiceFinalCurrency?: (row: any) => string;
   loadingRecords?: any[];
   dueBills?: any[];
   onSelectLoading?: (orderId: string, loadingId: string) => void;
@@ -40,6 +46,8 @@ export function SourceFilteredTable({
   loadingRecords = [],
   dueBills = [],
   onSelectLoading,
+  invoiceRefresh = 0,
+  invoiceFinalCurrency,
 }: SourceFilteredTableProps) {
   // Format numbers helper
   const fmt = (n: any, decimals = 2) => {
@@ -64,9 +72,20 @@ export function SourceFilteredTable({
   });
   const label = (value: string) => translateHeader(lang, value);
   const displayDate = (value: string | null) => value ? value.slice(0, 10) : "—";
+  const invoiceView = activeMode === "advance";
+  const invoiceLabels = useErpScreen("pis", lang as never);
+  const invoiceIds = JSON.stringify([...new Set(uniqueRows.map(row => String(row.id)))].sort());
+  const invoiceHistory = usePurchaseInvoiceHistory(invoiceIds, invoiceView, invoiceRefresh);
+  const invoiceCell = (row: any, section: "invoice" | "paid" | "remaining") => {
+    const history = invoiceHistory[String(row.id)];
+    return <PurchaseInvoiceSection compact lang={lang} section={section}
+      summary={purchaseInvoiceSummary(row, history?.payments ?? null, invoiceFinalCurrency?.(row) ?? "", history?.complete ?? false)}
+      loading={!history || history.loading} />;
+  };
+
 
   return (
-    <div className="mx-6 mb-6 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+    <div dir={invoiceLabels.dir} className="mx-2 mb-6 sm:mx-6 min-w-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
       {/* ── Blue Selector Bar Matching Design (❶ All Sources, ❷ Purchase Booking, ❸ Local Purchase) ── */}
       <div className="bg-[#1e40af] text-white px-5 py-3 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -130,28 +149,28 @@ export function SourceFilteredTable({
         {/* VIEW 1: ALL SOURCES (JOURNAL)                                             */}
         {/* ========================================================================= */}
         {sourceFilter === "all" && (
-          <table className="w-full min-w-[1350px] border-collapse text-left text-xs">
+          <table data-no-cards={invoiceView || undefined} className="w-full min-w-[1350px] border-collapse text-left text-xs">
             <thead>
               <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
-                <th className="py-3 px-3 border-r border-amber-300">Bill No</th>
-                <th className="py-3 px-2 border-r border-amber-300 text-center">Source</th>
+                <th className="py-3 px-3 border-r border-amber-300">{label("Bill No")}</th>
+                <th className="py-3 px-2 border-r border-amber-300 text-center">{label("Source")}</th>
                 <th className="py-3 px-2.5 border-r border-amber-300">{label("Date")}</th>
-                <th className="py-3 px-2.5 border-r border-amber-300">Country / Branch</th>
-                <th className="py-3 px-3 border-r border-amber-300">Supplier</th>
-                <th className="py-3 px-3 border-r border-amber-300">Goods Name</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300">Qty</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300">Unit</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300">Gross kg</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300">Net kg</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300">Currency</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300">Bill Total</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300">Paid</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300">Balance</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300 font-mono">DR Account</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300 font-mono">CR Account</th>
+                <th className="py-3 px-2.5 border-r border-amber-300">{label("Country / Branch")}</th>
+                <th className="py-3 px-3 border-r border-amber-300">{label("Supplier")}</th>
+                <th className="py-3 px-3 border-r border-amber-300">{label("Goods Name")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300">{label("Qty")}</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300">{label("Unit")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300">{label("Gross kg")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300">{label("Net kg")}</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300">{label("Currency")}</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300">{invoiceView ? invoiceLabels.t("invoice", "Purchase Invoice") : "Bill Total"}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300">{invoiceView ? invoiceLabels.t("paid", "Invoice Paid") : "Paid"}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300">{invoiceView ? invoiceLabels.t("remaining", "Invoice Remaining") : "Balance"}</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300 font-mono">{label("DR Account")}</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300 font-mono">{label("CR Account")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300">{activeMode === "remaining" ? label("REMAINING DUE DATE") : label("DUE DATE")} / {label("Status")}</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300">Exchange Rate</th>
-                <th className="py-3 px-3 text-center">Journal</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300">{label("Exchange Rate")}</th>
+                <th className="py-3 px-3 text-center">{label("Journal")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
@@ -196,9 +215,9 @@ export function SourceFilteredTable({
                     <td className="py-3 px-2 text-right font-mono">{grossKg == null ? "—" : fmtQty(grossKg)}</td>
                     <td className="py-3 px-2 text-right font-mono">{netKg == null ? "—" : fmtQty(netKg)}</td>
                     <td className="py-3 px-2 text-center font-bold text-indigo-600">{ccy}</td>
-                    <td className="py-3 px-2.5 text-right font-mono font-black">{fmt(total)}</td>
-                    <td className="py-3 px-2 text-right font-mono font-bold text-emerald-600">{fmt(paid)}</td>
-                    <td className="py-3 px-2 text-right font-mono font-bold text-rose-600">{fmt(bal)}</td>
+                    <td className="py-3 px-2.5 text-right font-mono font-black">{invoiceView ? invoiceCell(r, "invoice") : <>{fmt(total)}</>}</td>
+                    <td className="py-3 px-2 text-right font-mono font-bold text-emerald-600">{invoiceView ? invoiceCell(r, "paid") : <>{fmt(paid)}</>}</td>
+                    <td className="py-3 px-2 text-right font-mono font-bold text-rose-600">{invoiceView ? invoiceCell(r, "remaining") : <>{fmt(bal)}</>}</td>
                     <td className="py-3 px-2 text-center font-mono text-slate-500">{dr}</td>
                     <td className="py-3 px-2 text-center font-mono text-slate-500">{cr}</td>
                     <td className="py-3 px-2.5 text-center">
@@ -233,30 +252,30 @@ export function SourceFilteredTable({
           <RemainingBookingTable rows={rows} loadingRecords={loadingRecords} dueBills={dueBills} lang={lang} onSelectOrder={onSelectOrder} onSelectLoading={onSelectLoading} />
         )}
         {sourceFilter === "purchase_booking" && activeMode !== "remaining" && (
-          <table className="w-full min-w-[1700px] border-collapse text-left text-xs">
+          <table data-no-cards={invoiceView || undefined} className="w-full min-w-[1700px] border-collapse text-left text-xs">
             <thead>
               <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
-                <th className="py-3 px-3 border-r border-amber-300">Bill No</th>
-                <th className="py-3 px-2.5 border-r border-amber-300">Date</th>
-                <th className="py-3 px-2.5 border-r border-amber-300">Country / Branch</th>
-                <th className="py-3 px-3 border-r border-amber-300">Supplier</th>
-                <th className="py-3 px-3 border-r border-amber-300">Goods Name</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300">Qty</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300">Unit</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300">Gross kg</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300">Net kg</th>
+                <th className="py-3 px-3 border-r border-amber-300">{label("Bill No")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300">{label("Date")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300">{label("Country / Branch")}</th>
+                <th className="py-3 px-3 border-r border-amber-300">{label("Supplier")}</th>
+                <th className="py-3 px-3 border-r border-amber-300">{label("Goods Name")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300">{label("Qty")}</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300">{label("Unit")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300">{label("Gross kg")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300">{label("Net kg")}</th>
                 
                 {/* ── Same-Row Grouped Loading & Receiving ── */}
                 <th className="py-3 px-4 border-r border-amber-300 bg-amber-200/90 text-center min-w-[340px]">
                   {label("Loading & Receiving")}
                 </th>
 
-                <th className="py-3 px-2 text-center border-r border-amber-300">Currency</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300">Exchange Rate</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300">Bill Total</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300">Paid</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300">Balance</th>
-                <th className="py-3 px-3 text-center">Journal</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300">{label("Currency")}</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300">{label("Exchange Rate")}</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300">{invoiceView ? invoiceLabels.t("invoice", "Purchase Invoice") : "Bill Total"}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300">{invoiceView ? invoiceLabels.t("paid", "Invoice Paid") : "Paid"}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300">{invoiceView ? invoiceLabels.t("remaining", "Invoice Remaining") : "Balance"}</th>
+                <th className="py-3 px-3 text-center">{label("Journal")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
@@ -296,9 +315,9 @@ export function SourceFilteredTable({
 
                     <td className="py-3 px-2 text-center font-bold text-indigo-600">{ccy}</td>
                     <td className="py-3 px-2 text-center font-mono">{exRate}</td>
-                    <td className="py-3 px-2.5 text-right font-mono font-black">{fmt(total)}</td>
-                    <td className="py-3 px-2 text-right font-mono font-bold text-emerald-600">{fmt(paid)}</td>
-                    <td className="py-3 px-2 text-right font-mono font-bold text-rose-600">{fmt(bal)}</td>
+                    <td className="py-3 px-2.5 text-right font-mono font-black">{invoiceView ? invoiceCell(r, "invoice") : <>{fmt(total)}</>}</td>
+                    <td className="py-3 px-2 text-right font-mono font-bold text-emerald-600">{invoiceView ? invoiceCell(r, "paid") : <>{fmt(paid)}</>}</td>
+                    <td className="py-3 px-2 text-right font-mono font-bold text-rose-600">{invoiceView ? invoiceCell(r, "remaining") : <>{fmt(bal)}</>}</td>
                     <td className="py-3 px-3 text-center">
                       <button
                         type="button"
@@ -319,23 +338,23 @@ export function SourceFilteredTable({
         {/* VIEW 3: LOCAL PURCHASE                                                    */}
         {/* ========================================================================= */}
         {sourceFilter === "local_purchase" && (
-          <table className="w-full min-w-[1300px] border-collapse text-left text-xs">
+          <table data-no-cards={invoiceView || undefined} className="w-full min-w-[1300px] border-collapse text-left text-xs">
             <thead>
               <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
-                <th className="py-3 px-3 border-r border-amber-300">Bill No</th>
-                <th className="py-3 px-2.5 border-r border-amber-300">Date</th>
-                <th className="py-3 px-2.5 border-r border-amber-300">Country / Branch</th>
-                <th className="py-3 px-3 border-r border-amber-300">Supplier</th>
-                <th className="py-3 px-3 border-r border-amber-300">Goods Name</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300">Qty</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300">Unit</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300">Gross kg</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300">Net kg</th>
+                <th className="py-3 px-3 border-r border-amber-300">{label("Bill No")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300">{label("Date")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300">{label("Country / Branch")}</th>
+                <th className="py-3 px-3 border-r border-amber-300">{label("Supplier")}</th>
+                <th className="py-3 px-3 border-r border-amber-300">{label("Goods Name")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300">{label("Qty")}</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300">{label("Unit")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300">{label("Gross kg")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300">{label("Net kg")}</th>
                 <th className="py-3 px-4 border-r border-amber-300 bg-amber-200/90 text-center min-w-[340px]">{label("Loading & Receiving")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300">Bill Total</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300">Paid</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300">Balance</th>
-                <th className="py-3 px-3 text-center">Journal</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300">{invoiceView ? invoiceLabels.t("invoice", "Purchase Invoice") : "Bill Total"}</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300">{invoiceView ? invoiceLabels.t("paid", "Invoice Paid") : "Paid"}</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300">{invoiceView ? invoiceLabels.t("remaining", "Invoice Remaining") : "Balance"}</th>
+                <th className="py-3 px-3 text-center">{label("Journal")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
@@ -369,9 +388,9 @@ export function SourceFilteredTable({
                     <td className="py-2.5 px-3 bg-slate-50/70 dark:bg-slate-900/60 border-r border-slate-200 dark:border-slate-800 align-top">
                       <LoadingReceivingCell row={r} loadingRecords={loadingRecords} lang={lang} />
                     </td>
-                    <td className="py-3 px-3 text-right font-mono font-black">{fmt(total)} {ccy}</td>
-                    <td className="py-3 px-2.5 text-right font-mono font-bold text-emerald-600">{fmt(paid)} {ccy}</td>
-                    <td className="py-3 px-2.5 text-right font-mono font-bold text-rose-600">{fmt(bal)} {ccy}</td>
+                    <td className="py-3 px-3 text-right font-mono font-black">{invoiceView ? invoiceCell(r, "invoice") : <>{fmt(total)} {ccy}</>}</td>
+                    <td className="py-3 px-2.5 text-right font-mono font-bold text-emerald-600">{invoiceView ? invoiceCell(r, "paid") : <>{fmt(paid)} {ccy}</>}</td>
+                    <td className="py-3 px-2.5 text-right font-mono font-bold text-rose-600">{invoiceView ? invoiceCell(r, "remaining") : <>{fmt(bal)} {ccy}</>}</td>
                     <td className="py-3 px-3 text-center">
                       <button
                         type="button"
