@@ -3730,6 +3730,9 @@ export type UiKey =
   | "prep.staff_users"
   | "prep.open_form_report"
   | "prep.no_ledger_data"
+  | "prep.no_records_available"
+  | "prep.expenses_bill_unavailable"
+  | "tdoc.save_first"
   | "prep.customer_ledger_title"
   | "prep.customer_ledger_sub"
   | "prep.customer_ledger_desc"
@@ -31408,6 +31411,8 @@ const en: Dict = {
   "prep.open_form_report": "Open Form / Report",
 
   "prep.no_ledger_data": "No ledger data available.",
+  "prep.no_records_available": "No records are available for this report.",
+  "prep.expenses_bill_unavailable": "The Expenses Bill report opens when expense data is available in the system.",
 
   "prep.customer_ledger_title": "Customer Ledger Report & Account Statement",
 
@@ -57699,6 +57704,8 @@ const ur: Dict = {
   "prep.open_form_report": "فارم / رپورٹ کھولیں",
 
   "prep.no_ledger_data": "کوئی لیجر ڈیٹا دستیاب نہیں۔",
+  "prep.no_records_available": "اس رپورٹ کے لیے کوئی ریکارڈ دستیاب نہیں۔",
+  "prep.expenses_bill_unavailable": "اخراجات کا بل رپورٹ اس وقت کھلتی ہے جب نظام میں اخراجات کا ڈیٹا دستیاب ہو۔",
 
   "prep.customer_ledger_title": "کسٹمر لیجر رپورٹ اور اکاؤنٹ اسٹیٹمنٹ",
 
@@ -84074,6 +84081,8 @@ const ar: Dict = {
   "prep.open_form_report": "فتح النموذج / التقرير",
 
   "prep.no_ledger_data": "لا توجد بيانات دفتر الأستاذ متاحة.",
+  "prep.no_records_available": "لا توجد سجلات متاحة لهذا التقرير.",
+  "prep.expenses_bill_unavailable": "يُفتح تقرير فاتورة المصروفات عندما تتوفر بيانات المصروفات في النظام.",
 
   "prep.customer_ledger_title": "تقرير دفتر أستاذ العميل وكشف الحساب",
 
@@ -110499,6 +110508,8 @@ const fa: Dict = {
   "prep.open_form_report": "باز کردن فرم / گزارش",
 
   "prep.no_ledger_data": "هیچ داده دفتر کلی در دسترس نیست.",
+  "prep.no_records_available": "هیچ رکوردی برای این گزارش در دسترس نیست.",
+  "prep.expenses_bill_unavailable": "گزارش صورتحساب هزینه‌ها زمانی باز می‌شود که داده‌های هزینه در سیستم موجود باشد.",
 
   "prep.customer_ledger_title": "گزارش دفتر کل مشتری و صورت‌حساب",
 
@@ -136922,6 +136933,8 @@ const ps: Dict = {
   "prep.open_form_report": "فورمه / راپور پرانیزئ",
 
   "prep.no_ledger_data": "د لېجر هیڅ معلومات شتون نلري.",
+  "prep.no_records_available": "د دې راپور لپاره هیڅ ریکارډ شتون نلري.",
+  "prep.expenses_bill_unavailable": "د لګښتونو بل راپور هغه مهال پرانستل کیږي چې په سیستم کې د لګښتونو معلومات شتون ولري.",
 
   "prep.customer_ledger_title": "د پیرودونکي لېجر راپور او د حساب بیان",
 

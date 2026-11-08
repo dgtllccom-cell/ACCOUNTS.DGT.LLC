@@ -30,7 +30,7 @@ import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-wind
 import { openAccountA4ReportWindow } from "@/lib/reports/open-account-a4-report-window";
 import {
   DEFAULT_INVOICE_TEMPLATE_ID, DEFAULT_TEMPLATE_FLAGS, listTemplatesForDocType,
-  openInvoiceDocument, type InvoiceTemplateId,
+  openInvoiceDocument, resolveInvoiceTemplateDefault, type InvoiceTemplateId,
 } from "@/lib/reports/invoice-templates";
 import { purchaseOrderToTradeInput } from "@/lib/reports/trade-documents/from-transaction";
 import { resolveDocumentBranding } from "@/lib/reports/resolve-document-branding";
@@ -155,6 +155,8 @@ export default function PrintReportsHubPage() {
   const [tradeDocPick, setTradeDocPick] = useState<TradeDocType | null>(null);
   const [tradeDocTemplateId, setTradeDocTemplateId] = useState<InvoiceTemplateId>(DEFAULT_INVOICE_TEMPLATE_ID);
   const [tradeDocBusy, setTradeDocBusy] = useState(false);
+  // True once the user picks a template: a late saved-default lookup must not replace that choice.
+  const tradeDocTouchedRef = useRef(false);
 
   useEffect(() => {
     fetch("/api/erp/auth/session", { credentials: "include" })
@@ -256,7 +258,7 @@ export default function PrintReportsHubPage() {
   
   const scopeCountry = selectedCountry === "All Countries" ? "" : selectedCountry;
   const scopeBranch = selectedBranch === "All Branches" ? "" : selectedBranch;
-  const noData = (label: string) => alert(`No ${label} records available for this report.`);
+  const noData = (_label: string) => alert(tp("prep.no_records_available", "No records are available for this report."));
 
   // 1. Customer Ledger Report — real roznamcha lines only
   const handlePrintCustomerLedger = useCallback(() => {
@@ -610,9 +612,21 @@ export default function PrintReportsHubPage() {
   // 10. Proforma Invoice / 12. Trade Document — the user picks a template (default Classic), then the
   // document opens through the template-aware engine (openInvoiceDocument). The data mapping is unchanged.
   const openTradeDoc = useCallback((docType: TradeDocType) => {
-    if (!orders[0]) return noData("purchase order (trade document)");
+    const o = orders[0];
+    if (!o) return noData("purchase order (trade document)");
+    tradeDocTouchedRef.current = false;
     setTradeDocTemplateId(DEFAULT_INVOICE_TEMPLATE_ID);
     setTradeDocPick(docType);
+    // The saved default for this document type and scope is the starting template, as in the Document Center.
+    void resolveInvoiceTemplateDefault({
+      documentType: docType,
+      companyId: o.company_id || o.companyId || null,
+      countryId: o.country_id || o.countryId || null,
+      countryBranchId: o.country_branch_id || null,
+      cityBranchId: o.city_branch_id || null,
+    }).then((resolved) => {
+      if (!tradeDocTouchedRef.current) setTradeDocTemplateId(resolved.templateId);
+    });
   }, [orders]);
   const confirmTradeDoc = useCallback(async () => {
     const o = orders[0];
@@ -638,7 +652,7 @@ export default function PrintReportsHubPage() {
 
   // 11. Expenses Bill
   const handlePrintExpenses = useCallback(() => {
-    alert("Expenses Bill Report — Opens when expense data is available in the system.");
+    alert(tp("prep.expenses_bill_unavailable", "The Expenses Bill report opens when expense data is available in the system."));
   }, []);
 
   // 12. Trade Document (Purchase Contract)
@@ -1471,7 +1485,7 @@ export default function PrintReportsHubPage() {
                     <button
                       key={def.id}
                       type="button"
-                      onClick={() => setTradeDocTemplateId(def.id)}
+                      onClick={() => { tradeDocTouchedRef.current = true; setTradeDocTemplateId(def.id); }}
                       title={tp(def.descKey, def.descFallback)}
                       className={`relative flex flex-col items-center gap-1 rounded-lg border p-1.5 transition ${on ? "border-blue-500 ring-2 ring-blue-200 dark:ring-blue-900" : "border-slate-200 dark:border-slate-700 hover:border-slate-300"}`}
                     >
