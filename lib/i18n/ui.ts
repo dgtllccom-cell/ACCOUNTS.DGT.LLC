@@ -13119,6 +13119,16 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "pis.title": "Invoice summary",
+  "pis.invoice": "Purchase Invoice",
+  "pis.paid": "Invoice Paid",
+  "pis.remaining": "Invoice Remaining",
+  "pis.purchase_amount": "Purchase currency",
+  "pis.invoice_rate": "Saved invoice rate",
+  "pis.final_amount": "Final currency",
+  "pis.payments": "Posted payments",
+  "pis.payment_rate": "Posted payment rate",
+
   "lp.queue_transfer": "Transfer for Review",
   "lp.review_transfer": "Review Transfer",
   "lp.print_invoice": "Print Invoice",
@@ -39577,7 +39587,18 @@ const en: Dict = {
 
 const ur: Dict = {
 
+
 ...en,
+  "pis.title": "انوائس کا خلاصہ",
+  "pis.invoice": "خریداری انوائس",
+  "pis.paid": "انوائس کی ادا شدہ رقم",
+  "pis.remaining": "انوائس کی باقی رقم",
+  "pis.purchase_amount": "خریداری کی کرنسی",
+  "pis.invoice_rate": "انوائس کی محفوظ شرح",
+  "pis.final_amount": "حتمی کرنسی",
+  "pis.payments": "درج شدہ ادائیگیاں",
+  "pis.payment_rate": "ادائیگی کی درج شدہ شرح",
+
   "lp.queue_transfer": "جانچ کے لیے منتقل کریں",
   "lp.review_transfer": "منتقلی کی جانچ",
   "lp.print_invoice": "انوائس پرنٹ کریں",
@@ -66004,7 +66025,18 @@ const ur: Dict = {
 
 const ar: Dict = {
 
+
 ...en,
+  "pis.title": "ملخص الفاتورة",
+  "pis.invoice": "فاتورة الشراء",
+  "pis.paid": "المدفوع من الفاتورة",
+  "pis.remaining": "المتبقي من الفاتورة",
+  "pis.purchase_amount": "عملة الشراء",
+  "pis.invoice_rate": "سعر صرف الفاتورة المحفوظ",
+  "pis.final_amount": "العملة النهائية",
+  "pis.payments": "الدفعات المرحّلة",
+  "pis.payment_rate": "سعر صرف الدفعة المرحّلة",
+
   "lp.queue_transfer": "إرسال للمراجعة",
   "lp.review_transfer": "مراجعة التحويل",
   "lp.print_invoice": "طباعة الفاتورة",
@@ -92432,7 +92464,18 @@ const ar: Dict = {
 
 const fa: Dict = {
 
+
 ...en,
+  "pis.title": "خلاصه فاکتور",
+  "pis.invoice": "فاکتور خرید",
+  "pis.paid": "مبلغ پرداخت‌شده فاکتور",
+  "pis.remaining": "مانده فاکتور",
+  "pis.purchase_amount": "ارز خرید",
+  "pis.invoice_rate": "نرخ ذخیره‌شده فاکتور",
+  "pis.final_amount": "ارز نهایی",
+  "pis.payments": "پرداخت‌های ثبت‌شده",
+  "pis.payment_rate": "نرخ ثبت‌شده پرداخت",
+
   "lp.queue_transfer": "انتقال برای بررسی",
   "lp.review_transfer": "بررسی انتقال",
   "lp.print_invoice": "چاپ فاکتور",
@@ -118859,7 +118902,18 @@ const fa: Dict = {
 
 const ps: Dict = {
 
+
 ...en,
+  "pis.title": "د انوایس لنډیز",
+  "pis.invoice": "د پېرود انوایس",
+  "pis.paid": "د انوایس ورکړل شوې پیسې",
+  "pis.remaining": "د انوایس پاتې پیسې",
+  "pis.purchase_amount": "د پېرود اسعار",
+  "pis.invoice_rate": "د انوایس خوندي شوی نرخ",
+  "pis.final_amount": "وروستي اسعار",
+  "pis.payments": "ثبت شوې تادیې",
+  "pis.payment_rate": "د تادیې ثبت شوی نرخ",
+
   "lp.queue_transfer": "د کتنې لپاره ولېږدئ",
   "lp.review_transfer": "د لېږد کتنه",
   "lp.print_invoice": "د انوایس چاپ",

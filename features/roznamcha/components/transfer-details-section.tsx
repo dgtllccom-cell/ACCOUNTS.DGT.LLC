@@ -26,6 +26,7 @@ export interface BankItem {
 interface TransferDetailsSectionProps {
   bankName: string;
   onBankNameChange: (name: string) => void;
+  onBankRecordChange?: (bank: BankItem | null) => void;
   transferMode: string;
   onTransferModeChange: (mode: string) => void;
   transactionReference: string;
@@ -43,6 +44,7 @@ interface TransferDetailsSectionProps {
 export function TransferDetailsSection({
   bankName,
   onBankNameChange,
+  onBankRecordChange,
   transferMode,
   onTransferModeChange,
   transactionReference,
@@ -305,6 +307,7 @@ export function TransferDetailsSection({
       const created = res?.bank || res;
       await fetchBanks();
       onBankNameChange(created?.bank_name || trimmed);
+      onBankRecordChange?.(created?.id ? created : null);
       setNewBankName("");
       setNewBankCode("");
       setNewBankBranch("");
@@ -351,6 +354,7 @@ export function TransferDetailsSection({
       await fetchBanks();
       if (bankName === editingBank.bank_name) {
         onBankNameChange(editBankName.trim());
+        onBankRecordChange?.({ ...editingBank, bank_name: editBankName.trim() });
       }
       setEditingBank(null);
     } catch (err: any) {
@@ -491,6 +495,7 @@ export function TransferDetailsSection({
                       type="button"
                       onClick={() => {
                         onBankNameChange(opt.name);
+                        onBankRecordChange?.(opt.record || null);
                         setBankMenuOpen(false);
                         setShowNewBankForm(false);
                       }}

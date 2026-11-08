@@ -195,16 +195,16 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: nt("Daily Payment Entry"),
     icon: FileText,
     children: [
-      { label: nt("Daily Cash Entry (Roznamcha)"), href: "/dashboard/roznamcha/cash-entry", icon: Wallet },
+      { label: nt("Daily Cash Entry (Roznamcha)"), href: "/dashboard/roznamcha/cash-entry", icon: Wallet, upgraded: true },
       {
         key: "sub-purchase-payments",
         label: nt("Purchase Payments"),
         icon: Receipt,
         children: [
-          { label: nt("Advance Payment"), href: "/dashboard/journal/purchase-order-payment/advance", icon: Receipt, },
+          { label: nt("Advance Payment"), href: "/dashboard/journal/purchase-order-payment/advance", icon: Receipt, upgraded: true },
           { label: nt("Endorsement Payment"), href: "/dashboard/journal/purchase-order-payment/endorsement", icon: FileCheck2 },
           { label: nt("Credit Payment"), href: "/dashboard/journal/purchase-order-payment/charges", icon: CreditCard },
-          { label: nt("Remaining Payment"), href: "/dashboard/journal/purchase-order-payment/remaining", icon: CreditCard, },
+          { label: nt("Remaining Payment"), href: "/dashboard/journal/purchase-order-payment/remaining", icon: CreditCard, upgraded: true },
           { label: nt("Purchase Payment History"), href: "/dashboard/journal/purchase-order-payment/history", icon: Clock },
           { label: nt("Final Payment"), href: "/dashboard/journal/purchase-order-payment/final", icon: CheckCircle2 },
         ],
@@ -221,7 +221,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: nt("Final Payment"), href: "/dashboard/journal/sales-order-payment/final", icon: CheckCircle2 },
         ],
       },
-      { label: nt("Daily Exchange Rate"), href: "/dashboard/reports/exchange-rate", icon: RefreshCw },
+      { label: nt("Daily Exchange Rate"), href: "/dashboard/reports/exchange-rate", icon: RefreshCw, upgraded: true },
       { label: nt("Money Changer (Currency Exchange)"), href: "/dashboard/roznamcha/money-exchange", icon: ArrowRightLeft },
     ],
   },
@@ -256,10 +256,10 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         label: nt("Purchase Booking"),
         icon: ClipboardList,
         children: [
-          { label: nt("New Booking"), href: "/dashboard/purchase/new-purchase-booking-order", icon: ClipboardList },
+          { label: nt("New Booking"), href: "/dashboard/purchase/new-purchase-booking-order", icon: ClipboardList, upgraded: true },
           { label: nt("Transport Payment Booking"), href: "/dashboard/purchase/transport-payment", icon: Receipt },
-          { label: nt("Loading Booking"), href: "/dashboard/purchase/purchase-loading-records", icon: Truck },
-          { label: nt("Confirmed Booking"), href: "/dashboard/purchase/purchase-confirm", icon: CheckCircle2 },
+          { label: nt("Loading Booking"), href: "/dashboard/purchase/purchase-loading-records", icon: Truck, upgraded: true },
+          { label: nt("Confirmed Booking"), href: "/dashboard/purchase/purchase-confirm", icon: CheckCircle2, upgraded: true },
         ],
       },
       {
@@ -269,8 +269,8 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         tone: "red", // In-progress review: restore default when the Local Purchase checks are cleared.
         children: [
           { label: nt("Local Purchase Bills"), href: "/dashboard/purchase/local-purchase", icon: ShoppingCart },
-          { label: nt("Local Purchase Payment Transfer"), href: "/dashboard/purchase/local-purchase-transfer-payment", icon: ArrowRightLeft },
-          { label: nt("Local Purchase Loading"), href: "/dashboard/purchase/local-purchase-loading", icon: Truck },
+          { label: nt("Local Purchase Payment Transfer"), href: "/dashboard/purchase/local-purchase-transfer-payment", icon: ArrowRightLeft, upgraded: true },
+          { label: nt("Local Purchase Loading"), href: "/dashboard/purchase/local-purchase-loading", icon: Truck, upgraded: true },
           { label: nt("Local Purchase Journal Report"), href: "/dashboard/purchase/local-purchase-journal-report", icon: FileBarChart },
         ],
       },
@@ -300,6 +300,11 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: nt("Local Sales Order"), href: "/dashboard/sales/local-sales", icon: ShoppingCart },
           { label: nt("Sales Order & Payment Transfer"), href: "/dashboard/sales/sales-order", icon: Receipt },
         ],
+      },
+      {
+        label: nt("P/S General Transfer Journal"),
+        href: "/dashboard/purchase/purchase-transit-lane",
+        icon: ArrowRightLeft,
       },
       {
         key: "sub-trade",
@@ -382,7 +387,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         label: nt("Shipping Line"),
         icon: Ship,
         children: [
-          { label: nt("P/S General Transfer"), href: "/dashboard/purchase/purchase-transit-lane", icon: ArrowRightLeft },
           { label: nt("Shipping Lines"), href: "/dashboard/shipping-line", icon: Ship },
           { label: nt("BL Entry"), href: "/dashboard/shipping-line/bl-entry", icon: FileText },
           { label: nt("Track Shipment (Container & Vessel)"), href: "/dashboard/shipping-line/tracking?type=vessel", icon: Compass, },
@@ -431,8 +435,8 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         children: [
           { label: nt("Employees Directory & Registration"), href: "/dashboard/general-office/employees", icon: Users },
           { label: nt("Employee KYC & Documents"), href: "/dashboard/general-office/employee-kyc", icon: FileText },
-          { label: nt("Attendance & Leave Management"), href: "/dashboard/general-office/leave-attendance", icon: CalendarCheck, upgraded: true },
-          { label: nt("Payroll Runs & Salary Slips"), href: "/dashboard/general-office/payroll", icon: Banknote, upgraded: true },
+          { label: nt("Attendance & Leave Management"), href: "/dashboard/general-office/leave-attendance", icon: CalendarCheck },
+          { label: nt("Payroll Runs & Salary Slips"), href: "/dashboard/general-office/payroll", icon: Banknote },
           { label: nt("UAE WPS & SIF"), href: "/dashboard/general-office/wps-sif", icon: Landmark },
           { label: nt("Employee Performance & Appraisal"), href: "/dashboard/general-office/performance", icon: Award },
           { label: nt("Departments & Designations"), href: "/dashboard/general-office/departments", icon: Building2 },
@@ -440,7 +444,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: nt("Share External Forms"), href: "/dashboard/general-office/employees?tab=share-forms", icon: ArrowRightLeft },
         ],
       },
-      { label: nt("Goods Master"), href: "/dashboard/settings/management/goods", icon: Package, upgraded: true },
+      { label: nt("Goods Master"), href: "/dashboard/settings/management/goods", icon: Package },
       { label: nt("CHS Product Management"), href: "/dashboard/settings/management/chs-products", icon: Boxes },
       { label: nt("Dynamic Location & Route Management"), href: "/dashboard/settings/location-master", icon: MapPin, },
       { label: nt("Reusable Route Templates"), href: "/dashboard/settings/route-templates", icon: Route, },
@@ -526,7 +530,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: nt("AI Voice & Text Entry"), href: "/dashboard/ai-entry/voice-text", icon: Sparkles },
       { label: nt("AI Approvals & Workflow"), href: "/dashboard/ai-entry/approvals", icon: CheckSquare },
       { label: nt("AI Calls Center"), href: "/dashboard/customer-inquiries/calls", icon: PhoneCall },
-      { label: nt("Document Intelligence AI"), href: "/dashboard/document-intelligence", icon: FileText, upgraded: true },
+      { label: nt("Document Intelligence AI"), href: "/dashboard/document-intelligence", icon: FileText },
     ],
   },
   {
@@ -566,10 +570,10 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: nt("All Messages"),
     icon: MessageSquare,
     children: [
-      { label: nt("Email"), href: "/dashboard/messages/email", icon: Mail, upgraded: true },
+      { label: nt("Email"), href: "/dashboard/messages/email", icon: Mail },
       { label: nt("WhatsApp"), href: "/dashboard/messages/whatsapp", icon: MessageCircle },
       { label: nt("Communication Center Hub"), href: "/dashboard/communication-center", icon: MessageSquare },
-      { label: nt("Customer Inquiries & Calls"), href: "/dashboard/customer-inquiries", icon: PhoneCall, upgraded: true },
+      { label: nt("Customer Inquiries & Calls"), href: "/dashboard/customer-inquiries", icon: PhoneCall },
       { label: nt("Inquiry Follow-ups"), href: "/dashboard/customer-inquiries/follow-ups", icon: Clock },
       { label: nt("Meeting & Conversation Intelligence"), href: "/dashboard/customer-inquiries/intelligence", icon: Sparkles },
       { label: nt("Old Lead Reactivation"), href: "/dashboard/customer-inquiries/reactivation", icon: RotateCcw },
@@ -618,7 +622,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     children: [
       { label: nt("System Settings Hub"), href: "/dashboard/settings", icon: Settings },
       { label: nt("Dashboard Settings"), href: "/dashboard/settings/dashboard-settings", icon: Sliders },
-      { label: nt("Company Settings"), href: "/dashboard/settings/company", icon: Building2, upgraded: true },
+      { label: nt("Company Settings"), href: "/dashboard/settings/company", icon: Building2 },
       { label: nt("Account Types Setup"), href: "/dashboard/settings/account-type", icon: BookOpen },
       { label: nt("Locations & Cities"), href: "/dashboard/settings/locations", icon: Globe2 },
       { label: nt("Country Tax & Currency"), href: "/dashboard/settings/tax", icon: Landmark },
@@ -695,13 +699,33 @@ export const CRM_REPORT_CENTER_OPTIONS = [
 ];
 
 /* ---------------- UPGRADED marker ---------------- */
-/** Green status dots are hidden globally until explicitly requested for an individual menu. */
-function hasUpgraded(_item: SidebarMenuItem | SidebarSubItem | SidebarDeepChild): boolean {
+function hasUpgraded(item: SidebarMenuItem | SidebarSubItem | SidebarDeepChild): boolean {
+  if (item.upgraded) return true;
+  if ("children" in item && Array.isArray(item.children)) {
+    return item.children.some((c) => hasUpgraded(c));
+  }
   return false;
 }
 
-function UpgradedMark(_props: { lang: string }) {
-  return null;
+function UpgradedMark({ lang, dotOnly = false }: { lang?: string; dotOnly?: boolean }) {
+  if (dotOnly) {
+    return (
+      <span className="relative flex h-2 w-2 ms-auto shrink-0 me-1" title={nt("Contains New ERP Pages")}>
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700/60 shadow-xs ms-auto shrink-0"
+      title={nt("New ERP Page")}
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+      <span>{nt("NEW")}</span>
+    </span>
+  );
 }
 
 /* ---------------- Helper to check path matches ---------------- */
@@ -1305,7 +1329,7 @@ export function DigitalDockPremiumSidebar({
                       <span className={`truncate text-start tracking-tight ${isRed ? "text-red-600 font-bold" : ""}`}>
                         {tr(item.label)}
                       </span>
-                      {hasUpgraded(item) && <UpgradedMark lang={lang} />}
+                      {hasUpgraded(item) && <UpgradedMark lang={lang} dotOnly />}
                     </div>
 
                     
@@ -1366,7 +1390,7 @@ export function DigitalDockPremiumSidebar({
                                     {tr(sub.label)}
                                   </span>
                                   
-                                  {hasUpgraded(sub) && !isSubNew && <UpgradedMark lang={lang} />}
+                                  {hasUpgraded(sub) && !isSubNew && <UpgradedMark lang={lang} dotOnly />}
                                 </div>
                                 {isSubOpen ? (
                                   <ChevronDown className="h-3.5 w-3.5 shrink-0 text-black" />
@@ -1498,7 +1522,7 @@ export function DigitalDockPremiumSidebar({
                       <span className="truncate text-start tracking-tight">
                         {tr(item.label)}
                       </span>
-                      {hasUpgraded(item) && <UpgradedMark lang={lang} />}
+                      {hasUpgraded(item) && <UpgradedMark lang={lang} dotOnly />}
                     </div>
 
                     <ChevronRight className={`h-4 w-4 shrink-0 transition-transform duration-200 rtl:rotate-180 ${

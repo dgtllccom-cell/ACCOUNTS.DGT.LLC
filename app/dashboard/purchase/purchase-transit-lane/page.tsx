@@ -1,7 +1,7 @@
 import { PurchaseTransitLaneView } from "@/features/purchases/components/purchase-transit-lane-view";
 import { requireErpSession } from "@/lib/auth/session";
 
-export const metadata = { title: "Purchase & Sales — P/S General Transfer" };
+export const metadata = { title: "Purchase & Sales — P/S General Transfer Journal" };
 
 export const dynamic = "force-dynamic";
 
@@ -20,5 +20,5 @@ export default async function PurchaseTransitLanePage({
     sp.source === "local_sales"
       ? (sp.source as "local_purchase" | "purchase_booking" | "sales_booking" | "local_sales")
       : null;
-  return <PurchaseTransitLaneView lang={session.preferredLanguage ?? "en"} source={src} />;
+  return <PurchaseTransitLaneView lang={session.preferredLanguage ?? "en"} source={src} session={session} />;
 }

@@ -84,7 +84,7 @@ export async function ensureLaneSchema(sql: Sql) {
       BEGIN
         IF (SELECT count(*) FROM information_schema.columns
             WHERE table_schema = 'public' AND table_name = 'purchase_lane_loads'
-              AND column_name IN ('sales_order_id', 'remaining_quantity', 'transfer_destination')) < 3
+              AND column_name IN ('sales_order_id', 'remaining_quantity', 'transfer_destination', 'truck_number', 'driver_name', 'driver_phone', 'loading_date')) < 7
           OR NOT EXISTS (
             SELECT 1 FROM pg_constraint
             WHERE conrelid = 'public.purchase_lane_loads'::regclass
@@ -101,6 +101,10 @@ export async function ensureLaneSchema(sql: Sql) {
             ADD COLUMN IF NOT EXISTS sales_order_id uuid REFERENCES public.sales_orders(id) ON DELETE SET NULL,
             ADD COLUMN IF NOT EXISTS remaining_quantity numeric NOT NULL DEFAULT 0,
             ADD COLUMN IF NOT EXISTS transfer_destination text,
+            ADD COLUMN IF NOT EXISTS truck_number text,
+            ADD COLUMN IF NOT EXISTS driver_name text,
+            ADD COLUMN IF NOT EXISTS driver_phone text,
+            ADD COLUMN IF NOT EXISTS loading_date date,
             DROP CONSTRAINT IF EXISTS purchase_lane_loads_source_type_check,
             ADD CONSTRAINT purchase_lane_loads_source_type_check
               CHECK (source_type IN ('purchase_booking', 'local_purchase', 'sales_booking', 'local_sales')),
@@ -116,7 +120,8 @@ export async function ensureLaneFromSalesOrder(sql: Sql, salesOrderId: string, s
   const rows = await sql`
     insert into public.purchase_lane_loads (
       source_type, source_id, sales_order_id, purchase_ref_no, supplier_name, goods_name,
-      bl_number, container_number, loaded_quantity, remaining_quantity, unit, gross_weight, net_weight,
+      bl_number, container_number, truck_number, driver_name, driver_phone, loading_date,
+      loaded_quantity, remaining_quantity, unit, gross_weight, net_weight,
       origin_text, destination_text, transport_mode, lane_status, current_location, owner_type,
       owner_country_id, owner_country_branch_id, owner_city_branch_id, lane_stock_qty,
       country_id, country_branch_id, city_branch_id, created_by)
@@ -126,6 +131,10 @@ export async function ensureLaneFromSalesOrder(sql: Sql, salesOrderId: string, s
       coalesce(so.product_summary, so.form_data->'goodsEntries'->0->>'goodsName', so.form_data->'form'->>'goodsName', 'Goods'),
       coalesce(so.form_data->'form'->>'blNumber', so.form_data->>'blNumber', '-'),
       coalesce(so.form_data->'form'->>'containerNumber', so.form_data->>'containerNumber', '-'),
+      coalesce(so.form_data->'form'->>'truckNo', so.form_data->'form'->>'vehicleNumber', so.form_data->>'vehicleNumber'),
+      coalesce(so.form_data->'form'->>'driverName', so.form_data->>'driverName'),
+      coalesce(so.form_data->'form'->>'driverPhone', so.form_data->>'driverPhone'),
+      coalesce((so.form_data->'workflow'->>'loadingDate')::date, (so.form_data->'form'->>'orderDate')::date, so.order_date, so.created_at::date),
       coalesce((so.form_data->'workflow'->>'loadedQuantity')::numeric, so.quantity, 0),
       greatest(0, coalesce(so.quantity, 0) - coalesce((so.form_data->'workflow'->>'loadedQuantity')::numeric, so.quantity, 0)),
       coalesce(so.form_data->'form'->>'unit', so.form_data->'goodsEntries'->0->>'unit', 'PCS'),
@@ -141,7 +150,21 @@ export async function ensureLaneFromSalesOrder(sql: Sql, salesOrderId: string, s
     from public.sales_orders so
     where so.id = ${salesOrderId}::uuid and so.deleted_at is null
       and coalesce(so.form_data->'form'->>'saleSource', so.form_data->>'saleSource', '') <> 'local'
-    on conflict (source_type, source_id) where deleted_at is null do nothing
+    on conflict (source_type, source_id) where deleted_at is null
+    do update set
+      truck_number = coalesce(excluded.truck_number, purchase_lane_loads.truck_number),
+      driver_name = coalesce(excluded.driver_name, purchase_lane_loads.driver_name),
+      driver_phone = coalesce(excluded.driver_phone, purchase_lane_loads.driver_phone),
+      loading_date = coalesce(excluded.loading_date, purchase_lane_loads.loading_date),
+      purchase_ref_no = coalesce(excluded.purchase_ref_no, purchase_lane_loads.purchase_ref_no),
+      goods_name = coalesce(excluded.goods_name, purchase_lane_loads.goods_name),
+      loaded_quantity = coalesce(excluded.loaded_quantity, purchase_lane_loads.loaded_quantity),
+      unit = coalesce(excluded.unit, purchase_lane_loads.unit),
+      gross_weight = coalesce(excluded.gross_weight, purchase_lane_loads.gross_weight),
+      net_weight = coalesce(excluded.net_weight, purchase_lane_loads.net_weight),
+      origin_text = coalesce(excluded.origin_text, purchase_lane_loads.origin_text),
+      destination_text = coalesce(excluded.destination_text, purchase_lane_loads.destination_text),
+      updated_at = now()
     returning id`;
   if (rows[0]) {
     await addEvent(sql, { id: rows[0].id }, { type: "loaded", to: "loaded", detail: { source: "sales_booking", salesOrderId } }, session);
@@ -155,7 +178,8 @@ export async function ensureLaneFromLocalSale(sql: Sql, salesOrderId: string, se
   const rows = await sql`
     insert into public.purchase_lane_loads (
       source_type, source_id, sales_order_id, purchase_ref_no, supplier_name, goods_name,
-      bl_number, container_number, loaded_quantity, remaining_quantity, unit, gross_weight, net_weight,
+      bl_number, container_number, truck_number, driver_name, driver_phone, loading_date,
+      loaded_quantity, remaining_quantity, unit, gross_weight, net_weight,
       origin_text, destination_text, transport_mode, lane_status, current_location, owner_type,
       owner_country_id, owner_country_branch_id, owner_city_branch_id, lane_stock_qty,
       country_id, country_branch_id, city_branch_id, created_by)
@@ -164,6 +188,10 @@ export async function ensureLaneFromLocalSale(sql: Sql, salesOrderId: string, se
       so.customer_name,
       coalesce(so.product_summary, so.form_data->'goodsEntries'->0->>'goodsName', so.form_data->'form'->>'goodsName', 'Local Goods'),
       '-', coalesce(so.form_data->'form'->>'vehicleNumber', '-'),
+      coalesce(so.form_data->'form'->>'vehicleNumber', so.form_data->'form'->>'truckNo'),
+      coalesce(so.form_data->'form'->>'driverName', so.form_data->>'driverName'),
+      coalesce(so.form_data->'form'->>'driverPhone', so.form_data->>'driverPhone'),
+      coalesce((so.form_data->'form'->>'orderDate')::date, so.order_date, so.created_at::date),
       coalesce(so.quantity, 0),
       0,
       coalesce(so.form_data->'form'->>'unit', 'PCS'),
@@ -176,7 +204,19 @@ export async function ensureLaneFromLocalSale(sql: Sql, salesOrderId: string, se
     from public.sales_orders so
     where so.id = ${salesOrderId}::uuid and so.deleted_at is null
       and coalesce(so.form_data->'form'->>'saleSource', so.form_data->>'saleSource', '') = 'local'
-    on conflict (source_type, source_id) where deleted_at is null do nothing
+    on conflict (source_type, source_id) where deleted_at is null
+    do update set
+      truck_number = coalesce(excluded.truck_number, purchase_lane_loads.truck_number),
+      driver_name = coalesce(excluded.driver_name, purchase_lane_loads.driver_name),
+      driver_phone = coalesce(excluded.driver_phone, purchase_lane_loads.driver_phone),
+      loading_date = coalesce(excluded.loading_date, purchase_lane_loads.loading_date),
+      purchase_ref_no = coalesce(excluded.purchase_ref_no, purchase_lane_loads.purchase_ref_no),
+      goods_name = coalesce(excluded.goods_name, purchase_lane_loads.goods_name),
+      loaded_quantity = coalesce(excluded.loaded_quantity, purchase_lane_loads.loaded_quantity),
+      unit = coalesce(excluded.unit, purchase_lane_loads.unit),
+      gross_weight = coalesce(excluded.gross_weight, purchase_lane_loads.gross_weight),
+      net_weight = coalesce(excluded.net_weight, purchase_lane_loads.net_weight),
+      updated_at = now()
     returning id`;
   if (rows[0]) {
     await addEvent(sql, { id: rows[0].id }, { type: "loaded", to: "loaded", detail: { source: "local_sales", salesOrderId } }, session);
@@ -191,7 +231,7 @@ export async function ensureLaneFromLoadingRecord(sql: Sql, loadingRecordId: str
   const rows = await sql`
     insert into public.purchase_lane_loads (
       source_type, source_id, purchase_order_id, purchase_ref_no, loading_record_no, supplier_name, goods_name, goods_id,
-      bl_number, container_number, container_type, loaded_quantity, unit, gross_weight, tare_weight, net_weight,
+      bl_number, container_number, truck_number, driver_name, driver_phone, loading_date, container_type, loaded_quantity, unit, gross_weight, tare_weight, net_weight,
       origin_text, destination_text, transport_mode, lane_status, current_location, owner_type,
       owner_country_id, owner_country_branch_id, owner_city_branch_id, lane_stock_qty,
       country_id, country_branch_id, city_branch_id, created_by)
@@ -200,7 +240,13 @@ export async function ensureLaneFromLoadingRecord(sql: Sql, loadingRecordId: str
       coalesce(po.form_data->'form'->>'supplierName', po.form_data->'form'->>'purchaseAccountName'),
       coalesce(plr.report_payload->>'goodsName', po.form_data->'goodsEntries'->0->>'goodsName', po.form_data->'form'->>'goodsName'),
       plr.receiving_goods_id,
-      coalesce(plr.bl_number, plr.report_payload->>'blNumber'), plr.container_number, plr.container_type,
+      coalesce(plr.bl_number, plr.report_payload->>'blNumber'),
+      plr.container_number,
+      coalesce(plr.vehicle_no, plr.report_payload->>'truckNo', plr.report_payload->>'vehicleNo', plr.container_number),
+      coalesce(plr.driver_name, plr.report_payload->>'driverName'),
+      coalesce(plr.report_payload->>'driverPhone', plr.report_payload->>'driverMobile'),
+      coalesce(plr.loaded_at::date, plr.created_at::date),
+      plr.container_type,
       coalesce(plr.loaded_quantity, 0),
       coalesce(plr.report_payload->>'qtyName', po.form_data->'form'->>'qtyName'),
       coalesce(plr.gross_weight, nullif(plr.report_payload->>'grossWeight','')::numeric),
@@ -215,7 +261,22 @@ export async function ensureLaneFromLoadingRecord(sql: Sql, loadingRecordId: str
     from public.purchase_loading_records plr
     left join public.purchase_orders po on po.id = plr.purchase_order_id
     where plr.id = ${loadingRecordId}::uuid and plr.deleted_at is null and plr.loading_status <> 'cancelled'
-    on conflict (source_type, source_id) where deleted_at is null do nothing
+    on conflict (source_type, source_id) where deleted_at is null
+    do update set
+      truck_number = coalesce(excluded.truck_number, purchase_lane_loads.truck_number),
+      driver_name = coalesce(excluded.driver_name, purchase_lane_loads.driver_name),
+      driver_phone = coalesce(excluded.driver_phone, purchase_lane_loads.driver_phone),
+      loading_date = coalesce(excluded.loading_date, purchase_lane_loads.loading_date),
+      purchase_ref_no = coalesce(excluded.purchase_ref_no, purchase_lane_loads.purchase_ref_no),
+      loading_record_no = coalesce(excluded.loading_record_no, purchase_lane_loads.loading_record_no),
+      goods_name = coalesce(excluded.goods_name, purchase_lane_loads.goods_name),
+      loaded_quantity = coalesce(excluded.loaded_quantity, purchase_lane_loads.loaded_quantity),
+      unit = coalesce(excluded.unit, purchase_lane_loads.unit),
+      gross_weight = coalesce(excluded.gross_weight, purchase_lane_loads.gross_weight),
+      net_weight = coalesce(excluded.net_weight, purchase_lane_loads.net_weight),
+      origin_text = coalesce(excluded.origin_text, purchase_lane_loads.origin_text),
+      destination_text = coalesce(excluded.destination_text, purchase_lane_loads.destination_text),
+      updated_at = now()
     returning id`;
   if (rows[0]) {
     await addEvent(sql, { id: rows[0].id }, { type: "loaded", to: "loaded", detail: { source: "purchase_booking", loadingRecordId } }, session);
@@ -228,18 +289,41 @@ export async function ensureLaneFromLoadingRecord(sql: Sql, loadingRecordId: str
 export async function ensureLaneFromLocalPurchase(sql: Sql, localPurchaseId: string, session: ErpSession): Promise<{ id: string; created: boolean } | null> {
   const rows = await sql`
     insert into public.purchase_lane_loads (
-      source_type, source_id, local_purchase_id, purchase_ref_no, supplier_name, goods_name, goods_id,
-      container_number, loaded_quantity, unit, gross_weight, net_weight, transport_mode, lane_status, current_location, owner_type,
+      source_type, source_id, local_purchase_id, purchase_ref_no, loading_record_no, supplier_name, goods_name, goods_id,
+      container_number, truck_number, driver_name, driver_phone, loading_date, loaded_quantity, unit, gross_weight, net_weight,
+      origin_text, destination_text, transport_mode, lane_status, current_location, owner_type,
       owner_country_id, owner_country_branch_id, owner_city_branch_id, lane_stock_qty,
       country_id, country_branch_id, city_branch_id, created_by)
     select
-      'local_purchase', lp.id, lp.id, coalesce(lp.manual_bill_no, lp.entry_serial, lp.journal_serial_no), lp.supplier_name, lp.goods_name, lp.goods_id,
-      lp.truck_no, coalesce(lp.numbers, 0), lp.quantity_name, lp.total_gross_weight, lp.net_weight, lp.shipping_mode, 'loaded', lp.warehouse_name, 'branch',
+      'local_purchase', lp.id, lp.id, coalesce(lp.manual_bill_no, lp.entry_serial, lp.journal_serial_no),
+      coalesce(lp.entry_serial, lp.manual_bill_no),
+      lp.supplier_name, lp.goods_name, lp.goods_id,
+      lp.truck_no,
+      coalesce(lp.truck_no, lp.loading_details->'entries'->0->>'truckNo'),
+      coalesce(lp.driver_name, lp.loading_details->'entries'->0->>'driverName'),
+      coalesce(lp.driver_phone, lp.loading_details->'entries'->0->>'driverPhone'),
+      coalesce(lp.date, lp.created_at::date),
+      coalesce(lp.numbers, (lp.loading_details->'entries'->0->>'loadedQuantity')::numeric, 0),
+      lp.quantity_name, lp.total_gross_weight, lp.net_weight,
+      'Local Yard', coalesce(lp.warehouse_name, 'Local Warehouse'),
+      lp.shipping_mode, 'loaded', lp.warehouse_name, 'branch',
       lp.country_id, lp.country_branch_id, lp.city_branch_id, coalesce(lp.numbers, 0),
       lp.country_id, lp.country_branch_id, lp.city_branch_id, ${session.userId}::uuid
     from public.local_purchases lp
     where lp.id = ${localPurchaseId}::uuid and lp.deleted_at is null
-    on conflict (source_type, source_id) where deleted_at is null do nothing
+    on conflict (source_type, source_id) where deleted_at is null
+    do update set
+      truck_number = coalesce(excluded.truck_number, purchase_lane_loads.truck_number),
+      driver_name = coalesce(excluded.driver_name, purchase_lane_loads.driver_name),
+      driver_phone = coalesce(excluded.driver_phone, purchase_lane_loads.driver_phone),
+      loading_date = coalesce(excluded.loading_date, purchase_lane_loads.loading_date),
+      purchase_ref_no = coalesce(excluded.purchase_ref_no, purchase_lane_loads.purchase_ref_no),
+      goods_name = coalesce(excluded.goods_name, purchase_lane_loads.goods_name),
+      loaded_quantity = coalesce(excluded.loaded_quantity, purchase_lane_loads.loaded_quantity),
+      unit = coalesce(excluded.unit, purchase_lane_loads.unit),
+      gross_weight = coalesce(excluded.gross_weight, purchase_lane_loads.gross_weight),
+      net_weight = coalesce(excluded.net_weight, purchase_lane_loads.net_weight),
+      updated_at = now()
     returning id`;
   if (rows[0]) {
     await addEvent(sql, { id: rows[0].id }, { type: "loaded", to: "loaded", detail: { source: "local_purchase", localPurchaseId } }, session);
@@ -259,16 +343,24 @@ async function backfillScope(sql: Sql, session: ErpSession) {
     select plr.id from public.purchase_loading_records plr
     where plr.deleted_at is null and plr.loading_status <> 'cancelled' and coalesce(plr.loaded_quantity,0) > 0
       and ${sqlScopeCondition(sql, scope, "plr")}
-      and not exists (select 1 from public.purchase_lane_loads l where l.source_type='purchase_booking' and l.source_id = plr.id and l.deleted_at is null)
-    limit 100`;
+      and not exists (
+        select 1 from public.purchase_lane_loads l
+        where l.source_type='purchase_booking' and l.source_id = plr.id and l.deleted_at is null
+          and l.truck_number is not null and l.loading_date is not null
+      )
+    limit 500`;
   for (const r of pbIds) await ensureLaneFromLoadingRecord(sql, r.id, session);
 
   // 2. Local Purchase
   const lpIds = await sql`
     select lp.id from public.local_purchases lp
     where lp.deleted_at is null and ${sqlScopeCondition(sql, scope, "lp")}
-      and not exists (select 1 from public.purchase_lane_loads l where l.source_type='local_purchase' and l.source_id = lp.id and l.deleted_at is null)
-    limit 100`;
+      and not exists (
+        select 1 from public.purchase_lane_loads l
+        where l.source_type='local_purchase' and l.source_id = lp.id and l.deleted_at is null
+          and l.truck_number is not null and l.loading_date is not null
+      )
+    limit 500`;
   for (const r of lpIds) await ensureLaneFromLocalPurchase(sql, r.id, session);
 
   // 3. Sales Booking
@@ -276,8 +368,12 @@ async function backfillScope(sql: Sql, session: ErpSession) {
     select so.id from public.sales_orders so
     where so.deleted_at is null and coalesce(so.form_data->'form'->>'saleSource', so.form_data->>'saleSource', '') <> 'local'
       and ${sqlScopeCondition(sql, scope, "so")}
-      and not exists (select 1 from public.purchase_lane_loads l where l.source_type='sales_booking' and l.source_id = so.id and l.deleted_at is null)
-    limit 100`;
+      and not exists (
+        select 1 from public.purchase_lane_loads l
+        where l.source_type='sales_booking' and l.source_id = so.id and l.deleted_at is null
+          and l.truck_number is not null and l.loading_date is not null
+      )
+    limit 500`;
   for (const r of sbIds) await ensureLaneFromSalesOrder(sql, r.id, session);
 
   // 4. Local Sales
@@ -285,8 +381,12 @@ async function backfillScope(sql: Sql, session: ErpSession) {
     select so.id from public.sales_orders so
     where so.deleted_at is null and coalesce(so.form_data->'form'->>'saleSource', so.form_data->>'saleSource', '') = 'local'
       and ${sqlScopeCondition(sql, scope, "so")}
-      and not exists (select 1 from public.purchase_lane_loads l where l.source_type='local_sales' and l.source_id = so.id and l.deleted_at is null)
-    limit 100`;
+      and not exists (
+        select 1 from public.purchase_lane_loads l
+        where l.source_type='local_sales' and l.source_id = so.id and l.deleted_at is null
+          and l.truck_number is not null and l.loading_date is not null
+      )
+    limit 500`;
   for (const r of lsIds) await ensureLaneFromLocalSale(sql, r.id, session);
 }
 
@@ -300,12 +400,32 @@ export async function listLaneLoads(session: ErpSession, f: LaneFilters = {}) {
     const term = f.q?.trim();
     const rows = await sql`
       select l.*,
+             coalesce(c.name, '') as country_name,
+             coalesce(c.iso2, '') as country_iso2,
+             coalesce(oc.name, ob.name, cb.name, '') as branch_name,
              coalesce(cb.name, '') as owner_country_branch_name, coalesce(ci.name, '') as owner_city_branch_name,
              (select count(*)::int from public.purchase_lane_events ev where ev.lane_load_id = l.id) as history_count,
              (select count(*)::int from public.purchase_lane_expenses e where e.lane_load_id = l.id and e.deleted_at is null) as expense_count,
              (select coalesce(sum(e.amount),0) from public.purchase_lane_expenses e where e.lane_load_id = l.id and e.deleted_at is null and e.status <> 'cancelled') as expense_total,
+             case
+               when exists (select 1 from public.purchase_lane_expenses e where e.lane_load_id = l.id and e.deleted_at is null and e.status in ('confirmed', 'reviewed'))
+                    or l.transfer_destination in ('general_purchase_expenses', 'general_sales_expenses') then 'transferred'
+               else 'pending'
+             end as expense_status,
+             coalesce(
+               case
+                 when l.source_type = 'purchase_booking' then (select coalesce(po.payment_status, po.form_data->'form'->>'paymentStatus') from public.purchase_orders po where po.id = l.purchase_order_id)
+                 when l.source_type = 'local_purchase' then (select coalesce(lp.payment_status, 'completed') from public.local_purchases lp where lp.id = l.source_id)
+                 when l.source_type in ('sales_booking', 'local_sales') then (select coalesce(so.payment_status, 'pending') from public.sales_orders so where so.id = coalesce(l.sales_order_id, l.source_id))
+                 else 'pending'
+               end,
+               'pending'
+             ) as payment_status,
              coalesce(l.remaining_quantity, 0) as remaining_quantity
       from public.purchase_lane_loads l
+      left join public.countries c on c.id = coalesce(l.country_id, l.owner_country_id)
+      left join public.country_branches ob on ob.id = coalesce(l.country_branch_id, l.owner_country_branch_id)
+      left join public.city_branches oc on oc.id = coalesce(l.city_branch_id, l.owner_city_branch_id)
       left join public.country_branches cb on cb.id = l.owner_country_branch_id
       left join public.city_branches ci on ci.id = l.owner_city_branch_id
       where l.deleted_at is null and ${laneScopeSql(sql, session, "l")}
@@ -697,3 +817,21 @@ export async function purchaseLaneSummary(session: ErpSession, purchaseOrderId: 
 }
 
 export { isFinalDisposition };
+
+/** Read-only tracking projection. Never backfills loads, moves stock, or creates shipping/accounting records. */
+export async function listPurchaseLaneTracking(session: ErpSession, filter: { id?: string; q?: string } = {}) {
+  return withLocalPg(async (sql: Sql) => {
+    const term = filter.q?.trim();
+    return sql`
+      select l.id,l.purchase_ref_no,l.loading_record_no,l.container_number,l.bl_number,
+             l.loaded_quantity,l.unit,l.gross_weight,l.net_weight,l.lane_status,l.transfer_destination,l.created_at,
+             coalesce(lr.loaded_at,lr.created_at,l.created_at) as loaded_at,lr.loading_batch_no
+      from public.purchase_lane_loads l
+      left join public.purchase_loading_records lr on l.source_type='purchase_booking' and lr.id=l.source_id and lr.deleted_at is null
+      where l.deleted_at is null and l.source_type in ('purchase_booking','local_purchase')
+        and ${laneScopeSql(sql, session, "l")}
+        ${filter.id ? sql`and l.id=${filter.id}::uuid` : sql``}
+        ${term ? sql`and (l.purchase_ref_no ilike ${"%"+term+"%"} or l.container_number ilike ${"%"+term+"%"} or l.bl_number ilike ${"%"+term+"%"})` : sql``}
+      order by l.created_at desc,l.id limit 100`;
+  });
+}

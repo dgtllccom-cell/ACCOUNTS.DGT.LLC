@@ -50,6 +50,7 @@ import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { apiGet, apiPatch, apiPost } from "@/lib/api/client";
 import {
   destinationRoute,
+  defaultLaneTransferDestination,
   isModuleDestination,
   LANE_STATUSES,
   LANE_STATUS_LABEL,
@@ -70,6 +71,7 @@ import {
 } from "@/lib/purchases/lane-rules";
 import { Th } from "@/components/ui/translated-th";
 import { LanePaymentPreview } from "./lane-payment-preview";
+import { loadingJournalLinks } from "@/lib/purchases/loading-journal";
 
 type Row = Record<string, any>;
 type Detail = { load: Row; events: Row[]; expenses: Row[]; canAct: boolean };
@@ -95,21 +97,27 @@ const SOURCE_TONE: Record<string, string> = {
 };
 
 const inputCls =
-  "w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100";
+  "min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100";
 const btnCls =
   "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition disabled:opacity-50";
 
 export function PurchaseTransitLaneView({
   lang,
   source,
+  session,
 }: {
   lang?: string;
   source?: "purchase_booking" | "local_purchase" | "sales_booking" | "local_sales" | null;
+  session?: any;
 }) {
   const s = useErpScreen("plane", lang);
   const T = useCallback((k: string, fb: string) => s.t(k, fb), [s]);
   const stLabel = (st: string) =>
     T(LANE_STATUS_LABEL[st as LaneStatus]?.key ?? st, LANE_STATUS_LABEL[st as LaneStatus]?.en ?? st);
+
+  const isSuperAdmin = Boolean(session?.isSuperAdmin || session?.roles?.includes("super_admin") || session?.scopes?.isSuperAdmin);
+  const isCountryAdmin = !isSuperAdmin && Boolean(session?.roles?.some((r: string) => r === "country_admin" || r === "country_user"));
+  const isBranchUser = !isSuperAdmin && !isCountryAdmin;
 
   const [rows, setRows] = useState<Row[]>([]);
   const [summary, setSummary] = useState<Record<string, number>>({});
@@ -118,6 +126,7 @@ export function PurchaseTransitLaneView({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [routedUrl, setRoutedUrl] = useState<string | null>(null);
+  const [linkedLoads, setLinkedLoads] = useState<Row[]>([]);
   const [status, setStatus] = useState("");
   const [q, setQ] = useState("");
   const [sourceType, setSourceType] = useState<string>(source ?? "");
@@ -251,6 +260,17 @@ export function PurchaseTransitLaneView({
     return null;
   };
 
+  const actionMenu = (r: Row, na: ReturnType<typeof nextAction>) => <select
+    value="" disabled={busy} aria-label={s.tGlobal("common.actions", "Actions")} data-testid="lane-actions"
+    className={`${inputCls} min-h-11 min-w-[170px] !w-auto`}
+    onChange={(e) => { const action = e.target.value; if (action === "transfer") setTransferTargetLoads([r]); else if (action === "history") void openHistory(r); else if (action === "details") void openDetail(r.id); else if (action === "next" && na) void na.run(); }}>
+      <option value="" disabled>{s.tGlobal("common.actions", "Actions")}</option>
+      {r.lane_status !== "completed" && <option value="transfer">{T("act_transfer_load", "Transfer Load")}</option>}
+      <option value="history">{T("col_transfer_history", "Transfer History")} ({r.history_count || 0})</option>
+      {na && <option value="next">{na.label}</option>}
+      <option value="details">{T("act_details", "Details")}</option>
+    </select>;
+
   const billTypeLabel = (st: string) => {
     switch (st) {
       case "purchase_booking":
@@ -280,7 +300,7 @@ export function PurchaseTransitLaneView({
               <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm shadow-blue-500/30">
                 <ArrowRightLeft className="h-4 w-4" />
               </span>
-              {T("title", "P/S General Transfer")}
+              {T("title_journal", "P/S General Transfer Journal")}
             </h1>
             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
               {T(
@@ -431,11 +451,19 @@ export function PurchaseTransitLaneView({
                 </Link>
               )}
             </div>
-            <button type="button" onClick={() => { setNotice(null); setRoutedUrl(null); }}>
+            <button type="button" onClick={() => { setNotice(null); setRoutedUrl(null); setLinkedLoads([]); }}>
               <X className="h-3.5 w-3.5" />
             </button>
           </div>
         )}
+
+        {linkedLoads.length > 0 && <div className="grid gap-2 rounded-xl border bg-white p-3 text-sm sm:grid-cols-2 dark:bg-slate-900">
+          {linkedLoads.map((r) => { const links = loadingJournalLinks(r.id, r.purchase_order_id, r.local_purchase_id); return <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg border p-3">
+            <span className="font-mono font-bold">{r.purchase_ref_no} · {r.loading_record_no || r.container_number}</span>
+            <Link className="text-blue-700 underline dark:text-blue-300" href={links.expenses}>{s.tGlobal("utask.mod_journal", "Journal")} · {s.tGlobal("expenses", "Expenses")}</Link>
+            <Link className="text-blue-700 underline dark:text-blue-300" href={links.tracking}>{s.tGlobal("log.seg_tracking", "Tracking")}</Link>
+          </div>; })}
+        </div>}
 
         {/* Content Body */}
         {loading ? (
@@ -453,26 +481,51 @@ export function PurchaseTransitLaneView({
           <>
             {/* Main Table */}
             <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm md:block dark:border-slate-800 dark:bg-slate-900">
-              <table className="w-full min-w-[1200px] text-start text-xs" data-testid="lane-table">
+              <table className="w-full min-w-[1500px] text-start text-xs" data-testid="lane-table">
                 <thead className="border-b border-slate-200/80 bg-slate-50 text-[11px] font-black uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-300">
                   <tr>
                     <Th className="p-2.5 w-8" />
-                    <Th className="p-2.5 text-start">{T("col_bill_no", "Bill No. / Ref")}</Th>
-                    <Th className="p-2.5 text-start">{T("col_bill_type", "Bill Type")}</Th>
-                    <Th className="p-2.5 text-start">{T("col_party", "Party (Supplier/Customer)")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_bill_no", "Bill No.")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_loading_no_date", "Loading No. & Date")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_source", "Source")}</Th>
+                    {isSuperAdmin && <Th className="p-2.5 text-start">{T("col_country", "Country")}</Th>}
+                    {(isSuperAdmin || isCountryAdmin) && <Th className="p-2.5 text-start">{T("col_branch", "Branch")}</Th>}
                     <Th className="p-2.5 text-start">{T("col_goods", "Goods")}</Th>
-                    <Th className="p-2.5 text-start">{T("col_container", "BL / Container")}</Th>
                     <Th className="p-2.5 text-end">{T("col_qty", "Loaded Qty")}</Th>
-                    <Th className="p-2.5 text-end">{T("col_remaining_qty", "Remaining Qty")}</Th>
-                    <Th className="p-2.5 text-start">{T("col_status", "Transfer Status")}</Th>
-                    <Th className="p-2.5 text-start">{T("col_location", "Location / Assigned")}</Th>
-                    <Th className="p-2.5 text-end">{T("col_next", "Action / Routing")}</Th>
+                    <Th className="p-2.5 text-end">{T("col_weights", "Gross / Net (KG)")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_truck_container", "Truck / Container No")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_driver", "Driver Details")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_route", "Origin → Destination")}</Th>
+                    <Th className="p-2.5 text-center">{T("col_movement_status", "Movement Status")}</Th>
+                    <Th className="p-2.5 text-center">{T("col_payment_status", "Payment Status")}</Th>
+                    <Th className="p-2.5 text-center">{T("col_expense_status", "Expense Status")}</Th>
+                    <Th className="p-2.5 text-end">{T("col_action", "Action")}</Th>
                   </tr>
                 </thead>
 
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                   {rows.map((r) => {
                     const na = nextAction(r);
+                    const rawPayStatus = String(r.payment_status || "pending").toLowerCase();
+                    const isPaid = rawPayStatus.includes("paid") || rawPayStatus.includes("completed");
+                    const isCredit = rawPayStatus.includes("credit");
+                    const isRemaining = rawPayStatus.includes("remaining") || rawPayStatus.includes("partial");
+                    const payBadgeTone = isPaid
+                      ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300"
+                      : isCredit
+                      ? "bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-950/60 dark:text-indigo-300"
+                      : isRemaining
+                      ? "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300"
+                      : "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300";
+                    const payLabel = isPaid
+                      ? T("st_paid", "Paid")
+                      : isCredit
+                      ? T("st_credit", "Credit")
+                      : isRemaining
+                      ? T("st_remaining", "Remaining")
+                      : T("st_pending", "Pending");
+
+                    const isTransferredExp = r.expense_status === "transferred" || r.transfer_destination === "general_purchase_expenses" || r.transfer_destination === "general_sales_expenses";
                     return (
                       <tr
                         key={r.id}
@@ -491,17 +544,22 @@ export function PurchaseTransitLaneView({
                           />
                         </td>
 
-                        {/* Bill No. / Ref */}
-                        <td className="p-2.5 font-mono font-bold text-blue-700 dark:text-blue-400" dir="ltr">
+                        {/* Bill No. */}
+                        <td className="p-2.5 font-mono font-bold text-blue-700 dark:text-blue-400 text-xs" dir="ltr">
                           {r.purchase_ref_no || "—"}
-                          {r.loading_record_no && (
-                            <div className="text-[10px] text-slate-400 font-normal">
-                              LR: {r.loading_record_no}
-                            </div>
-                          )}
                         </td>
 
-                        {/* Bill Type Badge */}
+                        {/* Loading No. & Date */}
+                        <td className="p-2.5" dir="ltr">
+                          <div className="font-mono text-xs font-bold text-slate-900 dark:text-white">
+                            {r.loading_record_no || r.container_number || r.bl_number || "—"}
+                          </div>
+                          <div className="font-mono text-[10px] text-slate-400">
+                            {r.loading_date ? String(r.loading_date).slice(0, 10) : (r.created_at ? String(r.created_at).slice(0, 10) : "—")}
+                          </div>
+                        </td>
+
+                        {/* Source */}
                         <td className="p-2.5">
                           <span
                             className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
@@ -512,123 +570,103 @@ export function PurchaseTransitLaneView({
                           </span>
                         </td>
 
-                        {/* Party */}
-                        <td className="p-2.5 font-semibold text-slate-800 dark:text-slate-100" dir="auto">
-                          {r.supplier_name || "—"}
-                        </td>
+                        {/* Country (Super Admin only) */}
+                        {isSuperAdmin && (
+                          <td className="p-2.5 font-semibold text-slate-800 dark:text-slate-100 text-[11px]" dir="auto">
+                            {r.country_name || (r.country_iso2 ? r.country_iso2.toUpperCase() : "—")}
+                          </td>
+                        )}
+
+                        {/* Branch (Super Admin & Country Admin only) */}
+                        {(isSuperAdmin || isCountryAdmin) && (
+                          <td className="p-2.5 text-slate-600 dark:text-slate-300 text-[11px]" dir="auto">
+                            {r.branch_name || r.owner_country_branch_name || "—"}
+                          </td>
+                        )}
 
                         {/* Goods */}
-                        <td className="p-2.5" dir="auto">
+                        <td className="p-2.5 text-xs" dir="auto">
                           <span className="font-medium text-slate-700 dark:text-slate-200">{r.goods_name || "—"}</span>
                         </td>
 
-                        {/* BL / Container */}
-                        <td className="p-2.5 font-mono text-[11px]" dir="ltr">
-                          <div>
-                            <span className="text-slate-400">BL:</span> {r.bl_number || "—"}
-                          </div>
-                          <div className="font-bold text-slate-700 dark:text-slate-300">
-                            <span className="text-slate-400 font-normal">CTN:</span> {r.container_number || "—"}
-                          </div>
-                        </td>
-
                         {/* Loaded Qty */}
-                        <td className="p-2.5 text-end font-mono font-bold text-slate-900 dark:text-white">
+                        <td className="p-2.5 text-end font-mono font-bold text-slate-900 dark:text-white text-xs">
                           {Number(r.loaded_quantity || 0).toLocaleString()} <span className="text-[10px] font-normal text-slate-400">{r.unit || ""}</span>
                         </td>
 
-                        {/* Remaining Qty */}
-                        <td className="p-2.5 text-end font-mono font-bold text-amber-700 dark:text-amber-400">
-                          {Number(r.remaining_quantity || 0).toLocaleString()} <span className="text-[10px] font-normal text-slate-400">{r.unit || ""}</span>
+                        {/* Gross / Net (KG) */}
+                        <td className="p-2.5 text-end font-mono text-xs whitespace-nowrap">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">{Number(r.gross_weight || 0).toLocaleString()}</span>
+                          <span className="text-slate-400 mx-1">/</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">{Number(r.net_weight || 0).toLocaleString()}</span>
                         </td>
 
-                        {/* Transfer Status */}
-                        <td className="p-2.5">
-                          <span
-                            className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                              STATUS_TONE[r.lane_status] ?? ""
-                            }`}
-                            data-testid="lane-status"
-                          >
+                        {/* Truck / Container No */}
+                        <td className="p-2.5 text-xs font-mono" dir="ltr">
+                          <div className="font-bold text-slate-800 dark:text-slate-200">
+                            {r.truck_number || r.container_number || r.vehicle_no || "—"}
+                          </div>
+                          {r.container_number && r.truck_number && r.container_number !== r.truck_number && (
+                            <div className="text-[10px] text-slate-400">Cont: {r.container_number}</div>
+                          )}
+                        </td>
+
+                        {/* Driver Details */}
+                        <td className="p-2.5 text-xs" dir="auto">
+                          <div className="font-medium text-slate-700 dark:text-slate-200">{r.driver_name || "—"}</div>
+                          {r.driver_phone && <div className="font-mono text-[10px] text-slate-400" dir="ltr">{r.driver_phone}</div>}
+                        </td>
+
+                        {/* Origin → Destination */}
+                        <td className="p-2.5 text-xs" dir="auto">
+                          <div className="font-medium text-slate-700 dark:text-slate-300 max-w-[170px] truncate" title={`${r.origin_text || "—"} → ${r.destination_text || "—"}`}>
+                            {r.origin_text || "—"} <span className="text-slate-400">→</span> {r.destination_text || "—"}
+                          </div>
+                        </td>
+
+                        {/* Movement Status */}
+                        <td className="p-2.5 text-center">
+                          <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${STATUS_TONE[r.lane_status] || "bg-slate-100 text-slate-700 border-slate-300"}`}>
                             {stLabel(r.lane_status)}
                           </span>
-                          {r.transfer_destination && (
-                            <div className="mt-0.5 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400">
-                              → {destinationName(r.transfer_destination, T)}
-                            </div>
-                          )}
-                          {r.leg_no > 1 && (
-                            <span className="ms-1 text-[10px] text-slate-400 font-normal">
-                              ({T("leg", "leg")} {r.leg_no})
-                            </span>
-                          )}
                         </td>
 
-                        {/* Location / Assigned */}
-                        <td className="p-2.5 text-[11px]" dir="auto">
-                          <div className="font-semibold text-slate-700 dark:text-slate-200">
-                            {r.current_location || r.expected_location || "—"}
-                          </div>
-                          <div className="text-[10px] text-slate-400">
-                            {ownerLabel(r, T)}
-                          </div>
+                        {/* Payment Status (READ-ONLY) */}
+                        <td className="p-2.5 text-center">
+                          <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${payBadgeTone}`}>
+                            {payLabel}
+                          </span>
+                        </td>
+
+                        {/* Expense Status */}
+                        <td className="p-2.5 text-center">
+                          <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${
+                            isTransferredExp
+                              ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300"
+                              : "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300"
+                          }`}>
+                            {isTransferredExp ? T("st_transferred", "Transferred") : T("st_pending", "Pending")}
+                          </span>
                         </td>
 
                         {/* Actions */}
-                        <td className="p-2.5 text-end">
-                          <div className="flex flex-wrap items-center justify-end gap-1">
-                            {/* Transfer Button */}
-                            {r.lane_status !== "completed" && (
-                              <button
-                                type="button"
-                                onClick={() => setTransferTargetLoads([r])}
-                                className={`${btnCls} bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm`}
-                                data-testid="lane-transfer"
-                              >
-                                <ArrowRightLeft className="h-3 w-3" />
-                                {T("act_transfer_load", "Transfer Load")}
-                              </button>
-                            )}
-
-                            {/* Transfer History Button */}
+                        <td className="p-2.5 text-end whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1.5">
                             <button
                               type="button"
-                              onClick={() => void openHistory(r)}
-                              className={`${btnCls} border border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800`}
-                              title={T("col_transfer_history", "Transfer History")}
-                              data-testid="lane-history-btn"
+                              onClick={() => setTransferTargetLoads([r])}
+                              className={`${btnCls} bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm`}
+                              data-testid="transfer-general-expenses"
                             >
-                              <History className="h-3 w-3" />
-                              <span className="hidden xl:inline">{T("col_transfer_history", "Transfer History")}</span>
-                              {r.history_count > 0 && (
-                                <span className="ms-0.5 rounded-full bg-slate-200 px-1 text-[9px] dark:bg-slate-700">
-                                  {r.history_count}
-                                </span>
-                              )}
+                              <ArrowRightLeft className="h-3 w-3" />
+                              {T("act_transfer_to_general_expenses", "Transfer to General Expenses")}
                             </button>
-
-                            {/* Next Status Action */}
-                            {na && (
-                              <button
-                                type="button"
-                                disabled={busy}
-                                onClick={() => void na.run()}
-                                className={`${btnCls} bg-blue-600 text-white hover:bg-blue-700 shadow-sm`}
-                                data-testid="lane-next"
-                              >
-                                {na.label}
-                              </button>
-                            )}
-
-                            {/* Details Drawer Button */}
                             <button
                               type="button"
-                              onClick={() => void openDetail(r.id)}
-                              className={`${btnCls} border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200`}
-                              data-testid="lane-details"
+                              onClick={() => openDetail(r.id)}
+                              className={`${btnCls} border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300`}
                             >
-                              <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
-                              {T("act_details", "Details")}
+                              {T("act_view", "View")}
                             </button>
                           </div>
                         </td>
@@ -671,10 +709,10 @@ export function PurchaseTransitLaneView({
 
                     <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-slate-600 dark:text-slate-300">
                       <span>
-                        {T("col_container", "Container")}: <b dir="ltr">{r.container_number || "—"}</b>
+                        {T("col_truck_no", "Truck No.")}: <b dir="ltr">{r.truck_number || r.container_number || r.vehicle_no || "—"}</b>
                       </span>
                       <span>
-                        {T("col_bl", "BL no.")}: <b dir="ltr">{r.bl_number || "—"}</b>
+                        {T("col_loading_date", "Loading Date")}: <b dir="ltr">{r.loading_date ? String(r.loading_date).slice(0, 10) : (r.created_at ? String(r.created_at).slice(0, 10) : "—")}</b>
                       </span>
                       <span>
                         {T("col_qty", "Loaded Qty")}:{" "}
@@ -683,53 +721,25 @@ export function PurchaseTransitLaneView({
                         </b>
                       </span>
                       <span>
-                        {T("col_remaining_qty", "Remaining Qty")}:{" "}
-                        <b className="font-mono text-amber-700 dark:text-amber-400">
-                          {Number(r.remaining_quantity || 0).toLocaleString()} {r.unit || ""}
+                        {T("col_weights", "Gross / Net (KG)")}:{" "}
+                        <b className="font-mono text-slate-900 dark:text-white">
+                          {Number(r.gross_weight || 0).toLocaleString()} / {Number(r.net_weight || 0).toLocaleString()}
                         </b>
+                      </span>
+                      {r.driver_name && (
+                        <span className="col-span-2">
+                          {T("col_driver", "Driver")}: <b>{r.driver_name} {r.driver_phone ? `(${r.driver_phone})` : ""}</b>
+                        </span>
+                      )}
+                      <span className="col-span-2">
+                        {T("col_route", "Route")}: <b dir="auto">{r.origin_text || "—"} → {r.destination_text || "—"}</b>
                       </span>
                       <span className="col-span-2">
                         {T("col_location", "Location / Assigned")}: <b dir="auto">{r.current_location || ownerLabel(r, T)}</b>
                       </span>
                     </div>
 
-                    <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-2 dark:border-slate-800">
-                      {r.lane_status !== "completed" && (
-                        <button
-                          type="button"
-                          onClick={() => setTransferTargetLoads([r])}
-                          className={`${btnCls} bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm`}
-                        >
-                          <ArrowRightLeft className="h-3 w-3" />
-                          {T("act_transfer_load", "Transfer Load")}
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => void openHistory(r)}
-                        className={`${btnCls} border border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-300`}
-                      >
-                        <History className="h-3 w-3" />
-                        {T("col_transfer_history", "History")}
-                      </button>
-                      {na && (
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => void na.run()}
-                          className={`${btnCls} bg-blue-600 text-white`}
-                        >
-                          {na.label}
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => void openDetail(r.id)}
-                        className={`${btnCls} border border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-300`}
-                      >
-                        {T("act_details", "Details")}
-                      </button>
-                    </div>
+                    <div className="mt-3 border-t pt-3">{actionMenu(r, na)}</div>
                   </div>
                 );
               })}
@@ -746,6 +756,7 @@ export function PurchaseTransitLaneView({
           loads={transferTargetLoads}
           onClose={() => setTransferTargetLoads(null)}
           onDone={async (msg, targetUrl) => {
+            setLinkedLoads(transferTargetLoads || []);
             setTransferTargetLoads(null);
             setNotice(msg);
             setRoutedUrl(targetUrl ?? null);
@@ -842,11 +853,10 @@ function CenterTransferConfirmationModal({
 }) {
   const ids = useMemo(() => loads.map((l) => l.id), [loads]);
   const primarySource = loads[0]?.source_type || "purchase_booking";
-  const defaultDest: TransferType = primarySource.startsWith("sales")
-    ? "general_sales_expenses"
-    : "general_purchase_expenses";
+  const defaultDest = defaultLaneTransferDestination(primarySource);
 
   const [type, setType] = useState<TransferType>(defaultDest);
+  const [afterView, setAfterView] = useState("destination");
   const [paymentReviewReady, setPaymentReviewReady] = useState(false);
   const [countryId, setCountryId] = useState("");
   const [countryBranchId, setCountryBranchId] = useState("");
@@ -920,7 +930,6 @@ function CenterTransferConfirmationModal({
   };
 
   const submit = async () => {
-    if (type === "remaining_payment" && loads.every(l => l.source_type === "purchase_booking") && !paymentReviewReady) return;
     const p = transferProblems(req);
     setProblems(p);
     if (p.length) return;
@@ -928,7 +937,9 @@ function CenterTransferConfirmationModal({
     setError(null);
     try {
       await apiPost("/api/erp/purchases/lane", { action: "transfer", ids, transfer: req });
-      const targetUrl = destinationRoute(type, primarySource, loads[0]?.purchase_ref_no);
+      const commonPurchaseId = loads.every((l) => l.purchase_order_id === loads[0]?.purchase_order_id) ? loads[0]?.purchase_order_id : null;
+      const links = loadingJournalLinks(ids.length === 1 ? ids[0] : "", commonPurchaseId, loads.length === 1 ? loads[0]?.local_purchase_id : null);
+      const targetUrl = afterView === "expenses" ? links.expenses : afterView === "tracking" ? links.tracking : destinationRoute(type, primarySource, loads.every((l) => l.purchase_ref_no === loads[0]?.purchase_ref_no) ? loads[0]?.purchase_ref_no : undefined, loads.length === 1 && primarySource === "purchase_booking" ? loads[0]?.source_id : undefined);
       await onDone(`${T("done_transferred", "Transferred")} (${ids.length})`, targetUrl);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -978,7 +989,7 @@ function CenterTransferConfirmationModal({
           </button>
         </div>
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_340px] lg:overflow-hidden" dir="ltr">
+        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_minmax(360px,440px)] lg:overflow-hidden" dir="ltr">
           <div className="overflow-y-auto bg-slate-100 p-3 sm:p-5 dark:bg-slate-950" dir={s.dir}>
             <LanePaymentPreview loads={loads.map(l => ({ id: String(l.id), source_id: l.source_id, source_type: l.source_type, purchase_ref_no: l.purchase_ref_no }))} lang={s.lang} onReady={setPaymentReviewReady} />
           </div>
@@ -1027,20 +1038,19 @@ function CenterTransferConfirmationModal({
               data-testid="tr-type"
             >
               <optgroup label={T("group_erp_modules", "ERP Business Modules")}>
-                <option value="general_purchase_expenses">{T("dest_expenses_p", "General Purchase Expenses")}</option>
-                <option value="general_sales_expenses">{T("dest_expenses_s", "General Sales Expenses")}</option>
-                <option value="remaining_payment">{T("dest_payment", "Remaining Payment")}</option>
-                <option value="jc_journal_voucher">{T("dest_jc", "JC (Journal Clearing / Voucher)")}</option>
-                <option value="pc_petty_cash">{T("dest_pc", "PC (Petty Cash / Payment Certificate)")}</option>
+                <option value={primarySource === "sales_booking" || primarySource === "local_sales" ? "general_sales_expenses" : "general_purchase_expenses"}>
+                  {T("act_transfer_to_general_expenses", "Transfer to General Expenses Journal")}
+                </option>
               </optgroup>
-              <optgroup label={T("group_logistics_handover", "Branch & Logistics Hand-over")}>
-                <option value="other_branch">{T("tt_other_branch", "Another country or city branch")}</option>
-                <option value="own_branch">{T("tt_own_branch", "Own branch")}</option>
-                <option value="internal_agent">{T("tt_internal_agent", "Internal clearing agent")}</option>
-                <option value="external_agent">{T("tt_external_agent", "External clearing agent / logistics partner")}</option>
-                <option value="other_user">{T("tt_other_user", "Another authorised user")}</option>
-                <option value="self_managed">{T("tt_self", "Self-managed clearance")}</option>
-              </optgroup>
+            </select>
+          </div>
+
+          <div>
+            {lbl(T("col_next", "Action / Routing"))}
+            <select value={afterView} onChange={(e) => setAfterView(e.target.value)} className={inputCls} data-testid="tr-after-view">
+              <option value="destination">{T("open_destination", "Open in Destination Module")}</option>
+              <option value="expenses">{s.tGlobal("utask.mod_journal", "Journal")} · {s.tGlobal("expenses", "Expenses")}</option>
+              <option value="tracking">{s.tGlobal("log.seg_tracking", "Tracking")}</option>
             </select>
           </div>
 
@@ -1236,7 +1246,7 @@ function CenterTransferConfirmationModal({
           </button>
           <button
             type="button"
-            disabled={busy || (type === "remaining_payment" && loads.every(l => l.source_type === "purchase_booking") && !paymentReviewReady)}
+            disabled={busy}
             onClick={() => void submit()}
             className={`${btnCls} bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-500/20`}
             data-testid="tr-submit"
@@ -1286,17 +1296,17 @@ function TransferHistoryModal({
       aria-modal="true"
       dir={s.dir}
     >
-      <div className="relative w-full max-w-xl max-h-[85vh] flex flex-col rounded-2xl bg-white shadow-2xl border border-slate-200 dark:bg-slate-900 dark:border-slate-800 animate-in fade-in-50 zoom-in-95 duration-150">
+      <div className="relative w-full max-w-[1400px] max-h-[90dvh] flex flex-col rounded-2xl bg-white shadow-2xl border border-slate-200 dark:bg-slate-900 dark:border-slate-800 animate-in fade-in-50 zoom-in-95 duration-150">
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm shadow-blue-500/30">
               <History className="h-4 w-4" />
             </span>
             <div>
-              <h3 className="text-sm font-black text-slate-900 dark:text-white">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">
                 {T("history_title", "Transfer & Audit History")}
               </h3>
-              <p className="text-[11px] font-mono text-blue-700 dark:text-blue-400 font-bold" dir="ltr">
+              <p className="text-sm font-mono text-blue-700 dark:text-blue-400 font-bold" dir="ltr">
                 {load.purchase_ref_no || "—"} · {load.container_number || load.bl_number || "—"}
               </p>
             </div>
@@ -1311,9 +1321,9 @@ function TransferHistoryModal({
           </button>
         </div>
 
-        <div className="overflow-y-auto px-5 py-4 text-xs">
+        <div className="min-h-0 overflow-y-auto px-5 py-4 text-sm">
           {/* Quick Stats Header */}
-          <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-[11px] dark:border-slate-800 dark:bg-slate-800/40">
+          <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-800/40">
             <div>
               <span className="text-slate-500">{T("col_qty", "Loaded Qty")}:</span>{" "}
               <b>{Number(load.loaded_quantity || 0).toLocaleString()} {load.unit || ""}</b>
@@ -1324,7 +1334,7 @@ function TransferHistoryModal({
             </div>
             <div className="col-span-2">
               <span className="text-slate-500">{T("col_status", "Current Status")}:</span>{" "}
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[load.lane_status] ?? ""}`}>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${STATUS_TONE[load.lane_status] ?? ""}`}>
                 {stLabel(load.lane_status)}
               </span>
             </div>
@@ -1341,35 +1351,35 @@ function TransferHistoryModal({
               {events.map((ev) => (
                 <li key={ev.id} className="relative">
                   <div className="absolute -start-[21px] top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-blue-600 dark:border-slate-900" />
-                  <div className="flex flex-wrap items-center justify-between gap-1 text-[11px]">
+                  <div className="flex flex-wrap items-center justify-between gap-1 text-sm">
                     <span className="font-bold text-slate-900 dark:text-white">
                       {T("ev_" + ev.event_type, ev.event_type)}
                     </span>
-                    <span className="text-[10px] font-mono text-slate-400" dir="ltr">
+                    <span className="text-xs font-mono text-slate-400" dir="ltr">
                       {new Date(ev.created_at).toLocaleString()}
                     </span>
                   </div>
 
                   {(ev.from_status || ev.to_status) && (
-                    <div className="mt-0.5 text-[11px] text-slate-600 dark:text-slate-300">
+                    <div className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">
                       {ev.from_status ? stLabel(ev.from_status) : "—"} →{" "}
                       <b className="text-indigo-600 dark:text-indigo-400">{ev.to_status ? stLabel(ev.to_status) : "—"}</b>
                     </div>
                   )}
 
                   {ev.detail?.destination && (
-                    <div className="mt-1 rounded bg-indigo-50 px-2 py-1 text-[11px] font-semibold text-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-200">
+                    <div className="mt-1 rounded bg-indigo-50 px-2 py-1 text-sm font-semibold text-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-200">
                       Destination: {destinationName(ev.detail.destination, T)}
                     </div>
                   )}
 
                   {ev.detail?.note && (
-                    <div className="mt-1 rounded bg-slate-100 p-1.5 text-[11px] text-slate-700 dark:bg-slate-800 dark:text-slate-200" dir="auto">
+                    <div className="mt-1 rounded bg-slate-100 p-1.5 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-200" dir="auto">
                       "{ev.detail.note}"
                     </div>
                   )}
 
-                  <div className="mt-1 text-[10px] text-slate-400">
+                  <div className="mt-1 text-xs text-slate-400">
                     By: <b>{ev.actor_name || "System"}</b>
                   </div>
                 </li>
@@ -1556,7 +1566,7 @@ function DetailDialog({
       dir={s.dir}
       data-testid="lane-detail"
     >
-      <div className="flex max-h-[calc(100dvh_-_1.5rem)] w-full max-w-[1200px] min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 sm:max-h-[calc(100dvh_-_3rem)]">
+      <div className="flex max-h-[calc(100dvh_-_1.5rem)] w-full max-w-[1600px] min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 sm:max-h-[calc(100dvh_-_3rem)]">
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-800 sm:px-6 sm:py-4">
           <div className="min-w-0">
             <h3 id="lane-detail-title" className="break-words text-base font-black sm:text-lg">
@@ -1603,7 +1613,7 @@ function DetailDialog({
               `${l.origin_text || "—"} → ${l.destination_text || "—"}`
             )}
             {kv(T("col_location", "Location"), l.current_location)}
-            {kv(T("expected_location", "Expected location"), l.expected_location)}
+            {kv(T("expected_location", "Expected location"), l.expected_location ? destinationName(l.expected_location, T) : "—")}
             {kv(T("col_assigned", "Assigned to"), ownerLabel(l, T))}
             {kv(T("responsibility", "Responsibility"), l.responsibility)}
             {l.disposition &&

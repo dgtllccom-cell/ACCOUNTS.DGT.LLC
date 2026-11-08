@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function PurchaseExpensesPage() {
   const lang = await getRequestLanguage();
   return (
-    <div className="container mx-auto p-4 md:p-6">
+    <div className="w-full min-w-0 p-2 sm:p-4">
       <BillExpensesView lang={lang} section="purchase" />
     </div>
   );

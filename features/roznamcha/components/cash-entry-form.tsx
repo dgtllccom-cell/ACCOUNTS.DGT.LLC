@@ -77,8 +77,6 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
-import { BankPicker } from "@/features/banks/components/bank-picker";
-import { getBankById, type BankRecord } from "@/features/banks/bank-api";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { LocationBackdrop } from "@/components/location-backdrop";
 import { VoiceFormFill } from "@/components/voice-form-fill";
@@ -182,7 +180,7 @@ const CURRENCY_FULL_NAMES: Record<string, string> = {
 };
 
 // NOTE: the free-text COUNTRY_BANKS list this used to hold was removed —
-// the Bank Details section now uses the real Bank Master via BankPicker
+// Bank details use the existing scoped Settings Bank and Transfer Mode masters.
 // (see "RULE: Always use BankPicker — never create a free-text bank input"
 // in features/banks/components/bank-picker.tsx).
 
@@ -509,7 +507,6 @@ export function CashEntryForm({
 
   // Payment-type details (clean initial state)
   const [typeDetails, setTypeDetails] = useState<Record<string, string>>({});
-  const [selectedBankRecord, setSelectedBankRecord] = useState<BankRecord | null>(null);
 
   // Financial snapshot state for Selected Account (live statement query)
   const [accountSnapshot, setAccountSnapshot] = useState<{
@@ -718,13 +715,28 @@ export function CashEntryForm({
     }
   };
 
-  const fetchAllDailyExchangeRates = async () => {
+  const fetchAllDailyExchangeRates = async (overrideDate?: string) => {
     try {
       setLoadingExchangeModule(true);
-      const res = await apiGet<any>("/api/erp/currency/daily-rates");
+      const targetDate = overrideDate || (tableDateMode === "day" ? (tableDate || entryDate || todayIso()) : (entryDate || todayIso()));
+      const res = await apiGet<any>(`/api/erp/currency/daily-rates?date=${targetDate}`);
       if (res) {
-        setDailyExchangeModuleRates(Array.isArray(res.rates) ? res.rates : Array.isArray(res.data) ? res.data : []);
-        setDailyExchangeCountriesStatus(Array.isArray(res.countriesStatus) ? res.countriesStatus : []);
+        const ratesList = Array.isArray(res)
+          ? res
+          : Array.isArray(res?.rates)
+          ? res.rates
+          : Array.isArray(res?.data?.rates)
+          ? res.data.rates
+          : Array.isArray(res?.data)
+          ? res.data
+          : [];
+        const statusList = Array.isArray(res?.countriesStatus)
+          ? res.countriesStatus
+          : Array.isArray(res?.data?.countriesStatus)
+          ? res.data.countriesStatus
+          : [];
+        setDailyExchangeModuleRates(ratesList);
+        setDailyExchangeCountriesStatus(statusList);
       }
     } catch (err) {
       console.error("Failed to fetch daily exchange rates from module", err);
@@ -988,80 +1000,69 @@ export function CashEntryForm({
   // Active countries & exchange rates connected to the Daily Exchange Rate module (/api/erp/currency/daily-rates)
   const activeExchangeRatesList = useMemo(() => {
     const targetDate = tableDateMode === "day" ? (tableDate || entryDate || todayIso()) : (entryDate || todayIso());
-    const map = new Map<string, {
-      countryId: string;
-      countryName: string;
-      iso2: string;
-      currencyCode: string;
-      currencyFullName: string;
-      rate: number | null;
-      status: "APPROVED" | "PENDING_MISSING";
-    }>();
+    const userCountryIds = session?.scopes?.countryIds || [];
 
-    // 1. Seed from countries master & summaryOverview
-    for (const c of countries) {
+    // Country Admin and Branch Admin only see their assigned countries; Super Admin sees all active countries
+    const scopedCountries = (isSuperAdmin || userCountryIds.length === 0)
+      ? countries
+      : countries.filter((c) => userCountryIds.includes(c.id));
+
+    const list = scopedCountries.map((c) => {
       const code = (c.currency_code || "AED").toUpperCase();
-      map.set(c.id, {
+      const isUsd = code === "USD";
+
+      // Base currency USD is always 1.0000 and Approved
+      if (isUsd) {
+        return {
+          countryId: c.id,
+          countryName: c.name,
+          iso2: (c as any).iso2 || c.name.slice(0, 2).toUpperCase(),
+          currencyCode: "USD",
+          currencyFullName: CURRENCY_FULL_NAMES["USD"] || "US Dollar",
+          rate: 1.0,
+          creditRate: 1.0,
+          debitRate: 1.0,
+          rateDate: targetDate,
+          status: "APPROVED" as const,
+          statusLabel: "Approved",
+          rateTime: null,
+          enteredBy: null,
+        };
+      }
+
+      // Check exact matching record for targetDate in dailyExchangeCountriesStatus
+      const statusEntry = dailyExchangeCountriesStatus.find(
+        (cs) => cs.countryId === c.id && cs.rateDate === targetDate && cs.status === "APPROVED"
+      );
+
+      // Check exact matching record for targetDate in dailyExchangeModuleRates
+      // STRICT: Must match targetDate, never silently substitute an older rate
+      const exactRow = dailyExchangeModuleRates.find(
+        (r) => r.country_id === c.id && r.rate_date === targetDate && !r.superseded_at
+      );
+
+      const creditRate = exactRow?.credit_rate ?? exactRow?.selling_rate ?? statusEntry?.creditRate ?? null;
+      const debitRate = exactRow?.debit_rate ?? exactRow?.buying_rate ?? statusEntry?.debitRate ?? null;
+      const rateVal = creditRate ?? debitRate ?? null;
+      const isApproved = rateVal != null && Number(rateVal) > 0;
+
+      return {
         countryId: c.id,
         countryName: c.name,
         iso2: (c as any).iso2 || c.name.slice(0, 2).toUpperCase(),
         currencyCode: code,
         currencyFullName: CURRENCY_FULL_NAMES[code] || code,
-        rate: null,
-        status: "PENDING_MISSING",
-      });
-    }
+        rate: isApproved ? Number(rateVal) : null,
+        creditRate: creditRate != null ? Number(creditRate) : null,
+        debitRate: debitRate != null ? Number(debitRate) : null,
+        rateDate: targetDate,
+        status: isApproved ? ("APPROVED" as const) : ("PENDING_MISSING" as const),
+        statusLabel: isApproved ? "Approved" : "Rate Not Entered",
+        rateTime: exactRow?.rate_time ?? statusEntry?.rateTime ?? null,
+        enteredBy: exactRow?.user_name ?? statusEntry?.enteredBy ?? null,
+      };
+    });
 
-    for (const sc of summaryOverview?.countries || []) {
-      const code = (sc.currencyCode || "AED").toUpperCase();
-      const existing = map.get(sc.countryId);
-      const ovRate = sc.rates?.creditRate ?? sc.rates?.debitRate ?? sc.rates?.buyingRate ?? sc.rates?.sellingRate ?? null;
-      map.set(sc.countryId, {
-        countryId: sc.countryId,
-        countryName: sc.countryName || existing?.countryName || "",
-        iso2: sc.iso2 || existing?.iso2 || "",
-        currencyCode: code,
-        currencyFullName: CURRENCY_FULL_NAMES[code] || code,
-        rate: ovRate != null && Number(ovRate) > 0 ? Number(ovRate) : (existing?.rate ?? null),
-        status: ovRate != null && Number(ovRate) > 0 ? "APPROVED" : (existing?.status ?? "PENDING_MISSING"),
-      });
-    }
-
-    // 2. Overlay from Daily Exchange Rate module countriesStatus
-    for (const cs of dailyExchangeCountriesStatus) {
-      if (!cs?.countryId) continue;
-      const code = (cs.currencyCode || "AED").toUpperCase();
-      const existing = map.get(cs.countryId);
-      const modRate = cs.creditRate ?? cs.debitRate ?? null;
-      map.set(cs.countryId, {
-        countryId: cs.countryId,
-        countryName: cs.countryName || existing?.countryName || "",
-        iso2: cs.iso2 || existing?.iso2 || "",
-        currencyCode: code,
-        currencyFullName: CURRENCY_FULL_NAMES[code] || code,
-        rate: modRate != null && Number(modRate) > 0 ? Number(modRate) : (existing?.rate ?? null),
-        status: modRate != null && Number(modRate) > 0 ? "APPROVED" : (existing?.status ?? "PENDING_MISSING"),
-      });
-    }
-
-    // 3. Overlay exact-date or latest non-superseded rate from daily_usd_rates table
-    for (const [cid, item] of map.entries()) {
-      const exactRow = dailyExchangeModuleRates.find(
-        (r) => r.country_id === cid && r.rate_date === targetDate && !r.superseded_at
-      );
-      const latestRow = exactRow || dailyExchangeModuleRates.find(
-        (r) => r.country_id === cid && !r.superseded_at
-      );
-      if (latestRow) {
-        const val = latestRow.credit_rate ?? latestRow.debit_rate ?? latestRow.selling_rate ?? latestRow.buying_rate ?? null;
-        if (val != null && Number(val) > 0) {
-          item.rate = Number(val);
-          item.status = "APPROVED";
-        }
-      }
-    }
-
-    const list = Array.from(map.values());
     const q = exchangeRateSearchQuery.trim().toLowerCase();
     if (!q) return list;
     return list.filter((it) =>
@@ -1070,7 +1071,7 @@ export function CashEntryForm({
       it.currencyCode.toLowerCase().includes(q) ||
       it.currencyFullName.toLowerCase().includes(q)
     );
-  }, [countries, summaryOverview, dailyExchangeCountriesStatus, dailyExchangeModuleRates, entryDate, tableDate, tableDateMode, exchangeRateSearchQuery]);
+  }, [countries, isSuperAdmin, session, dailyExchangeCountriesStatus, dailyExchangeModuleRates, entryDate, tableDate, tableDateMode, exchangeRateSearchQuery]);
 
   // Fast currency -> rate map from Daily Exchange Rate module
   const currencyRateLookup = useMemo(() => {
@@ -3822,7 +3823,7 @@ export function CashEntryForm({
               </div>
 
               {/* Active Country Rates List from Daily Exchange Rate Module */}
-              <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[148px] overflow-y-auto pr-0.5">
+              <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[160px] overflow-y-auto pr-0.5">
                 {activeExchangeRatesList.length > 0 ? (
                   activeExchangeRatesList.map((item) => (
                     <div
@@ -3831,22 +3832,48 @@ export function CashEntryForm({
                         setCountryId(item.countryId);
                         if (isSuperAdmin) setTopCountryFilter(item.countryId);
                       }}
-                      className="flex items-center justify-between py-1.5 px-1 hover:bg-emerald-50/40 dark:hover:bg-slate-800/40 rounded-md cursor-pointer transition-colors text-xs"
+                      className={cn(
+                        "flex items-center justify-between py-1.5 px-1.5 rounded-lg cursor-pointer transition-colors text-xs border border-transparent hover:border-emerald-200 hover:bg-emerald-50/50 dark:hover:bg-slate-800/60",
+                        countryId === item.countryId && "bg-emerald-50/80 border-emerald-300 dark:bg-slate-800/80 dark:border-emerald-600"
+                      )}
+                      title={`${item.countryName} (${item.currencyCode}): ${item.rate != null ? `1 USD = ${item.rate.toFixed(4)} ${item.currencyCode}` : 'Rate Not Entered'} ${item.creditRate ? `(Credit: ${item.creditRate.toFixed(4)}, Debit: ${item.debitRate?.toFixed(4) ?? '—'})` : ''}`}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-sm shrink-0">{getCountryFlag(item.countryName || item.iso2)}</span>
-                        <span className="font-extrabold text-slate-900 dark:text-white w-9 shrink-0">
-                          {item.currencyCode}
-                        </span>
-                        <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
-                          {item.currencyFullName}
-                        </span>
+                        <span className="text-base shrink-0">{getCountryFlag(item.countryName || item.iso2)}</span>
+                        <div className="min-w-0 flex flex-col">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-extrabold text-slate-900 dark:text-white">
+                              {item.currencyCode}
+                            </span>
+                            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate max-w-[110px]" title={item.countryName}>
+                              {item.countryName}
+                            </span>
+                          </div>
+                          <span className="text-[9.5px] font-mono text-slate-400 dark:text-slate-500">
+                            {item.rateDate}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="font-mono text-xs font-black text-slate-900 dark:text-white" dir="ltr">
-                          {item.rate != null && item.rate > 0 ? Number(item.rate).toFixed(4) : "—"}
-                        </span>
-                        <TrendingUp className={cn("h-3.5 w-3.5", item.rate != null && item.rate > 0 ? "text-emerald-600" : "text-amber-500")} />
+                      <div className="flex flex-col items-end gap-0.5 shrink-0">
+                        {item.rate != null && item.rate > 0 ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-xs font-black text-slate-900 dark:text-white" dir="ltr">
+                              {item.rate.toFixed(4)}
+                            </span>
+                            <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9.5px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">
+                              Approved
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-800">
+                            Rate Not Entered
+                          </span>
+                        )}
+                        {item.rate != null && (item.creditRate != null || item.debitRate != null) && (
+                          <span className="text-[9px] font-mono text-slate-400">
+                            CR {item.creditRate ? item.creditRate.toFixed(4) : "—"} / DR {item.debitRate ? item.debitRate.toFixed(4) : "—"}
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))
@@ -4503,129 +4530,18 @@ export function CashEntryForm({
                       </div>
 
                       {paymentType === "bank" ? (
-                        <div className="space-y-2.5">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                            <div className="space-y-1">
-                              <BankPicker
-                                label={`${tr("cj.mBank", "Bank")} (${activeCountryIso || tr("cj.mBank", "Bank")})`}
-                                value={typeDetails.bankId || ""}
-                                countryId={selectedCountry?.id || session?.scopes?.countryIds?.[0] || undefined}
-                                onValueChange={async (bankId) => {
-                                  if (!bankId) {
-                                    setTypeDetails((p) => ({ ...p, bankId: "", bankName: "", bankAccount: "" }));
-                                    setSelectedBankRecord(null);
-                                    return;
-                                  }
-                                  try {
-                                    const b = await getBankById(bankId);
-                                    setSelectedBankRecord(b || null);
-                                    setTypeDetails((p) => ({
-                                      ...p,
-                                      bankId,
-                                      bankName: b?.bank_name || p.bankName || "",
-                                      bankAccount: b?.account_number || b?.iban_number || p.bankAccount || ""
-                                    }));
-                                  } catch (e) {
-                                    setTypeDetails((p) => ({ ...p, bankId }));
-                                  }
-                                }}
-                              />
-                            </div>
-
-                            <div className="space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.transfer_method", "Transfer Mode")}</Label>
-                              <select
-                                value={typeDetails.method || "Online Transfer"}
-                                onChange={(e) => setTypeDetails((p) => ({ ...p, method: e.target.value }))}
-                                className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
-                              >
-                                <option value="Online Transfer">{t(lang, "cef.opt_online_transfer", "Online Transfer")}</option>
-                                <option value="Cheque">{t(lang, "cef.opt_cheque", "Cheque")}</option>
-                                <option value="Wire Transfer / TT">{t(lang, "cef.opt_wire_transfer", "Wire Transfer / TT")}</option>
-                                <option value="Cash Deposit">{t(lang, "cef.opt_cash_deposit_slip", "Cash Deposit Slip")}</option>
-                                <option value="RTGS / NEFT">{t(lang, "cef.opt_rtgs_neft", "RTGS / NEFT")}</option>
-                                <option value="IBFT">IBFT</option>
-                                <option value="Other">{tr("cj.mOther", "Other")}</option>
-                              </select>
-                            </div>
-                          </div>
-
-                          {/* Bank Master Coordinate Information (Replaces manual IBAN/Account field) */}
-                          {selectedBankRecord ? (
-                            <div className="p-3 rounded-xl border border-blue-200/80 bg-blue-50/50 dark:border-blue-900/60 dark:bg-blue-950/20 text-xs">
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="font-extrabold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
-                                  <Building2 className="h-3.5 w-3.5 text-blue-600" />
-                                  <span>{selectedBankRecord.bank_name}</span>
-                                  {selectedBankRecord.branch_name && (
-                                    <span className="text-[11px] font-normal text-slate-500">({selectedBankRecord.branch_name})</span>
-                                  )}
-                                </span>
-                                <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">
-                                  {tr("cj.mBankVerified", "Bank Master Verified ✓")}
-                                </span>
-                              </div>
-                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-                                <div>
-                                  <span className="text-[9px] uppercase font-bold text-slate-400 block">{tr("cj.mAccountTitle", "Account Title")}</span>
-                                  <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
-                                    {selectedBankRecord.account_title || "—"}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-[9px] uppercase font-bold text-slate-400 block">{tr("cj.mAccountNumber", "Account Number")}</span>
-                                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate block">
-                                    {selectedBankRecord.account_number || "—"}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-[9px] uppercase font-bold text-slate-400 block">{tr("cj.mIban", "IBAN Number")}</span>
-                                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate block" title={selectedBankRecord.iban_number || ""}>
-                                    {selectedBankRecord.iban_number || "—"}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-[9px] uppercase font-bold text-slate-400 block">{tr("cj.mCurrency", "Currency")}</span>
-                                  <span className="font-bold text-emerald-700 dark:text-emerald-400 block">
-                                    {selectedBankRecord.currency || currency || "AED"}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="p-2.5 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-[11px] text-slate-400 text-center">
-                              {tr("cj.mBankHint", "Select a bank above to automatically load account title, account number, and IBAN from Bank Master.")}
-                            </div>
-                          )}
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                            <div className="space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.cheque_ref_number", "Cheque / Ref Number")}</Label>
-                              <Input
-                                value={typeDetails.transferReferenceNumber || typeDetails.refNo || ""}
-                                onChange={(e) => setTypeDetails((p) => ({ ...p, transferReferenceNumber: e.target.value, refNo: e.target.value }))}
-                                placeholder={t(lang, "cef.cheque_ref_ph", "CHK-883492 or TXN-99482")}
-                                className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
-                              />
-                            </div>
-
-                            <div className="space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.bank_receipt_upload", "Bank Receipt / Slip Upload")}</Label>
-                              <label className="flex items-center justify-center gap-1.5 h-8.5 px-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold cursor-pointer transition">
-                                <Paperclip className="h-3.5 w-3.5" />
-                                <span>{attachmentFile ? attachmentFile.name.slice(0, 16) : tr("cj.mUploadSlip", "Upload Deposit / Cheque Slip")}</span>
-                                <input
-                                  type="file"
-                                  className="hidden"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0] ?? null;
-                                    setAttachmentFile(file);
-                                  }}
-                                />
-                              </label>
-                            </div>
-                          </div>
-                        </div>
+                        <TransferDetailsSection
+                          bankName={typeDetails.bankName || ""}
+                          onBankNameChange={(bankName) => setTypeDetails(p => ({ ...p, bankName }))}
+                          onBankRecordChange={(bank) => setTypeDetails(p => ({ ...p, bankId: bank?.id || "", bankName: bank?.bank_name || p.bankName }))}
+                          transferMode={typeDetails.method || typeDetails.transferType || ""}
+                          onTransferModeChange={(method) => setTypeDetails(p => ({ ...p, method, transferType: method }))}
+                          transactionReference={typeDetails.transferReferenceNumber || typeDetails.refNo || typeDetails.chequeNo || ""}
+                          onTransactionReferenceChange={(refNo) => setTypeDetails(p => ({ ...p, refNo, ref: refNo, transferReferenceNumber: refNo, chequeNo: refNo }))}
+                          attachmentFile={attachmentFile} onAttachmentChange={setAttachmentFile}
+                          countryId={selectedCountry?.id || session?.scopes?.countryIds?.[0] || undefined}
+                          showAttachment={true} lang={lang as SupportedLanguage}
+                        />
                       ) : paymentType === "business" || paymentType === "invoice" ? (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                           <div className="space-y-1">

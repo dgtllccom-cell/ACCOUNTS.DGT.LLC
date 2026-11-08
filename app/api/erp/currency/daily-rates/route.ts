@@ -56,8 +56,9 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const countryId = searchParams.get("countryId");
     const query = searchParams.get("query")?.toLowerCase().trim();
-    const dateFrom = searchParams.get("dateFrom");
-    const dateTo = searchParams.get("dateTo");
+    const dateParam = searchParams.get("date")?.trim();
+    const dateFrom = searchParams.get("dateFrom") || (dateParam ? dateParam : null);
+    const dateTo = searchParams.get("dateTo") || (dateParam ? dateParam : null);
     authorizeApiScope(session, { resource: hasRolePermission(session, "currency_rates", "read") ? "currency_rates" : "roznamcha", action: "read", countryId: countryId && countryId !== "all" ? countryId : null });
 
     const supabase = createSupabaseAdminClient() as any;
@@ -109,25 +110,25 @@ export async function GET(req: NextRequest) {
       ? cleanCountries
       : cleanCountries.filter((c: any) => session.countryIds?.includes(c.id));
 
-    const todayStr = isoToday();
+    const targetRateDate = dateParam || isoToday();
 
-    // Map status for each scoped country for today
+    // Map status for each scoped country for the requested date (exact match only, never silent older fallback)
     const countriesStatus = scopedCountries.map((c: any) => {
-      const todayRate = rows.find(
-        (r) => r.country_id === c.id && r.rate_date === todayStr && !r.superseded_at
+      const activeRate = rows.find(
+        (r) => r.country_id === c.id && r.rate_date === targetRateDate && !r.superseded_at
       );
       return {
         countryId: c.id,
         countryName: c.name,
         currencyCode: c.currency_code,
         iso2: c.iso2,
-        rateDate: todayStr,
-        status: todayRate ? ("APPROVED" as const) : ("PENDING_MISSING" as const),
-        creditRate: todayRate ? todayRate.credit_rate : null,
-        debitRate: todayRate ? todayRate.debit_rate : null,
-        rateTime: todayRate ? todayRate.rate_time : null,
-        enteredBy: todayRate ? todayRate.user_name : null,
-        updatedAt: todayRate ? todayRate.updated_at || todayRate.created_at : null,
+        rateDate: targetRateDate,
+        status: activeRate ? ("APPROVED" as const) : ("PENDING_MISSING" as const),
+        creditRate: activeRate ? activeRate.credit_rate : null,
+        debitRate: activeRate ? activeRate.debit_rate : null,
+        rateTime: activeRate ? activeRate.rate_time : null,
+        enteredBy: activeRate ? activeRate.user_name : null,
+        updatedAt: activeRate ? activeRate.updated_at || activeRate.created_at : null,
       };
     });
 
@@ -147,9 +148,15 @@ export async function GET(req: NextRequest) {
 
     const { data: auditRows } = await histQ;
 
+    const payload = {
+      rates: rows,
+      countriesStatus,
+      auditHistory: auditRows || [],
+    };
+
     return NextResponse.json({
       ok: true,
-      data: rows,
+      data: payload,
       rates: rows,
       countriesStatus,
       auditHistory: auditRows || [],

@@ -2,6 +2,8 @@
 
 import { EntryPortal } from "./payment-entry-portal";
 import { SourceFilteredTable } from "./source-filtered-table";
+import { purchaseInvoiceSummary, isActualInvoicePayment } from "@/lib/journal/purchase-invoice-summary";
+import { afterPurchasePayment, purchasePaymentRegisterUrl } from "@/lib/journal/after-purchase-payment";
 import { payableRemainingLoadings, remainingLoadingEntry, type RemainingDueBill } from "@/lib/journal/remaining-loading-entry";
  
 import { pl } from "@/lib/reports/print-label";
@@ -91,8 +93,10 @@ import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { openPurchaseA4ReportWindow, type PurchaseReportData } from "@/lib/reports/open-purchase-a4-report-window";
 import { PaymentEditModal } from "./payment-edit-modal";
 import { VoiceDictateButton } from "@/components/voice-dictate-button";
-import { BankPicker } from "@/features/banks/components/bank-picker";
-import { getBankById } from "@/features/banks/bank-api";
+import { TransferDetailsSection } from "@/features/roznamcha/components/transfer-details-section";
+import { FinalPaymentReconciliation } from "./final-payment-reconciliation";
+import { finalPaymentReconciliation } from "@/lib/journal/final-payment-reconciliation";
+import { openScopedGenericReport } from "@/lib/reports/open-scoped-report";
 import { Th } from "@/components/ui/translated-th";
 import { t, tData, type LanguageCode } from "@/features/i18n/purchase-journal-translations";
 import { t as tGlobal } from "@/lib/i18n/ui";
@@ -2802,8 +2806,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   };
   const [orders, setOrders] = useState<PurchaseOrderRow[]>([]);
   const [selectedId, setSelectedId] = useState("");
+  const entryClosedRef = React.useRef(false);
   const [modalTab, setModalTab] = useState<"overview" | "goods" | "payments" | "transport">("overview");
   const selectOrder = (id: string, initialTab: "overview" | "goods" | "payments" | "transport" = "payments") => {
+    entryClosedRef.current = false;
     // The next bill must never inherit the previous bill's selected container.
     setSelectedLoadingRecord(null);
     setCalcAmount("");
@@ -2996,7 +3002,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const [paymentDebitLedgerId, setPaymentDebitLedgerId] = useState("");
   const [paymentSourceLedgerId, setPaymentSourceLedgerId] = useState("");
   const [roznamchaType, setRoznamchaType] = useState("Cash Book No.");
-  const [roznamchaNumber, setRoznamchaNumber] = useState("000123");
+  const [roznamchaNumber, setRoznamchaNumber] = useState("");
   const [paymentType, setPaymentType] = useState<"" | "bank" | "business" | "invoice" | "cash" | "transfer">("");
   const [currency, setCurrency] = useState("USD");
   const [calcAmount, setCalcAmount] = useState("");
@@ -3071,7 +3077,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const [registryDueReady, setRegistryDueReady] = useState(false);
   const [registryLoadingRecords, setRegistryLoadingRecords] = useState<any[]>([]);
   useEffect(() => {
-    if (!paymentPage || activeMode !== "remaining") return;
+    if (!paymentPage || !["remaining", "final"].includes(activeMode)) return;
     let cancelled = false;
     setRegistryLoadingRecords([]);
     setRegistryDueBills([]);
@@ -3267,6 +3273,21 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     }
   }, []);
 
+  const returnToPaymentRegister = () => {
+    entryClosedRef.current = true;
+    pendingLoadingPick.current = null;
+    setUrlParamPurchaseOrderNo("");
+    setFromLoadingParam(false);
+    setSelectedLoadingRecord(null);
+    setSelectedId("");
+    setCalcAmount("");
+    setFinalPayment("");
+    setPaymentError("");
+    if (typeof window !== "undefined") {
+      window.history.replaceState(window.history.state, "", purchasePaymentRegisterUrl(window.location.href));
+    }
+  };
+
   async function loadOrders() {
     setLoading(true);
     setError("");
@@ -3390,7 +3411,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       setOrders(rows);
       // Auto-select by URL param
       const urlOrderNo = urlParamPurchaseOrderNo || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("purchaseOrderNo") || "" : "");
-      if (urlOrderNo) {
+      if (urlOrderNo && !entryClosedRef.current) {
         const match = rows.find((r) => r.purchase_order_no === urlOrderNo || r.id === urlOrderNo);
         if (match) setSelectedId(match.id);
       }
@@ -3589,9 +3610,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
           : hasTransferStatus || hasTransferAudit || hasLoadingRecord || isUrlLoadingScope || isInvoiceBill;
         if (!hasContainerMovement) return false; // Block: not yet transferred from loading
 
-        // Show remaining if not fully settled
-        const isFullyCleared = (row.payment_status || "").toLowerCase() === "paid" || (row.payment_status || "").toLowerCase() === "completed";
-        if (isFullyCleared && remainingDue <= 0.01 && !isUrlLoadingScope) return false;
+        // Keep all eligible remaining bills (both pending and cleared) in modeFilteredAll so
+        // summary card counts (Total, Paid, Remaining) reconcile accurately and users can filter
+        // by settlement status (all / paid / remaining).
       } else if (activeMode === "credit") {
         // Strict Business Rule: ONLY show Credit bills in Credit Payment Journal
         if (!isCreditBill) return false;
@@ -3650,17 +3671,27 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     return status === "paid" || status === "completed" || (total > 0 && due <= 0.01);
   };
 
+  const isLocalPurchaseRecord = (r: any) => Boolean(
+    r && (
+      r.is_local_purchase ||
+      r.order_type === "local_purchase" ||
+      r.source_type === "local_purchase" ||
+      r.source_type === "Local Purchase" ||
+      r.local_purchase_id
+    )
+  );
+
   const billSummaryCounts = useMemo(() => {
     const totalAll = modeFilteredAll.length;
     const paidAll = modeFilteredAll.filter(isSettledRow).length;
     const remainingAll = Math.max(0, totalAll - paidAll);
 
-    const bookingRows = modeFilteredAll.filter((o: any) => o.order_type !== "local_purchase");
+    const bookingRows = modeFilteredAll.filter((o: any) => !isLocalPurchaseRecord(o));
     const totalBooking = bookingRows.length;
     const paidBooking = bookingRows.filter(isSettledRow).length;
     const remainingBooking = Math.max(0, totalBooking - paidBooking);
 
-    const localRows = modeFilteredAll.filter((o: any) => o.order_type === "local_purchase");
+    const localRows = modeFilteredAll.filter(isLocalPurchaseRecord);
     const totalLocal = localRows.length;
     const paidLocal = localRows.filter(isSettledRow).length;
     const remainingLocal = Math.max(0, totalLocal - paidLocal);
@@ -3695,15 +3726,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
 
   const sourceCounts = useMemo(() => ({
     all: modeFilteredAll.length,
-    booking: modeFilteredAll.filter((o: any) => o.order_type !== "local_purchase").length,
-    local: modeFilteredAll.filter((o: any) => o.order_type === "local_purchase").length,
+    booking: modeFilteredAll.filter((o: any) => !isLocalPurchaseRecord(o)).length,
+    local: modeFilteredAll.filter(isLocalPurchaseRecord).length,
   }), [modeFilteredAll]);
 
   const filtered = useMemo(() => {
     let rows = modeFilteredAll;
     if (sourceFilter !== "all") {
       rows = rows.filter((row: any) => {
-        const rowSource = row.order_type === "local_purchase" ? "local_purchase" : "purchase_booking";
+        const rowSource = isLocalPurchaseRecord(row) ? "local_purchase" : "purchase_booking";
         return rowSource === sourceFilter;
       });
     }
@@ -4544,8 +4575,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   }, [docMode, selectedId]);
 
   const canSave = useMemo(() => {
-    return Boolean(roznamchaNumber && paymentType && amount > 0 && !overLimit);
-  }, [roznamchaNumber, paymentType, amount, overLimit]);
+    return Boolean(activeMode !== "final" && paymentType && amount > 0 && !overLimit);
+  }, [activeMode, paymentType, amount, overLimit]);
 
   // Dynamic double entry preview values
   const selectedDebitLedger = useMemo(() => {
@@ -4742,7 +4773,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         amountLocal: amount,
         narration: finalRemarks,
         entryDate: paymentDate,
-        referenceNo: roznamchaNumber || undefined,
+        referenceNo: typeDetails.transferReferenceNumber || typeDetails.refNo || typeDetails.chequeNo || roznamchaNumber || undefined,
         typeDetails: {
           ...typeDetails,
           ...(fromLoading && loadingRecordId ? { loadingRecordId } : {})
@@ -4779,19 +4810,26 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       setTypeDetails({});
       setAttachmentFile(null);
       
-      // Auto-redirect back to Purchase Loading Records if from loading or in advance/endorsement mode
-      if (fromLoading || (typeof window !== "undefined" && window.location.search.includes("fromLoading=true"))) {
-        setTimeout(() => {
-          router.push("/dashboard/purchase/purchase-loading-records");
-        }, 1200);
-      } else if (activeMode === "advance" && selected?.purchase_order_no) {
-        setTimeout(() => {
-          router.push("/dashboard/purchase/purchase-loading-records");
-        }, 1200);
-      } else {
-        await loadOrders();
-        setPaymentsTick((n) => n + 1); // show the just-posted payment in the history
-      }
+      await afterPurchasePayment({
+        mode: activeMode,
+        fromLoading: fromLoading || (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("fromLoading") === "true"),
+        hasOrder: Boolean(selected.purchase_order_no),
+        navigate: (path) => router.push(path),
+        returnToRegister: returnToPaymentRegister,
+        refresh: async () => {
+          if (activeMode === "remaining" && !isLocalSelected) {
+            // Block the previous payable snapshot while the same saved loading
+            // is reloaded. A paid batch cannot be offered for another payment.
+            setDueReady(false);
+            setSelectedDueDetail(null);
+            setDueLoadings({});
+            setRegistryDueReady(false);
+            setRegistryDueBills([]);
+          }
+          setPaymentsTick((n) => n + 1);
+          await loadOrders();
+        },
+      });
     } catch (err: any) {
       setPaymentError(err?.message || "Failed to process payment settlement. Please try again.");
     } finally {
@@ -5381,8 +5419,58 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         </div>
       )}
 
+      {activeMode === "remaining" && paymentSuccess && !selected && (
+        <div role="status" className="mx-6 my-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          {paymentSuccess}
+          <a className="ms-3 underline" href="/dashboard/journal/purchase-order-payment/final">{translateHeader(currentLanguage, "Final Payment")}</a>
+        </div>
+      )}
+
       {/* ── 3-State Source Table Component (All Sources, Purchase Booking with Same-Row Loading/Receiving, Local Purchase) ── */}
-      <SourceFilteredTable
+      {activeMode === "final" ? (
+        <FinalPaymentReconciliation
+          rows={displayRows} dueBills={registryDueBills} ready={registryDueReady} error={error}
+          sourceFilter={sourceFilter} onSourceChange={setSourceFilter} lang={currentLanguage}
+          onOpenFullBill={(row: any) => setViewingRow(row)} onPrintStatement={(row: any) => {
+            const r = finalPaymentReconciliation(row, registryDueBills.find(bill => String(bill.id) === String(row.id)));
+            const tr = (key: string, fallback: string) => tGlobal(currentLanguage, key, fallback);
+            const money = (amount: number) => `${r.currency} ${amount.toLocaleString(currentLanguage, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            void openScopedGenericReport({
+              title: translateHeader(currentLanguage, "Final Payment"), subtitle: `${r.billNo} · ${r.supplier}`,
+              lang: currentLanguage, orientation: "portrait",
+              countryId: row.country_id || erpScope.lockedCountryId,
+              countryBranchId: row.country_branch_id || erpScope.lockedCountryBranchId,
+              cityBranchId: row.city_branch_id || erpScope.lockedCityBranchId,
+              countryName: row.country_name || erpScope.countryName, branchName: r.branch,
+              currency: r.currency, printedBy: erpScope.userName,
+              summary: {
+                [tr("rdue.col_bill_total", "Bill Total")]: money(r.total),
+                [tr("ppe.f_advance_paid", "Total Advance Paid")]: money(r.advancePaid),
+                [`${tr("ppe.kind_advance", "Advance")} · ${tr("ppe.f_balance", "Balance")}`]: money(r.afterAdvance),
+                [tr("ppe.f_remaining_paid", "Total Remaining Paid")]: money(r.remainingPaid),
+                [tr("ppe.f_total_paid", "Total Paid")]: money(r.totalPaid),
+                [tr("ppe.f_balance", "Balance")]: money(r.outstanding),
+              },
+              filters: [
+                { label: translateHeader(currentLanguage, "Date"), value: r.date },
+                { label: translateHeader(currentLanguage, "DR Account"), value: row.purchase_account_no || row.form_data?.form?.purchaseAccountNo || "—" },
+                { label: translateHeader(currentLanguage, "CR Account"), value: row.sales_account_no || row.form_data?.form?.salesAccountNo || "—" },
+                { label: tr("plr.history_title", "Loading History"), value: tr("rdue.status_paid", "Paid in full") },
+              ],
+              columns: [
+                { key: "loadingNo", label: tr("rdue.col_loading_no", "Loading No.") },
+                { key: "container", label: tr("rdue.col_container", "Container") },
+                { key: "quantity", label: translateHeader(currentLanguage, "Quantity"), align: "right" },
+                { key: "value", label: tr("rdue.col_value", "Value"), align: "right" },
+                { key: "advanceAllocated", label: tr("rdue.col_adv_alloc", "Advance Allocated"), align: "right" },
+                { key: "paid", label: tr("ppe.f_remaining_paid", "Total Remaining Paid"), align: "right" },
+                { key: "outstanding", label: tr("ppe.f_balance", "Balance"), align: "right" },
+              ],
+              rows: r.completed.map(entry => ({ ...entry, loadingNo: entry.loadingNo || entry.id, value: money(Number(entry.value)), advanceAllocated: money(Number(entry.advanceAllocated)), paid: money(Number(entry.paid)), outstanding: money(Number(entry.outstanding)) })),
+            });
+          }}
+        />
+      ) : <SourceFilteredTable
         sourceFilter={sourceFilter}
         onSourceChange={(s: any) => { setSourceFilter(s); setPageIndex(0); }}
         rows={displayRows}
@@ -5395,17 +5483,20 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         activeMode={activeMode}
         loadingRecords={registryLoadingRecords}
         dueBills={registryDueBills}
+        invoiceRefresh={paymentsTick}
+        invoiceFinalCurrency={rowOfficeCurrency}
         onSelectLoading={(id, loadingId) => { pendingLoadingPick.current = loadingId; selectOrder(id); }}
-      />
+        session={session}
+      />}
       </>
       )}
 
       {/* Ledger Cash Entry Panel (Modal) - Compact 4-Tab Architecture */}
-      {selected && (
+      {selected && activeMode !== "final" && (
         <PaymentPanelShell
           docMode={docMode}
           title=""
-          onClose={() => setSelectedId("")}
+          onClose={returnToPaymentRegister}
           maxWidth="max-w-[1360px]"
           className="w-[96vw] max-w-[1360px] h-[92vh] max-h-[920px] p-0 overflow-hidden bg-slate-50 dark:bg-[#070e20] text-slate-900 dark:text-slate-100 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
         >
@@ -5478,7 +5569,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
             const paymentCondition = form.paymentCondition || (activeMode === "advance" ? "Advance Payment" : isCredit ? "Credit Payment" : "");
 
             // Payment calculations
-            const displayPayments = selectedOrderPayments.filter((p: any) => p.kind !== "booking");
+            const displayPayments = selectedOrderPayments.filter((p: any) => activeMode === "advance" ? isActualInvoicePayment(p) : p.kind !== "booking");
             const chronological = displayPayments.sort((a: any, b: any) =>
               new Date(a.entry_date || a.created_at).getTime() - new Date(b.entry_date || b.created_at).getTime()
             );
@@ -5637,6 +5728,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   isRtl={isRtl}
                   mode={activeMode as PaymentEntryMode}
                   model={docModel}
+                  invoiceSummary={activeMode === "advance" ? purchaseInvoiceSummary(selected, loadingPayments ? null : selectedOrderPayments, rowOfficeCurrency(selected), selectedOrderPayments.length < 200 && !paymentError) : undefined}
                   limit={docLimit}
                   purchaseCurrency={poCurrencyHeader}
                   baseCurrency={baseCurrency}
@@ -5673,7 +5765,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   saving={processingPayment}
                   saveDisabled={Boolean(docLimit?.over) || (activeMode === "remaining" && !isLocalSelected && !selectedLoadingDue)}
                   paymentsLoading={loadingPayments}
-                  onBack={() => { setSelectedLoadingRecord(null); setSelectedId(""); }}
+                  onBack={returnToPaymentRegister}
                   onPrint={() => handleOpenA4PDF(selected, true)}
                   onSave={() => {
                     setIsDoubleEntryExpanded(true);
@@ -5698,7 +5790,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       <h2 className="text-lg font-extrabold text-slate-900">{translateHeader(currentLanguage, "Remaining Payment")} — {selected.purchase_order_no}</h2>
                       <p className="text-xs font-semibold text-slate-500">{translateHeader(currentLanguage, "Select Loaded Container / Batch")}</p>
                     </div>
-                    <button type="button" onClick={() => { setSelectedLoadingRecord(null); setSelectedId(""); }} className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white">Back to Register</button>
+                    <button type="button" onClick={returnToPaymentRegister} className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white">Back to Register</button>
                   </div>
                   {selectedDueError ? (
                     <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
@@ -5730,6 +5822,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                           </button>
                         );
                       })}
+                    </div>
+                  ) : selectedDueBill?.loadings?.some(entry => entry.complete && Number(entry.outstanding || 0) <= 0.05) ? (
+                    <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900">
+                      {tGlobal(currentLanguage, "plr.history_title", "Loading History")} · {tGlobal(currentLanguage, "rdue.status_paid", "Paid in full")}
+                      <a className="ms-3 underline" href="/dashboard/journal/purchase-order-payment/final">{translateHeader(currentLanguage, "Final Payment")}</a>
                     </div>
                   ) : (
                     <p className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
@@ -6595,15 +6692,6 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                           </select>
                         </FieldBlock>
 
-                        <FieldBlock label={t("roznamcha_voucher_no", currentLanguage)} required>
-                          <Input
-                            className="h-8 font-mono text-xs font-bold bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                            value={roznamchaNumber}
-                            onChange={(e) => setRoznamchaNumber(e.target.value)}
-                            placeholder="e.g. 000123"
-                          />
-                        </FieldBlock>
-
                         <FieldBlock label={t("payment_condition", currentLanguage)} required>
                           <select
                             className="flex h-8 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-xs font-semibold text-slate-900 dark:text-slate-100 focus-visible:outline-none"
@@ -6635,45 +6723,17 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
 
                       {/* Dynamic Bank / Method Details */}
                       {paymentType === "bank" && (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-xl">
-                          <FieldBlock label={translateHeader(currentLanguage, "Select Bank Name")} required>
-                            <BankPicker
-                              label=""
-                              value={typeDetails.bankId || ""}
-                              onValueChange={async (bankId) => {
-                                setTypeDetails((prev) => ({ ...prev, bankId }));
-                                if (!bankId) return;
-                                try {
-                                  const bank = await getBankById(bankId);
-                                  setTypeDetails((prev) => ({
-                                    ...prev,
-                                    bankName: bank?.bank_name || prev.bankName
-                                  }));
-                                } catch {
-                                  // ignore
-                                }
-                              }}
-                            />
-                          </FieldBlock>
-
-                          <FieldBlock label={translateHeader(currentLanguage, "Bank Account / IBAN / Ref No.")}>
-                            <Input
-                              className="h-8 text-xs font-mono bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                              placeholder={translateHeader(currentLanguage, "Account / IBAN...")}
-                              value={typeDetails.refNo || ""}
-                              onChange={(e) => setTypeDetails((p) => ({ ...p, refNo: e.target.value }))}
-                            />
-                          </FieldBlock>
-
-                          <FieldBlock label={translateHeader(currentLanguage, "Cheque / Transaction ID")}>
-                            <Input
-                              className="h-8 text-xs font-mono bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                              placeholder={translateHeader(currentLanguage, "Cheque No. / TT Slip ID...")}
-                              value={typeDetails.chequeNo || ""}
-                              onChange={(e) => setTypeDetails((p) => ({ ...p, chequeNo: e.target.value }))}
-                            />
-                          </FieldBlock>
-                        </div>
+                        <TransferDetailsSection
+                          bankName={typeDetails.bankName || ""}
+                          onBankNameChange={(bankName) => setTypeDetails(p => ({ ...p, bankName }))}
+                          onBankRecordChange={(bank) => setTypeDetails(p => ({ ...p, bankId: bank?.id || "", bankName: bank?.bank_name || p.bankName }))}
+                          transferMode={typeDetails.method || typeDetails.transferType || ""}
+                          onTransferModeChange={(method) => setTypeDetails(p => ({ ...p, method, transferType: method }))}
+                          transactionReference={typeDetails.transferReferenceNumber || typeDetails.refNo || typeDetails.chequeNo || ""}
+                          onTransactionReferenceChange={(refNo) => setTypeDetails(p => ({ ...p, refNo, transferReferenceNumber: refNo, chequeNo: refNo }))}
+                          countryId={selected.country_id || undefined}
+                          lang={currentLanguage as any}
+                        />
                       )}
 
                       {paymentType === "business" && (
@@ -6977,7 +7037,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                         const missing: string[] = [];
                         if (!paymentDebitLedgerId) missing.push(t("debit_account_party_supplier", currentLanguage));
                         if (!paymentSourceLedgerId) missing.push(t("payment_source_account", currentLanguage));
-                        if (!roznamchaNumber) missing.push(t("roznamcha_voucher_number", currentLanguage));
+                        // The server allocates the internal voucher serial; the bank reference is separate.
                         if (!paymentType) missing.push(t("payment_type_label", currentLanguage));
                         if (!(amount > 0)) missing.push(t("payment_amount_label", currentLanguage));
 

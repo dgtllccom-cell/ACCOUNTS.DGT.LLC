@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { PapFilters, PapMenu, PapRefresh, PapSearch } from "@/components/purchase-ui/purchase-approved-header";
 import "@/components/purchase-ui/purchase-table-skin.css";
 import { LoadingApprovedHeader } from "./purchase-loading-approved-header";
+import { PurchaseLoadingPaymentStatement } from "./purchase-loading-payment-statement";
 import { useSearchParams } from "next/navigation";
 import { openLoadingRecordsPrintReport } from "@/lib/reports/open-loading-records-print-report";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -13,8 +14,10 @@ import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { loadingWeightProfile, loadingWeights } from "@/lib/purchases/loading-weights";
 import { Th } from "@/components/ui/translated-th";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { translateOptionLabel } from "@/lib/i18n/option-labels";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
@@ -186,9 +189,10 @@ function normalizeAdvanceToPurchaseCurrency(rawAdvance: number, contractPurchase
 }
 
 
-function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord; onClose: () => void; onSaved?: () => void }) {
+export function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord; onClose: () => void; onSaved?: () => void }) {
   const activeLang = useActiveLanguage();
   const tt = buildTt(activeLang);
+  const th = (key: string) => translateHeader(activeLang, key);
   const poData = (Array.isArray(record.purchase_orders) ? record.purchase_orders[0] : record.purchase_orders)?.form_data || {};
   const poRow = (Array.isArray(record.purchase_orders) ? record.purchase_orders[0] : record.purchase_orders) || {};
   const form = poData.form || {};
@@ -507,7 +511,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
     setReceivingPortState(h.report_payload?.receivingPort || h.receiving_location || "");
     setReceivingDateState(h.report_payload?.receivingDate || "");
     setVesselName(h.report_payload?.vesselName || h.carrier_name || "");
-    setNewLoadingQuantity(String(h.report_payload?.loadedQuantity || h.loadedQuantity || ""));
+    setNewLoadingQuantity(String(h.report_payload?.loadedQuantity ?? h.loaded_quantity ?? h.loadedQuantity ?? ""));
     setNewLoadingNote(h.remarks || "");
     setOriginCountry(h.report_payload?.originCountry || "");
     setGoodsName(h.report_payload?.goodsName || "");
@@ -516,18 +520,18 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
     setBrand(h.report_payload?.brand || "");
     setSizeSpec(h.report_payload?.sizeSpec || "");
     setQtyName(h.report_payload?.qtyName || "BAGS");
-    setQuantityNo(h.report_payload?.quantityNo || "");
-    setOneQtyKgs(h.report_payload?.oneQtyKgs || "");
-    setOneEmptyKgs(h.report_payload?.oneEmptyKgs || "");
+    setQuantityNo(String(h.report_payload?.quantityNo ?? h.loaded_quantity ?? h.loadedQuantity ?? ""));
+    setOneQtyKgs(String(h.report_payload?.oneQtyKgs ?? ""));
+    setOneEmptyKgs(String(h.report_payload?.oneEmptyKgs ?? ""));
     setDivideType(h.report_payload?.divideType || "D/KGs");
     setDivideWeightValue(h.report_payload?.divideWeightValue || "1");
     setQualityReportRef(h.report_payload?.qualityReportRef || "");
     setContainerTypeInput(h.container_type || record.container_type || "40 FT");
     setVoyageNo(h.voyage_no || "");
     setRailReference(h.rail_reference || "");
-    setGrossWeightInput(h.gross_weight != null ? String(h.gross_weight) : "");
-    setTareWeightInput(h.tare_weight != null ? String(h.tare_weight) : "");
-    setNetWeightInput(h.net_weight != null ? String(h.net_weight) : "");
+    setGrossWeightInput(h.gross_weight != null ? String(h.gross_weight) : h.report_payload?.grossWeight != null ? String(h.report_payload.grossWeight) : "");
+    setTareWeightInput(h.tare_weight != null ? String(h.tare_weight) : h.report_payload?.tareWeight != null ? String(h.report_payload.tareWeight) : "");
+    setNetWeightInput(h.net_weight != null ? String(h.net_weight) : h.report_payload?.netWeight != null ? String(h.report_payload.netWeight) : "");
     if (h.transport_mode) setTransportMode(h.transport_mode as TransportModeUi);
     setContainerNumberInput(h.container_number || h.report_payload?.containerNumber || "");
     setSealNumberInput(h.report_payload?.sealNumber || "");
@@ -695,11 +699,15 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
   const remainingGrossWeight = Math.max(0, contractGrossWeight - loadedGrossWeight);
   const remainingNetWeight = Math.max(0, contractNetWeight - loadedNetWeight);
 
-  const currentInputQty = Number(quantityNo || 0);
-  const currentInputQtyKgs = Number(oneQtyKgs || 0);
-  const currentInputEmptyKgs = Number(oneEmptyKgs || 0);
-  const currentInputGrossKgs = currentInputQty > 0 && currentInputQtyKgs > 0 ? (currentInputQty * currentInputQtyKgs) : 0;
-  const currentInputNetKgs = currentInputQty > 0 && currentInputQtyKgs > 0 ? (currentInputQty * Math.max(0, currentInputQtyKgs - currentInputEmptyKgs)) : 0;
+  const selectedWeightProfile = loadingWeightProfile(goods, form, goodsName);
+  const automaticWeights = loadingWeights(quantityNo, selectedWeightProfile, oneQtyKgs, oneEmptyKgs);
+  const currentInputGrossKgs = automaticWeights.gross ?? 0;
+  const currentInputNetKgs = automaticWeights.net ?? 0;
+  const resetWeightOverrides = () => {
+    setGrossWeightInput("");
+    setTareWeightInput("");
+    setNetWeightInput("");
+  };
   async function downloadLoadDetails(kind: "json" | "pdf") {
     if (kind === "pdf") {
       const { printDomFragmentViaModal } = await import("@/lib/reports/print-dom-fragment");
@@ -781,9 +789,9 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
           transportRemarks: transportRemarksInput || null,
           // Operational cargo data only — never a currency, rate or amount.
           blNumber: blNumber || null,
-          grossWeight: grossWeightInput !== "" ? Number(grossWeightInput) : (currentInputGrossKgs > 0 ? currentInputGrossKgs : null),
-          tareWeight: tareWeightInput !== "" ? Number(tareWeightInput) : (currentInputGrossKgs > currentInputNetKgs && currentInputNetKgs > 0 ? currentInputGrossKgs - currentInputNetKgs : null),
-          netWeight: netWeightInput !== "" ? Number(netWeightInput) : (currentInputNetKgs > 0 ? currentInputNetKgs : null),
+          grossWeight: grossWeightInput !== "" ? Number(grossWeightInput) : automaticWeights.gross,
+          tareWeight: tareWeightInput !== "" ? Number(tareWeightInput) : automaticWeights.tare,
+          netWeight: netWeightInput !== "" ? Number(netWeightInput) : automaticWeights.net,
           sealNumber: sealNumberInput || null,
           vesselName: transportMode === "By Sea" ? (vesselName || null) : null,
           voyageNo: transportMode === "By Sea" ? (voyageNo || null) : null,
@@ -842,6 +850,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
       const totalContainers = Math.max(1, Number(containerCount) || 1);
       setEditingLoadingId(null);
       if (currentContainerIndex < totalContainers) {
+        resetWeightOverrides();
         const nextIdx = currentContainerIndex + 1;
         setCurrentContainerIndex(nextIdx);
         setContainerNumberInput("");
@@ -865,6 +874,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
         setReceivingPortState(receivingPort !== "-" ? receivingPort : "");
         setReceivingDateState(form.receivedDate || form.arrivalDate || "");
         const defaultGood = goods?.[0] || {};
+        const defaultWeightProfile = loadingWeightProfile(goods, form, defaultGood.itemName || defaultGood.goodsName || defaultGood.item || form.goodsName || "");
         setVesselName(form.vesselName || poRow.carrier_name || "");
         setOriginCountry(defaultGood.originCountry || defaultGood.origin || form.originCountry || form.origin || "");
         setGoodsName(defaultGood.itemName || defaultGood.goodsName || defaultGood.item || form.goodsName || "");
@@ -874,8 +884,8 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
         setSizeSpec(defaultGood.sizeSpec || defaultGood.size || form.size || "");
         setQtyName(defaultGood.qtyName || defaultGood.unit || form.qtyName || "BAGS");
         setQuantityNo("");
-        setOneQtyKgs(defaultGood.qtyKgs ? String(defaultGood.qtyKgs) : (form.qtyKgs ? String(form.qtyKgs) : ""));
-        setOneEmptyKgs(defaultGood.emptyKgs ? String(defaultGood.emptyKgs) : (form.emptyKgs ? String(form.emptyKgs) : ""));
+        setOneQtyKgs(defaultWeightProfile.grossPerUnit == null ? "" : String(defaultWeightProfile.grossPerUnit));
+        setOneEmptyKgs(defaultWeightProfile.emptyPerUnit == null ? "" : String(defaultWeightProfile.emptyPerUnit));
         setDivideType(defaultGood.divideType || form.divideType || "D/KGs");
         setDivideWeightValue(defaultGood.divideWeightValue ? String(defaultGood.divideWeightValue) : (form.divideWeightValue ? String(form.divideWeightValue) : "1"));
         setQualityReportRef("");
@@ -910,14 +920,15 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                setEditingLoadingId(null);
                setFormStep(1);
                const defaultGood = goods?.[0] || {};
+        const defaultWeightProfile = loadingWeightProfile(goods, form, defaultGood.itemName || defaultGood.goodsName || defaultGood.item || form.goodsName || "");
                const dOrigin = defaultGood.originCountry || defaultGood.origin || form.originCountry || form.origin || (loadingCountry !== "-" ? loadingCountry : "");
                const dGoodsName = defaultGood.itemName || defaultGood.goodsName || defaultGood.item || form.goodsName || "";
                const dHsCode = defaultGood.hsCode || form.hsCode || "0000";
                const dBrand = defaultGood.brandName || defaultGood.brand || form.brand || "";
                const dSizeSpec = defaultGood.sizeSpec || defaultGood.size || form.size || "";
                const dQtyName = defaultGood.qtyName || defaultGood.unit || form.qtyName || "BAGS";
-               const dOneQtyKgs = defaultGood.qtyKgs ? String(defaultGood.qtyKgs) : (form.qtyKgs ? String(form.qtyKgs) : "");
-               const dOneEmptyKgs = defaultGood.emptyKgs ? String(defaultGood.emptyKgs) : (form.emptyKgs ? String(form.emptyKgs) : "");
+               const dOneQtyKgs = defaultWeightProfile.grossPerUnit == null ? "" : String(defaultWeightProfile.grossPerUnit);
+               const dOneEmptyKgs = defaultWeightProfile.emptyPerUnit == null ? "" : String(defaultWeightProfile.emptyPerUnit);
                const dDivideType = defaultGood.divideType || form.divideType || "D/KGs";
                const dDivideWeightValue = defaultGood.divideWeightValue ? String(defaultGood.divideWeightValue) : (form.divideWeightValue ? String(form.divideWeightValue) : "1");
                const dTransportMode = (form.shippingMode as TransportModeUi) || "By Sea";
@@ -1544,6 +1555,10 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                             onChange={(e) => {
                               const selectedName = e.target.value;
                               setGoodsName(selectedName);
+                              resetWeightOverrides();
+                              const profile = loadingWeightProfile(goods, form, selectedName);
+                              setOneQtyKgs(profile.grossPerUnit == null ? "" : String(profile.grossPerUnit));
+                              setOneEmptyKgs(profile.emptyPerUnit == null ? "" : String(profile.emptyPerUnit));
                               const good = goods.find((g: any) => (g.itemName || g.goodsName || g.item) === selectedName);
                               if (good) {
                                 if (good.hsCode) setHsCode(good.hsCode);
@@ -1552,8 +1567,6 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                                 if (good.qtyName || good.unit) setQtyName(good.qtyName || good.unit);
                                 if (good.sizeSpec || good.size) setSizeSpec(good.sizeSpec || good.size);
                                 // Quantity No is explicitly left empty for manual user entry as requested
-                                if (good.qtyKgs) setOneQtyKgs(String(good.qtyKgs));
-                                if (good.emptyKgs) setOneEmptyKgs(String(good.emptyKgs));
                                 if (good.divideType) setDivideType(good.divideType);
                                 if (good.divideWeightValue) setDivideWeightValue(String(good.divideWeightValue));
                               }
@@ -1597,6 +1610,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                         <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                           {tt("plr.qty_number", "Quantity No")}
                           <input data-testid="ld-qty" value={quantityNo} onChange={(e) => {
+                            resetWeightOverrides();
                             setQuantityNo(e.target.value);
                             setNewLoadingQuantity(e.target.value);
                           }} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
@@ -1604,12 +1618,12 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
 
                         <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                           {tt("plr.gross_per_unit", "Gross Wt / Unit (KGS)")}
-                          <input value={oneQtyKgs} onChange={(e) => setOneQtyKgs(e.target.value)} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
+                          <input value={oneQtyKgs} onChange={(e) => { resetWeightOverrides(); setOneQtyKgs(e.target.value); }} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                         
                         <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                           {tt("plr.empty_per_unit", "Empty Wt / Unit (KGS)")}
-                          <input value={oneEmptyKgs} onChange={(e) => setOneEmptyKgs(e.target.value)} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
+                          <input value={oneEmptyKgs} onChange={(e) => { resetWeightOverrides(); setOneEmptyKgs(e.target.value); }} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
 
                         <label className="space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
@@ -1649,15 +1663,15 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           <div className="grid grid-cols-3 gap-2">
                             <label className="space-y-1 text-[11px] font-bold text-teal-700 dark:text-teal-500">
                               {tt("plr.gross_weight_kg", "Gross (kg)")}
-                              <input type="number" min="0" step="0.01" value={grossWeightInput} onChange={(e) => setGrossWeightInput(e.target.value)} data-testid="ld-gross" placeholder={currentInputGrossKgs > 0 ? String(currentInputGrossKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
+                              <input type="number" min="0" step="0.01" value={grossWeightInput !== "" ? grossWeightInput : automaticWeights.gross ?? ""} onChange={(e) => setGrossWeightInput(e.target.value)} data-testid="ld-gross" placeholder={currentInputGrossKgs > 0 ? String(currentInputGrossKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                             </label>
                             <label className="space-y-1 text-[11px] font-bold text-teal-700 dark:text-teal-500">
                               {tt("plr.tare_weight_kg", "Tare (kg)")}
-                              <input type="number" min="0" step="0.01" value={tareWeightInput} onChange={(e) => setTareWeightInput(e.target.value)} data-testid="ld-tare" placeholder={currentInputGrossKgs > currentInputNetKgs ? String(currentInputGrossKgs - currentInputNetKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
+                              <input type="number" min="0" step="0.01" value={tareWeightInput !== "" ? tareWeightInput : automaticWeights.tare ?? ""} onChange={(e) => setTareWeightInput(e.target.value)} data-testid="ld-tare" placeholder={currentInputGrossKgs > currentInputNetKgs ? String(currentInputGrossKgs - currentInputNetKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                             </label>
                             <label className="space-y-1 text-[11px] font-bold text-teal-700 dark:text-teal-500">
                               {tt("plr.net_weight_kg", "Net (kg)")}
-                              <input type="number" min="0" step="0.01" value={netWeightInput} onChange={(e) => setNetWeightInput(e.target.value)} data-testid="ld-net" placeholder={currentInputNetKgs > 0 ? String(currentInputNetKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
+                              <input type="number" min="0" step="0.01" value={netWeightInput !== "" ? netWeightInput : automaticWeights.net ?? ""} onChange={(e) => setNetWeightInput(e.target.value)} data-testid="ld-net" placeholder={currentInputNetKgs > 0 ? String(currentInputNetKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                             </label>
                           </div>
                           <label className="space-y-1 text-[11px] font-bold text-teal-700 dark:text-teal-500">
@@ -1671,6 +1685,12 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           </div>
                         </div>
                       </div>
+
+                      {Number(quantityNo) > 0 && ((grossWeightInput === "" && automaticWeights.gross == null) || (netWeightInput === "" && automaticWeights.net == null)) && (
+                        <p role="status" className="mb-4 rounded border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                          {tt("pjb.weight_missing_note", "Some goods have no recorded weight; their kg are not estimated.")}
+                        </p>
+                      )}
 
                       {/* PO Items Status Summary Table */}
                       <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 mb-4 dark:border-slate-800 dark:bg-slate-900/30">
@@ -2197,6 +2217,7 @@ const containerTypes = ["20 FT", "40 FT", "20 FT Reefer", "40 FT Reefer", "Non R
 function ReceivingModal({ record, onClose, onReceived }: { record: LoadingRecord; onClose: () => void; onReceived?: () => void }) {
   const activeLang = useActiveLanguage();
   const tt = buildTt(activeLang);
+  const th = (key: string) => translateHeader(activeLang, key);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang || "en");
 
   const loadedQuantity = Number(record.loaded_quantity || 0);
@@ -2344,6 +2365,7 @@ function emptyForm() {
 export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: string }) {
   const activeLang = useActiveLanguage();
   const tt = buildTt(activeLang);
+  const th = (key: string) => translateHeader(activeLang, key);
   const searchParams = useSearchParams();
   // Country Receiving nav entry links here with ?focus=receiving — same page, same data,
   // just pre-filtered to the records that still have something left to receive, instead of
@@ -2372,6 +2394,9 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
   const [setupMessage, setSetupMessage] = useState<string | null>(null);
   const [apiSession, setApiSession] = useState<LoadingApiSession | null>(null);
   const [apiScope, setApiScope] = useState<LoadingApiScope | null>(null);
+  const isSuperAdmin = Boolean(apiSession?.isSuperAdmin || apiSession?.roles?.includes("super_admin"));
+  const isCountryAdmin = !isSuperAdmin && Boolean(apiSession?.roles?.some(r => r === "country_admin" || r === "country_user") || apiScope?.type === "country");
+  const isBranchUser = !isSuperAdmin && !isCountryAdmin;
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"all" | LoadingStatus>("all");
   const [loading, setLoading] = useState(true);
@@ -2956,182 +2981,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
         );
       })()}
 
-      {/* Super Admin Country Report Dashboard Header */}
-      {loadingSummaryRows.length > 0 && (() => {
-        let totalPoQty = 0;
-        let totalLoadedQty = 0;
-        let totalPurchaseValue = 0;
-        let totalLoadedValue = 0;
-        let activeBranchesCount = 0;
-        let totalGrossWeight = 0;
-        let totalNetWeight = 0;
-        
-        loadingSummaryRows.forEach(r => {
-          totalPoQty += r.totalQuantity;
-          totalLoadedQty += r.loadedQuantity;
-          totalPurchaseValue += r.purchaseValue;
-          totalLoadedValue += r.loadedValue;
-          activeBranchesCount += r.branches.length;
-        });
 
-        (records || []).forEach(rec => {
-          const payload = (rec as any).report_payload || {};
-          totalGrossWeight += Number(payload.grossWeight || payload.gross_weight || (rec as any).gross_weight || 0);
-          totalNetWeight += Number(payload.netWeight || payload.net_weight || (rec as any).net_weight || 0);
-        });
-
-        const activeCountriesCount = loadingSummaryRows.length;
-        const totalRemainingQty = Math.max(0, totalPoQty - totalLoadedQty);
-        const totalRemainingValue = Math.max(0, totalPurchaseValue - totalLoadedValue);
-
-        const formatMoney = (val: number) => val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const getFlag = (cName: string) => {
-          if (!cName) return '';
-          if (cName.toLowerCase().includes('pakistan')) return 'PK';
-          if (cName.toLowerCase().includes('iran')) return 'IR';
-          if (cName.toLowerCase().includes('arab emirates') || cName.toLowerCase().includes('uae')) return 'AE';
-          if (cName.toLowerCase().includes('afghanistan')) return 'AF';
-          if (cName.toLowerCase().includes('india')) return 'IN';
-          if (cName.toLowerCase().includes('china')) return 'CN';
-          return '';
-        };
-
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-        const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase();
-        const firstRecord = records[0] ?? null;
-        const firstPo = firstRecord ? (Array.isArray(firstRecord.purchase_orders) ? firstRecord.purchase_orders[0] : firstRecord.purchase_orders) : null;
-        const firstForm = firstPo?.form_data?.form || {};
-        const isSuperAdminScope = Boolean(apiSession?.isSuperAdmin);
-        const scopeType = apiScope?.type || (isSuperAdminScope ? "global" : "country");
-        const primaryCountry = apiScope?.countries?.[0];
-        const primaryMainBranch = apiScope?.countryBranches?.[0];
-        const primaryCityBranch = apiScope?.cityBranches?.[0];
-        const countryDisplay = isSuperAdminScope && activeCountriesCount !== 1
-          ? "All Countries"
-          : (primaryCountry?.name || firstRecord?.countries?.name || firstForm.branchCountry || "Assigned Country");
-        const countryIso = primaryCountry?.iso2 || firstRecord?.countries?.iso2 || "";
-        const branchDisplay = isSuperAdminScope && activeBranchesCount !== 1
-          ? "All Branches"
-          : scopeType === "city_branch"
-            ? (primaryCityBranch?.name || primaryCityBranch?.city_name || firstRecord?.city_branches?.name || firstRecord?.city_branches?.city_name || firstRecord?.country_branches?.name || firstForm.branchName || "Assigned Branch")
-            : scopeType === "country_branch"
-              ? (primaryMainBranch?.name || firstRecord?.country_branches?.name || firstForm.branchName || "Assigned Main Branch")
-              : (activeBranchesCount > 1 ? "All Country Branches" : (firstRecord?.country_branches?.name || firstForm.branchName || "Assigned Branches"));
-        const userIdDisplay = apiSession?.userId || "-";
-        const userNameDisplay = apiSession?.fullName || apiSession?.email || "Current User";
-        const roleDisplay = (apiSession?.roles?.[0] || (isSuperAdminScope ? "super_admin" : scopeType)).replace(/_/g, " ");
-        const scopeReportTitle = isSuperAdminScope
-          ? "All Countries Report Details"
-          : scopeType === "city_branch"
-            ? "Branch Loading Report Details"
-            : scopeType === "country_branch"
-              ? "Main Branch Loading Report Details"
-              : "Country Branches Report Details";
-        const scopeBadge = isSuperAdminScope
-          ? `${activeCountriesCount} scoped countries`
-          : scopeType === "city_branch"
-            ? "1 branch scope"
-            : `${activeBranchesCount} scoped branches`;
-
-        return (
-          <div className="flex flex-col mb-6 space-y-4">
-            {/* Collapsible Country Dashboard Section */}
-            <details className="group border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-              <summary className="flex cursor-pointer items-center justify-between bg-slate-50 px-4 py-3 font-black text-slate-800 hover:bg-slate-100 dark:bg-slate-900/50 dark:text-slate-200 dark:hover:bg-slate-900/80 uppercase text-xs tracking-wider">
-                <div className="flex items-center gap-2">
-                  <span className="transition-transform group-open:rotate-90">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                  </span>
-                  {scopeReportTitle}
-                </div>
-                <span className="text-[11px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800 uppercase whitespace-nowrap">
-                  {scopeBadge}
-                </span>
-              </summary>
-              
-              <div className="p-4 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {loadingSummaryRows.map((r, idx) => {
-                    const totalQty = r.totalQuantity;
-                    const loadedQty = r.loadedQuantity;
-                    const balQty = Math.max(0, totalQty - loadedQty);
-                    
-                    return (
-                      <details key={idx} className="group/card overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-                        <summary className="cursor-pointer list-none">
-                          <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-3 text-white flex justify-between items-center">
-                            <span className="font-black tracking-wide text-sm flex items-center gap-2">
-                              <span className="transition-transform group-open/card:rotate-90">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                              </span>
-                              {getFlag(r.country)} {r.country}
-                            </span>
-                            <span className="rounded bg-white/20 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider backdrop-blur-sm whitespace-nowrap">
-                              {r.branches.length} Branches
-                            </span>
-                          </div>
-                        </summary>
-                        <div className="p-4">
-                          <div className="mb-4 flex flex-col gap-2 rounded-xl bg-slate-50 p-3 dark:bg-slate-950">
-                            <div className="flex justify-between items-center">
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("lpjr.col_cur", "Currency")}</span>
-                              <span className="font-black text-slate-800 dark:text-slate-200 text-xs">{r.currency}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.col_total_qty", "Total Qty")}</span>
-                              <span className="font-black text-slate-800 dark:text-slate-200 font-mono text-[11px]">{totalQty.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.loaded_qty", "Loaded Qty")}</span>
-                              <span className="font-black text-emerald-600 font-mono text-[11px]">{loadedQty.toLocaleString()}</span>
-                            </div>
-                            <div className="mt-1 flex justify-between items-center border-t border-slate-200 pt-2 dark:border-slate-800">
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.col_remaining_bal_qty", "Remaining Bal. Qty")}</span>
-                              <span className="font-black text-rose-600 dark:text-rose-400 font-mono text-sm">{balQty.toLocaleString()}</span>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-400 flex justify-between items-center">
-                              <span>{tt("report.branch_breakdown", "Branch Breakdown")}</span>
-                              <span className="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[11px] dark:bg-slate-800">All</span>
-                            </h5>
-                            {r.branches.map((b, bIdx) => {
-                              const bBalQty = Math.max(0, b.totalQuantity - b.loadedQuantity);
-                              return (
-                                <div key={bIdx} className="flex flex-col gap-1.5 rounded-lg border border-slate-100 p-2.5 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                  <div className="flex justify-between items-center">
-                                    <span className="font-black text-[11px] uppercase text-slate-700 dark:text-slate-300 truncate pr-2" title={b.branch}>{b.branch}</span>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-1 text-[11px]">
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-slate-400">{tt("plr.col_total_qty", "Total Qty")}</span>
-                                      <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{b.totalQuantity.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-slate-400">{tt("plr.loaded_qty", "Loaded Qty")}</span>
-                                      <span className="font-bold text-emerald-500 font-mono">{b.loadedQuantity.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center col-span-2">
-                                      <span className="text-slate-400">{tt("plr.col_bal_qty", "Bal. Qty")}</span>
-                                      <span className="font-bold text-rose-500 font-mono">{bBalQty.toLocaleString()}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </details>
-                    );
-                  })}
-                </div>
-              </div>
-            </details>
-          </div>
-        );
-      })()}
 
 
       {setupMessage ? (
@@ -3145,337 +2995,22 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
         </div>
       ) : null}
 
-      <div className="space-y-4">
-        <div className="dgt-purchase-table-skin overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/20">
-            <div className="flex items-center gap-2">
-              <Ship className="h-4 w-4 text-blue-600" />
-              <div>
-                <h2 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{tt("plr.title_loading_records", "Loading Records Report")}</h2>
-                <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 tracking-wide mt-0.5">{tt("plr.independent_note", "Independent from Purchase Booking Order unless explicitly linked.")}</p>
-              </div>
-            </div>
-          </div>
+      <PurchaseLoadingPaymentStatement
+        records={records}
+        poGroups={poGroups}
+        loadingSummaryRows={loadingSummaryRows}
+        isSuperAdmin={isSuperAdmin}
+        isCountryAdmin={isCountryAdmin}
+        isBranchUser={isBranchUser}
+        apiSession={apiSession}
+        apiScope={apiScope}
+        activeLang={activeLang}
+        loading={loading}
+        onEditRecord={(rec) => setSelectedLoadDetailsRecord(rec)}
+        onReceiveRecord={(rec) => setReceivingRecord(rec)}
+        onRefresh={() => void loadRecords()}
+      />
 
-          <div className="overflow-x-auto">
-            <table className="w-max min-w-full border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-50/80 text-left text-[11px] font-black uppercase tracking-wider text-slate-500 dark:bg-slate-900/40 dark:text-slate-400">
-                    {[
-                      "Expand",
-                      "SR#",
-                      "Country",
-                      "Branch",
-                      "Bill / Source",
-                      "Sales Account",
-                      "Purchase Account",
-                      "Goods",
-                      "Contract Qty",
-                      "Gross Wt",
-                      "Tare Wt (Empty)",
-                      "Net Wt",
-                      "Total Purchase Amount (FC)",
-                      "Purchase Advance (FC)",
-                      "Purchase Remaining (FC)",
-                      "Loaded Qty",
-                      "Remaining to Load",
-                      "Stage / Payment / Next Step",
-                      "Action"
-                    ].map((head) => (
-                      <Th key={head} className="whitespace-nowrap px-4 py-3 border-b border-slate-100 dark:border-slate-800">
-                        {head}
-                      </Th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={19} className="px-3 py-8 text-center text-muted-foreground">
-                        {tt("plr.loading_records", "Loading records...")}
-                      </td>
-                    </tr>
-                  ) : poGroups.length ? (
-                    poGroups.map(([poNo, group], groupIdx) => {
-                      const { poRow, form, records, realRecords, totalContractQty, totalContractGrossWeight, totalContractNetWeight, totalContractAmount, currency, totalLoadedQty } = group;
-                      const isExpanded = !!expandedPoNos[poNo];
-                      const displayRecords = realRecords;
-
-                      const salesAccountNo = form.salesAccountNumber || form.salesAccountNo || "-";
-                      const salesAccountName = form.salesAccountName || "-";
-                      const purchaseAccountNo = form.purchaseAccountNumber || form.purchaseAccountNo || "-";
-                      const purchaseAccountName = form.purchaseAccountName || "-";
-
-                      const goods = asRecordArray<any>(poRow.form_data?.goodsEntries);
-                      const goodsName = goods.map((g: any) => g.goodsName || g.item_name).filter(Boolean).join(", ") || form.itemName || "-";
-                      const goodsDetails = goods.map((g: any) => g.brand || g.size || g.item_details).filter(Boolean).join(", ") || form.itemDetails || "-";
-                      const combinedGoods = goodsName !== "-" ? `${goodsName}${goodsDetails !== "-" ? ` - ${goodsDetails}` : ""}` : "-";
-
-                      const remainingQtyToLoad = Math.max(0, totalContractQty - totalLoadedQty);
-                      const exRate = Number(poRow.exchange_rate || form.exchangeRate || 1);
-                      const rawAdvance = Number(poRow.advance_paid || form.advanceAmount || 0);
-
-                      const contractTareWeight = Math.max(0, totalContractGrossWeight - totalContractNetWeight);
-                      const priceRate = totalContractQty > 0 ? (totalContractAmount / totalContractQty) : 0;
-                      const purchaseAdvanceUSD = normalizeAdvanceToPurchaseCurrency(rawAdvance, totalContractAmount, exRate);
-                      const purchaseRemainingUSD = Math.max(0, totalContractAmount - purchaseAdvanceUSD);
-
-                      const localCurrencyCode = records[0]?.countries?.currency || form.branchCurrency || "PKR";
-                      const finalAmountLC = totalContractAmount * exRate;
-                      const finalAdvanceLC = purchaseAdvanceUSD * exRate;
-                      const finalRemainingLC = Math.max(0, finalAmountLC - finalAdvanceLC);
-                      const paymentStatus = String(poRow.payment_status || form.paymentStatus || form.payment_status || "pending");
-                      const primaryLoadingRecord = realRecords[0] || records[0] || null;
-                      const nextDestination = String(
-                        primaryLoadingRecord?.receiving_location ||
-                        form.receivedPort ||
-                        form.destinationPort ||
-                        form.destinationCountry ||
-                        "Land / In Transit"
-                      );
-
-                      const countryLabel = `${records[0]?.countries?.name || form.branchCountry || "-"}${records[0]?.countries?.iso2 ? ` (${records[0].countries.iso2})` : ""}`;
-                      const branchLabel = `${records[0]?.country_branches?.name || form.branchName || "-"}${records[0]?.country_branches?.code ? ` (${records[0].country_branches.code})` : ""}`;
-
-                      const isFullyLoaded = totalLoadedQty >= totalContractQty && totalContractQty > 0;
-                      const isPartiallyLoaded = totalLoadedQty > 0 && totalLoadedQty < totalContractQty;
-
-                      return (
-                        <React.Fragment key={poNo}>
-                          {/* Main Purchase Booking Parent Row */}
-                          <tr className={cn(
-                            "transition font-semibold",
-                            isExpanded ? "bg-blue-50/40 dark:bg-blue-950/20" : "hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                          )}>
-                            <td className="whitespace-nowrap px-3 py-3 text-center">
-                              <button
-                                type="button"
-                                onClick={() => togglePoExpand(poNo)}
-                                className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white font-bold text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-                              >
-                                {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-blue-600" /> : <ChevronRight className="h-3.5 w-3.5 text-slate-500" />}
-                              </button>
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-3 text-[11px] font-bold text-slate-400">{String(groupIdx + 1).padStart(2, "0")}</td>
-                            <td className="whitespace-nowrap px-4 py-3 font-semibold">{countryLabel}</td>
-                            <td className="whitespace-nowrap px-4 py-3 text-slate-500">{branchLabel}</td>
-                            <td className="whitespace-nowrap px-4 py-3 leading-tight">
-                              <div className="inline-flex items-center gap-1.5 font-bold text-blue-600">
-                                <Link2 className="h-3.5 w-3.5 text-blue-500" />
-                                {poNo}
-                              </div>
-                              <div className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                                {primaryLoadingRecord?.loading_record_no || "Loading source pending"}
-                              </div>
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-3 leading-tight">
-                              <div className="font-mono text-[11px] font-bold text-slate-700 dark:text-slate-300">{salesAccountNo}</div>
-                              <div className="text-slate-400 text-[11px] uppercase tracking-wider">{salesAccountName}</div>
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-3 leading-tight">
-                              <div className="font-mono text-[11px] font-bold text-slate-700 dark:text-slate-300">{purchaseAccountNo}</div>
-                              <div className="text-slate-400 text-[11px] uppercase tracking-wider">{purchaseAccountName}</div>
-                            </td>
-                            <td className="min-w-[150px] px-4 py-3 text-[11px] text-slate-700 dark:text-slate-200">{combinedGoods}</td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono font-black text-slate-900 dark:text-slate-100">{totalContractQty.toLocaleString()} Bags</td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono">{totalContractGrossWeight.toLocaleString()} kg</td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono text-slate-500">{contractTareWeight.toLocaleString()} kg</td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono">{totalContractNetWeight.toLocaleString()} kg</td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono font-black text-emerald-600 dark:text-emerald-400">
-                              {totalContractAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono font-bold text-amber-600">
-                              {purchaseAdvanceUSD > 0 ? `${purchaseAdvanceUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}` : "-"}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono font-bold text-rose-600">
-                              {purchaseRemainingUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono font-black text-teal-600 dark:text-teal-400">{totalLoadedQty.toLocaleString()} Bags</td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono font-black text-rose-600">{remainingQtyToLoad.toLocaleString()} Bags</td>
-                            <td className="whitespace-nowrap px-4 py-3">
-                              <div className="flex flex-col gap-1.5">
-                                {isFullyLoaded ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-black uppercase text-white shadow-sm dark:bg-black">
-                                    {tt("plr.fully_loaded_100", "100% Fully Loaded")}
-                                  </span>
-                                ) : isPartiallyLoaded ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-black uppercase text-amber-950 shadow-sm">
-                                    {((totalLoadedQty / totalContractQty) * 100).toFixed(0)}% Partially Loaded
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-600 px-2.5 py-1 text-[11px] font-black uppercase text-white shadow-sm animate-pulse">
-                                    0% Loaded (Pending)
-                                  </span>
-                                )}
-                                <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                                  Payment: <span className="text-slate-800 dark:text-slate-200">{paymentStatus.replace(/_/g, " ")}</span>
-                                </span>
-                                <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                                  Next: <span className="text-blue-600 dark:text-blue-400">{nextDestination}</span>
-                                </span>
-                                <span className="text-[11px] font-mono font-black text-rose-600" data-testid="payable-balance">
-                                  {tt("plr.payable_balance", "Payable")}: {purchaseRemainingUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-3">
-                              <div className="flex items-center gap-1.5">
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setSelectedLoadDetailsRecord(records[0])}
-                                  disabled={isFullyLoaded}
-                                  data-testid={`add-loading-${poNo}`}
-                                  title={isFullyLoaded ? tt("plr.new_loading_disabled", "Everything is already loaded. Edit an existing entry to correct it.") : undefined}
-                                  className="h-7 px-2 text-[11px] font-bold uppercase text-emerald-700 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 gap-1 shadow-sm disabled:opacity-50"
-                                >
-                                  <Plus className="h-3 w-3 text-emerald-600" />
-                                  {tt("plr.add_loading", "Add Loading")}
-                                </Button>
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => togglePoExpand(poNo)}
-                                  className="h-7 px-2 text-[11px] font-bold uppercase tracking-wider gap-1"
-                                >
-                                  <Ship className="h-3 w-3 text-blue-600" />
-                                  {isExpanded ? "Hide" : `View (${displayRecords.length})`}
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-
-                          {/* Expanded Child Loading Breakdown Table */}
-                          {isExpanded && (
-                            <tr className="bg-slate-100/70 dark:bg-slate-950/60">
-                              <td colSpan={19} className="p-4">
-                                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md dark:border-slate-800 dark:bg-slate-900 space-y-3">
-                                  <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
-                                    <div className="flex items-center gap-2">
-                                      <div className="rounded bg-blue-50 p-1.5 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
-                                        <Ship className="h-4 w-4" />
-                                      </div>
-                                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
-                                        {tt("plr.container_breakdown_for", "Container Shipment Loading Breakdown for")} <span className="text-blue-600">{poNo}</span>
-                                      </h4>
-                                    </div>
-                                    <span className="text-[11px] font-bold text-slate-500 font-mono">
-                                      Loaded: {totalLoadedQty.toLocaleString()} / {totalContractQty.toLocaleString()} Bags
-                                    </span>
-                                  </div>
-
-                                  {displayRecords.length > 0 ? (
-                                    <div className="overflow-x-auto">
-                                      <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
-                                        <thead>
-                                          <tr className="bg-slate-50 text-[11px] font-black uppercase tracking-wider text-slate-500 border-b dark:bg-slate-950">
-                                            <Th className="px-3 py-2">{tt("plr.col_loading_no", "Loading #")}</Th>
-                                            <Th className="px-3 py-2">{tt("plr.col_bl", "BL Number")}</Th>
-                                            <Th className="px-3 py-2">{tt("plr.col_container", "Container")}</Th>
-                                            <Th className="px-3 py-2">{tt("plr.col_vessel", "Vessel / Vehicle")}</Th>
-                                            <Th className="px-3 py-2 text-end">{tt("plr.loaded_qty", "Loaded Qty")}</Th>
-                                            <Th className="px-3 py-2 text-end">{tt("plr.col_net_weight", "Net Weight")}</Th>
-                                            <Th className="px-3 py-2 text-end">{tt("plr.col_gross_weight", "Gross Weight")}</Th>
-                                            <Th className="px-3 py-2">{tt("plr.col_lane_status", "Lane Status")}</Th>
-                                            <Th className="px-3 py-2">{tt("plr.col_location", "Current Location")}</Th>
-                                            <Th className="px-3 py-2">{tt("plr.col_assigned", "Assigned To")}</Th>
-                                            <Th className="px-3 py-2">{tt("plr.col_route_dates", "Route / Dates")}</Th>
-                                            <Th className="px-3 py-2 text-center max-sm:sticky max-sm:end-0 max-sm:z-10 max-sm:bg-slate-50 dark:max-sm:bg-slate-950">{tt("common.actions", "Actions")}</Th>
-                                          </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                          {displayRecords.map((r, childIdx) => {
-                                            const payload = r.report_payload || {};
-                                            const loadedQty = Number(payload.loadedQuantity || r.loadedQuantity || 0);
-                                            const finance = calcLoadingFinance(r, poRow, form);
-                                            const blNo = r.bl_number || payload.blNumber || "-";
-                                            const containerNo = r.container_number || payload.containerNumber || "-";
-                                            const vessel = payload.vesselName || r.carrier_name || "-";
-                                            const route = [payload.loadingPort || r.loading_location, payload.receivingPort || r.receiving_location].filter(Boolean).join(" to ") || "-";
-                                            const loadingDateStr = payload.loadingDate || (r.loaded_at ? new Date(r.loaded_at).toLocaleDateString() : "-");
-                                            const ls = listLane[r.id];
-                                            const act = loadingRowAction({ laneStatus: ls?.lane_status, hasLaneRow: !!ls, legNo: ls?.leg_no, ownerChanged: ls?.ownerChanged });
-                                            const net = Number(r.net_weight ?? payload.netWeight ?? finance.netWeight ?? 0);
-                                            const gross = Number(r.gross_weight ?? payload.grossWeight ?? finance.grossWeight ?? 0);
-
-                                            return (
-                                              <tr key={r.id || childIdx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                                                <td className="px-3 py-2 font-mono font-bold text-blue-600">{r.loading_record_no}</td>
-                                                <td className="px-3 py-2 font-mono font-semibold text-slate-700 dark:text-slate-300">{blNo}</td>
-                                                <td className="px-3 py-2 font-mono font-bold text-slate-800 dark:text-slate-100">{containerNo}</td>
-                                                <td className="px-3 py-2 text-slate-600 dark:text-slate-400">{vessel}</td>
-                                                <td className="px-3 py-2 text-right font-mono font-black text-emerald-600">{loadedQty.toLocaleString()} Bags</td>
-                                                <td className="px-3 py-2 text-end font-mono text-slate-600 dark:text-slate-400">{net > 0 ? `${net.toLocaleString()} kg` : "-"}</td>
-                                                <td className="px-3 py-2 text-end font-mono text-slate-600 dark:text-slate-400">{gross > 0 ? `${gross.toLocaleString()} kg` : "-"}</td>
-                                                <td className="px-3 py-2" data-testid="list-lane-status">
-                                                  {ls
-                                                    ? <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-black uppercase text-sky-700 whitespace-nowrap">{tt(`plane.${LANE_STATUS_LABEL[ls.lane_status as LaneStatus]?.key ?? ls.lane_status}`, LANE_STATUS_LABEL[ls.lane_status as LaneStatus]?.en ?? ls.lane_status)}</span>
-                                                    : <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-black uppercase text-slate-500 whitespace-nowrap">{tt("plr.not_in_lane", "Not in lane")}</span>}
-                                                </td>
-                                                <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{ls?.current_location || payload.loadingPort || r.loading_location || "-"}</td>
-                                                <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{ls?.assigned_to || "-"}</td>
-                                                <td className="px-3 py-2 text-[11px]">
-                                                  <div className="font-semibold text-slate-700 dark:text-slate-300">{route}</div>
-                                                  <div className="text-slate-400 font-mono">{loadingDateStr}</div>
-                                                </td>
-                                                <td className="px-3 py-2 text-center max-sm:sticky max-sm:end-0 max-sm:z-10 max-sm:bg-white max-sm:shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.25)] dark:max-sm:bg-slate-900">
-                                                  <div className="flex items-center justify-center gap-1.5 max-sm:max-w-[9.5rem] max-sm:flex-wrap">
-                                                    <Button
-                                                      type="button"
-                                                      size="sm"
-                                                      disabled={listLaneBusy === r.id}
-                                                      onClick={() => void onListLaneAction(r, act.kind, poRow.id ?? r.purchase_order_id ?? null)}
-                                                      data-testid="list-lane-action"
-                                                      data-kind={act.kind}
-                                                      className="h-6 gap-1 rounded bg-indigo-600 px-2 text-[11px] font-bold uppercase text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 whitespace-nowrap"
-                                                    >
-                                                      <ArrowRightLeft className="h-3 w-3" />
-                                                      {tt(`plane.${act.labelKey}`, act.label)}
-                                                    </Button>
-                                                    <CustomDropdown record={r} onLoadDetails={setSelectedLoadDetailsRecord} onReceive={setReceivingRecord} />
-                                                  </div>
-                                                </td>
-                                              </tr>
-                                            );
-                                          })}
-                                        </tbody>
-                                      </table>
-                                    </div>
-                                  ) : (
-                                    <div className="p-6 text-center space-y-3 bg-slate-50/50 dark:bg-slate-950/40 rounded-lg border border-dashed border-slate-200 dark:border-slate-800">
-                                      <p className="text-xs font-semibold text-slate-500">{tt("plr.no_container_loadings", "No container shipment loadings created yet for Purchase Booking")} <span className="font-bold text-blue-600">{poNo}</span>.</p>
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        onClick={() => setSelectedLoadDetailsRecord(records[0])}
-                                        className="h-8 px-4 text-xs font-bold uppercase bg-blue-600 hover:bg-blue-700 text-white rounded-lg gap-1.5 shadow-sm"
-                                      >
-                                        <Plus className="h-3.5 w-3.5" />
-                                        {tt("plr.create_first_loading", "Create First Loading Entry")}
-                                      </Button>
-                                    </div>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </React.Fragment>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan={18} className="px-3 py-8 text-center text-muted-foreground">
-                        {tt("plr.no_records_found", "No purchase loading records found.")}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

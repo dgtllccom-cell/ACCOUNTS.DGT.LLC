@@ -32,11 +32,13 @@ export async function GET(request: NextRequest) {
 
     const data = await withLocalPg(async (sql) => {
       const pos = await sql`
-        select po.id::text as id, po.country_id::text as country_id, po.city_branch_id::text as city_branch_id, po.purchase_order_no, po.currency_code, po.purchase_currency, po.exchange_rate, po.order_total, po.total_goods_original,
+        select po.id::text as id, po.country_id::text as country_id, po.dest_country_id::text as dest_country_id,
+               po.city_branch_id::text as city_branch_id, po.purchase_order_no, po.currency_code, po.purchase_currency, po.exchange_rate, po.order_total, po.total_goods_original,
                po.advance_paid, po.remaining_paid, po.credit_amount, po.remaining_due, po.payment_status, po.form_data, po.created_at,
-               c.name as country_name, c.currency_code as base_currency, cib.city_name as branch_name
+               c.name as country_name, dc.name as dest_country_name, c.currency_code as base_currency, cib.city_name as branch_name
         from public.purchase_orders po
         left join public.countries c on c.id = po.country_id
+        left join public.countries dc on dc.id = po.dest_country_id
         left join public.city_branches cib on cib.id = po.city_branch_id
         where po.deleted_at is null
           and exists (select 1 from public.purchase_loading_records l where l.purchase_order_id = po.id and l.deleted_at is null and coalesce(l.loaded_quantity, 0) > 0)
@@ -49,7 +51,10 @@ export async function GET(request: NextRequest) {
       const ids = pos.map((p: any) => p.id as string);
       if (!ids.length) return { pos, loadings: [] as any[], payments: [] as any[] };
       const loadings = await sql`
-        select id::text as id, purchase_order_id::text as purchase_order_id, loading_record_no, container_number, loaded_quantity, net_weight, gross_weight,
+        select id::text as id, purchase_order_id::text as purchase_order_id, loading_record_no, container_number, vehicle_no,
+               loaded_quantity, net_weight, gross_weight,
+               origin_text, destination_text, loading_location, receiving_location,
+               loaded_at, received_at, actual_arrival_date,
                loading_status, report_payload, created_at
         from public.purchase_loading_records
         where purchase_order_id = any(${ids}::uuid[]) and deleted_at is null and coalesce(loaded_quantity, 0) > 0
@@ -64,6 +69,7 @@ export async function GET(request: NextRequest) {
     // country / branch names follow the viewer's language (the bill's own numbers, supplier and goods are business data and stay as saved)
     const posLocalized = await localizeJoinedNames((data?.pos ?? []) as any[], lang, [
       { idField: "country_id", nameField: "country_name", table: "countries" },
+      { idField: "dest_country_id", nameField: "dest_country_name", table: "countries" },
       { idField: "city_branch_id", nameField: "branch_name", table: "city_branches", field: "name" }
     ]);
     const bills: any[] = [];
@@ -80,10 +86,17 @@ export async function GET(request: NextRequest) {
           id: String(l.id),
           loadingNo: l.loading_record_no ?? null,
           container: l.container_number ?? null,
+          vehicleNo: l.vehicle_no ?? null,
           quantity: Number(l.loaded_quantity || 0),
           netWeightKg: Number(l.net_weight || 0),
           grossWeightKg: l.gross_weight == null ? null : Number(l.gross_weight),
-          loadedAt: l.created_at ?? null,
+          originText: l.origin_text ?? null,
+          destinationText: l.destination_text ?? null,
+          loadingLocation: l.loading_location ?? null,
+          receivingLocation: l.receiving_location ?? null,
+          loadedAt: l.loaded_at ?? l.created_at ?? null,
+          receivedAt: l.received_at ?? l.actual_arrival_date ?? null,
+          reportPayload: l.report_payload ?? null,
           value: st?.valueFC ?? 0,
           advanceAllocated: st?.advanceAllocFC ?? 0,
           paid: st?.paidFC ?? 0,
@@ -103,6 +116,7 @@ export async function GET(request: NextRequest) {
         supplier: form.supplierName || form.salesAccountName || null,
         goods: goodsNames.join(", "),
         country: po.country_name ?? null,
+        destCountry: po.dest_country_name ?? null,
         branch: po.branch_name ?? null,
         currency: bill.currency,
         localCurrency: String(po.base_currency || "").toUpperCase(),

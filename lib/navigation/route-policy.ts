@@ -71,6 +71,7 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/roznamcha/expenses-bill": ["expenses:read", "expenses:create", "route:/dashboard/roznamcha/expenses-bill"],
   "/dashboard/purchase/new-purchase-booking-order": ["purchases:read", "purchases:create", "route:/dashboard/purchase/new-purchase-booking-order"],
   "/dashboard/purchase/purchase-confirm": ["purchases:read", "purchases:update", "route:/dashboard/purchase/purchase-confirm"],
+  "/dashboard/purchase/confirm-purchase": ["purchases:read", "purchases:update", "route:/dashboard/purchase/confirm-purchase"],
   "/dashboard/purchase/purchase-booking-journal-report": ["purchases:read", "reports:read", "route:/dashboard/purchase/purchase-booking-journal-report"],
   "/dashboard/purchase/purchase-order": ["purchases:read", "purchases:create", "route:/dashboard/purchase/purchase-order"],
   "/dashboard/purchase/purchase-order-tracking": ["purchases:read", "route:/dashboard/purchase/purchase-order-tracking"],
