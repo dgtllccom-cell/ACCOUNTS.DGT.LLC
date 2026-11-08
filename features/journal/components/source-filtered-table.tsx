@@ -199,12 +199,17 @@ export function SourceFilteredTable({
       billNo: string;
       loadingNo: string;
       truckNo: string;
-      loadingDate: string;
       goodsName: string;
       loadedQty: number;
       unit: string;
       grossWeight: number;
       netWeight: number;
+      loadCountry: string;
+      loadPort: string;
+      loadDate: string;
+      receiveCountry: string;
+      receivePort: string;
+      receiveDate: string;
       purchCurr: string;
       finalCurr: string;
       exRate: number;
@@ -225,10 +230,11 @@ export function SourceFilteredTable({
     if (Array.isArray(dueBills) && dueBills.length > 0) {
       for (const bill of dueBills) {
         const po = rowMap.get(String(bill.id));
+        const poForm = (po?.form_data?.form || {}) as Record<string, any>;
         const billNo = bill.billNo || po?.purchase_order_no || po?.bill_no || "—";
-        const purchCurr = String(bill.currency || po?.currency_code || "USD").toUpperCase();
-        const finalCurr = String(bill.localCurrency || po?.dest_countries?.currency_code || "AED").toUpperCase();
-        const exRate = Number(bill.exchangeRate || po?.exchange_rate || 1) || 1;
+        const purchCurr = String(bill.currency || po?.currency_code || poForm.currency || "USD").toUpperCase();
+        const finalCurr = String(bill.localCurrency || po?.dest_countries?.currency_code || poForm.branchCurrency || poForm.finalCurrency || "AED").toUpperCase();
+        const exRate = Number(bill.exchangeRate || po?.exchange_rate || poForm.exchangeRate || 1) || 1;
         const rawDueDate = bill.dueDate || (po ? resolveAgreedDueDate(po) : null) || po?.due_date || "—";
 
         const loadings = Array.isArray(bill.loadings) ? bill.loadings : [];
@@ -236,14 +242,85 @@ export function SourceFilteredTable({
           const qty = Number(l.quantity || 0);
           if (qty <= 0) continue;
           const lr = lrMap.get(String(l.id));
+          const payload = (lr?.report_payload || l.reportPayload || {}) as Record<string, any>;
 
           const loadingNo = l.loadingNo || lr?.loading_record_no || `LD-${String(l.id).slice(0, 8)}`;
-          const truckNo = lr?.vehicle_no || lr?.report_payload?.truckNo || lr?.report_payload?.vehicleNo || l.container || lr?.container_number || "—";
-          const loadingDate = l.loadedAt ? String(l.loadedAt).slice(0, 10) : (lr?.loaded_at ? String(lr.loaded_at).slice(0, 10) : (lr?.created_at ? String(lr.created_at).slice(0, 10) : "—"));
-          const goodsName = lr?.report_payload?.goodsName || lr?.goods_name || bill.goods || po?.goods_name || "—";
-          const unit = lr?.report_payload?.qtyName || po?.form_data?.form?.qtyName || po?.unit || "PCS";
-          const grossWeight = Number(l.grossWeightKg ?? lr?.gross_weight ?? lr?.report_payload?.grossWeight ?? 0);
-          const netWeight = Number(l.netWeightKg ?? lr?.net_weight ?? lr?.report_payload?.netWeight ?? 0);
+          const truckNo = lr?.vehicle_no || l.vehicleNo || payload.truckNo || payload.vehicleNo || l.container || lr?.container_number || "—";
+          const goodsName = payload.goodsName || lr?.goods_name || bill.goods || po?.goods_name || "—";
+          const unit = payload.qtyName || poForm.qtyName || po?.unit || "PCS";
+          const grossWeight = Number(l.grossWeightKg ?? lr?.gross_weight ?? payload.grossWeight ?? 0);
+          const netWeight = Number(l.netWeightKg ?? lr?.net_weight ?? payload.netWeight ?? 0);
+
+          const loadCountry = String(
+            payload.loadingCountry ||
+            payload.originCountry ||
+            poForm.originCountry ||
+            poForm.countryName ||
+            lr?.loading_country ||
+            lr?.origin_country ||
+            po?.country_name ||
+            bill.country ||
+            "—"
+          ).trim() || "—";
+
+          const loadPort = String(
+            payload.loadingPort ||
+            payload.originPort ||
+            payload.loadingPlace ||
+            payload.border ||
+            lr?.loading_location ||
+            l.loadingLocation ||
+            lr?.origin_text ||
+            l.originText ||
+            poForm.loadingPort ||
+            poForm.originPort ||
+            poForm.loadingLocation ||
+            "—"
+          ).trim() || "—";
+
+          const loadDate = String(
+            l.loadedAt ? String(l.loadedAt).slice(0, 10) :
+            (lr?.loaded_at ? String(lr.loaded_at).slice(0, 10) :
+            (payload.loadingDate ? String(payload.loadingDate).slice(0, 10) :
+            (lr?.created_at ? String(lr.created_at).slice(0, 10) : "—")))
+          ).trim() || "—";
+
+          const receiveCountry = String(
+            payload.receivingCountry ||
+            payload.destinationCountry ||
+            poForm.destCountry ||
+            poForm.destinationCountry ||
+            bill.destCountry ||
+            po?.dest_country_name ||
+            po?.dest_countries?.name ||
+            lr?.receiving_country ||
+            "—"
+          ).trim() || "—";
+
+          const receivePort = String(
+            payload.receivingPort ||
+            payload.destPort ||
+            payload.destinationPort ||
+            payload.dischargePort ||
+            lr?.receiving_location ||
+            l.receivingLocation ||
+            lr?.destination_text ||
+            l.destinationText ||
+            poForm.destPort ||
+            poForm.destinationPort ||
+            poForm.receivingLocation ||
+            "—"
+          ).trim() || "—";
+
+          const rawReceiveDate =
+            l.receivedAt ? String(l.receivedAt).slice(0, 10) :
+            (lr?.received_at ? String(lr.received_at).slice(0, 10) :
+            (lr?.actual_arrival_date ? String(lr.actual_arrival_date).slice(0, 10) :
+            (payload.receivedAt ? String(payload.receivedAt).slice(0, 10) :
+            (payload.actualArrivalDate ? String(payload.actualArrivalDate).slice(0, 10) :
+            (payload.arrivalDate ? String(payload.arrivalDate).slice(0, 10) : null)))));
+
+          const receiveDate = rawReceiveDate || (payload.etaDate ? `${String(payload.etaDate).slice(0, 10)} (ETA)` : "— / Pending");
 
           const loadedInvoicePC = Number(l.value ?? 0);
           const loadedInvoiceFC = loadedInvoicePC * exRate;
@@ -253,9 +330,9 @@ export function SourceFilteredTable({
           const remainingFC = Math.max(0, loadedInvoiceFC - paidFC);
 
           let paymentStatus = "Open";
-          if (l.complete || remainingPC <= 0.05) {
+          if (remainingPC <= 0.05 && remainingFC <= 0.05) {
             paymentStatus = "Fully Paid";
-          } else if (paidPC > 0) {
+          } else if (paidPC > 0.05 || paidFC > 0.05) {
             paymentStatus = "Partially Paid";
           }
 
@@ -267,12 +344,17 @@ export function SourceFilteredTable({
             billNo,
             loadingNo,
             truckNo,
-            loadingDate,
             goodsName,
             loadedQty: qty,
             unit,
             grossWeight,
             netWeight,
+            loadCountry,
+            loadPort,
+            loadDate,
+            receiveCountry,
+            receivePort,
+            receiveDate,
             purchCurr,
             finalCurr,
             exRate,
@@ -292,6 +374,8 @@ export function SourceFilteredTable({
         const qty = Number(lr.loaded_quantity || 0);
         if (qty <= 0) continue;
         const po = rowMap.get(String(lr.purchase_order_id));
+        const poForm = (po?.form_data?.form || {}) as Record<string, any>;
+        const payload = (lr.report_payload || {}) as Record<string, any>;
         const billNo = lr.purchase_order_no || po?.purchase_order_no || "—";
         const purchCurr = String(po?.currency_code || "USD").toUpperCase();
         const finalCurr = String(po?.dest_countries?.currency_code || "AED").toUpperCase();
@@ -310,11 +394,19 @@ export function SourceFilteredTable({
         const remainingFC = Math.max(0, loadedInvoiceFC - paidFC);
 
         let paymentStatus = "Open";
-        if (remainingPC <= 0.05) {
+        if (remainingPC <= 0.05 && remainingFC <= 0.05) {
           paymentStatus = "Fully Paid";
-        } else if (paidPC > 0) {
+        } else if (paidPC > 0.05 || paidFC > 0.05) {
           paymentStatus = "Partially Paid";
         }
+
+        const loadCountry = String(payload.loadingCountry || payload.originCountry || poForm.originCountry || po?.country_name || "—").trim() || "—";
+        const loadPort = String(payload.loadingPort || payload.originPort || lr.loading_location || lr.origin_text || "—").trim() || "—";
+        const loadDate = String(lr.loaded_at ? String(lr.loaded_at).slice(0, 10) : (lr.created_at ? String(lr.created_at).slice(0, 10) : "—")).trim() || "—";
+        const receiveCountry = String(payload.receivingCountry || payload.destinationCountry || poForm.destCountry || po?.dest_country_name || "—").trim() || "—";
+        const receivePort = String(payload.receivingPort || payload.destPort || lr.receiving_location || lr.destination_text || "—").trim() || "—";
+        const rawReceiveDate = lr.received_at ? String(lr.received_at).slice(0, 10) : (lr.actual_arrival_date ? String(lr.actual_arrival_date).slice(0, 10) : null);
+        const receiveDate = rawReceiveDate || (payload.etaDate ? `${String(payload.etaDate).slice(0, 10)} (ETA)` : "— / Pending");
 
         result.push({
           id: `pb-${lr.id}`,
@@ -323,13 +415,18 @@ export function SourceFilteredTable({
           source: "purchase_booking",
           billNo,
           loadingNo: lr.loading_record_no || `LD-${String(lr.id).slice(0, 8)}`,
-          truckNo: lr.vehicle_no || lr.report_payload?.truckNo || lr.container_number || "—",
-          loadingDate: lr.loaded_at ? String(lr.loaded_at).slice(0, 10) : (lr.created_at ? String(lr.created_at).slice(0, 10) : "—"),
-          goodsName: lr.report_payload?.goodsName || lr.goods_name || po?.goods_name || "—",
+          truckNo: lr.vehicle_no || payload.truckNo || lr.container_number || "—",
+          goodsName: payload.goodsName || lr.goods_name || po?.goods_name || "—",
           loadedQty: qty,
-          unit: lr.report_payload?.qtyName || po?.unit || "PCS",
-          grossWeight: Number(lr.gross_weight || lr.report_payload?.grossWeight || 0),
-          netWeight: Number(lr.net_weight || lr.report_payload?.netWeight || 0),
+          unit: payload.qtyName || po?.unit || "PCS",
+          grossWeight: Number(lr.gross_weight || payload.grossWeight || 0),
+          netWeight: Number(lr.net_weight || payload.netWeight || 0),
+          loadCountry,
+          loadPort,
+          loadDate,
+          receiveCountry,
+          receivePort,
+          receiveDate,
           purchCurr,
           finalCurr,
           exRate,
@@ -358,6 +455,10 @@ export function SourceFilteredTable({
       const totalBillQty = Number(lp.numbers || 1);
       const unitPrice = totalBillQty > 0 ? totalCost / totalBillQty : 0;
       const dueDate = lp.due_date || "—";
+      const loadCountry = String(lp.country_name || lp.country || "UAE").trim();
+      const loadPort = String(lp.origin || lp.loading_location || lp.loading_port || "Local Yard").trim();
+      const receiveCountry = String(lp.country_name || lp.country || "UAE").trim();
+      const receivePort = String(lp.warehouse_name || lp.destination || lp.receiving_location || "Local Warehouse").trim();
 
       if (entries.length > 0) {
         entries.forEach((e: any, idx: number) => {
@@ -365,11 +466,12 @@ export function SourceFilteredTable({
           if (qty <= 0) return;
           const loadingNo = e.loadingNo || e.entryNo || `LD-${idx + 1}`;
           const truckNo = e.truckNo || e.vehicleNo || lp.truck_no || "—";
-          const loadingDate = e.loadingDate ? String(e.loadingDate).slice(0, 10) : (lp.date ? String(lp.date).slice(0, 10) : "—");
+          const loadDate = String(e.loadingDate ? String(e.loadingDate).slice(0, 10) : (lp.date ? String(lp.date).slice(0, 10) : (lp.created_at ? String(lp.created_at).slice(0, 10) : "—"))).trim();
           const goodsName = e.goodsName || lp.goods_name || "—";
           const unit = e.unit || lp.quantity_name || "PCS";
           const grossWeight = Number(e.grossWeight || 0);
           const netWeight = Number(e.netWeight || 0);
+          const receiveDate = lp.received_at ? String(lp.received_at).slice(0, 10) : (lp.date ? String(lp.date).slice(0, 10) : "— / Pending");
 
           const loadedInvoicePC = qty * unitPrice;
           const loadedInvoiceFC = loadedInvoicePC * exRate;
@@ -380,9 +482,9 @@ export function SourceFilteredTable({
           const remainingFC = Math.max(0, loadedInvoiceFC - paidFC);
 
           let paymentStatus = "Open";
-          if (remainingPC <= 0.05) {
+          if (remainingPC <= 0.05 && remainingFC <= 0.05) {
             paymentStatus = "Fully Paid";
-          } else if (paidPC > 0) {
+          } else if (paidPC > 0.05 || paidFC > 0.05) {
             paymentStatus = "Partially Paid";
           }
 
@@ -394,12 +496,17 @@ export function SourceFilteredTable({
             billNo,
             loadingNo,
             truckNo,
-            loadingDate,
             goodsName,
             loadedQty: qty,
             unit,
             grossWeight,
             netWeight,
+            loadCountry,
+            loadPort,
+            loadDate,
+            receiveCountry,
+            receivePort,
+            receiveDate,
             purchCurr,
             finalCurr,
             exRate,
@@ -417,11 +524,12 @@ export function SourceFilteredTable({
         const qty = Number(lp.numbers || 0);
         const loadingNo = lp.entry_serial || `LD-1`;
         const truckNo = lp.truck_no || "—";
-        const loadingDate = lp.date ? String(lp.date).slice(0, 10) : (lp.created_at ? String(lp.created_at).slice(0, 10) : "—");
+        const loadDate = String(lp.date ? String(lp.date).slice(0, 10) : (lp.created_at ? String(lp.created_at).slice(0, 10) : "—")).trim();
         const goodsName = lp.goods_name || "—";
         const unit = lp.quantity_name || "PCS";
         const grossWeight = Number(lp.total_gross_weight || 0);
         const netWeight = Number(lp.net_weight || 0);
+        const receiveDate = lp.received_at ? String(lp.received_at).slice(0, 10) : (lp.date ? String(lp.date).slice(0, 10) : "— / Pending");
 
         const loadedInvoicePC = totalCost;
         const loadedInvoiceFC = loadedInvoicePC * exRate;
@@ -431,9 +539,9 @@ export function SourceFilteredTable({
         const remainingFC = Math.max(0, loadedInvoiceFC - paidFC);
 
         let paymentStatus = "Open";
-        if (remainingPC <= 0.05) {
+        if (remainingPC <= 0.05 && remainingFC <= 0.05) {
           paymentStatus = "Fully Paid";
-        } else if (paidPC > 0) {
+        } else if (paidPC > 0.05 || paidFC > 0.05) {
           paymentStatus = "Partially Paid";
         }
 
@@ -445,12 +553,17 @@ export function SourceFilteredTable({
           billNo,
           loadingNo,
           truckNo,
-          loadingDate,
           goodsName,
           loadedQty: qty,
           unit,
           grossWeight,
           netWeight,
+          loadCountry,
+          loadPort,
+          loadDate,
+          receiveCountry,
+          receivePort,
+          receiveDate,
           purchCurr,
           finalCurr,
           exRate,
@@ -727,134 +840,158 @@ export function SourceFilteredTable({
           </table>
         ) : activeMode === "remaining" ? (
           /* ========================================================================= */
-          /* REMAINING PAYMENT JOURNAL — EXACT 20-COLUMN LOADING-BASED FINANCIAL REPORT */
+          /* REMAINING PAYMENT JOURNAL — EXACT 23-COLUMN LOADING-BASED FINANCIAL REPORT */
           /* ========================================================================= */
-          <table className="w-full min-w-[2000px] border-collapse text-left text-xs">
+          <table className="w-full min-w-[2300px] border-collapse text-left text-xs">
             <thead>
               <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("PURCHASE BILL NO")}</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("LOADING ENTRY NO")}</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("TRUCK NO")}</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("LOADING DATE")}</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("GOODS NAME")}</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("LOADED QUANTITY")}</th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("BILL NO.")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("LOADING NO.")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("TRUCK NO.")}</th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("GOODS")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("QTY")}</th>
                 <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("UNIT")}</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("GROSS WT (KG)")}</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("NET WT (KG)")}</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("PURCHASE CURRENCY")}</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("FINAL CURRENCY")}</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("LOADED INVOICE AMOUNT (PC)")}</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("LOADED INVOICE AMOUNT (FC)")}</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID AMOUNT (PC)")}</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID AMOUNT (FC)")}</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("REMAINING AMOUNT (PC)")}</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("REMAINING AMOUNT (FC)")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("GROSS KG")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("NET KG")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("LOAD COUNTRY")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("LOAD PORT")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("LOAD DATE")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("RECEIVE COUNTRY")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("RECEIVE PORT")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("RECEIVE DATE")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PURCHASE (PC)")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("FINAL (FC)")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID (PC)")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID (FC)")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("BALANCE (PC)")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("BALANCE (FC)")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("DUE DATE")}</th>
-                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("PAYMENT STATUS")}</th>
+                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("STATUS")}</th>
                 <th className="py-3 px-3 text-center whitespace-nowrap">{label("JOURNAL")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
               {remainingRowsToRender.length === 0 ? (
                 <tr>
-                  <td colSpan={20} className="py-8 text-center text-xs text-slate-400 font-medium">
+                  <td colSpan={23} className="py-8 text-center text-xs text-slate-400 font-medium">
                     {label("NO CONFIRMED LOADINGS FOUND")}
                   </td>
                 </tr>
               ) : (
                 remainingRowsToRender.map((r) => (
                   <tr key={r.id} className="hover:bg-amber-50/40 dark:hover:bg-slate-800/40 transition-colors">
-                    {/* 1. Purchase Bill Number */}
+                    {/* 1. Bill No. */}
                     <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-blue-700 dark:text-blue-400 whitespace-nowrap">
                       {r.billNo}
                     </td>
 
-                    {/* 2. Loading Entry Number */}
+                    {/* 2. Loading No. */}
                     <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-mono text-slate-800 dark:text-slate-200 whitespace-nowrap">
                       {r.loadingNo}
                     </td>
 
-                    {/* 3. Truck Number */}
+                    {/* 3. Truck No. */}
                     <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
                       {r.truckNo}
                     </td>
 
-                    {/* 4. Loading Date */}
-                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                      {r.loadingDate}
-                    </td>
-
-                    {/* 5. Goods Name */}
+                    {/* 4. Goods */}
                     <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 whitespace-nowrap">
                       {r.goodsName}
                     </td>
 
-                    {/* 6. Loaded Quantity */}
+                    {/* 5. Qty */}
                     <td className="py-3 px-2 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
                       {fmtQty(r.loadedQty)}
                     </td>
 
-                    {/* 7. Unit */}
+                    {/* 6. Unit */}
                     <td className="py-3 px-2 text-center border-r border-slate-200 dark:border-slate-800 text-slate-500 whitespace-nowrap">
                       {r.unit}
                     </td>
 
-                    {/* 8. Gross Weight (KG) */}
+                    {/* 7. Gross KG */}
                     <td className="py-3 px-2 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
                       {fmt(r.grossWeight)}
                     </td>
 
-                    {/* 9. Net Weight (KG) */}
+                    {/* 8. Net KG */}
                     <td className="py-3 px-2 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
                       {fmt(r.netWeight)}
                     </td>
 
-                    {/* 10. Purchase Currency */}
-                    <td className="py-3 px-2 text-center border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                      {r.purchCurr}
+                    {/* 9. Load Country */}
+                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                      {r.loadCountry}
                     </td>
 
-                    {/* 11. Final Currency */}
-                    <td className="py-3 px-2 text-center border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                      {r.finalCurr}
+                    {/* 10. Load Port */}
+                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                      {r.loadPort}
                     </td>
 
-                    {/* 12. Loaded Invoice Amount — Purchase Currency */}
-                    <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                    {/* 11. Load Date */}
+                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                      {r.loadDate}
+                    </td>
+
+                    {/* 12. Receive Country */}
+                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                      {r.receiveCountry}
+                    </td>
+
+                    {/* 13. Receive Port */}
+                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                      {r.receivePort}
+                    </td>
+
+                    {/* 14. Receive Date */}
+                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                      {r.receiveDate}
+                    </td>
+
+                    {/* 15. Purchase (PC) (Currency + Loaded Amount) */}
+                    <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                      <span className="text-[10px] text-slate-400 font-semibold mr-1">{r.purchCurr}</span>
                       {fmt(r.loadedInvoicePC)}
                     </td>
 
-                    {/* 13. Loaded Invoice Amount — Final Currency */}
-                    <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                    {/* 16. Final (FC) (Currency + Loaded Amount) */}
+                    <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                      <span className="text-[10px] text-slate-400 font-semibold mr-1">{r.finalCurr}</span>
                       {fmt(r.loadedInvoiceFC)}
                     </td>
 
-                    {/* 14. Paid Amount — Purchase Currency */}
-                    <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                    {/* 17. Paid (PC) (Currency + Paid Amount) */}
+                    <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                      <span className="text-[10px] text-emerald-500/70 font-semibold mr-1">{r.purchCurr}</span>
                       {fmt(r.paidPC)}
                     </td>
 
-                    {/* 15. Paid Amount — Final Currency */}
-                    <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                    {/* 18. Paid (FC) (Currency + Paid Amount) */}
+                    <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                      <span className="text-[10px] text-emerald-500/70 font-semibold mr-1">{r.finalCurr}</span>
                       {fmt(r.paidFC)}
                     </td>
 
-                    {/* 16. Remaining Amount — Purchase Currency */}
-                    <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                    {/* 19. Balance (PC) (Currency + Balance Amount) */}
+                    <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                      <span className="text-[10px] text-rose-500/70 font-semibold mr-1">{r.purchCurr}</span>
                       {fmt(r.remainingPC)}
                     </td>
 
-                    {/* 17. Remaining Amount — Final Currency */}
-                    <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-semibold text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                    {/* 20. Balance (FC) (Currency + Balance Amount) */}
+                    <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-semibold text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                      <span className="text-[10px] text-rose-500/70 font-semibold mr-1">{r.finalCurr}</span>
                       {fmt(r.remainingFC)}
                     </td>
 
-                    {/* 18. Due Date */}
+                    {/* 21. Due Date */}
                     <td className="py-3 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
                       {r.dueDate}
                     </td>
 
-                    {/* 19. Payment Status */}
+                    {/* 22. Status */}
                     <td className="py-3 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
                       <span className={cn(
                         "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
@@ -868,7 +1005,7 @@ export function SourceFilteredTable({
                       </span>
                     </td>
 
-                    {/* 20. Journal Action */}
+                    {/* 23. Journal */}
                     <td className="py-3 px-3 text-center whitespace-nowrap">
                       <button
                         type="button"
