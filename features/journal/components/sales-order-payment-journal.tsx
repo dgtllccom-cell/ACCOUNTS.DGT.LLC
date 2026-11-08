@@ -4165,7 +4165,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
           )}
           onClick={() => setExpandedIds((prev) => ({ ...prev, [rowKey]: !prev[rowKey] }))}
         >
-          {/* 1. BILL # & Pay S/N */}
+          {/* 1. BILL # / DATE */}
           <td className="py-2.5 px-2.5 whitespace-nowrap">
             <div className="flex flex-col gap-0.5">
               <button
@@ -4178,20 +4178,21 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
               >
                 {billNo}
               </button>
+              <div className="flex items-center gap-1 text-[11px] text-slate-500 font-mono">
+                <span>📅</span>
+                <span>{dateStr}</span>
+              </div>
               <div className="flex items-center gap-1 mt-0.5">
                 {(row as any).order_type === "local_sales" ? (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 whitespace-nowrap">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 whitespace-nowrap">
                     Local Sales
                   </span>
                 ) : (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300 dark:border-blue-800 whitespace-nowrap">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300 dark:border-blue-800 whitespace-nowrap">
                     Sales Booking
                   </span>
                 )}
               </div>
-              <span className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400">
-                {row.super_admin_serial_number || `PAY-${String(index + 1).padStart(4, "0")}`}
-              </span>
             </div>
           </td>
 
@@ -4200,83 +4201,102 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
             {(row as any).order_type === "local_sales" ? "Local" : (type || "Booking")}
           </td>
 
-          {/* 3. BRANCH CODE */}
-          <td className="py-2.5 px-2 font-mono font-bold whitespace-nowrap text-xs">{branchCode}</td>
+          {/* 3. BRANCH / COUNTRY */}
+          <td className="py-2.5 px-2 font-mono whitespace-nowrap text-xs">
+            <div className="font-bold text-slate-800 dark:text-slate-200">{branchCode} / {countryCode}</div>
+            <div className="text-[10px] text-slate-500 truncate max-w-[110px]" title={branchName}>{branchName}</div>
+          </td>
 
-          {/* 4. COUNTRY CODE */}
-          <td className="py-2.5 px-2 font-bold whitespace-nowrap text-xs">{countryCode}</td>
-
-          {/* 5. DATE */}
-          <td className="py-2.5 px-2 whitespace-nowrap font-mono text-xs text-slate-600 dark:text-slate-300">{dateStr}</td>
-
-          {/* 6. A/C / PARTY & STATUS BADGE */}
-          <td className="py-2.5 px-2.5 whitespace-nowrap">
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-slate-900 dark:text-white text-xs">{partyName}</span>
-              {isPosted || (calcs.advanceAmountFC > 0 && calcs.remainingPurchaseFC <= 0.01) ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0 whitespace-nowrap">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  Paid
-                </span>
-              ) : calcs.advanceAmountFC > 0 && calcs.remainingPurchaseFC > 0 ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 shrink-0 whitespace-nowrap">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                  Partial
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200/80 dark:bg-sky-950/40 dark:text-sky-400 shrink-0 whitespace-nowrap">
-                  <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
-                  Pending
-                </span>
-              )}
+          {/* 4. CUSTOMER / SALES ACCOUNT */}
+          <td className="py-2.5 px-2.5 whitespace-nowrap max-w-[160px]">
+            <div className="font-extrabold text-slate-900 dark:text-white text-xs truncate" title={partyName}>{partyName}</div>
+            <div className="text-[10px] font-mono text-blue-600 dark:text-blue-400 truncate" title={sCode || pCode || "—"}>
+              {sCode || pCode || "—"}
             </div>
           </td>
 
-          {/* 7. GOODS NAME */}
+          {/* 5. GOODS BRAND / SIZE */}
           <td
-            className="py-3 px-2.5 border-r border-slate-200/80 dark:border-slate-800 text-[12.5px] max-w-[200px] w-[200px]"
+            className="py-3 px-2.5 border-r border-slate-200/80 dark:border-slate-800 text-[12.5px] max-w-[180px] w-[180px]"
             onClick={(e) => e.stopPropagation()}
           >
             <GoodsPopoverCell
               goods={goods.length > 0 ? goods : goodsName}
               fallbackName={form.goodsName || form.productName || "—"}
-              maxWidthClass="max-w-[170px]"
+              maxWidthClass="max-w-[160px]"
             />
           </td>
 
-          {/* 8. QTY */}
-          <td className="py-3 px-2 text-right font-mono font-bold">{totalQty.toLocaleString()}</td>
-
-          {/* 9. GROSS WEIGHT */}
-          <td className="py-3 px-2 text-right font-mono font-bold">{grossWeight.toLocaleString()}</td>
-
-          {/* 10. NET WEIGHT */}
-          <td className="py-3 px-2 text-right font-mono font-bold">{netWeight.toLocaleString()}</td>
-
-          {/* 11. TOTAL PURCHASE AMOUNT (ORIGINAL CURRENCY) */}
-          <td className="py-3 px-2.5 text-right font-mono font-bold whitespace-nowrap">
-            {calcs.totalPurchaseFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
-            <span className="text-slate-500 font-normal text-[11px]">{calcs.purchCurr}</span>
+          {/* 6. QTY / UNIT */}
+          <td className="py-3 px-2 text-right font-mono whitespace-nowrap">
+            <div className="font-bold text-slate-900 dark:text-white">{totalQty.toLocaleString()}</div>
+            <div className="text-[10px] text-slate-500">{form.quantityUnit || form.unit || "Cartons"}</div>
           </td>
 
-          {/* 12. ADVANCE % */}
+          {/* 7. GROSS / NET WT (KG) */}
+          <td className="py-3 px-2 text-right font-mono whitespace-nowrap">
+            <div className="font-bold text-slate-800 dark:text-slate-200">{grossWeight.toLocaleString()}</div>
+            <div className="text-[10px] text-slate-500">{netWeight.toLocaleString()}</div>
+          </td>
+
+          {/* 8. CURRENCY / FX RATE */}
+          <td className="py-3 px-2 text-center font-mono whitespace-nowrap">
+            <div className="font-bold text-indigo-600 dark:text-indigo-400">{calcs.purchCurr} / {calcs.finalCurr}</div>
+            <div className="text-[10px] text-slate-500">{calcs.exRate.toFixed(4)}</div>
+          </td>
+
+          {/* 9. TOTAL SALES (PC / FC) */}
+          <td className="py-3 px-2.5 text-right font-mono whitespace-nowrap">
+            <div className="font-bold text-blue-700 dark:text-blue-400">
+              <span className="text-[10px] text-blue-500/70 font-semibold mr-1">{calcs.purchCurr}</span>
+              {calcs.totalPurchaseFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className="font-semibold text-slate-700 dark:text-slate-300 text-[11px]">
+              <span className="text-[10px] text-slate-400 font-semibold mr-1">{calcs.finalCurr}</span>
+              {(calcs.totalPurchaseFC * calcs.exRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+          </td>
+
+          {/* 10. ADV % */}
           <td className="py-3 px-2 text-center font-mono font-bold">
             {calcs.advancePercent.toFixed(2)}%
           </td>
 
-          {/* 13. PURCHASE ADVANCE AMOUNT (ORIGINAL CURRENCY) */}
-          <td className="py-3 px-2.5 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-            {calcs.advanceAmountFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
-            <span className="text-slate-500 font-normal text-[11px]">{calcs.purchCurr}</span>
+          {/* 11. ADVANCE AMOUNT (PC / FC) */}
+          <td className="py-3 px-2.5 text-right font-mono whitespace-nowrap">
+            <div className="font-bold text-emerald-600 dark:text-emerald-400">
+              <span className="text-[10px] text-emerald-500/70 font-semibold mr-1">{calcs.purchCurr}</span>
+              {calcs.advanceAmountFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className="font-semibold text-emerald-600/90 dark:text-emerald-400/90 text-[11px]">
+              <span className="text-[10px] text-emerald-500/70 font-semibold mr-1">{calcs.finalCurr}</span>
+              {calcs.advanceAmountLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
           </td>
 
-          {/* 14. REMAINING PURCHASE AMOUNT (ORIGINAL CURRENCY) */}
-          <td className="py-3 px-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
-            {calcs.remainingPurchaseFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
-            <span className="text-slate-500 font-normal text-[11px]">{calcs.purchCurr}</span>
+          {/* 12. REMAINING AMOUNT (PC / FC) */}
+          <td className="py-3 px-2.5 text-right font-mono whitespace-nowrap">
+            <div className="font-bold text-rose-600 dark:text-rose-400">
+              <span className="text-[10px] text-rose-500/70 font-semibold mr-1">{calcs.purchCurr}</span>
+              {calcs.remainingPurchaseFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className="font-semibold text-rose-600/90 dark:text-rose-400/90 text-[11px]">
+              <span className="text-[10px] text-rose-500/70 font-semibold mr-1">{calcs.finalCurr}</span>
+              {(calcs.remainingPurchaseFC * calcs.exRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
           </td>
 
-          {/* 15. PAYMENT DUE TRACKING & DUE DATE */}
+          {/* 13. LOADING / RECEIVE DATE */}
+          <td className="py-2.5 px-2 text-center font-mono text-[10px] whitespace-nowrap">
+            <div className="text-slate-700 dark:text-slate-300">
+              <span>📅 </span>{loadingDate || "—"}
+            </div>
+            <div className="text-slate-500 mt-0.5">
+              <span>📅 </span>{receivingDate || "—"}
+            </div>
+          </td>
+
+          {/* 14. PAYMENT DUE TRACKING & DUE DATE */}
           <td className="py-2.5 px-3 whitespace-nowrap border-r border-slate-200/80 dark:border-slate-800 text-[11.5px]">
             <div className="flex flex-col gap-0.5 items-start">
               <span className={cn("font-bold font-mono inline-flex items-center gap-1", dueTracking.agreedDueDate ? "text-slate-800 dark:text-slate-200" : "text-slate-400 italic text-[11px]")}>
@@ -4319,50 +4339,6 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
               </div>
             </div>
           </td>
-
-          {/* 16. EXCHANGE RATE */}
-          <td className="py-3 px-2 text-center font-mono font-bold text-indigo-600 dark:text-indigo-400">
-            {calcs.exRate.toFixed(4)}
-          </td>
-
-          {/* 17. FINAL CURRENCY (BRANCH) */}
-          <td className="py-3 px-2 text-center font-mono font-bold">{calcs.finalCurr}</td>
-
-          {/* 18. FINAL ADVANCE AMOUNT (BRANCH CURRENCY) */}
-          <td className="py-3 px-2.5 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-            {calcs.advanceAmountLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </td>
-
-          {/* 19. P CODE */}
-          <td className="py-3 px-2 font-mono text-[11px] font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">
-            {pCode}
-          </td>
-
-          {/* 20. S CODE */}
-          <td className="py-3 px-2 font-mono text-[11px] font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">
-            {sCode}
-          </td>
-
-          {/* 21. ROUTE */}
-          <td className="py-3 px-2 whitespace-nowrap font-medium">{route}</td>
-
-          {/* 22. LOADING COUNTRY */}
-          <td className="py-3 px-2 whitespace-nowrap font-medium">{loadingCountry}</td>
-
-          {/* 23. LOADING PORT */}
-          <td className="py-3 px-2 whitespace-nowrap font-medium">{loadingPort}</td>
-
-          {/* 24. LOADING DATE */}
-          <td className="py-3 px-2 whitespace-nowrap font-mono">{loadingDate}</td>
-
-          {/* 25. RECEIVING COUNTRY */}
-          <td className="py-3 px-2 whitespace-nowrap font-medium">{receivingCountry}</td>
-
-          {/* 26. RECEIVING PORT */}
-          <td className="py-3 px-2 whitespace-nowrap font-medium">{receivingPort}</td>
-
-          {/* 27. RECEIVING DATE */}
-          <td className="py-3 px-2 whitespace-nowrap font-mono">{receivingDate}</td>
 
           {/* 28. ACTION */}
           <td className="py-3 px-2 text-center" onClick={(e) => e.stopPropagation()}>
@@ -4589,9 +4565,9 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       {/* ── Main Table Card ── */}
       <div className="dgt-purchase-table-skin mx-6 mb-6 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
         {/* Table Title Bar (Matching Reference Screenshot: SALES ORDER PAYMENTS (18)) */}
-        <div className="px-6 py-4 border-b border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#091020] flex flex-wrap justify-between items-center gap-3">
+        <div className="px-4 py-2.5 border-b border-blue-700 bg-blue-700 text-white dark:bg-blue-800 flex flex-wrap justify-between items-center gap-2">
           <div className="flex flex-wrap items-center gap-3">
-            <h3 className="text-sm font-black tracking-wider text-slate-900 dark:text-slate-100 uppercase">
+            <h3 className="text-xs font-black tracking-wide text-white">
               SALES ORDER PAYMENTS ({filtered.length})
             </h3>
             {/* Source Segmented Control */}
@@ -4639,54 +4615,41 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
               </span>
             )}
           </div>
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+          <span className="text-xs font-semibold text-blue-100">
             Showing {pageRows.length > 0 ? pageIndex * pageSize + 1 : 0} to {Math.min((pageIndex + 1) * pageSize, pageRows.length)} of {pageRows.length} entries
           </span>
         </div>
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[2100px] border-collapse text-left text-xs">
+          <table data-no-cards className={cn("w-full min-w-[1850px] border-collapse text-xs", isRtl ? "text-right" : "text-left")}>
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-100/90 dark:border-slate-800 dark:bg-[#080d1a] text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              <tr className="border-b border-amber-300 bg-[#ffd257] dark:border-amber-800 dark:bg-amber-950/40 text-[11px] font-black text-slate-900 dark:text-slate-100">
                 {[
-                  { label: "BILL #", tip: "Sales Order / Bill Number" },
+                  { label: "BILL # / DATE", tip: "Sales Order / Bill Number and Date" },
                   { label: "TYPE", tip: "Order Type" },
-                  { label: "BRANCH", tip: "Branch Code" },
-                  { label: "COUNTRY", tip: "Country Code" },
-                  { label: "DATE", tip: "Order Date" },
-                  { label: "CUSTOMER", tip: "Customer / Party Name" },
-                  { label: "GOODS", tip: "Goods Description" },
-                  { label: "QTY", tip: "Quantity" },
-                  { label: "GROSS WT", tip: "Gross Weight (Kgs)" },
-                  { label: "NET WT", tip: "Net Weight (Kgs)" },
-                  { label: "TOTAL AMT", tip: "Total Sales Amount (Original Currency)" },
+                  { label: "BRANCH / COUNTRY", tip: "Branch and Country" },
+                  { label: "CUSTOMER / SALES ACCOUNT", tip: "Customer and Sales Account" },
+                  { label: "GOODS / BRAND / SIZE", tip: "Goods Description" },
+                  { label: "QTY / UNIT", tip: "Quantity and Unit" },
+                  { label: "GROSS / NET WT (KG)", tip: "Gross and Net Weight (Kgs)" },
+                  { label: "CURRENCY / FX RATE", tip: "Currency and Exchange Rate" },
+                  { label: "TOTAL SALES (PC / FC)", tip: "Total Sales Amount" },
                   { label: "ADV %", tip: "Advance Percentage" },
-                  { label: "ADV AMT", tip: "Sales Advance Amount (Original Currency)" },
-                  { label: "REM AMT", tip: "Remaining Sales Amount (Original Currency)" },
-                  { label: "DUE DATE", tip: "Advance Payment Due Date" },
-                  { label: "FX RATE", tip: "Exchange Rate" },
-                  { label: "CURR", tip: "Branch Currency" },
-                  { label: "FINAL ADV", tip: "Final Advance Amount (Branch Currency)" },
-                  { label: "P CODE", tip: "Purchase Account Code" },
-                  { label: "S CODE", tip: "Sales Account Code" },
-                  { label: "ROUTE", tip: "Shipping Line / Route" },
-                  { label: "LOAD CNT", tip: "Loading Country" },
-                  { label: "LOAD PORT", tip: "Loading Port" },
-                  { label: "LOAD DATE", tip: "Loading Date" },
-                  { label: "RCV CNT", tip: "Receiving Country" },
-                  { label: "RCV PORT", tip: "Receiving Port" },
-                  { label: "RCV DATE", tip: "Receiving Date" },
+                  { label: "ADVANCE AMOUNT (PC / FC)", tip: "Sales Advance Amount" },
+                  { label: "REMAINING AMOUNT (PC / FC)", tip: "Remaining Sales Amount" },
+                  { label: "LOADING / RECEIVE DATE", tip: "Loading and Receiving Date" },
+                  { label: "DUE DATE", tip: "Payment Due Date & Status" },
                   { label: "ACTION", tip: "Available Actions" }
                 ].map((col, i) => (
                   <Th
                     key={col.label}
                     title={translateHeader(currentLanguage, col.tip)}
                     className={cn(
-                      "px-2.5 py-3 whitespace-nowrap border-r border-slate-200/60 dark:border-slate-800/80 last:border-0 cursor-default",
-                      i === 6 ? "w-[200px] max-w-[200px]" : "",
-                      i === 7 || i === 8 || i === 9 || i === 10 || i === 12 || i === 13 || i === 17 ? "text-right" :
-                      i === 1 || i === 11 || i === 15 || i === 16 || i === 27 ? "text-center" : "text-left"
+                      "px-2 py-2 whitespace-nowrap border-r border-amber-300/80 dark:border-slate-800/80 last:border-0 cursor-default",
+                      i === 4 ? "w-[180px] max-w-[180px]" : "",
+                      i === 5 || i === 6 || i === 8 || i === 10 || i === 11 ? "text-right" :
+                      i === 1 || i === 7 || i === 9 || i === 12 || i === 14 ? "text-center" : "text-left"
                     )}
                   >
                     <span className="inline-flex items-center gap-1">
@@ -4703,7 +4666,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
               {!pageRows.length && !loading && (
                 <tr>
                   <td
-                    colSpan={28}
+                    colSpan={15}
                     className="py-16 text-center text-slate-400 dark:text-slate-500 text-xs"
                   >
                     <div className="flex flex-col items-center justify-center gap-2">
