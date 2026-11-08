@@ -41,6 +41,9 @@ export type UiKey =
   | "invtpl.scope_country"
   | "invtpl.scope_country_branch"
   | "invtpl.scope_global"
+  | "invtpl.default_load_failed"
+  | "invtpl.default_unsupported_doc"
+  | "tdoc.preview_failed"
   | "invtpl.set_default"
   | "invtpl.set_default_hint"
   | "invtpl.show_bank"
@@ -13431,6 +13434,8 @@ const en: Dict = {
   "invtpl.scope_country": "This Country",
   "invtpl.scope_country_branch": "This Main Branch",
   "invtpl.scope_global": "Whole Company (Global)",
+  "invtpl.default_load_failed": "The saved default could not be loaded, so Classic is shown. Reopen this window to try again.",
+  "invtpl.default_unsupported_doc": "Default templates are not available for this document type yet.",
   "invtpl.set_default": "Set Default",
   "invtpl.set_default_hint": "Saves this template as the default for the scope selected above.",
   "invtpl.show_bank": "Bank Details",
@@ -25236,6 +25241,7 @@ const en: Dict = {
   "tdoc.beneficiary_bank": "Beneficiary Bank",
   "tdoc.no_bank": "No bank account on the company master — the bank section will be omitted.",
   "tdoc.no_bank_selected": "— none —",
+  "tdoc.preview_failed": "Could not build this document. Please try again.",
   "tdoc.preview": "Preview Document",
   "pdfprev.document_language": "Document Language",
   "tdoc.po_no": "Purchase Order No.",
@@ -51823,6 +51829,7 @@ const ur: Dict = {
   "tdoc.beneficiary_bank": "مستفید بینک",
   "tdoc.no_bank": "کمپنی ماسٹر پر کوئی بینک اکاؤنٹ نہیں — بینک سیکشن حذف ہو جائے گا۔",
   "tdoc.no_bank_selected": "— کوئی نہیں —",
+  "tdoc.preview_failed": "یہ دستاویز تیار نہیں ہو سکی۔ براہ کرم دوبارہ کوشش کریں۔",
   "tdoc.preview": "دستاویز کا معائنہ",
   "pdfprev.document_language": "دستاویز کی زبان",
   "tdoc.po_no": "پرچیز آرڈر نمبر",
@@ -59359,6 +59366,8 @@ const ur: Dict = {
   "invtpl.scope_country": "یہ ملک",
   "invtpl.scope_country_branch": "یہ مرکزی برانچ",
   "invtpl.scope_global": "پوری کمپنی (عالمی)",
+  "invtpl.default_load_failed": "محفوظ شدہ ڈیفالٹ لوڈ نہیں ہو سکا، اس لیے کلاسک دکھایا جا رہا ہے۔ دوبارہ کوشش کے لیے یہ ونڈو دوبارہ کھولیں۔",
+  "invtpl.default_unsupported_doc": "اس دستاویز کی قسم کے لیے ڈیفالٹ ٹیمپلیٹ ابھی دستیاب نہیں ہیں۔",
   "invtpl.set_default": "بطور ڈیفالٹ مقرر کریں",
   "invtpl.set_default_hint": "یہ اوپر منتخب کردہ دائرہ کار کے لیے اس ٹیمپلیٹ کو بطور ڈیفالٹ محفوظ کرتا ہے۔",
   "invtpl.show_bank": "بینک کی تفصیلات",
@@ -78193,6 +78202,7 @@ const ar: Dict = {
   "tdoc.beneficiary_bank": "البنك المستفيد",
   "tdoc.no_bank": "لا يوجد حساب بنكي في سجل الشركة — سيتم حذف قسم البنك.",
   "tdoc.no_bank_selected": "— لا شيء —",
+  "tdoc.preview_failed": "تعذّر إنشاء هذا المستند. يرجى المحاولة مرة أخرى.",
   "tdoc.preview": "معاينة المستند",
   "pdfprev.document_language": "لغة المستند",
   "tdoc.po_no": "رقم أمر الشراء",
@@ -85780,6 +85790,8 @@ const ar: Dict = {
   "invtpl.scope_country": "هذا البلد",
   "invtpl.scope_country_branch": "هذا الفرع الرئيسي",
   "invtpl.scope_global": "الشركة بأكملها (عام)",
+  "invtpl.default_load_failed": "تعذّر تحميل القالب الافتراضي المحفوظ، لذلك يُعرض القالب الكلاسيكي. أعد فتح هذه النافذة للمحاولة مرة أخرى.",
+  "invtpl.default_unsupported_doc": "القوالب الافتراضية غير متاحة لهذا النوع من المستندات حتى الآن.",
   "invtpl.set_default": "تعيين كافتراضي",
   "invtpl.set_default_hint": "يحفظ هذا القالب كافتراضي للنطاق المحدد أعلاه.",
   "invtpl.show_bank": "تفاصيل البنك",
@@ -104613,6 +104625,7 @@ const fa: Dict = {
   "tdoc.beneficiary_bank": "بانک ذی‌نفع",
   "tdoc.no_bank": "هیچ حساب بانکی در پرونده شرکت نیست — بخش بانک حذف می‌شود.",
   "tdoc.no_bank_selected": "— هیچ‌کدام —",
+  "tdoc.preview_failed": "ساخت این سند ممکن نشد. لطفاً دوباره تلاش کنید.",
   "tdoc.preview": "پیش‌نمایش سند",
   "pdfprev.document_language": "زبان سند",
   "tdoc.po_no": "شماره سفارش خرید",
@@ -112200,6 +112213,8 @@ const fa: Dict = {
   "invtpl.scope_country": "این کشور",
   "invtpl.scope_country_branch": "این شعبه اصلی",
   "invtpl.scope_global": "کل شرکت (سراسری)",
+  "invtpl.default_load_failed": "قالب پیش‌فرض ذخیره‌شده بارگذاری نشد، بنابراین قالب کلاسیک نمایش داده می‌شود. برای تلاش دوباره این پنجره را دوباره باز کنید.",
+  "invtpl.default_unsupported_doc": "قالب‌های پیش‌فرض هنوز برای این نوع سند در دسترس نیستند.",
   "invtpl.set_default": "تنظیم به‌عنوان پیش‌فرض",
   "invtpl.set_default_hint": "این قالب را به‌عنوان پیش‌فرض برای محدوده انتخاب‌شده در بالا ذخیره می‌کند.",
   "invtpl.show_bank": "مشخصات بانکی",
@@ -131031,6 +131046,7 @@ const ps: Dict = {
   "tdoc.beneficiary_bank": "ګټه اخیستونکی بانک",
   "tdoc.no_bank": "د شرکت په ماسټر کې بانکي حساب نشته — د بانک برخه به لرې شي.",
   "tdoc.no_bank_selected": "— هیڅ یو —",
+  "tdoc.preview_failed": "دا سند جوړ نشو. مهرباني وکړئ بیا هڅه وکړئ.",
   "tdoc.preview": "د سند مخکتنه",
   "pdfprev.document_language": "د سند ژبه",
   "tdoc.po_no": "د پیرود امر شمیره",
@@ -138618,6 +138634,8 @@ const ps: Dict = {
   "invtpl.scope_country": "دا هیواد",
   "invtpl.scope_country_branch": "دا اصلي څانګه",
   "invtpl.scope_global": "ټوله شرکت (نړیوال)",
+  "invtpl.default_load_failed": "خوندی شوی ډیفالټ نشو پورته کیدای، نو کلاسیک ټمپلیټ ښودل کیږي. د بیا هڅې لپاره دا کړکۍ بیا خلاص کړئ.",
+  "invtpl.default_unsupported_doc": "د دې ډول سند لپاره ډیفالټ ټمپلیټونه تر اوسه شتون نلري.",
   "invtpl.set_default": "د ډیفالټ په توګه وټاکئ",
   "invtpl.set_default_hint": "دا ټمپلیټ د پورته ټاکل شوي ساحې لپاره د ډیفالټ په توګه خوندي کوي.",
   "invtpl.show_bank": "د بانک توضیحات",
