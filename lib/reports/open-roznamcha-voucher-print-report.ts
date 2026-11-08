@@ -234,7 +234,7 @@ export function buildRoznamchaVoucherHtml(input: {
     /* Two portrait copies side by side on one A4 landscape sheet, with the cut line between them */
     .sheet {
       width: 285mm; max-width: 100%; box-sizing: border-box; min-height: 198mm; background: #fff; border: 1px solid #cbd5e1; box-shadow: 0 8px 24px rgba(15,23,42,0.1);
-      display: grid; grid-template-columns: 1fr 6mm 1fr; padding: 4mm;
+      display: grid; grid-template-columns: minmax(0, 1fr) 6mm minmax(0, 1fr); padding: 4mm;
     }
     .copy {
       display: flex; flex-direction: column; gap: 3px; padding: 3mm;
@@ -276,10 +276,10 @@ export function buildRoznamchaVoucherHtml(input: {
     .pm-meta { display: flex; justify-content: space-between; gap: 6px; font-size: 9.5px; border: 1px solid #cbd5e1; border-top: none; padding: 3px 6px; }
 
     .amt-row { display: flex; gap: 6px; margin-top: 3px; }
-    .amt-box { border: 2px solid #0f172a; padding: 3px 8px; min-width: 42mm; text-align: center; }
+    .amt-box { border: 2px solid #0f172a; padding: 3px 8px; min-width: min(42mm, 100%); text-align: center; }
     .amt-lbl { font-size: 8px; font-weight: 800; text-transform: uppercase; color: #475569; }
     .amt-val { font-size: 19px; font-weight: 900; }
-    .amt-words { flex: 1; border: 1px solid #cbd5e1; padding: 5px 6px; font-size: 10px; font-style: italic; }
+    .amt-words { flex: 1 1 0; min-width: 0; border: 1px solid #cbd5e1; padding: 5px 6px; font-size: 10px; font-style: italic; }
 
     .remarks { border: 1px solid #cbd5e1; padding: 5px 6px; min-height: 9mm; font-size: 10px; font-weight: 700; }
 
