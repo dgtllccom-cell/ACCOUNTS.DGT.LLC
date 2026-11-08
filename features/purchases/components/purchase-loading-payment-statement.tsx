@@ -215,14 +215,14 @@ export function PurchaseLoadingPaymentStatement({
           : "Loading Gate Entry";
 
       const billDate = String(form.orderDate || poRow.order_date || poRow.created_at || "—").slice(0, 10);
-      const gate = primaryRecord.loading_location || form.loadingPort || payload.loadingPort || payload.loadingLocation || "Main Port Gate";
+      const gate = primaryRecord.loading_location || form.loadingPort || payload.loadingPort || payload.loadingLocation || "Not Recorded";
 
       const countryName = primaryRecord.countries?.name || form.branchCountry || "—";
       const countryCode = primaryRecord.countries?.iso2 || form.countryCode || "—";
       const countryDisplay = countryCode !== "—" ? `${countryCode} - ${countryName}` : countryName;
 
-      const mainBranch = primaryRecord.country_branches?.name || form.branchName || "Main Branch";
-      const cityBranch = primaryRecord.city_branches?.name || primaryRecord.city_branches?.city_name || form.cityBranchName || "City Branch";
+      const mainBranch = primaryRecord.country_branches?.name || form.branchName || "Not Recorded";
+      const cityBranch = primaryRecord.city_branches?.name || primaryRecord.city_branches?.city_name || form.cityBranchName || "Not Recorded";
 
       const purchaseAccount = form.purchaseAccountNumber || form.purchaseAccountNo
         ? `${form.purchaseAccountNumber || form.purchaseAccountNo} — ${form.purchaseAccountName || "Purchase Account"}`
