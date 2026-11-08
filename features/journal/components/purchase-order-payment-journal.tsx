@@ -5483,6 +5483,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         loadingRecords={registryLoadingRecords}
         dueBills={registryDueBills}
         onSelectLoading={(id, loadingId) => { pendingLoadingPick.current = loadingId; selectOrder(id); }}
+        session={session}
       />}
       </>
       )}
