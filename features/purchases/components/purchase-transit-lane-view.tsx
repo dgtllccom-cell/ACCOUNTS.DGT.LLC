@@ -481,18 +481,22 @@ export function PurchaseTransitLaneView({
           <>
             {/* Main Table */}
             <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm md:block dark:border-slate-800 dark:bg-slate-900">
-              <table className="w-full min-w-[1200px] text-start text-xs" data-testid="lane-table">
+              <table className="w-full min-w-[1500px] text-start text-xs" data-testid="lane-table">
                 <thead className="border-b border-slate-200/80 bg-slate-50 text-[11px] font-black uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-300">
                   <tr>
                     <Th className="p-2.5 w-8" />
+                    <Th className="p-2.5 text-start">{T("col_bill_no", "Bill No.")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_loading_no_date", "Loading No. & Date")}</Th>
                     <Th className="p-2.5 text-start">{T("col_source", "Source")}</Th>
                     {isSuperAdmin && <Th className="p-2.5 text-start">{T("col_country", "Country")}</Th>}
                     {(isSuperAdmin || isCountryAdmin) && <Th className="p-2.5 text-start">{T("col_branch", "Branch")}</Th>}
-                    <Th className="p-2.5 text-start">{T("col_bill_no", "Bill No.")}</Th>
-                    <Th className="p-2.5 text-start">{T("col_loading_no", "Loading No.")}</Th>
                     <Th className="p-2.5 text-start">{T("col_goods", "Goods")}</Th>
                     <Th className="p-2.5 text-end">{T("col_qty", "Loaded Qty")}</Th>
-                    <Th className="p-2.5 text-end">{T("col_balance_qty", "Balance Qty")}</Th>
+                    <Th className="p-2.5 text-end">{T("col_weights", "Gross / Net (KG)")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_truck_container", "Truck / Container No")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_driver", "Driver Details")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_route", "Origin → Destination")}</Th>
+                    <Th className="p-2.5 text-center">{T("col_movement_status", "Movement Status")}</Th>
                     <Th className="p-2.5 text-center">{T("col_payment_status", "Payment Status")}</Th>
                     <Th className="p-2.5 text-center">{T("col_expense_status", "Expense Status")}</Th>
                     <Th className="p-2.5 text-end">{T("col_action", "Action")}</Th>
@@ -540,6 +544,21 @@ export function PurchaseTransitLaneView({
                           />
                         </td>
 
+                        {/* Bill No. */}
+                        <td className="p-2.5 font-mono font-bold text-blue-700 dark:text-blue-400 text-xs" dir="ltr">
+                          {r.purchase_ref_no || "—"}
+                        </td>
+
+                        {/* Loading No. & Date */}
+                        <td className="p-2.5" dir="ltr">
+                          <div className="font-mono text-xs font-bold text-slate-900 dark:text-white">
+                            {r.loading_record_no || r.container_number || r.bl_number || "—"}
+                          </div>
+                          <div className="font-mono text-[10px] text-slate-400">
+                            {r.loading_date ? String(r.loading_date).slice(0, 10) : (r.created_at ? String(r.created_at).slice(0, 10) : "—")}
+                          </div>
+                        </td>
+
                         {/* Source */}
                         <td className="p-2.5">
                           <span
@@ -565,16 +584,6 @@ export function PurchaseTransitLaneView({
                           </td>
                         )}
 
-                        {/* Bill No. */}
-                        <td className="p-2.5 font-mono font-bold text-blue-700 dark:text-blue-400 text-xs" dir="ltr">
-                          {r.purchase_ref_no || "—"}
-                        </td>
-
-                        {/* Loading No. */}
-                        <td className="p-2.5 font-mono text-[11px]" dir="ltr">
-                          {r.loading_record_no || r.container_number || r.bl_number || "—"}
-                        </td>
-
                         {/* Goods */}
                         <td className="p-2.5 text-xs" dir="auto">
                           <span className="font-medium text-slate-700 dark:text-slate-200">{r.goods_name || "—"}</span>
@@ -585,9 +594,41 @@ export function PurchaseTransitLaneView({
                           {Number(r.loaded_quantity || 0).toLocaleString()} <span className="text-[10px] font-normal text-slate-400">{r.unit || ""}</span>
                         </td>
 
-                        {/* Balance Qty */}
-                        <td className="p-2.5 text-end font-mono font-bold text-amber-700 dark:text-amber-400 text-xs">
-                          {Number(r.remaining_quantity || 0).toLocaleString()} <span className="text-[10px] font-normal text-slate-400">{r.unit || ""}</span>
+                        {/* Gross / Net (KG) */}
+                        <td className="p-2.5 text-end font-mono text-xs whitespace-nowrap">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">{Number(r.gross_weight || 0).toLocaleString()}</span>
+                          <span className="text-slate-400 mx-1">/</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">{Number(r.net_weight || 0).toLocaleString()}</span>
+                        </td>
+
+                        {/* Truck / Container No */}
+                        <td className="p-2.5 text-xs font-mono" dir="ltr">
+                          <div className="font-bold text-slate-800 dark:text-slate-200">
+                            {r.truck_number || r.container_number || r.vehicle_no || "—"}
+                          </div>
+                          {r.container_number && r.truck_number && r.container_number !== r.truck_number && (
+                            <div className="text-[10px] text-slate-400">Cont: {r.container_number}</div>
+                          )}
+                        </td>
+
+                        {/* Driver Details */}
+                        <td className="p-2.5 text-xs" dir="auto">
+                          <div className="font-medium text-slate-700 dark:text-slate-200">{r.driver_name || "—"}</div>
+                          {r.driver_phone && <div className="font-mono text-[10px] text-slate-400" dir="ltr">{r.driver_phone}</div>}
+                        </td>
+
+                        {/* Origin → Destination */}
+                        <td className="p-2.5 text-xs" dir="auto">
+                          <div className="font-medium text-slate-700 dark:text-slate-300 max-w-[170px] truncate" title={`${r.origin_text || "—"} → ${r.destination_text || "—"}`}>
+                            {r.origin_text || "—"} <span className="text-slate-400">→</span> {r.destination_text || "—"}
+                          </div>
+                        </td>
+
+                        {/* Movement Status */}
+                        <td className="p-2.5 text-center">
+                          <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${STATUS_TONE[r.lane_status] || "bg-slate-100 text-slate-700 border-slate-300"}`}>
+                            {stLabel(r.lane_status)}
+                          </span>
                         </td>
 
                         {/* Payment Status (READ-ONLY) */}
@@ -668,10 +709,10 @@ export function PurchaseTransitLaneView({
 
                     <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-slate-600 dark:text-slate-300">
                       <span>
-                        {T("col_container", "Container")}: <b dir="ltr">{r.container_number || "—"}</b>
+                        {T("col_truck_no", "Truck No.")}: <b dir="ltr">{r.truck_number || r.container_number || r.vehicle_no || "—"}</b>
                       </span>
                       <span>
-                        {T("col_bl", "BL no.")}: <b dir="ltr">{r.bl_number || "—"}</b>
+                        {T("col_loading_date", "Loading Date")}: <b dir="ltr">{r.loading_date ? String(r.loading_date).slice(0, 10) : (r.created_at ? String(r.created_at).slice(0, 10) : "—")}</b>
                       </span>
                       <span>
                         {T("col_qty", "Loaded Qty")}:{" "}
@@ -680,10 +721,18 @@ export function PurchaseTransitLaneView({
                         </b>
                       </span>
                       <span>
-                        {T("col_remaining_qty", "Remaining Qty")}:{" "}
-                        <b className="font-mono text-amber-700 dark:text-amber-400">
-                          {Number(r.remaining_quantity || 0).toLocaleString()} {r.unit || ""}
+                        {T("col_weights", "Gross / Net (KG)")}:{" "}
+                        <b className="font-mono text-slate-900 dark:text-white">
+                          {Number(r.gross_weight || 0).toLocaleString()} / {Number(r.net_weight || 0).toLocaleString()}
                         </b>
+                      </span>
+                      {r.driver_name && (
+                        <span className="col-span-2">
+                          {T("col_driver", "Driver")}: <b>{r.driver_name} {r.driver_phone ? `(${r.driver_phone})` : ""}</b>
+                        </span>
+                      )}
+                      <span className="col-span-2">
+                        {T("col_route", "Route")}: <b dir="auto">{r.origin_text || "—"} → {r.destination_text || "—"}</b>
                       </span>
                       <span className="col-span-2">
                         {T("col_location", "Location / Assigned")}: <b dir="auto">{r.current_location || ownerLabel(r, T)}</b>

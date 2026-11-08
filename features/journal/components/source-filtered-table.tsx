@@ -187,9 +187,313 @@ export function SourceFilteredTable({
     };
   };
 
+  // Loading-based calculation logic for Remaining Payment Journal (Per Confirmed Truck/Loading)
+  const allRemainingRows = useMemo(() => {
+    if (activeMode !== "remaining") return [];
+
+    const result: Array<{
+      id: string;
+      orderId: string;
+      loadingId: string;
+      source: "purchase_booking" | "local_purchase";
+      billNo: string;
+      loadingNo: string;
+      truckNo: string;
+      loadingDate: string;
+      goodsName: string;
+      loadedQty: number;
+      unit: string;
+      grossWeight: number;
+      netWeight: number;
+      purchCurr: string;
+      finalCurr: string;
+      exRate: number;
+      loadedInvoicePC: number;
+      loadedInvoiceFC: number;
+      paidPC: number;
+      paidFC: number;
+      remainingPC: number;
+      remainingFC: number;
+      dueDate: string;
+      paymentStatus: string;
+    }> = [];
+
+    const lrMap = new Map((loadingRecords || []).map((lr: any) => [String(lr.id), lr]));
+    const rowMap = new Map(uniqueRows.map((r: any) => [String(r.id), r]));
+
+    // 1. Purchase Booking loadings
+    if (Array.isArray(dueBills) && dueBills.length > 0) {
+      for (const bill of dueBills) {
+        const po = rowMap.get(String(bill.id));
+        const billNo = bill.billNo || po?.purchase_order_no || po?.bill_no || "—";
+        const purchCurr = String(bill.currency || po?.currency_code || "USD").toUpperCase();
+        const finalCurr = String(bill.localCurrency || po?.dest_countries?.currency_code || "AED").toUpperCase();
+        const exRate = Number(bill.exchangeRate || po?.exchange_rate || 1) || 1;
+        const rawDueDate = bill.dueDate || (po ? resolveAgreedDueDate(po) : null) || po?.due_date || "—";
+
+        const loadings = Array.isArray(bill.loadings) ? bill.loadings : [];
+        for (const l of loadings) {
+          const qty = Number(l.quantity || 0);
+          if (qty <= 0) continue;
+          const lr = lrMap.get(String(l.id));
+
+          const loadingNo = l.loadingNo || lr?.loading_record_no || `LD-${String(l.id).slice(0, 8)}`;
+          const truckNo = lr?.vehicle_no || lr?.report_payload?.truckNo || lr?.report_payload?.vehicleNo || l.container || lr?.container_number || "—";
+          const loadingDate = l.loadedAt ? String(l.loadedAt).slice(0, 10) : (lr?.loaded_at ? String(lr.loaded_at).slice(0, 10) : (lr?.created_at ? String(lr.created_at).slice(0, 10) : "—"));
+          const goodsName = lr?.report_payload?.goodsName || lr?.goods_name || bill.goods || po?.goods_name || "—";
+          const unit = lr?.report_payload?.qtyName || po?.form_data?.form?.qtyName || po?.unit || "PCS";
+          const grossWeight = Number(l.grossWeightKg ?? lr?.gross_weight ?? lr?.report_payload?.grossWeight ?? 0);
+          const netWeight = Number(l.netWeightKg ?? lr?.net_weight ?? lr?.report_payload?.netWeight ?? 0);
+
+          const loadedInvoicePC = Number(l.value ?? 0);
+          const loadedInvoiceFC = loadedInvoicePC * exRate;
+          const paidPC = Number(l.paid ?? 0);
+          const paidFC = paidPC * exRate;
+          const remainingPC = Math.max(0, loadedInvoicePC - paidPC);
+          const remainingFC = Math.max(0, loadedInvoiceFC - paidFC);
+
+          let paymentStatus = "Open";
+          if (l.complete || remainingPC <= 0.05) {
+            paymentStatus = "Fully Paid";
+          } else if (paidPC > 0) {
+            paymentStatus = "Partially Paid";
+          }
+
+          result.push({
+            id: `pb-${l.id}`,
+            orderId: String(bill.id),
+            loadingId: String(l.id),
+            source: "purchase_booking",
+            billNo,
+            loadingNo,
+            truckNo,
+            loadingDate,
+            goodsName,
+            loadedQty: qty,
+            unit,
+            grossWeight,
+            netWeight,
+            purchCurr,
+            finalCurr,
+            exRate,
+            loadedInvoicePC,
+            loadedInvoiceFC,
+            paidPC,
+            paidFC,
+            remainingPC,
+            remainingFC,
+            dueDate: displayDate(rawDueDate),
+            paymentStatus,
+          });
+        }
+      }
+    } else if (Array.isArray(loadingRecords) && loadingRecords.length > 0) {
+      for (const lr of loadingRecords) {
+        const qty = Number(lr.loaded_quantity || 0);
+        if (qty <= 0) continue;
+        const po = rowMap.get(String(lr.purchase_order_id));
+        const billNo = lr.purchase_order_no || po?.purchase_order_no || "—";
+        const purchCurr = String(po?.currency_code || "USD").toUpperCase();
+        const finalCurr = String(po?.dest_countries?.currency_code || "AED").toUpperCase();
+        const exRate = Number(po?.exchange_rate || 1) || 1;
+        const rawDueDate = po ? resolveAgreedDueDate(po) : "—";
+
+        const totalQty = Number(po?.total_quantity || 1);
+        const totalAmt = Number(po?.order_total || 0);
+        const unitPrice = totalQty > 0 ? totalAmt / totalQty : 0;
+        const loadedInvoicePC = qty * unitPrice;
+        const loadedInvoiceFC = loadedInvoicePC * exRate;
+        const ratio = totalQty > 0 ? qty / totalQty : 1;
+        const paidPC = (Number(po?.advance_paid || 0) + Number(po?.remaining_paid || 0)) * ratio;
+        const paidFC = paidPC * exRate;
+        const remainingPC = Math.max(0, loadedInvoicePC - paidPC);
+        const remainingFC = Math.max(0, loadedInvoiceFC - paidFC);
+
+        let paymentStatus = "Open";
+        if (remainingPC <= 0.05) {
+          paymentStatus = "Fully Paid";
+        } else if (paidPC > 0) {
+          paymentStatus = "Partially Paid";
+        }
+
+        result.push({
+          id: `pb-${lr.id}`,
+          orderId: String(lr.purchase_order_id),
+          loadingId: String(lr.id),
+          source: "purchase_booking",
+          billNo,
+          loadingNo: lr.loading_record_no || `LD-${String(lr.id).slice(0, 8)}`,
+          truckNo: lr.vehicle_no || lr.report_payload?.truckNo || lr.container_number || "—",
+          loadingDate: lr.loaded_at ? String(lr.loaded_at).slice(0, 10) : (lr.created_at ? String(lr.created_at).slice(0, 10) : "—"),
+          goodsName: lr.report_payload?.goodsName || lr.goods_name || po?.goods_name || "—",
+          loadedQty: qty,
+          unit: lr.report_payload?.qtyName || po?.unit || "PCS",
+          grossWeight: Number(lr.gross_weight || lr.report_payload?.grossWeight || 0),
+          netWeight: Number(lr.net_weight || lr.report_payload?.netWeight || 0),
+          purchCurr,
+          finalCurr,
+          exRate,
+          loadedInvoicePC,
+          loadedInvoiceFC,
+          paidPC,
+          paidFC,
+          remainingPC,
+          remainingFC,
+          dueDate: displayDate(rawDueDate),
+          paymentStatus,
+        });
+      }
+    }
+
+    // 2. Local Purchase loadings
+    const localPurchases = uniqueRows.filter((r: any) => isLocalPurchase(r));
+    for (const lp of localPurchases) {
+      const details = typeof lp.loading_details === "object" ? lp.loading_details : {};
+      const entries: any[] = Array.isArray(details?.entries) ? details.entries : [];
+      const billNo = lp.manual_bill_no || lp.entry_serial || lp.journal_serial_no || String(lp.id).slice(0, 8);
+      const purchCurr = String(lp.currency || "AED").toUpperCase();
+      const finalCurr = String(lp.currency || "AED").toUpperCase();
+      const exRate = Number(lp.exchange_rate || 1) || 1;
+      const totalCost = Number(lp.final_cost || lp.order_total || lp.purchase_cost || 0);
+      const totalBillQty = Number(lp.numbers || 1);
+      const unitPrice = totalBillQty > 0 ? totalCost / totalBillQty : 0;
+      const dueDate = lp.due_date || "—";
+
+      if (entries.length > 0) {
+        entries.forEach((e: any, idx: number) => {
+          const qty = Number(e.loadedQuantity || 0);
+          if (qty <= 0) return;
+          const loadingNo = e.loadingNo || e.entryNo || `LD-${idx + 1}`;
+          const truckNo = e.truckNo || e.vehicleNo || lp.truck_no || "—";
+          const loadingDate = e.loadingDate ? String(e.loadingDate).slice(0, 10) : (lp.date ? String(lp.date).slice(0, 10) : "—");
+          const goodsName = e.goodsName || lp.goods_name || "—";
+          const unit = e.unit || lp.quantity_name || "PCS";
+          const grossWeight = Number(e.grossWeight || 0);
+          const netWeight = Number(e.netWeight || 0);
+
+          const loadedInvoicePC = qty * unitPrice;
+          const loadedInvoiceFC = loadedInvoicePC * exRate;
+          const ratio = totalBillQty > 0 ? qty / totalBillQty : 1;
+          const paidPC = (Number(lp.advance_paid || 0) + Number(lp.remaining_paid || 0)) * ratio;
+          const paidFC = paidPC * exRate;
+          const remainingPC = Math.max(0, loadedInvoicePC - paidPC);
+          const remainingFC = Math.max(0, loadedInvoiceFC - paidFC);
+
+          let paymentStatus = "Open";
+          if (remainingPC <= 0.05) {
+            paymentStatus = "Fully Paid";
+          } else if (paidPC > 0) {
+            paymentStatus = "Partially Paid";
+          }
+
+          result.push({
+            id: `lp-${lp.id}-${idx}`,
+            orderId: String(lp.id),
+            loadingId: String(e.id || `${lp.id}-${idx}`),
+            source: "local_purchase",
+            billNo,
+            loadingNo,
+            truckNo,
+            loadingDate,
+            goodsName,
+            loadedQty: qty,
+            unit,
+            grossWeight,
+            netWeight,
+            purchCurr,
+            finalCurr,
+            exRate,
+            loadedInvoicePC,
+            loadedInvoiceFC,
+            paidPC,
+            paidFC,
+            remainingPC,
+            remainingFC,
+            dueDate: displayDate(dueDate),
+            paymentStatus,
+          });
+        });
+      } else if (Number(lp.numbers || 0) > 0) {
+        const qty = Number(lp.numbers || 0);
+        const loadingNo = lp.entry_serial || `LD-1`;
+        const truckNo = lp.truck_no || "—";
+        const loadingDate = lp.date ? String(lp.date).slice(0, 10) : (lp.created_at ? String(lp.created_at).slice(0, 10) : "—");
+        const goodsName = lp.goods_name || "—";
+        const unit = lp.quantity_name || "PCS";
+        const grossWeight = Number(lp.total_gross_weight || 0);
+        const netWeight = Number(lp.net_weight || 0);
+
+        const loadedInvoicePC = totalCost;
+        const loadedInvoiceFC = loadedInvoicePC * exRate;
+        const paidPC = Number(lp.advance_paid || 0) + Number(lp.remaining_paid || 0);
+        const paidFC = paidPC * exRate;
+        const remainingPC = Math.max(0, loadedInvoicePC - paidPC);
+        const remainingFC = Math.max(0, loadedInvoiceFC - paidFC);
+
+        let paymentStatus = "Open";
+        if (remainingPC <= 0.05) {
+          paymentStatus = "Fully Paid";
+        } else if (paidPC > 0) {
+          paymentStatus = "Partially Paid";
+        }
+
+        result.push({
+          id: `lp-${lp.id}`,
+          orderId: String(lp.id),
+          loadingId: String(lp.id),
+          source: "local_purchase",
+          billNo,
+          loadingNo,
+          truckNo,
+          loadingDate,
+          goodsName,
+          loadedQty: qty,
+          unit,
+          grossWeight,
+          netWeight,
+          purchCurr,
+          finalCurr,
+          exRate,
+          loadedInvoicePC,
+          loadedInvoiceFC,
+          paidPC,
+          paidFC,
+          remainingPC,
+          remainingFC,
+          dueDate: displayDate(dueDate),
+          paymentStatus,
+        });
+      }
+    }
+
+    return result;
+  }, [activeMode, dueBills, loadingRecords, uniqueRows]);
+
+  const remainingRowsToRender = useMemo(() => {
+    if (activeMode !== "remaining") return [];
+    if (sourceFilter === "purchase_booking") {
+      return allRemainingRows.filter((r) => r.source === "purchase_booking");
+    }
+    if (sourceFilter === "local_purchase") {
+      return allRemainingRows.filter((r) => r.source === "local_purchase");
+    }
+    return allRemainingRows;
+  }, [activeMode, sourceFilter, allRemainingRows]);
+
+  const activeCounts = useMemo(() => {
+    if (activeMode === "remaining") {
+      const booking = allRemainingRows.filter((r) => r.source === "purchase_booking").length;
+      const local = allRemainingRows.filter((r) => r.source === "local_purchase").length;
+      return { all: booking + local, booking, local };
+    }
+    return counts;
+  }, [activeMode, counts, allRemainingRows]);
+
   const isEmpty = activeMode === "advance"
     ? advanceRowsToRender.length === 0
-    : (sourceFilter === "all" ? generalRows.length === 0 : rows.length === 0);
+    : activeMode === "remaining"
+      ? remainingRowsToRender.length === 0
+      : (sourceFilter === "all" ? generalRows.length === 0 : rows.length === 0);
 
   return (
     <div className="mx-6 mb-6 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
@@ -220,7 +524,7 @@ export function SourceFilteredTable({
                   : "text-blue-100 hover:text-white hover:bg-blue-800/50"
               )}
             >
-              All Sources ({counts.all})
+              All Sources ({activeCounts.all})
             </button>
             <button
               type="button"
@@ -232,7 +536,7 @@ export function SourceFilteredTable({
                   : "text-blue-100 hover:text-white hover:bg-blue-800/50"
               )}
             >
-              Purchase Booking ({counts.booking})
+              Purchase Booking ({activeCounts.booking})
             </button>
             <button
               type="button"
@@ -244,7 +548,7 @@ export function SourceFilteredTable({
                   : "text-blue-100 hover:text-white hover:bg-blue-800/50"
               )}
             >
-              Local Purchase ({counts.local})
+              Local Purchase ({activeCounts.local})
             </button>
           </div>
         </div>
@@ -419,6 +723,170 @@ export function SourceFilteredTable({
                   </tr>
                 );
               })}
+            </tbody>
+          </table>
+        ) : activeMode === "remaining" ? (
+          /* ========================================================================= */
+          /* REMAINING PAYMENT JOURNAL — EXACT 20-COLUMN LOADING-BASED FINANCIAL REPORT */
+          /* ========================================================================= */
+          <table className="w-full min-w-[2000px] border-collapse text-left text-xs">
+            <thead>
+              <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("PURCHASE BILL NO")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("LOADING ENTRY NO")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("TRUCK NO")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("LOADING DATE")}</th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("GOODS NAME")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("LOADED QUANTITY")}</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("UNIT")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("GROSS WT (KG)")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("NET WT (KG)")}</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("PURCHASE CURRENCY")}</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("FINAL CURRENCY")}</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("LOADED INVOICE AMOUNT (PC)")}</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("LOADED INVOICE AMOUNT (FC)")}</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID AMOUNT (PC)")}</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID AMOUNT (FC)")}</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("REMAINING AMOUNT (PC)")}</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("REMAINING AMOUNT (FC)")}</th>
+                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("DUE DATE")}</th>
+                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("PAYMENT STATUS")}</th>
+                <th className="py-3 px-3 text-center whitespace-nowrap">{label("JOURNAL")}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+              {remainingRowsToRender.length === 0 ? (
+                <tr>
+                  <td colSpan={20} className="py-8 text-center text-xs text-slate-400 font-medium">
+                    {label("NO CONFIRMED LOADINGS FOUND")}
+                  </td>
+                </tr>
+              ) : (
+                remainingRowsToRender.map((r) => (
+                  <tr key={r.id} className="hover:bg-amber-50/40 dark:hover:bg-slate-800/40 transition-colors">
+                    {/* 1. Purchase Bill Number */}
+                    <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-blue-700 dark:text-blue-400 whitespace-nowrap">
+                      {r.billNo}
+                    </td>
+
+                    {/* 2. Loading Entry Number */}
+                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-mono text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                      {r.loadingNo}
+                    </td>
+
+                    {/* 3. Truck Number */}
+                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                      {r.truckNo}
+                    </td>
+
+                    {/* 4. Loading Date */}
+                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                      {r.loadingDate}
+                    </td>
+
+                    {/* 5. Goods Name */}
+                    <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 whitespace-nowrap">
+                      {r.goodsName}
+                    </td>
+
+                    {/* 6. Loaded Quantity */}
+                    <td className="py-3 px-2 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                      {fmtQty(r.loadedQty)}
+                    </td>
+
+                    {/* 7. Unit */}
+                    <td className="py-3 px-2 text-center border-r border-slate-200 dark:border-slate-800 text-slate-500 whitespace-nowrap">
+                      {r.unit}
+                    </td>
+
+                    {/* 8. Gross Weight (KG) */}
+                    <td className="py-3 px-2 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                      {fmt(r.grossWeight)}
+                    </td>
+
+                    {/* 9. Net Weight (KG) */}
+                    <td className="py-3 px-2 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                      {fmt(r.netWeight)}
+                    </td>
+
+                    {/* 10. Purchase Currency */}
+                    <td className="py-3 px-2 text-center border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                      {r.purchCurr}
+                    </td>
+
+                    {/* 11. Final Currency */}
+                    <td className="py-3 px-2 text-center border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                      {r.finalCurr}
+                    </td>
+
+                    {/* 12. Loaded Invoice Amount — Purchase Currency */}
+                    <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                      {fmt(r.loadedInvoicePC)}
+                    </td>
+
+                    {/* 13. Loaded Invoice Amount — Final Currency */}
+                    <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                      {fmt(r.loadedInvoiceFC)}
+                    </td>
+
+                    {/* 14. Paid Amount — Purchase Currency */}
+                    <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                      {fmt(r.paidPC)}
+                    </td>
+
+                    {/* 15. Paid Amount — Final Currency */}
+                    <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                      {fmt(r.paidFC)}
+                    </td>
+
+                    {/* 16. Remaining Amount — Purchase Currency */}
+                    <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                      {fmt(r.remainingPC)}
+                    </td>
+
+                    {/* 17. Remaining Amount — Final Currency */}
+                    <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-semibold text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                      {fmt(r.remainingFC)}
+                    </td>
+
+                    {/* 18. Due Date */}
+                    <td className="py-3 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                      {r.dueDate}
+                    </td>
+
+                    {/* 19. Payment Status */}
+                    <td className="py-3 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                      <span className={cn(
+                        "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
+                        r.paymentStatus === "Fully Paid"
+                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                          : r.paymentStatus === "Partially Paid"
+                            ? "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+                            : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+                      )}>
+                        {label(r.paymentStatus.toUpperCase())}
+                      </span>
+                    </td>
+
+                    {/* 20. Journal Action */}
+                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (r.source === "purchase_booking" && onSelectLoading) {
+                            onSelectLoading(r.orderId, r.loadingId);
+                          } else {
+                            onSelectOrder(r.orderId);
+                          }
+                        }}
+                        className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs shadow-sm transition cursor-pointer"
+                      >
+                        {label("JOURNAL")}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         ) : (
