@@ -4589,9 +4589,9 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       {/* ── Main Table Card ── */}
       <div className="dgt-purchase-table-skin mx-6 mb-6 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
         {/* Table Title Bar (Matching Reference Screenshot: SALES ORDER PAYMENTS (18)) */}
-        <div className="px-6 py-4 border-b border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#091020] flex flex-wrap justify-between items-center gap-3">
+        <div className="px-4 py-2.5 border-b border-blue-700 bg-blue-700 text-white dark:bg-blue-800 flex flex-wrap justify-between items-center gap-2">
           <div className="flex flex-wrap items-center gap-3">
-            <h3 className="text-sm font-black tracking-wider text-slate-900 dark:text-slate-100 uppercase">
+            <h3 className="text-xs font-black tracking-wide text-white">
               SALES ORDER PAYMENTS ({filtered.length})
             </h3>
             {/* Source Segmented Control */}
@@ -4639,16 +4639,16 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
               </span>
             )}
           </div>
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+          <span className="text-xs font-semibold text-blue-100">
             Showing {pageRows.length > 0 ? pageIndex * pageSize + 1 : 0} to {Math.min((pageIndex + 1) * pageSize, pageRows.length)} of {pageRows.length} entries
           </span>
         </div>
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[2100px] border-collapse text-left text-xs">
+          <table data-no-cards className={cn("w-full min-w-[1850px] border-collapse text-xs", isRtl ? "text-right" : "text-left")}>
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-100/90 dark:border-slate-800 dark:bg-[#080d1a] text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              <tr className="border-b border-amber-300 bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 text-[11px] font-black text-slate-800 dark:text-slate-100">
                 {[
                   { label: "BILL #", tip: "Sales Order / Bill Number" },
                   { label: "TYPE", tip: "Order Type" },
@@ -4683,7 +4683,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                     key={col.label}
                     title={translateHeader(currentLanguage, col.tip)}
                     className={cn(
-                      "px-2.5 py-3 whitespace-nowrap border-r border-slate-200/60 dark:border-slate-800/80 last:border-0 cursor-default",
+                      "px-2 py-2 whitespace-nowrap border-r border-amber-200/70 dark:border-slate-800/80 last:border-0 cursor-default",
                       i === 6 ? "w-[200px] max-w-[200px]" : "",
                       i === 7 || i === 8 || i === 9 || i === 10 || i === 12 || i === 13 || i === 17 ? "text-right" :
                       i === 1 || i === 11 || i === 15 || i === 16 || i === 27 ? "text-center" : "text-left"

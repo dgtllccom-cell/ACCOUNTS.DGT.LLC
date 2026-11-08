@@ -598,29 +598,26 @@ export function SourceFilteredTable({
         {/* ADVANCE PAYMENT JOURNAL — EXACT 23-COLUMN INVOICE-BASED FINANCIAL REPORT  */}
         {/* ========================================================================= */}
         {activeMode === "advance" ? (
-          <table data-no-cards className="w-full min-w-[2100px] border-collapse text-start text-xs">
+          <table data-no-cards className="w-full min-w-[1570px] border-collapse text-start text-xs">
             <thead>
               <tr className="bg-amber-100 text-slate-900 text-xs border-b border-amber-300">
-                <th colSpan={14} aria-hidden="true" />
+                <th colSpan={12} aria-hidden="true" />
                 <th colSpan={2} scope="colgroup" className="px-3 py-2 text-start">{invoiceLabels.t("invoice", "Purchase Invoice")}</th>
                 <th colSpan={2} scope="colgroup" className="px-3 py-2 text-start">{invoiceLabels.t("paid", "Invoice Paid")}</th>
                 <th colSpan={2} scope="colgroup" className="px-3 py-2 text-start">{invoiceLabels.t("remaining", "Invoice Remaining")}</th>
                 <th colSpan={3} aria-hidden="true" />
               </tr>
               <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("BILL / INVOICE NO")}</th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("BILL NO / DATE")}</th>
                 <th className="py-3 px-2 border-r border-amber-300 text-center whitespace-nowrap">{label("SOURCE")}</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("DATE")}</th>
                 <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">
                   {isSuperAdmin ? label("COUNTRY / BRANCH") : label("BRANCH")}
                 </th>
                 <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("SUPPLIER / PURCHASE ACCOUNT")}</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("GOODS NAME")}</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("QUANTITY")}</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("UNIT")}</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("GROSS WT (KG)")}</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("NET WT (KG)")}</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("ORIGIN COUNTRY")}</th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("GOODS / BRAND / SIZE")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("QTY / UNIT")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("GROSS / NET WT (KG)")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("ORIGIN")}</th>
                 <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("PURCHASE CURRENCY")}</th>
                 <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("FINAL CURRENCY")}</th>
                 <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{invoiceLabels.t("invoice_rate", "Saved invoice rate")}</th>
@@ -630,6 +627,7 @@ export function SourceFilteredTable({
                 <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID AMOUNT (FC)")}</th>
                 <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("REMAINING BALANCE (PC)")}</th>
                 <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("REMAINING BALANCE (FC)")}</th>
+                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("LOADING / RECEIVING DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("DUE DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("PAYMENT STATUS")}</th>
                 <th className="py-3 px-3 text-center whitespace-nowrap">{label("JOURNAL")}</th>
@@ -651,13 +649,17 @@ export function SourceFilteredTable({
                 const grossKg = Number(r.gross_weight ?? form.grossWeight ?? r.gross_weight_kg ?? 0);
                 const netKg = Number(r.net_weight ?? form.netWeight ?? r.net_weight_kg ?? 0);
                 const originCountry = form.originCountry || form.originCountryName || form.countryOfOrigin || r.origin_country_name || form.loadingCountry || (r.countries?.name) || (isLocal ? "Local" : "—");
+                const brand = form.brand || form.brandName || r.brand || "";
+                const size = form.size || form.goodsSize || r.size || "";
+                const loadDate = form.loadingDate || form.expectedLoadingDate || r.loading_date || "";
+                const receiveDate = form.receivingDate || form.expectedReceivingDate || r.receiving_date || "";
                 const dueDate = form.advancePaymentDate || form.advanceDueDate || form.dueDate || resolveAgreedDueDate(r, "advance");
                 const fin = getAdvanceInvoiceFinancials(r);
 
                 return (
                   <tr key={r.id || i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                     {/* 1. Bill / Invoice Number */}
-                    <td className="py-3 px-3 font-mono font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">{billNo}</td>
+                    <td className="py-2 px-2.5 font-mono whitespace-nowrap"><div className="font-bold text-blue-600 dark:text-blue-400">{billNo}</div><div className="mt-0.5 text-[10px] text-slate-500">{displayDate(date)}</div></td>
 
                     {/* 2. Source */}
                     <td className="py-3 px-2 text-center whitespace-nowrap">
@@ -669,8 +671,6 @@ export function SourceFilteredTable({
                       </span>
                     </td>
 
-                    {/* 3. Bill / Invoice Date */}
-                    <td className="py-3 px-2.5 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">{displayDate(date)}</td>
 
                     {/* 4. Country / Branch */}
                     <td className="py-3 px-2.5 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
@@ -694,19 +694,15 @@ export function SourceFilteredTable({
                     </td>
 
                     {/* 6. Goods Name */}
-                    <td className="py-3 px-3 font-semibold text-slate-900 dark:text-slate-100 max-w-[140px] truncate" title={goods}>{goods}</td>
+                    <td className="py-2 px-2.5 text-slate-900 dark:text-slate-100 max-w-[175px]"><div className="font-semibold truncate" title={goods}>{goods}</div><div className="text-[10px] text-slate-500 truncate" title={[brand,size].filter(Boolean).join(" / ")}>{[brand && `${label("BRAND")}: ${brand}`,size && `${label("SIZE")}: ${size}`].filter(Boolean).join(" | ") || "—"}</div></td>
 
                     {/* 7. Quantity */}
-                    <td className="py-3 px-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">{fmtQty(qty)}</td>
+                    <td className="py-2 px-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap"><div>{fmtQty(qty)}</div><div className="text-[10px] text-slate-500">{unit}</div></td>
 
-                    {/* 8. Unit */}
-                    <td className="py-3 px-2 text-center text-slate-500 whitespace-nowrap">{unit}</td>
 
                     {/* 9. Gross Weight (KG) */}
-                    <td className="py-3 px-2 text-right font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">{fmtQty(grossKg)}</td>
+                    <td className="py-2 px-2 text-right font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap"><div>{fmtQty(grossKg)}</div><div className="border-t border-slate-200 dark:border-slate-700 mt-0.5 pt-0.5">{fmtQty(netKg)}</div></td>
 
-                    {/* 10. Net Weight (KG) */}
-                    <td className="py-3 px-2 text-right font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">{fmtQty(netKg)}</td>
 
                     {/* 11. Origin Country */}
                     <td className="py-3 px-2.5 text-slate-700 dark:text-slate-300 whitespace-nowrap">{originCountry}</td>
@@ -724,6 +720,8 @@ export function SourceFilteredTable({
                         <PurchaseInvoiceSection compact lang={lang} section={section} summary={fin.summary} loading={fin.loading} />
                       </td>
                     ))}
+
+                    <td className="py-2 px-2 text-center font-mono text-[10px] whitespace-nowrap"><div>{loadDate ? displayDate(loadDate) : "—"}</div><div className="border-t border-slate-200 dark:border-slate-700 mt-0.5 pt-0.5">{receiveDate ? displayDate(receiveDate) : "—"}</div></td>
 
                     {/* 21. Due Date */}
                     <td className="py-3 px-2.5 text-center font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">{displayDate(dueDate)}</td>
