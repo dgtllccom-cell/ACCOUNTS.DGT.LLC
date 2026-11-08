@@ -121,7 +121,14 @@ export function SourceFilteredTable({
       orderId: string;
       loadingId: string;
       source: "purchase_booking" | "local_purchase";
+      orderType?: string;
       billNo: string;
+      billDate?: string;
+      purchaseAccount?: string;
+      branch?: string;
+      brand?: string;
+      size?: string;
+      origin?: string;
       loadingNo: string;
       truckNo: string;
       goodsName: string;
@@ -142,6 +149,10 @@ export function SourceFilteredTable({
       loadedInvoiceFC: number;
       paidPC: number;
       paidFC: number;
+      advancePaidPC?: number;
+      advancePaidFC?: number;
+      remainingPaidPC?: number;
+      remainingPaidFC?: number;
       remainingPC: number;
       remainingFC: number;
       dueDate: string;
@@ -261,12 +272,32 @@ export function SourceFilteredTable({
             paymentStatus = "Partially Paid";
           }
 
+          const billDate = bill?.order_date || poForm.orderDate || poForm.billDate || bill?.created_at?.slice(0, 10) || "—";
+          const branch = poForm.branchName || bill?.branch_name || poForm.branchCode || "—";
+          const purchaseAccount = poForm.purchaseAccountName || poForm.purchaseAccountNo || bill?.purchase_account_name || bill?.purchase_account_no || bill?.supplier_name || "—";
+          const brand = payload.brand || poForm.brand || poForm.brandName || "";
+          const size = payload.size || poForm.size || poForm.goodsSize || "";
+          const origin = loadCountry || poForm.originCountry || "—";
+          const billTotalQty = Number(bill.totalQuantity || bill.quantity || po?.total_quantity || poForm.totalQuantity || 1);
+          const advancePaidPC = Number(l.advanceAllocated ?? (Number(bill?.advance_paid || 0) * (qty / (billTotalQty || 1))));
+          const advancePaidFC = advancePaidPC * exRate;
+          const remainingPaidPC = Math.max(0, paidPC - advancePaidPC);
+          const remainingPaidFC = remainingPaidPC * exRate;
+          const orderType = (poForm.purchaseType as string) || "Booking";
+
           result.push({
             id: `pb-${l.id}`,
             orderId: String(bill.id),
             loadingId: String(l.id),
             source: "purchase_booking",
+            orderType,
             billNo,
+            billDate,
+            purchaseAccount,
+            branch,
+            brand,
+            size,
+            origin,
             loadingNo,
             truckNo,
             goodsName,
@@ -287,6 +318,10 @@ export function SourceFilteredTable({
             loadedInvoiceFC,
             paidPC,
             paidFC,
+            advancePaidPC,
+            advancePaidFC,
+            remainingPaidPC,
+            remainingPaidFC,
             remainingPC,
             remainingFC,
             dueDate: displayDate(rawDueDate),
@@ -333,12 +368,31 @@ export function SourceFilteredTable({
         const rawReceiveDate = lr.received_at ? String(lr.received_at).slice(0, 10) : (lr.actual_arrival_date ? String(lr.actual_arrival_date).slice(0, 10) : null);
         const receiveDate = rawReceiveDate || (payload.etaDate ? `${String(payload.etaDate).slice(0, 10)} (ETA)` : "— / Pending");
 
+        const billDate = po?.order_date || poForm.orderDate || poForm.billDate || po?.created_at?.slice(0, 10) || "—";
+        const branch = poForm.branchName || po?.branch_name || poForm.branchCode || "—";
+        const purchaseAccount = poForm.purchaseAccountName || poForm.purchaseAccountNo || po?.purchase_account_name || po?.purchase_account_no || po?.supplier_name || "—";
+        const brand = payload.brand || poForm.brand || poForm.brandName || "";
+        const size = payload.size || poForm.size || poForm.goodsSize || "";
+        const origin = loadCountry || poForm.originCountry || "—";
+        const advancePaidPC = Number(po?.advance_paid || 0) * ratio;
+        const advancePaidFC = advancePaidPC * exRate;
+        const remainingPaidPC = Number(po?.remaining_paid || 0) * ratio;
+        const remainingPaidFC = remainingPaidPC * exRate;
+        const orderType = (poForm.purchaseType as string) || "Booking";
+
         result.push({
           id: `pb-${lr.id}`,
           orderId: String(lr.purchase_order_id),
           loadingId: String(lr.id),
           source: "purchase_booking",
+          orderType,
           billNo,
+          billDate,
+          purchaseAccount,
+          branch,
+          brand,
+          size,
+          origin,
           loadingNo: lr.loading_record_no || `LD-${String(lr.id).slice(0, 8)}`,
           truckNo: lr.vehicle_no || payload.truckNo || lr.container_number || "—",
           goodsName: payload.goodsName || lr.goods_name || po?.goods_name || "—",
@@ -359,6 +413,10 @@ export function SourceFilteredTable({
           loadedInvoiceFC,
           paidPC,
           paidFC,
+          advancePaidPC,
+          advancePaidFC,
+          remainingPaidPC,
+          remainingPaidFC,
           remainingPC,
           remainingFC,
           dueDate: displayDate(rawDueDate),
@@ -385,6 +443,10 @@ export function SourceFilteredTable({
       const receiveCountry = String(lp.country_name || lp.country || "UAE").trim();
       const receivePort = String(lp.warehouse_name || lp.destination || lp.receiving_location || "Local Warehouse").trim();
 
+      const billDate = lp.date ? String(lp.date).slice(0, 10) : (lp.created_at ? String(lp.created_at).slice(0, 10) : "—");
+      const branch = lp.branch_name || lp.branch_code || "—";
+      const purchaseAccount = lp.supplier_name || lp.account_name || lp.purchase_account || "—";
+
       if (entries.length > 0) {
         entries.forEach((e: any, idx: number) => {
           const qty = Number(e.loadedQuantity || 0);
@@ -398,11 +460,19 @@ export function SourceFilteredTable({
           const netWeight = Number(e.netWeight || 0);
           const receiveDate = lp.received_at ? String(lp.received_at).slice(0, 10) : (lp.date ? String(lp.date).slice(0, 10) : "— / Pending");
 
+          const brand = e.brand || lp.brand || "";
+          const size = e.size || lp.size || "";
+          const origin = lp.origin || lp.country_name || "—";
+
           const loadedInvoicePC = qty * unitPrice;
           const loadedInvoiceFC = loadedInvoicePC * exRate;
           const ratio = totalBillQty > 0 ? qty / totalBillQty : 1;
           const paidPC = (Number(lp.advance_paid || 0) + Number(lp.remaining_paid || 0)) * ratio;
           const paidFC = paidPC * exRate;
+          const advancePaidPC = Number(lp.advance_paid || 0) * ratio;
+          const advancePaidFC = advancePaidPC * exRate;
+          const remainingPaidPC = Number(lp.remaining_paid || 0) * ratio;
+          const remainingPaidFC = remainingPaidPC * exRate;
           const remainingPC = Math.max(0, loadedInvoicePC - paidPC);
           const remainingFC = Math.max(0, loadedInvoiceFC - paidFC);
 
@@ -418,7 +488,14 @@ export function SourceFilteredTable({
             orderId: String(lp.id),
             loadingId: String(e.id || `${lp.id}-${idx}`),
             source: "local_purchase",
+            orderType: "Local",
             billNo,
+            billDate,
+            purchaseAccount,
+            branch,
+            brand,
+            size,
+            origin,
             loadingNo,
             truckNo,
             goodsName,
@@ -439,6 +516,10 @@ export function SourceFilteredTable({
             loadedInvoiceFC,
             paidPC,
             paidFC,
+            advancePaidPC,
+            advancePaidFC,
+            remainingPaidPC,
+            remainingPaidFC,
             remainingPC,
             remainingFC,
             dueDate: displayDate(dueDate),
@@ -456,10 +537,18 @@ export function SourceFilteredTable({
         const netWeight = Number(lp.net_weight || 0);
         const receiveDate = lp.received_at ? String(lp.received_at).slice(0, 10) : (lp.date ? String(lp.date).slice(0, 10) : "— / Pending");
 
+        const brand = lp.brand || "";
+        const size = lp.size || "";
+        const origin = lp.origin || lp.country_name || "—";
+
         const loadedInvoicePC = totalCost;
         const loadedInvoiceFC = loadedInvoicePC * exRate;
         const paidPC = Number(lp.advance_paid || 0) + Number(lp.remaining_paid || 0);
         const paidFC = paidPC * exRate;
+        const advancePaidPC = Number(lp.advance_paid || 0);
+        const advancePaidFC = advancePaidPC * exRate;
+        const remainingPaidPC = Number(lp.remaining_paid || 0);
+        const remainingPaidFC = remainingPaidPC * exRate;
         const remainingPC = Math.max(0, loadedInvoicePC - paidPC);
         const remainingFC = Math.max(0, loadedInvoiceFC - paidFC);
 
@@ -475,7 +564,14 @@ export function SourceFilteredTable({
           orderId: String(lp.id),
           loadingId: String(lp.id),
           source: "local_purchase",
+          orderType: "Local",
           billNo,
+          billDate,
+          purchaseAccount,
+          branch,
+          brand,
+          size,
+          origin,
           loadingNo,
           truckNo,
           goodsName,
@@ -496,6 +592,10 @@ export function SourceFilteredTable({
           loadedInvoiceFC,
           paidPC,
           paidFC,
+          advancePaidPC,
+          advancePaidFC,
+          remainingPaidPC,
+          remainingPaidFC,
           remainingPC,
           remainingFC,
           dueDate: displayDate(dueDate),
@@ -757,31 +857,24 @@ export function SourceFilteredTable({
           </table>
         ) : activeMode === "remaining" ? (
           /* ========================================================================= */
-          /* REMAINING PAYMENT JOURNAL — EXACT 23-COLUMN LOADING-BASED FINANCIAL REPORT */
+          /* REMAINING PAYMENT JOURNAL — EXACT COMPACT 16-COLUMN STACKED FINANCIAL REPORT */
           /* ========================================================================= */
-          <table className="w-full min-w-[2300px] border-collapse text-left text-xs">
+          <table className="w-full min-w-[1900px] border-collapse text-left text-xs">
             <thead>
               <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("BILL NO.")}</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("LOADING NO.")}</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("TRUCK NO.")}</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("GOODS")}</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("QTY")}</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("UNIT")}</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("GROSS KG")}</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("NET KG")}</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("LOAD COUNTRY")}</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("LOAD PORT")}</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("LOAD DATE")}</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("RECEIVE COUNTRY")}</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("RECEIVE PORT")}</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("RECEIVE DATE")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PURCHASE (PC)")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("FINAL (FC)")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID (PC)")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID (FC)")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("BALANCE (PC)")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("BALANCE (FC)")}</th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("BILL NO., DATE")}</th>
+                <th className="py-3 px-2 border-r border-amber-300 text-center whitespace-nowrap">{label("TYPE")}</th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("PURCHASE ACCOUNT")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("BRANCH")}</th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("GOODS BRAND / SIZE")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("QTY (CTNS)")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("GROSS WT / NET WT (KG)")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("ORIGIN")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PURCHASE AMOUNT (USD) / FINAL AMOUNT (AED)")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE PAID (TO) (AED)")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("REMAINING PAID (TO) (AED)")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("BALANCE (REMAINING) (USD) / (AED)")}</th>
+                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("LOADING DATE / RECEIVE DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("DUE DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("STATUS")}</th>
                 <th className="py-3 px-3 text-center whitespace-nowrap">{label("JOURNAL")}</th>
@@ -790,126 +883,141 @@ export function SourceFilteredTable({
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
               {remainingRowsToRender.length === 0 ? (
                 <tr>
-                  <td colSpan={23} className="py-8 text-center text-xs text-slate-400 font-medium">
+                  <td colSpan={16} className="py-8 text-center text-xs text-slate-400 font-medium">
                     {label("NO CONFIRMED LOADINGS FOUND")}
                   </td>
                 </tr>
               ) : (
                 remainingRowsToRender.map((r) => (
                   <tr key={r.id} className="hover:bg-amber-50/40 dark:hover:bg-slate-800/40 transition-colors">
-                    {/* 1. Bill No. */}
-                    <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-blue-700 dark:text-blue-400 whitespace-nowrap">
-                      {r.billNo}
+                    {/* 1. Bill No., Date */}
+                    <td className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                      <div className="font-bold text-blue-700 dark:text-blue-400">{r.billNo}</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1">
+                        <span>📅</span>
+                        <span>{displayDate(r.billDate)}</span>
+                      </div>
                     </td>
 
-                    {/* 2. Loading No. */}
-                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-mono text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                      {r.loadingNo}
+                    {/* 2. Type */}
+                    <td className="py-2.5 px-2 border-r border-slate-200 dark:border-slate-800 text-center whitespace-nowrap">
+                      <span className={cn(
+                        "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
+                        r.orderType === "Local" || r.source === "local_purchase"
+                          ? "bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300"
+                          : r.orderType === "Purchase"
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                            : "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+                      )}>
+                        {r.orderType || (r.source === "local_purchase" ? "Local" : "Booking")}
+                      </span>
                     </td>
 
-                    {/* 3. Truck No. */}
-                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                      {r.truckNo}
+                    {/* 3. Purchase Account */}
+                    <td className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-800 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap max-w-[160px] truncate" title={r.purchaseAccount}>
+                      {r.purchaseAccount}
                     </td>
 
-                    {/* 4. Goods */}
-                    <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 whitespace-nowrap">
-                      {r.goodsName}
+                    {/* 4. Branch */}
+                    <td className="py-2.5 px-2.5 border-r border-slate-200 dark:border-slate-800 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                      {r.branch}
                     </td>
 
-                    {/* 5. Qty */}
-                    <td className="py-3 px-2 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
-                      {fmtQty(r.loadedQty)}
+                    {/* 5. Goods Brand / Size */}
+                    <td className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap max-w-[200px]">
+                      <div className="font-bold text-slate-900 dark:text-slate-100 truncate flex items-center gap-1.5" title={r.goodsName}>
+                        <span>🥜</span>
+                        <span className="truncate">{r.goodsName}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-500 truncate" title={[r.brand && `Brand: ${r.brand}`, r.size && `Size: ${r.size}`].filter(Boolean).join(" | ")}>
+                        {[r.brand && `Brand: ${r.brand}`, r.size && `Size: ${r.size}`].filter(Boolean).join(" | ") || "—"}
+                      </div>
                     </td>
 
-                    {/* 6. Unit */}
-                    <td className="py-3 px-2 text-center border-r border-slate-200 dark:border-slate-800 text-slate-500 whitespace-nowrap">
-                      {r.unit}
+                    {/* 6. Qty (Ctns) */}
+                    <td className="py-2.5 px-2 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                      <div className="font-bold text-slate-900 dark:text-white">{fmtQty(r.loadedQty)}</div>
+                      <div className="text-[10px] text-slate-500">{r.unit || "Ctns"}</div>
                     </td>
 
-                    {/* 7. Gross KG */}
-                    <td className="py-3 px-2 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
-                      {fmt(r.grossWeight)}
+                    {/* 7. Gross Wt / Net Wt (Kg) */}
+                    <td className="py-2.5 px-2 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                      <div className="font-bold text-slate-800 dark:text-slate-200">{fmt(r.grossWeight)}</div>
+                      <div className="text-[10px] text-slate-500">{fmt(r.netWeight)}</div>
                     </td>
 
-                    {/* 8. Net KG */}
-                    <td className="py-3 px-2 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
-                      {fmt(r.netWeight)}
+                    {/* 8. Origin */}
+                    <td className="py-2.5 px-2.5 border-r border-slate-200 dark:border-slate-800 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                      {r.origin}
                     </td>
 
-                    {/* 9. Load Country */}
-                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                      {r.loadCountry}
+                    {/* 9. Purchase Amount (USD) / Final Amount (AED) */}
+                    <td className="py-2.5 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                      <div className="font-bold text-blue-700 dark:text-blue-400">
+                        <span className="text-[10px] text-blue-500/70 font-semibold mr-1">{r.purchCurr}</span>
+                        {fmt(r.loadedInvoicePC)}
+                      </div>
+                      <div className="font-semibold text-slate-700 dark:text-slate-300 text-[11px]">
+                        <span className="text-[10px] text-slate-400 font-semibold mr-1">{r.finalCurr}</span>
+                        {fmt(r.loadedInvoiceFC)}
+                      </div>
                     </td>
 
-                    {/* 10. Load Port */}
-                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                      {r.loadPort}
+                    {/* 10. Advance Paid (to) (AED) */}
+                    <td className="py-2.5 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                      <div className="font-bold text-emerald-600 dark:text-emerald-400">
+                        <span className="text-[10px] text-emerald-500/70 font-semibold mr-1">{r.purchCurr}</span>
+                        {fmt(r.advancePaidPC)}
+                      </div>
+                      <div className="font-semibold text-emerald-600/90 dark:text-emerald-400/90 text-[11px]">
+                        <span className="text-[10px] text-emerald-500/70 font-semibold mr-1">{r.finalCurr}</span>
+                        {fmt(r.advancePaidFC)}
+                      </div>
                     </td>
 
-                    {/* 11. Load Date */}
-                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                      {r.loadDate}
+                    {/* 11. Remaining Paid (to) (AED) */}
+                    <td className="py-2.5 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                      <div className="font-bold text-emerald-600 dark:text-emerald-400">
+                        <span className="text-[10px] text-emerald-500/70 font-semibold mr-1">{r.purchCurr}</span>
+                        {fmt(r.remainingPaidPC)}
+                      </div>
+                      <div className="font-semibold text-emerald-600/90 dark:text-emerald-400/90 text-[11px]">
+                        <span className="text-[10px] text-emerald-500/70 font-semibold mr-1">{r.finalCurr}</span>
+                        {fmt(r.remainingPaidFC)}
+                      </div>
                     </td>
 
-                    {/* 12. Receive Country */}
-                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                      {r.receiveCountry}
+                    {/* 12. Balance (Remaining) (USD) / (AED) */}
+                    <td className="py-2.5 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                      <div className="font-bold text-rose-600 dark:text-rose-400">
+                        <span className="text-[10px] text-rose-500/70 font-semibold mr-1">{r.purchCurr}</span>
+                        {fmt(r.remainingPC)}
+                      </div>
+                      <div className="font-bold text-rose-600 dark:text-rose-400 text-[11px]">
+                        <span className="text-[10px] text-rose-500/70 font-semibold mr-1">{r.finalCurr}</span>
+                        {fmt(r.remainingFC)}
+                      </div>
                     </td>
 
-                    {/* 13. Receive Port */}
-                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                      {r.receivePort}
+                    {/* 13. Loading Date / Receive Date */}
+                    <td className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-[10px] whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-1 text-slate-700 dark:text-slate-300">
+                        <span>📅</span>
+                        <span>{r.loadDate ? displayDate(r.loadDate) : "—"}</span>
+                      </div>
+                      <div className="flex items-center justify-center gap-1 text-slate-500 mt-0.5">
+                        <span>📅</span>
+                        <span>{r.receiveDate ? displayDate(r.receiveDate) : "—"}</span>
+                      </div>
                     </td>
 
-                    {/* 14. Receive Date */}
-                    <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                      {r.receiveDate}
-                    </td>
-
-                    {/* 15. Purchase (PC) (Currency + Loaded Amount) */}
-                    <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
-                      <span className="text-[10px] text-slate-400 font-semibold mr-1">{r.purchCurr}</span>
-                      {fmt(r.loadedInvoicePC)}
-                    </td>
-
-                    {/* 16. Final (FC) (Currency + Loaded Amount) */}
-                    <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                      <span className="text-[10px] text-slate-400 font-semibold mr-1">{r.finalCurr}</span>
-                      {fmt(r.loadedInvoiceFC)}
-                    </td>
-
-                    {/* 17. Paid (PC) (Currency + Paid Amount) */}
-                    <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-                      <span className="text-[10px] text-emerald-500/70 font-semibold mr-1">{r.purchCurr}</span>
-                      {fmt(r.paidPC)}
-                    </td>
-
-                    {/* 18. Paid (FC) (Currency + Paid Amount) */}
-                    <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-                      <span className="text-[10px] text-emerald-500/70 font-semibold mr-1">{r.finalCurr}</span>
-                      {fmt(r.paidFC)}
-                    </td>
-
-                    {/* 19. Balance (PC) (Currency + Balance Amount) */}
-                    <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
-                      <span className="text-[10px] text-rose-500/70 font-semibold mr-1">{r.purchCurr}</span>
-                      {fmt(r.remainingPC)}
-                    </td>
-
-                    {/* 20. Balance (FC) (Currency + Balance Amount) */}
-                    <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-semibold text-rose-600 dark:text-rose-400 whitespace-nowrap">
-                      <span className="text-[10px] text-rose-500/70 font-semibold mr-1">{r.finalCurr}</span>
-                      {fmt(r.remainingFC)}
-                    </td>
-
-                    {/* 21. Due Date */}
-                    <td className="py-3 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                    {/* 14. Due Date */}
+                    <td className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
                       {r.dueDate}
                     </td>
 
-                    {/* 22. Status */}
-                    <td className="py-3 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                    {/* 15. Status */}
+                    <td className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
                       <span className={cn(
                         "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
                         r.paymentStatus === "Fully Paid"
@@ -922,8 +1030,8 @@ export function SourceFilteredTable({
                       </span>
                     </td>
 
-                    {/* 23. Journal */}
-                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                    {/* 16. Journal */}
+                    <td className="py-2.5 px-3 text-center whitespace-nowrap">
                       <button
                         type="button"
                         onClick={() => {
@@ -953,25 +1061,25 @@ export function SourceFilteredTable({
               <table className="w-full min-w-[1350px] border-collapse text-left text-xs">
                 <thead>
                   <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
-                    <th className="py-3 px-3 border-r border-amber-300">Bill No</th>
-                    <th className="py-3 px-2 border-r border-amber-300 text-center">Source</th>
-                    <th className="py-3 px-2.5 border-r border-amber-300">{label("Date")}</th>
-                    <th className="py-3 px-2.5 border-r border-amber-300">Country / Branch</th>
-                    <th className="py-3 px-3 border-r border-amber-300">Supplier</th>
-                    <th className="py-3 px-3 border-r border-amber-300">Goods Name</th>
-                    <th className="py-3 px-2 text-right border-r border-amber-300">Qty</th>
-                    <th className="py-3 px-2 text-center border-r border-amber-300">Unit</th>
-                    <th className="py-3 px-2 text-right border-r border-amber-300">Gross kg</th>
-                    <th className="py-3 px-2 text-right border-r border-amber-300">Net kg</th>
-                    <th className="py-3 px-2 text-center border-r border-amber-300">Currency</th>
-                    <th className="py-3 px-2.5 text-right border-r border-amber-300">Bill Total</th>
-                    <th className="py-3 px-2 text-right border-r border-amber-300">Paid</th>
-                    <th className="py-3 px-2 text-right border-r border-amber-300">Balance</th>
-                    <th className="py-3 px-2 text-center border-r border-amber-300 font-mono">DR Account</th>
-                    <th className="py-3 px-2 text-center border-r border-amber-300 font-mono">CR Account</th>
-                    <th className="py-3 px-2.5 text-center border-r border-amber-300">{activeMode === "remaining" ? label("REMAINING DUE DATE") : label("DUE DATE")} / {label("Status")}</th>
-                    <th className="py-3 px-2 text-center border-r border-amber-300">Exchange Rate</th>
-                    <th className="py-3 px-3 text-center">Journal</th>
+                    <th className="py-3 px-3 border-r border-amber-300">{label("BILL NO.")}</th>
+                    <th className="py-3 px-2 border-r border-amber-300 text-center">{label("SOURCE")}</th>
+                    <th className="py-3 px-2.5 border-r border-amber-300">{label("DATE")}</th>
+                    <th className="py-3 px-2.5 border-r border-amber-300">{label("COUNTRY / BRANCH")}</th>
+                    <th className="py-3 px-3 border-r border-amber-300">{label("SUPPLIER / PURCHASE ACCOUNT")}</th>
+                    <th className="py-3 px-3 border-r border-amber-300">{label("GOODS / BRAND / SIZE")}</th>
+                    <th className="py-3 px-2 text-right border-r border-amber-300">{label("QTY")}</th>
+                    <th className="py-3 px-2 text-center border-r border-amber-300">{label("UNIT")}</th>
+                    <th className="py-3 px-2 text-right border-r border-amber-300">{label("GROSS KG")}</th>
+                    <th className="py-3 px-2 text-right border-r border-amber-300">{label("NET KG")}</th>
+                    <th className="py-3 px-2 text-center border-r border-amber-300">{label("CURRENCY")}</th>
+                    <th className="py-3 px-2.5 text-right border-r border-amber-300">{label("BILL TOTAL")}</th>
+                    <th className="py-3 px-2 text-right border-r border-amber-300">{label("PAID")}</th>
+                    <th className="py-3 px-2 text-right border-r border-amber-300">{label("BALANCE")}</th>
+                    <th className="py-3 px-2 text-center border-r border-amber-300 font-mono">{label("DR ACCOUNT")}</th>
+                    <th className="py-3 px-2 text-center border-r border-amber-300 font-mono">{label("CR ACCOUNT")}</th>
+                    <th className="py-3 px-2.5 text-center border-r border-amber-300">{activeMode === "remaining" ? label("REMAINING DUE DATE") : label("DUE DATE")} / {label("STATUS")}</th>
+                    <th className="py-3 px-2 text-center border-r border-amber-300">{label("EXCHANGE RATE")}</th>
+                    <th className="py-3 px-3 text-center">{label("JOURNAL")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
