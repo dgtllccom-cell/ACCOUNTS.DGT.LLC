@@ -1774,7 +1774,8 @@ function SuperAdminRoznamchaReportViewContent({
           branch: targetRow.cityBranchName || targetRow.countryBranchName || "",
           printedBy: ""
         },
-        lang
+        lang,
+        autoPrint,
       });
       return;
     }

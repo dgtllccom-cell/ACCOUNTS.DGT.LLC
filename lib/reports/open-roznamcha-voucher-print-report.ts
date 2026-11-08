@@ -1,5 +1,5 @@
 import { escapeHtml, formatMoney, formatDate, type ERPCompanyInfo } from "./erp-report-template-builder";
-import { numberToWords } from "@/lib/utils/number-to-words";
+import { documentAmountInWords } from "@/lib/utils/number-to-words-i18n";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
@@ -82,7 +82,8 @@ export function buildRoznamchaVoucherHtml(input: {
     : d.type === "exchange" ? tt("rvp.title_exchange", "MONEY EXCHANGE")
     : tt("rvp.title_receipt", "CASH RECEIPT");
   const currencySymbol = d.currency === "USD" ? "$" : d.currency === "AED" ? "AED" : d.currency === "PKR" ? "Rs" : d.currency || "AED";
-  const amountInWords = numberToWords(d.amount);
+  // Words in the document language. The currency code is part of the returned text, so the line below adds none.
+  const amountInWords = documentAmountInWords(d.amount, d.currency || "", lang).trim();
 
   // Legs: the stored lines, one side per stored side. Legacy single DR/CR fields still apply.
   const drLegs: Leg[] = d.drLines && d.drLines.length ? d.drLines
@@ -170,7 +171,7 @@ export function buildRoznamchaVoucherHtml(input: {
       </div>
       <div class="amt-words">
         <div class="amt-lbl">${escapeHtml(tt("rvp.amount_words", "Amount in Words"))}</div>
-        <div>"${escapeHtml(amountInWords)} ${escapeHtml(d.currency || "")}"</div>
+        <div>"${escapeHtml(amountInWords)}"</div>
       </div>
     </div>
 
@@ -232,7 +233,7 @@ export function buildRoznamchaVoucherHtml(input: {
     .wrap { padding: 10px; display: flex; justify-content: center; }
     /* Two portrait copies side by side on one A4 landscape sheet, with the cut line between them */
     .sheet {
-      width: 285mm; min-height: 198mm; background: #fff; border: 1px solid #cbd5e1; box-shadow: 0 8px 24px rgba(15,23,42,0.1);
+      width: 285mm; max-width: 100%; box-sizing: border-box; min-height: 198mm; background: #fff; border: 1px solid #cbd5e1; box-shadow: 0 8px 24px rgba(15,23,42,0.1);
       display: grid; grid-template-columns: 1fr 6mm 1fr; padding: 4mm;
     }
     .copy {
@@ -333,13 +334,17 @@ export function openRoznamchaVoucherPrintReport(input: {
   data: RoznamchaVoucherData;
   companyInfo?: ERPCompanyInfo;
   lang?: string;
+  /** Open the print dialog once the voucher has loaded (the caller asked to print, not just to view). */
+  autoPrint?: boolean;
 }) {
   if (typeof window === "undefined") return;
   const html = buildRoznamchaVoucherHtml(input);
+  const autoPrintScript = `<script>window.addEventListener("load", function () { setTimeout(function () { window.print(); }, 250); });</script>`;
+  const finalHtml = input.autoPrint ? html.replace("</body>", `${autoPrintScript}</body>`) : html;
   const printWindow = window.open("", "_blank");
   if (printWindow) {
     printWindow.document.open();
-    printWindow.document.write(html);
+    printWindow.document.write(finalHtml);
     printWindow.document.close();
   }
 }
