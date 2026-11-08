@@ -2,6 +2,7 @@
 
 import { EntryPortal } from "./payment-entry-portal";
 import { SourceFilteredTable } from "./source-filtered-table";
+import { purchaseInvoiceSummary, isActualInvoicePayment } from "@/lib/journal/purchase-invoice-summary";
 import { afterPurchasePayment, purchasePaymentRegisterUrl } from "@/lib/journal/after-purchase-payment";
 import { payableRemainingLoadings, remainingLoadingEntry, type RemainingDueBill } from "@/lib/journal/remaining-loading-entry";
  
@@ -5482,6 +5483,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         activeMode={activeMode}
         loadingRecords={registryLoadingRecords}
         dueBills={registryDueBills}
+        invoiceRefresh={paymentsTick}
+        invoiceFinalCurrency={rowOfficeCurrency}
         onSelectLoading={(id, loadingId) => { pendingLoadingPick.current = loadingId; selectOrder(id); }}
         session={session}
       />}
@@ -5566,7 +5569,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
             const paymentCondition = form.paymentCondition || (activeMode === "advance" ? "Advance Payment" : isCredit ? "Credit Payment" : "");
 
             // Payment calculations
-            const displayPayments = selectedOrderPayments.filter((p: any) => p.kind !== "booking");
+            const displayPayments = selectedOrderPayments.filter((p: any) => activeMode === "advance" ? isActualInvoicePayment(p) : p.kind !== "booking");
             const chronological = displayPayments.sort((a: any, b: any) =>
               new Date(a.entry_date || a.created_at).getTime() - new Date(b.entry_date || b.created_at).getTime()
             );
@@ -5725,6 +5728,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   isRtl={isRtl}
                   mode={activeMode as PaymentEntryMode}
                   model={docModel}
+                  invoiceSummary={activeMode === "advance" ? purchaseInvoiceSummary(selected, loadingPayments ? null : selectedOrderPayments, rowOfficeCurrency(selected), selectedOrderPayments.length < 200 && !paymentError) : undefined}
                   limit={docLimit}
                   purchaseCurrency={poCurrencyHeader}
                   baseCurrency={baseCurrency}

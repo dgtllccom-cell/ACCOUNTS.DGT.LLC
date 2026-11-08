@@ -7,6 +7,10 @@ import { resolveAgreedDueDate } from "@/lib/services/payment-due-tracking";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { cn } from "@/lib/utils";
 import { LoadingReceivingCell } from "./loading-receiving-cell";
+import { purchaseInvoiceSummary } from "@/lib/journal/purchase-invoice-summary";
+import { PurchaseInvoiceSection } from "./purchase-invoice-summary";
+import { usePurchaseInvoiceHistory } from "./use-purchase-invoice-history";
+import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 type LanguageCode = string;
 import { FileSpreadsheet } from "lucide-react";
 
@@ -21,6 +25,8 @@ export interface SourceFilteredTableProps {
   onPrintStatement: (row: any) => void;
   tGlobal: (lang: LanguageCode, key: string, fallback: string) => string;
   activeMode: string;
+  invoiceRefresh?: number;
+  invoiceFinalCurrency?: (row: any) => string;
   loadingRecords?: any[];
   dueBills?: any[];
   onSelectLoading?: (orderId: string, loadingId: string) => void;
@@ -42,6 +48,8 @@ export function SourceFilteredTable({
   dueBills = [],
   onSelectLoading,
   session,
+  invoiceRefresh = 0,
+  invoiceFinalCurrency,
 }: SourceFilteredTableProps) {
   // Format numbers helper
   const fmt = (n: any, decimals = 2) => {
@@ -89,101 +97,18 @@ export function SourceFilteredTable({
     return uniqueRows;
   }, [sourceFilter, uniqueRows]);
 
-  // Invoice-based calculation logic for Advance Payment Journal
-  const getAdvanceInvoiceFinancials = (r: any) => {
-    const form = r.form_data?.form || {};
-    const isLocal = isLocalPurchase(r);
-
-    // Exchange rate
-    const exRate = Number(r.exchange_rate || form.exchangeRate || 1) || 1;
-
-    // Currencies
-    const purchCurr = String(r.currency_code || form.currency || form.purchaseCurrency || (isLocal ? "AED" : "USD")).toUpperCase().trim();
-    const finalCurr = String(form.branchCurrency || form.finalCurrency || r.dest_countries?.currency_code || r.countries?.currency_code || (isLocal ? "AED" : "AED")).toUpperCase().trim();
-
-    // Full Purchase Bill in Purchase Currency
-    let fullBillFC = 0;
-    if (isLocal) {
-      fullBillFC = Number(r.final_cost || r.order_total || r.purchase_cost || form.totalAmount || 0);
-    } else {
-      const goods = r.form_data?.goodsEntries || [];
-      if (Array.isArray(goods) && goods.length > 0) {
-        fullBillFC = goods.reduce((sum: number, g: any) => sum + Number(g.totalAmount || g.amount || 0), 0);
-      } else {
-        fullBillFC = Number(r.form_data?.totals?.grandPrimaryFinal || form.subTotal || form.totalAmount || r.order_total || 0);
-      }
-    }
-
-    // Invoice Percentage (%)
-    let invoicePercent = 0;
-    if (isLocal) {
-      invoicePercent = Number(r.advance_percentage || form.advancePercent || 0);
-    } else {
-      invoicePercent = Number(form.advancePercent || 0);
-    }
-
-    // Invoice Amount in Purchase Currency (actual invoice amount applicable to the selected payment percentage)
-    let invoiceAmountFC = 0;
-    if (invoicePercent > 0) {
-      invoiceAmountFC = (fullBillFC * invoicePercent) / 100;
-    } else if (Number(r.advance_paid || form.advanceAmount || 0) > 0) {
-      const rawAdv = Number(r.advance_paid || form.advanceAmount || 0);
-      invoiceAmountFC = (exRate > 1 && rawAdv > fullBillFC * 1.05) ? rawAdv / exRate : rawAdv;
-      if (fullBillFC > 0) {
-        invoicePercent = Math.min(100, Math.round((invoiceAmountFC / fullBillFC) * 100));
-      }
-    } else {
-      const pType = String(form.paymentType || form.paymentCondition || r.payment_mode || "").toLowerCase();
-      if (pType.includes("advance") || pType.includes("endorsement")) {
-        invoiceAmountFC = fullBillFC;
-        invoicePercent = 100;
-      } else {
-        invoiceAmountFC = 0;
-        invoicePercent = 0;
-      }
-    }
-
-    // Invoice Amount in Final Currency
-    const invoiceAmountLC = invoiceAmountFC * exRate;
-
-    // Paid Amount in Purchase Currency
-    let paidAmountFC = 0;
-    const rawPaid = Number(r.advance_paid || form.advancePaidAmount || 0);
-    if (rawPaid > 0) {
-      paidAmountFC = (exRate > 1 && rawPaid > invoiceAmountFC * 1.05 && fullBillFC > 0 && rawPaid > fullBillFC * 1.05)
-        ? rawPaid / exRate
-        : rawPaid;
-    }
-    paidAmountFC = Math.min(invoiceAmountFC, paidAmountFC);
-    const paidAmountLC = paidAmountFC * exRate;
-
-    // Remaining Balance
-    const remainingFC = Math.max(0, invoiceAmountFC - paidAmountFC);
-    const remainingLC = Math.max(0, invoiceAmountLC - paidAmountLC);
-
-    // Payment Status
-    let status = "Open";
-    if (invoiceAmountFC > 0 && remainingFC <= 0.05) {
-      status = "Fully Paid";
-    } else if (paidAmountFC > 0) {
-      status = "Partially Paid";
-    } else {
-      status = "Pending";
-    }
-
+  // Frozen invoice values and each payment's own posted rate. The 23-column
+  // register keeps its role-aware metadata and groups the three invoice sections.
+  const invoiceLabels = useErpScreen("pis", lang);
+  const invoiceIds = JSON.stringify([...new Set(uniqueRows.map(row => String(row.id)))]);
+  const invoiceHistory = usePurchaseInvoiceHistory(invoiceIds, activeMode === "advance", invoiceRefresh);
+  const getAdvanceInvoiceFinancials = (row: any) => {
+    const history = invoiceHistory[String(row.id)];
+    const summary = purchaseInvoiceSummary(row, history?.payments ?? null, invoiceFinalCurrency?.(row) ?? "", history?.complete ?? false);
     return {
-      exRate,
-      purchCurr,
-      finalCurr,
-      fullBillFC,
-      invoicePercent,
-      invoiceAmountFC,
-      invoiceAmountLC,
-      paidAmountFC,
-      paidAmountLC,
-      remainingFC,
-      remainingLC,
-      status
+      summary, purchCurr: summary.purchaseCurrency, finalCurr: summary.finalCurrency, exRate: summary.invoiceRate,
+      loading: !history || history.loading,
+      status: summary.remaining.purchase == null ? "—" : summary.remaining.purchase <= 0.05 ? "Fully Paid" : (summary.paid.purchase ?? 0) > 0 ? "Partially Paid" : "Pending",
     };
   };
 
@@ -609,7 +534,7 @@ export function SourceFilteredTable({
       : (sourceFilter === "all" ? generalRows.length === 0 : rows.length === 0);
 
   return (
-    <div className="mx-6 mb-6 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+    <div dir={invoiceLabels.dir} className="mx-2 sm:mx-6 mb-6 min-w-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
       {/* ── Blue Selector Bar Matching Design (❶ All Sources, ❷ Purchase Booking, ❸ Local Purchase) ── */}
       <div className="bg-[#1e40af] text-white px-5 py-3 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -673,8 +598,15 @@ export function SourceFilteredTable({
         {/* ADVANCE PAYMENT JOURNAL — EXACT 23-COLUMN INVOICE-BASED FINANCIAL REPORT  */}
         {/* ========================================================================= */}
         {activeMode === "advance" ? (
-          <table className="w-full min-w-[2100px] border-collapse text-left text-xs">
+          <table data-no-cards className="w-full min-w-[2100px] border-collapse text-start text-xs">
             <thead>
+              <tr className="bg-amber-100 text-slate-900 text-xs border-b border-amber-300">
+                <th colSpan={14} aria-hidden="true" />
+                <th colSpan={2} scope="colgroup" className="px-3 py-2 text-start">{invoiceLabels.t("invoice", "Purchase Invoice")}</th>
+                <th colSpan={2} scope="colgroup" className="px-3 py-2 text-start">{invoiceLabels.t("paid", "Invoice Paid")}</th>
+                <th colSpan={2} scope="colgroup" className="px-3 py-2 text-start">{invoiceLabels.t("remaining", "Invoice Remaining")}</th>
+                <th colSpan={3} aria-hidden="true" />
+              </tr>
               <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
                 <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("BILL / INVOICE NO")}</th>
                 <th className="py-3 px-2 border-r border-amber-300 text-center whitespace-nowrap">{label("SOURCE")}</th>
@@ -691,7 +623,7 @@ export function SourceFilteredTable({
                 <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("ORIGIN COUNTRY")}</th>
                 <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("PURCHASE CURRENCY")}</th>
                 <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("FINAL CURRENCY")}</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("INVOICE %")}</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{invoiceLabels.t("invoice_rate", "Saved invoice rate")}</th>
                 <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("INVOICE AMOUNT (PC)")}</th>
                 <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("INVOICE AMOUNT (FC)")}</th>
                 <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID AMOUNT (PC)")}</th>
@@ -785,26 +717,13 @@ export function SourceFilteredTable({
                     {/* 13. Final Currency */}
                     <td className="py-3 px-2 text-center font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">{fin.finalCurr}</td>
 
-                    {/* 14. Invoice Percentage (%) */}
-                    <td className="py-3 px-2 text-center font-mono font-bold text-amber-700 dark:text-amber-400 whitespace-nowrap">{fin.invoicePercent}%</td>
-
-                    {/* 15. Invoice Amount – Purchase Currency */}
-                    <td className="py-3 px-2.5 text-right font-mono font-black text-slate-900 dark:text-slate-100 whitespace-nowrap">{fmt(fin.invoiceAmountFC)}</td>
-
-                    {/* 16. Invoice Amount – Final Currency */}
-                    <td className="py-3 px-2.5 text-right font-mono font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">{fmt(fin.invoiceAmountLC)}</td>
-
-                    {/* 17. Paid Amount – Purchase Currency */}
-                    <td className="py-3 px-2.5 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">{fmt(fin.paidAmountFC)}</td>
-
-                    {/* 18. Paid Amount – Final Currency */}
-                    <td className="py-3 px-2.5 text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">{fmt(fin.paidAmountLC)}</td>
-
-                    {/* 19. Remaining Balance – Purchase Currency */}
-                    <td className="py-3 px-2.5 text-right font-mono font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">{fmt(fin.remainingFC)}</td>
-
-                    {/* 20. Remaining Balance – Final Currency */}
-                    <td className="py-3 px-2.5 text-right font-mono font-semibold text-rose-600 dark:text-rose-400 whitespace-nowrap">{fmt(fin.remainingLC)}</td>
+                    {/* 14. Saved invoice rate; advance requirements never replace invoice value. */}
+                    <td className="py-3 px-2 text-center font-mono tabular-nums" dir="ltr">{fin.exRate == null ? "—" : Number(fin.exRate).toFixed(4)}</td>
+                    {(["invoice", "paid", "remaining"] as const).map(section => (
+                      <td key={section} colSpan={2} className="align-top px-3 py-3">
+                        <PurchaseInvoiceSection compact lang={lang} section={section} summary={fin.summary} loading={fin.loading} />
+                      </td>
+                    ))}
 
                     {/* 21. Due Date */}
                     <td className="py-3 px-2.5 text-center font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">{displayDate(dueDate)}</td>

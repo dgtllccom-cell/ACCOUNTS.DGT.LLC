@@ -10,7 +10,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { writeAuditLog } from "@/lib/api/supabase";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { withLocalPg } from "@/lib/db/local-postgres";
+import { withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 import { withKeyedLock } from "@/lib/db/keyed-lock";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
@@ -226,9 +226,13 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    // Register summaries need only saved numeric fields. Reuse the read pool and
+    // avoid localizing narration for every visible bill; authorization is identical.
+    const summaryOnly = request.nextUrl.searchParams.get("summary") === "1";
+    const readPayments = summaryOnly ? withReadPg : withLocalPg;
 
     // withLocalPg, not the RLS-gated Supabase client — see the POST handler below for why.
-    const { order, rows } = (await withLocalPg(async (sql) => {
+    const { order, rows } = (await readPayments(async (sql) => {
       let orderRows = await sql`
         select id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id,
                currency_code, exchange_rate, order_total, total_goods_original, total_goods_usd, advance_paid, remaining_paid, credit_amount,
@@ -297,6 +301,16 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       countryBranchId: (order as any)?.country_branch_id ?? null,
       cityBranchId: (order as any)?.city_branch_id ?? null
     });
+
+    if (summaryOnly) {
+      return apiOk({ payments: rows.map((payment: any) => ({
+        id: payment.id, purchase_order_id: payment.purchase_order_id,
+        local_purchase_id: payment.local_purchase_id, kind: payment.kind,
+        entry_date: payment.entry_date, created_at: payment.created_at,
+        amount: payment.amount, currency_code: payment.currency_code,
+        exchange_rate: payment.exchange_rate, status: payment.status,
+      })), limit: 200 });
+    }
 
     const localizedPayments = await localizeRecordNames(
       (rows ?? []) as unknown as Array<{ id: string; narration?: string | null }>,
