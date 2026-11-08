@@ -772,7 +772,7 @@ export function PurchaseLoadingPaymentStatement({
       {/* ── Main Statement Table (Requirement 5 & 6) ── */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[3400px] border-collapse text-left text-xs">
+          <table className="w-full min-w-[2800px] border-collapse text-left text-xs">
             {/* Sticky Header with 34 Columns */}
             <thead className="sticky top-0 z-20 bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300 shadow-xs">
               <tr>
@@ -782,13 +782,10 @@ export function PurchaseLoadingPaymentStatement({
                 <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">PURCHASE BILL NO</th>
                 <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">BILL DATE</th>
                 <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">GATE</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">COUNTRY</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">MAIN BRANCH</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">CITY BRANCH</th>
+                {isSuperAdmin && <th className="py-2 px-2 border-r border-amber-300 whitespace-nowrap">COUNTRY</th>}
+                {(isSuperAdmin || isCountryAdmin) && <th className="py-2 px-2 border-r border-amber-300 whitespace-nowrap">BRANCH</th>}
                 <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">PURCHASE ACCOUNT</th>
                 <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">SALES ACCOUNT</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">SUPPLIER / EXPORTER</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">BUYER / IMPORTER</th>
                 <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">GOODS NAME</th>
                 <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">BRAND</th>
                 <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">SIZE</th>
@@ -817,7 +814,7 @@ export function PurchaseLoadingPaymentStatement({
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
               {filteredRows.length === 0 ? (
                 <tr>
-                  <td colSpan={34} className="py-12 text-center text-slate-400">
+                  <td colSpan={29 + (isSuperAdmin ? 1 : 0) + (isSuperAdmin || isCountryAdmin ? 1 : 0)} className="py-12 text-center text-slate-400">
                     No matching purchase loading and statement records found.
                   </td>
                 </tr>
@@ -869,20 +866,18 @@ export function PurchaseLoadingPaymentStatement({
                           {notRecorded(r.gate)}
                         </td>
 
-                        {/* 7. Country */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap font-medium">
-                          {r.countryDisplay}
-                        </td>
-
-                        {/* 8. Main Branch */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                          {notRecorded(r.mainBranch)}
-                        </td>
-
-                        {/* 9. City Branch */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                          {notRecorded(r.cityBranch)}
-                        </td>
+                        {/* Country and branch columns follow the signed-in role. API scoping remains authoritative. */}
+                        {isSuperAdmin && (
+                          <td className="py-2 px-2 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                            {notRecorded(r.countryDisplay)}
+                          </td>
+                        )}
+                        {(isSuperAdmin || isCountryAdmin) && (
+                          <td className="py-2 px-2 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                            <div className="font-semibold">{notRecorded(r.cityBranch)}</div>
+                            <div className="text-[10px] text-slate-500">{notRecorded(r.mainBranch)}</div>
+                          </td>
+                        )}
 
                         {/* 10. Purchase Account */}
                         <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
@@ -892,16 +887,6 @@ export function PurchaseLoadingPaymentStatement({
                         {/* 11. Sales Account */}
                         <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
                           {notRecorded(r.salesAccount)}
-                        </td>
-
-                        {/* 12. Supplier / Exporter */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">
-                          {notRecorded(r.supplierName)}
-                        </td>
-
-                        {/* 13. Buyer / Importer */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                          {notRecorded(r.buyerName)}
                         </td>
 
                         {/* 14. Goods Name */}
@@ -1106,7 +1091,7 @@ export function PurchaseLoadingPaymentStatement({
                       {/* ── Expandable Record Details (Requirement 7, 8, 9) ── */}
                       {isExpanded && (
                         <tr>
-                          <td colSpan={34} className="bg-slate-50/80 p-5 dark:bg-slate-950/80 border-b-2 border-blue-200 dark:border-blue-900">
+                          <td colSpan={29 + (isSuperAdmin ? 1 : 0) + (isSuperAdmin || isCountryAdmin ? 1 : 0)} className="bg-slate-50/80 p-5 dark:bg-slate-950/80 border-b-2 border-blue-200 dark:border-blue-900">
                             <div className="space-y-6">
                               {/* 5 Compact Numbered Detail Sections (Requirement 7) */}
                               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
