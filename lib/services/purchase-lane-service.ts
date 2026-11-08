@@ -300,12 +300,32 @@ export async function listLaneLoads(session: ErpSession, f: LaneFilters = {}) {
     const term = f.q?.trim();
     const rows = await sql`
       select l.*,
+             coalesce(c.name, '') as country_name,
+             coalesce(c.iso2, '') as country_iso2,
+             coalesce(oc.name, ob.name, cb.name, '') as branch_name,
              coalesce(cb.name, '') as owner_country_branch_name, coalesce(ci.name, '') as owner_city_branch_name,
              (select count(*)::int from public.purchase_lane_events ev where ev.lane_load_id = l.id) as history_count,
              (select count(*)::int from public.purchase_lane_expenses e where e.lane_load_id = l.id and e.deleted_at is null) as expense_count,
              (select coalesce(sum(e.amount),0) from public.purchase_lane_expenses e where e.lane_load_id = l.id and e.deleted_at is null and e.status <> 'cancelled') as expense_total,
+             case
+               when exists (select 1 from public.purchase_lane_expenses e where e.lane_load_id = l.id and e.deleted_at is null and e.status in ('confirmed', 'reviewed'))
+                    or l.transfer_destination in ('general_purchase_expenses', 'general_sales_expenses') then 'transferred'
+               else 'pending'
+             end as expense_status,
+             coalesce(
+               case
+                 when l.source_type = 'purchase_booking' then (select coalesce(po.payment_status, po.form_data->'form'->>'paymentStatus') from public.purchase_orders po where po.id = l.purchase_order_id)
+                 when l.source_type = 'local_purchase' then (select coalesce(lp.payment_status, 'completed') from public.local_purchases lp where lp.id = l.source_id)
+                 when l.source_type in ('sales_booking', 'local_sales') then (select coalesce(so.payment_status, 'pending') from public.sales_orders so where so.id = coalesce(l.sales_order_id, l.source_id))
+                 else 'pending'
+               end,
+               'pending'
+             ) as payment_status,
              coalesce(l.remaining_quantity, 0) as remaining_quantity
       from public.purchase_lane_loads l
+      left join public.countries c on c.id = coalesce(l.country_id, l.owner_country_id)
+      left join public.country_branches ob on ob.id = coalesce(l.country_branch_id, l.owner_country_branch_id)
+      left join public.city_branches oc on oc.id = coalesce(l.city_branch_id, l.owner_city_branch_id)
       left join public.country_branches cb on cb.id = l.owner_country_branch_id
       left join public.city_branches ci on ci.id = l.owner_city_branch_id
       where l.deleted_at is null and ${laneScopeSql(sql, session, "l")}

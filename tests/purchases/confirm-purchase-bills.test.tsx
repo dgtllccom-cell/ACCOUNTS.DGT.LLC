@@ -121,7 +121,8 @@ describe("ConfirmPurchaseBillsView", () => {
       // Total confirmed bills
       expect(screen.getByText("Total Confirmed Bills")).toBeDefined();
       expect(screen.getByText("Purchase Booking Bills")).toBeDefined();
-      expect(screen.getByText("Local Purchase Bills")).toBeDefined();
+      // Confirm Purchase is booking-only: no Local Purchase card
+      expect(screen.queryByText("Local Purchase Bills")).toBeNull();
       expect(screen.getByText("Total Loaded Quantity")).toBeDefined();
       expect(screen.getByText("Total Weight (Gross / Net)")).toBeDefined();
     });

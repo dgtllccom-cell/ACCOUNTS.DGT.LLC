@@ -302,6 +302,11 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         ],
       },
       {
+        label: nt("P/S General Transfer Journal"),
+        href: "/dashboard/purchase/purchase-transit-lane",
+        icon: ArrowRightLeft,
+      },
+      {
         key: "sub-trade",
         label: nt("Other Country Trade"),
         icon: Globe,
@@ -382,7 +387,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         label: nt("Shipping Line"),
         icon: Ship,
         children: [
-          { label: nt("P/S General Transfer"), href: "/dashboard/purchase/purchase-transit-lane", icon: ArrowRightLeft },
           { label: nt("Shipping Lines"), href: "/dashboard/shipping-line", icon: Ship },
           { label: nt("BL Entry"), href: "/dashboard/shipping-line/bl-entry", icon: FileText },
           { label: nt("Track Shipment (Container & Vessel)"), href: "/dashboard/shipping-line/tracking?type=vessel", icon: Compass, },

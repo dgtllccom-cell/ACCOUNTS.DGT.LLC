@@ -85,7 +85,7 @@ export const PS_TRANSFER_DESTINATIONS = [
 export const TRANSFER_TYPES = PS_TRANSFER_DESTINATIONS;
 
 export const defaultLaneTransferDestination = (sourceType: string): TransferType =>
-  sourceType === "sales_booking" || sourceType === "local_sales" ? "general_sales_expenses" : "remaining_payment";
+  sourceType === "sales_booking" || sourceType === "local_sales" ? "general_sales_expenses" : "general_purchase_expenses";
 export type TransferType = (typeof TRANSFER_TYPES)[number];
 
 export const MODULE_DESTINATIONS = [
@@ -102,10 +102,18 @@ export const isModuleDestination = (t: string): t is ModuleDestination =>
 
 export function destinationRoute(dest: string, sourceType?: string, refNo?: string, loadingRecordId?: string): string {
   switch (dest) {
-    case "general_purchase_expenses":
-      return "/dashboard/expenses/purchase";
-    case "general_sales_expenses":
-      return "/dashboard/expenses/sales";
+    case "general_purchase_expenses": {
+      const params = new URLSearchParams();
+      if (refNo) params.set("orderNo", refNo);
+      if (loadingRecordId) params.set("loadingRecordId", loadingRecordId);
+      return "/dashboard/expenses/purchase" + (params.size ? `?${params}` : "");
+    }
+    case "general_sales_expenses": {
+      const params = new URLSearchParams();
+      if (refNo) params.set("orderNo", refNo);
+      if (loadingRecordId) params.set("loadingRecordId", loadingRecordId);
+      return "/dashboard/expenses/sales" + (params.size ? `?${params}` : "");
+    }
     case "remaining_payment":
       if (sourceType === "sales_booking" || sourceType === "local_sales") return "/dashboard/sales/sales-order";
       {

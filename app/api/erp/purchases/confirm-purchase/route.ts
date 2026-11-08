@@ -58,7 +58,9 @@ export async function GET(request: NextRequest) {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "purchases", action: "read" });
     const { searchParams } = new URL(request.url);
-    const sourceFilter = searchParams.get("source") || "all"; // all | booking | local
+    // Confirm Purchase is a Purchase Booking step only. Local Purchase loadings go straight to the Consignment page
+    // (/dashboard/consignment) without this confirmation step, so they are never listed here.
+    const sourceFilter = "booking" as string;
     const query = (searchParams.get("query") || "").toLowerCase().trim();
     const lang = await getRequestLanguage(searchParams.get("lang"));
 
@@ -77,15 +79,12 @@ export async function GET(request: NextRequest) {
             po.purchase_contract_no,
             po.currency_code,
             po.order_total,
-            po.total_quantity,
-            po.gross_weight,
-            po.net_weight,
             po.advance_paid,
             po.remaining_paid,
             po.credit_amount,
             po.payment_status,
             po.form_data,
-            po.created_at,
+            po.created_at::text as created_at,
             po.country_id::text as country_id,
             po.city_branch_id::text as city_branch_id,
             c.name as country_name,
@@ -113,20 +112,22 @@ export async function GET(request: NextRequest) {
               purchase_order_id::text as purchase_order_id,
               loading_record_no,
               container_number,
-              truck_number,
+              vehicle_no as truck_number,
               driver_name,
-              transporter_name,
+              coalesce(transport_company, carrier_name, shipping_line) as transporter_name,
+              bl_number,
               loaded_quantity,
               net_weight,
               gross_weight,
               loading_status,
               report_payload,
-              loaded_at,
-              created_at
+              loaded_at::text as loaded_at,
+              created_at::text as created_at
             from public.purchase_loading_records
             where purchase_order_id = any(${poIds}::uuid[])
               and deleted_at is null
               and coalesce(loaded_quantity, 0) > 0
+              and coalesce(loading_status, '') <> 'cancelled'
             order by created_at asc, id asc;
           `;
 
@@ -145,7 +146,7 @@ export async function GET(request: NextRequest) {
             const goodsName = goodsEntries.map((g: any) => g.goodsName).filter(Boolean).join(", ") || form.goodsName || form.productName || "—";
             const lotNo = goodsEntries.map((g: any) => g.lotNo).filter(Boolean).join(", ") || form.lotNo || form.lotNumber || "—";
             const unit = form.quantityUnit || "Cartons";
-            const totalBooked = Number(po.total_quantity || form.totalQuantity || 0);
+            const totalBooked = Number(fd.workflow?.totalQuantity || fd.totals?.totalQuantity || goodsEntries.reduce((s: number, g: any) => s + Number(g.qtyNo || g.quantity || 0), 0) || form.totalQuantity || 0);
             const totalLoadedForPo = myLoadings.reduce((sum, l) => sum + Number(l.loaded_quantity || 0), 0);
             const paymentType = form.paymentType || form.paymentCondition || "Advance";
             const supplier = form.supplierName || form.salesAccountName || "—";
@@ -169,10 +170,10 @@ export async function GET(request: NextRequest) {
               const driver = load.driver_name || p.driverName || pForm.driverName || "—";
               const agency = load.transporter_name || p.transporterName || pForm.shippingLine || form.transporterName || "—";
               const container = load.container_number || p.containerNumber || null;
-              const bl = p.blNo || form.blNumber || null;
+              const bl = load.bl_number || p.blNo || p.blNumber || form.blNumber || null;
 
-              const gross = Number(load.gross_weight ?? (totalBooked > 0 ? (loadedQty / totalBooked) * Number(po.gross_weight || form.grossWeight || 0) : 0));
-              const net = Number(load.net_weight ?? (totalBooked > 0 ? (loadedQty / totalBooked) * Number(po.net_weight || form.netWeight || 0) : 0));
+              const gross = Number(load.gross_weight ?? (totalBooked > 0 ? (loadedQty / totalBooked) * Number(fd.totals?.totalGrossWeight || form.grossWeight || 0) : 0));
+              const net = Number(load.net_weight ?? (totalBooked > 0 ? (loadedQty / totalBooked) * Number(fd.totals?.totalNetWeight || form.netWeight || 0) : 0));
 
               bookingBills.push({
                 id: `${po.id}-${load.id}`,
@@ -436,3 +437,4 @@ export async function GET(request: NextRequest) {
     return handleApiError(error);
   }
 }
+

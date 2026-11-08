@@ -31,7 +31,8 @@ export function ConfirmPurchaseBillsView({ sessionInfo }: { sessionInfo?: { user
     totalNetWeightKg: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [sourceFilter, setSourceFilter] = useState<"all" | "booking" | "local">("all");
+  // Confirm Purchase lists Purchase Booking loadings only (Local Purchase goes directly to Consignment).
+  const sourceFilter = "booking" as const;
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBill, setSelectedBill] = useState<ConfirmPurchaseBillItem | null>(null);
@@ -42,7 +43,7 @@ export function ConfirmPurchaseBillsView({ sessionInfo }: { sessionInfo?: { user
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (sourceFilter !== "all") params.set("source", sourceFilter);
+      params.set("source", sourceFilter);
       if (searchQuery.trim()) params.set("query", searchQuery.trim());
       params.set("lang", lang);
 
@@ -107,7 +108,7 @@ export function ConfirmPurchaseBillsView({ sessionInfo }: { sessionInfo?: { user
               </span>
             </h1>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 max-w-2xl">
-              {tr("Confirmed Purchase Bills automatically linked from saved Loading entries for Purchase Booking and Local Purchase.")}
+              {tr("Purchase Booking loadings awaiting confirmation. Local Purchase loadings go directly to the Consignment page.")}
             </p>
           </div>
         </div>
@@ -126,7 +127,7 @@ export function ConfirmPurchaseBillsView({ sessionInfo }: { sessionInfo?: { user
       </div>
 
       {/* Top 5 Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card className="p-3 bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
           <div className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
             <FileText className="h-3.5 w-3.5 text-blue-600" />
@@ -146,17 +147,6 @@ export function ConfirmPurchaseBillsView({ sessionInfo }: { sessionInfo?: { user
           <div className="mt-2 flex items-baseline justify-between">
             <span className="text-xl font-black text-indigo-700 dark:text-indigo-400">{summary.bookingBills}</span>
             <span className="text-[10px] text-indigo-500/80 font-semibold">{tr("Booking")}</span>
-          </div>
-        </Card>
-
-        <Card className="p-3 bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
-          <div className="text-[10.5px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-            <Truck className="h-3.5 w-3.5 text-emerald-600" />
-            <span>{tr("Local Purchase Bills")}</span>
-          </div>
-          <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-xl font-black text-emerald-700 dark:text-emerald-400">{summary.localBills}</span>
-            <span className="text-[10px] text-emerald-500/80 font-semibold">{tr("Local")}</span>
           </div>
         </Card>
 
@@ -191,44 +181,11 @@ export function ConfirmPurchaseBillsView({ sessionInfo }: { sessionInfo?: { user
 
       {/* Filter and Search Bar */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3 shadow-xs flex flex-wrap items-center justify-between gap-3">
-        {/* Source Tabs */}
+        {/* Purchase Booking only — Local Purchase loadings go straight to Consignment */}
         <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-          <button
-            type="button"
-            onClick={() => setSourceFilter("all")}
-            className={cn(
-              "px-3 py-1.5 rounded-md text-xs font-bold transition-all",
-              sourceFilter === "all"
-                ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-            )}
-          >
-            {tr("All Sources")} ({summary.totalBills})
-          </button>
-          <button
-            type="button"
-            onClick={() => setSourceFilter("booking")}
-            className={cn(
-              "px-3 py-1.5 rounded-md text-xs font-bold transition-all",
-              sourceFilter === "booking"
-                ? "bg-indigo-600 text-white shadow-xs"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-            )}
-          >
+          <span className="px-3 py-1.5 rounded-md text-xs font-bold bg-indigo-600 text-white shadow-xs">
             {tr("Purchase Booking")} ({summary.bookingBills})
-          </button>
-          <button
-            type="button"
-            onClick={() => setSourceFilter("local")}
-            className={cn(
-              "px-3 py-1.5 rounded-md text-xs font-bold transition-all",
-              sourceFilter === "local"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-            )}
-          >
-            {tr("Local Purchase")} ({summary.localBills})
-          </button>
+          </span>
         </div>
 
         {/* Payment Condition Filter */}
@@ -304,7 +261,7 @@ export function ConfirmPurchaseBillsView({ sessionInfo }: { sessionInfo?: { user
                       {tr("No Confirm Purchase Bills Found")}
                     </p>
                     <p className="text-[11px] text-slate-400 mt-1">
-                      {tr("When a loading entry is saved for Purchase Booking or Local Purchase, confirmed bills appear here automatically.")}
+                      {tr("When a Purchase Booking loading entry is saved, its confirm bill appears here automatically.")}
                     </p>
                   </td>
                 </tr>
@@ -476,12 +433,9 @@ export function ConfirmPurchaseBillsView({ sessionInfo }: { sessionInfo?: { user
                             variant="ghost"
                             size="sm"
                             onClick={() => {
-                              // Route to appropriate transfer depending on type
-                              if (bill.purchaseType === "local") {
-                                window.open("/dashboard/purchase/local-purchase-warehouse-transfer", "_self");
-                              } else {
-                                window.open("/dashboard/purchase/purchase-transit-lane", "_self");
-                              }
+                              // The next destination (Warehouse / Re-export) is chosen on the common Consignment page.
+                              const params = new URLSearchParams({ tab: "loadings", source: "purchase_booking", q: bill.loadingEntryNo || bill.originalBillNo });
+                              window.open(`/dashboard/consignment?${params}`, "_self");
                             }}
                             className="h-7 px-2 text-[10.5px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300"
                             title={tr("Transfer")}
