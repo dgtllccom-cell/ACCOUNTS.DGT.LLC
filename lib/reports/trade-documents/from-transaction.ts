@@ -120,9 +120,17 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
   const form: AnyRec = fd.form || fd || {};
   const entries: AnyRec[] = form.goodsEntries || fd.goodsEntries || fd.goods || form.goods || rec.goods || [];
   const goods = goodsFrom(entries);
-  const scope = inferScope(form, rec);
+  // A local sale (saleSource local, not marked as an export) is domestic: a received or loading country on its form does not make it an export.
+  const isLocalSaleForm = kind === "sales"
+    && String(pick(form, "saleSource") || "").toLowerCase() === "local"
+    && String(pick(form, "saleMode") || "").toLowerCase() !== "export";
+  const scope: TradeScope = isLocalSaleForm ? "local" : inferScope(form, rec);
 
-  const currency = pick(rec, "currency_code", "currency") || pick(form, "purchaseCurrency", "currencyCode", "currencyType", "currency") || "USD";
+  // A sale's document currency is the currency it was booked in (original_currency_code, the wizard's sales currency).
+  // currency_code on a sales row is the country's currency, so it is only the fallback.
+  const currency = kind === "sales"
+    ? pick(rec, "original_currency_code") || pick(form, "currencyType", "salesCurrency", "currencyCode") || pick(rec, "currency_code", "currency") || "USD"
+    : pick(rec, "currency_code", "currency") || pick(form, "purchaseCurrency", "currencyCode", "currencyType", "currency") || "USD";
   const exchangeRate = n(pick(rec, "exchange_rate")) ?? n(pick(form, "exchangeRate")) ?? undefined;
   const functionalCurrency = pick(form, "secondaryCurrency", "localCurrency", "functionalCurrency", "paymentCurrency") || pick(rec, "local_currency");
 

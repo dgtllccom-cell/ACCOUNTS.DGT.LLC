@@ -8084,7 +8084,7 @@ export type UiKey =
   | "tdoc.t_purchase_invoice" | "tdoc.t_sales_invoice" | "tdoc.t_tax_invoice" | "tdoc.t_purchase_order"
   | "tdoc.sec_contract_goods" | "tdoc.sign_seller" | "tdoc.sign_buyer" | "tdoc.contract_terms"
   | "rvp.company_copy" | "rvp.customer_copy" | "rvp.title_receipt" | "rvp.title_payment" | "rvp.title_expense" | "rvp.title_exchange" | "rvp.receipt_no" | "rvp.date" | "rvp.party_details" | "rvp.paid_to" | "rvp.received_from" | "rvp.account_code" | "rvp.account_title" | "rvp.contact" | "rvp.emirates_id" | "rvp.trade_license" | "rvp.reference" | "rvp.payment_method" | "rvp.cash" | "rvp.cheque" | "rvp.bank_transfer" | "rvp.cheque_no" | "rvp.bank_branch" | "rvp.amount" | "rvp.amount_words" | "rvp.remarks" | "rvp.account_details" | "rvp.side" | "rvp.dr" | "rvp.cr" | "rvp.narration" | "rvp.prepared_by" | "rvp.checked_by" | "rvp.authorized_by" | "rvp.website" | "rvp.print_voucher" | "rvp.save_pdf" | "rvp.close" | "rvp.cut_here"
-  | "uae.trn" | "uae.ms" | "uae.address" | "uae.place_of_supply" | "uae.reference_no" | "uae.ship_mode" | "uae.transport" | "uae.import_export" | "uae.import" | "uae.export" | "uae.awb" | "uae.loading_country" | "uae.receiving_country" | "uae.sr" | "uae.product_service" | "uae.hs_code" | "uae.qty" | "uae.rate" | "uae.taxable_value" | "uae.vat_pct" | "uae.vat_amount" | "uae.total_col" | "uae.total_qty" | "uae.terms" | "uae.due_date" | "uae.authorised_signatory" | "uae.summary_taxable" | "uae.add_vat" | "uae.total_tax" | "uae.total_after_tax" | "uae.tagline" | "uae.only"
+  | "uae.trn" | "uae.ms" | "uae.address" | "uae.place_of_supply" | "uae.reference_no" | "uae.ship_mode" | "uae.transport" | "uae.import_export" | "uae.import" | "uae.export" | "uae.awb" | "uae.loading_country" | "uae.receiving_country" | "uae.sr" | "uae.product_service" | "uae.hs_code" | "uae.qty" | "uae.rate" | "uae.taxable_value" | "uae.vat_pct" | "uae.vat_amount" | "uae.total_col" | "uae.total_qty" | "uae.terms" | "uae.due_date" | "uae.authorised_signatory" | "uae.summary_taxable" | "uae.add_vat" | "uae.total_tax" | "uae.total_after_tax" | "uae.tagline" | "uae.only" | "uae.local_sale"
   | "tdoc.t_contract"
   | "tdoc.t_sales_contract"
   | "tdoc.t_purchase_contract"
@@ -25187,6 +25187,7 @@ const en: Dict = {
   "uae.total_after_tax": "Total Amount After Tax",
   "uae.tagline": "Clearing, Forwarding & Logistics Services",
   "uae.only": "Only",
+  "uae.local_sale": "Local Sale",
   "rvp.company_copy": "Company Copy",
   "rvp.customer_copy": "Customer Copy",
   "rvp.title_receipt": "CASH RECEIPT",
@@ -51775,6 +51776,7 @@ const ur: Dict = {
   "uae.total_after_tax": "ٹیکس کے بعد کل رقم",
   "uae.tagline": "کلیئرنگ، فارورڈنگ اور لاجسٹکس خدمات",
   "uae.only": "صرف",
+  "uae.local_sale": "مقامی فروخت",
   "rvp.company_copy": "کمپنی کی کاپی",
   "rvp.customer_copy": "کسٹمر کی کاپی",
   "rvp.title_receipt": "نقد وصولی رسید",
@@ -78148,6 +78150,7 @@ const ar: Dict = {
   "uae.total_after_tax": "الإجمالي بعد الضريبة",
   "uae.tagline": "خدمات التخليص والشحن واللوجستيات",
   "uae.only": "فقط",
+  "uae.local_sale": "بيع محلي",
   "rvp.company_copy": "نسخة الشركة",
   "rvp.customer_copy": "نسخة العميل",
   "rvp.title_receipt": "إيصال قبض نقدي",
@@ -104571,6 +104574,7 @@ const fa: Dict = {
   "uae.total_after_tax": "جمع پس از مالیات",
   "uae.tagline": "خدمات ترخیص، حمل و لجستیک",
   "uae.only": "فقط",
+  "uae.local_sale": "فروش داخلی",
   "rvp.company_copy": "نسخه شرکت",
   "rvp.customer_copy": "نسخه مشتری",
   "rvp.title_receipt": "رسید دریافت نقدی",
@@ -130992,6 +130996,7 @@ const ps: Dict = {
   "uae.total_after_tax": "د مالیې وروسته ټوله",
   "uae.tagline": "د پاکولو، لیږد او لوژستیکي خدمات",
   "uae.only": "یوازې",
+  "uae.local_sale": "ځایی پلورنه",
   "rvp.company_copy": "د شرکت کاپي",
   "rvp.customer_copy": "د پیرودونکي کاپي",
   "rvp.title_receipt": "نغدي د ترلاسه کولو رسید",
