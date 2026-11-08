@@ -11,7 +11,7 @@
  */
 
 import { t } from "@/lib/i18n/ui";
-import { numberToWords } from "@/lib/utils/number-to-words";
+import { documentAmountInWords } from "@/lib/utils/number-to-words-i18n";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { TradeDocumentInput, TradeParty, TradeLineItem } from "@/lib/reports/trade-documents/types";
 import { docTitleKeyFor } from "@/lib/reports/trade-documents/build-trade-document";
@@ -281,7 +281,7 @@ export function prepareInvoiceData(input: TradeDocumentInput, flags: InvoiceTemp
     financialRows,
     grandTotalLabel: tt("tdoc.grand_total", "Grand Total"),
     grandTotalValue: `${money(grand)} ${input.currency}`,
-    amountInWords: !isPacking ? `${tt("tdoc.amount_in_words", "Amount in words")}: ${numberToWords(grand)} ${input.currency}` : null,
+    amountInWords: !isPacking ? `${tt("tdoc.amount_in_words", "Amount in words")}: ${documentAmountInWords(grand, input.currency, lang)}` : null,
     showBank, bankRows,
     notes: isReal(input.notes) ? String(input.notes) : null,
     signatureName: input.signatureName || tt("tdoc.sign_authorized", "Authorized Signature & Stamp"),

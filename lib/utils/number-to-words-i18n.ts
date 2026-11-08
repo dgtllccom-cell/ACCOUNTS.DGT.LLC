@@ -47,6 +47,20 @@ export function amountInWordsLocalized(amount: number, currency: string, lang: A
   return currency ? `${words} ${currency}` : words;
 }
 
+/**
+ * Print-path wrapper. A non-English amount the localized table cannot express (NaN, |amount| >= 1e18)
+ * falls back to the English words so the document still prints. The owner has not yet decided
+ * whether such amounts should throw instead; change this wrapper if the answer is different.
+ */
+export function documentAmountInWords(amount: number, currency: string, lang: string): string {
+  try {
+    return amountInWordsLocalized(amount, currency, lang as AmountWordsLang);
+  } catch (err) {
+    if (err instanceof RangeError) return `${numberToWords(amount)} ${currency}`;
+    throw err;
+  }
+}
+
 interface LangSpec {
   zero: string;
   negative: string;

@@ -13,7 +13,7 @@
  */
 
 import { t } from "@/lib/i18n/ui";
-import { numberToWords } from "@/lib/utils/number-to-words";
+import { documentAmountInWords } from "@/lib/utils/number-to-words-i18n";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { brandLinesFor } from "@/lib/reports/resolve-document-branding";
 import type { TradeDocumentInput, TradeParty, TradeLineItem } from "./types";
@@ -263,7 +263,7 @@ export function buildTradeDocumentHtml(input: TradeDocumentInput): string {
         ${isReal(totals.balanceAmount) ? `<tr><td>${tt("tdoc.balance", "Balance Due")}</td><td>${money(totals.balanceAmount)} ${esc(input.currency)}</td></tr>` : ""}
         ${fxLine}
       </table>
-      <div class="in-words">${esc(tt("tdoc.amount_in_words", "Amount in words"))}: <strong>${esc(numberToWords(grand))} ${esc(input.currency)}</strong></div>
+      <div class="in-words">${esc(tt("tdoc.amount_in_words", "Amount in words"))}: <strong>${esc(documentAmountInWords(grand, input.currency, lang))}</strong></div>
     </div>`;
   }
 
