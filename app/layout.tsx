@@ -64,7 +64,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             __html: `
 (() => {
   try {
-    const allowedColors = new Set(['purple','blue','green','gold','cyan','red','teal','pink','navy','slate']);
+    const allowedColors = new Set(['purple','blue','green','gold','cyan','red','teal','pink','navy','slate','mint','peach','lavender']);
     const storedColor = localStorage.getItem('erp_color');
     const color = (storedColor && allowedColors.has(storedColor)) ? storedColor : 'purple';
     document.documentElement.classList.remove(...Array.from(allowedColors, c => 'theme-' + c));
