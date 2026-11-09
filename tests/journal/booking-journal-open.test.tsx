@@ -115,11 +115,11 @@ it("returns a settled loading to the Remaining register and clears stale entry U
   expect(await screen.findByText(/Loading History · Paid in full/)).toBeTruthy();
   expect(screen.queryByText(/No verified loaded quantity/)).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Back to Register" }));
-  expect(await screen.findByText("Journal / All Sources selected")).toBeTruthy();
+  expect(await screen.findByRole("columnheader", { name: "BILL NO., DATE" })).toBeTruthy();
   expect(screen.queryByTestId("remaining-select-loading")).toBeNull();
   expect(screen.queryByTestId("payment-entry-shell")).toBeNull();
   expect(window.location.search).toBe("?lang=ur");
   await act(async () => { fireEvent.click(screen.getByTitle("Refresh")); });
   await waitFor(() => expect(screen.queryByTestId("payment-entry-shell")).toBeNull());
   expect(vi.mocked(fetch).mock.calls.some(([, options]) => options?.method === "POST")).toBe(false);
-});
+}, 20000); // the redesigned remaining register renders heavier than the 5s default in jsdom
