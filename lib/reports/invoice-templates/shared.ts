@@ -16,6 +16,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { TradeDocumentInput, TradeParty, TradeLineItem } from "@/lib/reports/trade-documents/types";
 import { docTitleKeyFor } from "@/lib/reports/trade-documents/build-trade-document";
 import type { InvoiceTemplateFlags } from "./types";
+import { qrCodeSvgMarkup } from "@/components/ui/qr-code";
 
 export function esc(v: unknown): string {
   return String(v ?? "")
@@ -90,6 +91,8 @@ export type PreparedInvoice = {
   currency: string;
   stamp: string;
   qrLabel: string;
+  /** Public link encoded in the QR code (null → no code is drawn). */
+  publicUrl: string | null;
   pageLabel: string;
   ofLabel: string;
   flags: InvoiceTemplateFlags;
@@ -293,25 +296,20 @@ export function prepareInvoiceData(input: TradeDocumentInput, flags: InvoiceTemp
     currency: input.currency,
     stamp,
     qrLabel: tt("invtpl.qr_placeholder", "Scan to verify"),
+    publicUrl: input.publicUrl || null,
     pageLabel: tt("tdoc.page", "Page"),
     ofLabel: tt("tdoc.of", "of"),
     flags,
   };
 }
 
-/** Shared inline-SVG QR-code PLACEHOLDER (no external asset, no network call). */
-export function qrPlaceholderSvg(size = 60): string {
-  const cells = [
-    "1110101","1000110","1011101","1011001","1000010","1110111","0000000",
-  ];
-  const cell = size / 9;
-  let rects = "";
-  cells.forEach((row, y) => {
-    row.split("").forEach((v, x) => {
-      if (v === "1") rects += `<rect x="${(x + 1) * cell}" y="${(y + 1) * cell}" width="${cell}" height="${cell}" fill="#0f172a"/>`;
-    });
-  });
-  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg"><rect width="${size}" height="${size}" fill="#fff"/>${rects}<rect x="0.5" y="0.5" width="${size - 1}" height="${size - 1}" fill="none" stroke="#cbd5e1"/></svg>`;
+/**
+ * Inline-SVG QR code that encodes the invoice's public link (pure SVG, no network call).
+ * Returns "" when there is no link, so a document never shows a fake code.
+ */
+export function invoiceQrSvg(url: string | null | undefined, size = 60): string {
+  if (!url) return "";
+  return qrCodeSvgMarkup(url, { size, quietZone: 1 });
 }
 
 /** Common `@page`/print doctype wrapper every hand-built template shares. */
