@@ -36,7 +36,8 @@ export function TemplateColorPicker({
       blue: t(lang, "nav.template_blue"),
       green: t(lang, "nav.template_green"),
       gold: t(lang, "nav.template_gold"),
-      cyan: t(lang, "nav.template_cyan")
+      cyan: t(lang, "nav.template_cyan"),
+      red: "Coral Red", teal: "Ocean Teal", pink: "Rose Pink", navy: "Executive Navy", slate: "Classic Slate"
     };
     return map;
   }, [lang]);
@@ -63,7 +64,7 @@ export function TemplateColorPicker({
   }
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn("flex flex-wrap items-center gap-3", className)}>
       {templateColors.map((c) => (
         <button
           key={c.id}
