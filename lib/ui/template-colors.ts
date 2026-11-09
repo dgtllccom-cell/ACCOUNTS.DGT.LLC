@@ -9,6 +9,9 @@ export const templateColors = [
   { id: "pink", hex: "#DB2777" },
   { id: "navy", hex: "#1E3A8A" },
   { id: "slate", hex: "#475569" },
+  { id: "mint", hex: "#6BAF9A" },
+  { id: "peach", hex: "#E9A68C" },
+  { id: "lavender", hex: "#A995D5" },
 ] as const;
 
 export type TemplateColor = (typeof templateColors)[number]["id"];
