@@ -13,7 +13,24 @@ import { docTitleKeyFor } from "@/lib/reports/trade-documents/build-trade-docume
 import { buildUaeTaxInvoiceHtml } from "@/lib/reports/trade-documents/uae-tax-invoice";
 import type { TradeDocumentInput } from "@/lib/reports/trade-documents/types";
 import { getInvoiceTemplate } from "./registry";
+import { normalizeTemplateColor, templateColors } from "@/lib/ui/template-colors";
 import { DEFAULT_TEMPLATE_FLAGS, type InvoiceTemplateFlags, type InvoiceTemplateId } from "./types";
+
+/** Invoice accent follows the user's ERP color preference; printed company and goods headers stay black. */
+function themedInvoiceHtml(html: string): string {
+  if (typeof window === "undefined") return html;
+  const selected = normalizeTemplateColor(window.localStorage.getItem("erp_color"));
+  const accent = templateColors.find((item) => item.id === selected)?.hex || "#5B21B6";
+  const css = `<style data-erp-invoice-theme>
+    :root { --erp-invoice-accent: ${accent}; }
+    .brand-name, .company-name, .company-title { color: #111827 !important; }
+    table.goods thead th, table.goods th, .goods-table thead th { background: #111827 !important; color: #ffffff !important; }
+    .accent-bar { background: var(--erp-invoice-accent) !important; }
+    .doc-title h1, .info-title { color: var(--erp-invoice-accent) !important; }
+    @media print { table.goods thead th, table.goods th, .goods-table thead th { background: #111827 !important; color: #ffffff !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+  </style>`;
+  return html.includes("</head>") ? html.replace("</head>", css + "</head>") : css + html;
+}
 
 export function openInvoiceDocument(
   input: TradeDocumentInput,
@@ -29,10 +46,10 @@ export function openInvoiceDocument(
     src.layout === "uae_tax" && (src.docType === "sales_invoice" || src.docType === "tax_invoice")
       ? buildUaeTaxInvoiceHtml(src)
       : tpl.render(src, flags);
-  printStore.openPrint(render(input), `${title} — ${input.docNo}`, {
+  printStore.openPrint(themedInvoiceHtml(render(input)), `${title} — ${input.docNo}`, {
     lang: input.lang || "en",
     // in-preview language / orientation switch rebuilds from the same source input + template
     rebuild: ({ lang, orientation }) =>
-      render({ ...input, lang: lang as SupportedLanguage, orientation }),
+      themedInvoiceHtml(render({ ...input, lang: lang as SupportedLanguage, orientation })),
   });
 }

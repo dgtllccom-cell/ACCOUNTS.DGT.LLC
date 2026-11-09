@@ -176,6 +176,24 @@
     --accent: 38 92% 50%;
   }
 
+  :root.theme-red { --primary: 0 70% 48%; --primary-foreground: 0 0% 100%; --ring: 0 70% 48%; --accent: 0 70% 48%; }
+  :root.theme-teal { --primary: 173 80% 30%; --primary-foreground: 0 0% 100%; --ring: 173 80% 30%; --accent: 173 80% 30%; }
+  :root.theme-pink { --primary: 330 75% 45%; --primary-foreground: 0 0% 100%; --ring: 330 75% 45%; --accent: 330 75% 45%; }
+  :root.theme-navy { --primary: 222 65% 35%; --primary-foreground: 0 0% 100%; --ring: 222 65% 35%; --accent: 222 65% 35%; }
+  :root.theme-slate { --primary: 215 20% 35%; --primary-foreground: 0 0% 100%; --ring: 215 20% 35%; --accent: 215 20% 35%; }
+
+  .dark.theme-red { --primary: 0 80% 68%; --primary-foreground: 222 47% 11%; --ring: 0 80% 68%; --accent: 0 80% 68%; }
+  .dark.theme-teal { --primary: 173 70% 62%; --primary-foreground: 222 47% 11%; --ring: 173 70% 62%; --accent: 173 70% 62%; }
+  .dark.theme-pink { --primary: 330 80% 72%; --primary-foreground: 222 47% 11%; --ring: 330 80% 72%; --accent: 330 80% 72%; }
+  .dark.theme-navy { --primary: 222 85% 76%; --primary-foreground: 222 47% 11%; --ring: 222 85% 76%; --accent: 222 85% 76%; }
+  .dark.theme-slate { --primary: 215 30% 76%; --primary-foreground: 222 47% 11%; --ring: 215 30% 76%; --accent: 215 30% 76%; }
+
+  :root.theme-mint { --primary: 158 30% 43%; --primary-foreground: 0 0% 100%; --ring: 158 30% 43%; --accent: 158 35% 84%; }
+  :root.theme-peach { --primary: 15 63% 48%; --primary-foreground: 0 0% 100%; --ring: 15 63% 48%; --accent: 15 75% 87%; }
+  :root.theme-lavender { --primary: 258 42% 53%; --primary-foreground: 0 0% 100%; --ring: 258 42% 53%; --accent: 258 55% 88%; }
+  .dark.theme-mint { --primary: 158 42% 68%; --primary-foreground: 222 47% 11%; --ring: 158 42% 68%; }
+  .dark.theme-peach { --primary: 15 78% 72%; --primary-foreground: 222 47% 11%; --ring: 15 78% 72%; }
+  .dark.theme-lavender { --primary: 258 58% 77%; --primary-foreground: 222 47% 11%; --ring: 258 58% 77%; }
   .dark.theme-purple {
     --primary: 262 83% 70%;
     --primary-foreground: 222 47% 11%;
