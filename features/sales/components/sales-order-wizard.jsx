@@ -342,6 +342,21 @@ const DEFAULT_FORM = {
   qualityReport: "Passed"
 };
 
+// A saved order holds only what was saved. Every DEFAULT_FORM field it does not carry starts blank, so the sample
+// customer, invoice number, goods, currency and rate in DEFAULT_FORM never stand in for the record's own values
+// (they would otherwise print on its sales and tax documents). Calculator and mode defaults are kept.
+const SAVED_ORDER_KEEP_DEFAULTS = ["operator", "divideType", "priceType", "divideWeight", "saleType", "saleMode", "qtyName"];
+const SAVED_ORDER_BLANK_FORM = Object.fromEntries(
+  Object.entries(DEFAULT_FORM).map(([key, value]) => {
+    if (SAVED_ORDER_KEEP_DEFAULTS.includes(key)) return [key, value];
+    if (key === "exchangeRate") return [key, 1];
+    if (typeof value === "string") return [key, ""];
+    if (typeof value === "number") return [key, 0];
+    if (typeof value === "boolean") return [key, false];
+    return [key, value];
+  })
+);
+
 // Seeded rows matching user's mock screenshots
 
 function calculateItemTotals(form) {
@@ -696,6 +711,11 @@ export function SalesOrderWizard({ session }) {
   const [savedOrderId, setSavedOrderId] = useState("");
   const [tradeDocsOpen, setTradeDocsOpen] = useState(false);
   const [savedOrderNo, setSavedOrderNo] = useState("");
+  // The sale source as stored on the saved order (saved orders keep it at the top of form_data, not under form).
+  const [loadedSaleSource, setLoadedSaleSource] = useState("");
+  // The header columns of the saved order (currency, total, rate, customer, purchase link, date). The document record
+  // falls back to them for anything the wizard form does not hold.
+  const [loadedOrderRow, setLoadedOrderRow] = useState(null);
   const [registerRefreshKey, setRegisterRefreshKey] = useState(0);
   const [accountLookupMessage, setAccountLookupMessage] = useState("");
   const [accountLookupLoading, setAccountLookupLoading] = useState(null);
@@ -1692,20 +1712,42 @@ export function SalesOrderWizard({ session }) {
 
           setSavedOrderId(soData.id || orderId || "");
           setSavedOrderNo(soNumber);
+          // Saved orders keep saleSource / saleMode at the top of form_data (the flat shape) as well as under form.
+          const savedSaleSource = String(soData.form_data?.saleSource || rawFormData.saleSource || loadedForm.saleSource || "");
+          const savedSaleMode = String(soData.form_data?.saleMode || rawFormData.saleMode || loadedForm.saleMode || "");
+          setLoadedSaleSource(savedSaleSource.toLowerCase());
+          setLoadedOrderRow({
+            customerName: soData.customer_name || null,
+            currencyCode: soData.currency_code || null,
+            exchangeRate: soData.exchange_rate ?? null,
+            orderTotal: soData.order_total ?? null,
+            purchaseOrderId: soData.purchase_order_id || null,
+            createdAt: soData.created_at || null,
+            billNo: loadedForm.billNo || "",
+            originalCurrencyCode: soData.original_currency_code || null,
+          });
 
           const mergedCountryId = loadedForm.countryId || soData.country_id || soData.countryId || "";
           const mergedCountryBranchId = loadedForm.countryBranchId || soData.country_branch_id || soData.countryBranchId || soData.branch_id || soData.branchId || "";
           const mergedCityBranchId = loadedForm.cityBranchId || soData.city_branch_id || soData.cityBranchId || "";
 
-          setForm((prev) => ({
-            ...prev,
-            ...loadedForm,
-            countryId: mergedCountryId,
-            countryBranchId: mergedCountryBranchId,
-            cityBranchId: mergedCityBranchId,
-            salesOrderNo: soNumber,
-            salesContractNo: contractNumber,
-          }));
+          setForm((prev) => {
+            const next = { ...prev };
+            for (const key of Object.keys(SAVED_ORDER_BLANK_FORM)) {
+              if (!(key in loadedForm)) next[key] = SAVED_ORDER_BLANK_FORM[key];
+            }
+            return {
+              ...next,
+              ...loadedForm,
+              saleSource: loadedForm.saleSource || savedSaleSource.toLowerCase() || next.saleSource,
+              saleMode: loadedForm.saleMode || savedSaleMode.toLowerCase() || next.saleMode,
+              countryId: mergedCountryId,
+              countryBranchId: mergedCountryBranchId,
+              cityBranchId: mergedCityBranchId,
+              salesOrderNo: soNumber,
+              salesContractNo: contractNumber,
+            };
+          });
           setScopeConfirmed(true);
 
           if (loadedForm.customerAccountName || loadedForm.customerAccountNo) {
@@ -1715,9 +1757,8 @@ export function SalesOrderWizard({ session }) {
             setSalesSearch(loadedForm.salesAccountName || loadedForm.salesAccountNo || "");
           }
 
-          if (Array.isArray(loadedGoods) && loadedGoods.length) {
-            setGoodsEntries(loadedGoods);
-          }
+          // Always replace the sample goods: a saved order with no goods lines has none (not DEFAULT_SEEDED_GOODS).
+          setGoodsEntries(Array.isArray(loadedGoods) ? loadedGoods : []);
 
           setIsTransferred(false);
           setTransferredData(null);
@@ -3371,8 +3412,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </button>
                       <button
                         type="button"
+                        disabled={!savedOrderId}
+                        title={savedOrderId ? undefined : t(lang, "tdoc.save_first", "Save the order first. Documents print only from a saved record.")}
                         onClick={() => { setViewDropdownOpen(false); setTradeDocsOpen(true); }}
-                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <FileText className="h-3.5 w-3.5 text-blue-500" />
                         <span>{t(lang, "tdoc.center_title", "Commercial Document Center")}</span>
@@ -7027,14 +7070,33 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             id: savedOrderId || undefined,
             sales_order_no: form.salesOrderNo,
             sales_contract_no: form.salesContractNo,
-            currency_code: form.currencyCode || form.currencyType,
-            exchange_rate: form.exchangeRate,
-            order_total: form.orderTotal,
+            // A saved order's header (currency, rate, total, customer, bill number, purchase link, date) is the saved record's
+            // own: the wizard form can pick up defaults on load, so it is not read for a saved order. A new order uses the form.
+            original_currency_code: loadedOrderRow ? (loadedOrderRow.originalCurrencyCode || undefined) : undefined,
+            currency_code: loadedOrderRow ? (loadedOrderRow.originalCurrencyCode || loadedOrderRow.currencyCode || undefined) : (form.currencyCode || form.currencyType),
+            exchange_rate: loadedOrderRow ? (loadedOrderRow.exchangeRate ?? undefined) : form.exchangeRate,
+            order_total: loadedOrderRow ? (loadedOrderRow.orderTotal ?? undefined) : form.orderTotal,
+            purchase_order_id: loadedOrderRow?.purchaseOrderId || undefined,
+            created_at: loadedOrderRow?.createdAt || undefined,
             country_id: form.countryId,
             country_branch_id: form.countryBranchId,
             city_branch_id: form.cityBranchId,
-            customer_name: form.customerName,
-            form_data: { form, goodsEntries },
+            customer_name: loadedOrderRow ? (loadedOrderRow.customerName || undefined) : form.customerName,
+            // a local sale (the wizard's own isLocalSale rule) takes the local tax layout in the document
+            form_data: {
+              form: {
+                ...form,
+                ...(loadedOrderRow ? {
+                  billNo: loadedOrderRow.billNo,
+                  currencyType: loadedOrderRow.originalCurrencyCode || undefined,
+                  salesCurrency: loadedOrderRow.originalCurrencyCode || undefined,
+                  currencyCode: loadedOrderRow.originalCurrencyCode || undefined,
+                  customerName: loadedOrderRow.customerName || undefined,
+                } : {}),
+                ...((isLocalSale || loadedSaleSource === "local") ? { saleSource: "local" } : {}),
+              },
+              goodsEntries,
+            },
           }}
           companyId={form.salesCompanyId || null}
           scope={{

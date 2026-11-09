@@ -260,6 +260,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: nt("Transport Payment Booking"), href: "/dashboard/purchase/transport-payment", icon: Receipt },
           { label: nt("Loading Booking"), href: "/dashboard/purchase/purchase-loading-records", icon: Truck, upgraded: true },
           { label: nt("Confirmed Booking"), href: "/dashboard/purchase/purchase-confirm", icon: CheckCircle2, upgraded: true },
+          { label: nt("Confirm Purchase"), href: "/dashboard/purchase/confirm-purchase", icon: CheckCircle2, isNew: true },
         ],
       },
       {
@@ -1427,25 +1428,23 @@ export function DigitalDockPremiumSidebar({
                                       >
                                         {LeafIcon ? (
                                           <LeafIcon className={`h-3.5 w-3.5 shrink-0 ${
-                                            isLeafNew
-                                              ? "text-white"
-                                              : isLeafActive
+                                            isLeafActive
                                                 ? isLeafRed ? "text-red-600" : "text-[#2563eb]"
                                                 : isLeafRed ? "text-red-500" : "text-slate-400"
                                           }`} />
                                         ) : (
                                           <span className={`h-1.5 w-1.5 rounded-full ${
-                                            isLeafNew
-                                              ? "bg-white"
-                                              : isLeafActive
+                                            isLeafActive
                                                 ? isLeafRed ? "bg-red-600" : "bg-[#2563eb]"
                                                 : isLeafRed ? "bg-red-400" : "bg-slate-300"
                                           }`} />
                                         )}
-                                        <span className={`tracking-tight ${isLeafNew ? "text-white font-bold truncate" : isLeafRed ? "text-red-600 font-bold break-words leading-snug" : "truncate"}`}>
+                                        <span className={`tracking-tight ${isLeafNew ? "font-semibold truncate" : isLeafRed ? "text-red-600 font-bold break-words leading-snug" : "truncate"}`}>
                                           {tr(leaf.label)}
                                         </span>
-                                        
+                                        {isLeafNew && (
+                                          <span aria-label={tUi(lang as never, "common.new", "New")} title={tUi(lang as never, "common.new", "New")} className="ms-auto h-2 w-2 shrink-0 rounded-full bg-emerald-500 ring-2 ring-emerald-100" />
+                                        )}
                                         {leaf.upgraded && !isLeafNew && <UpgradedMark lang={lang} />}
                                       </Link>
                                     );

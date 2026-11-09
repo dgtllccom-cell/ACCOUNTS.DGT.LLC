@@ -89,11 +89,11 @@ const QTY_TYPE_OPTIONS = ["BAGS", "CARTONS", "Loose", "KGS", "Ton", "PCS", "Doze
 
 
 // API Helpers
-// Module-level helpers run outside the component, so they read the active ERP language directly.
-function readUiLang() {
-  return (typeof document !== "undefined" ? document.documentElement.lang : "en") || "en";
-}
-
+// Module-level helpers run outside the component, so they read the active ERP language directly.
+function readUiLang() {
+  return (typeof document !== "undefined" ? document.documentElement.lang : "en") || "en";
+}
+
 async function lookupAccountMaster(query, countryId, countryBranchId, cityBranchId, isSuperAdmin) {
   const needle = String(query || "").trim();
   if (!needle) return null;
@@ -616,8 +616,8 @@ export function PurchaseOrderWizard({ session }) {
     }
   }, []);
 
-  const [savingOrder, setSavingOrder] = useState(false);
-  // "View company" buttons call setViewCompanyModal; the state was never declared (ReferenceError on click).
+  const [savingOrder, setSavingOrder] = useState(false);
+  // "View company" buttons call setViewCompanyModal; the state was never declared (ReferenceError on click).
   const [, setViewCompanyModal] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [savedOrderId, setSavedOrderId] = useState("");
@@ -3601,24 +3601,28 @@ export function PurchaseOrderWizard({ session }) {
             </button>
             <button
               type="button"
+              disabled={!savedOrderId}
+              title={savedOrderId ? undefined : t(lang, "tdoc.save_first", "Save the order first. Documents print only from a saved record.")}
               onClick={() => {
                 setViewDropdownOpen(false);
                 setTradeDocsInitialType("contract");
                 setTradeDocsOpen(true);
               }}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition disabled:cursor-not-allowed disabled:opacity-50"
             >
               <FileSignature className="h-3.5 w-3.5 text-purple-500" />
               <span>{t(lang, "purchase.dd_print_contract", "Print Contract")}</span>
             </button>
             <button
               type="button"
+              disabled={!savedOrderId}
+              title={savedOrderId ? undefined : t(lang, "tdoc.save_first", "Save the order first. Documents print only from a saved record.")}
               onClick={() => {
                 setViewDropdownOpen(false);
                 setTradeDocsInitialType("commercial_invoice");
                 setTradeDocsOpen(true);
               }}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition disabled:cursor-not-allowed disabled:opacity-50"
             >
               <FileText className="h-3.5 w-3.5 text-blue-500" />
               <span>{t(lang, "tdoc.center_title", "Commercial Document Center")}</span>

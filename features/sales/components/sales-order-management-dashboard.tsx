@@ -655,7 +655,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
           onClose={() => setTradeDocsOrder(null)}
           txnKind="sales"
           record={tradeDocsOrder as any}
-          companyId={(tradeDocsOrder as any).seller_company_id || (tradeDocsOrder as any).company_id || null}
+          companyId={(tradeDocsOrder as any).form_data?.form?.salesCompanyId || (tradeDocsOrder as any).seller_company_id || (tradeDocsOrder as any).company_id || null}
           scope={{
             countryId: (tradeDocsOrder as any).country_id || null,
             countryBranchId: (tradeDocsOrder as any).country_branch_id || null,

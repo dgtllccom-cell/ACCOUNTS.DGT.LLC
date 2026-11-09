@@ -461,7 +461,8 @@ export function RoznamchaReportView({
           branch: entryBranchName(selectedHeader) || entryCountryName(selectedHeader) || "",
           printedBy: ""
         },
-        lang
+        lang,
+        autoPrint,
       });
       return;
     }

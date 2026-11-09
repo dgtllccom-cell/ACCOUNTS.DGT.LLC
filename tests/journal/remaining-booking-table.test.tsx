@@ -78,11 +78,13 @@ it("does not list unloaded or fully settled bills as collectible", () => {
 
 it("shows one row per saved loading in the current All Sources layout, never the contract total", () => {
   render(<SourceFilteredTable sourceFilter="all" onSourceChange={vi.fn()} rows={[bill()]} counts={{ all: 1, booking: 1, local: 0 }} lang="en" onSelectOrder={vi.fn()} onOpenFullBill={vi.fn()} onPrintStatement={vi.fn()} tGlobal={(_lang, _key, fallback) => fallback} activeMode="remaining" loadingRecords={[]} dueBills={[due()]} />);
-  expect(screen.getAllByRole("cell", { name: "AE-001-0007" })).toHaveLength(2);
-  expect(screen.getAllByText("2,250")).toHaveLength(2);
+  // Accessible cell name includes the date glyph and placeholder ("AE-001-0007 📅 —").
+  expect(screen.getAllByRole("cell", { name: /^AE-001-0007/ })).toHaveLength(2);
+  expect(screen.getAllByRole("cell", { name: /2,250 PCS/ })).toHaveLength(2);
   expect(screen.getAllByRole("button", { name: /journal/i })).toHaveLength(2);
-  expect(screen.getByRole("columnheader", { name: "LOAD COUNTRY" })).toBeTruthy();
-  expect(screen.getByRole("columnheader", { name: "LOAD PORT" })).toBeTruthy();
+  expect(screen.getByRole("columnheader", { name: "BILL NO., DATE" })).toBeTruthy();
+  expect(screen.getByRole("columnheader", { name: "LOADING DATE / RECEIVE DATE" })).toBeTruthy();
+  expect(screen.getByRole("columnheader", { name: "BALANCE (REMAINING) (USD) / (AED)" })).toBeTruthy();
   expect(screen.queryByText("4,252,612.50")).toBeNull();
 });
 
@@ -95,10 +97,10 @@ it("keeps the current per-loading transport layout and deduplicates repeated bil
   };
   const { rerender } = render(<SourceFilteredTable {...props} />);
   expect(screen.getAllByRole("button", { name: /journal/i })).toHaveLength(2);
-  expect(screen.getAllByText("LD-1")).toHaveLength(1);
+  // The flat Remaining report shows one row per saved loading (no separate loading-number column).
+  expect(screen.getAllByRole("cell", { name: /^AE-001-0007/ })).toHaveLength(2);
   rerender(<SourceFilteredTable {...props} sourceFilter="purchase_booking" />);
-  expect(screen.getByRole("columnheader", { name: "LOAD COUNTRY" })).toBeTruthy();
-  expect(screen.getByRole("columnheader", { name: "RECEIVE COUNTRY" })).toBeTruthy();
+  expect(screen.getByRole("columnheader", { name: "BILL NO., DATE" })).toBeTruthy();
   expect(screen.getAllByRole("button", { name: /journal/i })).toHaveLength(2);
 });
 

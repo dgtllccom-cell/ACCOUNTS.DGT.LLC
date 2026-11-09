@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { TemplateColorPicker } from "@/components/layout/template-color-picker";
 
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t, type UiKey } from "@/lib/i18n/ui";
@@ -69,6 +70,12 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6 pb-12">
+      {/* Existing ERP color preference restored to the production Settings page. */}
+      <section className="rounded-xl border bg-card p-4 shadow-sm" aria-label="ERP appearance and theme colors">
+        <h2 className="text-sm font-semibold">{t(lang, "common.settings", "Settings")} — Theme Colors</h2>
+        <p className="mb-3 text-xs text-muted-foreground">Choose one of 10 ERP colors. Your selection is saved automatically.</p>
+        <TemplateColorPicker lang={lang} />
+      </section>
       {/* Design Options Switcher Toolbar — dev-only */}
       {process.env.NODE_ENV === 'development' && (
       <div className="rounded-xl border border-blue-200 bg-blue-50/80 p-3.5 dark:border-blue-900/50 dark:bg-blue-950/40">

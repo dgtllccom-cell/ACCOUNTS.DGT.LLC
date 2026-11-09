@@ -31,6 +31,22 @@ const n = (v: any): number | undefined => {
   return Number.isFinite(x) ? x : undefined;
 };
 
+/** Document-number prefix per document type, so a Purchase Invoice is "PI-…", not the proforma's "PFI-…". */
+function docNoPrefix(docType: TradeDocType): string {
+  switch (docType) {
+    case "commercial_invoice": return "CI";
+    case "packing_list": return "PL";
+    case "contract": return "CT";
+    case "proforma_invoice": return "PFI";
+    case "purchase_invoice": return "PI";
+    case "sales_invoice": return "SI";
+    case "tax_invoice": return "TI";
+    case "export_invoice": return "EI";
+    case "purchase_order": return "PO";
+    default: return "DOC";
+  }
+}
+
 /**
  * A real company name for a party box. Branding falls back to the COUNTRY name when a scope has no
  * company name configured; printing "Pakistan" as the buyer/consignee company would be wrong, so the
@@ -50,7 +66,9 @@ function goodsFrom(entries: AnyRec[]): TradeLineItem[] {
     const netW = n(pick(g, "netWeight", "net_weight", "totalNetWeight"));
     const grossW = n(pick(g, "grossWeight", "gross_weight", "totalGrossWeight", "total_gross_weight"));
     const rate = n(pick(g, "coursePrice", "unitPrice", "price", "priceRateC1", "purchase_rate", "rate"));
-    const amount = n(pick(g, "finalAmount", "totalAmount", "amount", "final_cost", "lineTotal"));
+    // totalAmount is the line value in the transaction (document) currency. finalAmount is the local-currency
+    // equivalent (value x exchange rate) and must not be printed under the document currency.
+    const amount = n(pick(g, "totalAmount", "finalAmount", "amount", "final_cost", "lineTotal"));
     const unit = pick(g, "qtyName", "unit", "quantity_name", "uom");
     const discount = n(pick(g, "discount", "discountAmount", "discount_amount"));
     const taxAmount = n(pick(g, "taxAmount", "tax_amount", "vatAmount", "gstAmount"));
@@ -102,9 +120,17 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
   const form: AnyRec = fd.form || fd || {};
   const entries: AnyRec[] = form.goodsEntries || fd.goodsEntries || fd.goods || form.goods || rec.goods || [];
   const goods = goodsFrom(entries);
-  const scope = inferScope(form, rec);
+  // A local sale (saleSource local, not marked as an export) is domestic: a received or loading country on its form does not make it an export.
+  const isLocalSaleForm = kind === "sales"
+    && String(pick(form, "saleSource") || "").toLowerCase() === "local"
+    && String(pick(form, "saleMode") || "").toLowerCase() !== "export";
+  const scope: TradeScope = isLocalSaleForm ? "local" : inferScope(form, rec);
 
-  const currency = pick(rec, "currency_code", "currency") || pick(form, "purchaseCurrency", "currencyCode", "currencyType", "currency") || "USD";
+  // A sale's document currency is the currency it was booked in (original_currency_code, the wizard's sales currency).
+  // currency_code on a sales row is the country's currency, so it is only the fallback.
+  const currency = kind === "sales"
+    ? pick(rec, "original_currency_code") || pick(form, "currencyType", "salesCurrency", "currencyCode") || pick(rec, "currency_code", "currency") || "USD"
+    : pick(rec, "currency_code", "currency") || pick(form, "purchaseCurrency", "currencyCode", "currencyType", "currency") || "USD";
   const exchangeRate = n(pick(rec, "exchange_rate")) ?? n(pick(form, "exchangeRate")) ?? undefined;
   const functionalCurrency = pick(form, "secondaryCurrency", "localCurrency", "functionalCurrency", "paymentCurrency") || pick(rec, "local_currency");
 
@@ -112,7 +138,8 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
   const customer = pick(form, "customerName", "customer_name", "buyerName") || pick(rec, "customer_name");
   const isSales = kind === "sales";
   const seller: TradeParty = {
-    name: (isSales ? companyNameOrNull(opts.branding) : supplier) || undefined,
+    // A sale is issued by the selling company chosen on the booking; branding is the fallback.
+    name: (isSales ? (pick(form, "salesCompanyName") || companyNameOrNull(opts.branding)) : supplier) || undefined,
     address: isSales ? opts.branding.address : pick(form, "supplierAddress"),
     phone: isSales ? opts.branding.phone : pick(form, "supplierMobile", "supplierContact", "purchaseContact"),
     email: isSales ? opts.branding.email : pick(form, "supplierEmail"),
@@ -133,7 +160,9 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
   const totalQty = goods.reduce((s, g) => s + (Number(g.quantity) || 0), 0);
   const totalPkg = goods.reduce((s, g) => s + (Number(g.packages) || 0), 0);
   const subTotal = goods.reduce((s, g) => s + (Number(g.amount) || 0), 0);
-  const grand = n(pick(rec, "order_total")) ?? n(pick(form, "orderTotal", "grandTotal")) ?? subTotal;
+  // The grand total is the sum of the lines in the document currency when the lines carry one; the stored
+  // order_total can be in the local currency, so it is only used when there are no lines to add up.
+  const grand = goods.length && subTotal > 0 ? subTotal : (n(pick(rec, "order_total")) ?? n(pick(form, "orderTotal", "grandTotal")) ?? subTotal);
   const advance = n(pick(rec, "advance_paid")) ?? n(pick(form, "advanceAmount"));
 
   const transport = scope === "international" ? {
@@ -170,10 +199,13 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
   return {
     docType: opts.docType,
     txnKind: kind,
+    // A local sale (sold from local purchase stock) uses the local tax layout; every other document keeps the standard layout.
+    layout: kind === "sales" && (String(pick(form, "saleSource") || "").toLowerCase() === "local" || Boolean(rec.purchase_order_id))
+      ? "uae_tax" : "standard",
     tradeScope: scope,
     lang: opts.lang,
     branding: opts.branding,
-    docNo: `${opts.docType === "commercial_invoice" ? "CI" : opts.docType === "packing_list" ? "PL" : opts.docType === "contract" ? "CT" : "PFI"}-${refs.invoice || refs.contract || refs.po || refs.so || rec.id?.slice(0, 8) || "NEW"}`,
+    docNo: `${docNoPrefix(opts.docType)}-${refs.invoice || refs.contract || refs.po || refs.so || rec.id?.slice(0, 8) || "NEW"}`,
     docDate: pick(form, "purchaseDate", "orderDate", "bookingDate", "invoiceDate") || pick(rec, "created_at") || new Date().toISOString(),
     referenceNos: refs,
     seller: { ...seller, ...(opts.overrides?.seller || {}) },
@@ -218,7 +250,43 @@ export function salesOrderToTradeInput(rec: AnyRec, opts: MapOptions): TradeDocu
   return baseFromForm(rec, "sales", opts);
 }
 
-/** Local Purchase (`local_purchases` table) — a single-good, no-shipping record. */
+/** `line_items` (jsonb) holds the goods lines of a Local Purchase. Some rows have none, and a string is parsed. */
+function localPurchaseLines(rec: AnyRec): AnyRec[] {
+  let raw: unknown = rec.line_items;
+  if (typeof raw === "string") {
+    try { raw = JSON.parse(raw); } catch { raw = null; }
+  }
+  return Array.isArray(raw) ? raw.filter((x): x is AnyRec => !!x && typeof x === "object") : [];
+}
+
+/** Text the record actually carries. The "-" placeholder stored for an empty size or brand is not printed. */
+const realText = (v: any): string | undefined => {
+  const s = v === undefined || v === null ? "" : String(v).trim();
+  return s && s !== "-" ? s : undefined;
+};
+
+/** One printed row for one saved line. Quantities and amounts are that line's own values. */
+function localPurchaseLineToItem(rec: AnyRec, x: AnyRec): TradeLineItem {
+  const count = n(x.quantityCount) ?? n(x.numbers);
+  const amount = n(x.finalCost) ?? n(x.amount) ?? n(x.purchaseCost);
+  const unit = realText(x.quantityName) ?? realText(rec.quantity_name);
+  return {
+    description: realText(x.goodsName) ?? realText(rec.goods_name),
+    brand: realText(x.brand),
+    size: realText(x.size),
+    packing: count !== undefined && unit ? `${count} ${unit}` : undefined,
+    packages: count,
+    quantity: count,
+    unit,
+    // Derived from this line's own amount and count, so it matches the printed unit. Nothing is stored for it.
+    unitPrice: amount !== undefined && count ? Number((amount / count).toFixed(4)) : undefined,
+    netWeight: n(x.netWeight),
+    grossWeight: n(x.totalGrossWeight),
+    amount,
+  };
+}
+
+/** Local Purchase (`local_purchases` table) — one printed row per saved goods line; no shipping. */
 export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeDocumentInput {
   const qty = n(rec.numbers) ?? n(rec.quantity_kgs);
   const li: TradeLineItem = {
@@ -236,21 +304,25 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
     amount: n(rec.final_cost) ?? n(rec.purchase_cost),
   };
   const grand = n(rec.final_cost) ?? n(rec.purchase_cost) ?? (li.amount || 0);
+  const lines = localPurchaseLines(rec);
+  const goods: TradeLineItem[] = lines.length ? lines.map((x) => localPurchaseLineToItem(rec, x)) : [li];
+  const lineSum = goods.reduce((sum, g) => sum + (g.amount ?? 0), 0);
   return {
     docType: opts.docType,
     txnKind: "purchase",
     tradeScope: "local",
     lang: opts.lang,
     branding: opts.branding,
-    docNo: `${opts.docType === "commercial_invoice" ? "CI" : opts.docType === "packing_list" ? "PL" : opts.docType === "contract" ? "CT" : "PFI"}-LP-${rec.id?.slice(0, 8) || "NEW"}`,
+    docNo: `${docNoPrefix(opts.docType)}-LP-${rec.id?.slice(0, 8) || "NEW"}`,
     docDate: rec.created_at || new Date().toISOString(),
-    referenceNos: { invoice: rec.purchase_account_no, contract: rec.chassis_code },
+    // The ledger code (purchase_account_no, e.g. 1002) is not an invoice number. The bill number is manual_bill_no.
+    referenceNos: { invoice: realText(rec.manual_bill_no), contract: rec.chassis_code },
     seller: { name: rec.supplier_name || undefined, ...(opts.overrides?.seller || {}) },
     buyer: { name: companyNameOrNull(opts.branding) || undefined, address: opts.branding.address, taxId: opts.branding.taxNumber, ...(opts.overrides?.buyer || {}) },
     notifyParty: null,
     delivery: { ...(opts.overrides?.delivery || {}) },
     transport: null,
-    goods: [li],
+    goods,
     currency: rec.purchase_currency || "USD",
     exchangeRate: n(rec.exchange_rate),
     functionalCurrency: rec.local_currency,
@@ -258,7 +330,7 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
       totalQuantity: qty || undefined,
       totalNetWeight: n(rec.net_weight) || undefined,
       totalGrossWeight: n(rec.total_gross_weight) || undefined,
-      subTotal: li.amount || undefined,
+      subTotal: (lines.length ? lineSum : li.amount) || undefined,
       grandTotal: grand || undefined,
     },
     bank: opts.bank ?? null,
@@ -268,7 +340,7 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
     missingFields: [
       ...(rec.supplier_name ? [] : ["Supplier"]),
       ...(companyNameOrNull(opts.branding) ? [] : ["Buyer (company name not set in company profile)"]),
-      ...(rec.goods_name ? [] : ["Goods"]),
+      ...(lines.length || rec.goods_name ? [] : ["Goods"]),
     ],
     orientation: opts.orientation,
     autoPrint: opts.autoPrint,

@@ -3787,6 +3787,9 @@ export function PurchaseBookingJournalReportView({
             txnKind="purchase"
             source="purchase_order"
             record={{
+              // Spread first so the saved row's own fields (created_at, supplier and company ids) are not dropped.
+              ...(selected as any),
+              created_at: (selected as any).created_at || (selected as any).createdAt || (selected as any).bookingDate || null,
               id: selected.id,
               purchase_order_no: selected.purchaseBookingOrderNumber,
               purchase_contract_no: selected.purchaseContractNo,

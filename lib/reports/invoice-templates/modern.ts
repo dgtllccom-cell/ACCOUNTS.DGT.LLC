@@ -91,9 +91,9 @@ export function renderModernInvoice(input: TradeDocumentInput, flags: InvoiceTem
     tr, .pcard, .info-card { page-break-inside: avoid; }
   `;
 
-  const body = `<div class="wrap"><div class="page">
-    <div class="accent-bar"></div>
-    <div class="inner">
+  // A contract is two sheets (the Classic engine's split): sheet 1 = parties, delivery and terms, bank and notes;
+  // sheet 2 = goods, values and signatures. Every other document keeps one flow.
+  const topHtml = `
       <div class="head">
         <div class="brand">
           ${d.logoUrl ? `<img src="${esc(d.logoUrl)}" alt="" />` : ""}
@@ -115,6 +115,8 @@ export function renderModernInvoice(input: TradeDocumentInput, flags: InvoiceTem
       ${d.notify ? partyCard(d.notify, "notify") : ""}
       ${infoBlock(tt("tdoc.sec_delivery", "Delivery & Terms"), d.deliveryRows)}
       ${infoBlock(tt("tdoc.sec_delivery", "Delivery & Terms") + " — " + tt("tdoc.transport_mode", "Transport Mode"), d.transportRows)}
+    `;
+  const goodsHtml = `
       <table class="goods">
         <thead><tr>${goodsHead}</tr></thead>
         <tbody>${goodsBody}</tbody>
@@ -125,18 +127,25 @@ export function renderModernInvoice(input: TradeDocumentInput, flags: InvoiceTem
         <div class="grand"><span>${esc(d.grandTotalLabel)}</span><span>${esc(d.grandTotalValue)}</span></div>
         ${d.amountInWords ? `<div class="words">${esc(d.amountInWords)}</div>` : ""}
       </div></div>` : ""}
+    `;
+  const bottomHtml = `
       <div class="bottom-grid">
         ${d.showBank && d.bankRows.length ? infoBlock(tt("tdoc.sec_bank", "Payment / Bank Details"), d.bankRows) : "<div></div>"}
         ${d.notes ? `<div class="notes-card"><strong>${esc(tt("tdoc.notes", "Notes / Remarks"))}:</strong> ${esc(d.notes)}</div>` : "<div></div>"}
       </div>
+    `;
+  const closingHtml = `
       ${flags.showSignature ? `<div class="sign-row">
-        <div class="sign">${esc(d.preparedByLabel)}</div>
-        <div class="sign">${esc(d.signatureName)}</div>
+        <div class="sign">${esc(d.signLeft)}</div>
+        <div class="sign">${esc(d.signRight)}</div>
         ${flags.showQr ? `<div class="qr-box">${qrPlaceholderSvg(48)}<div>${esc(d.qrLabel)}</div></div>` : ""}
       </div>` : ""}
       ${flags.showHeaderFooter ? `<div class="foot"><span>${esc(d.brandName)} · ${esc(d.docTitle)} · ${esc(d.docNo)}</span><span>${esc(tt("tdoc.system_generated", "System-generated document"))} · ${esc(d.stamp)}</span></div>` : ""}
-    </div>
-  </div></div>`;
+    `;
+  const sheet = (inner: string, extra = "") => `<div class="page${extra}"><div class="accent-bar"></div><div class="inner">${inner}</div></div>`;
+  const body = d.isContract
+    ? `<div class="wrap multi">${sheet(topHtml + bottomHtml)}${sheet(goodsHtml + closingHtml, " page-2")}</div>`
+    : `<div class="wrap">${sheet(topHtml + goodsHtml + bottomHtml + closingHtml)}</div>`;
 
   return documentShell({
     lang, dir: d.dir, title: d.docTitle, docNo: d.docNo, docTitle: d.docTitle, brandName: d.brandName, stamp: d.stamp,
