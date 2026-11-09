@@ -2,7 +2,7 @@ import { defaultLaneTransferDestination, destinationRoute } from "@/lib/purchase
 import { describe, expect, it, vi } from "vitest";
 import { loadingJournalRows, loadingJournalLinks, readBillLoadingJournal } from "@/lib/purchases/loading-journal";
 describe("one bill, successive loading batches", () => {
-  it.each([["purchase_booking","remaining_payment"],["local_purchase","remaining_payment"],["sales_booking","general_sales_expenses"],["local_sales","general_sales_expenses"]])("keeps %s on its own workflow",(source,destination)=>{ expect(defaultLaneTransferDestination(source)).toBe(destination); });
+  it.each([["purchase_booking","general_purchase_expenses"],["local_purchase","general_purchase_expenses"],["sales_booking","general_sales_expenses"],["local_sales","general_sales_expenses"]])("keeps %s on its own workflow",(source,destination)=>{ expect(defaultLaneTransferDestination(source)).toBe(destination); });
   it("keeps later loading dates, BLs and containers separate under the original bill", () => {
     const rows = loadingJournalRows([
       { id: "b", loading_record_no: "LR-002", created_at: "2026-11-12", loaded_at: "2026-11-12", container_number: "C-2", bl_number: "BL-2", loaded_quantity: 200, loaded_purchase_local: 7340, local_currency: "AED" },
