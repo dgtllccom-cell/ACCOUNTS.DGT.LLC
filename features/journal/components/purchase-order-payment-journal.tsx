@@ -3773,6 +3773,132 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       };
     }), [orders, countryFilter, branchFilter, countryNameById]);
 
+  const advanceCardData = useMemo(() => {
+    if (activeMode !== "advance" && activeMode !== "advance_completed") return undefined;
+    const rateAED = dailyUsdRates?.["AED"] ?? 3.6725;
+    const fmt = (curr: string, amt: number) => `${curr} ${amt.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    let totalBills = filtered.length;
+    let totalPurchPC = 0;
+    let totalPurchFC = 0;
+
+    let advReqBills = 0;
+    let advReqPC = 0;
+    let advReqFC = 0;
+
+    let advPaidBills = 0;
+    let advPaidPC = 0;
+    let advPaidFC = 0;
+
+    let advBalBills = 0;
+    let advBalPC = 0;
+    let advBalFC = 0;
+
+    let fullyPaidCount = 0;
+    let partiallyPaidCount = 0;
+    let pendingCount = 0;
+
+    const branchMap = new Map<string, { bills: number; advReq: number; advPaid: number; advBal: number }>();
+
+    filtered.forEach((r: any) => {
+      const form = r.form_data?.form || {};
+      const exRate = Number(r.exchange_rate || form.exchangeRate || rateAED) || rateAED;
+      const purchPC = Number(r.total_goods_original || r.purchase_cost || form.totalAmount || r.order_total || 0);
+      const purchFC = purchPC * exRate;
+
+      const advPct = Number(form.advancePercent || form.advancePercentage || r.advance_percent || 10) || 10;
+      const rowAdvReqPC = Number(form.advanceAmount || form.advanceRequired || ((purchPC * advPct) / 100));
+      const rowAdvReqFC = rowAdvReqPC * exRate;
+
+      const rowAdvPaidPC = Number(r.advance_paid || form.advancePaid || 0);
+      const rowAdvPaidFC = rowAdvPaidPC * exRate;
+
+      const rowAdvBalPC = Math.max(0, rowAdvReqPC - rowAdvPaidPC);
+      const rowAdvBalFC = rowAdvBalPC * exRate;
+
+      totalPurchPC += purchPC;
+      totalPurchFC += purchFC;
+
+      if (rowAdvReqPC > 0) {
+        advReqBills++;
+        advReqPC += rowAdvReqPC;
+        advReqFC += rowAdvReqFC;
+      }
+
+      if (rowAdvPaidPC > 0) {
+        advPaidBills++;
+        advPaidPC += rowAdvPaidPC;
+        advPaidFC += rowAdvPaidFC;
+      }
+
+      if (rowAdvBalPC > 0.05) {
+        advBalBills++;
+        advBalPC += rowAdvBalPC;
+        advBalFC += rowAdvBalFC;
+      }
+
+      if (rowAdvBalPC <= 0.05 && rowAdvReqPC > 0) {
+        fullyPaidCount++;
+      } else if (rowAdvPaidPC > 0) {
+        partiallyPaidCount++;
+      } else {
+        pendingCount++;
+      }
+
+      const branchName = String(form.branchName || r.branch_name || form.countryName || r.country_name || "UAE").toUpperCase();
+      const existing = branchMap.get(branchName) || { bills: 0, advReq: 0, advPaid: 0, advBal: 0 };
+      existing.bills++;
+      existing.advReq += rowAdvReqPC;
+      existing.advPaid += rowAdvPaidPC;
+      existing.advBal += rowAdvBalPC;
+      branchMap.set(branchName, existing);
+    });
+
+    const totalCountSafe = totalBills || 1;
+
+    const branchRows: Array<{ branch: string; bills: number; advReq: string; advPaid: string; advBal: string; isTotal?: boolean }> = Array.from(branchMap.entries()).map(([branch, data]) => ({
+      branch,
+      bills: data.bills,
+      advReq: fmt("USD", data.advReq),
+      advPaid: fmt("USD", data.advPaid),
+      advBal: fmt("USD", data.advBal),
+    }));
+
+    branchRows.push({
+      branch: "Total",
+      bills: totalBills,
+      advReq: fmt("USD", advReqPC),
+      advPaid: fmt("USD", advPaidPC),
+      advBal: fmt("USD", advBalPC),
+      isTotal: true,
+    });
+
+    return {
+      summary: {
+        title: translateHeader(currentLanguage, "Advance Payment Summary"),
+        rows: [
+          { description: translateHeader(currentLanguage, "Total Bills"), bills: totalBills, purchaseAmt: fmt("USD", totalPurchPC), finalAmt: fmt("AED", totalPurchFC) },
+          { description: translateHeader(currentLanguage, "Advance Required"), bills: advReqBills, purchaseAmt: fmt("USD", advReqPC), finalAmt: fmt("AED", advReqFC) },
+          { description: translateHeader(currentLanguage, "Advance Paid"), bills: advPaidBills, purchaseAmt: fmt("USD", advPaidPC), finalAmt: fmt("AED", advPaidFC) },
+          { description: translateHeader(currentLanguage, "Advance Balance (Remaining)"), bills: advBalBills, purchaseAmt: fmt("USD", advBalPC), finalAmt: fmt("AED", advBalFC) },
+        ],
+      },
+      status: {
+        title: translateHeader(currentLanguage, "Payment Status"),
+        rows: [
+          { status: translateHeader(currentLanguage, "Fully Paid"), dotColor: "green" as const, bills: fullyPaidCount, pct: `${((fullyPaidCount / totalCountSafe) * 100).toFixed(1)}%` },
+          { status: translateHeader(currentLanguage, "Partially Paid"), dotColor: "blue" as const, bills: partiallyPaidCount, pct: `${((partiallyPaidCount / totalCountSafe) * 100).toFixed(1)}%` },
+          { status: translateHeader(currentLanguage, "Pending"), dotColor: "orange" as const, bills: pendingCount, pct: `${((pendingCount / totalCountSafe) * 100).toFixed(1)}%` },
+          { status: translateHeader(currentLanguage, "Total"), dotColor: "green" as const, bills: totalBills, pct: "100.0%", isTotal: true },
+        ],
+      },
+      branchWise: {
+        title: translateHeader(currentLanguage, "Branch Wise (Advance)"),
+        rows: branchRows,
+      },
+    };
+  }, [activeMode, filtered, dailyUsdRates]);
+
   const selected = selectedId ? (orders.find((row) => row.id === selectedId) ?? filtered.find((row) => row.id === selectedId) ?? null) : null;
 
   // Container Selection local state (moved here to allow access to 'selected' initialization)
@@ -5305,6 +5431,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         onCountryOpen={(name) => { setCountryFilter(name); setPageIndex(0); }}
         translateLabel={(label) => translateHeader(currentLanguage, label)}
         summaryBillCounts={billSummaryCounts}
+        advanceCards={advanceCardData}
         branchScopeInfo={!erpScope.isSuperAdmin ? {
           countryCode: erpScope.countryName ? (getCountryCode(erpScope.countryName) || erpScope.countryName).toUpperCase() : undefined,
           branchCode: erpScope.branchDisplayName ? erpScope.branchDisplayName.toUpperCase() : undefined,

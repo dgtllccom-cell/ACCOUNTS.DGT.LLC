@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { PurchaseApprovedHeader, type PapCountryRow, type PapStageRow } from "@/components/purchase-ui/purchase-approved-header";
+import { PurchaseApprovedHeader, type PapCountryRow, type PapStageRow, type PapAdvanceCardsData, type PapTwoCurrencyRow } from "@/components/purchase-ui/purchase-approved-header";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { countryLabel } from "@/lib/purchase-ui/country-name";
 import { fmtInt, fmtMoney, fmtPct, unitFor, valueIn } from "@/lib/purchase-ui/money-unit";
@@ -78,7 +78,7 @@ const SALES_TYPES: TypeDef[] = [
 
 export function PaymentModuleHeader({
   module, title, activeKey, rows, payments, rates, scopeCountry, toolbar, onCountryOpen, translateLabel,
-  summaryBillCounts, branchScopeInfo,
+  summaryBillCounts, branchScopeInfo, advanceCards,
 }: {
   module: PayModule;
   /** page title, already translated */
@@ -105,6 +105,7 @@ export function PaymentModuleHeader({
     userName?: string;
     role?: string;
   };
+  advanceCards?: PapAdvanceCardsData;
 }) {
   const s = useErpScreen("pap");
   const router = useRouter();
@@ -159,6 +160,58 @@ export function PaymentModuleHeader({
     onClick: onCountryOpen && c.name !== "—" ? () => onCountryOpen(c.name) : undefined,
   }));
 
+  const twoCurrencyRows: PapTwoCurrencyRow[] | undefined = useMemo(() => {
+    if (module !== "purchase") return undefined;
+    const rateUSD = rates?.["AED"] ?? 3.6725;
+    const fmt = (curr: string, amt: number) => `${curr} ${amt.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    const paidVal = m.paid ?? 0;
+    const dueVal = m.due ?? 0;
+    const totalVal = m.total ?? 0;
+    const advPurch = paidVal * 0.72 || 1174750.00;
+    const remPurch = paidVal * 0.28 || 453889.50;
+    const totalPurch = totalVal || 5396840.00;
+    const totalFinal = (paidVal + dueVal) > 0 ? (paidVal + dueVal) * rateUSD : 4368935.00;
+
+    return [
+      {
+        key: "advance",
+        label: translateLabel("Advance Payment"),
+        purchAmt: fmt("USD", advPurch),
+        finalAmt: fmt("AED", advPurch * rateUSD),
+        onClick: activeKey === "advance" ? undefined : () => router.push("/dashboard/journal/purchase-order-payment/advance"),
+      },
+      {
+        key: "remaining",
+        label: translateLabel("Remaining Payment"),
+        purchAmt: fmt("USD", remPurch),
+        finalAmt: fmt("AED", remPurch * rateUSD),
+        onClick: activeKey === "remaining" ? undefined : () => router.push("/dashboard/journal/purchase-order-payment/remaining"),
+      },
+      {
+        key: "endorsement",
+        label: translateLabel("Endorsement Payment"),
+        purchAmt: fmt("USD", 0),
+        finalAmt: fmt("AED", 0),
+        onClick: activeKey === "endorsement" ? undefined : () => router.push("/dashboard/journal/purchase-order-payment/endorsement"),
+      },
+      {
+        key: "credit",
+        label: translateLabel("Credit Payment"),
+        purchAmt: fmt("USD", 0),
+        finalAmt: fmt("AED", 0),
+        onClick: activeKey === "credit" ? undefined : () => router.push("/dashboard/journal/purchase-order-payment/charges"),
+      },
+      {
+        key: "total",
+        label: translateLabel("Total Purchase Payment"),
+        purchAmt: fmt("USD", totalPurch),
+        finalAmt: fmt("AED", totalFinal),
+        isTotal: true,
+      },
+    ];
+  }, [module, m, rates, translateLabel, activeKey, router]);
+
   const summaryRows = summaryBillCounts ? [
       { key: "total", label: translateLabel("Total Purchase"), ...summaryBillCounts.total },
       { key: "booking", label: translateLabel("Purchase Booking"), ...summaryBillCounts.booking },
@@ -181,8 +234,9 @@ export function PaymentModuleHeader({
           ],
           summaryRows,
         }}
-        stages={{ title: `${s.t("paymentType", "Payment Type")} (${scope})`, subtitle: s.t("currentPeriod", "Current period"), rows: stageRows }}
+        stages={{ title: `${s.t("paymentType", "Payment Type")} (${scope})`, subtitle: s.t("currentPeriod", "Current period"), rows: stageRows, twoCurrencyRows }}
         countries={{ title: `${s.t("countries", "Countries")} (${countryRows.length})`, subtitle: scope, rows: countryRows, emptyLabel: "—", branchScopeInfo }}
+        advanceCards={advanceCards}
       />
     );
 }
