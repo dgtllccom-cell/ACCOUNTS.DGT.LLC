@@ -26,6 +26,10 @@ function themedInvoiceHtml(html: string): string {
     .brand-name, .company-name, .company-title { color: #111827 !important; }
     table.goods thead th, table.goods th, .goods-table thead th, table.items th { background: #111827 !important; color: #ffffff !important; }
     .accent-bar { background: var(--erp-invoice-accent) !important; }
+    .summary .grand { background: var(--erp-invoice-accent) !important; }
+    .pcard { border-inline-start-color: var(--erp-invoice-accent) !important; }
+    .info-title { color: var(--erp-invoice-accent) !important; }
+    table.goods tfoot td { border-top-color: var(--erp-invoice-accent) !important; }
     .doc-title h1, .info-title { color: var(--erp-invoice-accent) !important; }
     @media print { table.goods thead th, table.goods th, .goods-table thead th, table.items th { background: #111827 !important; color: #ffffff !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
   </style>`;
