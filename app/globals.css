@@ -188,6 +188,12 @@
   .dark.theme-navy { --primary: 222 85% 76%; --primary-foreground: 222 47% 11%; --ring: 222 85% 76%; --accent: 222 85% 76%; }
   .dark.theme-slate { --primary: 215 30% 76%; --primary-foreground: 222 47% 11%; --ring: 215 30% 76%; --accent: 215 30% 76%; }
 
+  :root.theme-mint { --primary: 158 30% 43%; --primary-foreground: 0 0% 100%; --ring: 158 30% 43%; --accent: 158 35% 84%; }
+  :root.theme-peach { --primary: 15 63% 48%; --primary-foreground: 0 0% 100%; --ring: 15 63% 48%; --accent: 15 75% 87%; }
+  :root.theme-lavender { --primary: 258 42% 53%; --primary-foreground: 0 0% 100%; --ring: 258 42% 53%; --accent: 258 55% 88%; }
+  .dark.theme-mint { --primary: 158 42% 68%; --primary-foreground: 222 47% 11%; --ring: 158 42% 68%; }
+  .dark.theme-peach { --primary: 15 78% 72%; --primary-foreground: 222 47% 11%; --ring: 15 78% 72%; }
+  .dark.theme-lavender { --primary: 258 58% 77%; --primary-foreground: 222 47% 11%; --ring: 258 58% 77%; }
   .dark.theme-purple {
     --primary: 262 83% 70%;
     --primary-foreground: 222 47% 11%;
