@@ -24,10 +24,10 @@ function themedInvoiceHtml(html: string): string {
   const css = `<style data-erp-invoice-theme>
     :root { --erp-invoice-accent: ${accent}; }
     .brand-name, .company-name, .company-title { color: #111827 !important; }
-    table.goods thead th, table.goods th, .goods-table thead th { background: #111827 !important; color: #ffffff !important; }
+    table.goods thead th, table.goods th, .goods-table thead th, table.items th { background: #111827 !important; color: #ffffff !important; }
     .accent-bar { background: var(--erp-invoice-accent) !important; }
     .doc-title h1, .info-title { color: var(--erp-invoice-accent) !important; }
-    @media print { table.goods thead th, table.goods th, .goods-table thead th { background: #111827 !important; color: #ffffff !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+    @media print { table.goods thead th, table.goods th, .goods-table thead th, table.items th { background: #111827 !important; color: #ffffff !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
   </style>`;
   return html.includes("</head>") ? html.replace("</head>", css + "</head>") : css + html;
 }

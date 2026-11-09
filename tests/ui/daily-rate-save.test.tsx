@@ -1,6 +1,6 @@
 import React from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { DailyExchangeRateManager } from "@/features/currency/daily-exchange-rate-manager";
 const api = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
 vi.mock("@/lib/api/client", () => ({ apiGet: api.get, apiPost: api.post }));
@@ -21,6 +21,8 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 it("does not show a fictitious saved rate after the server rejects the save", async () => {
   const { container } = render(<DailyExchangeRateManager />);
   await waitFor(() => expect(container.textContent).toContain("Pakistan"));
+  // Let the post-load effect (which clears the rate inputs when no rate is on file) finish before typing.
+  await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
   const inputs = screen.getAllByRole("spinbutton");
   fireEvent.change(inputs[0], { target: { value: "282" } });
   fireEvent.change(inputs[1], { target: { value: "280" } });
