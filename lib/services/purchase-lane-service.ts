@@ -301,7 +301,7 @@ export async function ensureLaneFromLocalPurchase(sql: Sql, localPurchaseId: str
       lp.truck_no,
       coalesce(lp.truck_no, lp.loading_details->'entries'->0->>'truckNo'),
       coalesce(lp.driver_name, lp.loading_details->'entries'->0->>'driverName'),
-      coalesce(lp.driver_phone, lp.loading_details->'entries'->0->>'driverPhone'),
+      coalesce(lp.loading_details->'entries'->0->>'driverPhone', null),
       coalesce(lp.date, lp.created_at::date),
       coalesce(lp.numbers, (lp.loading_details->'entries'->0->>'loadedQuantity')::numeric, 0),
       lp.quantity_name, lp.total_gross_weight, lp.net_weight,

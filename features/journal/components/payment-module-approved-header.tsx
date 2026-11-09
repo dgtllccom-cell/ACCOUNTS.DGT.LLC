@@ -165,13 +165,34 @@ export function PaymentModuleHeader({
     const rateUSD = rates?.["AED"] ?? 3.6725;
     const fmt = (curr: string, amt: number) => `${curr} ${amt.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-    const paidVal = m.paid ?? 0;
-    const dueVal = m.due ?? 0;
-    const totalVal = m.total ?? 0;
-    const advPurch = paidVal * 0.72 || 1174750.00;
-    const remPurch = paidVal * 0.28 || 453889.50;
-    const totalPurch = totalVal || 5396840.00;
-    const totalFinal = (paidVal + dueVal) > 0 ? (paidVal + dueVal) * rateUSD : 4368935.00;
+    let advPurch = 0;
+    let remPurch = 0;
+    let creditPurch = 0;
+    let totalPurch = 0;
+
+    rows.forEach((r: any) => {
+      advPurch += Number(r.advance_paid || 0);
+      remPurch += Number(r.remaining_paid || 0);
+      creditPurch += Number(r.credit_amount || 0);
+      totalPurch += Number(r.total || 0);
+    });
+
+    if (payments && payments.length > 0) {
+      let pAdv = 0;
+      let pRem = 0;
+      let pCred = 0;
+      payments.forEach((p) => {
+        const amt = Number(p.amount || 0);
+        if (p.kind === "advance") pAdv += amt;
+        else if (p.kind === "remaining") pRem += amt;
+        else if (p.kind === "credit") pCred += amt;
+      });
+      if (pAdv > 0) advPurch = pAdv;
+      if (pRem > 0) remPurch = pRem;
+      if (pCred > 0) creditPurch = pCred;
+    }
+
+    const totalFinal = totalPurch * rateUSD;
 
     return [
       {

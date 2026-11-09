@@ -3554,46 +3554,29 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       const isRemainingCleared = remainingDue <= 0.01;
 
       if (activeMode === "advance") {
-        // Business Rule: Show orders that need upfront payment before loading
-        // Advance/Endorsement bills → need advance % cleared
-        // Cash bills → need cash payment posted before loading
         if (isCreditBill) return false;
         
-        const isFullyPaid = (row.payment_status || "").toLowerCase() === "paid" || (row.payment_status || "").toLowerCase() === "completed";
-        if (isFullyPaid) return false;
-        
         if (isCashBill) {
-          // Cash bills: show until cash payment posted
-          if (paidAdvance > 0.01) return false; // Cash posted → moves to loading
+          if (paidAdvance > 0.01 && !isAdvanceBill) return false;
           return true;
         }
         
         if (!isAdvanceBill && advancePercent <= 0) return false;
-        if (advancePercent > 0 && remainingAdvance <= 0.01) return false; // Already cleared required advance -> moves to Loading
 
       } else if (activeMode === "advance_completed") {
         if (isCreditBill) return false;
         
         if (isCashBill) {
-          // Cash bills: show here when cash payment has been posted
           if (paidAdvance <= 0.01) return false;
           return true;
         }
         
         if (advancePercent === 0 && paidAdvance <= 0) return false;
-        if (advancePercent > 0 && remainingAdvance > 0.01) return false; // Not yet cleared
-        if (paidAdvance <= 0) return false; // Not paid anything
+        if (advancePercent > 0 && remainingAdvance > 0.01) return false;
+        if (paidAdvance <= 0) return false;
       } else if (activeMode === "remaining") {
-        // Business Rule: Credit bills do NOT belong in Remaining Journal
         if (isCreditBill) return false;
 
-        // Business Rule: Advance/Endorsement must be fully cleared first
-        if (!isCashBill && advancePercent > 0 && remainingAdvance > 0.01 && !isUrlLoadingScope) return false;
-        
-        // Business Rule: Cash bills must have cash payment posted first
-        if (isCashBill && paidAdvance <= 0.01 && !isUrlLoadingScope) return false;
-
-        // Business Rule: Remaining payment requires Loading/container movement first
         const workflow = row.form_data?.workflow || {};
         const hasTransferStatus = (workflow.transferStatus || "").toLowerCase() === "transferred";
         const hasTransferAudit = Boolean(row.form_data?.form?.transferAudit || workflow.transferAudit);
@@ -3601,14 +3584,13 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
           || Boolean(workflow.loadedQuantity && Number(workflow.loadedQuantity) > 0)
           || Boolean(workflow.transferredToRemaining);
         const isInvoiceBill = paymentType.includes("invoice");
-        // An Advance / Endorsement bill owes a Remaining payment only for goods that have actually been LOADED. The booking's own "transferred"
-        // flag and the empty loading placeholder created when the advance completes are not loading — before, they listed the bill here at once.
         const loadedQty = Number(workflow.loadedQuantity || 0) > 0 || Number((row as any).loaded_loading_count || 0) > 0;
         const isAdvanceBillInRemaining = isAdvanceBill && advancePercent > 0 && !isCashBill && !isInvoiceBill;
         const hasContainerMovement = isAdvanceBillInRemaining
-          ? loadedQty || isUrlLoadingScope
-          : hasTransferStatus || hasTransferAudit || hasLoadingRecord || isUrlLoadingScope || isInvoiceBill;
-        if (!hasContainerMovement) return false; // Block: not yet transferred from loading
+          ? (loadedQty || hasLoadingRecord || isUrlLoadingScope)
+          : (hasTransferStatus || hasTransferAudit || hasLoadingRecord || isUrlLoadingScope || isInvoiceBill);
+
+        if (!hasContainerMovement && !isUrlLoadingScope) return false;
 
         // Keep all eligible remaining bills (both pending and cleared) in modeFilteredAll so
         // summary card counts (Total, Paid, Remaining) reconcile accurately and users can filter
@@ -5432,13 +5414,13 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         translateLabel={(label) => translateHeader(currentLanguage, label)}
         summaryBillCounts={billSummaryCounts}
         advanceCards={advanceCardData}
-        branchScopeInfo={!erpScope.isSuperAdmin ? {
-          countryCode: erpScope.countryName ? (getCountryCode(erpScope.countryName) || erpScope.countryName).toUpperCase() : undefined,
-          branchCode: erpScope.branchDisplayName ? erpScope.branchDisplayName.toUpperCase() : undefined,
-          userCode: erpScope.userId ? String(erpScope.userId).slice(0, 8).toUpperCase() : undefined,
-          userName: erpScope.userName || undefined,
-          role: erpScope.role || (erpScope.roles?.[0] ?? undefined),
-        } : undefined}
+        branchScopeInfo={{
+          countryCode: erpScope.countryName ? (getCountryCode(erpScope.countryName) || erpScope.countryName).toUpperCase() : (erpScope.isSuperAdmin ? "ALL" : undefined),
+          branchCode: erpScope.branchDisplayName ? erpScope.branchDisplayName.toUpperCase() : (erpScope.isSuperAdmin ? "ALL BRANCHES" : undefined),
+          userCode: erpScope.userId ? String(erpScope.userId).slice(0, 8).toUpperCase() : (erpScope.isSuperAdmin ? "SA-001" : undefined),
+          userName: erpScope.userName || (erpScope.isSuperAdmin ? "Super Admin" : undefined),
+          role: (erpScope.role || erpScope.roles?.[0] || (erpScope.isSuperAdmin ? "SUPER_ADMIN" : "USER")).toUpperCase(),
+        }}
         toolbar={
           <>
             <PapSearch
