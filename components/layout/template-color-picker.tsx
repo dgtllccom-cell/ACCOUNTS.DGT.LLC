@@ -37,7 +37,7 @@ export function TemplateColorPicker({
       green: t(lang, "nav.template_green"),
       gold: t(lang, "nav.template_gold"),
       cyan: t(lang, "nav.template_cyan"),
-      red: "Coral Red", teal: "Ocean Teal", pink: "Rose Pink", navy: "Executive Navy", slate: "Classic Slate"
+      red: "Coral Red", teal: "Ocean Teal", pink: "Rose Pink", navy: "Executive Navy", slate: "Classic Slate", mint: "Soft Mint", peach: "Soft Peach", lavender: "Soft Lavender"
     };
     return map;
   }, [lang]);
