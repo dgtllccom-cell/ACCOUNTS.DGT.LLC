@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
-import { ChevronRight, FileText, Filter, Globe2, Layers, MoreVertical, RefreshCw, Search, ShoppingCart } from "lucide-react";
+import { ChevronRight, FileText, Filter, Globe2, Layers, MoreVertical, RefreshCw, Search, ShoppingCart, WalletCards } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { localizeCountryName } from "@/lib/i18n/country-names";
 import { cn } from "@/lib/utils";
@@ -42,6 +42,48 @@ export interface PapSummaryRow {
   onFilterRemaining?: () => void;
 }
 
+export interface PapTwoCurrencyRow {
+  key: string;
+  label: string;
+  purchAmt: string;
+  finalAmt: string;
+  isTotal?: boolean;
+  onClick?: () => void;
+}
+
+export interface PapAdvanceCardsData {
+  summary: {
+    title: string;
+    rows: Array<{
+      description: string;
+      bills: number;
+      purchaseAmt: string;
+      finalAmt: string;
+    }>;
+  };
+  status: {
+    title: string;
+    rows: Array<{
+      status: string;
+      dotColor: "green" | "blue" | "orange";
+      bills: number;
+      pct: string;
+      isTotal?: boolean;
+    }>;
+  };
+  branchWise: {
+    title: string;
+    rows: Array<{
+      branch: string;
+      bills: number;
+      advReq: string;
+      advPaid: string;
+      advBal: string;
+      isTotal?: boolean;
+    }>;
+  };
+}
+
 export interface ScopeUserInfo {
   countryCode?: string;
   branchCode?: string;
@@ -59,8 +101,9 @@ export interface PurchaseApprovedHeaderProps {
   /** localized, authorized scope text e.g. "All Countries"; defaults to the localized "All Countries" */
   scopeLabel?: string;
   summary: { title: string; subtitle?: string; metrics?: readonly [PapMetric, PapMetric, PapMetric]; summaryRows?: readonly PapSummaryRow[] };
-  stages: { title: string; subtitle?: string; rows: readonly PapStageRow[] };
+  stages: { title: string; subtitle?: string; rows: readonly PapStageRow[]; twoCurrencyRows?: readonly PapTwoCurrencyRow[] };
   countries: { title: string; subtitle?: string; rows: readonly PapCountryRow[]; emptyLabel?: string; branchScopeInfo?: ScopeUserInfo };
+  advanceCards?: PapAdvanceCardsData;
   /** the page's EXISTING controls (search, filters, date, refresh, more-actions, New) — compose with the Pap* helpers below */
   toolbar?: ReactNode;
   langProp?: string | null;
@@ -69,7 +112,7 @@ export interface PurchaseApprovedHeaderProps {
 const Go = () => <span className="dgt-pa-go" aria-hidden="true"><ChevronRight /></span>;
 const Bars = () => <span className="dgt-pa-bars" aria-hidden="true"><span /><span /><span /></span>;
 
-export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule, scopeLabel, summary, stages, countries, toolbar, langProp }: PurchaseApprovedHeaderProps) {
+export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule, scopeLabel, summary, stages, countries, advanceCards, toolbar, langProp }: PurchaseApprovedHeaderProps) {
   const s = useErpScreen("pap", langProp);
   const title = titleOverride ?? s.t(TITLE_KEY[page], "Purchase");
   const stageIcon = (tone: PapStageRow["tone"]) => (tone === "green" ? "✓" : tone === "red" ? "◎" : tone === "blue" ? "▵" : "☰");
@@ -89,135 +132,299 @@ export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule
       </div>
 
       <div className="dgt-pa-cards">
-        <section className="dgt-pa-card gold" aria-label={summary.title}>
-          <div className="dgt-pa-card-head">
-            <div className="dgt-pa-symbol" aria-hidden="true"><ShoppingCart /></div>
-            <div><div className="dgt-pa-headname">{summary.title}</div>{summary.subtitle && <div className="dgt-pa-sub">{summary.subtitle}</div>}</div>
-            <Bars />
-          </div>
-          {summary.summaryRows && summary.summaryRows.length > 0 ? (
-            <div className="p-2 overflow-x-auto">
-              <table className="dgt-pa-summary-table">
-                <thead>
-                  <tr>
-                    <th className="text-left">{s.t("sourceCategory", "Category")}</th>
-                    <th className="text-center">{s.t("totalBills", "Total Bills")}</th>
-                    <th className="text-center">{s.t("paidBills", "Paid Bills")}</th>
-                    <th className="text-center">{s.t("remainingBills", "Remaining Bills")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {summary.summaryRows.map((row) => (
-                    <tr key={row.key}>
-                      <td className="dgt-pa-summary-rowname">{row.label}</td>
-                      <td className="text-center">
-                        <button
-                          type="button"
-                          className="dgt-pa-summary-btn total"
-                          title={s.t("filterTotalBills", "Filter All Bills")}
-                          onClick={row.onFilterTotal}
-                        >
-                          {row.totalBills}
-                        </button>
-                      </td>
-                      <td className="text-center">
-                        <button
-                          type="button"
-                          className="dgt-pa-summary-btn paid"
-                          title={s.t("filterPaidBills", "Filter Paid Bills")}
-                          onClick={row.onFilterPaid}
-                        >
-                          {row.paidBills}
-                        </button>
-                      </td>
-                      <td className="text-center">
-                        <button
-                          type="button"
-                          className="dgt-pa-summary-btn remaining"
-                          title={s.t("filterRemainingBills", "Filter Remaining Bills")}
-                          onClick={row.onFilterRemaining}
-                        >
-                          {row.remainingBills}
-                        </button>
-                      </td>
+        {advanceCards ? (
+          <>
+            {/* Card 1 (Gold): Advance Payment Summary */}
+            <section className="dgt-pa-card gold" aria-label={advanceCards.summary.title}>
+              <div className="dgt-pa-card-head">
+                <div className="dgt-pa-symbol" aria-hidden="true"><ShoppingCart /></div>
+                <div><div className="dgt-pa-headname">{advanceCards.summary.title}</div></div>
+                <Bars />
+              </div>
+              <div className="p-1 px-2 overflow-x-auto flex-1 flex flex-col justify-between">
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-amber-300/80 text-[10px] font-black text-slate-700 uppercase">
+                      <th className="py-1 px-1.5 text-start whitespace-nowrap">{s.t("description", "Description")}</th>
+                      <th className="py-1 px-1 text-center whitespace-nowrap">{s.t("totalBills", "Total Bills")}</th>
+                      <th className="py-1 px-1.5 text-end whitespace-nowrap">{s.t("totalAmtPurchase", "Total Amt (Purchase)")}</th>
+                      <th className="py-1 px-1.5 text-end whitespace-nowrap">{s.t("totalAmtFinal", "Total Amt (Final)")}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="dgt-pa-kps">
-              {(summary.metrics || []).map((m, i) => (
-                <div className="dgt-pa-kp" key={i}>
-                  <div className="dgt-pa-kp-name">{m.label}</div>
-                  <div className={cn("dgt-pa-kp-value", `t-${m.tone ?? (i === 1 ? "green" : i === 2 ? "red" : "dark")}`)} data-len={(m.value || "").length > 12 ? "long" : "short"} dir="auto">{m.value || "—"}</div>
-                  {m.note && <div className={cn("dgt-pa-kp-note", `t-${m.tone ?? (i === 1 ? "green" : i === 2 ? "red" : "dark")}`)} dir="auto">{m.note}</div>}
+                  </thead>
+                  <tbody className="divide-y divide-amber-200/50">
+                    {advanceCards.summary.rows.map((r, i) => (
+                      <tr key={i} className="hover:bg-amber-100/40 transition-colors">
+                        <td className="py-1 px-1.5 text-start font-bold text-slate-800 whitespace-nowrap">{r.description}</td>
+                        <td className="py-1 px-1 text-center font-mono font-bold text-slate-900">{r.bills}</td>
+                        <td className="py-1 px-1.5 text-end font-mono font-bold text-blue-700 whitespace-nowrap" dir="ltr">{r.purchaseAmt}</td>
+                        <td className="py-1 px-1.5 text-end font-mono font-semibold text-slate-600 whitespace-nowrap" dir="ltr">{r.finalAmt}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {/* Card 2 (Sky): Payment Status */}
+            <section className="dgt-pa-card sky" aria-label={advanceCards.status.title}>
+              <div className="dgt-pa-card-head">
+                <div className="dgt-pa-symbol" aria-hidden="true"><Layers /></div>
+                <div><div className="dgt-pa-headname">{advanceCards.status.title}</div></div>
+                <Bars />
+              </div>
+              <div className="p-1 px-2 overflow-x-auto flex-1 flex flex-col justify-between">
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-blue-300/80 text-[10px] font-black text-slate-700 uppercase">
+                      <th className="py-1 px-2 text-start whitespace-nowrap">{s.t("status", "Status")}</th>
+                      <th className="py-1 px-2 text-center whitespace-nowrap">{s.t("bills", "Bills")}</th>
+                      <th className="py-1 px-2 text-end whitespace-nowrap">{s.t("pctOfBills", "% of Bills")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-blue-200/50">
+                    {advanceCards.status.rows.map((r, i) => (
+                      <tr key={i} className={cn("hover:bg-blue-100/40 transition-colors", r.isTotal && "font-black bg-blue-100/60")}>
+                        <td className="py-1 px-2 text-start font-bold flex items-center gap-1.5 whitespace-nowrap">
+                          {!r.isTotal && (
+                            <span className={cn(
+                              "h-2 w-2 rounded-full flex-none",
+                              r.dotColor === "green" ? "bg-emerald-500" :
+                              r.dotColor === "blue" ? "bg-blue-500" : "bg-amber-500"
+                            )} />
+                          )}
+                          <span>{r.status}</span>
+                        </td>
+                        <td className="py-1 px-2 text-center font-mono font-bold text-slate-900">{r.bills}</td>
+                        <td className="py-1 px-2 text-end font-mono font-bold text-slate-700" dir="ltr">{r.pct}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {/* Card 3 (Mint): Branch Wise (Advance) */}
+            <section className="dgt-pa-card mint" aria-label={advanceCards.branchWise.title}>
+              <div className="dgt-pa-card-head">
+                <div className="dgt-pa-symbol" aria-hidden="true"><Globe2 /></div>
+                <div><div className="dgt-pa-headname">{advanceCards.branchWise.title}</div></div>
+                <Bars />
+              </div>
+              <div className="p-1 px-2 overflow-x-auto flex-1 flex flex-col justify-between">
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-emerald-300/80 text-[10px] font-black text-slate-700 uppercase">
+                      <th className="py-1 px-1.5 text-start whitespace-nowrap">{s.t("branch", "Branch")}</th>
+                      <th className="py-1 px-1 text-center whitespace-nowrap">{s.t("bills", "Bills")}</th>
+                      <th className="py-1 px-1.5 text-end whitespace-nowrap">{s.t("advRequired", "Adv Required")}</th>
+                      <th className="py-1 px-1.5 text-end whitespace-nowrap">{s.t("advPaid", "Adv Paid")}</th>
+                      <th className="py-1 px-1.5 text-end whitespace-nowrap">{s.t("advBalance", "Adv Balance")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-emerald-200/50">
+                    {advanceCards.branchWise.rows.map((r, i) => (
+                      <tr key={i} className={cn("hover:bg-emerald-100/40 transition-colors", r.isTotal && "font-black bg-emerald-100/60")}>
+                        <td className="py-1 px-1.5 text-start font-bold text-slate-800 whitespace-nowrap">{r.branch}</td>
+                        <td className="py-1 px-1 text-center font-mono font-bold text-slate-900">{r.bills}</td>
+                        <td className="py-1 px-1.5 text-end font-mono font-bold text-blue-700 whitespace-nowrap" dir="ltr">{r.advReq}</td>
+                        <td className="py-1 px-1.5 text-end font-mono font-bold text-emerald-600 whitespace-nowrap" dir="ltr">{r.advPaid}</td>
+                        <td className="py-1 px-1.5 text-end font-mono font-bold text-rose-600 whitespace-nowrap" dir="ltr">{r.advBal}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </>
+        ) : (
+          <>
+            <section className="dgt-pa-card gold" aria-label={summary.title}>
+              <div className="dgt-pa-card-head">
+                <div className="dgt-pa-symbol" aria-hidden="true"><ShoppingCart /></div>
+                <div><div className="dgt-pa-headname">{summary.title}</div>{summary.subtitle && <div className="dgt-pa-sub">{summary.subtitle}</div>}</div>
+                <Bars />
+              </div>
+              {summary.summaryRows && summary.summaryRows.length > 0 ? (
+                <div className="p-2 overflow-x-auto">
+                  <table className="dgt-pa-summary-table">
+                    <thead>
+                      <tr>
+                        <th className="text-left">{s.t("sourceCategory", "Category")}</th>
+                        <th className="text-center">{s.t("totalBills", "Total Bills")}</th>
+                        <th className="text-center">{s.t("paidBills", "Paid Bills")}</th>
+                        <th className="text-center">{s.t("remainingBills", "Remaining Bills")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {summary.summaryRows.map((row) => (
+                        <tr key={row.key}>
+                          <td className="dgt-pa-summary-rowname">{row.label}</td>
+                          <td className="text-center">
+                            <button
+                              type="button"
+                              className="dgt-pa-summary-btn total"
+                              title={s.t("filterTotalBills", "Filter All Bills")}
+                              onClick={row.onFilterTotal}
+                            >
+                              {row.totalBills}
+                            </button>
+                          </td>
+                          <td className="text-center">
+                            <button
+                              type="button"
+                              className="dgt-pa-summary-btn paid"
+                              title={s.t("filterPaidBills", "Filter Paid Bills")}
+                              onClick={row.onFilterPaid}
+                            >
+                              {row.paidBills}
+                            </button>
+                          </td>
+                          <td className="text-center">
+                            <button
+                              type="button"
+                              className="dgt-pa-summary-btn remaining"
+                              title={s.t("filterRemainingBills", "Filter Remaining Bills")}
+                              onClick={row.onFilterRemaining}
+                            >
+                              {row.remainingBills}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              ))}
-            </div>
-          )}
-        </section>
+              ) : (
+                <div className="dgt-pa-kps">
+                  {(summary.metrics || []).map((m, i) => (
+                    <div className="dgt-pa-kp" key={i}>
+                      <div className="dgt-pa-kp-name">{m.label}</div>
+                      <div className={cn("dgt-pa-kp-value", `t-${m.tone ?? (i === 1 ? "green" : i === 2 ? "red" : "dark")}`)} data-len={(m.value || "").length > 12 ? "long" : "short"} dir="auto">{m.value || "—"}</div>
+                      {m.note && <div className={cn("dgt-pa-kp-note", `t-${m.tone ?? (i === 1 ? "green" : i === 2 ? "red" : "dark")}`)} dir="auto">{m.note}</div>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
 
-        <section className="dgt-pa-card sky" aria-label={stages.title}>
-          <div className="dgt-pa-card-head">
-            <div className="dgt-pa-symbol" aria-hidden="true"><Layers /></div>
-            <div><div className="dgt-pa-headname">{stages.title}</div>{stages.subtitle && <div className="dgt-pa-sub">{stages.subtitle}</div>}</div>
-            <Bars />
-          </div>
-          <div className="dgt-pa-rows">
-            {stages.rows.map((r) => {
-              const inner = (
-                <>
-                  <span className={cn("dgt-pa-row-icon", r.tone)} aria-hidden="true">{stageIcon(r.tone)}</span>
-                  <span className="dgt-pa-row-label">{r.label}</span>
-                  <span className={cn("dgt-pa-row-amt", `t-${r.valueTone ?? (r.tone === "red" ? "red" : r.tone === "green" ? "green" : "blue")}`)} dir="auto">{r.value || "—"}</span>
-                  {(r.countLabel || r.count) && <span className="dgt-pa-row-count" dir="auto">{r.count ?? r.countLabel}{r.count && r.countLabel ? ` ${r.countLabel}` : ""}</span>}
-                  <Go />
-                </>
-              );
-              return r.onClick
-                ? <button type="button" className="dgt-pa-row" key={r.key} onClick={r.onClick}>{inner}</button>
-                : <div className="dgt-pa-row" key={r.key}>{inner}</div>;
-            })}
-          </div>
-        </section>
+            <section className="dgt-pa-card sky" aria-label={stages.title}>
+              <div className="dgt-pa-card-head">
+                <div className="dgt-pa-symbol" aria-hidden="true"><Layers /></div>
+                <div><div className="dgt-pa-headname">{stages.title}</div>{stages.subtitle && <div className="dgt-pa-sub">{stages.subtitle}</div>}</div>
+                <Bars />
+              </div>
+              {stages.twoCurrencyRows ? (
+                <div className="p-1 px-2 overflow-x-auto flex-1 flex flex-col justify-between">
+                  <table className="w-full text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-blue-200/80 text-[10px] font-black text-slate-600 uppercase">
+                        <th className="py-1 px-2 text-start whitespace-nowrap">{s.t("paymentType", "Payment Type")}</th>
+                        <th className="py-1 px-2 text-end whitespace-nowrap">{s.t("purchaseAmount", "Purchase Amount")}</th>
+                        <th className="py-1 px-2 text-end whitespace-nowrap">{s.t("finalAmount", "Final Amount")}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-blue-100">
+                      {stages.twoCurrencyRows.map((r) => {
+                        if (r.isTotal) {
+                          return (
+                            <tr key={r.key} className="bg-[#1e40af] text-white font-black">
+                              <td className="py-1 px-2 text-start flex items-center gap-1.5 whitespace-nowrap">
+                                <WalletCards className="h-3.5 w-3.5 text-blue-200" />
+                                <span>{r.label}</span>
+                              </td>
+                              <td className="py-1 px-2 text-end font-mono text-white" dir="ltr">{r.purchAmt}</td>
+                              <td className="py-1 px-2 text-end font-mono text-white" dir="ltr">{r.finalAmt}</td>
+                            </tr>
+                          );
+                        }
+                        return (
+                          <tr
+                            key={r.key}
+                            onClick={r.onClick}
+                            className={cn(
+                              "hover:bg-blue-50/70 transition-colors text-slate-800",
+                              r.onClick && "cursor-pointer"
+                            )}
+                          >
+                            <td className="py-0.5 px-2 text-start font-bold flex items-center gap-1.5 whitespace-nowrap">
+                              <span className={cn(
+                                "h-2 w-2 rounded-full flex-none",
+                                r.key === "advance" ? "bg-purple-600" :
+                                r.key === "remaining" ? "bg-rose-500" :
+                                r.key === "endorsement" ? "bg-blue-600" : "bg-red-500"
+                              )} />
+                              <span>{r.label}</span>
+                            </td>
+                            <td className="py-0.5 px-2 text-end font-mono font-bold text-blue-700 whitespace-nowrap" dir="ltr">
+                              {r.purchAmt}
+                            </td>
+                            <td className="py-0.5 px-2 text-end font-mono font-semibold text-slate-600 whitespace-nowrap" dir="ltr">
+                              {r.finalAmt}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="dgt-pa-rows">
+                  {stages.rows.map((r) => {
+                    const inner = (
+                      <>
+                        <span className={cn("dgt-pa-row-icon", r.tone)} aria-hidden="true">{stageIcon(r.tone)}</span>
+                        <span className="dgt-pa-row-label">{r.label}</span>
+                        <span className={cn("dgt-pa-row-amt", `t-${r.valueTone ?? (r.tone === "red" ? "red" : r.tone === "green" ? "green" : "blue")}`)} dir="auto">{r.value || "—"}</span>
+                        {(r.countLabel || r.count) && <span className="dgt-pa-row-count" dir="auto">{r.count ?? r.countLabel}{r.count && r.countLabel ? ` ${r.countLabel}` : ""}</span>}
+                        <Go />
+                      </>
+                    );
+                    return r.onClick
+                      ? <button type="button" className="dgt-pa-row" key={r.key} onClick={r.onClick}>{inner}</button>
+                      : <div className="dgt-pa-row" key={r.key}>{inner}</div>;
+                  })}
+                </div>
+              )}
+            </section>
 
-        <section className="dgt-pa-card mint" aria-label={countries.title}>
-          <div className="dgt-pa-card-head">
-            <div className="dgt-pa-symbol" aria-hidden="true"><Globe2 /></div>
-            <div>
-              <div className="dgt-pa-headname">{countries.title}</div>
-              <div className="dgt-pa-sub">{countries.subtitle ?? scopeLabel ?? s.t("allCountries", "All Countries")}</div>
-            </div>
-            <Bars />
-          </div>
-          {countries.branchScopeInfo ? (
-            <div className="dgt-pa-scope-card">
-              <div className="dgt-pa-scope-item"><span className="dgt-pa-scope-key">{s.t("countryCode", "Country Code")}:</span><span className="dgt-pa-scope-val">{countries.branchScopeInfo.countryCode || "—"}</span></div>
-              <div className="dgt-pa-scope-item"><span className="dgt-pa-scope-key">{s.t("branchCode", "Branch Code")}:</span><span className="dgt-pa-scope-val">{countries.branchScopeInfo.branchCode || "—"}</span></div>
-              <div className="dgt-pa-scope-item"><span className="dgt-pa-scope-key">{s.t("userCode", "User Code")}:</span><span className="dgt-pa-scope-val">{countries.branchScopeInfo.userCode || "—"}</span></div>
-              <div className="dgt-pa-scope-item"><span className="dgt-pa-scope-key">{s.t("userName", "User Name")}:</span><span className="dgt-pa-scope-val truncate max-w-[130px]" title={countries.branchScopeInfo.userName}>{countries.branchScopeInfo.userName || "—"}</span></div>
-              <div className="dgt-pa-scope-item"><span className="dgt-pa-scope-key">{s.t("role", "Role")}:</span><span className="dgt-pa-scope-val text-blue-600 dark:text-blue-400 font-bold uppercase">{countries.branchScopeInfo.role || "—"}</span></div>
-            </div>
-          ) : (
-            <div className="dgt-pa-rows dgt-pa-scroll">
-              {countries.rows.length === 0 && <div className="dgt-pa-empty">{countries.emptyLabel ?? "—"}</div>}
-              {countries.rows.map((c) => {
-                const inner = (
-                  <>
-                    <span className="dgt-pa-country-name">{localizeCountryName(c.name, s.lang)}</span>
-                    <span className="dgt-pa-country-money" dir="auto">{c.value || "—"}</span>
-                    {c.count !== undefined && <span className="dgt-pa-country-count" dir="auto">{c.count}</span>}
-                    <Go />
-                  </>
-                );
-                return c.onClick
-                  ? <button type="button" className="dgt-pa-country" key={c.key} onClick={c.onClick}>{inner}</button>
-                  : <div className="dgt-pa-country" key={c.key}>{inner}</div>;
-              })}
-            </div>
-          )}
-        </section>
+            <section className="dgt-pa-card mint" aria-label={countries.title}>
+              <div className="dgt-pa-card-head">
+                <div className="dgt-pa-symbol" aria-hidden="true"><Globe2 /></div>
+                <div>
+                  <div className="dgt-pa-headname">{countries.title}</div>
+                  <div className="dgt-pa-sub">{countries.subtitle ?? scopeLabel ?? s.t("allCountries", "All Countries")}</div>
+                </div>
+                <Bars />
+              </div>
+              {countries.branchScopeInfo ? (
+                <div className="dgt-pa-scope-card">
+                  <div className="dgt-pa-scope-item"><span className="dgt-pa-scope-key">{s.t("countryCode", "Country Code")}:</span><span className="dgt-pa-scope-val">{countries.branchScopeInfo.countryCode || "—"}</span></div>
+                  <div className="dgt-pa-scope-item"><span className="dgt-pa-scope-key">{s.t("branchCode", "Branch Code")}:</span><span className="dgt-pa-scope-val">{countries.branchScopeInfo.branchCode || "—"}</span></div>
+                  <div className="dgt-pa-scope-item"><span className="dgt-pa-scope-key">{s.t("userCode", "User Code")}:</span><span className="dgt-pa-scope-val">{countries.branchScopeInfo.userCode || "—"}</span></div>
+                  <div className="dgt-pa-scope-item"><span className="dgt-pa-scope-key">{s.t("userName", "User Name")}:</span><span className="dgt-pa-scope-val truncate max-w-[130px]" title={countries.branchScopeInfo.userName}>{countries.branchScopeInfo.userName || "—"}</span></div>
+                  <div className="dgt-pa-scope-item"><span className="dgt-pa-scope-key">{s.t("role", "Role")}:</span><span className="dgt-pa-scope-val text-blue-600 dark:text-blue-400 font-bold uppercase">{countries.branchScopeInfo.role || "—"}</span></div>
+                </div>
+              ) : (
+                <div className="dgt-pa-rows dgt-pa-scroll">
+                  {countries.rows.length === 0 && <div className="dgt-pa-empty">{countries.emptyLabel ?? "—"}</div>}
+                  {countries.rows.map((c) => {
+                    const inner = (
+                      <>
+                        <span className="dgt-pa-country-name">{localizeCountryName(c.name, s.lang)}</span>
+                        <span className="dgt-pa-country-money" dir="auto">{c.value || "—"}</span>
+                        {c.count !== undefined && <span className="dgt-pa-country-count" dir="auto">{c.count}</span>}
+                        <Go />
+                      </>
+                    );
+                    return c.onClick
+                      ? <button type="button" className="dgt-pa-country" key={c.key} onClick={c.onClick}>{inner}</button>
+                      : <div className="dgt-pa-country" key={c.key}>{inner}</div>;
+                  })}
+                </div>
+              )}
+            </section>
+          </>
+        )}
       </div>
     </section>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { RemainingBookingTable } from "./remaining-booking-table";
 import { remainingBookingRow } from "@/lib/journal/remaining-booking-table";
 import { resolveAgreedDueDate } from "@/lib/services/payment-due-tracking";
@@ -12,7 +12,7 @@ import { PurchaseInvoiceSection } from "./purchase-invoice-summary";
 import { usePurchaseInvoiceHistory } from "./use-purchase-invoice-history";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 type LanguageCode = string;
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet, BookOpen, Globe, Download, ChevronDown, RotateCcw, Search, Shield, WalletCards, Calendar } from "lucide-react";
 
 export interface SourceFilteredTableProps {
   sourceFilter: "all" | "purchase_booking" | "local_purchase";
@@ -627,233 +627,742 @@ export function SourceFilteredTable({
     return counts;
   }, [activeMode, counts, allRemainingRows]);
 
+  const [filterCountry, setFilterCountry] = useState("all");
+  const [filterBranch, setFilterBranch] = useState("all");
+  const [filterAccount, setFilterAccount] = useState("all");
+  const [filterGoods, setFilterGoods] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
+  const [filterQuery, setFilterQuery] = useState("");
+  const [remainingBranchFilter, setRemainingBranchFilter] = useState("all");
+  const [exportOpen, setExportOpen] = useState(false);
+
+  const formatDashDate = (str: string | null | undefined): string => {
+    if (!str || str === "—") return "—";
+    const d = new Date(str);
+    if (isNaN(d.getTime())) return String(str).slice(0, 10);
+    const day = String(d.getDate()).padStart(2, "0");
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const mon = months[d.getMonth()];
+    const yr = d.getFullYear();
+    return `${day}-${mon}-${yr}`;
+  };
+
+  const advanceFilterOptions = useMemo(() => {
+    const countries = new Set<string>();
+    const branches = new Set<string>();
+    const accounts = new Set<string>();
+    const goods = new Set<string>();
+
+    advanceRowsToRender.forEach((r: any) => {
+      const form = r.form_data?.form || {};
+      const c = r.country_name || form.countryName;
+      if (c && c !== "—") countries.add(c);
+      const b = r.branch_name || form.branchName;
+      if (b && b !== "—") branches.add(b);
+      const a = r.purchase_account_name || r.purchase_account_no || form.purchaseAccountName;
+      if (a && a !== "—") accounts.add(a);
+      const g = r.goods_name || form.goodsName;
+      if (g && g !== "—") goods.add(g);
+    });
+
+    return {
+      countries: Array.from(countries),
+      branches: Array.from(branches),
+      accounts: Array.from(accounts),
+      goods: Array.from(goods),
+    };
+  }, [advanceRowsToRender]);
+
+  const advanceFinalRows = useMemo(() => {
+    let list = advanceRowsToRender;
+    if (filterCountry !== "all") {
+      list = list.filter((r: any) => {
+        const c = String(r.country_name || r.form_data?.form?.countryName || "").toLowerCase();
+        return c.includes(filterCountry.toLowerCase());
+      });
+    }
+    if (filterBranch !== "all") {
+      list = list.filter((r: any) => {
+        const b = String(r.branch_name || r.form_data?.form?.branchName || "").toLowerCase();
+        return b.includes(filterBranch.toLowerCase());
+      });
+    }
+    if (filterAccount !== "all") {
+      list = list.filter((r: any) => {
+        const a = String(r.purchase_account_name || r.purchase_account_no || r.form_data?.form?.purchaseAccountName || "").toLowerCase();
+        return a.includes(filterAccount.toLowerCase());
+      });
+    }
+    if (filterGoods !== "all") {
+      list = list.filter((r: any) => {
+        const g = String(r.goods_name || r.product_name || r.form_data?.form?.goodsName || "").toLowerCase();
+        return g.includes(filterGoods.toLowerCase());
+      });
+    }
+    if (filterStatus !== "all") {
+      list = list.filter((r: any) => {
+        const fin = getAdvanceInvoiceFinancials(r);
+        return fin.status.toLowerCase() === filterStatus.toLowerCase();
+      });
+    }
+    if (filterDateFrom) {
+      list = list.filter((r: any) => {
+        const d = String(r.order_date || r.form_data?.form?.orderDate || "").slice(0, 10);
+        return d >= filterDateFrom;
+      });
+    }
+    if (filterDateTo) {
+      list = list.filter((r: any) => {
+        const d = String(r.order_date || r.form_data?.form?.orderDate || "").slice(0, 10);
+        return d <= filterDateTo;
+      });
+    }
+    if (filterQuery.trim()) {
+      const q = filterQuery.toLowerCase().trim();
+      list = list.filter((r: any) => {
+        const bill = String(r.purchase_order_no || r.bill_no || "").toLowerCase();
+        const goods = String(r.goods_name || "").toLowerCase();
+        const acc = String(r.purchase_account_name || "").toLowerCase();
+        return bill.includes(q) || goods.includes(q) || acc.includes(q);
+      });
+    }
+    return list;
+  }, [advanceRowsToRender, filterCountry, filterBranch, filterAccount, filterGoods, filterStatus, filterDateFrom, filterDateTo, filterQuery]);
+
+  const advanceTotals = useMemo(() => {
+    let totalQty = 0;
+    let qtyUnit = "MT";
+    let totalGross = 0;
+    let totalNet = 0;
+    let totalPurchPC = 0;
+    let totalPurchFC = 0;
+    let totalAdvReqPC = 0;
+    let totalAdvReqFC = 0;
+    let totalAdvPaidPC = 0;
+    let totalAdvPaidFC = 0;
+    let totalAdvBalPC = 0;
+    let totalAdvBalFC = 0;
+
+    advanceFinalRows.forEach((r: any) => {
+      const form = r.form_data?.form || {};
+      const exRate = Number(r.exchange_rate || form.exchangeRate || 3.6725) || 3.6725;
+      const qty = Number(r.total_quantity || form.totalQuantity || r.quantity || 0);
+      if (form.quantityUnit || form.unit || r.quantity_name) {
+        qtyUnit = form.quantityUnit || form.unit || r.quantity_name;
+      }
+      const gross = Number(r.gross_weight || form.grossWeight || 0);
+      const net = Number(r.net_weight || form.netWeight || 0);
+
+      const purchPC = Number(r.total_goods_original || r.purchase_cost || form.totalAmount || r.order_total || 0);
+      const purchFC = purchPC * exRate;
+
+      const advPct = Number(form.advancePercent || form.advancePercentage || r.advance_percent || 10) || 10;
+      const advReqPC = Number(form.advanceAmount || form.advanceRequired || ((purchPC * advPct) / 100));
+      const advReqFC = advReqPC * exRate;
+
+      const advPaidPC = Number(r.advance_paid || form.advancePaid || 0);
+      const advPaidFC = advPaidPC * exRate;
+
+      const advBalPC = Math.max(0, advReqPC - advPaidPC);
+      const advBalFC = advBalPC * exRate;
+
+      totalQty += qty;
+      totalGross += gross;
+      totalNet += net;
+      totalPurchPC += purchPC;
+      totalPurchFC += purchFC;
+      totalAdvReqPC += advReqPC;
+      totalAdvReqFC += advReqFC;
+      totalAdvPaidPC += advPaidPC;
+      totalAdvPaidFC += advPaidFC;
+      totalAdvBalPC += advBalPC;
+      totalAdvBalFC += advBalFC;
+    });
+
+    return {
+      bills: advanceFinalRows.length,
+      qty: totalQty,
+      unit: qtyUnit,
+      gross: totalGross,
+      net: totalNet,
+      purchPC: totalPurchPC,
+      purchFC: totalPurchFC,
+      advReqPC: totalAdvReqPC,
+      advReqFC: totalAdvReqFC,
+      advPaidPC: totalAdvPaidPC,
+      advPaidFC: totalAdvPaidFC,
+      advBalPC: totalAdvBalPC,
+      advBalFC: totalAdvBalFC,
+    };
+  }, [advanceFinalRows]);
+
+  const remainingFinalRows = useMemo(() => {
+    let list = remainingRowsToRender;
+    if (remainingBranchFilter !== "all") {
+      list = list.filter((r) => String(r.branch || "").toLowerCase().includes(remainingBranchFilter.toLowerCase()));
+    }
+    return list;
+  }, [remainingRowsToRender, remainingBranchFilter]);
+
+  const availableRemainingBranches = useMemo(() => {
+    const set = new Set<string>();
+    allRemainingRows.forEach((r) => { if (r.branch && r.branch !== "—") set.add(r.branch); });
+    return Array.from(set);
+  }, [allRemainingRows]);
+
   const isEmpty = activeMode === "advance"
-    ? advanceRowsToRender.length === 0
+    ? advanceFinalRows.length === 0
     : activeMode === "remaining"
-      ? remainingRowsToRender.length === 0
+      ? remainingFinalRows.length === 0
       : (sourceFilter === "all" ? generalRows.length === 0 : rows.length === 0);
 
   return (
     <div dir={invoiceLabels.dir} className="mx-2 sm:mx-6 mb-6 min-w-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
-      {/* ── Blue Selector Bar Matching Design (❶ All Sources, ❷ Purchase Booking, ❸ Local Purchase) ── */}
-      <div className="bg-[#1e40af] text-white px-5 py-3 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[#1e40af] font-black text-sm shadow-xs">
-            {sourceFilter === "all" ? "1" : sourceFilter === "purchase_booking" ? "2" : "3"}
-          </span>
-          <span className="text-sm font-black tracking-wide">
-            {sourceFilter === "all" && "Journal / All Sources selected"}
-            {sourceFilter === "purchase_booking" && "Purchase Booking selected"}
-            {sourceFilter === "local_purchase" && "Local Purchase selected"}
-          </span>
-        </div>
+      {/* ── Blue Selector Bar Matching Design ── */}
+      {activeMode === "advance" ? (
+        <>
+          <div className="bg-[#1e40af] text-white px-5 py-3 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-700 text-white shadow-xs">
+                <BookOpen className="h-4.5 w-4.5" />
+              </div>
+              <span className="text-base font-black tracking-wide">
+                {label("Advance Payment Journal")}
+              </span>
+              <span className="text-blue-300 font-bold">|</span>
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-100">
+                <Globe className="h-3.5 w-3.5" />
+                <span>Super Admin: Country &gt; Branch Wise &gt; Branch User: Branch only</span>
+              </div>
+            </div>
 
-        {/* Source Segmented Pills */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-blue-100">Source:</span>
-          <div className="inline-flex rounded-lg bg-blue-900/60 p-1 border border-blue-400/30">
-            <button
-              type="button"
-              onClick={() => onSourceChange("all")}
-              className={cn(
-                "px-3 py-1 rounded-md text-xs font-black transition-all cursor-pointer",
-                sourceFilter === "all"
-                  ? "bg-white text-blue-900 shadow-sm"
-                  : "text-blue-100 hover:text-white hover:bg-blue-800/50"
+            {/* Export Button */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setExportOpen(!exportOpen)}
+                className="inline-flex items-center gap-1.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-xs transition cursor-pointer"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span>{label("Export") || "Export"}</span>
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+              {exportOpen && (
+                <div className="absolute right-0 top-9 z-50 min-w-[140px] bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 py-1 text-xs font-semibold">
+                  <button
+                    type="button"
+                    className="w-full text-start px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                    onClick={() => { setExportOpen(false); window.print(); }}
+                  >
+                    Print / PDF
+                  </button>
+                </div>
               )}
+            </div>
+          </div>
+
+          {/* Advance Filter Bar */}
+          <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 flex flex-wrap items-center gap-2.5 text-xs">
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-bold text-slate-500 uppercase">Country</label>
+              <select
+                value={filterCountry}
+                onChange={(e) => setFilterCountry(e.target.value)}
+                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer"
+              >
+                <option value="all">{label("ALL COUNTRIES")}</option>
+                {advanceFilterOptions.countries.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("BRANCH")}</label>
+              <select
+                value={filterBranch}
+                onChange={(e) => setFilterBranch(e.target.value)}
+                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer"
+              >
+                <option value="all">{label("ALL BRANCHES")}</option>
+                {advanceFilterOptions.branches.map((b) => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("PURCHASE ACCOUNT")}</label>
+              <select
+                value={filterAccount}
+                onChange={(e) => setFilterAccount(e.target.value)}
+                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer"
+              >
+                <option value="all">{label("ALL ACCOUNTS")}</option>
+                {advanceFilterOptions.accounts.map((a) => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("GOODS")}</label>
+              <select
+                value={filterGoods}
+                onChange={(e) => setFilterGoods(e.target.value)}
+                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer"
+              >
+                <option value="all">{label("ALL GOODS")}</option>
+                {advanceFilterOptions.goods.map((g) => <option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("PAYMENT STATUS")}</label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer"
+              >
+                <option value="all">{label("ALL STATUS")}</option>
+                <option value="Fully Paid">{label("FULLY PAID")}</option>
+                <option value="Partially Paid">{label("PARTIALLY PAID")}</option>
+                <option value="Pending">{label("PENDING")}</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("DATE FROM")}</label>
+              <input
+                type="date"
+                value={filterDateFrom}
+                onChange={(e) => setFilterDateFrom(e.target.value)}
+                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs"
+              />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("DATE TO")}</label>
+              <input
+                type="date"
+                value={filterDateTo}
+                onChange={(e) => setFilterDateTo(e.target.value)}
+                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs"
+              />
+            </div>
+            <div className="flex flex-col gap-0.5 flex-1 min-w-[180px]">
+              <label className="text-[10px] font-bold text-slate-500 uppercase">&nbsp;</label>
+              <input
+                type="text"
+                placeholder={label("SEARCH BILL NO., GOODS, ACCOUNT...")}
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+                className="h-8 px-3 rounded-md border border-slate-300 bg-white text-slate-800 font-medium text-xs"
+              />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-bold text-slate-500 uppercase">&nbsp;</label>
+              <button
+                type="button"
+                className="h-8 px-4 inline-flex items-center gap-1.5 rounded-md bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs shadow-xs cursor-pointer"
+              >
+                <Search className="h-3.5 w-3.5" />
+                <span>{label("SEARCH")}</span>
+              </button>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-bold text-slate-500 uppercase">&nbsp;</label>
+              <button
+                type="button"
+                onClick={() => {
+                  setFilterCountry("all");
+                  setFilterBranch("all");
+                  setFilterAccount("all");
+                  setFilterGoods("all");
+                  setFilterStatus("all");
+                  setFilterDateFrom("");
+                  setFilterDateTo("");
+                  setFilterQuery("");
+                }}
+                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-xs cursor-pointer"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>{label("RESET")}</span>
+              </button>
+            </div>
+          </div>
+        </>
+      ) : activeMode === "remaining" ? (
+        <div className="bg-[#1e40af] text-white px-5 py-3 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white border border-white/20">
+              <Shield className="h-4.5 w-4.5" />
+            </div>
+            <span className="text-base font-black tracking-wide">
+              Remaining Payment Records
+            </span>
+            <div className="inline-flex rounded-lg bg-blue-900/60 p-1 border border-blue-400/30 ml-2">
+              <button
+                type="button"
+                onClick={() => onSourceChange("all")}
+                className={cn(
+                  "px-3.5 py-1 rounded-md text-xs font-black transition-all cursor-pointer",
+                  sourceFilter === "all"
+                    ? "bg-[#2563eb] text-white shadow-sm"
+                    : "bg-white text-slate-800 hover:bg-slate-100"
+                )}
+              >
+                All ({activeCounts.all})
+              </button>
+              <button
+                type="button"
+                onClick={() => onSourceChange("purchase_booking")}
+                className={cn(
+                  "px-3.5 py-1 rounded-md text-xs font-black transition-all cursor-pointer",
+                  sourceFilter === "purchase_booking"
+                    ? "bg-[#2563eb] text-white shadow-sm"
+                    : "bg-white text-slate-800 hover:bg-slate-100"
+                )}
+              >
+                Purchase Booking ({activeCounts.booking})
+              </button>
+              <button
+                type="button"
+                onClick={() => onSourceChange("local_purchase")}
+                className={cn(
+                  "px-3.5 py-1 rounded-md text-xs font-black transition-all cursor-pointer",
+                  sourceFilter === "local_purchase"
+                    ? "bg-[#2563eb] text-white shadow-sm"
+                    : "bg-white text-slate-800 hover:bg-slate-100"
+                )}
+              >
+                Local Purchase ({activeCounts.local})
+              </button>
+            </div>
+          </div>
+
+          {/* Right: Show: [All Branches v] */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-blue-100">Show:</span>
+            <select
+              value={remainingBranchFilter}
+              onChange={(e) => setRemainingBranchFilter(e.target.value)}
+              className="bg-white text-slate-800 text-xs font-bold px-3 py-1.5 rounded-lg border border-blue-300 shadow-sm outline-none cursor-pointer"
             >
-              All Sources ({activeCounts.all})
-            </button>
-            <button
-              type="button"
-              onClick={() => onSourceChange("purchase_booking")}
-              className={cn(
-                "px-3 py-1 rounded-md text-xs font-black transition-all cursor-pointer",
-                sourceFilter === "purchase_booking"
-                  ? "bg-white text-blue-900 shadow-sm"
-                  : "text-blue-100 hover:text-white hover:bg-blue-800/50"
-              )}
-            >
-              Purchase Booking ({activeCounts.booking})
-            </button>
-            <button
-              type="button"
-              onClick={() => onSourceChange("local_purchase")}
-              className={cn(
-                "px-3 py-1 rounded-md text-xs font-black transition-all cursor-pointer",
-                sourceFilter === "local_purchase"
-                  ? "bg-white text-blue-900 shadow-sm"
-                  : "text-blue-100 hover:text-white hover:bg-blue-800/50"
-              )}
-            >
-              Local Purchase ({activeCounts.local})
-            </button>
+              <option value="all">{label("ALL BRANCHES")}</option>
+              {availableRemainingBranches.map((b) => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-[#1e40af] text-white px-5 py-3 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[#1e40af] font-black text-sm shadow-xs">
+              {sourceFilter === "all" ? "1" : sourceFilter === "purchase_booking" ? "2" : "3"}
+            </span>
+            <span className="text-sm font-black tracking-wide">
+              {sourceFilter === "all" && "Journal / All Sources selected"}
+              {sourceFilter === "purchase_booking" && "Purchase Booking selected"}
+              {sourceFilter === "local_purchase" && "Local Purchase selected"}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-blue-100">Source:</span>
+            <div className="inline-flex rounded-lg bg-blue-900/60 p-1 border border-blue-400/30">
+              <button
+                type="button"
+                onClick={() => onSourceChange("all")}
+                className={cn(
+                  "px-3 py-1 rounded-md text-xs font-black transition-all cursor-pointer",
+                  sourceFilter === "all"
+                    ? "bg-white text-blue-900 shadow-sm"
+                    : "text-blue-100 hover:text-white hover:bg-blue-800/50"
+                )}
+              >
+                All Sources ({activeCounts.all})
+              </button>
+              <button
+                type="button"
+                onClick={() => onSourceChange("purchase_booking")}
+                className={cn(
+                  "px-3 py-1 rounded-md text-xs font-black transition-all cursor-pointer",
+                  sourceFilter === "purchase_booking"
+                    ? "bg-white text-blue-900 shadow-sm"
+                    : "text-blue-100 hover:text-white hover:bg-blue-800/50"
+                )}
+              >
+                Purchase Booking ({activeCounts.booking})
+              </button>
+              <button
+                type="button"
+                onClick={() => onSourceChange("local_purchase")}
+                className={cn(
+                  "px-3 py-1 rounded-md text-xs font-black transition-all cursor-pointer",
+                  sourceFilter === "local_purchase"
+                    ? "bg-white text-blue-900 shadow-sm"
+                    : "text-blue-100 hover:text-white hover:bg-blue-800/50"
+                )}
+              >
+                Local Purchase ({activeCounts.local})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Table Container ── */}
       <div className="overflow-x-auto">
         {/* ========================================================================= */}
-        {/* ADVANCE PAYMENT JOURNAL — EXACT 23-COLUMN INVOICE-BASED FINANCIAL REPORT  */}
+        {/* ADVANCE PAYMENT JOURNAL — EXACT 15-COLUMN STACKED FINANCIAL REPORT         */}
         {/* ========================================================================= */}
         {activeMode === "advance" ? (
-          <table data-no-cards className="w-full min-w-[1570px] border-collapse text-start text-xs">
+          <table className="w-full min-w-[1700px] border-collapse text-start text-xs">
             <thead>
-              <tr className="bg-amber-100 text-slate-900 text-xs border-b border-amber-300">
-                <th colSpan={12} aria-hidden="true" />
-                <th colSpan={2} scope="colgroup" className="px-3 py-2 text-start">{invoiceLabels.t("invoice", "Purchase Invoice")}</th>
-                <th colSpan={2} scope="colgroup" className="px-3 py-2 text-start">{invoiceLabels.t("paid", "Invoice Paid")}</th>
-                <th colSpan={2} scope="colgroup" className="px-3 py-2 text-start">{invoiceLabels.t("remaining", "Invoice Remaining")}</th>
-                <th colSpan={3} aria-hidden="true" />
-              </tr>
               <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("BILL NO / DATE")}</th>
-                <th className="py-3 px-2 border-r border-amber-300 text-center whitespace-nowrap">{label("SOURCE")}</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">
-                  {isSuperAdmin ? label("COUNTRY / BRANCH") : label("BRANCH")}
-                </th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("SUPPLIER / PURCHASE ACCOUNT")}</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("GOODS / BRAND / SIZE")}</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("QTY / UNIT")}</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("GROSS / NET WT (KG)")}</th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("BILL NO. / DATE")}</th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("PURCHASE ACCOUNT")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("BRANCH")}</th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("GOODS BRAND / SIZE")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("QTY (UNIT)")}</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("GROSS WT NET WT (KG)")}</th>
                 <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("ORIGIN")}</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("PURCHASE CURRENCY")}</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("FINAL CURRENCY")}</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{invoiceLabels.t("invoice_rate", "Saved invoice rate")}</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("INVOICE AMOUNT (PC)")}</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("INVOICE AMOUNT (FC)")}</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID AMOUNT (PC)")}</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID AMOUNT (FC)")}</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("REMAINING BALANCE (PC)")}</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("REMAINING BALANCE (FC)")}</th>
-                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("LOADING / RECEIVING DATE")}</th>
-                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("DUE DATE")}</th>
-                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("PAYMENT STATUS")}</th>
-                <th className="py-3 px-3 text-center whitespace-nowrap">{label("JOURNAL")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PURCHASE AMOUNT (USD) / FINAL AMOUNT (AED)")}</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("ADV %")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE REQUIRED (USD / AED)")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE PAID (USD / AED)")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE BALANCE (USD / AED)")}</th>
+                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("PAYMENT DATE")}</th>
+                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("LOADING DATE RECEIVE DATE")}</th>
+                <th className="py-3 px-3 text-center whitespace-nowrap">{label("ACTION")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-              {advanceRowsToRender.map((r, i) => {
-                const form = r.form_data?.form || {};
-                const billNo = r.purchase_order_no || r.bill_no || r.order_no || form.billNo || form.invoiceNo || "—";
-                const isLocal = isLocalPurchase(r);
-                const date = r.order_date || form.orderDate || form.billDate || r.created_at?.slice(0, 10) || "—";
-                const countryName = form.countryName || r.country_name || form.countryCode || r.country_code || "—";
-                const branchName = form.branchName || r.branch_name || form.branchCode || r.branch_code || "—";
-                const supplier = r.supplier_name || form.supplierName || r.party_name || "—";
-                const purchaseAccount = form.purchaseAccountNo || form.purchaseAccountName || r.purchase_account_no || r.purchase_account_name || "—";
-                const goods = r.goods_name || form.goodsName || r.product_name || (Array.isArray(form.goodsEntries) && form.goodsEntries.map((g: any) => g.itemName || g.goodsName).filter(Boolean).join(", ")) || "—";
-                const qty = Number(r.total_quantity ?? form.totalQuantity ?? form.quantity ?? r.pkg_count ?? 0);
-                const unit = form.quantityUnit || form.unit || r.quantity_name || "Cartons";
-                const grossKg = Number(r.gross_weight ?? form.grossWeight ?? r.gross_weight_kg ?? 0);
-                const netKg = Number(r.net_weight ?? form.netWeight ?? r.net_weight_kg ?? 0);
-                const originCountry = form.originCountry || form.originCountryName || form.countryOfOrigin || r.origin_country_name || form.loadingCountry || (r.countries?.name) || (isLocal ? "Local" : "—");
-                const brand = form.brand || form.brandName || r.brand || "";
-                const size = form.size || form.goodsSize || r.size || "";
-                const loadDate = form.loadingDate || form.expectedLoadingDate || r.loading_date || "";
-                const receiveDate = form.receivingDate || form.expectedReceivingDate || r.receiving_date || "";
-                const dueDate = form.advancePaymentDate || form.advanceDueDate || form.dueDate || resolveAgreedDueDate(r, "advance");
-                const fin = getAdvanceInvoiceFinancials(r);
+              {advanceFinalRows.length === 0 ? (
+                <tr>
+                  <td colSpan={15} className="py-8 text-center text-xs text-slate-400 font-medium">
+                    {label("NO ADVANCE BILLS FOUND")}
+                  </td>
+                </tr>
+              ) : (
+                advanceFinalRows.map((r, i) => {
+                  const form = r.form_data?.form || {};
+                  const billNo = r.purchase_order_no || r.bill_no || r.order_no || form.billNo || "—";
+                  const billDate = formatDashDate(r.order_date || form.orderDate || form.billDate || r.created_at);
+                  const branchName = r.branch_name || form.branchName || form.branchCode || "UAE";
+                  const purchaseAccount = form.purchaseAccountName || form.purchaseAccountNo || r.purchase_account_name || r.purchase_account_no || r.supplier_name || "—";
+                  const goodsName = r.goods_name || form.goodsName || "Walnut Kernel";
+                  const brand = form.brand || form.brandName || r.brand || "DGT";
+                  const size = form.size || form.goodsSize || r.size || "32/34";
+                  const qty = Number(r.total_quantity || form.totalQuantity || r.quantity || 0);
+                  const unit = form.quantityUnit || form.unit || r.quantity_name || "MT";
+                  const grossKg = Number(r.gross_weight || form.grossWeight || 0);
+                  const netKg = Number(r.net_weight || form.netWeight || 0);
+                  const origin = form.originCountry || form.originCountryName || r.origin_country_name || "USA";
 
-                return (
-                  <tr key={r.id || i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    {/* 1. Bill / Invoice Number */}
-                    <td className="py-2 px-2.5 font-mono whitespace-nowrap"><div className="font-bold text-blue-600 dark:text-blue-400">{billNo}</div><div className="mt-0.5 text-[10px] text-slate-500">{displayDate(date)}</div></td>
+                  const purchCurr = String(r.currency_code || form.currencyType || "USD").toUpperCase();
+                  const finalCurr = String(r.dest_countries?.currency_code || form.secondaryCurrency || "AED").toUpperCase();
+                  const exRate = Number(r.exchange_rate || form.exchangeRate || 3.6725) || 3.6725;
 
-                    {/* 2. Source */}
-                    <td className="py-3 px-2 text-center whitespace-nowrap">
-                      <span className={cn(
-                        "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
-                        isLocal ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300"
-                      )}>
-                        {isLocal ? "Local Purchase" : "Purchase Booking"}
-                      </span>
-                    </td>
+                  const purchAmtPC = Number(r.total_goods_original || r.purchase_cost || form.totalAmount || r.order_total || 0);
+                  const purchAmtFC = purchAmtPC * exRate;
 
+                  const advPct = Number(form.advancePercent || form.advancePercentage || r.advance_percent || 10) || 10;
+                  const advReqPC = Number(form.advanceAmount || form.advanceRequired || ((purchAmtPC * advPct) / 100));
+                  const advReqFC = advReqPC * exRate;
 
-                    {/* 4. Country / Branch */}
-                    <td className="py-3 px-2.5 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                      {isSuperAdmin ? (
-                        <div className="flex items-center gap-1">
-                          <span className="font-bold text-slate-800 dark:text-slate-200">{countryName}</span>
-                          <span className="text-slate-300 dark:text-slate-600">/</span>
-                          <span className="truncate max-w-[120px]" title={branchName}>{branchName}</span>
+                  const advPaidPC = Number(r.advance_paid || form.advancePaid || 0);
+                  const advPaidFC = advPaidPC * exRate;
+
+                  const advBalPC = Math.max(0, advReqPC - advPaidPC);
+                  const advBalFC = advBalPC * exRate;
+
+                  const fin = getAdvanceInvoiceFinancials(r);
+                  const paymentDate = formatDashDate(r.advance_payment_date || (fin.summary?.payments && fin.summary.payments[0]?.date) || (advPaidPC > 0 ? billDate : null));
+
+                  const loadDate = formatDashDate(form.loadingDate || form.expectedLoadingDate || r.loading_date);
+                  const receiveDate = formatDashDate(form.receivingDate || form.expectedReceivingDate || r.receiving_date);
+
+                  const isFullyPaid = advBalPC <= 0.05;
+
+                  return (
+                    <tr key={r.id || i} className="hover:bg-amber-50/40 dark:hover:bg-slate-800/40 transition-colors">
+                      {/* 1. Bill No. / Date */}
+                      <td className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                        <div className="font-bold text-blue-700 dark:text-blue-400">{billNo}</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1">
+                          <span>📅</span>
+                          <span>{billDate}</span>
                         </div>
-                      ) : isCountryAdmin ? (
-                        <span className="font-semibold text-slate-700 dark:text-slate-300">{branchName}</span>
-                      ) : (
-                        <span className="text-slate-400">—</span>
-                      )}
-                    </td>
-
-                    {/* 5. Supplier / Purchase Account */}
-                    <td className="py-3 px-3">
-                      <div className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[150px]" title={supplier}>{supplier}</div>
-                      <div className="font-mono text-[10px] text-blue-600 dark:text-blue-400 truncate max-w-[150px]" title={purchaseAccount}>{purchaseAccount}</div>
-                    </td>
-
-                    {/* 6. Goods Name */}
-                    <td className="py-2 px-2.5 text-slate-900 dark:text-slate-100 max-w-[175px]"><div className="font-semibold truncate" title={goods}>{goods}</div><div className="text-[10px] text-slate-500 truncate" title={[brand,size].filter(Boolean).join(" / ")}>{[brand && `${label("BRAND")}: ${brand}`,size && `${label("SIZE")}: ${size}`].filter(Boolean).join(" | ") || "—"}</div></td>
-
-                    {/* 7. Quantity */}
-                    <td className="py-2 px-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap"><div>{fmtQty(qty)}</div><div className="text-[10px] text-slate-500">{unit}</div></td>
-
-
-                    {/* 9. Gross Weight (KG) */}
-                    <td className="py-2 px-2 text-right font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap"><div>{fmtQty(grossKg)}</div><div className="border-t border-slate-200 dark:border-slate-700 mt-0.5 pt-0.5">{fmtQty(netKg)}</div></td>
-
-
-                    {/* 11. Origin Country */}
-                    <td className="py-3 px-2.5 text-slate-700 dark:text-slate-300 whitespace-nowrap">{originCountry}</td>
-
-                    {/* 12. Purchase Currency */}
-                    <td className="py-3 px-2 text-center font-bold text-indigo-600 dark:text-indigo-400 whitespace-nowrap">{fin.purchCurr}</td>
-
-                    {/* 13. Final Currency */}
-                    <td className="py-3 px-2 text-center font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">{fin.finalCurr}</td>
-
-                    {/* 14. Saved invoice rate; advance requirements never replace invoice value. */}
-                    <td className="py-3 px-2 text-center font-mono tabular-nums" dir="ltr">{fin.exRate == null ? "—" : Number(fin.exRate).toFixed(4)}</td>
-                    {(["invoice", "paid", "remaining"] as const).map(section => (
-                      <td key={section} colSpan={2} className="align-top px-3 py-3">
-                        <PurchaseInvoiceSection compact lang={lang} section={section} summary={fin.summary} loading={fin.loading} />
                       </td>
-                    ))}
 
-                    <td className="py-2 px-2 text-center font-mono text-[10px] whitespace-nowrap"><div>{loadDate ? displayDate(loadDate) : "—"}</div><div className="border-t border-slate-200 dark:border-slate-700 mt-0.5 pt-0.5">{receiveDate ? displayDate(receiveDate) : "—"}</div></td>
+                      {/* 2. Purchase Account */}
+                      <td className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-800 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap max-w-[170px] truncate" title={purchaseAccount}>
+                        {purchaseAccount}
+                      </td>
 
-                    {/* 21. Due Date */}
-                    <td className="py-3 px-2.5 text-center font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">{displayDate(dueDate)}</td>
+                      {/* 3. Branch */}
+                      <td className="py-2.5 px-2.5 border-r border-slate-200 dark:border-slate-800 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                        {branchName}
+                      </td>
 
-                    {/* 22. Payment Status */}
-                    <td className="py-3 px-2.5 text-center whitespace-nowrap">
-                      <span className={cn(
-                        "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
-                        fin.status === "Fully Paid"
-                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
-                          : fin.status === "Partially Paid"
-                            ? "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
-                            : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
-                      )}>
-                        {label(fin.status.toUpperCase())}
-                      </span>
-                    </td>
+                      {/* 4. Goods Brand / Size */}
+                      <td className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap max-w-[200px]">
+                        <div className="font-bold text-slate-900 dark:text-slate-100 truncate flex items-center gap-1.5" title={goodsName}>
+                          <span>🥜</span>
+                          <span className="truncate">{goodsName}</span>
+                        </div>
+                        <div className="text-[10px] text-slate-500 truncate" title={[brand && `Brand: ${brand}`, size && `Size: ${size}`].filter(Boolean).join(" | ")}>
+                          {[brand && `Brand: ${brand}`, size && `Size: ${size}`].filter(Boolean).join(" | ") || "—"}
+                        </div>
+                      </td>
 
-                    {/* 23. Journal Action */}
-                    <td className="py-3 px-3 text-center whitespace-nowrap">
-                      <button
-                        type="button"
-                        onClick={() => onSelectOrder(r.id)}
-                        className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs shadow-sm transition cursor-pointer"
-                      >
-                        {label("JOURNAL")}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+                      {/* 5. Qty (Unit) */}
+                      <td className="py-2.5 px-2 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                        <div className="font-bold text-slate-900 dark:text-white">{fmtQty(qty)} {unit}</div>
+                      </td>
+
+                      {/* 6. Gross Wt Net Wt (Kg) */}
+                      <td className="py-2.5 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                        <div className="font-bold text-slate-800 dark:text-slate-200">{fmt(grossKg)}</div>
+                        <div className="text-[10px] text-slate-500">{fmt(netKg)}</div>
+                      </td>
+
+                      {/* 7. Origin */}
+                      <td className="py-2.5 px-2.5 border-r border-slate-200 dark:border-slate-800 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                        {origin}
+                      </td>
+
+                      {/* 8. Purchase Amount (USD) / Final Amount (AED) */}
+                      <td className="py-2.5 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                        <div className="font-bold text-slate-900 dark:text-slate-100">
+                          <span className="text-[10px] text-slate-500 font-semibold mr-1">{purchCurr}</span>
+                          {fmt(purchAmtPC)}
+                        </div>
+                        <div className="font-semibold text-slate-600 dark:text-slate-400 text-[11px]">
+                          <span className="text-[10px] text-slate-400 font-semibold mr-1">{finalCurr}</span>
+                          {fmt(purchAmtFC)}
+                        </div>
+                      </td>
+
+                      {/* 9. Adv % */}
+                      <td className="py-2.5 px-2 text-center border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                        {advPct}%
+                      </td>
+
+                      {/* 10. Advance Required (USD / AED) */}
+                      <td className="py-2.5 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                        <div className="font-bold text-slate-900 dark:text-slate-100">
+                          <span className="text-[10px] text-slate-500 font-semibold mr-1">{purchCurr}</span>
+                          {fmt(advReqPC)}
+                        </div>
+                        <div className="font-semibold text-slate-600 dark:text-slate-400 text-[11px]">
+                          <span className="text-[10px] text-slate-400 font-semibold mr-1">{finalCurr}</span>
+                          {fmt(advReqFC)}
+                        </div>
+                      </td>
+
+                      {/* 11. Advance Paid (USD / AED) */}
+                      <td className="py-2.5 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                        <div className="font-bold text-emerald-600 dark:text-emerald-400">
+                          <span className="text-[10px] text-emerald-500/70 font-semibold mr-1">{purchCurr}</span>
+                          {fmt(advPaidPC)}
+                        </div>
+                        <div className="font-semibold text-emerald-600/90 dark:text-emerald-400/90 text-[11px]">
+                          <span className="text-[10px] text-emerald-500/70 font-semibold mr-1">{finalCurr}</span>
+                          {fmt(advPaidFC)}
+                        </div>
+                      </td>
+
+                      {/* 12. Advance Balance (USD / AED) */}
+                      <td className="py-2.5 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                        <div className={cn("font-bold", isFullyPaid ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+                          <span className="text-[10px] opacity-70 font-semibold mr-1">{purchCurr}</span>
+                          {fmt(advBalPC)}
+                        </div>
+                        <div className={cn("font-semibold text-[11px]", isFullyPaid ? "text-emerald-600/90 dark:text-emerald-400/90" : "text-rose-600/90 dark:text-rose-400/90")}>
+                          <span className="text-[10px] opacity-70 font-semibold mr-1">{finalCurr}</span>
+                          {fmt(advBalFC)}
+                        </div>
+                      </td>
+
+                      {/* 13. Payment Date */}
+                      <td className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                        {paymentDate}
+                      </td>
+
+                      {/* 14. Loading Date Receive Date */}
+                      <td className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-[10px] whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1 text-slate-700 dark:text-slate-300">
+                          <span>📅</span>
+                          <span>{loadDate}</span>
+                        </div>
+                        <div className="flex items-center justify-center gap-1 text-slate-500 mt-0.5">
+                          <span>📅</span>
+                          <span>{receiveDate}</span>
+                        </div>
+                      </td>
+
+                      {/* 15. Action */}
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                        {isFullyPaid ? (
+                          <button
+                            type="button"
+                            onClick={() => onOpenFullBill(r)}
+                            className="inline-flex items-center justify-center px-4 py-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs shadow-sm transition cursor-pointer"
+                          >
+                            View
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => onSelectOrder(r.id)}
+                            className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs shadow-sm transition cursor-pointer whitespace-nowrap"
+                          >
+                            Advance Entry
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
+            {/* Advance Table Total Row */}
+            <tfoot>
+              <tr className="bg-[#ffd257] text-slate-900 font-black text-xs border-t-2 border-amber-300">
+                <td className="py-2.5 px-3 border-r border-amber-300 whitespace-nowrap">
+                  Total ({advanceTotals.bills} Bills)
+                </td>
+                <td className="py-2.5 px-3 border-r border-amber-300" />
+                <td className="py-2.5 px-2.5 border-r border-amber-300" />
+                <td className="py-2.5 px-3 border-r border-amber-300" />
+                <td className="py-2.5 px-2 text-right border-r border-amber-300 font-mono whitespace-nowrap">
+                  {fmtQty(advanceTotals.qty)} {advanceTotals.unit}
+                </td>
+                <td className="py-2.5 px-2.5 text-right border-r border-amber-300 font-mono whitespace-nowrap">
+                  <div>{fmt(advanceTotals.gross)}</div>
+                  <div className="text-[10px] text-slate-700">{fmt(advanceTotals.net)}</div>
+                </td>
+                <td className="py-2.5 px-2.5 border-r border-amber-300" />
+                <td className="py-2.5 px-3 text-right border-r border-amber-300 font-mono whitespace-nowrap">
+                  <div><span className="text-[10px] text-slate-700 font-semibold mr-1">USD</span>{fmt(advanceTotals.purchPC)}</div>
+                  <div className="text-[11px] text-slate-800"><span className="text-[10px] text-slate-600 font-semibold mr-1">AED</span>{fmt(advanceTotals.purchFC)}</div>
+                </td>
+                <td className="py-2.5 px-2 text-center border-r border-amber-300 font-mono">
+                  10%
+                </td>
+                <td className="py-2.5 px-3 text-right border-r border-amber-300 font-mono whitespace-nowrap">
+                  <div><span className="text-[10px] text-slate-700 font-semibold mr-1">USD</span>{fmt(advanceTotals.advReqPC)}</div>
+                  <div className="text-[11px] text-slate-800"><span className="text-[10px] text-slate-600 font-semibold mr-1">AED</span>{fmt(advanceTotals.advReqFC)}</div>
+                </td>
+                <td className="py-2.5 px-3 text-right border-r border-amber-300 font-mono whitespace-nowrap text-emerald-800">
+                  <div><span className="text-[10px] font-semibold mr-1">USD</span>{fmt(advanceTotals.advPaidPC)}</div>
+                  <div className="text-[11px]"><span className="text-[10px] font-semibold mr-1">AED</span>{fmt(advanceTotals.advPaidFC)}</div>
+                </td>
+                <td className="py-2.5 px-3 text-right border-r border-amber-300 font-mono whitespace-nowrap text-rose-700">
+                  <div><span className="text-[10px] font-semibold mr-1">USD</span>{fmt(advanceTotals.advBalPC)}</div>
+                  <div className="text-[11px]"><span className="text-[10px] font-semibold mr-1">AED</span>{fmt(advanceTotals.advBalFC)}</div>
+                </td>
+                <td className="py-2.5 px-2.5 text-center border-r border-amber-300 font-mono text-slate-700">
+                  -
+                </td>
+                <td className="py-2.5 px-2.5 border-r border-amber-300" />
+                <td className="py-2.5 px-3" />
+              </tr>
+            </tfoot>
           </table>
         ) : activeMode === "remaining" ? (
           /* ========================================================================= */
@@ -881,14 +1390,14 @@ export function SourceFilteredTable({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-              {remainingRowsToRender.length === 0 ? (
+              {remainingFinalRows.length === 0 ? (
                 <tr>
                   <td colSpan={16} className="py-8 text-center text-xs text-slate-400 font-medium">
                     {label("NO CONFIRMED LOADINGS FOUND")}
                   </td>
                 </tr>
               ) : (
-                remainingRowsToRender.map((r) => (
+                remainingFinalRows.map((r) => (
                   <tr key={r.id} className="hover:bg-amber-50/40 dark:hover:bg-slate-800/40 transition-colors">
                     {/* 1. Bill No., Date */}
                     <td className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
