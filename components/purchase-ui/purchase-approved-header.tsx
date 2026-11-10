@@ -147,8 +147,8 @@ export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule
                     <tr className="border-b border-amber-300/80 text-[10px] font-black text-slate-700 uppercase">
                       <th className="py-1 px-1.5 text-start whitespace-normal leading-tight">{s.t("description", "Description")}</th>
                       <th className="py-1 px-1 text-center whitespace-normal leading-tight">{s.t("totalBills", "Total Bills")}</th>
-                      <th className="py-1 px-1.5 text-end whitespace-normal leading-tight">{s.t("totalAmtPurchase", "Total Amt (Purchase)")}</th>
-                      <th className="py-1 px-1.5 text-end whitespace-normal leading-tight">{s.t("totalAmtFinal", "Total Amt (Final)")}</th>
+                      <th className="py-1 px-1.5 text-end whitespace-normal leading-tight">{s.t("totalAmtPurchase", "Purchase")}</th>
+                      <th className="py-1 px-1.5 text-end whitespace-normal leading-tight">{s.t("totalAmtFinal", "Final")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-amber-200/50">
@@ -251,8 +251,8 @@ export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule
                       <tr>
                         <th className="text-left">{s.t("sourceCategory", "Category")}</th>
                         <th className="text-center">{s.t("totalBills", "Total Bills")}</th>
-                        <th className="text-center">{s.t("paidBills", "Paid Bills")}</th>
-                        <th className="text-center">{s.t("remainingBills", "Remaining Bills")}</th>
+                        <th className="text-center">{s.t("paidBills", "Paid")}</th>
+                        <th className="text-center">{s.t("remainingBills", "Remaining")}</th>
                       </tr>
                     </thead>
                     <tbody>

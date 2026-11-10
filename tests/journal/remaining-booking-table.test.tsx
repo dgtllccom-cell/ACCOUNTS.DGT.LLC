@@ -84,7 +84,7 @@ it("shows one row per saved loading in the current All Sources layout, never the
   expect(screen.getAllByRole("button", { name: /journal/i })).toHaveLength(2);
   expect(screen.getByRole("columnheader", { name: "BILL NO., DATE" })).toBeTruthy();
   expect(screen.getByRole("columnheader", { name: "LOADING DATE / RECEIVE DATE" })).toBeTruthy();
-  expect(screen.getByRole("columnheader", { name: "BALANCE (REMAINING) (USD) / (AED)" })).toBeTruthy();
+  expect(screen.getByRole("columnheader", { name: "BALANCE" })).toBeTruthy();
   expect(screen.queryByText("4,252,612.50")).toBeNull();
 });
 
