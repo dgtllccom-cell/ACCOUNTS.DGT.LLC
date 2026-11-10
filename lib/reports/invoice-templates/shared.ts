@@ -16,7 +16,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { TradeDocumentInput, TradeParty, TradeLineItem } from "@/lib/reports/trade-documents/types";
 import { docTitleKeyFor } from "@/lib/reports/trade-documents/build-trade-document";
 import type { InvoiceTemplateFlags } from "./types";
-import { qrCodeSvgMarkup } from "@/components/ui/qr-code";
+import { qrCodeSvgMarkup } from "@/lib/qr/qr-core";
 
 export function esc(v: unknown): string {
   return String(v ?? "")

@@ -3,7 +3,7 @@ import { purchaseOrderToTradeInput, type MapOptions } from "@/lib/reports/trade-
 import { invoiceQrSvg } from "@/lib/reports/invoice-templates/shared";
 import { renderInvoiceHtml, themeInvoiceHtml } from "@/lib/reports/invoice-templates/render-invoice-html";
 import { DEFAULT_TEMPLATE_FLAGS } from "@/lib/reports/invoice-templates/types";
-import { decodeQrByteMode, encodeByteMode } from "@/components/ui/qr-code";
+import { decodeQrByteMode, encodeByteMode } from "@/lib/qr/qr-core";
 
 const rec = {
   id: "po-qr-1",
