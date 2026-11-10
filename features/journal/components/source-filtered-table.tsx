@@ -758,7 +758,7 @@ export function SourceFilteredTable({
       const purchPC = Number(r.total_goods_original || r.purchase_cost || form.totalAmount || r.order_total || 0);
       const purchFC = purchPC * exRate;
 
-      const advPct = Number(form.advancePercent || form.advancePercentage || r.advance_percent || 10) || 10;
+      const advPct = Number(form.advancePercent || form.advancePercentage || r.advance_percent || 0);
       const advReqPC = Number(form.advanceAmount || form.advanceRequired || ((purchPC * advPct) / 100));
       const advReqFC = advReqPC * exRate;
 
@@ -1144,16 +1144,16 @@ export function SourceFilteredTable({
                   const form = r.form_data?.form || {};
                   const billNo = r.purchase_order_no || r.bill_no || r.order_no || form.billNo || "—";
                   const billDate = formatDashDate(r.order_date || form.orderDate || form.billDate || r.created_at);
-                  const branchName = r.branch_name || form.branchName || form.branchCode || "UAE";
+                  const branchName = r.branch_name || form.branchName || form.branchCode || "—";
                   const purchaseAccount = form.purchaseAccountName || form.purchaseAccountNo || r.purchase_account_name || r.purchase_account_no || r.supplier_name || "—";
-                  const goodsName = r.goods_name || form.goodsName || "Walnut Kernel";
-                  const brand = form.brand || form.brandName || r.brand || "DGT";
-                  const size = form.size || form.goodsSize || r.size || "32/34";
+                  const goodsName = r.goods_name || form.goodsName || form.productName || "—";
+                  const brand = form.brand || form.brandName || r.brand || "";
+                  const size = form.size || form.goodsSize || r.size || "";
                   const qty = Number(r.total_quantity || form.totalQuantity || r.quantity || 0);
-                  const unit = form.quantityUnit || form.unit || r.quantity_name || "MT";
+                  const unit = form.quantityUnit || form.unit || r.quantity_name || "";
                   const grossKg = Number(r.gross_weight || form.grossWeight || 0);
                   const netKg = Number(r.net_weight || form.netWeight || 0);
-                  const origin = form.originCountry || form.originCountryName || r.origin_country_name || "USA";
+                  const origin = form.originCountry || form.originCountryName || r.origin_country_name || r.country_name || "—";
 
                   const purchCurr = String(r.currency_code || form.currencyType || "USD").toUpperCase();
                   const finalCurr = String(r.dest_countries?.currency_code || form.secondaryCurrency || "AED").toUpperCase();
@@ -1162,7 +1162,7 @@ export function SourceFilteredTable({
                   const purchAmtPC = Number(r.total_goods_original || r.purchase_cost || form.totalAmount || r.order_total || 0);
                   const purchAmtFC = purchAmtPC * exRate;
 
-                  const advPct = Number(form.advancePercent || form.advancePercentage || r.advance_percent || 10) || 10;
+                  const advPct = Number(form.advancePercent || form.advancePercentage || r.advance_percent || 0);
                   const advReqPC = Number(form.advanceAmount || form.advanceRequired || ((purchAmtPC * advPct) / 100));
                   const advReqFC = advReqPC * exRate;
 

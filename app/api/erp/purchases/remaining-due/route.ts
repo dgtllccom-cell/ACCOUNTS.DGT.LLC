@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
       const bill = buildBillPayment(po, myLoadings, myPayments);
       if (bill.condition === "credit") continue; // Credit bills follow their own approved credit rules, not this list
       const advanceCleared = bill.advanceRequired > 0 ? bill.advancePaid >= bill.advanceRequired - 0.05 : bill.advancePaid > 0 || !bill.gated;
-      if (bill.gated && !advanceCleared) continue; // an Advance bill appears here only once its required advance is paid
+      if (bill.gated && !advanceCleared && myLoadings.length === 0) continue; // an Advance bill appears here once its required advance is paid or once goods are loaded
       const rows = myLoadings.map((l: any) => {
         const st = bill.byLoading.get(String(l.id));
         return {
