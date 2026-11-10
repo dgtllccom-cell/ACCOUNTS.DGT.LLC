@@ -12,7 +12,7 @@ import { PurchaseInvoiceSection } from "./purchase-invoice-summary";
 import { usePurchaseInvoiceHistory } from "./use-purchase-invoice-history";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 type LanguageCode = string;
-import { FileSpreadsheet, BookOpen, Globe, Download, ChevronDown, RotateCcw, Search, Shield, WalletCards, Calendar } from "lucide-react";
+import { FileSpreadsheet, BookOpen, Globe, Download, ChevronDown, RotateCcw, Search, Shield, WalletCards, Calendar, SlidersHorizontal, X } from "lucide-react";
 
 export interface SourceFilteredTableProps {
   sourceFilter: "all" | "purchase_booking" | "local_purchase";
@@ -637,6 +637,8 @@ export function SourceFilteredTable({
   const [filterQuery, setFilterQuery] = useState("");
   const [remainingBranchFilter, setRemainingBranchFilter] = useState("all");
   const [exportOpen, setExportOpen] = useState(false);
+  const [advFilterOpen, setAdvFilterOpen] = useState(false);
+  const advActiveCount = [filterCountry, filterBranch, filterAccount, filterGoods, filterStatus, filterDateFrom, filterDateTo].filter((v) => v && v !== "all").length;
 
   const formatDashDate = (str: string | null | undefined): string => {
     if (!str || str === "—") return "—";
@@ -863,124 +865,132 @@ export function SourceFilteredTable({
             </div>
           </div>
 
-          {/* Advance Filter Bar */}
+          {/* Advance filter bar: one Filters button and a search box; every dropdown and date lives in the Filters panel */}
           <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 flex flex-wrap items-center gap-2.5 text-xs">
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">Country</label>
-              <select
-                value={filterCountry}
-                onChange={(e) => setFilterCountry(e.target.value)}
-                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer"
-              >
-                <option value="all">{label("ALL COUNTRIES")}</option>
-                {advanceFilterOptions.countries.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("BRANCH")}</label>
-              <select
-                value={filterBranch}
-                onChange={(e) => setFilterBranch(e.target.value)}
-                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer"
-              >
-                <option value="all">{label("ALL BRANCHES")}</option>
-                {advanceFilterOptions.branches.map((b) => <option key={b} value={b}>{b}</option>)}
-              </select>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("PURCHASE ACCOUNT")}</label>
-              <select
-                value={filterAccount}
-                onChange={(e) => setFilterAccount(e.target.value)}
-                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer"
-              >
-                <option value="all">{label("ALL ACCOUNTS")}</option>
-                {advanceFilterOptions.accounts.map((a) => <option key={a} value={a}>{a}</option>)}
-              </select>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("GOODS")}</label>
-              <select
-                value={filterGoods}
-                onChange={(e) => setFilterGoods(e.target.value)}
-                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer"
-              >
-                <option value="all">{label("ALL GOODS")}</option>
-                {advanceFilterOptions.goods.map((g) => <option key={g} value={g}>{g}</option>)}
-              </select>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("PAYMENT STATUS")}</label>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer"
-              >
-                <option value="all">{label("ALL STATUS")}</option>
-                <option value="Fully Paid">{label("FULLY PAID")}</option>
-                <option value="Partially Paid">{label("PARTIALLY PAID")}</option>
-                <option value="Pending">{label("PENDING")}</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("DATE FROM")}</label>
-              <input
-                type="date"
-                value={filterDateFrom}
-                onChange={(e) => setFilterDateFrom(e.target.value)}
-                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs"
-              />
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("DATE TO")}</label>
-              <input
-                type="date"
-                value={filterDateTo}
-                onChange={(e) => setFilterDateTo(e.target.value)}
-                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs"
-              />
-            </div>
-            <div className="flex flex-col gap-0.5 flex-1 min-w-[180px]">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">&nbsp;</label>
+            <button
+              type="button"
+              onClick={() => setAdvFilterOpen(true)}
+              aria-haspopup="dialog"
+              className="h-9 px-4 inline-flex items-center gap-2 rounded-xl border border-blue-300 bg-gradient-to-b from-white to-blue-50 text-blue-800 font-bold text-xs shadow-[0_2px_0_0_#bfdbfe,0_6px_12px_-4px_rgba(37,99,235,0.35)] hover:-translate-y-px active:translate-y-px cursor-pointer"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              <span>{label("FILTERS")}</span>
+              {advActiveCount > 0 && (
+                <span className="ms-1 min-w-5 h-5 px-1.5 rounded-full bg-blue-600 text-white text-[10px] font-black inline-flex items-center justify-center">{advActiveCount}</span>
+              )}
+            </button>
+            <div className="relative flex-1 min-w-[200px] max-w-md">
+              <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input
                 type="text"
                 placeholder={label("SEARCH BILL NO., GOODS, ACCOUNT...")}
                 value={filterQuery}
                 onChange={(e) => setFilterQuery(e.target.value)}
-                className="h-8 px-3 rounded-md border border-slate-300 bg-white text-slate-800 font-medium text-xs"
+                className="h-9 w-full ps-8 pe-3 rounded-xl border border-slate-300 bg-white text-slate-800 font-medium text-xs"
               />
             </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">&nbsp;</label>
-              <button
-                type="button"
-                className="h-8 px-4 inline-flex items-center gap-1.5 rounded-md bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs shadow-xs cursor-pointer"
-              >
-                <Search className="h-3.5 w-3.5" />
-                <span>{label("SEARCH")}</span>
-              </button>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">&nbsp;</label>
-              <button
-                type="button"
-                onClick={() => {
-                  setFilterCountry("all");
-                  setFilterBranch("all");
-                  setFilterAccount("all");
-                  setFilterGoods("all");
-                  setFilterStatus("all");
-                  setFilterDateFrom("");
-                  setFilterDateTo("");
-                  setFilterQuery("");
-                }}
-                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-xs cursor-pointer"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                <span>{label("RESET")}</span>
-              </button>
-            </div>
           </div>
+
+          {advFilterOpen && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-[2px]"
+              onClick={() => setAdvFilterOpen(false)}
+              onKeyDown={(e) => { if (e.key === "Escape") setAdvFilterOpen(false); }}
+              role="presentation"
+            >
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-label={label("FILTERS")}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 shadow-[0_30px_60px_-20px_rgba(15,23,42,0.45),0_2px_0_0_#e2e8f0] overflow-hidden"
+              >
+                <div className="flex items-center justify-between px-5 py-3 bg-[#1e40af] text-white">
+                  <span className="font-black text-sm uppercase tracking-wide">{label("FILTERS")}</span>
+                  <button
+                    type="button"
+                    onClick={() => setAdvFilterOpen(false)}
+                    aria-label={label("CLOSE")}
+                    className="h-8 w-8 inline-flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 cursor-pointer"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-5 text-xs">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">{label("COUNTRY")}</label>
+                    <select value={filterCountry} onChange={(e) => setFilterCountry(e.target.value)} className="h-9 px-2 rounded-lg border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer">
+                      <option value="all">{label("ALL COUNTRIES")}</option>
+                      {advanceFilterOptions.countries.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">{label("BRANCH")}</label>
+                    <select value={filterBranch} onChange={(e) => setFilterBranch(e.target.value)} className="h-9 px-2 rounded-lg border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer">
+                      <option value="all">{label("ALL BRANCHES")}</option>
+                      {advanceFilterOptions.branches.map((b) => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">{label("PURCHASE ACCOUNT")}</label>
+                    <select value={filterAccount} onChange={(e) => setFilterAccount(e.target.value)} className="h-9 px-2 rounded-lg border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer">
+                      <option value="all">{label("ALL ACCOUNTS")}</option>
+                      {advanceFilterOptions.accounts.map((a) => <option key={a} value={a}>{a}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">{label("GOODS")}</label>
+                    <select value={filterGoods} onChange={(e) => setFilterGoods(e.target.value)} className="h-9 px-2 rounded-lg border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer">
+                      <option value="all">{label("ALL GOODS")}</option>
+                      {advanceFilterOptions.goods.map((g) => <option key={g} value={g}>{g}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">{label("PAYMENT STATUS")}</label>
+                    <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="h-9 px-2 rounded-lg border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer">
+                      <option value="all">{label("ALL STATUS")}</option>
+                      <option value="Fully Paid">{label("FULLY PAID")}</option>
+                      <option value="Partially Paid">{label("PARTIALLY PAID")}</option>
+                      <option value="Pending">{label("PENDING")}</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">{label("DATE FROM")}</label>
+                    <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} className="h-9 px-2 rounded-lg border border-slate-300 bg-white text-slate-800 font-semibold text-xs" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">{label("DATE TO")}</label>
+                    <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} className="h-9 px-2 rounded-lg border border-slate-300 bg-white text-slate-800 font-semibold text-xs" />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-2 px-5 py-3 border-t border-slate-200 bg-white">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFilterCountry("all");
+                      setFilterBranch("all");
+                      setFilterAccount("all");
+                      setFilterGoods("all");
+                      setFilterStatus("all");
+                      setFilterDateFrom("");
+                      setFilterDateTo("");
+                    }}
+                    className="h-9 px-4 inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-[0_2px_0_0_#e2e8f0] cursor-pointer"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    <span>{label("RESET")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAdvFilterOpen(false)}
+                    className="h-9 px-5 inline-flex items-center rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs shadow-[0_3px_0_0_#1e40af] cursor-pointer"
+                  >
+                    <span>{label("APPLY")}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       ) : activeMode === "remaining" ? (
         <div className="bg-[#1e40af] text-white px-5 py-3 flex flex-wrap items-center justify-between gap-4">
