@@ -8,7 +8,7 @@ import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { TradeDocumentInput } from "@/lib/reports/trade-documents/types";
 import type { InvoiceTemplateFlags } from "./types";
-import { esc, prepareInvoiceData, qrPlaceholderSvg, documentShell } from "./shared";
+import { esc, prepareInvoiceData, invoiceQrSvg, documentShell } from "./shared";
 
 const NAVY = "#0b1120";
 const GOLD = "#b8860b";
@@ -139,7 +139,7 @@ export function renderPremiumInvoice(input: TradeDocumentInput, flags: InvoiceTe
         <div class="sign">${esc(d.signLeft)}</div>
         <div class="stamp-box">${esc(tt("invtpl.stamp_here", "Stamp & Seal"))}</div>
         <div class="sign">${esc(d.signRight)}</div>
-        ${flags.showQr ? `<div class="qr-box">${qrPlaceholderSvg(52)}<div>${esc(d.qrLabel)}</div></div>` : ""}
+        ${flags.showQr && d.publicUrl ? `<div class="qr-box">${invoiceQrSvg(d.publicUrl, 52)}<div>${esc(d.qrLabel)}</div></div>` : ""}
       </div>` : ""}
       ${flags.showHeaderFooter ? `<div class="foot"><span>${esc(d.brandName)} · ${esc(d.docTitle)} · ${esc(d.docNo)}</span><span>${esc(tt("tdoc.system_generated", "System-generated document"))} · ${esc(d.stamp)}</span></div>` : ""}
   `;
