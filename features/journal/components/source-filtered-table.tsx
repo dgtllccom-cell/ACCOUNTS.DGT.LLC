@@ -1119,14 +1119,14 @@ export function SourceFilteredTable({
                 <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("QTY (UNIT)")}</th>
                 <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("GROSS WT NET WT (KG)")}</th>
                 <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("ORIGIN")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PURCHASE AMOUNT (USD) / FINAL AMOUNT (AED)")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PURCHASE")}</th>
                 <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("ADV %")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE REQUIRED (USD / AED)")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE PAID (USD / AED)")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE BALANCE (USD / AED)")}</th>
-                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("INVOICE AMOUNT (PC)")}</th>
-                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("PAID AMOUNT (PC)")}</th>
-                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("REMAINING BALANCE (PC)")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("REQUIRED")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("BALANCE")}</th>
+                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("AMOUNT")}</th>
+                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("PAYMENT")}</th>
+                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("REMAINING")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("PAYMENT DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("LOADING DATE RECEIVE DATE")}</th>
                 <th className="py-3 px-3 text-center whitespace-nowrap">{label("ACTION")}</th>
@@ -1389,10 +1389,10 @@ export function SourceFilteredTable({
                 <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("QTY (CTNS)")}</th>
                 <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("GROSS WT / NET WT (KG)")}</th>
                 <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("ORIGIN")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PURCHASE AMOUNT (USD) / FINAL AMOUNT (AED)")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE PAID (TO) (AED)")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("REMAINING PAID (TO) (AED)")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("BALANCE (REMAINING) (USD) / (AED)")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PURCHASE")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("BALANCE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("LOADING DATE / RECEIVE DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("DUE DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("STATUS")}</th>
