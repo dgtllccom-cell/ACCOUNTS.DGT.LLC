@@ -1109,7 +1109,7 @@ export function SourceFilteredTable({
         {/* ADVANCE PAYMENT JOURNAL — EXACT 15-COLUMN STACKED FINANCIAL REPORT         */}
         {/* ========================================================================= */}
         {activeMode === "advance" ? (
-          <table className="w-full min-w-[1700px] border-collapse text-start text-xs">
+          <table className="w-full min-w-[2200px] border-collapse text-start text-xs">
             <thead>
               <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
                 <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("BILL NO. / DATE")}</th>
@@ -1124,6 +1124,9 @@ export function SourceFilteredTable({
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE REQUIRED (USD / AED)")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE PAID (USD / AED)")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE BALANCE (USD / AED)")}</th>
+                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("INVOICE AMOUNT (PC)")}</th>
+                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("PAID AMOUNT (PC)")}</th>
+                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("REMAINING BALANCE (PC)")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("PAYMENT DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("LOADING DATE RECEIVE DATE")}</th>
                 <th className="py-3 px-3 text-center whitespace-nowrap">{label("ACTION")}</th>
@@ -1132,7 +1135,7 @@ export function SourceFilteredTable({
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
               {advanceFinalRows.length === 0 ? (
                 <tr>
-                  <td colSpan={15} className="py-8 text-center text-xs text-slate-400 font-medium">
+                  <td colSpan={21} className="py-8 text-center text-xs text-slate-400 font-medium">
                     {label("NO ADVANCE BILLS FOUND")}
                   </td>
                 </tr>
@@ -1277,6 +1280,13 @@ export function SourceFilteredTable({
                           {fmt(advBalFC)}
                         </div>
                       </td>
+
+                      {/* 12b. Invoice / Paid / Remaining summary (invoice-level, per currency) */}
+                      {(["invoice", "paid", "remaining"] as const).map((section) => (
+                        <td key={section} colSpan={2} className="align-top px-3 py-2.5 border-r border-slate-200 dark:border-slate-800">
+                          <PurchaseInvoiceSection compact lang={lang} section={section} summary={fin.summary} loading={fin.loading} />
+                        </td>
+                      ))}
 
                       {/* 13. Payment Date */}
                       <td className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
