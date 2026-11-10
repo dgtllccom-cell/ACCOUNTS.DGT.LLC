@@ -17,7 +17,6 @@ import { paidForLoadingGate, verifiedPaid } from "@/lib/purchases/loaded-payable
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
-import { ensureLaneFromLoadingRecord } from "@/lib/services/purchase-lane-service";
 
 const LOCALIZED_TEXT_FIELDS = ["carrier_name", "transport_company", "driver_name", "shipping_line", "transport_remarks", "receiving_remarks"] as const;
 
@@ -854,7 +853,7 @@ export async function POST(request: NextRequest) {
         rows = (await sql`insert into purchase_loading_records ${sql({ ...payload, lot_name: lotName } as any)} returning id, loading_record_no`) as any;
       }
       // After Loading the load enters the General Purchase Lane (idempotent: one lane row per loading record).
-      if (rows[0]?.id) await ensureLaneFromLoadingRecord(sql, rows[0].id, session);
+      // No automatic lane entry here: the loading stays in its stage until a user clicks Transfer.
       if (body.transportExpenseAmount > 0 && payload.purchase_order_id) {
         await sql`insert into purchase_order_expenses ${sql({
           purchase_order_id: payload.purchase_order_id,
