@@ -22,8 +22,9 @@ export async function GET(request: NextRequest) {
     const query = querySchema.parse({
       limit: request.nextUrl.searchParams.get("limit"),
       offset: request.nextUrl.searchParams.get("offset"),
-      search: request.nextUrl.searchParams.get("search"),
-      status: request.nextUrl.searchParams.get("status"),
+      // An empty or absent filter means "no filter" (the UI sends status= for All).
+      search: request.nextUrl.searchParams.get("search") ?? undefined,
+      status: request.nextUrl.searchParams.get("status") || undefined,
     });
 
     const db = createSupabaseAdminClient() as any;

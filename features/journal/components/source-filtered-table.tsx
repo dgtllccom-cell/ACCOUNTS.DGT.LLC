@@ -12,7 +12,7 @@ import { PurchaseInvoiceSection } from "./purchase-invoice-summary";
 import { usePurchaseInvoiceHistory } from "./use-purchase-invoice-history";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 type LanguageCode = string;
-import { FileSpreadsheet, BookOpen, Globe, Download, ChevronDown, RotateCcw, Search, Shield, WalletCards, Calendar } from "lucide-react";
+import { FileSpreadsheet, BookOpen, Globe, Download, ChevronDown, RotateCcw, Search, Shield, WalletCards, Calendar, SlidersHorizontal, X } from "lucide-react";
 
 export interface SourceFilteredTableProps {
   sourceFilter: "all" | "purchase_booking" | "local_purchase";
@@ -863,124 +863,6 @@ export function SourceFilteredTable({
             </div>
           </div>
 
-          {/* Advance Filter Bar */}
-          <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 flex flex-wrap items-center gap-2.5 text-xs">
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">Country</label>
-              <select
-                value={filterCountry}
-                onChange={(e) => setFilterCountry(e.target.value)}
-                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer"
-              >
-                <option value="all">{label("ALL COUNTRIES")}</option>
-                {advanceFilterOptions.countries.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("BRANCH")}</label>
-              <select
-                value={filterBranch}
-                onChange={(e) => setFilterBranch(e.target.value)}
-                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer"
-              >
-                <option value="all">{label("ALL BRANCHES")}</option>
-                {advanceFilterOptions.branches.map((b) => <option key={b} value={b}>{b}</option>)}
-              </select>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("PURCHASE ACCOUNT")}</label>
-              <select
-                value={filterAccount}
-                onChange={(e) => setFilterAccount(e.target.value)}
-                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer"
-              >
-                <option value="all">{label("ALL ACCOUNTS")}</option>
-                {advanceFilterOptions.accounts.map((a) => <option key={a} value={a}>{a}</option>)}
-              </select>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("GOODS")}</label>
-              <select
-                value={filterGoods}
-                onChange={(e) => setFilterGoods(e.target.value)}
-                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer"
-              >
-                <option value="all">{label("ALL GOODS")}</option>
-                {advanceFilterOptions.goods.map((g) => <option key={g} value={g}>{g}</option>)}
-              </select>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("PAYMENT STATUS")}</label>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs cursor-pointer"
-              >
-                <option value="all">{label("ALL STATUS")}</option>
-                <option value="Fully Paid">{label("FULLY PAID")}</option>
-                <option value="Partially Paid">{label("PARTIALLY PAID")}</option>
-                <option value="Pending">{label("PENDING")}</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("DATE FROM")}</label>
-              <input
-                type="date"
-                value={filterDateFrom}
-                onChange={(e) => setFilterDateFrom(e.target.value)}
-                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs"
-              />
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">{label("DATE TO")}</label>
-              <input
-                type="date"
-                value={filterDateTo}
-                onChange={(e) => setFilterDateTo(e.target.value)}
-                className="h-8 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-semibold text-xs"
-              />
-            </div>
-            <div className="flex flex-col gap-0.5 flex-1 min-w-[180px]">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">&nbsp;</label>
-              <input
-                type="text"
-                placeholder={label("SEARCH BILL NO., GOODS, ACCOUNT...")}
-                value={filterQuery}
-                onChange={(e) => setFilterQuery(e.target.value)}
-                className="h-8 px-3 rounded-md border border-slate-300 bg-white text-slate-800 font-medium text-xs"
-              />
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">&nbsp;</label>
-              <button
-                type="button"
-                className="h-8 px-4 inline-flex items-center gap-1.5 rounded-md bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs shadow-xs cursor-pointer"
-              >
-                <Search className="h-3.5 w-3.5" />
-                <span>{label("SEARCH")}</span>
-              </button>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">&nbsp;</label>
-              <button
-                type="button"
-                onClick={() => {
-                  setFilterCountry("all");
-                  setFilterBranch("all");
-                  setFilterAccount("all");
-                  setFilterGoods("all");
-                  setFilterStatus("all");
-                  setFilterDateFrom("");
-                  setFilterDateTo("");
-                  setFilterQuery("");
-                }}
-                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-xs cursor-pointer"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                <span>{label("RESET")}</span>
-              </button>
-            </div>
-          </div>
         </>
       ) : activeMode === "remaining" ? (
         <div className="bg-[#1e40af] text-white px-5 py-3 flex flex-wrap items-center justify-between gap-4">
@@ -1109,7 +991,7 @@ export function SourceFilteredTable({
         {/* ADVANCE PAYMENT JOURNAL — EXACT 15-COLUMN STACKED FINANCIAL REPORT         */}
         {/* ========================================================================= */}
         {activeMode === "advance" ? (
-          <table className="w-full min-w-[1700px] border-collapse text-start text-xs">
+          <table className="w-full min-w-[2200px] border-collapse text-start text-xs">
             <thead>
               <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
                 <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("BILL NO. / DATE")}</th>
@@ -1119,11 +1001,14 @@ export function SourceFilteredTable({
                 <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("QTY (UNIT)")}</th>
                 <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("GROSS WT NET WT (KG)")}</th>
                 <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("ORIGIN")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PURCHASE AMOUNT (USD) / FINAL AMOUNT (AED)")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PURCHASE")}</th>
                 <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">{label("ADV %")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE REQUIRED (USD / AED)")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE PAID (USD / AED)")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE BALANCE (USD / AED)")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("REQUIRED")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("BALANCE")}</th>
+                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("AMOUNT")}</th>
+                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("PAYMENT")}</th>
+                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("REMAINING")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("PAYMENT DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("LOADING DATE RECEIVE DATE")}</th>
                 <th className="py-3 px-3 text-center whitespace-nowrap">{label("ACTION")}</th>
@@ -1132,7 +1017,7 @@ export function SourceFilteredTable({
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
               {advanceFinalRows.length === 0 ? (
                 <tr>
-                  <td colSpan={15} className="py-8 text-center text-xs text-slate-400 font-medium">
+                  <td colSpan={21} className="py-8 text-center text-xs text-slate-400 font-medium">
                     {label("NO ADVANCE BILLS FOUND")}
                   </td>
                 </tr>
@@ -1278,6 +1163,13 @@ export function SourceFilteredTable({
                         </div>
                       </td>
 
+                      {/* 12b. Invoice / Paid / Remaining summary (invoice-level, per currency) */}
+                      {(["invoice", "paid", "remaining"] as const).map((section) => (
+                        <td key={section} colSpan={2} className="align-top px-3 py-2.5 border-r border-slate-200 dark:border-slate-800">
+                          <PurchaseInvoiceSection compact lang={lang} section={section} summary={fin.summary} loading={fin.loading} />
+                        </td>
+                      ))}
+
                       {/* 13. Payment Date */}
                       <td className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
                         {paymentDate}
@@ -1379,10 +1271,10 @@ export function SourceFilteredTable({
                 <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("QTY (CTNS)")}</th>
                 <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("GROSS WT / NET WT (KG)")}</th>
                 <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("ORIGIN")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PURCHASE AMOUNT (USD) / FINAL AMOUNT (AED)")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE PAID (TO) (AED)")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("REMAINING PAID (TO) (AED)")}</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("BALANCE (REMAINING) (USD) / (AED)")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PURCHASE")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID")}</th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("BALANCE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("LOADING DATE / RECEIVE DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("DUE DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("STATUS")}</th>

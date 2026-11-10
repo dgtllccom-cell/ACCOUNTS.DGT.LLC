@@ -145,10 +145,10 @@ export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule
                 <table className="w-full text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-amber-300/80 text-[10px] font-black text-slate-700 uppercase">
-                      <th className="py-1 px-1.5 text-start whitespace-nowrap">{s.t("description", "Description")}</th>
-                      <th className="py-1 px-1 text-center whitespace-nowrap">{s.t("totalBills", "Total Bills")}</th>
-                      <th className="py-1 px-1.5 text-end whitespace-nowrap">{s.t("totalAmtPurchase", "Total Amt (Purchase)")}</th>
-                      <th className="py-1 px-1.5 text-end whitespace-nowrap">{s.t("totalAmtFinal", "Total Amt (Final)")}</th>
+                      <th className="py-1 px-1.5 text-start whitespace-normal leading-tight">{s.t("description", "Description")}</th>
+                      <th className="py-1 px-1 text-center whitespace-normal leading-tight">{s.t("totalBills", "Total Bills")}</th>
+                      <th className="py-1 px-1.5 text-end whitespace-normal leading-tight">{s.t("totalAmtPurchase", "Purchase")}</th>
+                      <th className="py-1 px-1.5 text-end whitespace-normal leading-tight">{s.t("totalAmtFinal", "Final")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-amber-200/50">
@@ -176,9 +176,9 @@ export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule
                 <table className="w-full text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-blue-300/80 text-[10px] font-black text-slate-700 uppercase">
-                      <th className="py-1 px-2 text-start whitespace-nowrap">{s.t("status", "Status")}</th>
-                      <th className="py-1 px-2 text-center whitespace-nowrap">{s.t("bills", "Bills")}</th>
-                      <th className="py-1 px-2 text-end whitespace-nowrap">{s.t("pctOfBills", "% of Bills")}</th>
+                      <th className="py-1 px-2 text-start whitespace-normal leading-tight">{s.t("status", "Status")}</th>
+                      <th className="py-1 px-2 text-center whitespace-normal leading-tight">{s.t("bills", "Bills")}</th>
+                      <th className="py-1 px-2 text-end whitespace-normal leading-tight">{s.t("pctOfBills", "% of Bills")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-blue-200/50">
@@ -214,11 +214,11 @@ export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule
                 <table className="w-full text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-emerald-300/80 text-[10px] font-black text-slate-700 uppercase">
-                      <th className="py-1 px-1.5 text-start whitespace-nowrap">{s.t("branch", "Branch")}</th>
-                      <th className="py-1 px-1 text-center whitespace-nowrap">{s.t("bills", "Bills")}</th>
-                      <th className="py-1 px-1.5 text-end whitespace-nowrap">{s.t("advRequired", "Adv Required")}</th>
-                      <th className="py-1 px-1.5 text-end whitespace-nowrap">{s.t("advPaid", "Adv Paid")}</th>
-                      <th className="py-1 px-1.5 text-end whitespace-nowrap">{s.t("advBalance", "Adv Balance")}</th>
+                      <th className="py-1 px-1.5 text-start whitespace-normal leading-tight">{s.t("branch", "Branch")}</th>
+                      <th className="py-1 px-1 text-center whitespace-normal leading-tight">{s.t("bills", "Bills")}</th>
+                      <th className="py-1 px-1.5 text-end whitespace-normal leading-tight">{s.t("advRequired", "Adv Required")}</th>
+                      <th className="py-1 px-1.5 text-end whitespace-normal leading-tight">{s.t("advPaid", "Adv Paid")}</th>
+                      <th className="py-1 px-1.5 text-end whitespace-normal leading-tight">{s.t("advBalance", "Adv Balance")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-emerald-200/50">
@@ -251,8 +251,8 @@ export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule
                       <tr>
                         <th className="text-left">{s.t("sourceCategory", "Category")}</th>
                         <th className="text-center">{s.t("totalBills", "Total Bills")}</th>
-                        <th className="text-center">{s.t("paidBills", "Paid Bills")}</th>
-                        <th className="text-center">{s.t("remainingBills", "Remaining Bills")}</th>
+                        <th className="text-center">{s.t("paidBills", "Paid")}</th>
+                        <th className="text-center">{s.t("remainingBills", "Remaining")}</th>
                       </tr>
                     </thead>
                     <tbody>

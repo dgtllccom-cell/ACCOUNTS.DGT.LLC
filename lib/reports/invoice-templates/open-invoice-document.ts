@@ -4,56 +4,60 @@
  * the SELECTED template instead of the single fixed layout, and feeds the
  * SAME `printStore` — there is still only one print/PDF/Email/WhatsApp
  * delivery pipe in the app.
+ *
+ * Each opened invoice also gets a public link (saved snapshot + random token,
+ * see /api/erp/public-document-links and /public/invoice/[token]); the QR code
+ * on the document encodes that link.
  */
 
 import { t } from "@/lib/i18n/ui";
 import { printStore } from "@/lib/store/print-store";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { docTitleKeyFor } from "@/lib/reports/trade-documents/build-trade-document";
-import { buildUaeTaxInvoiceHtml } from "@/lib/reports/trade-documents/uae-tax-invoice";
 import type { TradeDocumentInput } from "@/lib/reports/trade-documents/types";
-import { getInvoiceTemplate } from "./registry";
-import { normalizeTemplateColor, templateColors } from "@/lib/ui/template-colors";
 import { DEFAULT_TEMPLATE_FLAGS, type InvoiceTemplateFlags, type InvoiceTemplateId } from "./types";
+import { renderInvoiceHtml } from "./render-invoice-html";
+import { normalizeTemplateColor } from "@/lib/ui/template-colors";
 
-/** Invoice accent follows the user's ERP color preference; printed company and goods headers stay black. */
-function themedInvoiceHtml(html: string): string {
-  if (typeof window === "undefined") return html;
-  const selected = normalizeTemplateColor(window.localStorage.getItem("erp_color"));
-  const accent = templateColors.find((item) => item.id === selected)?.hex || "#5B21B6";
-  const css = `<style data-erp-invoice-theme>
-    :root { --erp-invoice-accent: ${accent}; }
-    .brand-name, .company-name, .company-title { color: #111827 !important; }
-    table.goods thead th, table.goods th, .goods-table thead th, table.items th { background: #111827 !important; color: #ffffff !important; }
-    .accent-bar { background: var(--erp-invoice-accent) !important; }
-    .summary .grand { background: var(--erp-invoice-accent) !important; }
-    .pcard { border-inline-start-color: var(--erp-invoice-accent) !important; }
-    .info-title { color: var(--erp-invoice-accent) !important; }
-    table.goods tfoot td { border-top-color: var(--erp-invoice-accent) !important; }
-    .doc-title h1, .info-title { color: var(--erp-invoice-accent) !important; }
-    @media print { table.goods thead th, table.goods th, .goods-table thead th, table.items th { background: #111827 !important; color: #ffffff !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
-  </style>`;
-  return html.includes("</head>") ? html.replace("</head>", css + "</head>") : css + html;
+/** Save a snapshot of this document and return its public link, or null if it could not be saved. */
+async function createPublicInvoiceLink(
+  input: TradeDocumentInput,
+  templateId: string,
+  flags: InvoiceTemplateFlags,
+  colorId: string,
+): Promise<string | null> {
+  try {
+    const { publicUrl: _ignored, ...snapshot } = input;
+    const res = await fetch("/api/erp/public-document-links", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ snapshot, templateId, flags, colorId, docNo: input.docNo }),
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const url = json?.data?.url;
+    return typeof url === "string" && url.length > 0 ? url : null;
+  } catch {
+    return null;
+  }
 }
 
-export function openInvoiceDocument(
+export async function openInvoiceDocument(
   input: TradeDocumentInput,
   templateId: InvoiceTemplateId | string,
   flags: InvoiceTemplateFlags = DEFAULT_TEMPLATE_FLAGS,
-): void {
+): Promise<void> {
   if (typeof window === "undefined") return;
-  const tpl = getInvoiceTemplate(templateId);
+  const colorId = normalizeTemplateColor(window.localStorage.getItem("erp_color"));
   const [titleKey, titleFb] = docTitleKeyFor(input);
   const title = t((input.lang || "en") as SupportedLanguage, titleKey as never, titleFb);
-  // A local sale's sales / tax invoice uses the local tax layout (proforma-style VAT table); other documents use the template.
-  const render = (src: TradeDocumentInput) =>
-    src.layout === "uae_tax" && (src.docType === "sales_invoice" || src.docType === "tax_invoice")
-      ? buildUaeTaxInvoiceHtml(src)
-      : tpl.render(src, flags);
-  printStore.openPrint(themedInvoiceHtml(render(input)), `${title} — ${input.docNo}`, {
+  const publicUrl = await createPublicInvoiceLink(input, String(templateId), flags, colorId);
+  const linked: TradeDocumentInput = { ...input, publicUrl };
+  printStore.openPrint(renderInvoiceHtml(linked, String(templateId), flags, colorId), `${title} — ${input.docNo}`, {
     lang: input.lang || "en",
     // in-preview language / orientation switch rebuilds from the same source input + template
     rebuild: ({ lang, orientation }) =>
-      themedInvoiceHtml(render({ ...input, lang: lang as SupportedLanguage, orientation })),
+      renderInvoiceHtml({ ...linked, lang: lang as SupportedLanguage, orientation }, String(templateId), flags, colorId),
   });
 }

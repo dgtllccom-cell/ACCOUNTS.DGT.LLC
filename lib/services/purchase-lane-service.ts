@@ -8,6 +8,8 @@ import {
   type Disposition, type LaneStatus, type TransferRequest,
 } from "@/lib/purchases/lane-rules";
 import { stockInToWarehouse } from "@/lib/services/purchase-warehouse-stock";
+import { resolvePurchaseAmounts } from "@/lib/services/purchase-calculation-service";
+import { verifiedPaid } from "@/lib/purchases/loaded-payable";
 
 /**
  * Purchase Transit & Lane service.
@@ -301,8 +303,8 @@ export async function ensureLaneFromLocalPurchase(sql: Sql, localPurchaseId: str
       lp.truck_no,
       coalesce(lp.truck_no, lp.loading_details->'entries'->0->>'truckNo'),
       coalesce(lp.driver_name, lp.loading_details->'entries'->0->>'driverName'),
-      coalesce(lp.loading_details->'entries'->0->>'driverPhone', null),
-      coalesce(lp.date, lp.created_at::date),
+      coalesce(lp.driver_phone, lp.loading_details->'entries'->0->>'driverPhone'),
+      coalesce(lp.loading_date, lp.created_at::date),
       coalesce(lp.numbers, (lp.loading_details->'entries'->0->>'loadedQuantity')::numeric, 0),
       lp.quantity_name, lp.total_gross_weight, lp.net_weight,
       'Local Yard', coalesce(lp.warehouse_name, 'Local Warehouse'),
@@ -396,7 +398,7 @@ export type LaneFilters = { status?: string; q?: string; purchaseOrderId?: strin
 
 export async function listLaneLoads(session: ErpSession, f: LaneFilters = {}) {
   return withLocalPg(async (sql: Sql) => {
-    await backfillScope(sql, session);
+    // No automatic lane creation: a lane record is created only by the explicit Transfer action (transferFromSources).
     const term = f.q?.trim();
     const rows = await sql`
       select l.*,
@@ -544,19 +546,132 @@ async function resolveTarget(tx: Sql, session: ErpSession, req: TransferRequest)
   return t;
 }
 
-/** Transfer one or more loads (all-or-nothing). Writes an audit event per load; nothing else. */
+const money = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/**
+ * Server-side payment rule for every transfer: the bill's FULL purchase balance must be settled AND posted.
+ * Uses the same ledger-verified payment rule as the Loading gate (verifiedPaid): unposted or unverified rows do not count.
+ * If anything is still unpaid the transfer is refused and the exact outstanding amount is returned.
+ * Sales sources are not gated by this rule.
+ */
+async function assertTransferPaymentSettled(tx: Sql, l: Record<string, any>) {
+  if (l.source_type !== "purchase_booking" && l.source_type !== "local_purchase") return;
+  const fallbackNo = l.purchase_ref_no || l.loading_record_no || l.container_number || String(l.id).slice(0, 8);
+  let billNo = fallbackNo;
+  let currency = "";
+  let total = 0;
+  let paid = 0;
+  if (l.source_type === "purchase_booking") {
+    let poId: string | null = l.purchase_order_id ?? null;
+    if (!poId) {
+      const plr = (await tx`select purchase_order_id from public.purchase_loading_records where id = ${l.source_id}::uuid`)[0];
+      poId = plr?.purchase_order_id ?? null;
+    }
+    const row = poId ? (await tx`
+      select po.id, po.purchase_order_no, po.currency_code, po.exchange_rate, po.order_total, po.total_goods_original, po.form_data, c.currency_code as country_currency
+      from public.purchase_orders po left join public.countries c on c.id = po.country_id
+      where po.id = ${poId}::uuid and po.deleted_at is null`)[0] : null;
+    if (!row) throw fail(`Bill ${fallbackNo}: its purchase order was not found (it may be deleted), so its payment cannot be verified. Transfer blocked.`, "PAYMENT_UNVERIFIED", 409);
+    const order = { ...row, form_data: typeof row.form_data === "string" ? JSON.parse(row.form_data) : row.form_data };
+    billNo = row.purchase_order_no || fallbackNo;
+    currency = String(row.currency_code || "USD").toUpperCase();
+    total = resolvePurchaseAmounts(order as never).totalPurchaseFC;
+    const payments = await tx`select amount, exchange_rate, kind, status, currency_code, posted_to_journal, roznamcha_entry_id, debit_ledger_id, credit_ledger_id from public.purchase_order_payments where purchase_order_id = ${poId}::uuid and deleted_at is null`;
+    const baseCcy = String(row.country_currency || currency).toUpperCase();
+    const rateToBase = currency === baseCcy ? 1 : Number(row.exchange_rate) > 0 ? Number(row.exchange_rate) : 1;
+    const v = verifiedPaid(payments as never, currency, rateToBase);
+    paid = v.advanceFC + v.settledFC;
+  } else {
+    const lpId = l.local_purchase_id ?? l.source_id;
+    const lp = (await tx`select id, purchase_currency, local_currency, exchange_rate, purchase_cost, manual_bill_no, entry_serial from public.local_purchases where id = ${lpId}::uuid and deleted_at is null`)[0];
+    if (!lp) throw fail(`Bill ${fallbackNo} was not found, so its payment cannot be verified. Transfer blocked.`, "PAYMENT_UNVERIFIED", 409);
+    billNo = lp.manual_bill_no || lp.entry_serial || fallbackNo;
+    currency = String(lp.purchase_currency || lp.local_currency || "USD").toUpperCase();
+    total = Number(lp.purchase_cost) || 0;
+    const payments = await tx`select amount, exchange_rate, kind, status, currency_code, posted_to_journal, roznamcha_entry_id, debit_ledger_id, credit_ledger_id from public.purchase_order_payments where local_purchase_id = ${lp.id}::uuid and deleted_at is null`;
+    const baseCcy = String(lp.local_currency || currency).toUpperCase();
+    const rateToBase = currency === baseCcy ? 1 : Number(lp.exchange_rate) > 0 ? Number(lp.exchange_rate) : 1;
+    const v = verifiedPaid(payments as never, currency, rateToBase);
+    paid = v.advanceFC + v.settledFC;
+  }
+  if (!(total > 0)) throw fail(`Bill ${billNo} has no purchase amount, so its payment cannot be verified. Transfer blocked.`, "PAYMENT_UNVERIFIED", 409);
+  const outstanding = transferOutstanding(total, paid);
+  if (outstanding > 0.005) {
+    throw fail(`Transfer blocked: bill ${billNo} still has ${money(outstanding)} ${currency} unpaid. Settle and post the full balance before transferring.`, "PAYMENT_NOT_SETTLED", 409,
+      { billNo, outstanding, currency, total: Math.round(total * 100) / 100, paid: Math.round(paid * 100) / 100 });
+  }
+}
+
+/** Unpaid amount of a bill: total minus the ledger-verified settled amount, never below zero, rounded to cents. */
+export function transferOutstanding(total: number, paid: number): number {
+  return Math.max(0, Math.round((total - paid) * 100) / 100);
+}
+
+/** Why a load cannot be transferred again, or null when the transfer may proceed. */
+export function duplicateTransferReason(l: Record<string, any>, req: TransferRequest, target: Record<string, any>): string | null {
+  const label = l.container_number || l.purchase_ref_no || String(l.id).slice(0, 8);
+  if (l.lane_status === "transfer_pending") {
+    return `Load ${label} was already handed over and is waiting to be accepted. It cannot be transferred again.`;
+  }
+  const sameDestination = l.transfer_destination === req.type &&
+    (l.owner_country_branch_id ?? null) === (target.countryBranch ?? null) &&
+    (l.owner_city_branch_id ?? null) === (target.cityBranch ?? null) &&
+    (l.owner_agent_id ?? null) === (target.agentId ?? null) &&
+    (l.owner_user_id ?? null) === (target.userId ?? null);
+  return sameDestination ? `Load ${label} is already at this destination. Choose a different destination.` : null;
+}
+
+/** A load cannot be transferred twice: it is already waiting for acceptance, or it is already at this destination. */
+function assertNotDuplicateTransfer(l: Record<string, any>, req: TransferRequest, target: Record<string, any>) {
+  const reason = duplicateTransferReason(l, req, target);
+  if (reason) throw fail(reason, "DUPLICATE_TRANSFER", 409);
+}
+
+/** Transfer one or more existing lane loads (all-or-nothing). Writes an audit event per load; nothing else. */
 export async function transferLoads(session: ErpSession, ids: string[], req: TransferRequest) {
   const problems = transferProblems(req);
   if (problems.length) throw fail("The transfer is incomplete: " + problems.join(", "), "TRANSFER_INCOMPLETE", 422, { problems });
   if (!ids.length || ids.some((i) => !uuidRe.test(i))) throw fail("Select at least one load.", "NO_LOADS");
+  return withLocalPg(async (sql: Sql) => sql.begin(async (tx: Sql) => applyTransfer(tx, session, ids, req)));
+}
+
+/**
+ * Transfer from bills that have no lane record yet. The Transfer action creates the lane record itself, in the SAME
+ * transaction as the payment gate and the transfer: if the balance is not settled or the transfer is refused,
+ * neither the lane record nor the transfer is written.
+ */
+export async function transferFromSources(
+  session: ErpSession,
+  sources: Array<{ sourceType: "purchase_booking" | "local_purchase"; sourceId: string }>,
+  req: TransferRequest,
+) {
+  const problems = transferProblems(req);
+  if (problems.length) throw fail("The transfer is incomplete: " + problems.join(", "), "TRANSFER_INCOMPLETE", 422, { problems });
+  if (!sources.length || sources.some((s) => !uuidRe.test(s.sourceId))) throw fail("Select at least one bill.", "NO_LOADS");
   return withLocalPg(async (sql: Sql) =>
     sql.begin(async (tx: Sql) => {
-      const target = await resolveTarget(tx, session, req);
-      const results: Array<{ id: string; from: string; to: string }> = [];
-      for (const id of [...new Set(ids)]) {
-        const l = await loadForUpdate(tx, session, id);
-        if (l.lane_status === "completed") throw fail(`Load ${l.container_number || l.purchase_ref_no} is completed and cannot be transferred.`, "LOAD_COMPLETED");
-        const isMod = isModuleDestination(req.type);
+      const ids: string[] = [];
+      for (const s of sources) {
+        const ensured = s.sourceType === "purchase_booking"
+          ? await ensureLaneFromLoadingRecord(tx, s.sourceId, session)
+          : await ensureLaneFromLocalPurchase(tx, s.sourceId, session);
+        if (!ensured) throw fail("That bill was not found, or it has no loaded quantity yet, so it cannot be transferred.", "SOURCE_NOT_FOUND", 404);
+        ids.push(ensured.id);
+      }
+      return applyTransfer(tx, session, [...new Set(ids)], req);
+    })
+  );
+}
+
+async function applyTransfer(tx: Sql, session: ErpSession, ids: string[], req: TransferRequest) {
+  const target = await resolveTarget(tx, session, req);
+  const results: Array<{ id: string; from: string; to: string }> = [];
+  for (const id of [...new Set(ids)]) {
+    const l = await loadForUpdate(tx, session, id);
+    if (l.lane_status === "completed") throw fail(`Load ${l.container_number || l.purchase_ref_no} is completed and cannot be transferred.`, "LOAD_COMPLETED");
+    assertNotDuplicateTransfer(l, req, target);
+    await assertTransferPaymentSettled(tx, l);
+    const isMod = isModuleDestination(req.type);
         const needsAccept = transferNeedsAcceptance(req.type);
         const to: LaneStatus = needsAccept ? "transfer_pending" : "assigned";
         const prevOwner = { type: l.owner_type, countryBranchId: l.owner_country_branch_id, cityBranchId: l.owner_city_branch_id, agent: l.owner_agent_name, user: l.owner_user_name };
@@ -584,11 +699,9 @@ export async function transferLoads(session: ErpSession, ids: string[], req: Tra
             settlement: req.type === "own_branch" || req.type === "other_branch" ? "inter_branch" : "none",
           },
         }, session);
-        results.push({ id, from: l.lane_status, to });
-      }
-      return results;
-    })
-  );
+    results.push({ id, from: l.lane_status, to });
+  }
+  return results;
 }
 
 /** The receiver (or whoever manages the load for an agent) accepts the hand-over. */
