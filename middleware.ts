@@ -82,6 +82,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/auth") ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/legal") ||
+    pathname.startsWith("/i/") ||
     pathname.startsWith("/api/erp/document-intelligence")
   ) {
     return NextResponse.next();

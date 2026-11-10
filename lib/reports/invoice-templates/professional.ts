@@ -7,7 +7,7 @@ import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { TradeDocumentInput } from "@/lib/reports/trade-documents/types";
 import type { InvoiceTemplateFlags } from "./types";
-import { esc, prepareInvoiceData, qrPlaceholderSvg, documentShell } from "./shared";
+import { esc, prepareInvoiceData, invoiceQrSvg, documentShell } from "./shared";
 
 export function renderProfessionalInvoice(input: TradeDocumentInput, flags: InvoiceTemplateFlags): string {
   const d = prepareInvoiceData(input, flags);
@@ -122,7 +122,7 @@ export function renderProfessionalInvoice(input: TradeDocumentInput, flags: Invo
     ${d.notes ? `<div class="notes"><strong>${esc(tt("tdoc.notes", "Notes / Remarks"))}:</strong> ${esc(d.notes)}</div>` : ""}
   `;
   const closingHtml = `
-    ${flags.showQr ? `<div class="qr-row"><div class="qr-box">${qrPlaceholderSvg(52)}<div>${esc(d.qrLabel)}</div></div></div>` : ""}
+    ${flags.showQr && d.publicUrl ? `<div class="qr-row"><div class="qr-box">${invoiceQrSvg(d.publicUrl, 52)}<div>${esc(d.qrLabel)}</div></div></div>` : ""}
     ${flags.showSignature ? `<div class="sign-grid">
       <div class="sign">${esc(d.signLeft)}</div>
       <div class="sign">${d.isContract ? esc(d.signRight) : `${esc(tt("invtpl.sign_for", "For"))} ${esc(d.brandName)}<br/>${esc(d.signRight)}`}</div>
