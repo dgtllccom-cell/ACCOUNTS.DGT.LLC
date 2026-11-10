@@ -11,7 +11,7 @@ import { TRANSFER_TYPES } from "@/lib/purchases/lane-rules";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import {
   ensureLaneSchema, ensureLaneFromLoadingRecord, ensureLaneFromLocalPurchase, ensureLaneFromSalesOrder, ensureLaneFromLocalSale,
-  laneStatesForLoadingRecords, listLaneLoads, transferLoads,
+  laneStatesForLoadingRecords, listLaneLoads, transferFromSources, transferLoads,
 } from "@/lib/services/purchase-lane-service";
 
 const uuid = z.string().uuid();
@@ -57,6 +57,12 @@ const transferSchema = z.object({
 const bodySchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("ensure"), loadingRecordId: uuid.optional(), localPurchaseId: uuid.optional(), salesOrderId: uuid.optional() }),
   z.object({ action: z.literal("transfer"), ids: z.array(uuid).min(1).max(200), transfer: transferSchema }),
+  // Transfer from a bill that has no lane record yet: the server creates the lane record and applies the payment rule.
+  z.object({
+    action: z.literal("transfer_sources"),
+    sources: z.array(z.object({ sourceType: z.enum(["purchase_booking", "local_purchase"]), sourceId: uuid })).min(1).max(50),
+    transfer: transferSchema,
+  }),
 ]);
 
 export async function POST(request: NextRequest) {
@@ -76,6 +82,11 @@ export async function POST(request: NextRequest) {
         return null;
       });
       return apiOk({ lane: out });
+    }
+    if (body.action === "transfer_sources") {
+      const results = await transferFromSources(session, body.sources, body.transfer as never);
+      await writeAuditLog({ action: "update", entityTable: "purchase_lane_loads", entityId: results[0]?.id ?? null, before: null, after: { transfer: body.transfer, sources: body.sources, ids: results.map((r: { id: string }) => r.id) }, ipAddress: request.headers.get("x-forwarded-for") ?? null });
+      return apiOk({ results });
     }
     const results = await transferLoads(session, body.ids, body.transfer as never);
     await writeAuditLog({ action: "update", entityTable: "purchase_lane_loads", entityId: body.ids[0] ?? null, before: null, after: { transfer: body.transfer, ids: body.ids }, ipAddress: request.headers.get("x-forwarded-for") ?? null });
