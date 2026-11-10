@@ -139,11 +139,12 @@ export function PurchaseTransitLaneView({
   // Deep links from other modules: ?po=<id>&laneIds=a,b&action=transfer&focus=<id>
   const [deep] = useState(() => {
     if (typeof window === "undefined")
-      return { po: "", sourceId: "", laneIds: [] as string[], action: "", focus: "" };
+      return { po: "", sourceId: "", source: "", laneIds: [] as string[], action: "", focus: "" };
     const p = new URLSearchParams(window.location.search);
     return {
       po: p.get("po") ?? "",
       sourceId: p.get("sourceId") ?? "",
+      source: p.get("source") ?? "",
       laneIds: (p.get("laneIds") ?? "").split(",").filter(Boolean),
       action: p.get("action") ?? "",
       focus: p.get("focus") ?? "",
@@ -936,7 +937,15 @@ function CenterTransferConfirmationModal({
     setBusy(true);
     setError(null);
     try {
-      await apiPost("/api/erp/purchases/lane", { action: "transfer", ids, transfer: req });
+      // A bill that has no lane record yet is transferred from its bill: the server creates the lane record and applies the payment rule.
+      const dl = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+      const billId = dl.get("sourceId") || dl.get("focus") || "";
+      const billSource = dl.get("source") === "purchase_booking" || dl.get("source") === "local_purchase" ? dl.get("source") : null;
+      if (ids.length === 0 && billId && billSource) {
+        await apiPost("/api/erp/purchases/lane", { action: "transfer_sources", sources: [{ sourceType: billSource, sourceId: billId }], transfer: req });
+      } else {
+        await apiPost("/api/erp/purchases/lane", { action: "transfer", ids, transfer: req });
+      }
       const commonPurchaseId = loads.every((l) => l.purchase_order_id === loads[0]?.purchase_order_id) ? loads[0]?.purchase_order_id : null;
       const links = loadingJournalLinks(ids.length === 1 ? ids[0] : "", commonPurchaseId, loads.length === 1 ? loads[0]?.local_purchase_id : null);
       const targetUrl = afterView === "expenses" ? links.expenses : afterView === "tracking" ? links.tracking : destinationRoute(type, primarySource, loads.every((l) => l.purchase_ref_no === loads[0]?.purchase_ref_no) ? loads[0]?.purchase_ref_no : undefined, loads.length === 1 && primarySource === "purchase_booking" ? loads[0]?.source_id : undefined);
