@@ -447,3 +447,6 @@ button.dgt-pa-country:hover{background:#fff;border-color:#8ae0b0;box-shadow:0 1p
 .dark .dgt-pa-scope-val {
   color: #f8fafc;
 }
+
+/* Mobile: summary headers wrap inside the card instead of being cut off at the edge. */
+.dgt-pa-summary-table th { white-space: normal; line-height: 1.2; }

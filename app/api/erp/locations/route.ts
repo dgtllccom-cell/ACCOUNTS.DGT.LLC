@@ -32,7 +32,8 @@ export async function GET(request: NextRequest) {
       offset: request.nextUrl.searchParams.get("offset") ?? undefined,
       search: request.nextUrl.searchParams.get("search") ?? undefined,
       countryId: request.nextUrl.searchParams.get("countryId") ?? undefined,
-      status: request.nextUrl.searchParams.get("status") ?? undefined,
+      // An empty status (the UI sends status= for All) means "no filter".
+      status: request.nextUrl.searchParams.get("status") || undefined,
       fromDate: request.nextUrl.searchParams.get("fromDate") ?? undefined,
       toDate: request.nextUrl.searchParams.get("toDate") ?? undefined,
     });
