@@ -216,9 +216,9 @@ export function SourceFilteredTable({
 
           const loadDate = String(
             l.loadedAt ? String(l.loadedAt).slice(0, 10) :
-            (lr?.loaded_at ? String(lr.loaded_at).slice(0, 10) :
-            (payload.loadingDate ? String(payload.loadingDate).slice(0, 10) :
-            (lr?.created_at ? String(lr.created_at).slice(0, 10) : "—")))
+              (lr?.loaded_at ? String(lr.loaded_at).slice(0, 10) :
+                (payload.loadingDate ? String(payload.loadingDate).slice(0, 10) :
+                  (lr?.created_at ? String(lr.created_at).slice(0, 10) : "—")))
           ).trim() || "—";
 
           const receiveCountry = String(
@@ -250,11 +250,11 @@ export function SourceFilteredTable({
 
           const rawReceiveDate =
             l.receivedAt ? String(l.receivedAt).slice(0, 10) :
-            (lr?.received_at ? String(lr.received_at).slice(0, 10) :
-            (lr?.actual_arrival_date ? String(lr.actual_arrival_date).slice(0, 10) :
-            (payload.receivedAt ? String(payload.receivedAt).slice(0, 10) :
-            (payload.actualArrivalDate ? String(payload.actualArrivalDate).slice(0, 10) :
-            (payload.arrivalDate ? String(payload.arrivalDate).slice(0, 10) : null)))));
+              (lr?.received_at ? String(lr.received_at).slice(0, 10) :
+                (lr?.actual_arrival_date ? String(lr.actual_arrival_date).slice(0, 10) :
+                  (payload.receivedAt ? String(payload.receivedAt).slice(0, 10) :
+                    (payload.actualArrivalDate ? String(payload.actualArrivalDate).slice(0, 10) :
+                      (payload.arrivalDate ? String(payload.arrivalDate).slice(0, 10) : null)))));
 
           const receiveDate = rawReceiveDate || (payload.etaDate ? `${String(payload.etaDate).slice(0, 10)} (ETA)` : "— / Pending");
 
