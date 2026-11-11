@@ -639,17 +639,18 @@ function printPurchaseRegister(rows: PurchaseReport[], lang: SupportedLanguage) 
   });
 }
 
-function PurchaseReportActionsMenu({ lang, rows, onExport }: { lang: SupportedLanguage; rows: PurchaseReport[]; onExport: () => void }) {
+function PurchaseReportActionsMenu({ lang, rows, onExport, onReset }: { lang: SupportedLanguage; rows: PurchaseReport[]; onExport: () => void; onReset: () => void }) {
   const tr = (label: string) => translateHeader(lang, label);
-  // Same download / Excel / PDF / print handlers as before — only the menu shell changed to the approved toolbar style.
   return (
     <PapMenu
       label={tr("Report actions")}
       items={[
-        { key: "dl", label: tr("Download"), icon: <DownloadActionIcon />, onClick: onExport },
+        { key: "full", label: tr("Full Page View"), icon: <Printer />, onClick: () => { if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen?.(); } },
+        { key: "print", label: tr("Print (Full Page)"), icon: <Printer />, onClick: () => printPurchaseRegister(rows, lang) },
         { key: "xls", label: tr("Export Excel"), icon: <FileSpreadsheet />, onClick: onExport },
         { key: "pdf", label: tr("Export PDF"), icon: <PdfActionIcon />, onClick: () => printPurchaseRegister(rows, lang) },
-        { key: "print", label: tr("Print"), icon: <Printer />, onClick: () => printPurchaseRegister(rows, lang) },
+        { key: "csv", label: tr("Export CSV"), icon: <DownloadActionIcon />, onClick: onExport },
+        { key: "reset", label: tr("Reset Filters"), icon: <DownloadActionIcon />, onClick: onReset },
       ]}
     />
   );
@@ -2031,26 +2032,23 @@ export function PurchaseOrderManagementDashboard() {
     <div dir={isRtl ? "rtl" : "ltr"} className="w-full max-w-none space-y-4 px-2 py-3 text-slate-900 dark:text-slate-100 sm:px-4">
       <PurchasePageTop
         lang={activeLang}
-        title={tr("Purchase Booking")}
+        title={`${tr("Purchase Booking")} (${tr("Global & Country Wise")})`}
         superAdmin={isSuperAdmin}
         breadcrumb={[tr("Dashboard"), tr("Purchase & Trade"), tr("Purchase Booking")]}
         rows={reportsToPayRows(filtered)}
         rates={usdRates}
         reports={[
-          { label: tr("Purchase Booking"), href: "/dashboard/purchase/purchase-order" },
+          { label: tr("Purchase Booking"), href: "/dashboard/purchase/purchase-order", current: true },
           { label: tr("Purchase Booking Journal"), href: "/dashboard/purchase/purchase-booking-journal-report" },
           { label: tr("Payment Report"), href: "/dashboard/purchase/purchase-payments" },
-          { label: tr("Purchase Order Tracking"), href: "/dashboard/purchase/purchase-order-tracking" },
+          { label: tr("More Reports"), href: "/dashboard/reports", more: true },
         ]}
         search={searchText}
         onSearch={setSearchText}
         filterCount={Object.values(filters).filter((v) => v && v !== "all").length}
         onOpenFilters={() => setFiltersOpen(true)}
-        onReset={resetFilters}
-        onRefresh={() => void loadReports()}
         onApply={() => { setFiltersOpen(false); void loadReports(); }}
-        loading={loading}
-        menu={<PurchaseReportActionsMenu lang={activeLang} rows={filtered} onExport={() => downloadCsv(filtered, activeLang)} />}
+        menu={<PurchaseReportActionsMenu lang={activeLang} rows={filtered} onExport={() => downloadCsv(filtered, activeLang)} onReset={resetFilters} />}
       />
 
       {/* Branch Scope Header Bar (For Country Admin & Branch Admin) */}
@@ -2084,12 +2082,10 @@ export function PurchaseOrderManagementDashboard() {
 
       {/* REPORT-3: SEARCH & TRANSACTION REPORT */}
       <section className="w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-4 space-y-4">
-        <div className="flex flex-col items-center justify-center text-center w-full py-3 border-b border-slate-100 dark:border-slate-800/60">
-          <h2 className="text-sm font-black tracking-widest text-slate-800 dark:text-slate-100 uppercase flex items-center gap-2 justify-center">
-            <SlidersHorizontal className="h-4 w-4 text-blue-600 dark:text-blue-500" />
-            {tr("Transaction Log & Search Report")}
+        <div className="flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2.5 text-white shadow-sm dark:bg-blue-900">
+          <h2 className="text-sm font-black uppercase tracking-wide">
+            {tr("Purchase Booking List")} ({lockedCountryName || tr("All Countries")})
           </h2>
-          <p className="text-[11px] text-slate-400 mt-1.5 font-medium tracking-wide">{tr("Enterprise Registry & Financial Ledger Details")}</p>
         </div>
 
         {/* FILTER DIALOG (opened from the page toolbar) */}
@@ -2098,7 +2094,7 @@ export function PurchaseOrderManagementDashboard() {
             <div role="dialog" aria-modal="true" aria-label={tr("Filter")} onClick={(e) => e.stopPropagation()}
               className="w-full max-w-3xl overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-5 shadow-[0_30px_60px_-20px_rgba(15,23,42,0.45),0_2px_0_0_#e2e8f0] dark:border-slate-800 dark:from-slate-950 dark:to-slate-900 animate-in fade-in duration-200">
             <div className="mb-3 flex items-center justify-between">
-              <span className="text-sm font-black uppercase tracking-wide text-slate-800 dark:text-slate-100">{tr("Filter")}</span>
+              <span className="text-sm font-black uppercase tracking-wide text-slate-800 dark:text-slate-100">{tr("Filter")} – {tr("Purchase Booking")}</span>
               <button type="button" onClick={() => setFiltersOpen(false)} aria-label={tr("Close")} className="h-8 w-8 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer">×</button>
             </div>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
@@ -2141,8 +2137,8 @@ export function PurchaseOrderManagementDashboard() {
               <SelectFilter lang={activeLang} label="Date Period" value={filters.dateRange} options={options.dateRanges} onChange={(v) => setFilters((f) => ({ ...f, dateRange: v }))} />
             </div>
             <div className="mt-3 flex justify-end gap-2 border-t border-slate-150 pt-3 dark:border-slate-800">
-              <Button size="sm" variant="outline" onClick={resetFilters} className="h-8 text-[11px] font-bold">{tr("Reset Matrix")}</Button>
-              <Button size="sm" onClick={() => void loadReports()} className="bg-blue-600 hover:bg-blue-700 text-white h-8 text-[11px] font-bold"><RefreshCw className={cn("mr-1.5 h-3.5 w-3.5", loading && "animate-spin")} />{tr("Sync Ledger Registry")}</Button>
+              <Button size="sm" variant="outline" onClick={resetFilters} className="h-8 text-[11px] font-bold">{tr("Reset")}</Button>
+              <Button size="sm" onClick={() => { setFiltersOpen(false); void loadReports(); }} className="bg-blue-600 hover:bg-blue-700 text-white h-8 text-[11px] font-bold">{tr("Apply")}</Button>
             </div>
             </div>
           </div>

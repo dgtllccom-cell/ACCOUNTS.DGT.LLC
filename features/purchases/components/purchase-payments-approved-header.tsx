@@ -81,10 +81,16 @@ export function computePayTotals(rows: PayRow[], rates?: Record<string, number>)
     rows.forEach((r) => { (byCountry.get(r.country) ?? byCountry.set(r.country, []).get(r.country)!).push(r); });
     const countries = Array.from(byCountry.entries()).map(([name, list]) => {
       const u = unitFor(list, cur, (r) => r.total || paidOf(r) || r.due, rateOf);
-      return { name, count: list.length, text: fmtMoney(u, valueIn(u, list, cur, (r) => r.total, rateOf)) };
+      const currency = u.kind === "native" ? u.cur : u.kind === "usd" ? "USD" : "—";
+      return {
+        name,
+        count: list.length,
+        currency,
+        text: fmtMoney(u, valueIn(u, list, cur, (r) => r.total, rateOf)),
+        paidText: fmtMoney(u, valueIn(u, list, cur, paidOf, rateOf)),
+      };
     }).sort((a, b) => b.count - a.count);
     return { unit, total, paid, due, stage, countries };
-  return { unit, total, paid, due, stage, countries };
 }
 
 export function PaymentApprovedHeader({
