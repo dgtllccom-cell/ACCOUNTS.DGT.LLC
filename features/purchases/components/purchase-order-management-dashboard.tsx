@@ -5,10 +5,11 @@ import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-acti
 import { DocumentAttachmentIcon } from "@/components/documents/document-attachment-icon";
 import { useCallback, useEffect, useMemo, useState, Fragment } from "react";
 import { createPortal } from "react-dom";
-import { PapMenu, PapRefresh, PapSearch } from "@/components/purchase-ui/purchase-approved-header";
+import { PapMenu } from "@/components/purchase-ui/purchase-approved-header";
 import "@/components/purchase-ui/purchase-table-skin.css";
 import { useUsdRates } from "@/lib/purchase-ui/use-usd-rates";
-import { PaymentApprovedHeader, reportsToPayRows } from "./purchase-payments-approved-header";
+import { reportsToPayRows } from "./purchase-payments-approved-header";
+import { PurchasePageTop } from "@/components/purchase-ui/purchase-page-top";
 import {
   BadgeDollarSign,
   Boxes,
@@ -37,7 +38,6 @@ import {
   TrendingUp,
   WalletCards,
   CalendarDays,
-  Plus,
   Globe,
   Home,
   Fingerprint,
@@ -2027,53 +2027,30 @@ export function PurchaseOrderManagementDashboard() {
     }));
   }, [filtered]);
 
-  const approvedToolbar = (
-    <>
-      {/* Stage selector: the page's existing lifecycle tabs */}
-      <select
-        value={activeTab}
-        onChange={(event) => setActiveTab(event.target.value as LifecycleTab)}
-        className="dgt-pa-ctrl"
-        aria-label={tr("Select Stage")}
-      >
-        {lifecycleTabs.map((tab) => {
-          const count = tab === "Dashboard Overview"
-            ? reports.length
-            : tab === "Stock Management"
-              ? reports.filter(r => stockStage(r)).length
-              : reports.filter(r => lifecycleStage(r) === tab).length;
-          return (
-            <option key={tab} value={tab}>
-              {tr(tab).toUpperCase()} ({count})
-            </option>
-          );
-        })}
-      </select>
-      <PapSearch value={searchText} onChange={setSearchText} placeholder={tr("Search PO#, Supplier...")} />
-      <button type="button" className="dgt-pa-ctrl" onClick={() => setFiltersOpen((open) => !open)} aria-expanded={filtersOpen}>
-        <SlidersHorizontal aria-hidden="true" />
-        {tr("Filter")}
-      </button>
-      <PapRefresh title={tr("Reset")} spinning={loading} onClick={resetFilters} />
-      {/* Print / PDF / Excel / CSV: the page's existing three-dot menu */}
-      <PurchaseReportActionsMenu lang={activeLang} rows={filtered} onExport={() => downloadCsv(filtered, activeLang)} />
-      <button type="button" className="dgt-pa-ctrl dgt-pa-primary" onClick={() => router.push("/dashboard/purchase/local-purchase?create=true")}>
-        <Plus aria-hidden="true" />
-        {tr("New")}
-      </button>
-    </>
-  );
-
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="w-full max-w-none space-y-4 px-2 py-3 text-slate-900 dark:text-slate-100 sm:px-4">
-      {/* Approved Purchase header (title, page toolbar, yellow / blue / green cards). Figures are sums of the rows this page already
-          loaded; the toolbar wraps the page's EXISTING stage selector, search, filter panel, reset and report-actions handlers. */}
-      <PaymentApprovedHeader
-        variant="orders"
+      <PurchasePageTop
+        lang={activeLang}
+        title={tr("Purchase Booking")}
+        superAdmin={isSuperAdmin}
+        breadcrumb={[tr("Dashboard"), tr("Purchase & Trade"), tr("Purchase Booking")]}
         rows={reportsToPayRows(filtered)}
         rates={usdRates}
-        scopeCountry={lockedCountryName || (filters.country !== "all" ? filters.country : undefined)}
-        toolbar={approvedToolbar}
+        reports={[
+          { label: tr("Purchase Booking"), href: "/dashboard/purchase/purchase-order" },
+          { label: tr("Purchase Booking Journal"), href: "/dashboard/purchase/purchase-booking-journal-report" },
+          { label: tr("Payment Report"), href: "/dashboard/purchase/purchase-payments" },
+          { label: tr("Purchase Order Tracking"), href: "/dashboard/purchase/purchase-order-tracking" },
+        ]}
+        search={searchText}
+        onSearch={setSearchText}
+        filterCount={Object.values(filters).filter((v) => v && v !== "all").length}
+        onOpenFilters={() => setFiltersOpen(true)}
+        onReset={resetFilters}
+        onRefresh={() => void loadReports()}
+        onApply={() => { setFiltersOpen(false); void loadReports(); }}
+        loading={loading}
+        menu={<PurchaseReportActionsMenu lang={activeLang} rows={filtered} onExport={() => downloadCsv(filtered, activeLang)} />}
       />
 
       {/* Branch Scope Header Bar (For Country Admin & Branch Admin) */}
@@ -2115,10 +2092,33 @@ export function PurchaseOrderManagementDashboard() {
           <p className="text-[11px] text-slate-400 mt-1.5 font-medium tracking-wide">{tr("Enterprise Registry & Financial Ledger Details")}</p>
         </div>
 
-        {/* FILTER PANEL */}
+        {/* FILTER DIALOG (opened from the page toolbar) */}
         {filtersOpen ? (
-          <div className="rounded border border-slate-200 bg-slate-50/30 p-4 dark:border-slate-800 dark:bg-slate-955 animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[2px]" onClick={() => setFiltersOpen(false)} role="presentation">
+            <div role="dialog" aria-modal="true" aria-label={tr("Filter")} onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-3xl overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-5 shadow-[0_30px_60px_-20px_rgba(15,23,42,0.45),0_2px_0_0_#e2e8f0] dark:border-slate-800 dark:from-slate-950 dark:to-slate-900 animate-in fade-in duration-200">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-sm font-black uppercase tracking-wide text-slate-800 dark:text-slate-100">{tr("Filter")}</span>
+              <button type="button" onClick={() => setFiltersOpen(false)} aria-label={tr("Close")} className="h-8 w-8 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer">×</button>
+            </div>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+              <label className="space-y-1">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{tr("Select Stage")}</span>
+                <select value={activeTab} onChange={(e) => setActiveTab(e.target.value as LifecycleTab)} aria-label={tr("Select Stage")} className="h-9 w-full rounded border border-slate-300 bg-white px-2 text-xs font-semibold text-slate-800">
+                  {lifecycleTabs.map((tab) => {
+                    const count = tab === "Dashboard Overview"
+                      ? reports.length
+                      : tab === "Stock Management"
+                        ? reports.filter((r) => stockStage(r)).length
+                        : reports.filter((r) => lifecycleStage(r) === tab).length;
+                    return (
+                      <option key={tab} value={tab}>
+                        {tr(tab).toUpperCase()} ({count})
+                      </option>
+                    );
+                  })}
+                </select>
+              </label>
               <label className="space-y-1">
                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{tr("Country Scope")}</span>
                 <select value={filters.country} disabled={!!lockedCountryName} onChange={(e) => setFilters((f) => ({ ...f, country: e.target.value }))} className="h-9 w-full rounded border border-slate-250 bg-white px-3 text-xs focus:border-blue-500 outline-none transition disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-800 dark:bg-slate-950">
@@ -2143,6 +2143,7 @@ export function PurchaseOrderManagementDashboard() {
             <div className="mt-3 flex justify-end gap-2 border-t border-slate-150 pt-3 dark:border-slate-800">
               <Button size="sm" variant="outline" onClick={resetFilters} className="h-8 text-[11px] font-bold">{tr("Reset Matrix")}</Button>
               <Button size="sm" onClick={() => void loadReports()} className="bg-blue-600 hover:bg-blue-700 text-white h-8 text-[11px] font-bold"><RefreshCw className={cn("mr-1.5 h-3.5 w-3.5", loading && "animate-spin")} />{tr("Sync Ledger Registry")}</Button>
+            </div>
             </div>
           </div>
         ) : null}
