@@ -55,13 +55,11 @@ export function reportsToPayRows(reports: readonly any[]): PayRow[] {
 const PAGE: Record<PaymentVariant, ApprovedPurchasePage> = { payments: "purchase-payments", orders: "orders-payment", "country-bill": "country-bill-payment" };
 const paidOf = (r: PayRow) => r.advance + r.remainingPaid + r.credit;
 
-export function PaymentApprovedHeader({
-  variant, rows, rates, scopeCountry, toolbar, onCountryOpen,
-}: {
-  variant: PaymentVariant; rows: PayRow[]; rates?: Record<string, number>; scopeCountry?: string; toolbar: ReactNode; onCountryOpen?: (country: string) => void;
-}) {
-  const s = useErpScreen("pap");
-  const m = useMemo(() => {
+/**
+ * Totals and stage/country figures for a list of payment rows. Pure: the same figures the approved header shows, reused by the
+ * Purchase Booking and Local Purchase summary cards so every page computes money the same way.
+ */
+export function computePayTotals(rows: PayRow[], rates?: Record<string, number>) {
     const rateOf = (c: string) => rates?.[c];
     const cur = (r: PayRow) => r.currency;
     const unit = unitFor(rows, cur, (r) => r.total || paidOf(r) || r.due, rateOf);
@@ -86,7 +84,16 @@ export function PaymentApprovedHeader({
       return { name, count: list.length, text: fmtMoney(u, valueIn(u, list, cur, (r) => r.total, rateOf)) };
     }).sort((a, b) => b.count - a.count);
     return { unit, total, paid, due, stage, countries };
-  }, [rows, rates]);
+  return { unit, total, paid, due, stage, countries };
+}
+
+export function PaymentApprovedHeader({
+  variant, rows, rates, scopeCountry, toolbar, onCountryOpen,
+}: {
+  variant: PaymentVariant; rows: PayRow[]; rates?: Record<string, number>; scopeCountry?: string; toolbar: ReactNode; onCountryOpen?: (country: string) => void;
+}) {
+  const s = useErpScreen("pap");
+  const m = useMemo(() => computePayTotals(rows, rates), [rows, rates]);
 
   const only = m.countries.length === 1 && m.countries[0].name !== "—" ? m.countries[0].name : "";
   // a scoped user (one country) sees that country in the card titles, not "All Countries"
