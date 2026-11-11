@@ -1304,7 +1304,6 @@ export function PurchaseBookingGlobalRegisterView({
           isOpen={Boolean(fullBillRow)}
           onClose={() => setFullBillRow(null)}
           order={fullBillRow}
-          orderId={fullBillRow.id}
           lang={lang as any}
         />
       )}
