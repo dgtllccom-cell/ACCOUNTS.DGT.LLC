@@ -3764,7 +3764,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const advanceCardData = useMemo(() => {
     if (activeMode !== "advance" && activeMode !== "advance_completed") return undefined;
     const rateAED = dailyUsdRates?.["AED"] ?? 3.6725;
-    const fmt = (curr: string, amt: number) => `${curr} ${amt.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const fmt = (curr: string, amt: number) => {
+      const rounded = Math.round(amt);
+      if (curr === "USD") return `$${rounded.toLocaleString("en-US")}`;
+      if (curr === "AED") return `AED ${rounded.toLocaleString("en-US")}`;
+      return `${curr} ${rounded.toLocaleString("en-US")}`;
+    };
 
     let totalBills = filtered.length;
     let totalPurchPC = 0;

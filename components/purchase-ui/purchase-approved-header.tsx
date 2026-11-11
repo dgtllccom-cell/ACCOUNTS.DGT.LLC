@@ -141,23 +141,23 @@ export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule
                 <div><div className="dgt-pa-headname">{advanceCards.summary.title}</div></div>
                 <Bars />
               </div>
-              <div className="p-1 px-2 overflow-x-auto flex-1 flex flex-col justify-between">
-                <table className="w-full text-xs border-collapse">
+              <div className="p-0.5 px-1.5 overflow-hidden flex-1 flex flex-col justify-between">
+                <table className="w-full table-fixed text-[10.5px] leading-tight border-collapse">
                   <thead>
-                    <tr className="border-b border-amber-300/80 text-[10px] font-black text-slate-700 uppercase">
-                      <th className="py-1 px-1.5 text-start whitespace-normal leading-tight">{s.t("description", "Description")}</th>
-                      <th className="py-1 px-1 text-center whitespace-normal leading-tight">{s.t("totalBills", "Total Bills")}</th>
-                      <th className="py-1 px-1.5 text-end whitespace-normal leading-tight">{s.t("totalAmtPurchase", "Purchase")}</th>
-                      <th className="py-1 px-1.5 text-end whitespace-normal leading-tight">{s.t("totalAmtFinal", "Final")}</th>
+                    <tr className="border-b border-amber-300/80 text-[9px] font-black text-slate-700 uppercase">
+                      <th className="w-[44%] py-0.5 px-1 text-start whitespace-normal leading-tight">{s.t("description", "Description")}</th>
+                      <th className="w-[12%] py-0.5 px-0.5 text-center whitespace-normal leading-tight">{s.t("totalBills", "Bills")}</th>
+                      <th className="w-[22%] py-0.5 px-1 text-end whitespace-normal leading-tight">{s.t("totalAmtPurchase", "Purchase")}</th>
+                      <th className="w-[22%] py-0.5 px-1 text-end whitespace-normal leading-tight">{s.t("totalAmtFinal", "Final")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-amber-200/50">
                     {advanceCards.summary.rows.map((r, i) => (
                       <tr key={i} className="hover:bg-amber-100/40 transition-colors">
-                        <td className="py-1 px-1.5 text-start font-bold text-slate-800 whitespace-nowrap">{r.description}</td>
-                        <td className="py-1 px-1 text-center font-mono font-bold text-slate-900">{r.bills}</td>
-                        <td className="py-1 px-1.5 text-end font-mono font-bold text-blue-700 whitespace-nowrap" dir="ltr">{r.purchaseAmt}</td>
-                        <td className="py-1 px-1.5 text-end font-mono font-semibold text-slate-600 whitespace-nowrap" dir="ltr">{r.finalAmt}</td>
+                        <td className="py-0.5 px-1 text-start font-bold text-slate-800 truncate" title={r.description}>{r.description}</td>
+                        <td className="py-0.5 px-0.5 text-center font-mono font-bold text-slate-900">{r.bills}</td>
+                        <td className="py-0.5 px-1 text-end font-mono font-bold text-blue-700 truncate" dir="ltr">{r.purchaseAmt}</td>
+                        <td className="py-0.5 px-1 text-end font-mono font-semibold text-slate-600 truncate" dir="ltr">{r.finalAmt}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -172,30 +172,30 @@ export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule
                 <div><div className="dgt-pa-headname">{advanceCards.status.title}</div></div>
                 <Bars />
               </div>
-              <div className="p-1 px-2 overflow-x-auto flex-1 flex flex-col justify-between">
-                <table className="w-full text-xs border-collapse">
+              <div className="p-0.5 px-1.5 overflow-hidden flex-1 flex flex-col justify-between">
+                <table className="w-full table-fixed text-[10.5px] leading-tight border-collapse">
                   <thead>
-                    <tr className="border-b border-blue-300/80 text-[10px] font-black text-slate-700 uppercase">
-                      <th className="py-1 px-2 text-start whitespace-normal leading-tight">{s.t("status", "Status")}</th>
-                      <th className="py-1 px-2 text-center whitespace-normal leading-tight">{s.t("bills", "Bills")}</th>
-                      <th className="py-1 px-2 text-end whitespace-normal leading-tight">{s.t("pctOfBills", "% of Bills")}</th>
+                    <tr className="border-b border-blue-300/80 text-[9px] font-black text-slate-700 uppercase">
+                      <th className="w-[48%] py-0.5 px-1 text-start whitespace-normal leading-tight">{s.t("status", "Status")}</th>
+                      <th className="w-[22%] py-0.5 px-1 text-center whitespace-normal leading-tight">{s.t("bills", "Bills")}</th>
+                      <th className="w-[30%] py-0.5 px-1 text-end whitespace-normal leading-tight">{s.t("pctOfBills", "% of Bills")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-blue-200/50">
                     {advanceCards.status.rows.map((r, i) => (
                       <tr key={i} className={cn("hover:bg-blue-100/40 transition-colors", r.isTotal && "font-black bg-blue-100/60")}>
-                        <td className="py-1 px-2 text-start font-bold flex items-center gap-1.5 whitespace-nowrap">
+                        <td className="py-0.5 px-1 text-start font-bold flex items-center gap-1.5 truncate">
                           {!r.isTotal && (
                             <span className={cn(
-                              "h-2 w-2 rounded-full flex-none",
+                              "h-1.5 w-1.5 rounded-full flex-none",
                               r.dotColor === "green" ? "bg-emerald-500" :
                               r.dotColor === "blue" ? "bg-blue-500" : "bg-amber-500"
                             )} />
                           )}
-                          <span>{r.status}</span>
+                          <span className="truncate">{r.status}</span>
                         </td>
-                        <td className="py-1 px-2 text-center font-mono font-bold text-slate-900">{r.bills}</td>
-                        <td className="py-1 px-2 text-end font-mono font-bold text-slate-700" dir="ltr">{r.pct}</td>
+                        <td className="py-0.5 px-1 text-center font-mono font-bold text-slate-900">{r.bills}</td>
+                        <td className="py-0.5 px-1 text-end font-mono font-bold text-slate-700" dir="ltr">{r.pct}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -210,25 +210,25 @@ export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule
                 <div><div className="dgt-pa-headname">{advanceCards.branchWise.title}</div></div>
                 <Bars />
               </div>
-              <div className="p-1 px-2 overflow-x-auto flex-1 flex flex-col justify-between">
-                <table className="w-full text-xs border-collapse">
+              <div className="p-0.5 px-1.5 overflow-hidden flex-1 flex flex-col justify-between">
+                <table className="w-full table-fixed text-[10.5px] leading-tight border-collapse">
                   <thead>
-                    <tr className="border-b border-emerald-300/80 text-[10px] font-black text-slate-700 uppercase">
-                      <th className="py-1 px-1.5 text-start whitespace-normal leading-tight">{s.t("branch", "Branch")}</th>
-                      <th className="py-1 px-1 text-center whitespace-normal leading-tight">{s.t("bills", "Bills")}</th>
-                      <th className="py-1 px-1.5 text-end whitespace-normal leading-tight">{s.t("advRequired", "Adv Required")}</th>
-                      <th className="py-1 px-1.5 text-end whitespace-normal leading-tight">{s.t("advPaid", "Adv Paid")}</th>
-                      <th className="py-1 px-1.5 text-end whitespace-normal leading-tight">{s.t("advBalance", "Adv Balance")}</th>
+                    <tr className="border-b border-emerald-300/80 text-[9px] font-black text-slate-700 uppercase">
+                      <th className="w-[24%] py-0.5 px-1 text-start whitespace-normal leading-tight">{s.t("branch", "Branch")}</th>
+                      <th className="w-[12%] py-0.5 px-0.5 text-center whitespace-normal leading-tight">{s.t("bills", "Bills")}</th>
+                      <th className="w-[22%] py-0.5 px-1 text-end whitespace-normal leading-tight">{s.t("advRequired", "Adv Required")}</th>
+                      <th className="w-[21%] py-0.5 px-1 text-end whitespace-normal leading-tight">{s.t("advPaid", "Adv Paid")}</th>
+                      <th className="w-[21%] py-0.5 px-1 text-end whitespace-normal leading-tight">{s.t("advBalance", "Adv Balance")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-emerald-200/50">
                     {advanceCards.branchWise.rows.map((r, i) => (
                       <tr key={i} className={cn("hover:bg-emerald-100/40 transition-colors", r.isTotal && "font-black bg-emerald-100/60")}>
-                        <td className="py-1 px-1.5 text-start font-bold text-slate-800 whitespace-nowrap">{r.branch}</td>
-                        <td className="py-1 px-1 text-center font-mono font-bold text-slate-900">{r.bills}</td>
-                        <td className="py-1 px-1.5 text-end font-mono font-bold text-blue-700 whitespace-nowrap" dir="ltr">{r.advReq}</td>
-                        <td className="py-1 px-1.5 text-end font-mono font-bold text-emerald-600 whitespace-nowrap" dir="ltr">{r.advPaid}</td>
-                        <td className="py-1 px-1.5 text-end font-mono font-bold text-rose-600 whitespace-nowrap" dir="ltr">{r.advBal}</td>
+                        <td className="py-0.5 px-1 text-start font-bold text-slate-800 truncate" title={r.branch}>{r.branch}</td>
+                        <td className="py-0.5 px-0.5 text-center font-mono font-bold text-slate-900">{r.bills}</td>
+                        <td className="py-0.5 px-1 text-end font-mono font-bold text-blue-700 truncate" dir="ltr">{r.advReq}</td>
+                        <td className="py-0.5 px-1 text-end font-mono font-bold text-emerald-600 truncate" dir="ltr">{r.advPaid}</td>
+                        <td className="py-0.5 px-1 text-end font-mono font-bold text-rose-600 truncate" dir="ltr">{r.advBal}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -63,10 +63,19 @@ export function SourceFilteredTable({
   };
 
   const isLocalPurchase = (row: any) => row.is_local_purchase || row.order_type === "local_purchase" || row.source_type === "local_purchase" || Boolean(row.local_purchase_id);
-  // A loading can appear more than once in the incoming list. General shows one financial
-  // summary per saved bill; the Booking tab remains the per-loading movement register.
+  // Strict deduplication: deduplicate by genuine purchase order / bill number so multiple
+  // joined versions or state updates never cause duplicate rows on the page.
   const uniqueRows = useMemo(() => {
-    return [...new Map(rows.map(row => [`${isLocalPurchase(row) ? "local" : "booking"}:${String(row.id)}`, row])).values()];
+    const map = new Map<string, any>();
+    for (const row of rows) {
+      const billNo = String(row.purchase_order_no || row.bill_no || row.form_data?.form?.billNo || row.form_data?.form?.contractNo || "").trim();
+      const kind = isLocalPurchase(row) ? "local" : "booking";
+      const key = billNo && billNo !== "-" ? `${kind}:${billNo}` : `${kind}:${String(row.id)}`;
+      if (!map.has(key)) {
+        map.set(key, row);
+      }
+    }
+    return Array.from(map.values());
   }, [rows]);
 
   const dueByOrderId = useMemo(() => new Map(dueBills.map(bill => [String(bill.id), bill])), [dueBills]);
@@ -639,14 +648,23 @@ export function SourceFilteredTable({
   const [exportOpen, setExportOpen] = useState(false);
 
   const formatDashDate = (str: string | null | undefined): string => {
-    if (!str || str === "—") return "—";
-    const d = new Date(str);
-    if (isNaN(d.getTime())) return String(str).slice(0, 10);
-    const day = String(d.getDate()).padStart(2, "0");
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const mon = months[d.getMonth()];
-    const yr = d.getFullYear();
-    return `${day}-${mon}-${yr}`;
+    if (!str || str === "—" || String(str).toLowerCase().includes("pending") || String(str).toLowerCase().includes("null")) return "—";
+    const s = String(str).trim();
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, "0");
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const mon = months[d.getMonth()];
+      const yr = d.getFullYear();
+      return `${day}-${mon}-${yr}`;
+    }
+    const match = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const mIdx = parseInt(match[2], 10) - 1;
+      return `${match[3]}-${months[mIdx] || match[2]}-${match[1]}`;
+    }
+    return s.length > 11 ? s.slice(0, 10) : s;
   };
 
   const advanceFilterOptions = useMemo(() => {
@@ -677,6 +695,31 @@ export function SourceFilteredTable({
 
   const advanceFinalRows = useMemo(() => {
     let list = advanceRowsToRender;
+    // Default view: only show bills awaiting advance payment.
+    // Bills whose advance payment is finalized / cleared (advance balance <= 0.05)
+    // move directly to Loading and Remaining/Final payment, so they are hidden from the active advance register.
+    if (filterStatus === "all") {
+      list = list.filter((r: any) => {
+        const form = r.form_data?.form || {};
+        const purchAmtPC = Number(r.total_goods_original || r.purchase_cost || form.totalAmount || r.order_total || 0);
+        const advPct = Number(form.advancePercent || form.advancePercentage || r.advance_percent || 0);
+        const advReqPC = Number(form.advanceAmount || form.advanceRequired || ((purchAmtPC * advPct) / 100));
+        const advPaidPC = Number(r.advance_paid || form.advancePaid || 0);
+        const advBalPC = Math.max(0, advReqPC - advPaidPC);
+        return advBalPC > 0.05;
+      });
+    } else {
+      list = list.filter((r: any) => {
+        const form = r.form_data?.form || {};
+        const purchAmtPC = Number(r.total_goods_original || r.purchase_cost || form.totalAmount || r.order_total || 0);
+        const advPct = Number(form.advancePercent || form.advancePercentage || r.advance_percent || 0);
+        const advReqPC = Number(form.advanceAmount || form.advanceRequired || ((purchAmtPC * advPct) / 100));
+        const advPaidPC = Number(r.advance_paid || form.advancePaid || 0);
+        const advBalPC = Math.max(0, advReqPC - advPaidPC);
+        const status = advBalPC <= 0.05 ? "fully paid" : advPaidPC > 0 ? "partially paid" : "pending";
+        return status === filterStatus.toLowerCase();
+      });
+    }
     if (filterCountry !== "all") {
       list = list.filter((r: any) => {
         const c = String(r.country_name || r.form_data?.form?.countryName || "").toLowerCase();
@@ -699,12 +742,6 @@ export function SourceFilteredTable({
       list = list.filter((r: any) => {
         const g = String(r.goods_name || r.product_name || r.form_data?.form?.goodsName || "").toLowerCase();
         return g.includes(filterGoods.toLowerCase());
-      });
-    }
-    if (filterStatus !== "all") {
-      list = list.filter((r: any) => {
-        const fin = getAdvanceInvoiceFinancials(r);
-        return fin.status.toLowerCase() === filterStatus.toLowerCase();
       });
     }
     if (filterDateFrom) {
@@ -991,7 +1028,7 @@ export function SourceFilteredTable({
         {/* ADVANCE PAYMENT JOURNAL — EXACT 15-COLUMN STACKED FINANCIAL REPORT         */}
         {/* ========================================================================= */}
         {activeMode === "advance" ? (
-          <table className="w-full min-w-[2200px] border-collapse text-start text-xs">
+          <table className="w-full min-w-[1680px] border-collapse text-start text-xs">
             <thead>
               <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
                 <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("BILL NO. / DATE")}</th>
@@ -1006,9 +1043,6 @@ export function SourceFilteredTable({
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("REQUIRED")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("BALANCE")}</th>
-                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("AMOUNT")}</th>
-                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("PAYMENT")}</th>
-                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("REMAINING")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("PAYMENT DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("LOADING DATE RECEIVE DATE")}</th>
                 <th className="py-3 px-3 text-center whitespace-nowrap">{label("ACTION")}</th>
@@ -1017,7 +1051,7 @@ export function SourceFilteredTable({
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
               {advanceFinalRows.length === 0 ? (
                 <tr>
-                  <td colSpan={21} className="py-8 text-center text-xs text-slate-400 font-medium">
+                  <td colSpan={15} className="py-8 text-center text-xs text-slate-400 font-medium">
                     {label("NO ADVANCE BILLS FOUND")}
                   </td>
                 </tr>
@@ -1057,8 +1091,12 @@ export function SourceFilteredTable({
                   const fin = getAdvanceInvoiceFinancials(r);
                   const paymentDate = formatDashDate(r.advance_payment_date || (fin.summary?.payments && fin.summary.payments[0]?.date) || (advPaidPC > 0 ? billDate : null));
 
-                  const loadDate = formatDashDate(form.loadingDate || form.expectedLoadingDate || r.loading_date);
-                  const receiveDate = formatDashDate(form.receivingDate || form.expectedReceivingDate || r.receiving_date);
+                  const linkedLr = (loadingRecords || []).find((lr: any) =>
+                    (lr.purchase_order_id && String(lr.purchase_order_id) === String(r.id)) ||
+                    (r.purchase_order_no && lr.purchase_order_no && lr.purchase_order_no === r.purchase_order_no)
+                  );
+                  const loadDate = formatDashDate(linkedLr?.loaded_at || form.loadingDate || form.expectedLoadingDate || r.loading_date || linkedLr?.created_at);
+                  const receiveDate = formatDashDate(linkedLr?.received_at || linkedLr?.actual_arrival_date || form.receivingDate || form.expectedReceivingDate || r.receiving_date || linkedLr?.eta_date);
 
                   const isFullyPaid = advBalPC <= 0.05;
 
@@ -1163,13 +1201,6 @@ export function SourceFilteredTable({
                         </div>
                       </td>
 
-                      {/* 12b. Invoice / Paid / Remaining summary (invoice-level, per currency) */}
-                      {(["invoice", "paid", "remaining"] as const).map((section) => (
-                        <td key={section} colSpan={2} className="align-top px-3 py-2.5 border-r border-slate-200 dark:border-slate-800">
-                          <PurchaseInvoiceSection compact lang={lang} section={section} summary={fin.summary} loading={fin.loading} />
-                        </td>
-                      ))}
-
                       {/* 13. Payment Date */}
                       <td className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
                         {paymentDate}
@@ -1212,49 +1243,6 @@ export function SourceFilteredTable({
                 })
               )}
             </tbody>
-            {/* Advance Table Total Row */}
-            <tfoot>
-              <tr className="bg-[#ffd257] text-slate-900 font-black text-xs border-t-2 border-amber-300">
-                <td className="py-2.5 px-3 border-r border-amber-300 whitespace-nowrap">
-                  Total ({advanceTotals.bills} Bills)
-                </td>
-                <td className="py-2.5 px-3 border-r border-amber-300" />
-                <td className="py-2.5 px-2.5 border-r border-amber-300" />
-                <td className="py-2.5 px-3 border-r border-amber-300" />
-                <td className="py-2.5 px-2 text-right border-r border-amber-300 font-mono whitespace-nowrap">
-                  {fmtQty(advanceTotals.qty)} {advanceTotals.unit}
-                </td>
-                <td className="py-2.5 px-2.5 text-right border-r border-amber-300 font-mono whitespace-nowrap">
-                  <div>{fmt(advanceTotals.gross)}</div>
-                  <div className="text-[10px] text-slate-700">{fmt(advanceTotals.net)}</div>
-                </td>
-                <td className="py-2.5 px-2.5 border-r border-amber-300" />
-                <td className="py-2.5 px-3 text-right border-r border-amber-300 font-mono whitespace-nowrap">
-                  <div><span className="text-[10px] text-slate-700 font-semibold mr-1">USD</span>{fmt(advanceTotals.purchPC)}</div>
-                  <div className="text-[11px] text-slate-800"><span className="text-[10px] text-slate-600 font-semibold mr-1">AED</span>{fmt(advanceTotals.purchFC)}</div>
-                </td>
-                <td className="py-2.5 px-2 text-center border-r border-amber-300 font-mono">
-                  10%
-                </td>
-                <td className="py-2.5 px-3 text-right border-r border-amber-300 font-mono whitespace-nowrap">
-                  <div><span className="text-[10px] text-slate-700 font-semibold mr-1">USD</span>{fmt(advanceTotals.advReqPC)}</div>
-                  <div className="text-[11px] text-slate-800"><span className="text-[10px] text-slate-600 font-semibold mr-1">AED</span>{fmt(advanceTotals.advReqFC)}</div>
-                </td>
-                <td className="py-2.5 px-3 text-right border-r border-amber-300 font-mono whitespace-nowrap text-emerald-800">
-                  <div><span className="text-[10px] font-semibold mr-1">USD</span>{fmt(advanceTotals.advPaidPC)}</div>
-                  <div className="text-[11px]"><span className="text-[10px] font-semibold mr-1">AED</span>{fmt(advanceTotals.advPaidFC)}</div>
-                </td>
-                <td className="py-2.5 px-3 text-right border-r border-amber-300 font-mono whitespace-nowrap text-rose-700">
-                  <div><span className="text-[10px] font-semibold mr-1">USD</span>{fmt(advanceTotals.advBalPC)}</div>
-                  <div className="text-[11px]"><span className="text-[10px] font-semibold mr-1">AED</span>{fmt(advanceTotals.advBalFC)}</div>
-                </td>
-                <td className="py-2.5 px-2.5 text-center border-r border-amber-300 font-mono text-slate-700">
-                  -
-                </td>
-                <td className="py-2.5 px-2.5 border-r border-amber-300" />
-                <td className="py-2.5 px-3" />
-              </tr>
-            </tfoot>
           </table>
         ) : activeMode === "remaining" ? (
           /* ========================================================================= */
