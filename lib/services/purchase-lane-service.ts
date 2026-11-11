@@ -417,7 +417,7 @@ export async function listLaneLoads(session: ErpSession, f: LaneFilters = {}) {
              coalesce(
                case
                  when l.source_type = 'purchase_booking' then (select coalesce(po.payment_status, po.form_data->'form'->>'paymentStatus') from public.purchase_orders po where po.id = l.purchase_order_id)
-                 when l.source_type = 'local_purchase' then (select coalesce(lp.payment_status, 'completed') from public.local_purchases lp where lp.id = l.source_id)
+                 when l.source_type = 'local_purchase' then (select case when lp.remaining_balance is not null and lp.remaining_balance <= 0.01 then 'completed' else 'pending' end from public.local_purchases lp where lp.id = l.source_id)
                  when l.source_type in ('sales_booking', 'local_sales') then (select coalesce(so.payment_status, 'pending') from public.sales_orders so where so.id = coalesce(l.sales_order_id, l.source_id))
                  else 'pending'
                end,
