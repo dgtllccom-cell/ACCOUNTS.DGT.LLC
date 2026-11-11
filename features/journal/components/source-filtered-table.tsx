@@ -12,7 +12,7 @@ import { PurchaseInvoiceSection } from "./purchase-invoice-summary";
 import { usePurchaseInvoiceHistory } from "./use-purchase-invoice-history";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 type LanguageCode = string;
-import { FileSpreadsheet, BookOpen, Globe, Download, ChevronDown, RotateCcw, Search, Shield, WalletCards, Calendar, SlidersHorizontal, X } from "lucide-react";
+import { FileSpreadsheet, BookOpen, Globe, Download, ChevronDown, RotateCcw, Search, Shield, WalletCards, Calendar, SlidersHorizontal, X, MoreVertical, Plus, Eye } from "lucide-react";
 
 export interface SourceFilteredTableProps {
   sourceFilter: "all" | "purchase_booking" | "local_purchase";
@@ -1218,25 +1218,14 @@ export function SourceFilteredTable({
                         </div>
                       </td>
 
-                      {/* 15. Action */}
+                      {/* 15. Action: one three-dot menu with New Entry and View */}
                       <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        {isFullyPaid ? (
-                          <button
-                            type="button"
-                            onClick={() => onOpenFullBill(r)}
-                            className="inline-flex items-center justify-center px-4 py-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs shadow-sm transition cursor-pointer"
-                          >
-                            View
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => onSelectOrder(r.id)}
-                            className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs shadow-sm transition cursor-pointer whitespace-nowrap"
-                          >
-                            Advance Entry
-                          </button>
-                        )}
+                        <AdvanceRowMenu
+                          canCreateEntry={!isFullyPaid}
+                          onNewEntry={() => onSelectOrder(r.id)}
+                          onView={() => onOpenFullBill(r)}
+                          lang={lang}
+                        />
                       </td>
                     </tr>
                   );
@@ -1712,6 +1701,49 @@ export function SourceFilteredTable({
           <span className="font-bold text-blue-600">ⓘ Journal button</span> opens the selected bill details and Print on demand. | Alternative tab states — app shows one selected table at a time.
         </div>
       </div>
+    </div>
+  );
+}
+
+
+function AdvanceRowMenu({ canCreateEntry, onNewEntry, onView, lang }: { canCreateEntry: boolean; onNewEntry: () => void; onView: () => void; lang: string }) {
+  const [open, setOpen] = useState(false);
+  const t = (label: string) => translateHeader(lang, label);
+  return (
+    <div className="relative inline-block text-left" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false); }}>
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={t("ACTION")}
+        onClick={() => setOpen((v) => !v)}
+        className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 bg-white hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-950"
+      >
+        <MoreVertical className="h-4 w-4" aria-hidden="true" />
+      </button>
+      {open && (
+        <div role="menu" className="absolute end-0 z-30 mt-1 w-40 rounded-xl border border-slate-200 bg-white p-1 text-start shadow-xl dark:border-slate-800 dark:bg-slate-950">
+          <button
+            type="button"
+            role="menuitem"
+            disabled={!canCreateEntry}
+            onClick={() => { setOpen(false); onNewEntry(); }}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-900"
+          >
+            <Plus className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
+            {t("NEW ENTRY")}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => { setOpen(false); onView(); }}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900"
+          >
+            <Eye className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
+            {t("VIEW")}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
