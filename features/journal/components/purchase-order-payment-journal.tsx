@@ -514,6 +514,12 @@ function rowOfficeCurrency(row: PurchaseOrderRow): string {
   return officeCurrencyForCountryName(rowCountryName(row)); // also recognises the translated (UR/AR/FA/PS) country names
 }
 
+// Invoice display must keep missing historical currency metadata unknown.
+// Existing payment-entry defaults continue to use rowOfficeCurrency above.
+function rowInvoiceOfficeCurrency(row: PurchaseOrderRow): string {
+  return officeCurrencyForCountryName(rowCountryName(row), "");
+}
+
 function getUsdExchangeRate(cur: string, row: any, liveRates: any[] = []) {
   if (cur === "USD") return 1.0;
   const match = liveRates.find((r) => r.currency_code === cur);
@@ -5596,7 +5602,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         loadingRecords={registryLoadingRecords}
         dueBills={registryDueBills}
         invoiceRefresh={paymentsTick}
-        invoiceFinalCurrency={rowOfficeCurrency}
+        invoiceFinalCurrency={rowInvoiceOfficeCurrency}
         onSelectLoading={(id, loadingId) => { pendingLoadingPick.current = loadingId; selectOrder(id); }}
         session={session}
       />}
@@ -5840,7 +5846,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   isRtl={isRtl}
                   mode={activeMode as PaymentEntryMode}
                   model={docModel}
-                  invoiceSummary={activeMode === "advance" ? purchaseInvoiceSummary(selected, loadingPayments ? null : selectedOrderPayments, rowOfficeCurrency(selected), selectedOrderPayments.length < 200 && !paymentError) : undefined}
+                  invoiceSummary={activeMode === "advance" ? purchaseInvoiceSummary(selected, loadingPayments ? null : selectedOrderPayments, rowInvoiceOfficeCurrency(selected), selectedOrderPayments.length < 200 && !paymentError) : undefined}
                   limit={docLimit}
                   purchaseCurrency={poCurrencyHeader}
                   baseCurrency={baseCurrency}

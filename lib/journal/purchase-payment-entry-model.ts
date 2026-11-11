@@ -353,7 +353,7 @@ const OFFICE_COUNTRIES: Array<{ english: string; code: string; aliases: string[]
 ];
 let translatedOfficeNames: Map<string, string> | null = null;
 
-export function officeCurrencyForCountryName(name: string | null | undefined): string {
+export function officeCurrencyForCountryName(name: string | null | undefined, unknownCurrency = "USD"): string {
   const raw = String(name ?? "").trim();
   const upper = raw.toUpperCase();
   for (const c of OFFICE_COUNTRIES) if (c.aliases.some((a) => upper.includes(a))) return c.code;
@@ -366,5 +366,5 @@ export function officeCurrencyForCountryName(name: string | null | undefined): s
       }
     }
   }
-  return translatedOfficeNames.get(raw) ?? "USD";
+  return translatedOfficeNames.get(raw) ?? unknownCurrency;
 }

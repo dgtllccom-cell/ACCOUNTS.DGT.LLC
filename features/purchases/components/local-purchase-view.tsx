@@ -2652,6 +2652,8 @@ export function LocalPurchaseView({
           onExportPdf={() => {
             printDomFragmentViaModal("local-purchase-register-table-wrapper", t(lang, "lp.title", "Local Purchase Registry"));
           }}
+          loading={loadingHistory}
+          onRefresh={() => void loadHistory()}
         />
       )}
 
