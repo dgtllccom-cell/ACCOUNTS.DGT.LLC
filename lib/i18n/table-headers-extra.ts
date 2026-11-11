@@ -687,6 +687,15 @@ export const HEADER_EXTRA: Record<string, Row> = {
   "NO PORT DATA AVAILABLE": r("بندرگاہ کا کوئی ڈیٹا دستیاب نہیں", "لا تتوفر بيانات الموانئ", "داده‌ای از بنادر موجود نیست", "د بندرونو هیڅ معلومات نشته"),
   // shipping-line dashboards, branch reports and permission management (production 658c4be / a86355d screens)
   "GLOBAL EXECUTIVE SHIPPING LINE": r("عالمی ایگزیکٹو شپنگ لائن", "خط الشحن التنفيذي العالمي", "خط حمل اجرایی جهانی", "نړیوال اجرائیوي بار لیږد کرښه"),
+  // Local Purchase main page (top, filter dialog, report links) and the shared empty-state line used by PurchasePageTop. Drafts: native review pending.
+  "NO RECORDS FOUND.": r("کوئی ریکارڈ نہیں ملا۔", "لم يتم العثور على سجلات.", "هیچ رکوردی یافت نشد.", "هیڅ ریکارډ ونه موندل شو."),
+  "LOCAL PURCHASE JOURNAL": r("لوکل پرچیز جرنل", "يومية الشراء المحلي", "ژورنال خرید محلی", "د محلي پیرود جرنل"),
+  "TRANSFER & PAYMENT": r("منتقلی اور ادائیگی", "التحويل والدفع", "انتقال و پرداخت", "لیږد او تادیه"),
+  "LOCAL PURCHASE EXPORT": r("لوکل پرچیز برآمد", "تصدير الشراء المحلي", "صادرات خرید محلی", "د محلي پیرود صادرات"),
+  "NEW LOCAL PURCHASE": r("نئی لوکل پرچیز", "شراء محلي جديد", "خرید محلی جدید", "نوی محلي پیرود"),
+  "CASH": r("نقد", "نقدًا", "نقدی", "نغدي"),
+  "BANK TRANSFER": r("بینک ٹرانسفر", "تحويل بنكي", "انتقال بانکی", "بانکي لیږد"),
+  "PAYMENT MODE": r("ادائیگی کا طریقہ", "طريقة الدفع", "روش پرداخت", "د تادیې طریقه"),
 };
 
 /** Concise English text for English headings that were overly long (same meaning). */
