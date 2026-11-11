@@ -4,6 +4,7 @@ import { act, cleanup, render, screen, within, fireEvent } from '@testing-librar
 import { purchaseInvoiceSummary, isActualInvoicePayment } from '@/lib/journal/purchase-invoice-summary';
 import { PurchaseInvoiceSummaryPanel } from '@/features/journal/components/purchase-invoice-summary';
 import { t, type UiKey } from '@/lib/i18n/ui';
+import { officeCurrencyForCountryName } from '@/lib/journal/purchase-payment-entry-model';
 
 const order = { order_total: 36700, total_goods_original: 10000, currency_code: 'USD', exchange_rate: 3.67,
   advance_paid: 2000, remaining_due: 1000, form_data: {form: {secondaryCurrency: 'AED', advancePercent: 30}} };
@@ -88,6 +89,32 @@ describe('saved invoice currency projection', () => {
   });
   it('does not turn an empty goods array into an invoice worth zero', () => {
     expect(purchaseInvoiceSummary({currency_code:'USD',exchange_rate:3.67,order_total:36700,form_data:{goodsEntries:[],form:{secondaryCurrency:'AED'}}},[]).invoice.purchase).toBe(10000);
+  });
+  it('recovers an original from a converted total when the original column has only its zero default', () => {
+    const s=purchaseInvoiceSummary({total_goods_original:0,order_total:36700,currency_code:'USD',exchange_rate:3.67,base_currency:'AED'},[]);
+    expect(s.invoice).toEqual({purchase:10000,final:36700});
+  });
+  it('shows an unknown original when a zero default cannot be recovered without an invoice rate', () => {
+    const s=purchaseInvoiceSummary({total_goods_original:0,order_total:36700,currency_code:'USD',base_currency:'AED'},[]);
+    expect(s.invoice.purchase).toBeNull(); expect(s.invoiceRate).toBeNull();
+  });
+  it('does not reconvert a Local Purchase adapter total when the original is unavailable', () => {
+    const s=purchaseInvoiceSummary({order_type:'local_purchase',purchase_currency:'USD',local_currency:'AED',exchange_rate:3.67,final_cost:3670,form_data:{form:{totalAmount:3670},goodsEntries:[{totalAmount:3670}]}},[]);
+    expect(s.invoice).toEqual({purchase:1000,final:3670});
+  });
+  it('does not label a synthetic Local Purchase final total as an original when its rate is missing', () => {
+    const s=purchaseInvoiceSummary({order_type:'local_purchase',purchase_currency:'USD',local_currency:'AED',final_cost:3670,form_data:{form:{totalAmount:3670}}},[]);
+    expect(s.invoice).toEqual({purchase:null,final:3670});
+  });
+  it('keeps an unknown office currency unknown for invoice display, preserving the existing payment default', () => {
+    expect(officeCurrencyForCountryName('Atlantis')).toBe('USD');
+    expect(officeCurrencyForCountryName('Atlantis','')).toBe('');
+    const s=purchaseInvoiceSummary({currency_code:'USD',total_goods_original:1000,order_total:3670,exchange_rate:3.67},[],officeCurrencyForCountryName('Atlantis',''));
+    expect(s.finalCurrency).toBe(''); expect(s.invoiceRate).toBe(3.67);
+  });
+  it('uses a saved branch currency without inferring it from an unknown country', () => {
+    const s=purchaseInvoiceSummary({currency_code:'USD',total_goods_original:1000,exchange_rate:3.67,form_data:{form:{branchCurrency:'AED'}}},[]);
+    expect(s.finalCurrency).toBe('AED'); expect(s.invoice.final).toBe(3670);
   });
 });
 
