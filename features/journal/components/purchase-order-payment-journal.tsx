@@ -4639,6 +4639,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     return currency !== (selected?.currency_code || "USD") || currency !== baseCurrency;
   }, [currency, selected?.currency_code, baseCurrency]);
 
+  // Local-currency payment (payment currency = PO currency = local currency): no exchange rate or conversion helper; the amount is typed directly.
+  const isLocalPayment = !showCalcPanel;
+
   const calcFinal = useMemo(() => {
     if (!showCalcPanel) return null;
     const fAmt = Number(calcAmount || 0);
@@ -4876,7 +4879,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         roznamchaType,
         roznamchaNumber,
         currencyCode: currency,
-        exchangeRate: Number(exchangeRate || 1),
+        exchangeRate: isLocalPayment ? 1 : Number(exchangeRate || 1),
         amount: payloadAmount,
         amountLocal: amount,
         narration: finalRemarks,
@@ -6983,6 +6986,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                               />
                             </FieldBlock>
 
+                            {!isLocalPayment && (
                             <FieldBlock label={t("exchange_rate", currentLanguage)} required>
                               <Input
                                 type="number"
@@ -6994,7 +6998,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                                 placeholder={String(exRate || 1)}
                               />
                             </FieldBlock>
+                            )}
 
+                            {!isLocalPayment && (
                             <FieldBlock label={`${t("payment_amount_usd", currentLanguage)} (${poCurrencyHeader})`}>
                               <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">
@@ -7009,9 +7015,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                                 />
                               </div>
                             </FieldBlock>
+                            )}
                           </div>
 
                           {/* Conversion Calculator Helper */}
+                          {!isLocalPayment && (
                           <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-2.5 space-y-2">
                             <div className="flex items-center gap-1.5 text-[11px] font-bold text-blue-600 dark:text-blue-400">
                               <Calculator className="h-3.5 w-3.5" />
@@ -7048,6 +7056,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                               </FieldBlock>
                             </div>
                           </div>
+                          )}
 
                           <FieldBlock label={`${t("final_local_amount", currentLanguage)} (${baseCurrency})`} required>
                             <div className="relative">
@@ -7209,6 +7218,14 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                         </div>
                       </div>
                     </div>
+                    {activeMode === "remaining" && !isLocalSelected && Boolean(selectedLoadingRecord?.id) && Number(selectedLoadingDue?.outstanding ?? 1) <= 0.01 && (
+                      <a
+                        href={`/dashboard/purchase/purchase-transit-lane?source=purchase_booking&sourceId=${encodeURIComponent(String(selectedLoadingRecord.id))}&focus=${encodeURIComponent(String(selectedLoadingRecord.id))}`}
+                        className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700"
+                      >
+                        {translateHeader(currentLanguage, "Transfer to Lane")}
+                      </a>
+                    )}
                     {loadingRecords.length > 1 && (
                       <Button
                         type="button"
