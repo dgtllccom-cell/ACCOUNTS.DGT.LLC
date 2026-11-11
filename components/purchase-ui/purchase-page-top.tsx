@@ -9,15 +9,30 @@
 
 import { useState, type ReactNode } from "react";
 import { ShoppingCart, SlidersHorizontal, RotateCcw, RefreshCw, Search, ChevronDown, Crown, BarChart3 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { fmtInt, fmtMoney, fmtPct } from "@/lib/purchase-ui/money-unit";
 import { computePayTotals, type PayRow } from "@/features/purchases/components/purchase-payments-approved-header";
 
 export type PurchaseReportLink = { label: string; href: string };
 
+/**
+ * Optional wording for the cards and the country table. The caller passes text that is already translated (use tr(...));
+ * when a value is omitted the Purchase Booking wording is used, so the Purchase page renders exactly as before.
+ */
+export type PurchasePageTopLabels = Partial<{
+  summary: string;
+  totalBills: string;
+  totalAmount: string;
+  totalPaid: string;
+  balance: string;
+  countryTitle: string;
+  countryAmount: string;
+}>;
+
 export function PurchasePageTop({
   lang, title, superAdmin, breadcrumb, rows, rates, reports, search, onSearch, filterCount, onOpenFilters,
-  onReset, onRefresh, onApply, loading, menu,
+  onReset, onRefresh, onApply, loading, menu, labels, searchPlaceholder, icon: Icon = ShoppingCart,
 }: {
   lang: string;
   title: string;
@@ -35,6 +50,11 @@ export function PurchasePageTop({
   onApply: () => void;
   loading?: boolean;
   menu: ReactNode;
+  labels?: PurchasePageTopLabels;
+  /** already-translated placeholder for the toolbar search box (default: the translated "Search") */
+  searchPlaceholder?: string;
+  /** page icon in the title row (default: the shopping cart used by Purchase Booking) */
+  icon?: LucideIcon;
 }) {
   const t = (label: string) => translateHeader(lang, label);
   const [reportsOpen, setReportsOpen] = useState(false);
@@ -50,7 +70,7 @@ export function PurchasePageTop({
       {/* Title row */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2.5">
-          <ShoppingCart className="h-6 w-6 text-blue-700" aria-hidden="true" />
+          <Icon className="h-6 w-6 text-blue-700" aria-hidden="true" />
           <h1 className="text-xl font-black text-blue-800 dark:text-blue-300">{title}</h1>
           {superAdmin && (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-800">
@@ -79,7 +99,7 @@ export function PurchasePageTop({
         </button>
         <div className="relative flex-1 min-w-[180px] max-w-md">
           <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-          <input type="text" value={search} onChange={(e) => onSearch(e.target.value)} placeholder={t("Search")}
+          <input type="text" value={search} onChange={(e) => onSearch(e.target.value)} placeholder={searchPlaceholder ?? t("Search")}
             className="h-9 w-full ps-8 pe-3 rounded-lg border border-slate-300 bg-white text-xs font-medium text-slate-800" />
         </div>
         <div className="ms-auto flex items-center gap-2">
@@ -109,14 +129,14 @@ export function PurchasePageTop({
       {/* Three cards */}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         <section className="rounded-xl border border-amber-200 bg-gradient-to-b from-amber-50 to-white p-3 shadow-sm">
-          <h2 className="mb-2 text-xs font-black uppercase tracking-wide text-amber-900">{t("Purchase Booking Summary")}</h2>
+          <h2 className="mb-2 text-xs font-black uppercase tracking-wide text-amber-900">{labels?.summary ?? t("Purchase Booking Summary")}</h2>
           <dl className="space-y-1.5 text-xs">
-            <Row k={t("Total Bills")} v={fmtInt(totalBills)} />
-            <Row k={t("Total Purchase")} v={fmtMoney(m.unit, m.total)} />
-            <Row k={t("Total Paid")} v={fmtMoney(m.unit, m.paid)} />
+            <Row k={labels?.totalBills ?? t("Total Bills")} v={fmtInt(totalBills)} />
+            <Row k={labels?.totalAmount ?? t("Total Purchase")} v={fmtMoney(m.unit, m.total)} />
+            <Row k={labels?.totalPaid ?? t("Total Paid")} v={fmtMoney(m.unit, m.paid)} />
             <Row k={t("Finalized")} v={fmtInt(completed)} />
             <Row k={t("Pending")} v={fmtInt(pending)} />
-            <Row k={t("Balance (To Be Paid)")} v={fmtMoney(m.unit, m.due)} strong />
+            <Row k={labels?.balance ?? t("Balance (To Be Paid)")} v={fmtMoney(m.unit, m.due)} strong />
           </dl>
         </section>
 
@@ -135,13 +155,13 @@ export function PurchasePageTop({
         </section>
 
         <section className="rounded-xl border border-emerald-200 bg-gradient-to-b from-emerald-50 to-white p-3 shadow-sm">
-          <h2 className="mb-2 text-xs font-black uppercase tracking-wide text-emerald-900">{t("Country Wise Purchase Booking")}</h2>
+          <h2 className="mb-2 text-xs font-black uppercase tracking-wide text-emerald-900">{labels?.countryTitle ?? t("Country Wise Purchase Booking")}</h2>
           {m.countries.length === 0 ? (
             <p className="py-6 text-center text-xs text-slate-400">{t("No records found.")}</p>
           ) : (
             <table className="w-full text-xs">
               <thead className="text-[10px] font-bold uppercase text-slate-500">
-                <tr><th className="text-start py-1">#</th><th className="text-start py-1">{t("Country")}</th><th className="text-end py-1">{t("Bills")}</th><th className="text-end py-1">{t("Purchase Amount")}</th></tr>
+                <tr><th className="text-start py-1">#</th><th className="text-start py-1">{t("Country")}</th><th className="text-end py-1">{t("Bills")}</th><th className="text-end py-1">{labels?.countryAmount ?? t("Purchase Amount")}</th></tr>
               </thead>
               <tbody className="font-semibold text-slate-800">
                 {m.countries.map((c, i) => (
