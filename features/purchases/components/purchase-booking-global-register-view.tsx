@@ -109,6 +109,10 @@ export function PurchaseBookingGlobalRegisterView({
       if (actionsRef.current && !actionsRef.current.contains(e.target as Node)) {
         setActionsOpen(false);
       }
+      const target = e.target as HTMLElement | null;
+      if (!target?.closest("[data-row-menu]")) {
+        setActiveRowMenuId(null);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -266,7 +270,8 @@ export function PurchaseBookingGlobalRegisterView({
     const map = new Map<string, { country: string; currency: string; bills: number; purchaseAmount: number; paidAmount: number }>();
 
     filteredRows.forEach((r) => {
-      const country = String(r.countryName || r.form_data?.form?.destinationCountry || "UAE").trim();
+      const rawCountry = String(r.countryName || r.form_data?.form?.destinationCountry || "UAE").trim();
+      const country = shortenCountry(rawCountry);
       const exRate = Number(r.exchange_rate || r.form_data?.form?.exchangeRate || 1);
       const finalCurr = String(r.finalCurrency || r.form_data?.form?.secondaryCurrency?.split(" ")?.[0] || (country.includes("Pakistan") ? "PKR" : country.includes("Afghanistan") ? "AFN" : country.includes("Iran") ? "IRR" : country.includes("China") ? "CNY" : "AED")).toUpperCase();
 
@@ -1060,10 +1065,13 @@ export function PurchaseBookingGlobalRegisterView({
                             <Eye className="h-4 w-4" />
                           </button>
 
-                          <div className="relative">
+                          <div className="relative" data-row-menu="true">
                             <button
                               type="button"
-                              onClick={() => setActiveRowMenuId((curr) => curr === r.id ? null : r.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveRowMenuId((curr) => curr === r.id ? null : r.id);
+                              }}
                               className="p-1 rounded hover:bg-slate-100 text-slate-600 dark:hover:bg-slate-800 dark:text-slate-400 cursor-pointer"
                             >
                               <MoreVertical className="h-4 w-4" />
