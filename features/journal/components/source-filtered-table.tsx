@@ -667,6 +667,158 @@ export function SourceFilteredTable({
     return s.length > 11 ? s.slice(0, 10) : s;
   };
 
+  // Helper to extract complete goods info from row (supporting goodsEntries, form_data, totals, items, and root properties)
+  const resolveOrderGoods = (r: any) => {
+    let rawData = r.form_data ?? {};
+    if (typeof rawData === "string") {
+      try {
+        rawData = JSON.parse(rawData);
+      } catch (_) {
+        rawData = {};
+      }
+    }
+    const data = typeof rawData === "object" && rawData !== null ? rawData : {};
+    const form = (data.form ?? {}) as Record<string, any>;
+    const totals = (data.totals ?? {}) as Record<string, any>;
+    const goodsEntries = (
+      Array.isArray(data.goodsEntries) && data.goodsEntries.length > 0
+        ? data.goodsEntries
+        : (Array.isArray(r.goods_entries) && r.goods_entries.length > 0
+            ? r.goods_entries
+            : (Array.isArray(r.items) && r.items.length > 0
+                ? r.items
+                : (form.goodsName ? [form] : [])))
+    ) as any[];
+
+    // 1. Goods Name
+    const names = goodsEntries
+      .map((g: any) => g.goodsName || g.productName || g.description || g.goods_name || g.name)
+      .filter(Boolean);
+    const goodsName =
+      (names.length > 0 ? Array.from(new Set(names)).join(", ") : null) ||
+      r.goods_name ||
+      r.productName ||
+      r.goodsDescription ||
+      form.goodsName ||
+      form.productName ||
+      "—";
+
+    // 2. Brand & Size
+    const brands = goodsEntries.map((g: any) => g.brand).filter(Boolean);
+    const brand = (brands.length > 0 ? brands[0] : "") || form.brand || form.brandName || r.brand || "";
+
+    const sizes = goodsEntries.map((g: any) => g.size || g.goodsSize).filter(Boolean);
+    const size = (sizes.length > 0 ? sizes[0] : "") || form.size || form.goodsSize || r.size || "";
+
+    // 3. Quantity
+    const qtyFromEntries = goodsEntries.reduce((sum: number, g: any) => {
+      return sum + (Number(g.qtyNo ?? g.quantity ?? g.quantity_kgs ?? g.qty ?? 0) || 0);
+    }, 0);
+    const qty =
+      qtyFromEntries > 0
+        ? qtyFromEntries
+        : Number(totals.totalQty || totals.totalQuantity || r.total_quantity || form.totalQuantity || r.quantity || r.quantity_kgs || 0);
+
+    // 4. Unit
+    const unit =
+      goodsEntries[0]?.qtyName ||
+      goodsEntries[0]?.unit ||
+      goodsEntries[0]?.quantityUnit ||
+      form.qtyName ||
+      form.quantityUnit ||
+      form.unit ||
+      r.quantity_name ||
+      r.unit ||
+      "BAGS";
+
+    // 5. Gross Weight (Kg)
+    const grossFromEntries = goodsEntries.reduce((sum: number, g: any) => {
+      const direct = Number(g.grossWeight ?? g.total_gross_weight ?? 0);
+      if (direct > 0) return sum + direct;
+      const qNo = Number(g.qtyNo ?? g.quantity ?? 0);
+      const qKgs = Number(g.qtyKgs ?? 0);
+      if (qNo > 0 && qKgs > 0) return sum + (qNo * qKgs);
+      return sum;
+    }, 0);
+    const grossKg =
+      grossFromEntries > 0
+        ? grossFromEntries
+        : Number(totals.totalGross || totals.totalGrossWeight || r.total_gross_weight || r.gross_weight || form.grossWeight || 0);
+
+    // 6. Net Weight (Kg)
+    const netFromEntries = goodsEntries.reduce((sum: number, g: any) => {
+      const direct = Number(g.netWeight ?? g.net_weight ?? 0);
+      if (direct > 0) return sum + direct;
+      const qNo = Number(g.qtyNo ?? g.quantity ?? 0);
+      const qKgs = Number(g.qtyKgs ?? 0);
+      const emptyKgs = Number(g.emptyKgs ?? 0);
+      if (qNo > 0 && qKgs > 0) return sum + (qNo * (qKgs - emptyKgs));
+      return sum;
+    }, 0);
+    const netKg =
+      netFromEntries > 0
+        ? netFromEntries
+        : Number(totals.totalNet || totals.totalNetWeight || r.total_net_weight || r.net_weight || form.netWeight || (grossKg > 0 ? grossKg : 0));
+
+    // 7. Origin
+    const origin =
+      goodsEntries[0]?.origin ||
+      form.originCountry ||
+      form.originCountryName ||
+      r.origin_country_name ||
+      r.originCountry ||
+      r.country_name ||
+      "—";
+
+    return { goodsName, brand, size, qty, unit, grossKg, netKg, origin, form, totals, goodsEntries, rawData: data };
+  };
+
+  // Helper to resolve accurate Loading and Receiving Dates
+  const resolveOrderDates = (r: any, linkedLr: any, form: any, data: any) => {
+    const workflow = (data?.workflow ?? {}) as Record<string, any>;
+    const purchaseBooking = (data?.purchaseBooking ?? {}) as Record<string, any>;
+    const workflowDates = (data?.workflowDates ?? r.workflowDates ?? {}) as Record<string, any>;
+
+    const rawLoadDate =
+      linkedLr?.loaded_at ||
+      linkedLr?.loading_date ||
+      form?.loadingDate ||
+      form?.expectedLoadingDate ||
+      workflow?.loadingDate ||
+      workflow?.expectedLoadingDate ||
+      workflowDates?.loadingDate ||
+      purchaseBooking?.loadingDate ||
+      purchaseBooking?.expectedLoadingDate ||
+      r?.loading_date ||
+      r?.purchase_date ||
+      linkedLr?.created_at ||
+      null;
+
+    const rawReceiveDate =
+      linkedLr?.received_at ||
+      linkedLr?.actual_arrival_date ||
+      form?.receivingDate ||
+      form?.receivedDate ||
+      form?.expectedReceivingDate ||
+      form?.arrivalDate ||
+      workflow?.receivingDate ||
+      workflow?.receivedDate ||
+      workflow?.expectedReceivingDate ||
+      workflowDates?.receivingDate ||
+      purchaseBooking?.receivingDate ||
+      purchaseBooking?.expectedReceivingDate ||
+      r?.receiving_date ||
+      r?.receive_date ||
+      r?.arrival_date ||
+      linkedLr?.eta_date ||
+      null;
+
+    return {
+      loadDate: formatDashDate(rawLoadDate),
+      receiveDate: formatDashDate(rawReceiveDate),
+    };
+  };
+
   const advanceFilterOptions = useMemo(() => {
     const countries = new Set<string>();
     const branches = new Set<string>();
@@ -674,15 +826,14 @@ export function SourceFilteredTable({
     const goods = new Set<string>();
 
     advanceRowsToRender.forEach((r: any) => {
-      const form = r.form_data?.form || {};
+      const { goodsName, form } = resolveOrderGoods(r);
       const c = r.country_name || form.countryName;
       if (c && c !== "—") countries.add(c);
       const b = r.branch_name || form.branchName;
       if (b && b !== "—") branches.add(b);
       const a = r.purchase_account_name || r.purchase_account_no || form.purchaseAccountName;
       if (a && a !== "—") accounts.add(a);
-      const g = r.goods_name || form.goodsName;
-      if (g && g !== "—") goods.add(g);
+      if (goodsName && goodsName !== "—") goods.add(goodsName);
     });
 
     return {
@@ -740,8 +891,8 @@ export function SourceFilteredTable({
     }
     if (filterGoods !== "all") {
       list = list.filter((r: any) => {
-        const g = String(r.goods_name || r.product_name || r.form_data?.form?.goodsName || "").toLowerCase();
-        return g.includes(filterGoods.toLowerCase());
+        const { goodsName } = resolveOrderGoods(r);
+        return goodsName.toLowerCase().includes(filterGoods.toLowerCase());
       });
     }
     if (filterDateFrom) {
@@ -760,8 +911,9 @@ export function SourceFilteredTable({
       const q = filterQuery.toLowerCase().trim();
       list = list.filter((r: any) => {
         const bill = String(r.purchase_order_no || r.bill_no || "").toLowerCase();
-        const goods = String(r.goods_name || "").toLowerCase();
-        const acc = String(r.purchase_account_name || "").toLowerCase();
+        const { goodsName } = resolveOrderGoods(r);
+        const goods = goodsName.toLowerCase();
+        const acc = String(r.purchase_account_name || r.purchase_account_no || r.form_data?.form?.purchaseAccountName || "").toLowerCase();
         return bill.includes(q) || goods.includes(q) || acc.includes(q);
       });
     }
@@ -783,14 +935,13 @@ export function SourceFilteredTable({
     let totalAdvBalFC = 0;
 
     advanceFinalRows.forEach((r: any) => {
-      const form = r.form_data?.form || {};
+      const { qty, unit, grossKg, netKg, form } = resolveOrderGoods(r);
       const exRate = Number(r.exchange_rate || form.exchangeRate || 3.6725) || 3.6725;
-      const qty = Number(r.total_quantity || form.totalQuantity || r.quantity || 0);
-      if (form.quantityUnit || form.unit || r.quantity_name) {
-        qtyUnit = form.quantityUnit || form.unit || r.quantity_name;
+      if (unit && unit !== "—") {
+        qtyUnit = unit;
       }
-      const gross = Number(r.gross_weight || form.grossWeight || 0);
-      const net = Number(r.net_weight || form.netWeight || 0);
+      const gross = grossKg;
+      const net = netKg;
 
       const purchPC = Number(r.total_goods_original || r.purchase_cost || form.totalAmount || r.order_total || 0);
       const purchFC = purchPC * exRate;
@@ -1044,7 +1195,7 @@ export function SourceFilteredTable({
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("BALANCE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("PAYMENT DATE")}</th>
-                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("LOADING DATE RECEIVE DATE")}</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap text-[10px]">{label("LOAD / RCV DATE")}</th>
                 <th className="py-3 px-3 text-center whitespace-nowrap">{label("ACTION")}</th>
               </tr>
             </thead>
@@ -1057,19 +1208,28 @@ export function SourceFilteredTable({
                 </tr>
               ) : (
                 advanceFinalRows.map((r, i) => {
-                  const form = r.form_data?.form || {};
+                  const { goodsName: resolvedGoodsName, brand: resolvedBrand, size: resolvedSize, qty: resolvedQty, unit: resolvedUnit, grossKg: resolvedGrossKg, netKg: resolvedNetKg, origin: resolvedOrigin, form: resolvedForm, rawData: resolvedRawData } = resolveOrderGoods(r);
+                  const form = resolvedForm;
                   const billNo = r.purchase_order_no || r.bill_no || r.order_no || form.billNo || "—";
                   const billDate = formatDashDate(r.order_date || form.orderDate || form.billDate || r.created_at);
                   const branchName = r.branch_name || form.branchName || form.branchCode || "—";
                   const purchaseAccount = form.purchaseAccountName || form.purchaseAccountNo || r.purchase_account_name || r.purchase_account_no || r.supplier_name || "—";
-                  const goodsName = r.goods_name || form.goodsName || form.productName || "—";
-                  const brand = form.brand || form.brandName || r.brand || "";
-                  const size = form.size || form.goodsSize || r.size || "";
-                  const qty = Number(r.total_quantity || form.totalQuantity || r.quantity || 0);
-                  const unit = form.quantityUnit || form.unit || r.quantity_name || "";
-                  const grossKg = Number(r.gross_weight || form.grossWeight || 0);
-                  const netKg = Number(r.net_weight || form.netWeight || 0);
-                  const origin = form.originCountry || form.originCountryName || r.origin_country_name || r.country_name || "—";
+
+                  const linkedLr = (loadingRecords || []).find((lr: any) =>
+                    (lr.purchase_order_id && String(lr.purchase_order_id) === String(r.id)) ||
+                    (r.purchase_order_no && lr.purchase_order_no && lr.purchase_order_no === r.purchase_order_no) ||
+                    (r.bill_no && lr.purchase_order_no && lr.purchase_order_no === r.bill_no) ||
+                    (form.billNo && lr.purchase_order_no && lr.purchase_order_no === form.billNo)
+                  );
+
+                  const goodsName = (resolvedGoodsName && resolvedGoodsName !== "—") ? resolvedGoodsName : (linkedLr?.goods_name || "—");
+                  const brand = resolvedBrand;
+                  const size = resolvedSize;
+                  const qty = resolvedQty > 0 ? resolvedQty : Number(linkedLr?.loaded_quantity || 0);
+                  const unit = resolvedUnit;
+                  const grossKg = resolvedGrossKg > 0 ? resolvedGrossKg : Number(linkedLr?.gross_weight || 0);
+                  const netKg = resolvedNetKg > 0 ? resolvedNetKg : Number(linkedLr?.net_weight || (grossKg > 0 ? grossKg : 0));
+                  const origin = (resolvedOrigin && resolvedOrigin !== "—") ? resolvedOrigin : (linkedLr?.origin_country || "—");
 
                   const purchCurr = String(r.currency_code || form.currencyType || "USD").toUpperCase();
                   const finalCurr = String(r.dest_countries?.currency_code || form.secondaryCurrency || "AED").toUpperCase();
@@ -1091,12 +1251,7 @@ export function SourceFilteredTable({
                   const fin = getAdvanceInvoiceFinancials(r);
                   const paymentDate = formatDashDate(r.advance_payment_date || (fin.summary?.payments && fin.summary.payments[0]?.date) || (advPaidPC > 0 ? billDate : null));
 
-                  const linkedLr = (loadingRecords || []).find((lr: any) =>
-                    (lr.purchase_order_id && String(lr.purchase_order_id) === String(r.id)) ||
-                    (r.purchase_order_no && lr.purchase_order_no && lr.purchase_order_no === r.purchase_order_no)
-                  );
-                  const loadDate = formatDashDate(linkedLr?.loaded_at || form.loadingDate || form.expectedLoadingDate || r.loading_date || linkedLr?.created_at);
-                  const receiveDate = formatDashDate(linkedLr?.received_at || linkedLr?.actual_arrival_date || form.receivingDate || form.expectedReceivingDate || r.receiving_date || linkedLr?.eta_date);
+                  const { loadDate, receiveDate } = resolveOrderDates(r, linkedLr, form, resolvedRawData);
 
                   const isFullyPaid = advBalPC <= 0.05;
 
@@ -1206,14 +1361,14 @@ export function SourceFilteredTable({
                         {paymentDate}
                       </td>
 
-                      {/* 14. Loading Date Receive Date */}
-                      <td className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-[10px] whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-1 text-slate-700 dark:text-slate-300">
-                          <span>📅</span>
+                      {/* 14. Loading Date / Receive Date */}
+                      <td className="py-2 px-1.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-[10px] whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1.5 text-slate-800 dark:text-slate-200 font-medium leading-tight">
+                          <span className="text-[9px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100/90 dark:bg-blue-950/80 px-1 py-0.5 rounded leading-none">L:</span>
                           <span>{loadDate}</span>
                         </div>
-                        <div className="flex items-center justify-center gap-1 text-slate-500 mt-0.5">
-                          <span>📅</span>
+                        <div className="flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 font-medium mt-0.5 leading-tight">
+                          <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/80 px-1 py-0.5 rounded leading-none">R:</span>
                           <span>{receiveDate}</span>
                         </div>
                       </td>
@@ -1255,7 +1410,7 @@ export function SourceFilteredTable({
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("BALANCE")}</th>
-                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("LOADING DATE / RECEIVE DATE")}</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap text-[10px]">{label("LOAD / RCV DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("DUE DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("STATUS")}</th>
                 <th className="py-3 px-3 text-center whitespace-nowrap">{label("JOURNAL")}</th>
@@ -1381,13 +1536,13 @@ export function SourceFilteredTable({
                     </td>
 
                     {/* 13. Loading Date / Receive Date */}
-                    <td className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-[10px] whitespace-nowrap">
-                      <div className="flex items-center justify-center gap-1 text-slate-700 dark:text-slate-300">
-                        <span>📅</span>
+                    <td className="py-2 px-1.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-[10px] whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-1.5 text-slate-800 dark:text-slate-200 font-medium leading-tight">
+                        <span className="text-[9px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100/90 dark:bg-blue-950/80 px-1 py-0.5 rounded leading-none">L:</span>
                         <span>{r.loadDate ? displayDate(r.loadDate) : "—"}</span>
                       </div>
-                      <div className="flex items-center justify-center gap-1 text-slate-500 mt-0.5">
-                        <span>📅</span>
+                      <div className="flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 font-medium mt-0.5 leading-tight">
+                        <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/80 px-1 py-0.5 rounded leading-none">R:</span>
                         <span>{r.receiveDate ? displayDate(r.receiveDate) : "—"}</span>
                       </div>
                     </td>
