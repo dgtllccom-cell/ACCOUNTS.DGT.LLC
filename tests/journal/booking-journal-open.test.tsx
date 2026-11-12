@@ -1,5 +1,6 @@
 import React from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+vi.setConfig({ testTimeout: 20000 }); // full-suite load: these register tests need more than the 5s default (same as the 20000 used on individual tests)
 import { act, cleanup, configure, fireEvent, render, screen, within, waitFor } from "@testing-library/react";
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }), usePathname: () => "/dashboard/journal/purchase-order-payment/remaining", useSearchParams: () => new URLSearchParams() }));
 vi.mock("@/lib/i18n/use-active-language", () => ({ useActiveLanguage: () => "en" }));
