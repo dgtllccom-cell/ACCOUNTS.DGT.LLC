@@ -1715,8 +1715,13 @@ export function PurchaseOrderManagementDashboard() {
     setWarning("");
     try {
       const response = await fetch("/api/erp/purchases/booking-journal-report?limit=1000", { cache: "no-store" });
-      const body = await response.json();
-      const payload = (body?.ok ? body.data : body) as ApiPayload;
+      const body = await response.json().catch(() => null);
+      // A failed request must not look like an empty register: keep the rows already shown and say so.
+      if (!response.ok || !body?.ok) {
+        setWarning(tr("PURCHASE BOOKING LIST COULD NOT BE LOADED. PRESS REFRESH TO TRY AGAIN."));
+        return;
+      }
+      const payload = body.data as ApiPayload;
       const rows = payload?.reports || [];
 
       // Sort reports descending so that the newest created PO appears at the top
