@@ -265,6 +265,14 @@ export function PurchaseBookingGlobalRegisterView({
     };
   }, [filteredRows]);
 
+  // Defined before the first render-time use (countryMetrics below runs during render).
+  const shortenCountry = (c: string) => {
+    if (!c) return "—";
+    const s = String(c).trim();
+    if (s.toLowerCase().includes("united arab emirates") || s.toLowerCase() === "emirates") return "UAE";
+    return s;
+  };
+
   // Card 3: Country Wise breakdown (Final Currency Wise)
   const countryMetrics = useMemo(() => {
     const map = new Map<string, { country: string; currency: string; bills: number; purchaseAmount: number; paidAmount: number }>();
@@ -312,13 +320,6 @@ export function PurchaseBookingGlobalRegisterView({
     const mon = months[d.getMonth()];
     const yr = d.getFullYear();
     return `${day}-${mon}-${yr}`;
-  };
-
-  const shortenCountry = (c: string) => {
-    if (!c) return "—";
-    const s = String(c).trim();
-    if (s.toLowerCase().includes("united arab emirates") || s.toLowerCase() === "emirates") return "UAE";
-    return s;
   };
 
   const getCountryFlag = (country: string) => {
