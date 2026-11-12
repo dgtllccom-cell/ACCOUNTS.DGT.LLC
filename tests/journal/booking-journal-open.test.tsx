@@ -10,6 +10,10 @@ vi.mock("@/features/journal/components/payment-module-approved-header", () => ({
 vi.mock("@/features/journal/components/payment-journal-v2-header", () => ({ PaymentJournalV2Header: () => null }));
 vi.mock("@/features/journal/components/payment-journal-v2-filter-modal", () => ({ PaymentJournalV2FilterModal: () => null }));
 import { PurchaseOrderPaymentJournal } from "@/features/journal/components/purchase-order-payment-journal";
+const openNewEntry = (scope: any) => {
+  fireEvent.click(scope.getByRole("button", { name: /action/i }));
+  fireEvent.click(scope.getByRole("menuitem", { name: /journal/i }));
+};
 const order = {
   id: "11111111-1111-4111-8111-111111111111", purchase_order_no: "AE-001-0007", currency_code: "USD", exchange_rate: 3.67,
   loaded_loading_count: 1, order_total: 4252612.5, total_goods_original: 1158750, advance_paid: 115875, remaining_paid: 0, remaining_due: 1042875, status: "posted", ledger_posting_status: "posted", created_at: "2026-11-01",
@@ -49,7 +53,7 @@ it("opens the booking Remaining entry from the actual Journal button", async () 
   render(<PurchaseOrderPaymentJournal mode="remaining" paymentPage />);
   const billCell = await screen.findByText("AE-001-0007");
   const row = billCell.closest("tr")!;
-  fireEvent.click(within(row).getByRole("button", { name: /journal/i }));
+  openNewEntry(within(row));
   expect(await screen.findByTestId("payment-entry-shell")).toBeTruthy();
   expect(await screen.findByText(/P#AE-001-0007/)).toBeTruthy();
   const panel = screen.getByTestId("payment-entry-shell");
@@ -83,7 +87,7 @@ it("shows a failed per-order loading request and retries without posting", async
   dueFailure = true;
   render(<PurchaseOrderPaymentJournal mode="remaining" paymentPage />);
   const row = (await screen.findByText("AE-001-0007")).closest("tr")!;
-  fireEvent.click(within(row).getByRole("button", { name: /journal/i }));
+  openNewEntry(within(row));
   const alert = await screen.findByRole("alert");
   expect(alert.textContent).toContain("Verified loading service unavailable");
   dueFailure = false;
@@ -96,13 +100,13 @@ it("keeps Local Purchase entry working and can return to a Booking entry", async
   localRecords = [{ id: "44444444-4444-4444-8444-444444444444", manual_bill_no: "LP-12", payment_mode: "Advance", advance_percentage: 40, advance_amount: 40, remaining_balance: 60, final_cost: 100, quantity_kgs: 10, numbers: 10, goods_name: "Almonds", status: "posted", purchase_currency: "AED", exchange_rate: 1 }];
   render(<PurchaseOrderPaymentJournal mode="remaining" paymentPage />);
   const row = (await screen.findByText("LP-12")).closest("tr")!;
-  fireEvent.click(within(row).getByRole("button", { name: /journal/i }));
+  openNewEntry(within(row));
   expect(await screen.findByTestId("payment-entry-document")).toBeTruthy();
   fireEvent.click(screen.getByTestId("ppe-new-payment"));
   await waitFor(() => expect(screen.getByTestId("ppe-entry-slot").childElementCount).toBeGreaterThan(0));
   fireEvent.click(screen.getByTestId("ppe-back"));
   const booking = (await screen.findByText("AE-001-0007")).closest("tr")!;
-  fireEvent.click(within(booking).getByRole("button", { name: /journal/i }));
+  openNewEntry(within(booking));
   expect(await screen.findByTestId("ppe-selected-loading-summary")).toBeTruthy();
   expect(screen.getAllByTestId("ppe-entry-slot")).toHaveLength(1);
   expect(vi.mocked(fetch).mock.calls.some(([, options]) => options?.method === "POST")).toBe(false);
@@ -113,7 +117,7 @@ it("returns a settled loading to the Remaining register and clears stale entry U
   batches = [{ ...due.loadings[0], paid: 104287.5, outstanding: 0, complete: true } as any];
   render(<PurchaseOrderPaymentJournal mode="remaining" paymentPage />);
   expect(await screen.findByTestId("remaining-select-loading")).toBeTruthy();
-  expect(await screen.findByText(/Loading History · Paid in full/)).toBeTruthy();
+  expect(await screen.findByText(/Loading History .{1,4}Paid in full/)).toBeTruthy();
   expect(screen.queryByText(/No verified loaded quantity/)).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Back to Register" }));
   expect(await screen.findByRole("columnheader", { name: "BILL NO., DATE" })).toBeTruthy();
