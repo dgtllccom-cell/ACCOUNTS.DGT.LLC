@@ -16,10 +16,13 @@ export default function WarehouseStockRegisterPage() {
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [query, setQuery] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/erp/stock/warehouse-register", { credentials: "include", cache: "no-store" })
+    setLoading(true);
+    setFailed(false);
+    fetch(`/api/erp/stock/warehouse-register?lang=${encodeURIComponent(lang)}`, { credentials: "include", cache: "no-store" })
       .then(async (res) => {
         const body = await res.json();
         if (!res.ok || !body?.ok) throw new Error("load failed");
@@ -29,7 +32,10 @@ export default function WarehouseStockRegisterPage() {
         }
       })
       .catch(() => {
-        if (!cancelled) setFailed(true);
+        if (!cancelled) {
+          setRows([]);
+          setFailed(true);
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -37,7 +43,7 @@ export default function WarehouseStockRegisterPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [lang, refreshKey]);
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -51,12 +57,18 @@ export default function WarehouseStockRegisterPage() {
     <div dir={isRtl ? "rtl" : "ltr"} className="mx-auto max-w-6xl space-y-4 p-4">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-lg font-black text-blue-800 dark:text-blue-300">{t("WAREHOUSE STOCK REGISTER")}</h1>
+        <div className="flex flex-wrap items-center gap-2">
+        <button type="button" onClick={() => setRefreshKey((key) => key + 1)} disabled={loading}
+          className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold disabled:opacity-50">
+          {t("REFRESH")}
+        </button>
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t("SEARCH")}
           className="h-9 w-64 rounded-lg border border-slate-300 bg-white px-3 text-xs"
         />
+        </div>
       </header>
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
