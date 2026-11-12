@@ -12,7 +12,7 @@ import { PurchaseInvoiceSection } from "./purchase-invoice-summary";
 import { usePurchaseInvoiceHistory } from "./use-purchase-invoice-history";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 type LanguageCode = string;
-import { FileSpreadsheet, BookOpen, Globe, Download, ChevronDown, RotateCcw, Search, Shield, WalletCards, Calendar, SlidersHorizontal, X, MoreVertical, Plus, Eye } from "lucide-react";
+import { FileSpreadsheet, BookOpen, Globe, Download, ChevronDown, RotateCcw, Search, Shield, WalletCards, Calendar, SlidersHorizontal, X, MoreVertical, Plus, Eye, Clock, Truck, Printer, Maximize2 } from "lucide-react";
 
 export interface SourceFilteredTableProps {
   sourceFilter: "all" | "purchase_booking" | "local_purchase";
@@ -1221,10 +1221,13 @@ export function SourceFilteredTable({
                       {/* 15. Action: one three-dot menu with New Entry and View */}
                       <td className="py-2.5 px-3 text-center whitespace-nowrap">
                         <AdvanceRowMenu
-                          canCreateEntry={!isFullyPaid}
-                          onNewEntry={() => onSelectOrder(r.id)}
-                          onView={() => onOpenFullBill(r)}
                           lang={lang}
+                          canCreateEntry={!isFullyPaid}
+                          transferHref={isFullyPaid && (r.order_type === "local_purchase" || linkedLr?.id) ? transferHrefFor(r, linkedLr) : null}
+                          onNewEntry={() => onSelectOrder(r.id)}
+                          onFullView={() => onOpenFullBill(r)}
+                          onPaymentHistory={() => onSelectOrder(r.id)}
+                          onPrint={() => onPrintStatement(r)}
                         />
                       </td>
                     </tr>
@@ -1706,11 +1709,32 @@ export function SourceFilteredTable({
 }
 
 
-function AdvanceRowMenu({ canCreateEntry, onNewEntry, onView, lang }: { canCreateEntry: boolean; onNewEntry: () => void; onView: () => void; lang: string }) {
+function transferHrefFor(row: any, loading: any): string {
+  if (row?.order_type === "local_purchase") {
+    const id = encodeURIComponent(String(row.id));
+    return `/dashboard/purchase/purchase-transit-lane?source=local_purchase&sourceId=${id}&focus=${id}`;
+  }
+  const id = encodeURIComponent(String(loading?.id || ""));
+  return `/dashboard/purchase/purchase-transit-lane?source=purchase_booking&sourceId=${id}&focus=${id}`;
+}
+
+function AdvanceRowMenu({ lang, canCreateEntry, transferHref, onNewEntry, onFullView, onPaymentHistory, onPrint }: { lang: string; canCreateEntry: boolean; transferHref: string | null; onNewEntry: () => void; onFullView: () => void; onPaymentHistory: () => void; onPrint: () => void }) {
   const [open, setOpen] = useState(false);
   const t = (label: string) => translateHeader(lang, label);
+  const item = (label: string, icon: React.ReactNode, onClick: () => void, disabled = false) => (
+    <button
+      type="button"
+      role="menuitem"
+      disabled={disabled}
+      onClick={() => { setOpen(false); onClick(); }}
+      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-xs font-semibold text-slate-800 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-900"
+    >
+      <span className="text-blue-600 dark:text-blue-300 [&>svg]:h-3.5 [&>svg]:w-3.5">{icon}</span>
+      {label}
+    </button>
+  );
   return (
-    <div className="relative inline-block text-left" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false); }}>
+    <div className="relative inline-block text-start" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false); }}>
       <button
         type="button"
         aria-haspopup="menu"
@@ -1722,26 +1746,12 @@ function AdvanceRowMenu({ canCreateEntry, onNewEntry, onView, lang }: { canCreat
         <MoreVertical className="h-4 w-4" aria-hidden="true" />
       </button>
       {open && (
-        <div role="menu" className="absolute end-0 z-30 mt-1 w-40 rounded-xl border border-slate-200 bg-white p-1 text-start shadow-xl dark:border-slate-800 dark:bg-slate-950">
-          <button
-            type="button"
-            role="menuitem"
-            disabled={!canCreateEntry}
-            onClick={() => { setOpen(false); onNewEntry(); }}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-900"
-          >
-            <Plus className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
-            {t("NEW ENTRY")}
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => { setOpen(false); onView(); }}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900"
-          >
-            <Eye className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
-            {t("VIEW")}
-          </button>
+        <div role="menu" className="absolute end-0 z-30 mt-1 w-48 rounded-xl border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-800 dark:bg-slate-950">
+          {item(t("NEW ENTRY"), <Plus />, onNewEntry, !canCreateEntry)}
+          {item(t("FULL VIEW"), <Maximize2 />, onFullView)}
+          {item(t("PAYMENT HISTORY"), <Clock />, onPaymentHistory)}
+          {transferHref ? item(t("TRANSFER"), <Truck />, () => { window.location.href = transferHref; }) : item(t("TRANSFER"), <Truck />, () => {}, true)}
+          {item(t("PRINT"), <Printer />, onPrint)}
         </div>
       )}
     </div>
