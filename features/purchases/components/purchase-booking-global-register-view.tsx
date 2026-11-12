@@ -309,6 +309,13 @@ export function PurchaseBookingGlobalRegisterView({
     return `${day}-${mon}-${yr}`;
   };
 
+  const shortenCountry = (c: string) => {
+    if (!c) return "—";
+    const s = String(c).trim();
+    if (s.toLowerCase().includes("united arab emirates") || s.toLowerCase() === "emirates") return "UAE";
+    return s;
+  };
+
   const getCountryFlag = (country: string) => {
     const c = country.toLowerCase();
     if (c.includes("uae") || c.includes("dubai") || c.includes("emirates")) return "🇦🇪";
@@ -853,15 +860,15 @@ export function PurchaseBookingGlobalRegisterView({
                 <th className="py-2.5 px-2 text-center w-8 border-r border-slate-200 dark:border-slate-700">#</th>
                 <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Bill No. / Date")}</th>
                 <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Country (Ex. Rate)")}</th>
-                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Supplier Name")}</th>
+                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("SUPPLIER / BUYER (PARTY)")}</th>
                 <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Goods Name (Brand / Size)")}</th>
                 <th className="py-2.5 px-2 text-center border-r border-slate-200 dark:border-slate-700">{tr("Qty (Unit)")}</th>
                 <th className="py-2.5 px-3 text-right border-r border-slate-200 dark:border-slate-700">{tr("Gross Wt Net Wt (Kg)")}</th>
                 <th className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-700">{tr("Origin")}</th>
-                <th className="py-2.5 px-3 text-right border-r border-slate-200 dark:border-slate-700">{tr("Amount (Purchase / Final) USD -> AED")}</th>
+                <th className="py-2.5 px-2.5 text-right border-r border-slate-200 dark:border-slate-700">{tr("Amount (Purchase / Final) USD -> AED")}</th>
                 <th className="py-2.5 px-3 text-center border-r border-slate-200 dark:border-slate-700">{tr("Loading Country / Port / Date")}</th>
                 <th className="py-2.5 px-3 text-center border-r border-slate-200 dark:border-slate-700">{tr("Receiving Country / Port / Date")}</th>
-                <th className="py-2.5 px-3 text-right border-r border-slate-200 dark:border-slate-700">{tr("Payment (Adv / Bal) USD / AED")}</th>
+                <th className="py-2.5 px-2.5 text-right border-r border-slate-200 dark:border-slate-700">{tr("PAYMENT (PAID / BAL)")}</th>
                 <th className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-700">{tr("Status")}</th>
                 <th className="py-2.5 px-2.5 text-center w-20">{tr("Actions")}</th>
               </tr>
@@ -888,7 +895,11 @@ export function PurchaseBookingGlobalRegisterView({
                   const billDate = formatDashDate(r.purchaseDate || r.bookingDate || r.createdAt);
                   const countryName = r.countryName || form.destinationCountry || "UAE";
                   const exRate = Number(r.exchange_rate || form.exchangeRate || 1);
-                  const supplier = r.supplierName || form.supplierName || "—";
+
+                  // 1. Purchase Account & Sales Account stacked
+                  const purchaseAcc = r.purchaseAccountName && r.purchaseAccountName !== "-" ? r.purchaseAccountName : (r.supplierName || form.supplierName || "—");
+                  const salesAcc = r.salesAccountName && r.salesAccountName !== "-" ? r.salesAccountName : (r.buyerName || form.customerName || form.salesAccountName || "—");
+
                   const goodsName = r.productName || goods0.goodsName || form.goodsName || "—";
                   const brand = goods0.brand || form.brand || "";
                   const size = goods0.size || form.size || "";
@@ -903,18 +914,23 @@ export function PurchaseBookingGlobalRegisterView({
                   const purchAmt = Number(r.purchaseAmount || r.totalPurchaseAmount || 0);
                   const finalAmt = r.finalAmount ? Number(r.finalAmount) : purchAmt * exRate;
 
-                  const loadCountry = form.loadingCountry || "—";
-                  const loadPort = form.loadingPort || "";
-                  const loadDate = formatDashDate(form.loadingDate || r.loadingDate);
+                  // 2. Loading Port & Date
+                  const rawLoadCountry = form.loadingCountry || form.originCountry || r.countryName || "";
+                  const loadCountry = shortenCountry(rawLoadCountry);
+                  const loadPort = form.loadingPort || form.exitPort || form.particularPort || r.loadingPort || "";
+                  const loadDate = formatDashDate(form.loadingDate || form.expectedLoadingDate || r.loadingDate || r.workflow?.loadingDate || r.workflowDates?.loadingDate);
 
-                  const rcvCountry = form.receivingCountry || countryName || "—";
-                  const rcvPort = form.receivingPort || "";
-                  const rcvDate = formatDashDate(form.receivingDate || r.receivingDate);
+                  // 3. Receiving Port & Date
+                  const rawRcvCountry = form.receivingCountry || form.destinationCountry || r.countryName || "";
+                  const rcvCountry = shortenCountry(rawRcvCountry);
+                  const rcvPort = form.receivedPort || form.receivingPort || form.destinationPort || r.receivingPort || "";
+                  const rcvDate = formatDashDate(form.receivingDate || form.receivedDate || form.arrivalDate || form.expectedReceivingDate || r.receivingDate || r.workflow?.receivingDate || r.workflowDates?.receivingDate);
 
-                  const advPaid = Number(r.advance_paid || form.advancePaid || 0);
-                  const advPaidFC = advPaid * exRate;
-                  const bal = Math.max(0, purchAmt - advPaid);
-                  const balFC = bal * exRate;
+                  // 4. Payment: Total Paid vs Balance
+                  const totalPaidPC = Number(r.advance_paid || form.advancePaid || 0) + Number(r.remaining_paid || form.remainingPaid || 0);
+                  const balPC = Math.max(0, purchAmt - totalPaidPC);
+                  const balFC = balPC * exRate;
+                  const isCleared = purchAmt > 0 && balPC <= 0.05;
 
                   return (
                     <tr key={r.id || i} className="hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors">
@@ -931,7 +947,7 @@ export function PurchaseBookingGlobalRegisterView({
                             setSelectedRow(r);
                             setDrawerOpen(true);
                           }}
-                          className="font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 hover:underline block text-start font-mono"
+                          className="font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 hover:underline block text-start font-mono text-xs"
                         >
                           {billNo}
                         </button>
@@ -940,13 +956,14 @@ export function PurchaseBookingGlobalRegisterView({
 
                       {/* 3. Country (Ex. Rate) */}
                       <td className="py-2 px-3 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
-                        <div className="font-bold text-blue-600 dark:text-blue-400">{countryName}</div>
+                        <div className="font-bold text-blue-600 dark:text-blue-400">{shortenCountry(countryName)}</div>
                         <div className="text-[10px] text-slate-500 font-mono">Ex: {exRate.toFixed(4)}</div>
                       </td>
 
-                      {/* 4. Supplier Name */}
+                      {/* 4. Supplier / Buyer (Accounts) */}
                       <td className="py-2 px-3 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
-                        <div className="font-bold text-slate-900 dark:text-slate-100">{supplier}</div>
+                        <div className="font-bold text-slate-900 dark:text-slate-100 leading-tight">{purchaseAcc}</div>
+                        <div className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 mt-0.5 leading-tight">{salesAcc}</div>
                       </td>
 
                       {/* 5. Goods Name (Brand / Size) */}
@@ -975,14 +992,14 @@ export function PurchaseBookingGlobalRegisterView({
                         {origin}
                       </td>
 
-                      {/* 9. Amount (Purchase / Final) USD -> AED */}
-                      <td className="py-2 px-3 text-right border-r border-slate-100 dark:border-slate-800 whitespace-nowrap font-mono">
-                        <div className="font-bold text-slate-900 dark:text-slate-100">
+                      {/* 9. Amount (Purchase / Final) USD -> AED (Compact) */}
+                      <td className="py-2 px-2.5 text-right border-r border-slate-100 dark:border-slate-800 whitespace-nowrap font-mono">
+                        <div className="font-bold text-[11px] text-slate-900 dark:text-slate-100">
                           <span className="text-[10px] opacity-70 mr-1">{purchCurr}</span>
                           {fmt(purchAmt)}
                         </div>
-                        <div className="font-bold text-red-600 dark:text-red-400 text-[11px]">
-                          <span className="text-[10px] opacity-70 mr-1">{finalCurr}</span>
+                        <div className="font-bold text-[10px] text-red-600 dark:text-red-400">
+                          <span className="text-[9px] opacity-70 mr-1">{finalCurr}</span>
                           {fmt(finalAmt)}
                         </div>
                       </td>
@@ -992,7 +1009,7 @@ export function PurchaseBookingGlobalRegisterView({
                         <div className="font-medium text-slate-800 dark:text-slate-200">
                           {loadCountry}{loadPort ? ` / ${loadPort}` : ""}
                         </div>
-                        <div className="text-[10px] text-slate-500 font-mono">{loadDate}</div>
+                        <div className="text-[10px] text-slate-500 font-mono mt-0.5">{loadDate !== "—" ? `📅 ${loadDate}` : "—"}</div>
                       </td>
 
                       {/* 11. Receiving Country / Port / Date */}
@@ -1000,19 +1017,27 @@ export function PurchaseBookingGlobalRegisterView({
                         <div className="font-medium text-slate-800 dark:text-slate-200">
                           {rcvCountry}{rcvPort ? ` / ${rcvPort}` : ""}
                         </div>
-                        <div className="text-[10px] text-slate-500 font-mono">{rcvDate}</div>
+                        <div className="text-[10px] text-slate-500 font-mono mt-0.5">{rcvDate !== "—" ? `📅 ${rcvDate}` : "—"}</div>
                       </td>
 
-                      {/* 12. Payment (Adv / Bal) USD / AED */}
-                      <td className="py-2 px-3 text-right border-r border-slate-100 dark:border-slate-800 whitespace-nowrap font-mono">
-                        <div className="font-bold text-slate-900 dark:text-slate-100">
-                          <span className="text-[10px] opacity-70 mr-1">{purchCurr}</span>
-                          {fmt(advPaid)}
+                      {/* 12. Payment (Paid / Bal) */}
+                      <td className="py-2 px-2.5 text-right border-r border-slate-100 dark:border-slate-800 whitespace-nowrap font-mono">
+                        <div className="font-bold text-[11px] text-slate-900 dark:text-slate-100">
+                          <span className="text-[10px] font-semibold text-slate-500 mr-1">{tr("PAID")}:</span>
+                          <span className="text-[10px] opacity-70 mr-0.5">{purchCurr}</span>
+                          {fmt(totalPaidPC)}
                         </div>
-                        <div className="font-bold text-red-600 dark:text-red-400 text-[11px]">
-                          <span className="text-[10px] opacity-70 mr-1">{finalCurr}</span>
-                          {fmt(balFC)}
+                        <div className={cn("font-bold text-[10px]", isCleared ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
+                          <span className="text-[9px] font-semibold opacity-80 mr-1">{tr("BALANCE")}:</span>
+                          <span className="text-[9px] opacity-70 mr-0.5">{purchCurr}</span>
+                          {isCleared ? "0.00" : fmt(balPC)}
                         </div>
+                        {!isCleared && finalCurr !== purchCurr && (
+                          <div className="text-[9px] font-semibold text-red-500 dark:text-red-400 opacity-90">
+                            <span className="mr-0.5">{finalCurr}</span>
+                            {fmt(balFC)}
+                          </div>
+                        )}
                       </td>
 
                       {/* 13. Status */}
@@ -1045,18 +1070,65 @@ export function PurchaseBookingGlobalRegisterView({
                             </button>
 
                             {activeRowMenuId === r.id && (
-                              <div className="absolute end-0 top-full mt-1 z-30 w-44 rounded-lg border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-800 dark:bg-slate-900 text-start text-xs animate-in fade-in-50 zoom-in-95">
+                              <div className="absolute end-0 top-full mt-1 z-30 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 text-start text-xs animate-in fade-in-50 zoom-in-95">
+                                {/* 1. View Details */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedRow(r);
+                                    setDrawerOpen(true);
+                                    setActiveRowMenuId(null);
+                                  }}
+                                  className="w-full px-2.5 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold flex items-center gap-2"
+                                >
+                                  <Eye className="h-3.5 w-3.5 text-blue-600" />
+                                  <span>{tr("View Details")}</span>
+                                </button>
+
+                                {/* 2. View Full Bill */}
                                 <button
                                   type="button"
                                   onClick={() => {
                                     setFullBillRow(r);
                                     setActiveRowMenuId(null);
                                   }}
-                                  className="w-full px-2.5 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center gap-2"
+                                  className="w-full px-2.5 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold flex items-center gap-2"
                                 >
-                                  <FileText className="h-3.5 w-3.5 text-blue-600" />
+                                  <FileText className="h-3.5 w-3.5 text-slate-500" />
                                   <span>{tr("View Full Bill")}</span>
                                 </button>
+
+                                <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+
+                                {/* 3. Payment Entry */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    router.push(`/dashboard/journal/purchase-order-payment/advance?purchaseOrderNo=${encodeURIComponent(billNo)}`);
+                                    setActiveRowMenuId(null);
+                                  }}
+                                  className="w-full px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-2"
+                                >
+                                  <CreditCard className="h-3.5 w-3.5 text-emerald-600" />
+                                  <span>{tr("PAYMENT ENTRY")}</span>
+                                </button>
+
+                                {/* 4. Transfer Bill to Lane */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    router.push(`/dashboard/purchase/purchase-transit-lane?purchaseOrderNo=${encodeURIComponent(billNo)}`);
+                                    setActiveRowMenuId(null);
+                                  }}
+                                  className="w-full px-2.5 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-semibold flex items-center gap-2"
+                                >
+                                  <ArrowRight className="h-3.5 w-3.5 text-blue-600" />
+                                  <span>{tr("TRANSFER BILL")}</span>
+                                </button>
+
+                                <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+
+                                {/* 5. Edit Booking */}
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -1064,7 +1136,7 @@ export function PurchaseBookingGlobalRegisterView({
                                     router.push(`/dashboard/purchase/new-purchase-booking-order?id=${encodeURIComponent(r.id)}&purchaseOrderNo=${encodeURIComponent(billNo)}`);
                                     setActiveRowMenuId(null);
                                   }}
-                                  className="w-full px-2.5 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center gap-2"
+                                  className="w-full px-2.5 py-1.5 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-semibold flex items-center gap-2"
                                 >
                                   <Sparkles className="h-3.5 w-3.5 text-amber-500" />
                                   <span>{tr("Edit Booking")}</span>
