@@ -11,6 +11,7 @@ import { purchaseInvoiceSummary } from "@/lib/journal/purchase-invoice-summary";
 import { PurchaseInvoiceSection } from "./purchase-invoice-summary";
 import { usePurchaseInvoiceHistory } from "./use-purchase-invoice-history";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import { loadingOutstanding, loadingPaidTotal } from "@/lib/journal/loading-paid-remaining";
 type LanguageCode = string;
 import { FileSpreadsheet, BookOpen, Globe, Download, ChevronDown, RotateCcw, Search, Shield, WalletCards, Calendar, SlidersHorizontal, X, MoreVertical, Plus, Eye, Clock, Truck, Printer, Maximize2, Pencil } from "lucide-react";
 
@@ -274,10 +275,12 @@ export function SourceFilteredTable({
 
           const loadedInvoicePC = Number(l.value ?? 0);
           const loadedInvoiceFC = loadedInvoicePC * exRate;
-          const paidPC = Number(l.paid ?? 0);
+          // Paid = the advance share allocated to this loading + the remaining payments made against it.
+          const paidPC = loadingPaidTotal(l.advanceAllocated, l.paid);
           const paidFC = paidPC * exRate;
-          const remainingPC = Math.max(0, loadedInvoicePC - paidPC);
-          const remainingFC = Math.max(0, loadedInvoiceFC - paidFC);
+          // Outstanding = the server figure the payment API enforces; derived only when the server gives none.
+          const remainingPC = loadingOutstanding(loadedInvoicePC, paidPC, l.outstanding);
+          const remainingFC = remainingPC * exRate;
 
           let paymentStatus = "Open";
           if (remainingPC <= 0.05 && remainingFC <= 0.05) {
