@@ -725,6 +725,13 @@ export const HEADER_EXTRA: Record<string, Row> = {
   "NO PORT DATA AVAILABLE": r("بندرگاہ کا کوئی ڈیٹا دستیاب نہیں", "لا تتوفر بيانات الموانئ", "داده‌ای از بنادر موجود نیست", "د بندرونو هیڅ معلومات نشته"),
   // shipping-line dashboards, branch reports and permission management (production 658c4be / a86355d screens)
   "GLOBAL EXECUTIVE SHIPPING LINE": r("عالمی ایگزیکٹو شپنگ لائن", "خط الشحن التنفيذي العالمي", "خط حمل اجرایی جهانی", "نړیوال اجرائیوي بار لیږد کرښه"),
+  // Local purchase global & branch register layout (approved reference UI e5f692ba)
+  "LOCAL PURCHASE (GLOBAL & BRANCH WISE)": r("لوکل پرچیز (عالمی اور برانچ کے لحاظ سے)", "الشراء المحلي (عالميًا وحسب الفرع)", "خرید محلی (جهانی و به تفکیک شعبه)", "محلي پیرود (نړیوال او د څانګې له مخې)"),
+  "BRANCH WISE LOCAL PURCHASE": r("برانچ کے لحاظ سے لوکل پرچیز", "الشراء المحلي حسب الفرع", "خرید محلی به تفکیک شعبه", "د څانګې له مخې محلي پیرود"),
+  "LOCAL PURCHASE LIST (ALL BRANCHES)": r("لوکل پرچیز لسٹ (تمام برانچیں)", "قائمة الشراء المحلي (جميع الفروع)", "فهرست خرید محلی (همه شعب)", "د محلي پیرود لست (ټولې څانګې)"),
+  "LOCAL PURCHASE SUMMARY": r("لوکل پرچیز خلاصہ", "ملخص الشراء المحلي", "خلاصه خرید محلی", "د محلي پیرود لنډیز"),
+  "LOADING (FROM) COUNTRY / PORT / DATE": r("لوڈنگ (از) ملک / پورٹ / تاریخ", "التحميل (من) البلد / الميناء / التاريخ", "بارگیری (از) کشور / بندر / تاریخ", "بارګیري (له) هیواد / بندر / نیټه"),
+  "RECEIVING (TO) COUNTRY / PORT / DATE": r("وصولی (بہ) ملک / پورٹ / تاریخ", "الاستلام (إلى) البلد / الميناء / التاريخ", "تحویل (به) کشور / بندر / تاریخ", "رسید (ته) هیواد / بندر / نیټه"),
 };
 
 /** Concise English text for English headings that were overly long (same meaning). */
