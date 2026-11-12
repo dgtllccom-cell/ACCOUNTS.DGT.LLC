@@ -12,7 +12,7 @@ import { PurchaseInvoiceSection } from "./purchase-invoice-summary";
 import { usePurchaseInvoiceHistory } from "./use-purchase-invoice-history";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 type LanguageCode = string;
-import { FileSpreadsheet, BookOpen, Globe, Download, ChevronDown, RotateCcw, Search, Shield, WalletCards, Calendar, SlidersHorizontal, X, MoreVertical, Plus, Eye, Clock, Truck, Printer, Maximize2 } from "lucide-react";
+import { FileSpreadsheet, BookOpen, Globe, Download, ChevronDown, RotateCcw, Search, Shield, WalletCards, Calendar, SlidersHorizontal, X, MoreVertical, Plus, Eye, Clock, Truck, Printer, Maximize2, Pencil } from "lucide-react";
 
 export interface SourceFilteredTableProps {
   sourceFilter: "all" | "purchase_booking" | "local_purchase";
@@ -134,6 +134,9 @@ export function SourceFilteredTable({
       billNo: string;
       billDate?: string;
       purchaseAccount?: string;
+      salesAccount?: string;
+      mainBranch?: string;
+      cityBranch?: string;
       branch?: string;
       brand?: string;
       size?: string;
@@ -166,6 +169,8 @@ export function SourceFilteredTable({
       remainingFC: number;
       dueDate: string;
       paymentStatus: string;
+      rawRow?: any;
+      rawLoading?: any;
     }> = [];
 
     const lrMap = new Map((loadingRecords || []).map((lr: any) => [String(lr.id), lr]));
@@ -282,8 +287,15 @@ export function SourceFilteredTable({
           }
 
           const billDate = bill?.order_date || poForm.orderDate || poForm.billDate || bill?.created_at?.slice(0, 10) || "—";
+          const mainBranch = po?.country_branches?.name || poForm.mainBranchName || poForm.branchName || bill?.branch_name || poForm.branchCode || "Main Branch";
+          const cityBranch = po?.city_branches?.name || po?.city_branches?.city_name || poForm.cityBranchName || poForm.city_branch || "City Branch";
           const branch = poForm.branchName || bill?.branch_name || poForm.branchCode || "—";
-          const purchaseAccount = poForm.purchaseAccountName || poForm.purchaseAccountNo || bill?.purchase_account_name || bill?.purchase_account_no || bill?.supplier_name || "—";
+          const purchaseAccount = poForm.purchaseAccountName || poForm.purchaseAccountNo
+            ? (poForm.purchaseAccountNo ? `${poForm.purchaseAccountNo} — ${poForm.purchaseAccountName || "Purchase Account"}` : poForm.purchaseAccountName)
+            : (bill?.purchase_account_name || bill?.purchase_account_no || bill?.supplier_name || "—");
+          const salesAccount = poForm.salesAccountName || poForm.salesAccountNo
+            ? (poForm.salesAccountNo ? `${poForm.salesAccountNo} — ${poForm.salesAccountName || "Sales Account"}` : poForm.salesAccountName)
+            : (po?.sales_account_name || po?.customer_name || "—");
           const brand = payload.brand || poForm.brand || poForm.brandName || "";
           const size = payload.size || poForm.size || poForm.goodsSize || "";
           const origin = loadCountry || poForm.originCountry || "—";
@@ -303,6 +315,9 @@ export function SourceFilteredTable({
             billNo,
             billDate,
             purchaseAccount,
+            salesAccount,
+            mainBranch,
+            cityBranch,
             branch,
             brand,
             size,
@@ -335,6 +350,8 @@ export function SourceFilteredTable({
             remainingFC,
             dueDate: displayDate(rawDueDate),
             paymentStatus,
+            rawRow: po || bill,
+            rawLoading: lr || l,
           });
         }
       }
@@ -378,8 +395,15 @@ export function SourceFilteredTable({
         const receiveDate = rawReceiveDate || (payload.etaDate ? `${String(payload.etaDate).slice(0, 10)} (ETA)` : "— / Pending");
 
         const billDate = po?.order_date || poForm.orderDate || poForm.billDate || po?.created_at?.slice(0, 10) || "—";
+        const mainBranch = po?.country_branches?.name || poForm.mainBranchName || poForm.branchName || po?.branch_name || poForm.branchCode || "Main Branch";
+        const cityBranch = po?.city_branches?.name || po?.city_branches?.city_name || poForm.cityBranchName || poForm.city_branch || "City Branch";
         const branch = poForm.branchName || po?.branch_name || poForm.branchCode || "—";
-        const purchaseAccount = poForm.purchaseAccountName || poForm.purchaseAccountNo || po?.purchase_account_name || po?.purchase_account_no || po?.supplier_name || "—";
+        const purchaseAccount = poForm.purchaseAccountName || poForm.purchaseAccountNo
+          ? (poForm.purchaseAccountNo ? `${poForm.purchaseAccountNo} — ${poForm.purchaseAccountName || "Purchase Account"}` : poForm.purchaseAccountName)
+          : (po?.purchase_account_name || po?.purchase_account_no || po?.supplier_name || "—");
+        const salesAccount = poForm.salesAccountName || poForm.salesAccountNo
+          ? (poForm.salesAccountNo ? `${poForm.salesAccountNo} — ${poForm.salesAccountName || "Sales Account"}` : poForm.salesAccountName)
+          : (po?.sales_account_name || po?.customer_name || "—");
         const brand = payload.brand || poForm.brand || poForm.brandName || "";
         const size = payload.size || poForm.size || poForm.goodsSize || "";
         const origin = loadCountry || poForm.originCountry || "—";
@@ -398,6 +422,9 @@ export function SourceFilteredTable({
           billNo,
           billDate,
           purchaseAccount,
+          salesAccount,
+          mainBranch,
+          cityBranch,
           branch,
           brand,
           size,
@@ -430,6 +457,8 @@ export function SourceFilteredTable({
           remainingFC,
           dueDate: displayDate(rawDueDate),
           paymentStatus,
+          rawRow: po,
+          rawLoading: lr,
         });
       }
     }
@@ -452,9 +481,17 @@ export function SourceFilteredTable({
       const receiveCountry = String(lp.country_name || lp.country || "UAE").trim();
       const receivePort = String(lp.warehouse_name || lp.destination || lp.receiving_location || "Local Warehouse").trim();
 
+      const lpForm = (lp?.form_data?.form || lp.formData?.form || {}) as Record<string, any>;
       const billDate = lp.date ? String(lp.date).slice(0, 10) : (lp.created_at ? String(lp.created_at).slice(0, 10) : "—");
+      const mainBranch = lp?.country_branches?.name || lpForm.mainBranchName || lp.main_branch_name || lp.branch_name || "Main Branch";
+      const cityBranch = lp?.city_branches?.name || lp?.city_branches?.city_name || lpForm.cityBranchName || lp.city_branch_name || "City Branch";
       const branch = lp.branch_name || lp.branch_code || "—";
-      const purchaseAccount = lp.supplier_name || lp.account_name || lp.purchase_account || "—";
+      const purchaseAccount = lpForm.purchaseAccountName || lpForm.purchaseAccountNo
+        ? (lpForm.purchaseAccountNo ? `${lpForm.purchaseAccountNo} — ${lpForm.purchaseAccountName || "Purchase Account"}` : lpForm.purchaseAccountName)
+        : (lp.supplier_name || lp.account_name || lp.purchase_account || "—");
+      const salesAccount = lpForm.salesAccountName || lpForm.salesAccountNo
+        ? (lpForm.salesAccountNo ? `${lpForm.salesAccountNo} — ${lpForm.salesAccountName || "Sales Account"}` : lpForm.salesAccountName)
+        : (lp.customer_name || lp.sales_account || "—");
 
       if (entries.length > 0) {
         entries.forEach((e: any, idx: number) => {
@@ -501,6 +538,9 @@ export function SourceFilteredTable({
             billNo,
             billDate,
             purchaseAccount,
+            salesAccount,
+            mainBranch,
+            cityBranch,
             branch,
             brand,
             size,
@@ -533,6 +573,8 @@ export function SourceFilteredTable({
             remainingFC,
             dueDate: displayDate(dueDate),
             paymentStatus,
+            rawRow: lp,
+            rawLoading: e || lp,
           });
         });
       } else if (Number(lp.numbers || 0) > 0) {
@@ -577,6 +619,9 @@ export function SourceFilteredTable({
           billNo,
           billDate,
           purchaseAccount,
+          salesAccount,
+          mainBranch,
+          cityBranch,
           branch,
           brand,
           size,
@@ -609,6 +654,8 @@ export function SourceFilteredTable({
           remainingFC,
           dueDate: displayDate(dueDate),
           paymentStatus,
+          rawRow: lp,
+          rawLoading: lp,
         });
       }
     }
@@ -1400,20 +1447,20 @@ export function SourceFilteredTable({
               <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
                 <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("BILL NO., DATE")}</th>
                 <th className="py-3 px-2 border-r border-amber-300 text-center whitespace-nowrap">{label("TYPE")}</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("PURCHASE ACCOUNT")}</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("BRANCH")}</th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("ACCOUNTS (PURCHASE / SALES)")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("BRANCH (MAIN / CITY)")}</th>
                 <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("GOODS BRAND / SIZE")}</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("QTY (CTNS)")}</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("GROSS WT / NET WT (KG)")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("QTY (UNIT)")}</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("G.W. / N.W. (KG)")}</th>
                 <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("ORIGIN")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PURCHASE")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("BALANCE")}</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap text-[10px]">{label("LOAD / RCV DATE")}</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap text-[10px]">{label("LOAD / SHIP DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("DUE DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("STATUS")}</th>
-                <th className="py-3 px-3 text-center whitespace-nowrap">{label("JOURNAL")}</th>
+                <th className="py-3 px-3 text-center whitespace-nowrap">{label("ACTIONS")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
@@ -1449,14 +1496,26 @@ export function SourceFilteredTable({
                       </span>
                     </td>
 
-                    {/* 3. Purchase Account */}
-                    <td className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-800 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap max-w-[160px] truncate" title={r.purchaseAccount}>
-                      {r.purchaseAccount}
+                    {/* 3. Accounts (Purchase / Sales) */}
+                    <td className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap max-w-[180px]">
+                      <div className="font-semibold text-slate-800 dark:text-slate-200 truncate flex items-center gap-1.5" title={r.purchaseAccount}>
+                        <span className="text-[9px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100/90 dark:bg-blue-950/80 px-1 py-0.5 rounded leading-none shrink-0">P:</span>
+                        <span className="truncate">{r.purchaseAccount}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate flex items-center gap-1.5" title={r.salesAccount}>
+                        <span className="text-[9px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-950/80 px-1 py-0.5 rounded leading-none shrink-0">S:</span>
+                        <span className="truncate">{r.salesAccount || "—"}</span>
+                      </div>
                     </td>
 
-                    {/* 4. Branch */}
-                    <td className="py-2.5 px-2.5 border-r border-slate-200 dark:border-slate-800 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                      {r.branch}
+                    {/* 4. Branch (Main / City) */}
+                    <td className="py-2.5 px-2.5 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap max-w-[160px]">
+                      <div className="font-semibold text-slate-800 dark:text-slate-200 truncate" title={r.mainBranch || r.branch}>
+                        {r.mainBranch || r.branch}
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate" title={r.cityBranch || "—"}>
+                        {r.cityBranch || "—"}
+                      </div>
                     </td>
 
                     {/* 5. Goods Brand / Size */}
@@ -1470,16 +1529,22 @@ export function SourceFilteredTable({
                       </div>
                     </td>
 
-                    {/* 6. Qty (Ctns) */}
-                    <td className="py-2.5 px-2 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
-                      <div className="font-bold text-slate-900 dark:text-white">{fmtQty(r.loadedQty)}</div>
-                      <div className="text-[10px] text-slate-500">{r.unit || "Ctns"}</div>
+                    {/* 6. Qty (Unit) - normal-sized format */}
+                    <td className="py-2.5 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                      <span className="font-bold text-slate-900 dark:text-white text-xs">{fmtQty(r.loadedQty)}</span>
+                      <span className="text-[11px] text-slate-500 ml-1">{r.unit || "PCS"}</span>
                     </td>
 
-                    {/* 7. Gross Wt / Net Wt (Kg) */}
-                    <td className="py-2.5 px-2 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
-                      <div className="font-bold text-slate-800 dark:text-slate-200">{fmt(r.grossWeight)}</div>
-                      <div className="text-[10px] text-slate-500">{fmt(r.netWeight)}</div>
+                    {/* 7. G.W. / N.W. (KG) */}
+                    <td className="py-2.5 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                      <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-end gap-1">
+                        <span className="text-[10px] text-slate-400 font-semibold">G.W:</span>
+                        <span>{fmt(r.grossWeight, 0)}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-end gap-1">
+                        <span className="text-[10px] text-slate-400 font-semibold">N.W:</span>
+                        <span>{fmt(r.netWeight, 0)}</span>
+                      </div>
                     </td>
 
                     {/* 8. Origin */}
@@ -1535,14 +1600,14 @@ export function SourceFilteredTable({
                       </div>
                     </td>
 
-                    {/* 13. Loading Date / Receive Date */}
+                    {/* 13. Loading Date / Shipping (Receive) Date */}
                     <td className="py-2 px-1.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-[10px] whitespace-nowrap">
                       <div className="flex items-center justify-center gap-1.5 text-slate-800 dark:text-slate-200 font-medium leading-tight">
                         <span className="text-[9px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100/90 dark:bg-blue-950/80 px-1 py-0.5 rounded leading-none">L:</span>
                         <span>{r.loadDate ? displayDate(r.loadDate) : "—"}</span>
                       </div>
                       <div className="flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 font-medium mt-0.5 leading-tight">
-                        <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/80 px-1 py-0.5 rounded leading-none">R:</span>
+                        <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/80 px-1 py-0.5 rounded leading-none">S:</span>
                         <span>{r.receiveDate ? displayDate(r.receiveDate) : "—"}</span>
                       </div>
                     </td>
@@ -1566,21 +1631,29 @@ export function SourceFilteredTable({
                       </span>
                     </td>
 
-                    {/* 16. Journal */}
+                    {/* 16. Actions (Three-Dot Menu) */}
                     <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                      <button
-                        type="button"
-                        onClick={() => {
+                      <RemainingRowMenu
+                        lang={lang}
+                        canTransfer={r.paymentStatus === "Fully Paid" || r.remainingPC <= 0.05}
+                        transferHref={transferHrefFor(r.rawRow, r.rawLoading)}
+                        onView={() => onOpenFullBill(r.rawRow || r)}
+                        onEditEntry={() => {
                           if (r.source === "purchase_booking" && onSelectLoading) {
                             onSelectLoading(r.orderId, r.loadingId);
                           } else {
                             onSelectOrder(r.orderId);
                           }
                         }}
-                        className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs shadow-sm transition cursor-pointer"
-                      >
-                        {label("JOURNAL")}
-                      </button>
+                        onJournal={() => {
+                          if (r.source === "purchase_booking" && onSelectLoading) {
+                            onSelectLoading(r.orderId, r.loadingId);
+                          } else {
+                            onSelectOrder(r.orderId);
+                          }
+                        }}
+                        onPrint={() => onPrintStatement(r.rawRow || r)}
+                      />
                     </td>
                   </tr>
                 ))
@@ -1907,6 +1980,62 @@ function AdvanceRowMenu({ lang, canCreateEntry, transferHref, onNewEntry, onFull
           {item(t("PAYMENT HISTORY"), <Clock />, onPaymentHistory)}
           {transferHref ? item(t("TRANSFER"), <Truck />, () => { window.location.href = transferHref; }) : item(t("TRANSFER"), <Truck />, () => {}, true)}
           {item(t("PRINT"), <Printer />, onPrint)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RemainingRowMenu({
+  lang,
+  canTransfer,
+  transferHref,
+  onView,
+  onEditEntry,
+  onJournal,
+  onPrint,
+}: {
+  lang: string;
+  canTransfer: boolean;
+  transferHref: string | null;
+  onView: () => void;
+  onEditEntry: () => void;
+  onJournal: () => void;
+  onPrint?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const t = (label: string) => translateHeader(lang, label);
+  const item = (label: string, icon: React.ReactNode, onClick: () => void, disabled = false) => (
+    <button
+      type="button"
+      role="menuitem"
+      disabled={disabled}
+      onClick={() => { setOpen(false); onClick(); }}
+      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-xs font-semibold text-slate-800 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-900"
+    >
+      <span className="text-blue-600 dark:text-blue-300 [&>svg]:h-3.5 [&>svg]:w-3.5">{icon}</span>
+      {label}
+    </button>
+  );
+  return (
+    <div className="relative inline-block text-start" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false); }}>
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={t("ACTION")}
+        onClick={() => setOpen((v) => !v)}
+        className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 bg-white hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-950 transition shadow-sm"
+      >
+        <MoreVertical className="h-4 w-4 text-slate-700 dark:text-slate-300" aria-hidden="true" />
+      </button>
+      {open && (
+        <div role="menu" className="absolute end-0 z-30 mt-1 w-48 rounded-xl border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-800 dark:bg-slate-950">
+          {item(t("VIEW"), <Eye />, onView)}
+          {item(t("EDIT ENTRY"), <Pencil />, onEditEntry)}
+          {item(t("JOURNAL"), <BookOpen />, onJournal)}
+          {canTransfer && transferHref ? item(t("TRANSFER"), <Truck />, () => { window.location.href = transferHref; }) : item(t("TRANSFER"), <Truck />, () => {}, true)}
+          {onPrint ? item(t("PRINT"), <Printer />, onPrint) : null}
         </div>
       )}
     </div>
