@@ -215,14 +215,14 @@ export function PurchaseLoadingPaymentStatement({
           : "Loading Gate Entry";
 
       const billDate = String(form.orderDate || poRow.order_date || poRow.created_at || "—").slice(0, 10);
-      const gate = primaryRecord.loading_location || form.loadingPort || payload.loadingPort || payload.loadingLocation || "Main Port Gate";
+      const gate = primaryRecord.loading_location || form.loadingPort || payload.loadingPort || payload.loadingLocation || "Not Recorded";
 
       const countryName = primaryRecord.countries?.name || form.branchCountry || "—";
       const countryCode = primaryRecord.countries?.iso2 || form.countryCode || "—";
       const countryDisplay = countryCode !== "—" ? `${countryCode} - ${countryName}` : countryName;
 
-      const mainBranch = primaryRecord.country_branches?.name || form.branchName || "Main Branch";
-      const cityBranch = primaryRecord.city_branches?.name || primaryRecord.city_branches?.city_name || form.cityBranchName || "City Branch";
+      const mainBranch = primaryRecord.country_branches?.name || form.branchName || "Not Recorded";
+      const cityBranch = primaryRecord.city_branches?.name || primaryRecord.city_branches?.city_name || form.cityBranchName || "Not Recorded";
 
       const purchaseAccount = form.purchaseAccountNumber || form.purchaseAccountNo
         ? `${form.purchaseAccountNumber || form.purchaseAccountNo} — ${form.purchaseAccountName || "Purchase Account"}`
@@ -772,32 +772,27 @@ export function PurchaseLoadingPaymentStatement({
       {/* ── Main Statement Table (Requirement 5 & 6) ── */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[3400px] border-collapse text-left text-xs">
+          <table className="w-full min-w-[2200px] border-collapse text-left text-xs">
             {/* Sticky Header with 34 Columns */}
             <thead className="sticky top-0 z-20 bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300 shadow-xs">
               <tr>
                 <th className="py-3 px-2 text-center border-r border-amber-300 sticky left-0 bg-[#ffd257] z-30 w-12 whitespace-nowrap">VIEW</th>
                 <th className="py-3 px-2 text-center border-r border-amber-300 sticky left-12 bg-[#ffd257] z-30 w-12 whitespace-nowrap">SR#</th>
                 <th className="py-3 px-3 border-r border-amber-300 sticky left-24 bg-[#ffd257] z-30 whitespace-nowrap">LOADING REF</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">PURCHASE BILL NO</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">BILL DATE</th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">BILL NO / DATE</th>
+
                 <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">GATE</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">COUNTRY</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">MAIN BRANCH</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">CITY BRANCH</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">PURCHASE ACCOUNT</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">SALES ACCOUNT</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">SUPPLIER / EXPORTER</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">BUYER / IMPORTER</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">GOODS NAME</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">BRAND</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">SIZE</th>
+                {isSuperAdmin && <th className="py-2 px-2 border-r border-amber-300 whitespace-nowrap">COUNTRY</th>}
+                {(isSuperAdmin || isCountryAdmin) && <th className="py-2 px-2 border-r border-amber-300 whitespace-nowrap">BRANCH</th>}
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">PURCHASE / SALES ACCOUNT</th>
+
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">GOODS / BRAND / SIZE</th>
+
                 <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">CONTRACT QTY</th>
                 <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">LOADED QTY</th>
                 <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">REMAINING QTY</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">GROSS WT (KG)</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">TARE WT (KG)</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">NET WT (KG)</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">GROSS / NET WT (KG)</th>
+
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">PURCHASE TOTAL</th>
                 <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">CURR</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">PURCHASE PAID</th>
@@ -817,7 +812,7 @@ export function PurchaseLoadingPaymentStatement({
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
               {filteredRows.length === 0 ? (
                 <tr>
-                  <td colSpan={34} className="py-12 text-center text-slate-400">
+                  <td colSpan={23 + (isSuperAdmin ? 1 : 0) + (isSuperAdmin || isCountryAdmin ? 1 : 0)} className="py-12 text-center text-slate-400">
                     No matching purchase loading and statement records found.
                   </td>
                 </tr>
@@ -854,14 +849,10 @@ export function PurchaseLoadingPaymentStatement({
                           {r.loadingRef}
                         </td>
 
-                        {/* 4. Purchase Bill Number */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-mono font-black text-blue-700 dark:text-blue-400 whitespace-nowrap">
-                          {r.poNo}
-                        </td>
-
-                        {/* 5. Bill Date */}
-                        <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                          {r.billDate}
+                        {/* Original bill with date stacked in the same compact cell */}
+                        <td className="py-2 px-2 border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                          <div className="font-black text-blue-700 dark:text-blue-400">{r.poNo}</div>
+                          <div className="text-[10px] text-slate-500">{r.billDate}</div>
                         </td>
 
                         {/* 6. Gate */}
@@ -869,54 +860,27 @@ export function PurchaseLoadingPaymentStatement({
                           {notRecorded(r.gate)}
                         </td>
 
-                        {/* 7. Country */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap font-medium">
-                          {r.countryDisplay}
-                        </td>
+                        {/* Country and branch columns follow the signed-in role. API scoping remains authoritative. */}
+                        {isSuperAdmin && (
+                          <td className="py-2 px-2 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                            {notRecorded(r.countryDisplay)}
+                          </td>
+                        )}
+                        {(isSuperAdmin || isCountryAdmin) && (
+                          <td className="py-2 px-2 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                            <div className="font-semibold">{notRecorded(r.cityBranch)}</div>
+                            <div className="text-[10px] text-slate-500">{notRecorded(r.mainBranch)}</div>
+                          </td>
+                        )}
 
-                        {/* 8. Main Branch */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                          {notRecorded(r.mainBranch)}
+                        {/* Original account details and goods in compact stacked cells */}
+                        <td className="py-2 px-2 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                          <div className="font-semibold">{notRecorded(r.purchaseAccount)}</div>
+                          <div className="text-[10px] text-slate-500">{notRecorded(r.salesAccount)}</div>
                         </td>
-
-                        {/* 9. City Branch */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                          {notRecorded(r.cityBranch)}
-                        </td>
-
-                        {/* 10. Purchase Account */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                          {notRecorded(r.purchaseAccount)}
-                        </td>
-
-                        {/* 11. Sales Account */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                          {notRecorded(r.salesAccount)}
-                        </td>
-
-                        {/* 12. Supplier / Exporter */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">
-                          {notRecorded(r.supplierName)}
-                        </td>
-
-                        {/* 13. Buyer / Importer */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                          {notRecorded(r.buyerName)}
-                        </td>
-
-                        {/* 14. Goods Name */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-bold text-slate-900 dark:text-white whitespace-nowrap">
-                          {notRecorded(r.goodsName)}
-                        </td>
-
-                        {/* 15. Brand */}
-                        <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap text-slate-600">
-                          {notRecorded(r.brand)}
-                        </td>
-
-                        {/* 16. Size */}
-                        <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap text-slate-600">
-                          {notRecorded(r.size)}
+                        <td className="py-2 px-2 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                          <div className="font-bold">{notRecorded(r.goodsName)}</div>
+                          <div className="text-[10px] text-slate-500">{notRecorded(r.brand)} / {notRecorded(r.size)}</div>
                         </td>
 
                         {/* 17. Contract Quantity */}
@@ -934,19 +898,10 @@ export function PurchaseLoadingPaymentStatement({
                           {fmtQty(r.remainingQty)} <span className="text-[10px] text-rose-500/70 font-normal">{r.unit}</span>
                         </td>
 
-                        {/* 20. Gross Weight */}
-                        <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
-                          {fmt(r.grossWeight, 0)} kg
-                        </td>
-
-                        {/* 21. Tare Weight */}
-                        <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
-                          {fmt(r.tareWeight, 0)} kg
-                        </td>
-
-                        {/* 22. Net Weight */}
-                        <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap font-bold">
-                          {fmt(r.netWeight, 0)} kg
+                        {/* Gross and Net weight; tare is available in expanded loading detail */}
+                        <td className="py-2 px-2 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                          <div>{fmt(r.grossWeight, 0)} kg</div>
+                          <div className="text-[10px] text-slate-500">{fmt(r.netWeight, 0)} kg</div>
                         </td>
 
                         {/* 23. Purchase Total */}
@@ -1106,7 +1061,7 @@ export function PurchaseLoadingPaymentStatement({
                       {/* ── Expandable Record Details (Requirement 7, 8, 9) ── */}
                       {isExpanded && (
                         <tr>
-                          <td colSpan={34} className="bg-slate-50/80 p-5 dark:bg-slate-950/80 border-b-2 border-blue-200 dark:border-blue-900">
+                          <td colSpan={23 + (isSuperAdmin ? 1 : 0) + (isSuperAdmin || isCountryAdmin ? 1 : 0)} className="bg-slate-50/80 p-5 dark:bg-slate-950/80 border-b-2 border-blue-200 dark:border-blue-900">
                             <div className="space-y-6">
                               {/* 5 Compact Numbered Detail Sections (Requirement 7) */}
                               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
