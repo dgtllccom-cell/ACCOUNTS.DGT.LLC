@@ -80,7 +80,7 @@ export default function AiAssistantPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Remarks dictation state
-  const [demoRemarks, setDemoRemarks] = useState("Customer requested expedited customs clearance for Karachi transit.");
+  const [demoRemarks, setDemoRemarks] = useState("");
 
   // Audit Logs State
   const [auditLogs, setAuditLogs] = useState<AuditLogRow[]>([]);
@@ -88,13 +88,8 @@ export default function AiAssistantPage() {
 
   // Quick Prompts
   const quickPrompts = [
-    { label: "Find Customer Al-Farooq", query: "find customer Al-Farooq", type: "erp" },
-    { label: "Check Account 1010-DEV-TEST", query: "check account 1010-DEV-TEST", type: "erp" },
-    { label: "Where is BL-DEV-TEST-999?", query: "where is BL-DEV-TEST-999", type: "erp" },
     { label: "FOB Incoterms Rules (Urdu)", query: "FOB انکوٹرمز کے کیا اصول ہیں؟", type: "public" },
-    { label: "Container Sizes (English)", query: "What are standard container dimensions?", type: "public" },
-    { label: "Test Sensitive Refusal", query: "how much money does customer Al-Farooq have in their bank balance?", type: "refusal" },
-    { label: "Test Write Refusal", query: "delete customer Al-Farooq immediately", type: "refusal" }
+    { label: "Container Sizes (English)", query: "What are standard container dimensions?", type: "public" }
   ];
 
   const fetchAuditLogs = async () => {
@@ -225,12 +220,9 @@ export default function AiAssistantPage() {
                   <ShieldCheck className="h-3.5 w-3.5" />
                   RBAC & Isolation Protected
                 </span>
-                <span className="rounded-full bg-cyan-500/10 border border-cyan-400/30 px-2 py-0.5 text-xs font-semibold text-cyan-300 whitespace-nowrap">
-                  DEV TEST ONLY
-                </span>
               </div>
               <p className="text-xs text-slate-400">
-                Connected to real DEV database • Context-isolated Voice Entry • Strict field-level access • Real-time audit trail
+                ERP data access follows your authenticated permissions. Results depend on live sources and available records.
               </p>
             </div>
           </div>
@@ -583,7 +575,7 @@ export default function AiAssistantPage() {
 
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-6 max-w-2xl flex flex-col gap-4">
               <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
-                <span>Demo Remarks Field (Interactive Verification):</span>
+                <span>Remarks Dictation:</span>
                 <span className="text-[11px] text-slate-500">Live preview & Append/Replace toggle</span>
               </label>
 

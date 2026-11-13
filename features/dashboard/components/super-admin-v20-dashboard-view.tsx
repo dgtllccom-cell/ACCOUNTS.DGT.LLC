@@ -58,7 +58,7 @@ function formatDate(d: Date): string {
     const year = d.getFullYear();
     return `${day} ${month} ${year}`;
   } catch {
-    return "10 OCT 2026";
+    return "—";
   }
 }
 
@@ -98,6 +98,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
 
     return {
       ...data,
+      activeUsers: matched.totalUsers,
       counts: {
         ...data.counts,
         countries: 1,
@@ -140,7 +141,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
     },
     {
       id: "suppliers",
-      label: tt("dash.companies_suppliers", "Companies / Suppliers"),
+      label: translateHeader(lang, "COMPANIES"),
       value: filteredData.counts.suppliers || 0,
       bg: "bg-[#ff9113]",
       subtitle: tt("dash.live_records", "Live data")
@@ -155,7 +156,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
     {
       id: "users",
       label: tt("dash.active_users", "Active Users"),
-      value: filteredData.activeUsers || filteredData.counts.users || 0,
+      value: filteredData.activeUsers,
       bg: "bg-[#10a5c2]",
       subtitle: tt("dash.live_records", "Live data")
     }
