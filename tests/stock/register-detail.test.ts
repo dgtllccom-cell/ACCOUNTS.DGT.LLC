@@ -41,6 +41,18 @@ describe("register detail views", () => {
     expect(d.history[0]).toMatchObject({ event: "loaded", to: "loaded", actor: "Ops" });
   });
 
+  it("shows an event detail that is a JSON object as readable pairs, never as [object Object]", () => {
+    const lane = { id: "l2", loaded_quantity: "5", purchase_order_id: "b2" };
+    const events = [
+      { event_type: "loaded", from_status: null, to_status: "loaded", detail: { weight: 900, note: "sealed", empty: null }, actor_name: "Ops", created_at: "2026-11-12T10:00:00Z" },
+      { event_type: "moved", from_status: "loaded", to_status: "arrived", detail: "Arrived at Dubai", actor_name: null, created_at: "2026-11-12T12:00:00Z" },
+    ];
+    const d = loadDetailOf(lane, events);
+    expect(d.history[0].detail).toBe("weight: 900; note: sealed");
+    expect(d.history[1].detail).toBe("Arrived at Dubai");
+    expect(d.history.some((h) => h.detail.includes("[object Object]"))).toBe(false);
+  });
+
   it("builds one transfer with its warehouse and bill reference", () => {
     const t = { id: "t9", transfer_no: "TR-9", transfer_date: "2026-11-12", destination_type: "re_export", warehouse_id: null, goods_name: "Almond",
       quantity: "15", unit: "CARTON", status: "confirmed", remarks: "to export", confirmed_at: "2026-11-12T10:00:00Z" };
