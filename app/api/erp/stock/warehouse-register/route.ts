@@ -51,7 +51,8 @@ export async function GET(request: NextRequest) {
       const loadRows = await sql`
         select l.id::text as id, l.source_type, l.source_id::text as source_id,
                l.purchase_order_id::text as purchase_order_id, l.local_purchase_id::text as local_purchase_id,
-               l.purchase_ref_no, l.loading_record_no, l.loading_date, l.goods_name,
+               -- Local Purchase loads are saved without a loading date: the lane row's own creation time is when the load entered the lane.
+               l.purchase_ref_no, l.loading_record_no, coalesce(l.loading_date, l.created_at::date) as loading_date, l.goods_name,
                l.loaded_quantity, l.unit, l.gross_weight, l.net_weight, l.disposition, l.transfer_destination, l.destination_text,
                l.lane_status, l.lane_stock_qty,
                coalesce(dw.warehouse_name, '') as disposition_warehouse_name,
