@@ -286,7 +286,7 @@ export function buildPurchaseRows(
       const loadingDate = (e.loadingRecordId && loadingDates[e.loadingRecordId]) || (lane ? dateOnly(lane.loading_date) : "");
       return {
         id: e.entryId,
-        entryNo: e.lotEntryLabel,
+        entryNo: `Entry ${e.entryNo}`,
         loadingDate,
         goodsName: orDash(e.goodsName),
         brand: orDash(e.brand),
@@ -318,7 +318,7 @@ export function buildPurchaseRows(
       manualNo: b.manualBillNo,
       purchaseDate: b.date ?? "",
       countryName: b.countryName,
-      branch: b.branchName || DASH,
+      branch: b.branchFullLabel || b.branchName || DASH,
       goodsNames: [...new Set(b.entries.map((e) => e.goodsName).filter(Boolean))],
       unit: units.length === 1 ? units[0] : "",
       qty: b.totals.purchased.qty,

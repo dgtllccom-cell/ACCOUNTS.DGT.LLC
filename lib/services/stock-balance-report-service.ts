@@ -116,6 +116,16 @@ export interface BalanceTreatment {
   remarks: string | null;
 }
 
+/** Full branch label for a purchase: main (country) branch name with its code, then city branch name with its code. */
+export function branchLabelOf(countryBranch: unknown, countryBranchCode: unknown, city: unknown, cityBranchCode: unknown): string {
+  const part = (name: unknown, code: unknown) => {
+    const n = String(name ?? "").trim();
+    const c = String(code ?? "").trim();
+    return n ? (c ? `${n} (${c})` : n) : "";
+  };
+  return [part(countryBranch, countryBranchCode), part(city, cityBranchCode)].filter(Boolean).join(" / ");
+}
+
 export interface BalanceBill {
   id: string;
   type: BillType;
@@ -133,6 +143,8 @@ export interface BalanceBill {
   cityBranchId: string | null;
   cityName: string;
   branchName: string;
+  /** Main and city branch names with their codes, for the Warehouse Stock Register. */
+  branchFullLabel?: string;
   originCountry: string;
   currency: string;
   exchangeRate: number | null;
@@ -252,7 +264,7 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
       ? await sql`
         select po.id, po.purchase_order_no, po.purchase_contract_no, po.country_id, po.country_branch_id, po.city_branch_id, po.status, po.ledger_posting_status,
                po.payment_status, po.purchase_currency, po.currency_code, po.exchange_rate, po.order_total, po.total_goods_original, po.form_data, po.created_at,
-               c.name as country_name, c.iso2 as country_code, cb.name as country_branch_name, cib.city_name as city_name,
+               c.name as country_name, c.iso2 as country_code, cb.name as country_branch_name, cb.code as country_branch_code, cib.city_name as city_name, cib.code as city_branch_code,
                coalesce(cib.company_id, cb.company_id) as company_id
         from public.purchase_orders po
         left join public.countries c on c.id = po.country_id
@@ -267,7 +279,7 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
       ? await sql`
         select lp.id, lp.goods_id, lp.goods_name, lp.supplier_name, lp.supplier_person_id, lp.quantity_name, lp.quantity_kgs, lp.numbers, lp.net_weight, lp.total_gross_weight, lp.purchase_currency, lp.exchange_rate,
                lp.final_cost, lp.status, lp.manual_bill_no, lp.contract_no, lp.origin_country_name, lp.remarks, lp.country_id, lp.country_branch_id, lp.city_branch_id, lp.created_at,
-               lp.purchase_account_no, lp.sales_account_no, c.name as country_name, c.iso2 as country_code, cb.name as country_branch_name, cib.city_name as city_name,
+               lp.purchase_account_no, lp.sales_account_no, c.name as country_name, c.iso2 as country_code, cb.name as country_branch_name, cb.code as country_branch_code, cib.city_name as city_name, cib.code as city_branch_code,
                coalesce(lp.company_id, cib.company_id, cb.company_id) as company_id
         from public.local_purchases lp
         left join public.countries c on c.id = lp.country_id
@@ -494,7 +506,7 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
       id: po.id, type: "booking", billNo: str(po.purchase_order_no) || "-", manualBillNo: manual && manual !== po.purchase_order_no ? manual : "", date: dateOnly(form.purchaseDate || form.receiptDate || po.created_at),
       purchaseAccountName: acctName, purchaseAccountDetails: [str(form.salesAccountNo || form.purchaseAccountNo), str(form.supplierAddress), str(form.supplierPhone)].filter(Boolean).join(" · "),
       companyId: po.company_id ?? null, companyName: po.company_id ? companyName.get(po.company_id) ?? "" : "", countryId: po.country_id, countryName: po.country_name || "", countryCode: po.country_code || "",
-      countryBranchId: po.country_branch_id, cityBranchId: po.city_branch_id, cityName: po.city_name || "", branchName: po.city_name || po.country_branch_name || "",
+      countryBranchId: po.country_branch_id, cityBranchId: po.city_branch_id, cityName: po.city_name || "", branchName: po.city_name || po.country_branch_name || "", branchFullLabel: branchLabelOf(po.country_branch_name, po.country_branch_code, po.city_name, po.city_branch_code),
       originCountry: str(form.origin || form.originCountry || extras[0]?.origin), currency, exchangeRate: po.exchange_rate == null ? null : num(po.exchange_rate), remarks: str(form.remarks),
       amount: null, totals: totalsOf([]), entries, sales, unallocatedSales: unallocated, payments: [], paid: null, pending: null, mixedCurrency: false, treatments: [], paymentStatus: str(po.payment_status),
     };
@@ -552,7 +564,7 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
       id: lp.id, type: "local", billNo: systemNo, manualBillNo: str(lp.manual_bill_no) && str(lp.manual_bill_no) !== systemNo ? str(lp.manual_bill_no) : "", date: dateOnly(lp.created_at),
       purchaseAccountName: str(lp.supplier_name), purchaseAccountDetails: str(lp.purchase_account_no), companyId: lp.company_id ?? null, companyName: lp.company_id ? companyName.get(lp.company_id) ?? "" : "",
       countryId: lp.country_id, countryName: lp.country_name || "", countryCode: lp.country_code || "", countryBranchId: lp.country_branch_id, cityBranchId: lp.city_branch_id, cityName: lp.city_name || "",
-      branchName: lp.city_name || lp.country_branch_name || "", originCountry: str(lp.origin_country_name) || entries[0]?.origin || "", currency, exchangeRate: lp.exchange_rate == null ? null : num(lp.exchange_rate), remarks: str(lp.remarks),
+      branchName: lp.city_name || lp.country_branch_name || "", branchFullLabel: branchLabelOf(lp.country_branch_name, lp.country_branch_code, lp.city_name, lp.city_branch_code), originCountry: str(lp.origin_country_name) || entries[0]?.origin || "", currency, exchangeRate: lp.exchange_rate == null ? null : num(lp.exchange_rate), remarks: str(lp.remarks),
       amount: null, totals: totalsOf([]), entries, sales, unallocatedSales: zero(), payments: [], paid: null, pending: null, mixedCurrency: false, treatments: [], paymentStatus: "",
     };
     const paidAll = (payByLp.get(lp.id) ?? []).filter((p: any) => str(p.status) === "posted" && str(p.kind) !== "booking").reduce((s: number, p: any) => s + num(p.amount), 0);

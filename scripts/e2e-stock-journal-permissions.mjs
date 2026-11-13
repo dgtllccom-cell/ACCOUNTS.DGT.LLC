@@ -41,7 +41,7 @@ const [wh1] = await sql`select id from warehouses where deleted_at is null and c
 const [goods] = await sql`select id, goods_name from goods where deleted_at is null order by created_at limit 1`;
 const poNo = TAG + "-PO";
 const over = { id: crypto.randomUUID(), purchase_order_no: poNo, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), status: "Draft", ledger_posting_status: "posted", payment_status: "completed", super_admin_serial_number: null, country_transaction_serial_number: null, branch_transaction_serial_number: null, main_branch_transaction_serial: null, city_branch_transaction_serial: null, super_admin_serial: null, country_serial: null, branch_serial: null, entry_serial: null, global_reference_id: null, dest_country_id: null, dest_country_branch_id: null, dest_city_branch_id: null, purchase_contract_no: null };
-const fd = JSON.stringify({ form: {}, goodsEntries: [{ goodsName: goods.goods_name, goodsId: goods.id, qtyNo: 50, qtyName: "BAGS" }] });
+const fd = JSON.stringify({ form: { paymentType: "Credit" }, goodsEntries: [{ goodsName: goods.goods_name, goodsId: goods.id, qtyNo: 50, qtyName: "BAGS" }] });
 const [po] = await sql`insert into purchase_orders select (jsonb_populate_record(null::purchase_orders, to_jsonb(p) || ${sql.json(over)}::jsonb || jsonb_build_object('form_data', to_jsonb(${fd}::text)))).* from purchase_orders p where p.id = ${src.id} returning id`;
 const [b0] = await sql`select quantity_on_hand, quantity_reserved from product_inventory_balances where product_id = ${goods.id} and warehouse_id = ${wh1.id}`;
 
