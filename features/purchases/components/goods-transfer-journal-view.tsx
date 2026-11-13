@@ -9,6 +9,7 @@
  * Five-language / RTL via useErpScreen("gtj") — all strings live in lib/i18n/ui.ts.
  */
 
+import { localPurchaseBillNo } from "@/lib/purchases/local-purchase-number";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
@@ -468,9 +469,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
   const voucherNo = useMemo(() => {
     if (!purchase) return `LP-${purchaseId.slice(0, 5).toUpperCase()}`;
     return (
-      purchase.journalSerialNo ||
-      purchase.manualBillNo ||
-      (purchase.contractNo ? `LP-${purchase.contractNo}` : `LP-${String(purchase.id || purchaseId).slice(0, 5).toUpperCase()}`)
+      localPurchaseBillNo({ ...purchase, id: purchase.id || purchaseId })
     );
   }, [purchase, purchaseId]);
 

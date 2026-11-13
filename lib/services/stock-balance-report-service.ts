@@ -9,6 +9,7 @@
  * Scope: every query is filtered in SQL by the one scope rule (sessionSqlScope / sqlScopeCondition), single-record reads use
  * assertRecordAccess — never a front-end filter.
  */
+import { localPurchaseBillNo, localPurchaseContractRef } from "@/lib/purchases/local-purchase-number";
 import type { ErpSession } from "@/lib/auth/session";
 import { ApiClientError } from "@/lib/api/response";
 import { assertExplicitScopeAllowed, authorizeApiScope, sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
@@ -266,7 +267,7 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
     const lps = wantLp
       ? await sql`
         select lp.id, lp.goods_id, lp.goods_name, lp.supplier_name, lp.supplier_person_id, lp.quantity_name, lp.quantity_kgs, lp.numbers, lp.net_weight, lp.total_gross_weight, lp.purchase_currency, lp.exchange_rate,
-               lp.final_cost, lp.status, lp.manual_bill_no, lp.contract_no, lp.origin_country_name, lp.remarks, lp.country_id, lp.country_branch_id, lp.city_branch_id, lp.created_at,
+               lp.final_cost, lp.status, lp.manual_bill_no, lp.journal_serial_no, lp.contract_no, lp.origin_country_name, lp.remarks, lp.country_id, lp.country_branch_id, lp.city_branch_id, lp.created_at,
                lp.purchase_account_no, lp.sales_account_no, c.name as country_name, c.iso2 as country_code, cb.name as country_branch_name, cib.city_name as city_name,
                coalesce(lp.company_id, cib.company_id, cb.company_id) as company_id
         from public.local_purchases lp
@@ -542,14 +543,15 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
         const status = t.status === "completed" ? "completed" : t.status === "cancelled" ? "cancelled" : "reserved";
         sales.push({
           id: `gt:${t.id}`, salesBillNo: str(so?.sales_order_no) || str(t.transfer_no), salesOrderId: t.sales_order_id, date: dateOnly(so?.order_date ?? t.completed_at ?? t.created_at), saleType: saleTypeOf(t.purpose, so), status,
-          sellerAccount: party.seller, buyerAccount: party.buyer, truckBillNo: party.truck, billType: "local", billId: lp.id, billNo: str(lp.manual_bill_no) || (lp.contract_no ? `LP-${lp.contract_no}` : `LP-${String(lp.id).slice(0, 8)}`),
+          sellerAccount: party.seller, buyerAccount: party.buyer, truckBillNo: party.truck, billType: "local", billId: lp.id, billNo: localPurchaseBillNo(lp),
           lotNo, entryId: e.entryId, lotEntryLabel: e.lotEntryLabel, goodsName: e.goodsName, unit: e.unit, qty: q, gross: w(q).gross, net: w(q).net, amount: money && so ? num(so.total_goods_original ?? so.order_total) : null, currency: str(so?.currency_code), linked: true,
         });
       }
     }
-    const systemNo = lp.contract_no ? `LP-${lp.contract_no}` : str(lp.manual_bill_no) || `LP-${String(lp.id).slice(0, 8)}`;
+    const systemNo = localPurchaseBillNo(lp);
+    const contractRef = localPurchaseContractRef(lp);
     const bill: BalanceBill = {
-      id: lp.id, type: "local", billNo: systemNo, manualBillNo: str(lp.manual_bill_no) && str(lp.manual_bill_no) !== systemNo ? str(lp.manual_bill_no) : "", date: dateOnly(lp.created_at),
+      id: lp.id, type: "local", billNo: systemNo, manualBillNo: (str(lp.manual_bill_no) && str(lp.manual_bill_no) !== systemNo ? str(lp.manual_bill_no) : "") || contractRef, date: dateOnly(lp.created_at),
       purchaseAccountName: str(lp.supplier_name), purchaseAccountDetails: str(lp.purchase_account_no), companyId: lp.company_id ?? null, companyName: lp.company_id ? companyName.get(lp.company_id) ?? "" : "",
       countryId: lp.country_id, countryName: lp.country_name || "", countryCode: lp.country_code || "", countryBranchId: lp.country_branch_id, cityBranchId: lp.city_branch_id, cityName: lp.city_name || "",
       branchName: lp.city_name || lp.country_branch_name || "", originCountry: str(lp.origin_country_name) || entries[0]?.origin || "", currency, exchangeRate: lp.exchange_rate == null ? null : num(lp.exchange_rate), remarks: str(lp.remarks),
