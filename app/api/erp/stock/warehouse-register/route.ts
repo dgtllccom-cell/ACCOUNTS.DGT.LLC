@@ -25,11 +25,15 @@ export async function GET(request: NextRequest) {
              coalesce(g.goods_name, '') as goods_name,
              coalesce(c.name, '') as country_name,
              b.country_id, b.country_branch_id, b.city_branch_id,
+             coalesce(cb.name, '') as country_branch_name,
+             coalesce(cib.name, cib.city_name, '') as city_branch_name,
              b.quantity_on_hand, b.quantity_reserved, b.quantity_available
       from public.product_inventory_balances b
       join public.warehouses w on w.id = b.warehouse_id and w.deleted_at is null
       join public.goods g on g.id = b.product_id and g.deleted_at is null
       left join public.countries c on c.id = b.country_id
+      left join public.country_branches cb on cb.id = b.country_branch_id
+      left join public.city_branches cib on cib.id = b.city_branch_id
       order by warehouse_name, goods_name
       limit 1000`);
     const scoped = (rows as Record<string, unknown>[]).filter((r) => recordInSessionScope(session, r as never));

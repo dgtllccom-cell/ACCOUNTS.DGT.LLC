@@ -1,10 +1,37 @@
 import { describe, expect, it } from "vitest";
-import { normalizeBalanceRow, registerTotals } from "@/lib/stock/warehouse-register";
+import { branchLabel, groupRegister, normalizeBalanceRow, registerTotals } from "@/lib/stock/warehouse-register";
 
 describe("warehouse stock register", () => {
   it("maps a balance row, reading numeric strings as numbers and blank names as a dash", () => {
     const r = normalizeBalanceRow({ warehouse_id: "w1", warehouse_name: " Dubai Main ", goods_id: "g1", goods_name: "", country_name: "UAE", quantity_on_hand: "1250.5", quantity_reserved: "250", quantity_available: "1000.5" });
-    expect(r).toEqual({ warehouseId: "w1", warehouseName: "Dubai Main", goodsId: "g1", goodsName: "—", countryName: "UAE", onHand: 1250.5, reserved: 250, available: 1000.5 });
+    expect(r).toEqual({
+      warehouseId: "w1", warehouseName: "Dubai Main", goodsId: "g1", goodsName: "—", countryName: "UAE",
+      countryBranchId: "", countryBranchName: "—", cityBranchId: "", cityBranchName: "—",
+      onHand: 1250.5, reserved: 250, available: 1000.5,
+    });
+  });
+
+  it("branch label joins the country and city branch names and skips missing ones", () => {
+    const both = normalizeBalanceRow({ country_branch_id: "cb1", country_branch_name: "Dubai HQ", city_branch_id: "ci1", city_branch_name: "Deira" });
+    const onlyCountry = normalizeBalanceRow({ country_branch_id: "cb1", country_branch_name: "Dubai HQ" });
+    const none = normalizeBalanceRow({});
+    expect(branchLabel(both)).toBe("Dubai HQ / Deira");
+    expect(branchLabel(onlyCountry)).toBe("Dubai HQ");
+    expect(branchLabel(none)).toBe("—");
+  });
+
+  it("groups the register per goods, per country and per branch, summing quantities", () => {
+    const rows = [
+      normalizeBalanceRow({ goods_id: "g1", goods_name: "Rice", country_name: "UAE", country_branch_id: "cb1", country_branch_name: "Dubai HQ", quantity_on_hand: 100, quantity_reserved: 10, quantity_available: 90 }),
+      normalizeBalanceRow({ goods_id: "g1", goods_name: "Rice", country_name: "Pakistan", country_branch_id: "cb2", country_branch_name: "Quetta", quantity_on_hand: 40, quantity_reserved: 0, quantity_available: 40 }),
+      normalizeBalanceRow({ goods_id: "g2", goods_name: "Sugar", country_name: "UAE", country_branch_id: "cb1", country_branch_name: "Dubai HQ", quantity_on_hand: 5, quantity_reserved: 1, quantity_available: 4 }),
+    ];
+    const byGoods = groupRegister(rows, (r) => r.goodsId, (r) => r.goodsName);
+    expect(byGoods.map((g) => [g.label, g.onHand, g.available])).toEqual([["Rice", 140, 130], ["Sugar", 5, 4]]);
+    const byCountry = groupRegister(rows, (r) => r.countryName, (r) => r.countryName);
+    expect(byCountry.map((g) => [g.label, g.lines, g.onHand])).toEqual([["Pakistan", 1, 40], ["UAE", 2, 105]]);
+    const byBranch = groupRegister(rows, (r) => `${r.countryBranchId}|${r.cityBranchId}`, branchLabel);
+    expect(byBranch.map((g) => [g.label, g.reserved])).toEqual([["Dubai HQ", 11], ["Quetta", 0]]);
   });
 
   it("missing numbers become zero, never NaN", () => {
