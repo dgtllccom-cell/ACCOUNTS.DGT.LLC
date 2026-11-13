@@ -10,8 +10,10 @@ export type WarehouseBalanceRow = {
   countryName: string;
   countryBranchId: string;
   countryBranchName: string;
+  countryBranchCode: string;
   cityBranchId: string;
   cityBranchName: string;
+  cityBranchCode: string;
   onHand: number;
   reserved: number;
   available: number;
@@ -32,6 +34,7 @@ const num = (v: unknown): number => {
 };
 
 const text = (v: unknown): string => String(v ?? "").trim() || "—";
+const code = (v: unknown): string => String(v ?? "").trim();
 
 export function normalizeBalanceRow(r: Record<string, unknown>): WarehouseBalanceRow {
   return {
@@ -42,8 +45,10 @@ export function normalizeBalanceRow(r: Record<string, unknown>): WarehouseBalanc
     countryName: text(r.country_name),
     countryBranchId: String(r.country_branch_id ?? ""),
     countryBranchName: text(r.country_branch_name),
+    countryBranchCode: code(r.country_branch_code),
     cityBranchId: String(r.city_branch_id ?? ""),
     cityBranchName: text(r.city_branch_name),
+    cityBranchCode: code(r.city_branch_code),
     onHand: num(r.quantity_on_hand),
     reserved: num(r.quantity_reserved),
     available: num(r.quantity_available),
@@ -57,9 +62,15 @@ export function registerTotals(rows: WarehouseBalanceRow[]) {
   );
 }
 
-/** Branch label from the country branch and city branch names, without "—" placeholders. */
+/** One branch part: its name, followed by its code in brackets when a code exists. */
+function branchPart(name: string, branchCode: string): string {
+  if (name === "—") return "";
+  return branchCode ? `${name} (${branchCode})` : name;
+}
+
+/** Main (country) branch first, then city branch, each with its code. Missing parts are skipped. */
 export function branchLabel(r: WarehouseBalanceRow): string {
-  const parts = [r.countryBranchName, r.cityBranchName].filter((p) => p !== "—");
+  const parts = [branchPart(r.countryBranchName, r.countryBranchCode), branchPart(r.cityBranchName, r.cityBranchCode)].filter(Boolean);
   return parts.length ? parts.join(" / ") : "—";
 }
 

@@ -27,6 +27,8 @@ export async function GET(request: NextRequest) {
              b.country_id, b.country_branch_id, b.city_branch_id,
              coalesce(cb.name, '') as country_branch_name,
              coalesce(cib.name, cib.city_name, '') as city_branch_name,
+             coalesce(cb.code, '') as country_branch_code,
+             coalesce(cib.code, '') as city_branch_code,
              b.quantity_on_hand, b.quantity_reserved, b.quantity_available
       from public.product_inventory_balances b
       join public.warehouses w on w.id = b.warehouse_id and w.deleted_at is null

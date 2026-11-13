@@ -6,9 +6,19 @@ describe("warehouse stock register", () => {
     const r = normalizeBalanceRow({ warehouse_id: "w1", warehouse_name: " Dubai Main ", goods_id: "g1", goods_name: "", country_name: "UAE", quantity_on_hand: "1250.5", quantity_reserved: "250", quantity_available: "1000.5" });
     expect(r).toEqual({
       warehouseId: "w1", warehouseName: "Dubai Main", goodsId: "g1", goodsName: "—", countryName: "UAE",
-      countryBranchId: "", countryBranchName: "—", cityBranchId: "", cityBranchName: "—",
+      countryBranchId: "", countryBranchName: "—", countryBranchCode: "", cityBranchId: "", cityBranchName: "—", cityBranchCode: "",
       onHand: 1250.5, reserved: 250, available: 1000.5,
     });
+  });
+
+  it("branch label shows the main branch then the city branch, each with its code", () => {
+    const r = normalizeBalanceRow({
+      country_branch_id: "cb1", country_branch_name: "Pakistan Main Branch", country_branch_code: "PK-MB",
+      city_branch_id: "ci1", city_branch_name: "Quetta City Branch", city_branch_code: "QTA",
+    });
+    expect(branchLabel(r)).toBe("Pakistan Main Branch (PK-MB) / Quetta City Branch (QTA)");
+    const noCity = normalizeBalanceRow({ country_branch_id: "cb1", country_branch_name: "Pakistan Main Branch", country_branch_code: "PK-MB" });
+    expect(branchLabel(noCity)).toBe("Pakistan Main Branch (PK-MB)");
   });
 
   it("branch label joins the country and city branch names and skips missing ones", () => {
