@@ -3,9 +3,58 @@
 import { useEffect, useMemo, useState } from "react";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import type { WarehouseBalanceRow } from "@/lib/stock/warehouse-register";
+import { branchLabel, groupRegister, type RegisterGroup, type WarehouseBalanceRow } from "@/lib/stock/warehouse-register";
 
 type Totals = { lines: number; onHand: number; reserved: number; available: number };
+
+const fmt = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 3 });
+
+function GroupTable({
+  title,
+  labelHeader,
+  groups,
+  emptyText,
+  t,
+}: {
+  title: string;
+  labelHeader: string;
+  groups: RegisterGroup[];
+  emptyText: string;
+  t: (label: string) => string;
+}) {
+  return (
+    <section className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <h2 className="border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs font-black uppercase text-slate-700">{title}</h2>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead className="bg-slate-100 text-[11px] font-black uppercase text-slate-700">
+            <tr>
+              <th className="px-3 py-2 text-start">{labelHeader}</th>
+              <th className="px-3 py-2 text-end">{t("ON HAND")}</th>
+              <th className="px-3 py-2 text-end">{t("RESERVED")}</th>
+              <th className="px-3 py-2 text-end">{t("AVAILABLE")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {groups.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-3 py-4 text-center text-slate-500">{emptyText}</td>
+              </tr>
+            )}
+            {groups.map((g) => (
+              <tr key={g.key} className="border-t border-slate-100">
+                <td className="px-3 py-2 font-semibold text-black">{g.label}</td>
+                <td className="px-3 py-2 text-end font-mono text-black">{fmt(g.onHand)}</td>
+                <td className="px-3 py-2 text-end font-mono text-black">{fmt(g.reserved)}</td>
+                <td className="px-3 py-2 text-end font-mono font-bold text-black">{fmt(g.available)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
 
 export default function WarehouseStockRegisterPage() {
   const lang = useActiveLanguage();
@@ -48,41 +97,53 @@ export default function WarehouseStockRegisterPage() {
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return rows;
-    return rows.filter((r) => [r.warehouseName, r.goodsName, r.countryName].some((v) => v.toLowerCase().includes(q)));
+    return rows.filter((r) => [r.warehouseName, r.goodsName, r.countryName, r.countryBranchName, r.cityBranchName].some((v) => v.toLowerCase().includes(q)));
   }, [rows, query]);
 
-  const fmt = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 3 });
+  // Summary tables are built from every row the caller can see (not the search filter).
+  const adminGroups = useMemo(() => groupRegister(rows, (r) => r.goodsId, (r) => r.goodsName), [rows]);
+  const countryGroups = useMemo(() => groupRegister(rows, (r) => r.countryName, (r) => r.countryName), [rows]);
+  const branchGroups = useMemo(
+    () => groupRegister(rows, (r) => `${r.countryBranchId}|${r.cityBranchId}`, branchLabel),
+    [rows]
+  );
+
+  const emptyText = t("NO STOCK IN WAREHOUSES YET");
 
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} className="mx-auto max-w-6xl space-y-4 p-4">
+    <div dir={isRtl ? "rtl" : "ltr"} className="w-full space-y-4 p-4 md:p-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-lg font-black text-blue-800 dark:text-blue-300">{t("WAREHOUSE STOCK REGISTER")}</h1>
         <div className="flex flex-wrap items-center gap-2">
-        <button type="button" onClick={() => setRefreshKey((key) => key + 1)} disabled={loading}
-          className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold disabled:opacity-50">
-          {t("REFRESH")}
-        </button>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={t("SEARCH")}
-          className="h-9 w-64 rounded-lg border border-slate-300 bg-white px-3 text-xs"
-        />
+          <button
+            type="button"
+            onClick={() => setRefreshKey((key) => key + 1)}
+            disabled={loading}
+            className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold disabled:opacity-50"
+          >
+            {t("REFRESH")}
+          </button>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t("SEARCH")}
+            className="h-9 w-64 rounded-lg border border-slate-300 bg-white px-3 text-xs"
+          />
         </div>
       </header>
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-blue-200 bg-blue-50 p-3">
           <div className="text-[11px] font-bold uppercase text-slate-500">{t("ON HAND")}</div>
-          <div className="font-mono text-xl font-black">{fmt(totals.onHand)}</div>
+          <div className="font-mono text-xl font-black text-black">{fmt(totals.onHand)}</div>
         </div>
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
           <div className="text-[11px] font-bold uppercase text-slate-500">{t("RESERVED")}</div>
-          <div className="font-mono text-xl font-black">{fmt(totals.reserved)}</div>
+          <div className="font-mono text-xl font-black text-black">{fmt(totals.reserved)}</div>
         </div>
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
           <div className="text-[11px] font-bold uppercase text-slate-500">{t("AVAILABLE")}</div>
-          <div className="font-mono text-xl font-black">{fmt(totals.available)}</div>
+          <div className="font-mono text-xl font-black text-black">{fmt(totals.available)}</div>
         </div>
       </section>
 
@@ -92,12 +153,21 @@ export default function WarehouseStockRegisterPage() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-        <table className="w-full min-w-[640px] text-xs">
+      {!loading && (
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+          <GroupTable title={t("ADMIN")} labelHeader={t("GOODS NAME")} groups={adminGroups} emptyText={emptyText} t={t} />
+          <GroupTable title={t("COUNTRY ADMIN")} labelHeader={t("COUNTRY")} groups={countryGroups} emptyText={emptyText} t={t} />
+          <GroupTable title={t("BRANCH")} labelHeader={t("BRANCH")} groups={branchGroups} emptyText={emptyText} t={t} />
+        </div>
+      )}
+
+      <div className="w-full overflow-x-auto rounded-xl border border-slate-200 bg-white">
+        <table className="w-full min-w-[760px] text-xs">
           <thead className="bg-slate-100 text-[11px] font-black uppercase text-slate-700">
             <tr>
               <th className="px-3 py-2 text-start">{t("WAREHOUSE")}</th>
               <th className="px-3 py-2 text-start">{t("COUNTRY")}</th>
+              <th className="px-3 py-2 text-start">{t("BRANCH")}</th>
               <th className="px-3 py-2 text-start">{t("GOODS NAME")}</th>
               <th className="px-3 py-2 text-end">{t("ON HAND")}</th>
               <th className="px-3 py-2 text-end">{t("RESERVED")}</th>
@@ -107,30 +177,29 @@ export default function WarehouseStockRegisterPage() {
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-center text-slate-500">{t("LOADING")}</td>
+                <td colSpan={7} className="px-3 py-6 text-center text-slate-500">{t("LOADING")}</td>
               </tr>
             )}
             {!loading && !failed && shown.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-center text-slate-500">{t("NO STOCK IN WAREHOUSES YET")}</td>
+                <td colSpan={7} className="px-3 py-6 text-center text-slate-500">{emptyText}</td>
               </tr>
             )}
             {shown.map((r) => (
-              <tr key={`${r.warehouseId}-${r.goodsId}`} className="border-t border-slate-100">
-                <td className="px-3 py-2 font-semibold">{r.warehouseName}</td>
-                <td className="px-3 py-2">{r.countryName}</td>
-                <td className="px-3 py-2">{r.goodsName}</td>
-                <td className="px-3 py-2 text-end font-mono">{fmt(r.onHand)}</td>
-                <td className="px-3 py-2 text-end font-mono">{fmt(r.reserved)}</td>
-                <td className="px-3 py-2 text-end font-mono font-bold">{fmt(r.available)}</td>
+              <tr key={`${r.warehouseId}-${r.goodsId}-${r.countryBranchId}-${r.cityBranchId}`} className="border-t border-slate-100">
+                <td className="px-3 py-2 font-semibold text-black">{r.warehouseName}</td>
+                <td className="px-3 py-2 text-black">{r.countryName}</td>
+                <td className="px-3 py-2 text-black">{branchLabel(r)}</td>
+                <td className="px-3 py-2 text-black">{r.goodsName}</td>
+                <td className="px-3 py-2 text-end font-mono text-black">{fmt(r.onHand)}</td>
+                <td className="px-3 py-2 text-end font-mono text-black">{fmt(r.reserved)}</td>
+                <td className="px-3 py-2 text-end font-mono font-bold text-black">{fmt(r.available)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <p className="text-[11px] text-slate-500">
-        {t("STOCK ENTERS THIS REGISTER ONLY THROUGH A CONFIRMED WAREHOUSE TRANSFER.")}
-      </p>
+      <p className="text-[11px] text-slate-500">{t("STOCK ENTERS THIS REGISTER ONLY THROUGH A CONFIRMED WAREHOUSE TRANSFER.")}</p>
     </div>
   );
 }
