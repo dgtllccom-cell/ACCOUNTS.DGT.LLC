@@ -56,19 +56,23 @@ export function purchaseInvoiceSummary(row: Row, savedPayments: Row[] | null, fi
   const goods: Row[] = Array.isArray(data.goodsEntries) ? data.goodsEntries : [];
   const local = row.order_type === 'local_purchase' || row.is_local_purchase || !!row.local_purchase_id;
   const purchaseCurrency = currency(form.currencyType, form.pricingCurrency, goods[0]?.currencyType, goods[0]?.pricingCurrency, row.purchase_currency, row.currency_code, form.currency);
-  const finalCurrency = currency(form.secondaryCurrency, form.finalCurrency, row.final_currency, row.local_currency, row.countries?.currency_code, form.baseCurrency, finalCurrencyHint);
+  const finalCurrency = currency(form.secondaryCurrency, form.finalCurrency, form.branchCurrency, row.final_currency, row.local_currency, row.base_currency, row.countries?.currency_code, form.baseCurrency, finalCurrencyHint);
   const same = !!purchaseCurrency && purchaseCurrency === finalCurrency;
   const invoiceRate = same ? 1 : positive(row.exchange_rate, form.exchangeRate);
   const goodsOriginal = goods.length && goods.every(g => number(g.totalAmount, g.amount) != null)
     ? goods.reduce((s,g) => s + number(g.totalAmount, g.amount)!, 0) : null;
   // order_total / grandFinal are CONVERTED values in the saved booking contract.
   // total_goods_original / grandPrimaryFinal / goods.totalAmount are purchase amounts.
-  let purchase = (local
-    ? positive(row.purchase_cost, totals.grandPrimaryFinal, goodsOriginal, form.totalAmount)
-    : positive(row.total_goods_original, totals.grandPrimaryFinal, goodsOriginal, form.totalAmount)) ??
-    number(local ? row.purchase_cost : row.total_goods_original, totals.grandPrimaryFinal, goodsOriginal, form.totalAmount);
+  // The Local Purchase adapter copies final_cost into its synthetic goods/form
+  // totals. Only purchase_cost is an original amount there; never convert the
+  // synthetic final total a second time.
+  let purchase = local ? number(row.purchase_cost) :
+    positive(row.total_goods_original, totals.grandPrimaryFinal, goodsOriginal, form.totalAmount) ??
+    number(row.total_goods_original, totals.grandPrimaryFinal, goodsOriginal, form.totalAmount);
   const storedFinal = number(local ? row.final_cost : row.order_total, totals.grandFinal);
-  if (purchase == null && storedFinal != null && invoiceRate != null) purchase = storedFinal / invoiceRate;
+  if (purchase == null || (purchase === 0 && (storedFinal ?? 0) > 0)) {
+    purchase = storedFinal != null && invoiceRate != null ? storedFinal / invoiceRate : null;
+  }
   const invoiceFinal = purchase != null && invoiceRate != null ? purchase * invoiceRate : storedFinal;
 
   const seen = new Set<string>();

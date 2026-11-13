@@ -11,8 +11,9 @@ import { purchaseInvoiceSummary } from "@/lib/journal/purchase-invoice-summary";
 import { PurchaseInvoiceSection } from "./purchase-invoice-summary";
 import { usePurchaseInvoiceHistory } from "./use-purchase-invoice-history";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import { loadingOutstanding, loadingPaidTotal } from "@/lib/journal/loading-paid-remaining";
 type LanguageCode = string;
-import { FileSpreadsheet, BookOpen, Globe, Download, ChevronDown, RotateCcw, Search, Shield, WalletCards, Calendar, SlidersHorizontal, X } from "lucide-react";
+import { FileSpreadsheet, BookOpen, Globe, Download, ChevronDown, RotateCcw, Search, Shield, WalletCards, Calendar, SlidersHorizontal, X, MoreVertical, Plus, Eye, Clock, Truck, Printer, Maximize2, Pencil } from "lucide-react";
 
 export interface SourceFilteredTableProps {
   sourceFilter: "all" | "purchase_booking" | "local_purchase";
@@ -63,10 +64,19 @@ export function SourceFilteredTable({
   };
 
   const isLocalPurchase = (row: any) => row.is_local_purchase || row.order_type === "local_purchase" || row.source_type === "local_purchase" || Boolean(row.local_purchase_id);
-  // A loading can appear more than once in the incoming list. General shows one financial
-  // summary per saved bill; the Booking tab remains the per-loading movement register.
+  // Strict deduplication: deduplicate by genuine purchase order / bill number so multiple
+  // joined versions or state updates never cause duplicate rows on the page.
   const uniqueRows = useMemo(() => {
-    return [...new Map(rows.map(row => [`${isLocalPurchase(row) ? "local" : "booking"}:${String(row.id)}`, row])).values()];
+    const map = new Map<string, any>();
+    for (const row of rows) {
+      const billNo = String(row.purchase_order_no || row.bill_no || row.form_data?.form?.billNo || row.form_data?.form?.contractNo || "").trim();
+      const kind = isLocalPurchase(row) ? "local" : "booking";
+      const key = billNo && billNo !== "-" ? `${kind}:${billNo}` : `${kind}:${String(row.id)}`;
+      if (!map.has(key)) {
+        map.set(key, row);
+      }
+    }
+    return Array.from(map.values());
   }, [rows]);
 
   const dueByOrderId = useMemo(() => new Map(dueBills.map(bill => [String(bill.id), bill])), [dueBills]);
@@ -125,6 +135,9 @@ export function SourceFilteredTable({
       billNo: string;
       billDate?: string;
       purchaseAccount?: string;
+      salesAccount?: string;
+      mainBranch?: string;
+      cityBranch?: string;
       branch?: string;
       brand?: string;
       size?: string;
@@ -157,6 +170,8 @@ export function SourceFilteredTable({
       remainingFC: number;
       dueDate: string;
       paymentStatus: string;
+      rawRow?: any;
+      rawLoading?: any;
     }> = [];
 
     const lrMap = new Map((loadingRecords || []).map((lr: any) => [String(lr.id), lr]));
@@ -260,10 +275,12 @@ export function SourceFilteredTable({
 
           const loadedInvoicePC = Number(l.value ?? 0);
           const loadedInvoiceFC = loadedInvoicePC * exRate;
-          const paidPC = Number(l.paid ?? 0);
+          // Paid = the advance share allocated to this loading + the remaining payments made against it.
+          const paidPC = loadingPaidTotal(l.advanceAllocated, l.paid);
           const paidFC = paidPC * exRate;
-          const remainingPC = Math.max(0, loadedInvoicePC - paidPC);
-          const remainingFC = Math.max(0, loadedInvoiceFC - paidFC);
+          // Outstanding = the server figure the payment API enforces; derived only when the server gives none.
+          const remainingPC = loadingOutstanding(loadedInvoicePC, paidPC, l.outstanding);
+          const remainingFC = remainingPC * exRate;
 
           let paymentStatus = "Open";
           if (remainingPC <= 0.05 && remainingFC <= 0.05) {
@@ -273,8 +290,15 @@ export function SourceFilteredTable({
           }
 
           const billDate = bill?.order_date || poForm.orderDate || poForm.billDate || bill?.created_at?.slice(0, 10) || "—";
+          const mainBranch = po?.country_branches?.name || poForm.mainBranchName || poForm.branchName || bill?.branch_name || poForm.branchCode || "Main Branch";
+          const cityBranch = po?.city_branches?.name || po?.city_branches?.city_name || poForm.cityBranchName || poForm.city_branch || "City Branch";
           const branch = poForm.branchName || bill?.branch_name || poForm.branchCode || "—";
-          const purchaseAccount = poForm.purchaseAccountName || poForm.purchaseAccountNo || bill?.purchase_account_name || bill?.purchase_account_no || bill?.supplier_name || "—";
+          const purchaseAccount = poForm.purchaseAccountName || poForm.purchaseAccountNo
+            ? (poForm.purchaseAccountNo ? `${poForm.purchaseAccountNo} — ${poForm.purchaseAccountName || "Purchase Account"}` : poForm.purchaseAccountName)
+            : (bill?.purchase_account_name || bill?.purchase_account_no || bill?.supplier_name || "—");
+          const salesAccount = poForm.salesAccountName || poForm.salesAccountNo
+            ? (poForm.salesAccountNo ? `${poForm.salesAccountNo} — ${poForm.salesAccountName || "Sales Account"}` : poForm.salesAccountName)
+            : (po?.sales_account_name || po?.customer_name || "—");
           const brand = payload.brand || poForm.brand || poForm.brandName || "";
           const size = payload.size || poForm.size || poForm.goodsSize || "";
           const origin = loadCountry || poForm.originCountry || "—";
@@ -294,6 +318,9 @@ export function SourceFilteredTable({
             billNo,
             billDate,
             purchaseAccount,
+            salesAccount,
+            mainBranch,
+            cityBranch,
             branch,
             brand,
             size,
@@ -326,6 +353,8 @@ export function SourceFilteredTable({
             remainingFC,
             dueDate: displayDate(rawDueDate),
             paymentStatus,
+            rawRow: po || bill,
+            rawLoading: lr || l,
           });
         }
       }
@@ -369,8 +398,15 @@ export function SourceFilteredTable({
         const receiveDate = rawReceiveDate || (payload.etaDate ? `${String(payload.etaDate).slice(0, 10)} (ETA)` : "— / Pending");
 
         const billDate = po?.order_date || poForm.orderDate || poForm.billDate || po?.created_at?.slice(0, 10) || "—";
+        const mainBranch = po?.country_branches?.name || poForm.mainBranchName || poForm.branchName || po?.branch_name || poForm.branchCode || "Main Branch";
+        const cityBranch = po?.city_branches?.name || po?.city_branches?.city_name || poForm.cityBranchName || poForm.city_branch || "City Branch";
         const branch = poForm.branchName || po?.branch_name || poForm.branchCode || "—";
-        const purchaseAccount = poForm.purchaseAccountName || poForm.purchaseAccountNo || po?.purchase_account_name || po?.purchase_account_no || po?.supplier_name || "—";
+        const purchaseAccount = poForm.purchaseAccountName || poForm.purchaseAccountNo
+          ? (poForm.purchaseAccountNo ? `${poForm.purchaseAccountNo} — ${poForm.purchaseAccountName || "Purchase Account"}` : poForm.purchaseAccountName)
+          : (po?.purchase_account_name || po?.purchase_account_no || po?.supplier_name || "—");
+        const salesAccount = poForm.salesAccountName || poForm.salesAccountNo
+          ? (poForm.salesAccountNo ? `${poForm.salesAccountNo} — ${poForm.salesAccountName || "Sales Account"}` : poForm.salesAccountName)
+          : (po?.sales_account_name || po?.customer_name || "—");
         const brand = payload.brand || poForm.brand || poForm.brandName || "";
         const size = payload.size || poForm.size || poForm.goodsSize || "";
         const origin = loadCountry || poForm.originCountry || "—";
@@ -389,6 +425,9 @@ export function SourceFilteredTable({
           billNo,
           billDate,
           purchaseAccount,
+          salesAccount,
+          mainBranch,
+          cityBranch,
           branch,
           brand,
           size,
@@ -421,6 +460,8 @@ export function SourceFilteredTable({
           remainingFC,
           dueDate: displayDate(rawDueDate),
           paymentStatus,
+          rawRow: po,
+          rawLoading: lr,
         });
       }
     }
@@ -443,9 +484,17 @@ export function SourceFilteredTable({
       const receiveCountry = String(lp.country_name || lp.country || "UAE").trim();
       const receivePort = String(lp.warehouse_name || lp.destination || lp.receiving_location || "Local Warehouse").trim();
 
+      const lpForm = (lp?.form_data?.form || lp.formData?.form || {}) as Record<string, any>;
       const billDate = lp.date ? String(lp.date).slice(0, 10) : (lp.created_at ? String(lp.created_at).slice(0, 10) : "—");
+      const mainBranch = lp?.country_branches?.name || lpForm.mainBranchName || lp.main_branch_name || lp.branch_name || "Main Branch";
+      const cityBranch = lp?.city_branches?.name || lp?.city_branches?.city_name || lpForm.cityBranchName || lp.city_branch_name || "City Branch";
       const branch = lp.branch_name || lp.branch_code || "—";
-      const purchaseAccount = lp.supplier_name || lp.account_name || lp.purchase_account || "—";
+      const purchaseAccount = lpForm.purchaseAccountName || lpForm.purchaseAccountNo
+        ? (lpForm.purchaseAccountNo ? `${lpForm.purchaseAccountNo} — ${lpForm.purchaseAccountName || "Purchase Account"}` : lpForm.purchaseAccountName)
+        : (lp.supplier_name || lp.account_name || lp.purchase_account || "—");
+      const salesAccount = lpForm.salesAccountName || lpForm.salesAccountNo
+        ? (lpForm.salesAccountNo ? `${lpForm.salesAccountNo} — ${lpForm.salesAccountName || "Sales Account"}` : lpForm.salesAccountName)
+        : (lp.customer_name || lp.sales_account || "—");
 
       if (entries.length > 0) {
         entries.forEach((e: any, idx: number) => {
@@ -492,6 +541,9 @@ export function SourceFilteredTable({
             billNo,
             billDate,
             purchaseAccount,
+            salesAccount,
+            mainBranch,
+            cityBranch,
             branch,
             brand,
             size,
@@ -524,6 +576,8 @@ export function SourceFilteredTable({
             remainingFC,
             dueDate: displayDate(dueDate),
             paymentStatus,
+            rawRow: lp,
+            rawLoading: e || lp,
           });
         });
       } else if (Number(lp.numbers || 0) > 0) {
@@ -568,6 +622,9 @@ export function SourceFilteredTable({
           billNo,
           billDate,
           purchaseAccount,
+          salesAccount,
+          mainBranch,
+          cityBranch,
           branch,
           brand,
           size,
@@ -600,6 +657,8 @@ export function SourceFilteredTable({
           remainingFC,
           dueDate: displayDate(dueDate),
           paymentStatus,
+          rawRow: lp,
+          rawLoading: lp,
         });
       }
     }
@@ -639,14 +698,175 @@ export function SourceFilteredTable({
   const [exportOpen, setExportOpen] = useState(false);
 
   const formatDashDate = (str: string | null | undefined): string => {
-    if (!str || str === "—") return "—";
-    const d = new Date(str);
-    if (isNaN(d.getTime())) return String(str).slice(0, 10);
-    const day = String(d.getDate()).padStart(2, "0");
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const mon = months[d.getMonth()];
-    const yr = d.getFullYear();
-    return `${day}-${mon}-${yr}`;
+    if (!str || str === "—" || String(str).toLowerCase().includes("pending") || String(str).toLowerCase().includes("null")) return "—";
+    const s = String(str).trim();
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, "0");
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const mon = months[d.getMonth()];
+      const yr = d.getFullYear();
+      return `${day}-${mon}-${yr}`;
+    }
+    const match = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const mIdx = parseInt(match[2], 10) - 1;
+      return `${match[3]}-${months[mIdx] || match[2]}-${match[1]}`;
+    }
+    return s.length > 11 ? s.slice(0, 10) : s;
+  };
+
+  // Helper to extract complete goods info from row (supporting goodsEntries, form_data, totals, items, and root properties)
+  const resolveOrderGoods = (r: any) => {
+    let rawData = r.form_data ?? {};
+    if (typeof rawData === "string") {
+      try {
+        rawData = JSON.parse(rawData);
+      } catch (_) {
+        rawData = {};
+      }
+    }
+    const data = typeof rawData === "object" && rawData !== null ? rawData : {};
+    const form = (data.form ?? {}) as Record<string, any>;
+    const totals = (data.totals ?? {}) as Record<string, any>;
+    const goodsEntries = (
+      Array.isArray(data.goodsEntries) && data.goodsEntries.length > 0
+        ? data.goodsEntries
+        : (Array.isArray(r.goods_entries) && r.goods_entries.length > 0
+            ? r.goods_entries
+            : (Array.isArray(r.items) && r.items.length > 0
+                ? r.items
+                : (form.goodsName ? [form] : [])))
+    ) as any[];
+
+    // 1. Goods Name
+    const names = goodsEntries
+      .map((g: any) => g.goodsName || g.productName || g.description || g.goods_name || g.name)
+      .filter(Boolean);
+    const goodsName =
+      (names.length > 0 ? Array.from(new Set(names)).join(", ") : null) ||
+      r.goods_name ||
+      r.productName ||
+      r.goodsDescription ||
+      form.goodsName ||
+      form.productName ||
+      "—";
+
+    // 2. Brand & Size
+    const brands = goodsEntries.map((g: any) => g.brand).filter(Boolean);
+    const brand = (brands.length > 0 ? brands[0] : "") || form.brand || form.brandName || r.brand || "";
+
+    const sizes = goodsEntries.map((g: any) => g.size || g.goodsSize).filter(Boolean);
+    const size = (sizes.length > 0 ? sizes[0] : "") || form.size || form.goodsSize || r.size || "";
+
+    // 3. Quantity
+    const qtyFromEntries = goodsEntries.reduce((sum: number, g: any) => {
+      return sum + (Number(g.qtyNo ?? g.quantity ?? g.quantity_kgs ?? g.qty ?? 0) || 0);
+    }, 0);
+    const qty =
+      qtyFromEntries > 0
+        ? qtyFromEntries
+        : Number(totals.totalQty || totals.totalQuantity || r.total_quantity || form.totalQuantity || r.quantity || r.quantity_kgs || 0);
+
+    // 4. Unit
+    const unit =
+      goodsEntries[0]?.qtyName ||
+      goodsEntries[0]?.unit ||
+      goodsEntries[0]?.quantityUnit ||
+      form.qtyName ||
+      form.quantityUnit ||
+      form.unit ||
+      r.quantity_name ||
+      r.unit ||
+      "BAGS";
+
+    // 5. Gross Weight (Kg)
+    const grossFromEntries = goodsEntries.reduce((sum: number, g: any) => {
+      const direct = Number(g.grossWeight ?? g.total_gross_weight ?? 0);
+      if (direct > 0) return sum + direct;
+      const qNo = Number(g.qtyNo ?? g.quantity ?? 0);
+      const qKgs = Number(g.qtyKgs ?? 0);
+      if (qNo > 0 && qKgs > 0) return sum + (qNo * qKgs);
+      return sum;
+    }, 0);
+    const grossKg =
+      grossFromEntries > 0
+        ? grossFromEntries
+        : Number(totals.totalGross || totals.totalGrossWeight || r.total_gross_weight || r.gross_weight || form.grossWeight || 0);
+
+    // 6. Net Weight (Kg)
+    const netFromEntries = goodsEntries.reduce((sum: number, g: any) => {
+      const direct = Number(g.netWeight ?? g.net_weight ?? 0);
+      if (direct > 0) return sum + direct;
+      const qNo = Number(g.qtyNo ?? g.quantity ?? 0);
+      const qKgs = Number(g.qtyKgs ?? 0);
+      const emptyKgs = Number(g.emptyKgs ?? 0);
+      if (qNo > 0 && qKgs > 0) return sum + (qNo * (qKgs - emptyKgs));
+      return sum;
+    }, 0);
+    const netKg =
+      netFromEntries > 0
+        ? netFromEntries
+        : Number(totals.totalNet || totals.totalNetWeight || r.total_net_weight || r.net_weight || form.netWeight || (grossKg > 0 ? grossKg : 0));
+
+    // 7. Origin
+    const origin =
+      goodsEntries[0]?.origin ||
+      form.originCountry ||
+      form.originCountryName ||
+      r.origin_country_name ||
+      r.originCountry ||
+      r.country_name ||
+      "—";
+
+    return { goodsName, brand, size, qty, unit, grossKg, netKg, origin, form, totals, goodsEntries, rawData: data };
+  };
+
+  // Helper to resolve accurate Loading and Receiving Dates
+  const resolveOrderDates = (r: any, linkedLr: any, form: any, data: any) => {
+    const workflow = (data?.workflow ?? {}) as Record<string, any>;
+    const purchaseBooking = (data?.purchaseBooking ?? {}) as Record<string, any>;
+    const workflowDates = (data?.workflowDates ?? r.workflowDates ?? {}) as Record<string, any>;
+
+    const rawLoadDate =
+      linkedLr?.loaded_at ||
+      linkedLr?.loading_date ||
+      form?.loadingDate ||
+      form?.expectedLoadingDate ||
+      workflow?.loadingDate ||
+      workflow?.expectedLoadingDate ||
+      workflowDates?.loadingDate ||
+      purchaseBooking?.loadingDate ||
+      purchaseBooking?.expectedLoadingDate ||
+      r?.loading_date ||
+      r?.purchase_date ||
+      linkedLr?.created_at ||
+      null;
+
+    const rawReceiveDate =
+      linkedLr?.received_at ||
+      linkedLr?.actual_arrival_date ||
+      form?.receivingDate ||
+      form?.receivedDate ||
+      form?.expectedReceivingDate ||
+      form?.arrivalDate ||
+      workflow?.receivingDate ||
+      workflow?.receivedDate ||
+      workflow?.expectedReceivingDate ||
+      workflowDates?.receivingDate ||
+      purchaseBooking?.receivingDate ||
+      purchaseBooking?.expectedReceivingDate ||
+      r?.receiving_date ||
+      r?.receive_date ||
+      r?.arrival_date ||
+      linkedLr?.eta_date ||
+      null;
+
+    return {
+      loadDate: formatDashDate(rawLoadDate),
+      receiveDate: formatDashDate(rawReceiveDate),
+    };
   };
 
   const advanceFilterOptions = useMemo(() => {
@@ -656,15 +876,14 @@ export function SourceFilteredTable({
     const goods = new Set<string>();
 
     advanceRowsToRender.forEach((r: any) => {
-      const form = r.form_data?.form || {};
+      const { goodsName, form } = resolveOrderGoods(r);
       const c = r.country_name || form.countryName;
       if (c && c !== "—") countries.add(c);
       const b = r.branch_name || form.branchName;
       if (b && b !== "—") branches.add(b);
       const a = r.purchase_account_name || r.purchase_account_no || form.purchaseAccountName;
       if (a && a !== "—") accounts.add(a);
-      const g = r.goods_name || form.goodsName;
-      if (g && g !== "—") goods.add(g);
+      if (goodsName && goodsName !== "—") goods.add(goodsName);
     });
 
     return {
@@ -677,6 +896,31 @@ export function SourceFilteredTable({
 
   const advanceFinalRows = useMemo(() => {
     let list = advanceRowsToRender;
+    // Default view: only show bills awaiting advance payment.
+    // Bills whose advance payment is finalized / cleared (advance balance <= 0.05)
+    // move directly to Loading and Remaining/Final payment, so they are hidden from the active advance register.
+    if (filterStatus === "all") {
+      list = list.filter((r: any) => {
+        const form = r.form_data?.form || {};
+        const purchAmtPC = Number(r.total_goods_original || r.purchase_cost || form.totalAmount || r.order_total || 0);
+        const advPct = Number(form.advancePercent || form.advancePercentage || r.advance_percent || 0);
+        const advReqPC = Number(form.advanceAmount || form.advanceRequired || ((purchAmtPC * advPct) / 100));
+        const advPaidPC = Number(r.advance_paid || form.advancePaid || 0);
+        const advBalPC = Math.max(0, advReqPC - advPaidPC);
+        return advBalPC > 0.05;
+      });
+    } else {
+      list = list.filter((r: any) => {
+        const form = r.form_data?.form || {};
+        const purchAmtPC = Number(r.total_goods_original || r.purchase_cost || form.totalAmount || r.order_total || 0);
+        const advPct = Number(form.advancePercent || form.advancePercentage || r.advance_percent || 0);
+        const advReqPC = Number(form.advanceAmount || form.advanceRequired || ((purchAmtPC * advPct) / 100));
+        const advPaidPC = Number(r.advance_paid || form.advancePaid || 0);
+        const advBalPC = Math.max(0, advReqPC - advPaidPC);
+        const status = advBalPC <= 0.05 ? "fully paid" : advPaidPC > 0 ? "partially paid" : "pending";
+        return status === filterStatus.toLowerCase();
+      });
+    }
     if (filterCountry !== "all") {
       list = list.filter((r: any) => {
         const c = String(r.country_name || r.form_data?.form?.countryName || "").toLowerCase();
@@ -697,14 +941,8 @@ export function SourceFilteredTable({
     }
     if (filterGoods !== "all") {
       list = list.filter((r: any) => {
-        const g = String(r.goods_name || r.product_name || r.form_data?.form?.goodsName || "").toLowerCase();
-        return g.includes(filterGoods.toLowerCase());
-      });
-    }
-    if (filterStatus !== "all") {
-      list = list.filter((r: any) => {
-        const fin = getAdvanceInvoiceFinancials(r);
-        return fin.status.toLowerCase() === filterStatus.toLowerCase();
+        const { goodsName } = resolveOrderGoods(r);
+        return goodsName.toLowerCase().includes(filterGoods.toLowerCase());
       });
     }
     if (filterDateFrom) {
@@ -723,8 +961,9 @@ export function SourceFilteredTable({
       const q = filterQuery.toLowerCase().trim();
       list = list.filter((r: any) => {
         const bill = String(r.purchase_order_no || r.bill_no || "").toLowerCase();
-        const goods = String(r.goods_name || "").toLowerCase();
-        const acc = String(r.purchase_account_name || "").toLowerCase();
+        const { goodsName } = resolveOrderGoods(r);
+        const goods = goodsName.toLowerCase();
+        const acc = String(r.purchase_account_name || r.purchase_account_no || r.form_data?.form?.purchaseAccountName || "").toLowerCase();
         return bill.includes(q) || goods.includes(q) || acc.includes(q);
       });
     }
@@ -746,14 +985,13 @@ export function SourceFilteredTable({
     let totalAdvBalFC = 0;
 
     advanceFinalRows.forEach((r: any) => {
-      const form = r.form_data?.form || {};
+      const { qty, unit, grossKg, netKg, form } = resolveOrderGoods(r);
       const exRate = Number(r.exchange_rate || form.exchangeRate || 3.6725) || 3.6725;
-      const qty = Number(r.total_quantity || form.totalQuantity || r.quantity || 0);
-      if (form.quantityUnit || form.unit || r.quantity_name) {
-        qtyUnit = form.quantityUnit || form.unit || r.quantity_name;
+      if (unit && unit !== "—") {
+        qtyUnit = unit;
       }
-      const gross = Number(r.gross_weight || form.grossWeight || 0);
-      const net = Number(r.net_weight || form.netWeight || 0);
+      const gross = grossKg;
+      const net = netKg;
 
       const purchPC = Number(r.total_goods_original || r.purchase_cost || form.totalAmount || r.order_total || 0);
       const purchFC = purchPC * exRate;
@@ -991,7 +1229,7 @@ export function SourceFilteredTable({
         {/* ADVANCE PAYMENT JOURNAL — EXACT 15-COLUMN STACKED FINANCIAL REPORT         */}
         {/* ========================================================================= */}
         {activeMode === "advance" ? (
-          <table className="w-full min-w-[2200px] border-collapse text-start text-xs">
+          <table className="w-full min-w-[1680px] border-collapse text-start text-xs">
             <thead>
               <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
                 <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("BILL NO. / DATE")}</th>
@@ -1006,36 +1244,42 @@ export function SourceFilteredTable({
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("REQUIRED")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("BALANCE")}</th>
-                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("AMOUNT")}</th>
-                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("PAYMENT")}</th>
-                <th colSpan={2} className="py-3 px-3 text-start border-r border-amber-300 whitespace-nowrap">{label("REMAINING")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("PAYMENT DATE")}</th>
-                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("LOADING DATE RECEIVE DATE")}</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap text-[10px]">{label("LOAD / RCV DATE")}</th>
                 <th className="py-3 px-3 text-center whitespace-nowrap">{label("ACTION")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
               {advanceFinalRows.length === 0 ? (
                 <tr>
-                  <td colSpan={21} className="py-8 text-center text-xs text-slate-400 font-medium">
+                  <td colSpan={15} className="py-8 text-center text-xs text-slate-400 font-medium">
                     {label("NO ADVANCE BILLS FOUND")}
                   </td>
                 </tr>
               ) : (
                 advanceFinalRows.map((r, i) => {
-                  const form = r.form_data?.form || {};
+                  const { goodsName: resolvedGoodsName, brand: resolvedBrand, size: resolvedSize, qty: resolvedQty, unit: resolvedUnit, grossKg: resolvedGrossKg, netKg: resolvedNetKg, origin: resolvedOrigin, form: resolvedForm, rawData: resolvedRawData } = resolveOrderGoods(r);
+                  const form = resolvedForm;
                   const billNo = r.purchase_order_no || r.bill_no || r.order_no || form.billNo || "—";
                   const billDate = formatDashDate(r.order_date || form.orderDate || form.billDate || r.created_at);
                   const branchName = r.branch_name || form.branchName || form.branchCode || "—";
                   const purchaseAccount = form.purchaseAccountName || form.purchaseAccountNo || r.purchase_account_name || r.purchase_account_no || r.supplier_name || "—";
-                  const goodsName = r.goods_name || form.goodsName || form.productName || "—";
-                  const brand = form.brand || form.brandName || r.brand || "";
-                  const size = form.size || form.goodsSize || r.size || "";
-                  const qty = Number(r.total_quantity || form.totalQuantity || r.quantity || 0);
-                  const unit = form.quantityUnit || form.unit || r.quantity_name || "";
-                  const grossKg = Number(r.gross_weight || form.grossWeight || 0);
-                  const netKg = Number(r.net_weight || form.netWeight || 0);
-                  const origin = form.originCountry || form.originCountryName || r.origin_country_name || r.country_name || "—";
+
+                  const linkedLr = (loadingRecords || []).find((lr: any) =>
+                    (lr.purchase_order_id && String(lr.purchase_order_id) === String(r.id)) ||
+                    (r.purchase_order_no && lr.purchase_order_no && lr.purchase_order_no === r.purchase_order_no) ||
+                    (r.bill_no && lr.purchase_order_no && lr.purchase_order_no === r.bill_no) ||
+                    (form.billNo && lr.purchase_order_no && lr.purchase_order_no === form.billNo)
+                  );
+
+                  const goodsName = (resolvedGoodsName && resolvedGoodsName !== "—") ? resolvedGoodsName : (linkedLr?.goods_name || "—");
+                  const brand = resolvedBrand;
+                  const size = resolvedSize;
+                  const qty = resolvedQty > 0 ? resolvedQty : Number(linkedLr?.loaded_quantity || 0);
+                  const unit = resolvedUnit;
+                  const grossKg = resolvedGrossKg > 0 ? resolvedGrossKg : Number(linkedLr?.gross_weight || 0);
+                  const netKg = resolvedNetKg > 0 ? resolvedNetKg : Number(linkedLr?.net_weight || (grossKg > 0 ? grossKg : 0));
+                  const origin = (resolvedOrigin && resolvedOrigin !== "—") ? resolvedOrigin : (linkedLr?.origin_country || "—");
 
                   const purchCurr = String(r.currency_code || form.currencyType || "USD").toUpperCase();
                   const finalCurr = String(r.dest_countries?.currency_code || form.secondaryCurrency || "AED").toUpperCase();
@@ -1057,8 +1301,7 @@ export function SourceFilteredTable({
                   const fin = getAdvanceInvoiceFinancials(r);
                   const paymentDate = formatDashDate(r.advance_payment_date || (fin.summary?.payments && fin.summary.payments[0]?.date) || (advPaidPC > 0 ? billDate : null));
 
-                  const loadDate = formatDashDate(form.loadingDate || form.expectedLoadingDate || r.loading_date);
-                  const receiveDate = formatDashDate(form.receivingDate || form.expectedReceivingDate || r.receiving_date);
+                  const { loadDate, receiveDate } = resolveOrderDates(r, linkedLr, form, resolvedRawData);
 
                   const isFullyPaid = advBalPC <= 0.05;
 
@@ -1163,98 +1406,40 @@ export function SourceFilteredTable({
                         </div>
                       </td>
 
-                      {/* 12b. Invoice / Paid / Remaining summary (invoice-level, per currency) */}
-                      {(["invoice", "paid", "remaining"] as const).map((section) => (
-                        <td key={section} colSpan={2} className="align-top px-3 py-2.5 border-r border-slate-200 dark:border-slate-800">
-                          <PurchaseInvoiceSection compact lang={lang} section={section} summary={fin.summary} loading={fin.loading} />
-                        </td>
-                      ))}
-
                       {/* 13. Payment Date */}
                       <td className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
                         {paymentDate}
                       </td>
 
-                      {/* 14. Loading Date Receive Date */}
-                      <td className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-[10px] whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-1 text-slate-700 dark:text-slate-300">
-                          <span>📅</span>
+                      {/* 14. Loading Date / Receive Date */}
+                      <td className="py-2 px-1.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-[10px] whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1.5 text-slate-800 dark:text-slate-200 font-medium leading-tight">
+                          <span className="text-[9px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100/90 dark:bg-blue-950/80 px-1 py-0.5 rounded leading-none">L:</span>
                           <span>{loadDate}</span>
                         </div>
-                        <div className="flex items-center justify-center gap-1 text-slate-500 mt-0.5">
-                          <span>📅</span>
+                        <div className="flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 font-medium mt-0.5 leading-tight">
+                          <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/80 px-1 py-0.5 rounded leading-none">R:</span>
                           <span>{receiveDate}</span>
                         </div>
                       </td>
 
-                      {/* 15. Action */}
+                      {/* 15. Action: one three-dot menu with New Entry and View */}
                       <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        {isFullyPaid ? (
-                          <button
-                            type="button"
-                            onClick={() => onOpenFullBill(r)}
-                            className="inline-flex items-center justify-center px-4 py-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs shadow-sm transition cursor-pointer"
-                          >
-                            View
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => onSelectOrder(r.id)}
-                            className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs shadow-sm transition cursor-pointer whitespace-nowrap"
-                          >
-                            Advance Entry
-                          </button>
-                        )}
+                        <AdvanceRowMenu
+                          lang={lang}
+                          canCreateEntry={!isFullyPaid}
+                          transferHref={isFullyPaid && (r.order_type === "local_purchase" || linkedLr?.id) ? transferHrefFor(r, linkedLr) : null}
+                          onNewEntry={() => onSelectOrder(r.id)}
+                          onFullView={() => onOpenFullBill(r)}
+                          onPaymentHistory={() => onSelectOrder(r.id)}
+                          onPrint={() => onPrintStatement(r)}
+                        />
                       </td>
                     </tr>
                   );
                 })
               )}
             </tbody>
-            {/* Advance Table Total Row */}
-            <tfoot>
-              <tr className="bg-[#ffd257] text-slate-900 font-black text-xs border-t-2 border-amber-300">
-                <td className="py-2.5 px-3 border-r border-amber-300 whitespace-nowrap">
-                  Total ({advanceTotals.bills} Bills)
-                </td>
-                <td className="py-2.5 px-3 border-r border-amber-300" />
-                <td className="py-2.5 px-2.5 border-r border-amber-300" />
-                <td className="py-2.5 px-3 border-r border-amber-300" />
-                <td className="py-2.5 px-2 text-right border-r border-amber-300 font-mono whitespace-nowrap">
-                  {fmtQty(advanceTotals.qty)} {advanceTotals.unit}
-                </td>
-                <td className="py-2.5 px-2.5 text-right border-r border-amber-300 font-mono whitespace-nowrap">
-                  <div>{fmt(advanceTotals.gross)}</div>
-                  <div className="text-[10px] text-slate-700">{fmt(advanceTotals.net)}</div>
-                </td>
-                <td className="py-2.5 px-2.5 border-r border-amber-300" />
-                <td className="py-2.5 px-3 text-right border-r border-amber-300 font-mono whitespace-nowrap">
-                  <div><span className="text-[10px] text-slate-700 font-semibold mr-1">USD</span>{fmt(advanceTotals.purchPC)}</div>
-                  <div className="text-[11px] text-slate-800"><span className="text-[10px] text-slate-600 font-semibold mr-1">AED</span>{fmt(advanceTotals.purchFC)}</div>
-                </td>
-                <td className="py-2.5 px-2 text-center border-r border-amber-300 font-mono">
-                  10%
-                </td>
-                <td className="py-2.5 px-3 text-right border-r border-amber-300 font-mono whitespace-nowrap">
-                  <div><span className="text-[10px] text-slate-700 font-semibold mr-1">USD</span>{fmt(advanceTotals.advReqPC)}</div>
-                  <div className="text-[11px] text-slate-800"><span className="text-[10px] text-slate-600 font-semibold mr-1">AED</span>{fmt(advanceTotals.advReqFC)}</div>
-                </td>
-                <td className="py-2.5 px-3 text-right border-r border-amber-300 font-mono whitespace-nowrap text-emerald-800">
-                  <div><span className="text-[10px] font-semibold mr-1">USD</span>{fmt(advanceTotals.advPaidPC)}</div>
-                  <div className="text-[11px]"><span className="text-[10px] font-semibold mr-1">AED</span>{fmt(advanceTotals.advPaidFC)}</div>
-                </td>
-                <td className="py-2.5 px-3 text-right border-r border-amber-300 font-mono whitespace-nowrap text-rose-700">
-                  <div><span className="text-[10px] font-semibold mr-1">USD</span>{fmt(advanceTotals.advBalPC)}</div>
-                  <div className="text-[11px]"><span className="text-[10px] font-semibold mr-1">AED</span>{fmt(advanceTotals.advBalFC)}</div>
-                </td>
-                <td className="py-2.5 px-2.5 text-center border-r border-amber-300 font-mono text-slate-700">
-                  -
-                </td>
-                <td className="py-2.5 px-2.5 border-r border-amber-300" />
-                <td className="py-2.5 px-3" />
-              </tr>
-            </tfoot>
           </table>
         ) : activeMode === "remaining" ? (
           /* ========================================================================= */
@@ -1265,20 +1450,20 @@ export function SourceFilteredTable({
               <tr className="bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300">
                 <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("BILL NO., DATE")}</th>
                 <th className="py-3 px-2 border-r border-amber-300 text-center whitespace-nowrap">{label("TYPE")}</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("PURCHASE ACCOUNT")}</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("BRANCH")}</th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("ACCOUNTS (PURCHASE / SALES)")}</th>
+                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("BRANCH (MAIN / CITY)")}</th>
                 <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">{label("GOODS BRAND / SIZE")}</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("QTY (CTNS)")}</th>
-                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("GROSS WT / NET WT (KG)")}</th>
+                <th className="py-3 px-2 text-right border-r border-amber-300 whitespace-nowrap">{label("QTY (UNIT)")}</th>
+                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">{label("G.W. / N.W. (KG)")}</th>
                 <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">{label("ORIGIN")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PURCHASE")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("ADVANCE")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("PAID")}</th>
                 <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">{label("BALANCE")}</th>
-                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("LOADING DATE / RECEIVE DATE")}</th>
+                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap text-[10px]">{label("LOAD / SHIP DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("DUE DATE")}</th>
                 <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">{label("STATUS")}</th>
-                <th className="py-3 px-3 text-center whitespace-nowrap">{label("JOURNAL")}</th>
+                <th className="py-3 px-3 text-center whitespace-nowrap">{label("ACTIONS")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
@@ -1314,14 +1499,26 @@ export function SourceFilteredTable({
                       </span>
                     </td>
 
-                    {/* 3. Purchase Account */}
-                    <td className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-800 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap max-w-[160px] truncate" title={r.purchaseAccount}>
-                      {r.purchaseAccount}
+                    {/* 3. Accounts (Purchase / Sales) */}
+                    <td className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap max-w-[180px]">
+                      <div className="font-semibold text-slate-800 dark:text-slate-200 truncate flex items-center gap-1.5" title={r.purchaseAccount}>
+                        <span className="text-[9px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100/90 dark:bg-blue-950/80 px-1 py-0.5 rounded leading-none shrink-0">P:</span>
+                        <span className="truncate">{r.purchaseAccount}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate flex items-center gap-1.5" title={r.salesAccount}>
+                        <span className="text-[9px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-950/80 px-1 py-0.5 rounded leading-none shrink-0">S:</span>
+                        <span className="truncate">{r.salesAccount || "—"}</span>
+                      </div>
                     </td>
 
-                    {/* 4. Branch */}
-                    <td className="py-2.5 px-2.5 border-r border-slate-200 dark:border-slate-800 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                      {r.branch}
+                    {/* 4. Branch (Main / City) */}
+                    <td className="py-2.5 px-2.5 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap max-w-[160px]">
+                      <div className="font-semibold text-slate-800 dark:text-slate-200 truncate" title={r.mainBranch || r.branch}>
+                        {r.mainBranch || r.branch}
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate" title={r.cityBranch || "—"}>
+                        {r.cityBranch || "—"}
+                      </div>
                     </td>
 
                     {/* 5. Goods Brand / Size */}
@@ -1335,16 +1532,22 @@ export function SourceFilteredTable({
                       </div>
                     </td>
 
-                    {/* 6. Qty (Ctns) */}
-                    <td className="py-2.5 px-2 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
-                      <div className="font-bold text-slate-900 dark:text-white">{fmtQty(r.loadedQty)}</div>
-                      <div className="text-[10px] text-slate-500">{r.unit || "Ctns"}</div>
+                    {/* 6. Qty (Unit) - normal-sized format */}
+                    <td className="py-2.5 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                      <span className="font-bold text-slate-900 dark:text-white text-xs">{fmtQty(r.loadedQty)}</span>
+                      <span className="text-[11px] text-slate-500 ml-1">{r.unit || "PCS"}</span>
                     </td>
 
-                    {/* 7. Gross Wt / Net Wt (Kg) */}
-                    <td className="py-2.5 px-2 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
-                      <div className="font-bold text-slate-800 dark:text-slate-200">{fmt(r.grossWeight)}</div>
-                      <div className="text-[10px] text-slate-500">{fmt(r.netWeight)}</div>
+                    {/* 7. G.W. / N.W. (KG) */}
+                    <td className="py-2.5 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
+                      <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-end gap-1">
+                        <span className="text-[10px] text-slate-400 font-semibold">G.W:</span>
+                        <span>{fmt(r.grossWeight, 0)}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-end gap-1">
+                        <span className="text-[10px] text-slate-400 font-semibold">N.W:</span>
+                        <span>{fmt(r.netWeight, 0)}</span>
+                      </div>
                     </td>
 
                     {/* 8. Origin */}
@@ -1400,14 +1603,14 @@ export function SourceFilteredTable({
                       </div>
                     </td>
 
-                    {/* 13. Loading Date / Receive Date */}
-                    <td className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-[10px] whitespace-nowrap">
-                      <div className="flex items-center justify-center gap-1 text-slate-700 dark:text-slate-300">
-                        <span>📅</span>
+                    {/* 13. Loading Date / Shipping (Receive) Date */}
+                    <td className="py-2 px-1.5 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-[10px] whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-1.5 text-slate-800 dark:text-slate-200 font-medium leading-tight">
+                        <span className="text-[9px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100/90 dark:bg-blue-950/80 px-1 py-0.5 rounded leading-none">L:</span>
                         <span>{r.loadDate ? displayDate(r.loadDate) : "—"}</span>
                       </div>
-                      <div className="flex items-center justify-center gap-1 text-slate-500 mt-0.5">
-                        <span>📅</span>
+                      <div className="flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 font-medium mt-0.5 leading-tight">
+                        <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/80 px-1 py-0.5 rounded leading-none">S:</span>
                         <span>{r.receiveDate ? displayDate(r.receiveDate) : "—"}</span>
                       </div>
                     </td>
@@ -1431,21 +1634,29 @@ export function SourceFilteredTable({
                       </span>
                     </td>
 
-                    {/* 16. Journal */}
+                    {/* 16. Actions (Three-Dot Menu) */}
                     <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                      <button
-                        type="button"
-                        onClick={() => {
+                      <RemainingRowMenu
+                        lang={lang}
+                        canTransfer={r.paymentStatus === "Fully Paid" || r.remainingPC <= 0.05}
+                        transferHref={transferHrefFor(r.rawRow, r.rawLoading)}
+                        onView={() => onOpenFullBill(r.rawRow || r)}
+                        onEditEntry={() => {
                           if (r.source === "purchase_booking" && onSelectLoading) {
                             onSelectLoading(r.orderId, r.loadingId);
                           } else {
                             onSelectOrder(r.orderId);
                           }
                         }}
-                        className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs shadow-sm transition cursor-pointer"
-                      >
-                        {label("JOURNAL")}
-                      </button>
+                        onJournal={() => {
+                          if (r.source === "purchase_booking" && onSelectLoading) {
+                            onSelectLoading(r.orderId, r.loadingId);
+                          } else {
+                            onSelectOrder(r.orderId);
+                          }
+                        }}
+                        onPrint={() => onPrintStatement(r.rawRow || r)}
+                      />
                     </td>
                   </tr>
                 ))
@@ -1724,6 +1935,112 @@ export function SourceFilteredTable({
           <span className="font-bold text-blue-600">ⓘ Journal button</span> opens the selected bill details and Print on demand. | Alternative tab states — app shows one selected table at a time.
         </div>
       </div>
+    </div>
+  );
+}
+
+
+function transferHrefFor(row: any, loading: any): string {
+  if (row?.order_type === "local_purchase") {
+    const id = encodeURIComponent(String(row.id));
+    return `/dashboard/purchase/purchase-transit-lane?source=local_purchase&sourceId=${id}&focus=${id}`;
+  }
+  const id = encodeURIComponent(String(loading?.id || ""));
+  return `/dashboard/purchase/purchase-transit-lane?source=purchase_booking&sourceId=${id}&focus=${id}`;
+}
+
+function AdvanceRowMenu({ lang, canCreateEntry, transferHref, onNewEntry, onFullView, onPaymentHistory, onPrint }: { lang: string; canCreateEntry: boolean; transferHref: string | null; onNewEntry: () => void; onFullView: () => void; onPaymentHistory: () => void; onPrint: () => void }) {
+  const [open, setOpen] = useState(false);
+  const t = (label: string) => translateHeader(lang, label);
+  const item = (label: string, icon: React.ReactNode, onClick: () => void, disabled = false) => (
+    <button
+      type="button"
+      role="menuitem"
+      disabled={disabled}
+      onClick={() => { setOpen(false); onClick(); }}
+      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-xs font-semibold text-slate-800 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-900"
+    >
+      <span className="text-blue-600 dark:text-blue-300 [&>svg]:h-3.5 [&>svg]:w-3.5">{icon}</span>
+      {label}
+    </button>
+  );
+  return (
+    <div className="relative inline-block text-start" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false); }}>
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={t("ACTION")}
+        onClick={() => setOpen((v) => !v)}
+        className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 bg-white hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-950"
+      >
+        <MoreVertical className="h-4 w-4" aria-hidden="true" />
+      </button>
+      {open && (
+        <div role="menu" className="absolute end-0 z-30 mt-1 w-48 rounded-xl border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-800 dark:bg-slate-950">
+          {item(t("NEW ENTRY"), <Plus />, onNewEntry, !canCreateEntry)}
+          {item(t("FULL VIEW"), <Maximize2 />, onFullView)}
+          {item(t("PAYMENT HISTORY"), <Clock />, onPaymentHistory)}
+          {transferHref ? item(t("TRANSFER"), <Truck />, () => { window.location.href = transferHref; }) : item(t("TRANSFER"), <Truck />, () => {}, true)}
+          {item(t("PRINT"), <Printer />, onPrint)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RemainingRowMenu({
+  lang,
+  canTransfer,
+  transferHref,
+  onView,
+  onEditEntry,
+  onJournal,
+  onPrint,
+}: {
+  lang: string;
+  canTransfer: boolean;
+  transferHref: string | null;
+  onView: () => void;
+  onEditEntry: () => void;
+  onJournal: () => void;
+  onPrint?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const t = (label: string) => translateHeader(lang, label);
+  const item = (label: string, icon: React.ReactNode, onClick: () => void, disabled = false) => (
+    <button
+      type="button"
+      role="menuitem"
+      disabled={disabled}
+      onClick={() => { setOpen(false); onClick(); }}
+      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-xs font-semibold text-slate-800 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-900"
+    >
+      <span className="text-blue-600 dark:text-blue-300 [&>svg]:h-3.5 [&>svg]:w-3.5">{icon}</span>
+      {label}
+    </button>
+  );
+  return (
+    <div className="relative inline-block text-start" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false); }}>
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={t("ACTION")}
+        onClick={() => setOpen((v) => !v)}
+        className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 bg-white hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-950 transition shadow-sm"
+      >
+        <MoreVertical className="h-4 w-4 text-slate-700 dark:text-slate-300" aria-hidden="true" />
+      </button>
+      {open && (
+        <div role="menu" className="absolute end-0 z-30 mt-1 w-48 rounded-xl border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-800 dark:bg-slate-950">
+          {item(t("VIEW"), <Eye />, onView)}
+          {item(t("EDIT ENTRY"), <Pencil />, onEditEntry)}
+          {item(t("JOURNAL"), <BookOpen />, onJournal)}
+          {canTransfer && transferHref ? item(t("TRANSFER"), <Truck />, () => { window.location.href = transferHref; }) : item(t("TRANSFER"), <Truck />, () => {}, true)}
+          {onPrint ? item(t("PRINT"), <Printer />, onPrint) : null}
+        </div>
+      )}
     </div>
   );
 }

@@ -118,6 +118,8 @@ export type SidebarSubItem = {
   roles?: string[];
   tone?: "red" | "default";
   isNew?: boolean;
+  /** Small red NEW label on a direct link; the text stays black (used for newly added stock pages). */
+  redNew?: boolean;
   /** Strengthened by the current ERP upgrade project — renders the green UPGRADED marker. */
   upgraded?: boolean;
 };
@@ -340,6 +342,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     children: [
       { label: nt("Journal Purchase Stock"), href: "/dashboard/purchase/journal-booking-stock", icon: Boxes },
       { label: nt("Purchase General Stock"), href: "/dashboard/purchase/stock/journal", icon: Package },
+      { label: nt("Warehouse Stock Register"), href: "/dashboard/stock/warehouse-register", icon: Warehouse, redNew: true },
     ],
   },
   {
@@ -1457,6 +1460,7 @@ export function DigitalDockPremiumSidebar({
 
                         /* Level 2 Direct Link */
                         const isDirectNew = sub.isNew;
+                        const isDirectRedNew = !!sub.redNew;
                         return (
                           <Link
                             key={sub.label + (sub.href || "")}
@@ -1479,6 +1483,9 @@ export function DigitalDockPremiumSidebar({
                             <span className={`tracking-tight flex-1 ${isDirectNew ? "text-white font-bold truncate" : isSubRed ? "text-red-600 font-bold break-words leading-snug" : "truncate"}`}>
                               {tr(sub.label)}
                             </span>
+                            {isDirectRedNew && (
+                              <span className="ms-auto shrink-0 rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider bg-red-600 text-white">{tr("NEW")}</span>
+                            )}
                             
                             {sub.upgraded && !isDirectNew && <UpgradedMark lang={lang} />}
                           </Link>

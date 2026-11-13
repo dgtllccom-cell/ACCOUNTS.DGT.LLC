@@ -133,6 +133,8 @@ export async function GET(request: NextRequest) {
                  cr_acc.account_name as resolved_cr_account_name,
                  cr_acc.account_code as resolved_cr_account_code,
                  coalesce(pay_agg.posted_paid_amount, 0)::numeric as posted_paid_amount,
+                 coalesce(pay_agg.posted_advance_amount, 0)::numeric as posted_advance_amount,
+                 coalesce(pay_agg.posted_other_amount, 0)::numeric as posted_other_amount,
                  coalesce(pay_agg.posted_payment_count, 0)::int as posted_payment_count,
                  pay_agg.latest_payment_kind,
                  coalesce(pay_agg.payment_entries, '[]'::jsonb) as payment_entries
@@ -180,6 +182,8 @@ export async function GET(request: NextRequest) {
           left join lateral (
             select
               coalesce(sum(case when p.status = 'posted' then p.amount else 0 end), 0)::numeric as posted_paid_amount,
+              coalesce(sum(case when p.status = 'posted' and p.posted_to_journal = true and p.roznamcha_entry_id is not null and p.debit_ledger_id is not null and p.credit_ledger_id is not null and p.kind = 'advance' then p.amount else 0 end), 0)::numeric as posted_advance_amount,
+              coalesce(sum(case when p.status = 'posted' and p.posted_to_journal = true and p.roznamcha_entry_id is not null and p.debit_ledger_id is not null and p.credit_ledger_id is not null and p.kind <> 'advance' then p.amount else 0 end), 0)::numeric as posted_other_amount,
               count(case when p.status = 'posted' then 1 end)::int as posted_payment_count,
               (array_agg(p.kind order by p.entry_date desc, p.created_at desc) filter (where p.status = 'posted'))[1]::text as latest_payment_kind,
               coalesce(

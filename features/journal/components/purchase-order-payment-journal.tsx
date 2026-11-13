@@ -116,6 +116,7 @@ import { PurchasePaymentJournalRemainingView } from "./purchase-payment-journal-
 import { StandardizedDailyPaymentForm } from "@/components/daily-payments/standardized-daily-payment-form";
 import { calculatePaymentDueTracking, resolveAgreedDueDate } from "@/lib/services/payment-due-tracking";
 import { paymentInPurchaseCurrency } from "@/lib/purchases/loaded-payable";
+import { localPurchaseSettlement } from "@/lib/purchases/local-purchase-balance";
 import { Badge } from "@/components/ui/badge";
 function isUuid(value: any): boolean {
   if (!value || typeof value !== "string") return false;
@@ -512,6 +513,12 @@ function rowCurrency(row: PurchaseOrderRow) {
 function rowOfficeCurrency(row: PurchaseOrderRow): string {
   if (!row) return "USD";
   return officeCurrencyForCountryName(rowCountryName(row)); // also recognises the translated (UR/AR/FA/PS) country names
+}
+
+// Invoice display must keep missing historical currency metadata unknown.
+// Existing payment-entry defaults continue to use rowOfficeCurrency above.
+function rowInvoiceOfficeCurrency(row: PurchaseOrderRow): string {
+  return officeCurrencyForCountryName(rowCountryName(row), "");
 }
 
 function getUsdExchangeRate(cur: string, row: any, liveRates: any[] = []) {
@@ -3322,7 +3329,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
           : (lpBody?.records || []);
         lpRows = rawLp.map((lp: any) => {
           const rawTotal = Number(lp.final_cost || lp.purchase_cost || 0);
-          const rawAdvance = Number(lp.advance_amount || 0);
+          const rawAdvance = Number(lp.posted_advance_amount || 0);
           const pMode = String(lp.payment_mode || "Credit").trim();
           const pModeLower = pMode.toLowerCase();
           const isCredit = pModeLower.includes("credit");
@@ -3330,11 +3337,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
           const pType = isAdvance ? "Advance" : (isCredit ? "Credit" : pMode);
           const billNo = lp.contract_no ? `LP-${lp.contract_no}` : (lp.manual_bill_no || `LP-${lp.id?.slice(0, 8)}`);
 
-          const lpPaidAmount = Number(lp.paid_amount || lp.cleared_amount || 0);
-          const rawRemaining = isCredit 
-            ? Math.max(0, rawTotal - lpPaidAmount) 
-            : (Number(lp.remaining_balance) > 0 ? Number(lp.remaining_balance) : Math.max(0, rawTotal - rawAdvance));
-          const isCleared = isCredit ? (lpPaidAmount >= rawTotal && rawTotal > 0) : (rawRemaining <= 0.01 && (rawAdvance > 0 || rawTotal > 0));
+          // Ledger-verified payments only (same rule as the transfer gate); the payment-mode label and remaining_balance are not used.
+          const lpPaidAmount = Number(lp.posted_other_amount || 0);
+          const lpSettle = localPurchaseSettlement(rawTotal, rawAdvance, lpPaidAmount);
+          const rawRemaining = lpSettle.remaining;
+          const isCleared = lpSettle.cleared;
 
           return {
             ...lp,
@@ -3758,7 +3765,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const advanceCardData = useMemo(() => {
     if (activeMode !== "advance" && activeMode !== "advance_completed") return undefined;
     const rateAED = dailyUsdRates?.["AED"] ?? 3.6725;
-    const fmt = (curr: string, amt: number) => `${curr} ${amt.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const fmt = (curr: string, amt: number) => {
+      const rounded = Math.round(amt);
+      if (curr === "USD") return `$${rounded.toLocaleString("en-US")}`;
+      if (curr === "AED") return `AED ${rounded.toLocaleString("en-US")}`;
+      return `${curr} ${rounded.toLocaleString("en-US")}`;
+    };
 
     let totalBills = filtered.length;
     let totalPurchPC = 0;
@@ -5596,7 +5608,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         loadingRecords={registryLoadingRecords}
         dueBills={registryDueBills}
         invoiceRefresh={paymentsTick}
-        invoiceFinalCurrency={rowOfficeCurrency}
+        invoiceFinalCurrency={rowInvoiceOfficeCurrency}
         onSelectLoading={(id, loadingId) => { pendingLoadingPick.current = loadingId; selectOrder(id); }}
         session={session}
       />}
@@ -5840,7 +5852,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   isRtl={isRtl}
                   mode={activeMode as PaymentEntryMode}
                   model={docModel}
-                  invoiceSummary={activeMode === "advance" ? purchaseInvoiceSummary(selected, loadingPayments ? null : selectedOrderPayments, rowOfficeCurrency(selected), selectedOrderPayments.length < 200 && !paymentError) : undefined}
+                  invoiceSummary={activeMode === "advance" ? purchaseInvoiceSummary(selected, loadingPayments ? null : selectedOrderPayments, rowInvoiceOfficeCurrency(selected), selectedOrderPayments.length < 200 && !paymentError) : undefined}
                   limit={docLimit}
                   purchaseCurrency={poCurrencyHeader}
                   baseCurrency={baseCurrency}

@@ -26,7 +26,8 @@ import {
   Eye,
   RotateCcw,
   Boxes,
-  Truck
+  Truck,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -91,6 +92,7 @@ export function PurchaseLoadingPaymentStatement({
   const [showFilters, setShowFilters] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [activeMenuPo, setActiveMenuPo] = useState<string | null>(null);
+  const [viewModalRecord, setViewModalRecord] = useState<any | null>(null);
 
   // Draft filter state (changes only applied on "Apply Filters")
   const [draftCountry, setDraftCountry] = useState("all");
@@ -176,9 +178,40 @@ export function PurchaseLoadingPaymentStatement({
       const loadedQty = Number(group.totalLoadedQty || 0);
       const remainingQty = Math.max(0, contractQty - loadedQty);
 
-      const grossWeight = Number(group.totalContractGrossWeight || form.grossWeight || primaryRecord.gross_weight || 0);
-      const tareWeight = Number(primaryRecord.tare_weight || form.tareWeight || 0);
-      const netWeight = Math.max(0, Number(group.totalContractNetWeight || form.netWeight || primaryRecord.net_weight || (grossWeight - tareWeight)));
+      const grossWeight = Number(group.totalContractGrossWeight || form.grossWeight || primaryRecord.gross_weight || (goods.reduce((sum: number, g: any) => sum + Number(g.grossWeight || g.gross_weight || g.grossWt || 0), 0)) || 0);
+      const tareWeight = Number(primaryRecord.tare_weight || form.tareWeight || (goods.reduce((sum: number, g: any) => sum + Number(g.tareWeight || g.tare_weight || g.tareWt || 0), 0)) || 0);
+      const netWeight = Math.max(0, Number(group.totalContractNetWeight || form.netWeight || primaryRecord.net_weight || (goods.reduce((sum: number, g: any) => sum + Number(g.netWeight || g.net_weight || g.netWt || 0), 0)) || (grossWeight - tareWeight)));
+
+      // Loaded weights calculated from real loading records
+      const loadedGrossWeightFromRecords = realRecords.reduce((sum: number, rec: any) => {
+        const p = rec.report_payload || {};
+        return sum + Number(rec.gross_weight || p.grossWeight || 0);
+      }, 0);
+
+      const loadedTareWeightFromRecords = realRecords.reduce((sum: number, rec: any) => {
+        const p = rec.report_payload || {};
+        return sum + Number(rec.tare_weight || p.tareWeight || 0);
+      }, 0);
+
+      const loadedNetWeightFromRecords = realRecords.reduce((sum: number, rec: any) => {
+        const p = rec.report_payload || {};
+        const g = Number(rec.gross_weight || p.grossWeight || 0);
+        const t = Number(rec.tare_weight || p.tareWeight || 0);
+        const n = Number(rec.net_weight || p.netWeight || (g > 0 ? Math.max(0, g - t) : 0));
+        return sum + n;
+      }, 0);
+
+      // Effective loaded and balance weights (with proportional fallback if container weight entries were omitted)
+      const loadedGrossWeight = loadedGrossWeightFromRecords > 0
+        ? loadedGrossWeightFromRecords
+        : (contractQty > 0 && grossWeight > 0 ? (grossWeight * loadedQty) / contractQty : 0);
+
+      const loadedNetWeight = loadedNetWeightFromRecords > 0
+        ? loadedNetWeightFromRecords
+        : (contractQty > 0 && netWeight > 0 ? (netWeight * loadedQty) / contractQty : 0);
+
+      const remainingGrossWeight = Math.max(0, grossWeight - loadedGrossWeight);
+      const remainingNetWeight = Math.max(0, netWeight - loadedNetWeight);
 
       // Currency & Amounts
       const purchaseCurrency = String(form.currency || group.currency || poRow.currency_code || "USD").toUpperCase();
@@ -269,6 +302,10 @@ export function PurchaseLoadingPaymentStatement({
         grossWeight,
         tareWeight,
         netWeight,
+        loadedGrossWeight,
+        loadedNetWeight,
+        remainingGrossWeight,
+        remainingNetWeight,
         purchaseTotal,
         purchaseCurrency,
         purchasePaid,
@@ -499,16 +536,19 @@ export function PurchaseLoadingPaymentStatement({
             )}
           </Button>
 
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={collapseAll}
-            className="h-9 gap-1 text-xs font-bold"
-            title={tt("loc.collapse_all", "Collapse all expanded records")}
-          >
-            Collapse All
-          </Button>
+          {onRefresh && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={onRefresh}
+              className="h-9 gap-1.5 text-xs font-bold"
+              title={tt("common.refresh", "Refresh")}
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              {tt("common.refresh", "Refresh")}
+            </Button>
+          )}
 
           <Button
             type="button"
@@ -769,47 +809,46 @@ export function PurchaseLoadingPaymentStatement({
         </div>
       </div>
 
-      {/* ── Main Statement Table (Requirement 5 & 6) ── */}
+      {/* ── Main Statement Table ── */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[3400px] border-collapse text-left text-xs">
-            {/* Sticky Header with 34 Columns */}
+          <table className="w-full min-w-[1240px] border-collapse text-left text-xs">
+            {/* Sticky Compact Header */}
             <thead className="sticky top-0 z-20 bg-[#ffd257] text-slate-900 font-black uppercase text-[11px] border-b border-amber-300 shadow-xs">
               <tr>
-                <th className="py-3 px-2 text-center border-r border-amber-300 sticky left-0 bg-[#ffd257] z-30 w-12 whitespace-nowrap">VIEW</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300 sticky left-12 bg-[#ffd257] z-30 w-12 whitespace-nowrap">SR#</th>
-                <th className="py-3 px-3 border-r border-amber-300 sticky left-24 bg-[#ffd257] z-30 whitespace-nowrap">LOADING REF</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">PURCHASE BILL NO</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">BILL DATE</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">GATE</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">COUNTRY</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">MAIN BRANCH</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">CITY BRANCH</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">PURCHASE ACCOUNT</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">SALES ACCOUNT</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">SUPPLIER / EXPORTER</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">BUYER / IMPORTER</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">GOODS NAME</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">BRAND</th>
-                <th className="py-3 px-2.5 border-r border-amber-300 whitespace-nowrap">SIZE</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">CONTRACT QTY</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">LOADED QTY</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">REMAINING QTY</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">GROSS WT (KG)</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">TARE WT (KG)</th>
-                <th className="py-3 px-2.5 text-right border-r border-amber-300 whitespace-nowrap">NET WT (KG)</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">PURCHASE TOTAL</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">CURR</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">PURCHASE PAID</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">PURCHASE REMAINING</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">FINANCE TOTAL</th>
-                <th className="py-3 px-2 text-center border-r border-amber-300 whitespace-nowrap">FIN CURR</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">FINANCE PAID</th>
-                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">FINANCE REMAINING</th>
-                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">CURRENT STAGE</th>
-                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">NEXT STEP</th>
-                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">STATUS</th>
-                <th className="py-3 px-2.5 text-center whitespace-nowrap">ACTIONS</th>
+                <th className="py-3 px-2.5 text-center border-r border-amber-300 sticky left-0 bg-[#ffd257] z-30 w-12 whitespace-nowrap">
+                  {label("SR#")}
+                </th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">
+                  {label("LOADING REF")}
+                </th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">
+                  {label("BILL NO. / DATE")}
+                </th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">
+                  {label("BRANCH (MAIN / CITY)")}
+                </th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">
+                  {label("ACCOUNTS (PURCHASE / SALES)")}
+                </th>
+                <th className="py-3 px-3 border-r border-amber-300 whitespace-nowrap">
+                  {label("GOODS (BRAND / SIZE)")}
+                </th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">
+                  {label("TOTAL GOODS")}
+                </th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">
+                  {label("LOADED GOODS")}
+                </th>
+                <th className="py-3 px-3 text-right border-r border-amber-300 whitespace-nowrap">
+                  {label("BALANCE GOODS")}
+                </th>
+                <th className="py-3 px-2.5 text-center border-r border-amber-300 whitespace-nowrap">
+                  {label("STATUS")}
+                </th>
+                <th className="py-3 px-2.5 text-center whitespace-nowrap">
+                  {label("ACTIONS")}
+                </th>
               </tr>
             </thead>
 
@@ -817,230 +856,163 @@ export function PurchaseLoadingPaymentStatement({
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
               {filteredRows.length === 0 ? (
                 <tr>
-                  <td colSpan={34} className="py-12 text-center text-slate-400">
+                  <td colSpan={11} className="py-12 text-center text-slate-400">
                     No matching purchase loading and statement records found.
                   </td>
                 </tr>
               ) : (
                 filteredRows.map((r) => {
-                  const isExpanded = !!expandedRows[r.poNo];
-
                   return (
-                    <React.Fragment key={r.poNo}>
-                      {/* Main Statement Row */}
-                      <tr className={cn(
-                        "transition-colors",
-                        isExpanded ? "bg-blue-50/40 dark:bg-blue-950/20" : "hover:bg-amber-50/30 dark:hover:bg-slate-800/40"
-                      )}>
-                        {/* 1. View / Expand Toggle (Frozen Column 1) */}
-                        <td className="py-3 px-2 text-center border-r border-slate-200 dark:border-slate-800 sticky left-0 bg-white dark:bg-slate-900 z-10">
+                    <tr
+                      key={r.poNo}
+                      className="transition-colors hover:bg-amber-50/30 dark:hover:bg-slate-800/40"
+                    >
+                      {/* 1. SR# (Sticky left) */}
+                      <td className="py-3 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 sticky left-0 bg-white dark:bg-slate-900 z-10 font-bold text-slate-400">
+                        {String(r.sr).padStart(2, "0")}
+                      </td>
+
+                      {/* 2. Loading Ref */}
+                      <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                        {r.loadingRef}
+                      </td>
+
+                      {/* 3. Purchase Bill No & Date (Stacked in one compact column) */}
+                      <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                        <div className="flex flex-col">
+                          <span className="font-mono font-black text-blue-700 dark:text-blue-400">
+                            {r.poNo}
+                          </span>
+                          <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                            {r.billDate}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* 4. Branch (Main & City stacked, Country & Gate removed) */}
+                      <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                        <div className="flex flex-col max-w-[160px]">
+                          <span className="font-bold text-slate-900 dark:text-white truncate" title={r.mainBranch}>
+                            {notRecorded(r.mainBranch)}
+                          </span>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate" title={r.cityBranch}>
+                            {notRecorded(r.cityBranch)}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* 5. Accounts (Purchase & Sales combined in one packet) */}
+                      <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                        <div className="flex flex-col max-w-[180px]">
+                          <div className="flex items-center gap-1 truncate" title={r.purchaseAccount}>
+                            <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 shrink-0">P:</span>
+                            <span className="font-semibold text-slate-900 dark:text-white truncate">{notRecorded(r.purchaseAccount)}</span>
+                          </div>
+                          <div className="flex items-center gap-1 truncate" title={r.salesAccount}>
+                            <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 shrink-0">S:</span>
+                            <span className="text-[11px] text-slate-600 dark:text-slate-300 truncate">{notRecorded(r.salesAccount)}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* 6. Goods (Name, Brand & Size combined in one packet) */}
+                      <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                        <div className="flex flex-col max-w-[180px]">
+                          <span className="font-bold text-slate-900 dark:text-white truncate" title={r.goodsName}>
+                            {notRecorded(r.goodsName)}
+                          </span>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                            {r.brand !== "Not Recorded" ? r.brand : ""}{r.brand !== "Not Recorded" && r.size !== "Not Recorded" ? " | " : ""}{r.size !== "Not Recorded" ? r.size : (r.brand === "Not Recorded" ? "—" : "")}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* 7. Total Goods (Quantity + Gross Weight + Net Weight) */}
+                      <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                        <div className="flex flex-col text-right">
+                          <span className="font-mono font-bold text-slate-900 dark:text-white">
+                            {fmtQty(r.contractQty)} <span className="text-[10px] text-slate-400 font-normal">{r.unit}</span>
+                          </span>
+                          <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400">
+                            GW: {fmt(r.grossWeight, 0)} | NW: {fmt(r.netWeight, 0)} kg
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* 8. Loaded Goods (Loaded Qty + Loading Gross Wt + Loading Net Wt) */}
+                      <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                        <div className="flex flex-col text-right">
+                          <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                            {fmtQty(r.loadedQty)} <span className="text-[10px] text-emerald-500/70 font-normal">{r.unit}</span>
+                          </span>
+                          <span className="font-mono text-[10px] text-emerald-600/80 dark:text-emerald-400/80">
+                            GW: {fmt(r.loadedGrossWeight, 0)} | NW: {fmt(r.loadedNetWeight, 0)} kg
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* 9. Balance Goods (Remaining Qty + Balance Gross Wt + Balance Net Wt) */}
+                      <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                        <div className="flex flex-col text-right">
+                          <span className="font-mono font-bold text-rose-600 dark:text-rose-400">
+                            {fmtQty(r.remainingQty)} <span className="text-[10px] text-rose-500/70 font-normal">{r.unit}</span>
+                          </span>
+                          <span className="font-mono text-[10px] text-rose-600/80 dark:text-rose-400/80">
+                            GW: {fmt(r.remainingGrossWeight, 0)} | NW: {fmt(r.remainingNetWeight, 0)} kg
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* 10. Status */}
+                      <td className="py-3 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                        <span className={cn(
+                          "inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase shadow-xs",
+                          r.loadingStatus === "Fully Loaded"
+                            ? "bg-slate-900 text-white dark:bg-black"
+                            : r.loadingStatus === "Partially Loaded"
+                              ? "bg-amber-400 text-amber-950"
+                              : "bg-rose-600 text-white"
+                        )}>
+                          {r.loadingStatus}
+                        </span>
+                      </td>
+
+                      {/* 11. Actions (Three-Dot Menu) */}
+                      <td className="py-3 px-2.5 text-center whitespace-nowrap relative">
+                        <div className="flex items-center justify-center gap-1">
                           <button
                             type="button"
-                            onClick={() => toggleRow(r.poNo)}
-                            className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 shadow-xs transition hover:bg-slate-100 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                            title={isExpanded ? "Collapse Details" : "View Details"}
+                            onClick={() => setViewModalRecord(r)}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                            title={label("VIEW FULL DETAILS")}
                           >
-                            {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-blue-600" /> : <ChevronRight className="h-3.5 w-3.5 text-slate-500" />}
+                            <Eye className="h-4 w-4" />
                           </button>
-                        </td>
-
-                        {/* 2. SR# (Frozen Column 2) */}
-                        <td className="py-3 px-2 text-center border-r border-slate-200 dark:border-slate-800 sticky left-12 bg-white dark:bg-slate-900 z-10 font-bold text-slate-400">
-                          {String(r.sr).padStart(2, "0")}
-                        </td>
-
-                        {/* 3. Loading Ref (Frozen Column 3) */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 sticky left-24 bg-white dark:bg-slate-900 z-10 font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                          {r.loadingRef}
-                        </td>
-
-                        {/* 4. Purchase Bill Number */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-mono font-black text-blue-700 dark:text-blue-400 whitespace-nowrap">
-                          {r.poNo}
-                        </td>
-
-                        {/* 5. Bill Date */}
-                        <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                          {r.billDate}
-                        </td>
-
-                        {/* 6. Gate */}
-                        <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                          {notRecorded(r.gate)}
-                        </td>
-
-                        {/* 7. Country */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap font-medium">
-                          {r.countryDisplay}
-                        </td>
-
-                        {/* 8. Main Branch */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                          {notRecorded(r.mainBranch)}
-                        </td>
-
-                        {/* 9. City Branch */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                          {notRecorded(r.cityBranch)}
-                        </td>
-
-                        {/* 10. Purchase Account */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                          {notRecorded(r.purchaseAccount)}
-                        </td>
-
-                        {/* 11. Sales Account */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                          {notRecorded(r.salesAccount)}
-                        </td>
-
-                        {/* 12. Supplier / Exporter */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">
-                          {notRecorded(r.supplierName)}
-                        </td>
-
-                        {/* 13. Buyer / Importer */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                          {notRecorded(r.buyerName)}
-                        </td>
-
-                        {/* 14. Goods Name */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-bold text-slate-900 dark:text-white whitespace-nowrap">
-                          {notRecorded(r.goodsName)}
-                        </td>
-
-                        {/* 15. Brand */}
-                        <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap text-slate-600">
-                          {notRecorded(r.brand)}
-                        </td>
-
-                        {/* 16. Size */}
-                        <td className="py-3 px-2.5 border-r border-slate-200 dark:border-slate-800 whitespace-nowrap text-slate-600">
-                          {notRecorded(r.size)}
-                        </td>
-
-                        {/* 17. Contract Quantity */}
-                        <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
-                          {fmtQty(r.contractQty)} <span className="text-[10px] text-slate-400 font-normal">{r.unit}</span>
-                        </td>
-
-                        {/* 18. Loaded Quantity */}
-                        <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-                          {fmtQty(r.loadedQty)} <span className="text-[10px] text-emerald-500/70 font-normal">{r.unit}</span>
-                        </td>
-
-                        {/* 19. Remaining Quantity */}
-                        <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
-                          {fmtQty(r.remainingQty)} <span className="text-[10px] text-rose-500/70 font-normal">{r.unit}</span>
-                        </td>
-
-                        {/* 20. Gross Weight */}
-                        <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
-                          {fmt(r.grossWeight, 0)} kg
-                        </td>
-
-                        {/* 21. Tare Weight */}
-                        <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap">
-                          {fmt(r.tareWeight, 0)} kg
-                        </td>
-
-                        {/* 22. Net Weight */}
-                        <td className="py-3 px-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono whitespace-nowrap font-bold">
-                          {fmt(r.netWeight, 0)} kg
-                        </td>
-
-                        {/* 23. Purchase Total */}
-                        <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-black text-slate-900 dark:text-white whitespace-nowrap">
-                          <span className="text-[10px] text-slate-400 mr-1">{r.purchaseCurrency}</span>
-                          {fmt(r.purchaseTotal)}
-                        </td>
-
-                        {/* 24. Purchase Currency */}
-                        <td className="py-3 px-2 text-center border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-indigo-600 whitespace-nowrap">
-                          {r.purchaseCurrency}
-                        </td>
-
-                        {/* 25. Purchase Paid */}
-                        <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-                          <span className="text-[10px] text-emerald-500/70 mr-1">{r.purchaseCurrency}</span>
-                          {fmt(r.purchasePaid)}
-                        </td>
-
-                        {/* 26. Purchase Remaining */}
-                        <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-black text-rose-600 dark:text-rose-400 whitespace-nowrap">
-                          <span className="text-[10px] text-rose-500/70 mr-1">{r.purchaseCurrency}</span>
-                          {fmt(r.purchaseRemaining)}
-                        </td>
-
-                        {/* 27. Finance Total */}
-                        <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                          <span className="text-[10px] text-slate-400 mr-1">{r.financeCurrency}</span>
-                          {fmt(r.financeTotal)}
-                        </td>
-
-                        {/* 28. Finance Currency */}
-                        <td className="py-3 px-2 text-center border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-indigo-600 whitespace-nowrap">
-                          {r.financeCurrency}
-                        </td>
-
-                        {/* 29. Finance Paid */}
-                        <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-                          <span className="text-[10px] text-emerald-500/70 mr-1">{r.financeCurrency}</span>
-                          {fmt(r.financePaid)}
-                        </td>
-
-                        {/* 30. Finance Remaining */}
-                        <td className="py-3 px-3 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
-                          <span className="text-[10px] text-rose-500/70 mr-1">{r.financeCurrency}</span>
-                          {fmt(r.financeRemaining)}
-                        </td>
-
-                        {/* 31. Current Stage */}
-                        <td className="py-3 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                          <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-800 dark:bg-slate-800 dark:text-slate-200">
-                            {r.currentStage}
-                          </span>
-                        </td>
-
-                        {/* 32. Next Step */}
-                        <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap font-medium">
-                          {r.nextStep}
-                        </td>
-
-                        {/* 33. Status */}
-                        <td className="py-3 px-2.5 text-center border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                          <span className={cn(
-                            "inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase shadow-xs",
-                            r.loadingStatus === "Fully Loaded"
-                              ? "bg-slate-900 text-white dark:bg-black"
-                              : r.loadingStatus === "Partially Loaded"
-                                ? "bg-amber-400 text-amber-950"
-                                : "bg-rose-600 text-white"
-                          )}>
-                            {r.loadingStatus}
-                          </span>
-                        </td>
-
-                        {/* 34. Actions (Three-Dot Menu) */}
-                        <td className="py-3 px-2.5 text-center whitespace-nowrap relative">
                           <button
                             type="button"
                             onClick={() => setActiveMenuPo(activeMenuPo === r.poNo ? null : r.poNo)}
                             className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                            title={label("MORE ACTIONS")}
                           >
                             <MoreVertical className="h-4 w-4" />
                           </button>
+                        </div>
 
-                          {/* Action Popover Menu (Requirement 10) */}
-                          {activeMenuPo === r.poNo && (
+                        {/* Action Popover Menu */}
+                        {activeMenuPo === r.poNo && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-40"
+                              onClick={() => setActiveMenuPo(null)}
+                            />
                             <div className="absolute right-2 top-10 z-50 w-56 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 text-left">
                               <button
                                 type="button"
-                                onClick={() => { toggleRow(r.poNo); setActiveMenuPo(null); }}
+                                onClick={() => { setViewModalRecord(r); setActiveMenuPo(null); }}
                                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                               >
                                 <Eye className="h-3.5 w-3.5 text-blue-600" />
-                                View Details
+                                {label("VIEW DETAILS")}
                               </button>
 
                               <button
@@ -1052,7 +1024,7 @@ export function PurchaseLoadingPaymentStatement({
                                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                               >
                                 <Pencil className="h-3.5 w-3.5 text-amber-600" />
-                                Edit Loading
+                                {label("EDIT LOADING")}
                               </button>
 
                               <button
@@ -1061,7 +1033,7 @@ export function PurchaseLoadingPaymentStatement({
                                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                               >
                                 <Printer className="h-3.5 w-3.5 text-slate-600" />
-                                Print Record
+                                {label("PRINT RECORD")}
                               </button>
 
                               <button
@@ -1070,7 +1042,7 @@ export function PurchaseLoadingPaymentStatement({
                                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                               >
                                 <Download className="h-3.5 w-3.5 text-emerald-600" />
-                                Download Statement
+                                {label("DOWNLOAD STATEMENT")}
                               </button>
 
                               <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
@@ -1084,7 +1056,7 @@ export function PurchaseLoadingPaymentStatement({
                                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                               >
                                 <DollarSign className="h-3.5 w-3.5 text-emerald-600" />
-                                View Payment History
+                                {label("VIEW PAYMENT HISTORY")}
                               </button>
 
                               <button
@@ -1096,236 +1068,13 @@ export function PurchaseLoadingPaymentStatement({
                                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                               >
                                 <Truck className="h-3.5 w-3.5 text-blue-600" />
-                                View Loading History
+                                {label("VIEW LOADING HISTORY")}
                               </button>
                             </div>
-                          )}
-                        </td>
-                      </tr>
-
-                      {/* ── Expandable Record Details (Requirement 7, 8, 9) ── */}
-                      {isExpanded && (
-                        <tr>
-                          <td colSpan={34} className="bg-slate-50/80 p-5 dark:bg-slate-950/80 border-b-2 border-blue-200 dark:border-blue-900">
-                            <div className="space-y-6">
-                              {/* 5 Compact Numbered Detail Sections (Requirement 7) */}
-                              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-                                {/* 01 — Purchase Booking / Contract */}
-                                <div className="rounded-xl border border-blue-200 bg-white p-3.5 shadow-xs dark:border-blue-900 dark:bg-slate-900">
-                                  <div className="mb-2.5 flex items-center justify-between border-b border-blue-100 pb-1.5 dark:border-blue-900">
-                                    <span className="font-mono font-black text-blue-600">01</span>
-                                    <span className="text-[11px] font-black uppercase text-slate-800 dark:text-slate-200">
-                                      Contract Details
-                                    </span>
-                                  </div>
-                                  <div className="space-y-1 text-[11px]">
-                                    <div className="flex justify-between"><span className="text-slate-400">Bill No:</span><span className="font-bold text-blue-700">{r.poNo}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Contract No:</span><span className="font-mono">{r.form.contractNo || r.poNo}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Loading Ref:</span><span className="font-mono">{r.loadingRef}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">BL No:</span><span className="font-mono">{notRecorded(r.primaryRecord?.bl_number || r.form.blNo)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Bill Date:</span><span>{r.billDate}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Location:</span><span>{r.countryDisplay}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Contract Qty:</span><span className="font-bold">{fmtQty(r.contractQty)} {r.unit}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Loaded Qty:</span><span className="font-bold text-emerald-600">{fmtQty(r.loadedQty)} {r.unit}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Remaining:</span><span className="font-bold text-rose-600">{fmtQty(r.remainingQty)} {r.unit}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Gross / Net:</span><span>{fmt(r.grossWeight, 0)} / {fmt(r.netWeight, 0)} kg</span></div>
-                                  </div>
-                                </div>
-
-                                {/* 02 — Purchase and Payment Summary */}
-                                <div className="rounded-xl border border-emerald-200 bg-white p-3.5 shadow-xs dark:border-emerald-900 dark:bg-slate-900">
-                                  <div className="mb-2.5 flex items-center justify-between border-b border-emerald-100 pb-1.5 dark:border-emerald-900">
-                                    <span className="font-mono font-black text-emerald-600">02</span>
-                                    <span className="text-[11px] font-black uppercase text-slate-800 dark:text-slate-200">
-                                      Payment Summary
-                                    </span>
-                                  </div>
-                                  <div className="space-y-1 text-[11px]">
-                                    <div className="flex justify-between"><span className="text-slate-400">Purchase Total:</span><span className="font-bold">{fmt(r.purchaseTotal)} {r.purchaseCurrency}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Purchase Paid:</span><span className="font-bold text-emerald-600">{fmt(r.purchasePaid)} {r.purchaseCurrency}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Purchase Rem.:</span><span className="font-bold text-rose-600">{fmt(r.purchaseRemaining)} {r.purchaseCurrency}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Ex. Rate:</span><span className="font-mono">{r.exRate}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Finance Total:</span><span className="font-semibold">{fmt(r.financeTotal)} {r.financeCurrency}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Finance Paid:</span><span className="font-semibold text-emerald-600">{fmt(r.financePaid)} {r.financeCurrency}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Finance Rem.:</span><span className="font-bold text-rose-600">{fmt(r.financeRemaining)} {r.financeCurrency}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Pay Status:</span><span className="font-bold uppercase text-blue-600">{r.purchaseRemaining <= 0.05 ? "Fully Paid" : r.purchasePaid > 0 ? "Partially Paid" : "Unpaid"}</span></div>
-                                  </div>
-                                </div>
-
-                                {/* 03 — Goods Details */}
-                                <div className="rounded-xl border border-indigo-200 bg-white p-3.5 shadow-xs dark:border-indigo-900 dark:bg-slate-900">
-                                  <div className="mb-2.5 flex items-center justify-between border-b border-indigo-100 pb-1.5 dark:border-indigo-900">
-                                    <span className="font-mono font-black text-indigo-600">03</span>
-                                    <span className="text-[11px] font-black uppercase text-slate-800 dark:text-slate-200">
-                                      Goods Details
-                                    </span>
-                                  </div>
-                                  <div className="space-y-1 text-[11px]">
-                                    <div className="flex justify-between"><span className="text-slate-400">Goods:</span><span className="font-bold">{notRecorded(r.goodsName)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Category:</span><span>{notRecorded(r.form.category || r.goods[0]?.category)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Brand:</span><span>{notRecorded(r.brand)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Size:</span><span>{notRecorded(r.size)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Pack Unit:</span><span>{r.unit}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Contract Qty:</span><span>{fmtQty(r.contractQty)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Loaded Qty:</span><span>{fmtQty(r.loadedQty)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Tare Weight:</span><span>{fmt(r.tareWeight, 0)} kg</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Quality / Lab:</span><span className="text-emerald-600 font-semibold">{notRecorded(r.primaryRecord?.report_payload?.qualityReportRef || r.form.qualityReportRef)}</span></div>
-                                  </div>
-                                </div>
-
-                                {/* 04 — Purchase Account / Exporter */}
-                                <div className="rounded-xl border border-amber-200 bg-white p-3.5 shadow-xs dark:border-amber-900 dark:bg-slate-900">
-                                  <div className="mb-2.5 flex items-center justify-between border-b border-amber-100 pb-1.5 dark:border-amber-900">
-                                    <span className="font-mono font-black text-amber-600">04</span>
-                                    <span className="text-[11px] font-black uppercase text-slate-800 dark:text-slate-200">
-                                      Purchase Account / Exporter
-                                    </span>
-                                  </div>
-                                  <div className="space-y-1 text-[11px]">
-                                    <div className="flex justify-between"><span className="text-slate-400">Account ID:</span><span className="font-mono">{notRecorded(r.form.purchaseAccountNumber || r.form.purchaseAccountId)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Supplier:</span><span className="font-bold">{notRecorded(r.supplierName)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Country:</span><span>{r.countryName}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Branch:</span><span>{r.mainBranch}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Address:</span><span className="truncate max-w-[140px]">{notRecorded(r.form.supplierAddress || r.form.companyAddress)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Contact:</span><span>{notRecorded(r.form.supplierPhone || r.form.contactPhone)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Currency:</span><span className="font-bold">{r.purchaseCurrency}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Bill Total:</span><span>{fmt(r.purchaseTotal)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Outstanding:</span><span className="font-bold text-rose-600">{fmt(r.purchaseRemaining)}</span></div>
-                                  </div>
-                                </div>
-
-                                {/* 05 — Sales Account / Importer */}
-                                <div className="rounded-xl border border-purple-200 bg-white p-3.5 shadow-xs dark:border-purple-900 dark:bg-slate-900">
-                                  <div className="mb-2.5 flex items-center justify-between border-b border-purple-100 pb-1.5 dark:border-purple-900">
-                                    <span className="font-mono font-black text-purple-600">05</span>
-                                    <span className="text-[11px] font-black uppercase text-slate-800 dark:text-slate-200">
-                                      Sales Account / Importer
-                                    </span>
-                                  </div>
-                                  <div className="space-y-1 text-[11px]">
-                                    <div className="flex justify-between"><span className="text-slate-400">Account ID:</span><span className="font-mono">{notRecorded(r.form.salesAccountNumber || r.form.salesAccountId)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Buyer Name:</span><span className="font-bold">{notRecorded(r.buyerName)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Country:</span><span>{r.countryName}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Branch:</span><span>{r.cityBranch}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Address:</span><span className="truncate max-w-[140px]">{notRecorded(r.form.buyerAddress)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Contact:</span><span>{notRecorded(r.form.buyerPhone)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Currency:</span><span className="font-bold">{r.financeCurrency}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Finance Total:</span><span>{fmt(r.financeTotal)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Outstanding:</span><span className="font-bold text-rose-600">{fmt(r.financeRemaining)}</span></div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* ── Goods and Container Statement Table (Requirement 8) ── */}
-                              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-xs dark:border-slate-800 dark:bg-slate-900">
-                                <div className="bg-slate-100/80 px-4 py-2.5 font-black uppercase tracking-wider text-xs text-slate-800 dark:bg-slate-800 dark:text-slate-200 flex items-center justify-between">
-                                  <span className="flex items-center gap-2">
-                                    <Ship className="h-4 w-4 text-blue-600" />
-                                    Goods & Container Statement ({r.realRecords.length} Saved Entries)
-                                  </span>
-                                  <span className="text-[11px] font-bold text-slate-500">
-                                    Bill: {r.poNo}
-                                  </span>
-                                </div>
-
-                                <div className="overflow-x-auto">
-                                  <table className="w-full min-w-[1400px] border-collapse text-left text-xs">
-                                    <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-600 dark:bg-slate-800/60 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
-                                      <tr>
-                                        <th className="py-2.5 px-3">SR#</th>
-                                        <th className="py-2.5 px-3">Container No</th>
-                                        <th className="py-2.5 px-3">Seal No</th>
-                                        <th className="py-2.5 px-3">Goods Name</th>
-                                        <th className="py-2.5 px-3">Brand</th>
-                                        <th className="py-2.5 px-3">Size</th>
-                                        <th className="py-2.5 px-2 text-center">Unit</th>
-                                        <th className="py-2.5 px-3 text-right">Loaded Qty</th>
-                                        <th className="py-2.5 px-3 text-right">Gross Wt (KG)</th>
-                                        <th className="py-2.5 px-3 text-right">Tare Wt (KG)</th>
-                                        <th className="py-2.5 px-3 text-right">Net Wt (KG)</th>
-                                        <th className="py-2.5 px-2 text-center">Purch Curr</th>
-                                        <th className="py-2.5 px-2 text-center">Fin Curr</th>
-                                        <th className="py-2.5 px-3">Loading Date</th>
-                                        <th className="py-2.5 px-3">Warehouse</th>
-                                        <th className="py-2.5 px-3 text-center">Status</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-                                      {r.realRecords.length === 0 ? (
-                                        <tr>
-                                          <td colSpan={16} className="py-6 text-center text-slate-400">
-                                            No container loading entries recorded yet. Pending initial dispatch.
-                                          </td>
-                                        </tr>
-                                      ) : (
-                                        r.realRecords.map((rec: any, recIdx: number) => {
-                                          const recPayload = rec.report_payload || {};
-                                          const recLoadedQty = Number(recPayload.loadedQuantity || rec.loaded_quantity || 0);
-                                          const recGross = Number(rec.gross_weight || recPayload.grossWeight || 0);
-                                          const recTare = Number(rec.tare_weight || recPayload.tareWeight || 0);
-                                          const recNet = Number(rec.net_weight || recPayload.netWeight || (recGross - recTare));
-                                          const recLoadDate = String(rec.loaded_at ? String(rec.loaded_at).slice(0, 10) : rec.created_at ? String(rec.created_at).slice(0, 10) : "—");
-
-                                          return (
-                                            <tr key={rec.id || recIdx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                                              <td className="py-2.5 px-3 font-bold text-slate-400">{recIdx + 1}</td>
-                                              <td className="py-2.5 px-3 font-mono font-bold text-blue-700 dark:text-blue-400">{notRecorded(rec.container_number || recPayload.containerNumber)}</td>
-                                              <td className="py-2.5 px-3 font-mono">{notRecorded(rec.seal_number || recPayload.sealNumber)}</td>
-                                              <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-100">{notRecorded(recPayload.goodsName || rec.goods_name || r.goodsName)}</td>
-                                              <td className="py-2.5 px-3 text-slate-600">{notRecorded(recPayload.brand || r.brand)}</td>
-                                              <td className="py-2.5 px-3 text-slate-600">{notRecorded(recPayload.size || r.size)}</td>
-                                              <td className="py-2.5 px-2 text-center text-slate-500">{r.unit}</td>
-                                              <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-600">{fmtQty(recLoadedQty)}</td>
-                                              <td className="py-2.5 px-3 text-right font-mono">{fmt(recGross, 0)}</td>
-                                              <td className="py-2.5 px-3 text-right font-mono">{fmt(recTare, 0)}</td>
-                                              <td className="py-2.5 px-3 text-right font-mono font-bold">{fmt(recNet, 0)}</td>
-                                              <td className="py-2.5 px-2 text-center font-mono font-bold text-indigo-600">{r.purchaseCurrency}</td>
-                                              <td className="py-2.5 px-2 text-center font-mono font-bold text-indigo-600">{r.financeCurrency}</td>
-                                              <td className="py-2.5 px-3 font-mono">{recLoadDate}</td>
-                                              <td className="py-2.5 px-3 text-slate-700 dark:text-slate-300">{notRecorded(rec.receiving_location || recPayload.warehouse || "Transit Yard")}</td>
-                                              <td className="py-2.5 px-3 text-center">
-                                                <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-                                                  {rec.loading_status ? String(rec.loading_status).toUpperCase() : "CONFIRMED"}
-                                                </span>
-                                              </td>
-                                            </tr>
-                                          );
-                                        })
-                                      )}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              </div>
-
-                              {/* ── Final Record Summary (Requirement 9) ── */}
-                              <div className="rounded-xl border border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 shadow-xs dark:border-blue-900 dark:from-blue-950/40 dark:to-indigo-950/40">
-                                <div className="flex flex-wrap items-center justify-between gap-4 text-xs font-semibold text-slate-800 dark:text-slate-200">
-                                  <div className="flex items-center gap-4">
-                                    <span className="font-black text-blue-900 dark:text-blue-100">SUMMARY:</span>
-                                    <span>Contract: <b className="font-mono">{fmtQty(r.contractQty)}</b> {r.unit}</span>
-                                    <span>Loaded: <b className="font-mono text-emerald-600">{fmtQty(r.loadedQty)}</b> {r.unit}</span>
-                                    <span>Remaining: <b className="font-mono text-rose-600">{fmtQty(r.remainingQty)}</b> {r.unit}</span>
-                                  </div>
-
-                                  <div className="flex items-center gap-4">
-                                    <span>Purchase: <b className="font-mono">{fmt(r.purchaseTotal)}</b> | Paid: <b className="font-mono text-emerald-600">{fmt(r.purchasePaid)}</b> | Bal: <b className="font-mono text-rose-600">{fmt(r.purchaseRemaining)} {r.purchaseCurrency}</b></span>
-                                  </div>
-
-                                  <div className="flex items-center gap-4">
-                                    <span className="rounded bg-white px-2.5 py-1 text-xs font-black shadow-xs dark:bg-slate-900">
-                                      Status: <span className="text-blue-600">{r.loadingStatus}</span>
-                                    </span>
-                                    <span className="rounded bg-white px-2.5 py-1 text-xs font-bold text-slate-700 shadow-xs dark:bg-slate-900 dark:text-slate-300">
-                                      Next: {r.nextStep}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
+                          </>
+                        )}
+                      </td>
+                    </tr>
                   );
                 })
               )}
@@ -1333,6 +1082,309 @@ export function PurchaseLoadingPaymentStatement({
           </table>
         </div>
       </div>
+
+      {/* ── Separate Full-Detail Modal (Requirement 9) ── */}
+      {viewModalRecord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-6 backdrop-blur-xs overflow-y-auto animate-in fade-in">
+          <div className="w-full max-w-6xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[92vh] flex flex-col overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs">
+                  <Ship className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-black text-slate-900 dark:text-white">
+                      Loading Record Details — {viewModalRecord.poNo}
+                    </h3>
+                    <span className={cn(
+                      "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase shadow-xs",
+                      viewModalRecord.loadingStatus === "Fully Loaded"
+                        ? "bg-slate-900 text-white dark:bg-black"
+                        : viewModalRecord.loadingStatus === "Partially Loaded"
+                          ? "bg-amber-400 text-amber-950"
+                          : "bg-rose-600 text-white"
+                    )}>
+                      {viewModalRecord.loadingStatus}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Loading Ref: <b className="font-mono text-slate-800 dark:text-slate-200">{viewModalRecord.loadingRef}</b> | Date: <b className="font-mono">{viewModalRecord.billDate}</b> | Branch: {viewModalRecord.mainBranch} ({viewModalRecord.cityBranch})
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.print()}
+                  className="h-8 gap-1.5 text-xs font-bold"
+                >
+                  <Printer className="h-3.5 w-3.5" />
+                  {label("PRINT")}
+                </Button>
+                {onEditRecord && viewModalRecord.primaryRecord && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      onEditRecord(viewModalRecord.primaryRecord);
+                      setViewModalRecord(null);
+                    }}
+                    className="h-8 gap-1.5 text-xs font-bold text-amber-600 border-amber-200 hover:bg-amber-50"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    {label("EDIT")}
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewModalRecord(null)}
+                  className="h-8 w-8 p-0 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:hover:bg-slate-800"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="p-6 space-y-6 overflow-y-auto">
+              {/* 5 Detail Sections */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+                {/* 01 — Purchase Booking / Contract */}
+                <div className="rounded-xl border border-blue-200 bg-white p-3.5 shadow-xs dark:border-blue-900 dark:bg-slate-900">
+                  <div className="mb-2.5 flex items-center justify-between border-b border-blue-100 pb-1.5 dark:border-blue-900">
+                    <span className="font-mono font-black text-blue-600">01</span>
+                    <span className="text-[11px] font-black uppercase text-slate-800 dark:text-slate-200">
+                      Contract Details
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-[11px]">
+                    <div className="flex justify-between"><span className="text-slate-400">Bill No:</span><span className="font-bold text-blue-700">{viewModalRecord.poNo}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Contract No:</span><span className="font-mono">{viewModalRecord.form.contractNo || viewModalRecord.poNo}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Loading Ref:</span><span className="font-mono">{viewModalRecord.loadingRef}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">BL No:</span><span className="font-mono">{notRecorded(viewModalRecord.primaryRecord?.bl_number || viewModalRecord.form.blNo)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Bill Date:</span><span>{viewModalRecord.billDate}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Location:</span><span>{viewModalRecord.countryDisplay}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Contract Qty:</span><span className="font-bold">{fmtQty(viewModalRecord.contractQty)} {viewModalRecord.unit}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Loaded Qty:</span><span className="font-bold text-emerald-600">{fmtQty(viewModalRecord.loadedQty)} {viewModalRecord.unit}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Remaining:</span><span className="font-bold text-rose-600">{fmtQty(viewModalRecord.remainingQty)} {viewModalRecord.unit}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Gross / Net:</span><span>{fmt(viewModalRecord.grossWeight, 0)} / {fmt(viewModalRecord.netWeight, 0)} kg</span></div>
+                  </div>
+                </div>
+
+                {/* 02 — Purchase and Payment Summary */}
+                <div className="rounded-xl border border-emerald-200 bg-white p-3.5 shadow-xs dark:border-emerald-900 dark:bg-slate-900">
+                  <div className="mb-2.5 flex items-center justify-between border-b border-emerald-100 pb-1.5 dark:border-emerald-900">
+                    <span className="font-mono font-black text-emerald-600">02</span>
+                    <span className="text-[11px] font-black uppercase text-slate-800 dark:text-slate-200">
+                      Payment Summary
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-[11px]">
+                    <div className="flex justify-between"><span className="text-slate-400">Purchase Total:</span><span className="font-bold">{fmt(viewModalRecord.purchaseTotal)} {viewModalRecord.purchaseCurrency}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Purchase Paid:</span><span className="font-bold text-emerald-600">{fmt(viewModalRecord.purchasePaid)} {viewModalRecord.purchaseCurrency}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Purchase Rem.:</span><span className="font-bold text-rose-600">{fmt(viewModalRecord.purchaseRemaining)} {viewModalRecord.purchaseCurrency}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Ex. Rate:</span><span className="font-mono">{viewModalRecord.exRate}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Finance Total:</span><span className="font-semibold">{fmt(viewModalRecord.financeTotal)} {viewModalRecord.financeCurrency}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Finance Paid:</span><span className="font-semibold text-emerald-600">{fmt(viewModalRecord.financePaid)} {viewModalRecord.financeCurrency}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Finance Rem.:</span><span className="font-bold text-rose-600">{fmt(viewModalRecord.financeRemaining)} {viewModalRecord.financeCurrency}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Pay Status:</span><span className="font-bold uppercase text-blue-600">{viewModalRecord.purchaseRemaining <= 0.05 ? "Fully Paid" : viewModalRecord.purchasePaid > 0 ? "Partially Paid" : "Unpaid"}</span></div>
+                  </div>
+                </div>
+
+                {/* 03 — Goods Details */}
+                <div className="rounded-xl border border-indigo-200 bg-white p-3.5 shadow-xs dark:border-indigo-900 dark:bg-slate-900">
+                  <div className="mb-2.5 flex items-center justify-between border-b border-indigo-100 pb-1.5 dark:border-indigo-900">
+                    <span className="font-mono font-black text-indigo-600">03</span>
+                    <span className="text-[11px] font-black uppercase text-slate-800 dark:text-slate-200">
+                      Goods Details
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-[11px]">
+                    <div className="flex justify-between"><span className="text-slate-400">Goods:</span><span className="font-bold">{notRecorded(viewModalRecord.goodsName)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Category:</span><span>{notRecorded(viewModalRecord.form.category || viewModalRecord.goods[0]?.category)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Brand:</span><span>{notRecorded(viewModalRecord.brand)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Size:</span><span>{notRecorded(viewModalRecord.size)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Pack Unit:</span><span>{viewModalRecord.unit}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Contract Qty:</span><span>{fmtQty(viewModalRecord.contractQty)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Loaded Qty:</span><span>{fmtQty(viewModalRecord.loadedQty)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Tare Weight:</span><span>{fmt(viewModalRecord.tareWeight, 0)} kg</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Quality / Lab:</span><span className="text-emerald-600 font-semibold">{notRecorded(viewModalRecord.primaryRecord?.report_payload?.qualityReportRef || viewModalRecord.form.qualityReportRef)}</span></div>
+                  </div>
+                </div>
+
+                {/* 04 — Purchase Account / Exporter */}
+                <div className="rounded-xl border border-amber-200 bg-white p-3.5 shadow-xs dark:border-amber-900 dark:bg-slate-900">
+                  <div className="mb-2.5 flex items-center justify-between border-b border-amber-100 pb-1.5 dark:border-amber-900">
+                    <span className="font-mono font-black text-amber-600">04</span>
+                    <span className="text-[11px] font-black uppercase text-slate-800 dark:text-slate-200">
+                      Purchase Account / Exporter
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-[11px]">
+                    <div className="flex justify-between"><span className="text-slate-400">Account ID:</span><span className="font-mono">{notRecorded(viewModalRecord.form.purchaseAccountNumber || viewModalRecord.form.purchaseAccountId)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Supplier:</span><span className="font-bold">{notRecorded(viewModalRecord.supplierName)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Country:</span><span>{viewModalRecord.countryName}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Branch:</span><span>{viewModalRecord.mainBranch}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Address:</span><span className="truncate max-w-[140px]">{notRecorded(viewModalRecord.form.supplierAddress || viewModalRecord.form.companyAddress)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Contact:</span><span>{notRecorded(viewModalRecord.form.supplierPhone || viewModalRecord.form.contactPhone)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Currency:</span><span className="font-bold">{viewModalRecord.purchaseCurrency}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Bill Total:</span><span>{fmt(viewModalRecord.purchaseTotal)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Outstanding:</span><span className="font-bold text-rose-600">{fmt(viewModalRecord.purchaseRemaining)}</span></div>
+                  </div>
+                </div>
+
+                {/* 05 — Sales Account / Importer */}
+                <div className="rounded-xl border border-purple-200 bg-white p-3.5 shadow-xs dark:border-purple-900 dark:bg-slate-900">
+                  <div className="mb-2.5 flex items-center justify-between border-b border-purple-100 pb-1.5 dark:border-purple-900">
+                    <span className="font-mono font-black text-purple-600">05</span>
+                    <span className="text-[11px] font-black uppercase text-slate-800 dark:text-slate-200">
+                      Sales Account / Importer
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-[11px]">
+                    <div className="flex justify-between"><span className="text-slate-400">Account ID:</span><span className="font-mono">{notRecorded(viewModalRecord.form.salesAccountNumber || viewModalRecord.form.salesAccountId)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Buyer Name:</span><span className="font-bold">{notRecorded(viewModalRecord.buyerName)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Country:</span><span>{viewModalRecord.countryName}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Branch:</span><span>{viewModalRecord.cityBranch}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Address:</span><span className="truncate max-w-[140px]">{notRecorded(viewModalRecord.form.buyerAddress)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Contact:</span><span>{notRecorded(viewModalRecord.form.buyerPhone)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Currency:</span><span className="font-bold">{viewModalRecord.financeCurrency}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Finance Total:</span><span>{fmt(viewModalRecord.financeTotal)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Outstanding:</span><span className="font-bold text-rose-600">{fmt(viewModalRecord.financeRemaining)}</span></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Goods and Container Statement Table */}
+              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-xs dark:border-slate-800 dark:bg-slate-900">
+                <div className="bg-slate-100/80 px-4 py-2.5 font-black uppercase tracking-wider text-xs text-slate-800 dark:bg-slate-800 dark:text-slate-200 flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Ship className="h-4 w-4 text-blue-600" />
+                    Goods & Container Statement ({viewModalRecord.realRecords.length} Saved Entries)
+                  </span>
+                  <span className="text-[11px] font-bold text-slate-500">
+                    Bill: {viewModalRecord.poNo}
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[1100px] border-collapse text-left text-xs">
+                    <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-600 dark:bg-slate-800/60 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
+                      <tr>
+                        <th className="py-2.5 px-3">SR#</th>
+                        <th className="py-2.5 px-3">Container No</th>
+                        <th className="py-2.5 px-3">Seal No</th>
+                        <th className="py-2.5 px-3">Goods Name</th>
+                        <th className="py-2.5 px-3">Brand</th>
+                        <th className="py-2.5 px-3">Size</th>
+                        <th className="py-2.5 px-2 text-center">Unit</th>
+                        <th className="py-2.5 px-3 text-right">Loaded Qty</th>
+                        <th className="py-2.5 px-3 text-right">Gross Wt (KG)</th>
+                        <th className="py-2.5 px-3 text-right">Tare Wt (KG)</th>
+                        <th className="py-2.5 px-3 text-right">Net Wt (KG)</th>
+                        <th className="py-2.5 px-2 text-center">Purch Curr</th>
+                        <th className="py-2.5 px-2 text-center">Fin Curr</th>
+                        <th className="py-2.5 px-3">Loading Date</th>
+                        <th className="py-2.5 px-3">Warehouse</th>
+                        <th className="py-2.5 px-3 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                      {viewModalRecord.realRecords.length === 0 ? (
+                        <tr>
+                          <td colSpan={16} className="py-6 text-center text-slate-400">
+                            No container loading entries recorded yet. Pending initial dispatch.
+                          </td>
+                        </tr>
+                      ) : (
+                        viewModalRecord.realRecords.map((rec: any, recIdx: number) => {
+                          const recPayload = rec.report_payload || {};
+                          const recLoadedQty = Number(recPayload.loadedQuantity || rec.loaded_quantity || 0);
+                          const recGross = Number(rec.gross_weight || recPayload.grossWeight || 0);
+                          const recTare = Number(rec.tare_weight || recPayload.tareWeight || 0);
+                          const recNet = Number(rec.net_weight || recPayload.netWeight || (recGross - recTare));
+                          const recLoadDate = String(rec.loaded_at ? String(rec.loaded_at).slice(0, 10) : rec.created_at ? String(rec.created_at).slice(0, 10) : "—");
+
+                          return (
+                            <tr key={rec.id || recIdx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                              <td className="py-2.5 px-3 font-bold text-slate-400">{recIdx + 1}</td>
+                              <td className="py-2.5 px-3 font-mono font-bold text-blue-700 dark:text-blue-400">{notRecorded(rec.container_number || recPayload.containerNumber)}</td>
+                              <td className="py-2.5 px-3 font-mono">{notRecorded(rec.seal_number || recPayload.sealNumber)}</td>
+                              <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-100">{notRecorded(recPayload.goodsName || rec.goods_name || viewModalRecord.goodsName)}</td>
+                              <td className="py-2.5 px-3 text-slate-600">{notRecorded(recPayload.brand || viewModalRecord.brand)}</td>
+                              <td className="py-2.5 px-3 text-slate-600">{notRecorded(recPayload.size || viewModalRecord.size)}</td>
+                              <td className="py-2.5 px-2 text-center text-slate-500">{viewModalRecord.unit}</td>
+                              <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-600">{fmtQty(recLoadedQty)}</td>
+                              <td className="py-2.5 px-3 text-right font-mono">{fmt(recGross, 0)}</td>
+                              <td className="py-2.5 px-3 text-right font-mono">{fmt(recTare, 0)}</td>
+                              <td className="py-2.5 px-3 text-right font-mono font-bold">{fmt(recNet, 0)}</td>
+                              <td className="py-2.5 px-2 text-center font-mono font-bold text-indigo-600">{viewModalRecord.purchaseCurrency}</td>
+                              <td className="py-2.5 px-2 text-center font-mono font-bold text-indigo-600">{viewModalRecord.financeCurrency}</td>
+                              <td className="py-2.5 px-3 font-mono">{recLoadDate}</td>
+                              <td className="py-2.5 px-3 text-slate-700 dark:text-slate-300">{notRecorded(rec.receiving_location || recPayload.warehouse || "Transit Yard")}</td>
+                              <td className="py-2.5 px-3 text-center">
+                                <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                                  {rec.loading_status ? String(rec.loading_status).toUpperCase() : "CONFIRMED"}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Record Summary Strip */}
+              <div className="rounded-xl border border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 shadow-xs dark:border-blue-900 dark:from-blue-950/40 dark:to-indigo-950/40">
+                <div className="flex flex-wrap items-center justify-between gap-4 text-xs font-semibold text-slate-800 dark:text-slate-200">
+                  <div className="flex items-center gap-4">
+                    <span className="font-black text-blue-900 dark:text-blue-100">SUMMARY:</span>
+                    <span>Contract: <b className="font-mono">{fmtQty(viewModalRecord.contractQty)}</b> {viewModalRecord.unit}</span>
+                    <span>Loaded: <b className="font-mono text-emerald-600">{fmtQty(viewModalRecord.loadedQty)}</b> {viewModalRecord.unit}</span>
+                    <span>Remaining: <b className="font-mono text-rose-600">{fmtQty(viewModalRecord.remainingQty)}</b> {viewModalRecord.unit}</span>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <span>Purchase: <b className="font-mono">{fmt(viewModalRecord.purchaseTotal)}</b> | Paid: <b className="font-mono text-emerald-600">{fmt(viewModalRecord.purchasePaid)}</b> | Bal: <b className="font-mono text-rose-600">{fmt(viewModalRecord.purchaseRemaining)} {viewModalRecord.purchaseCurrency}</b></span>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <span className="rounded bg-white px-2.5 py-1 text-xs font-black shadow-xs dark:bg-slate-900">
+                      Status: <span className="text-blue-600">{viewModalRecord.loadingStatus}</span>
+                    </span>
+                    <span className="rounded bg-white px-2.5 py-1 text-xs font-bold text-slate-700 shadow-xs dark:bg-slate-900 dark:text-slate-300">
+                      Next: {viewModalRecord.nextStep}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="border-t border-slate-200 px-6 py-3 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/60 flex justify-end shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setViewModalRecord(null)}
+                className="font-bold"
+              >
+                {label("CLOSE")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
