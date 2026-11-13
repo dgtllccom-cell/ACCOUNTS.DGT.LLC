@@ -1,5 +1,6 @@
 "use client";
 
+import { localPurchaseBillNo } from "@/lib/purchases/local-purchase-number";
 import { EntryPortal } from "./payment-entry-portal";
 import { SourceFilteredTable } from "./source-filtered-table";
 import { purchaseInvoiceSummary, isActualInvoicePayment } from "@/lib/journal/purchase-invoice-summary";
@@ -3335,7 +3336,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
           const isCredit = pModeLower.includes("credit");
           const isAdvance = pModeLower.includes("advance") || Number(lp.advance_percentage || 0) > 0;
           const pType = isAdvance ? "Advance" : (isCredit ? "Credit" : pMode);
-          const billNo = lp.contract_no ? `LP-${lp.contract_no}` : (lp.manual_bill_no || `LP-${lp.id?.slice(0, 8)}`);
+          const billNo = localPurchaseBillNo(lp);
 
           // Ledger-verified payments only (same rule as the transfer gate); the payment-mode label and remaining_balance are not used.
           const lpPaidAmount = Number(lp.posted_other_amount || 0);

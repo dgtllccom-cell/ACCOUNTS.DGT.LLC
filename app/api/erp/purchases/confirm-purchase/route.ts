@@ -1,3 +1,4 @@
+import { localPurchaseBillNo } from "@/lib/purchases/local-purchase-number";
 import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
@@ -276,7 +277,7 @@ export async function GET(request: NextRequest) {
           const entries: any[] = Array.isArray(lDetails.entries) ? lDetails.entries : [];
 
           const totalBooked = Number(lp.numbers || lp.quantity_kgs || 0);
-          const billNo = lp.manual_bill_no || (lp.contract_no ? `LP-${lp.contract_no}` : (lp.journal_serial_no || `LP-${lp.id.slice(0, 6)}`));
+          const billNo = localPurchaseBillNo(lp);
           const currency = lp.purchase_currency || lp.local_currency || "AED";
           const supplier = lp.party_name || lp.supplier_name || "Local Supplier";
           const paymentType = lp.payment_mode || "Cash";

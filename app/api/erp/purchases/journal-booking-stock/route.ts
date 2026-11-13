@@ -1,3 +1,4 @@
+import { localPurchaseBillNo, localPurchaseContractRef } from "@/lib/purchases/local-purchase-number";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
@@ -155,9 +156,9 @@ function expandOrderToStockRows(row: any): any[] {
 }
 
 function expandLocalPurchaseToStockRow(lp: any): any {
-  const contractNo = lp.contract_no ? String(lp.contract_no) : "";
-  const systemBillNo = contractNo ? `LP-${contractNo}` : (lp.manual_bill_no || `LP-${String(lp.id).slice(0, 8)}`);
-  const displayBillNumber = contractNo ? `LP-${contractNo}` : systemBillNo;
+  const contractNo = localPurchaseContractRef(lp);
+  const systemBillNo = localPurchaseBillNo(lp);
+  const displayBillNumber = systemBillNo;
   const bookedQty = Number(lp.quantity_kgs ?? 0);
   const isLoaded = lp.warehouse_transfer_status === "transferred" || lp.status === "transferred";
   const loadedQty = isLoaded ? bookedQty : 0;
