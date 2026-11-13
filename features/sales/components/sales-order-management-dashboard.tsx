@@ -3,28 +3,8 @@
 import { pl } from "@/lib/reports/print-label";
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  BadgeDollarSign, 
-  Boxes, 
-  CheckCircle2, 
-  Clock3, 
-  Download, 
-  Edit3, 
-  Eye, 
-  FileCheck2, 
-  FileText, 
-  MoreVertical, 
-  Printer, 
-  RefreshCcw, 
-  Search, 
-  SlidersHorizontal, 
-  Ship, 
-  TrendingUp, 
-  Truck 
-} from "lucide-react";
+import { BadgeDollarSign, Edit3, FileText, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
 import { apiGet, apiPatch } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
@@ -32,12 +12,16 @@ import { deriveSalesBookingPostingState } from "@/lib/services/sales-booking-pos
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/verified-record-translations";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
 import { ERP_TABLE_STYLES } from "@/components/ui/erp-data-table";
 import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
-import { DashboardPageHeader } from "@/components/layout/dashboard-page-header";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { AddExpenseBillButton } from "@/features/expenses/components/add-expense-bill-button";
+import { PurchasePageTop } from "@/components/purchase-ui/purchase-page-top";
+import type { PayRow } from "@/features/purchases/components/purchase-payments-approved-header";
+import { useErpScope } from "@/lib/hooks/use-erp-scope";
+import { useUsdRates } from "@/lib/purchase-ui/use-usd-rates";
 
 
 type SalesOrder = {
@@ -82,17 +66,59 @@ const LIFECYCLE_TAB_LABEL_KEYS: Record<string, string> = {
 
 type LifecycleTab = (typeof lifecycleTabs)[number];
 
+/** Lifecycle stage filter (pure). Statuses are matched exactly as the API stores them. */
+function filterByTab(list: SalesOrder[], tab: LifecycleTab): SalesOrder[] {
+  if (tab === "Dashboard Overview") return list;
+  if (tab === "Draft Sales Bookings") return list.filter(o => o.sales_status === "draft");
+  if (tab === "Confirmed Sales") return list.filter(o => o.sales_status === "Confirmed" || o.sales_status === "confirmed");
+  if (tab === "Finalized Orders") return list.filter(o => o.sales_status === "Finalized" || o.sales_status === "finalized");
+  return list;
+}
+
+/**
+ * Sales rows -> the PayRow shape the shared Purchase Booking page top reads. Money is in the booking (final) currency.
+ * order_total is saved ALREADY converted to the final currency (see app/api/erp/sales/orders/route.ts and the payments
+ * route, which divides it by the rate to get USD), so total = order_total; paid_amount is kept in the original currency,
+ * so paid = paid_amount x exchange_rate.
+ * Receipts so far travel in PayRow.advance; the sales list has no advance / remaining / credit split, so those stay 0.
+ */
+function salesOrdersToPayRows(list: SalesOrder[]): PayRow[] {
+  return list.map((o) => {
+    const raw = o.form_data || {};
+    const f = raw.form || {};
+    const rate = Number(o.exchange_rate || 1);
+    const total = Number(o.order_total || 0);
+    const paid = Number(o.paid_amount || 0) * rate;
+    const due = Math.max(0, total - paid);
+    return {
+      country: String(o.country_name || f.branchCountry || "—"),
+      currency: String(o.currency_code || "AED").toUpperCase(),
+      total,
+      advance: paid,
+      remainingPaid: 0,
+      credit: 0,
+      due,
+      settled: due <= 0.01 && total > 0,
+    };
+  });
+}
+
 export function SalesOrderManagementDashboard({ initialStage }: { initialStage?: string }) {
   const activeLang = useActiveLanguage();
   const router = useRouter();
+  const scope = useErpScope();
+  const usdRates = useUsdRates();
   const [activeTab, setActiveTab] = useState<LifecycleTab>("Dashboard Overview");
   const [orders, setOrders] = useState<SalesOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [tradeDocsOrder, setTradeDocsOrder] = useState<SalesOrder | null>(null);
   const localized = (order: SalesOrder, field: string, fallback: string) =>
     resolveVerifiedTranslation(order.translations?.[field], activeLang) || fallback || translationPendingLabel(activeLang);
+  const tr = (label: string) => translateHeader(activeLang, label);
+  const pageTitle = t(activeLang, "nav.sales_order_management", "Sales Order Management");
 
   // Load orders
   async function loadOrders() {
@@ -138,23 +164,19 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
   }
 
   // Filtered lists
-  const applyTabFilter = (list: SalesOrder[]) => {
-    if (activeTab === "Dashboard Overview") return list;
-    if (activeTab === "Draft Sales Bookings") return list.filter(o => o.sales_status === "draft");
-    if (activeTab === "Confirmed Sales") return list.filter(o => o.sales_status === "Confirmed" || o.sales_status === "confirmed");
-    if (activeTab === "Finalized Orders") return list.filter(o => o.sales_status === "Finalized" || o.sales_status === "finalized");
-    return list;
-  };
+  const applyTabFilter = (list: SalesOrder[]) => filterByTab(list, activeTab);
   const filtered = useMemo(() => applyTabFilter(orders),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [orders, activeTab]);
+  const pageRows = useMemo(() => salesOrdersToPayRows(filtered), [filtered]);
 
   // Flat print row mirroring the on-screen table columns.
   const toPrintRow = (order: SalesOrder): Record<string, unknown> => {
     const raw = order.form_data || {};
     const f = raw.form || {};
-    const purchaseAmount = Number(order.order_total || 0);
     const exRate = Number(order.exchange_rate || 1);
+    // order_total is in the final currency; the original-currency amount is order_total / rate
+    const purchaseAmount = Number(order.order_total || 0) / exRate;
     const invPct = Number(f.invoicePercentage || 100);
     const invoiceAmt = (purchaseAmount * invPct) / 100;
     const postingState = deriveSalesBookingPostingState(order as any);
@@ -199,59 +221,6 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
     return applyTabFilter(res.salesOrders || []).map(toPrintRow);
   }
 
-  // Aggregated totals matching requested dashboard summary stats
-  const dashboardStats = useMemo(() => {
-    const totalSalesOrders = orders.length;
-    let totalSalesAmount = 0; // Purchase Currency
-    let totalInvoiceAmount = 0; // Purchase Currency
-    let totalFinalCurrencyAmount = 0; // Final Currency AED
-    let totalPaymentsReceived = 0; // Final Currency AED paid
-    let outstandingReceivables = 0; // Final Currency AED remaining
-    let pendingTransfers = 0;
-    let finalizedOrders = 0;
-
-    orders.forEach(o => {
-      const raw = o.form_data || {};
-      const f = raw.form || {};
-      
-      const purchaseAmount = Number(o.order_total || 0);
-      const exRate = Number(o.exchange_rate || 1);
-      const finalAmount = purchaseAmount * exRate;
-      
-      const invPct = Number(f.invoicePercentage || 100);
-      const invoiceAmt = (purchaseAmount * invPct) / 100;
-      
-      totalSalesAmount += purchaseAmount;
-      totalInvoiceAmount += invoiceAmt;
-      totalFinalCurrencyAmount += finalAmount;
-      
-      const paidAmt = Number(o.paid_amount || 0) * exRate;
-      totalPaymentsReceived += paidAmt;
-      
-      const remainingAmt = Math.max(0, finalAmount - paidAmt);
-      outstandingReceivables += remainingAmt;
-
-      const st = (o.sales_status || "").toLowerCase();
-      if (st === "draft" || st === "pending") {
-        pendingTransfers += 1;
-      }
-      if (st === "finalized" || st === "completed") {
-        finalizedOrders += 1;
-      }
-    });
-
-    return {
-      totalSalesOrders,
-      totalSalesAmount,
-      totalInvoiceAmount,
-      totalFinalCurrencyAmount,
-      totalPaymentsReceived,
-      outstandingReceivables,
-      pendingTransfers,
-      finalizedOrders
-    };
-  }, [orders]);
-
   // Print helper
   function handlePrint(order: SalesOrder) {
     const raw = order.form_data || {};
@@ -294,161 +263,137 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
     });
   }
 
+  // Toolbar / filter dialog: Reset clears the search and returns to the Dashboard Overview stage; Apply closes the dialog and reloads.
+  const resetFilters = () => { setSearch(""); setActiveTab("Dashboard Overview"); };
+  const applyFilters = () => { setFiltersOpen(false); void loadOrders(); };
+
+  // Menu slot of the page toolbar: the register's print / PDF / Excel menu and the create action.
+  const toolbarMenu = (
+    <div className="flex items-center gap-2">
+      <JournalPrintButton
+        variant="menu"
+        title={pageTitle}
+        subtitle={t(activeLang, LIFECYCLE_TAB_LABEL_KEYS[activeTab] as never, activeTab)}
+        columns={[
+          { key: "journal_serial", label: pl("Journal Serial"), align: "center" },
+          { key: "country_serial", label: pl("Country Serial"), align: "center" },
+          { key: "branch_serial", label: pl("Branch Serial"), align: "center" },
+          { key: "sales_order_no", label: pl("Sales Order No"), align: "center" },
+          { key: "order_date", label: pl("Date"), format: "date" },
+          { key: "customer", label: pl("Customer") },
+          { key: "user", label: pl("User") },
+          { key: "branch", label: pl("Branch") },
+          { key: "country", label: pl("Country") },
+          { key: "sales_account", label: pl("Sales Account") },
+          { key: "purchase_account", label: pl("Purchase Account") },
+          { key: "goods", label: pl("Goods Name") },
+          { key: "brand", label: pl("Brand") },
+          { key: "size", label: pl("Goods Size") },
+          { key: "quantity", label: pl("Quantity"), align: "right", format: "number" },
+          { key: "unit", label: pl("Unit"), align: "center" },
+          { key: "gross_weight", label: pl("Gross Wt (KG)"), align: "right", format: "number" },
+          { key: "net_weight", label: pl("Net Wt (KG)"), align: "right", format: "number" },
+          { key: "pur_currency", label: pl("Pur Currency"), align: "center" },
+          { key: "exchange_rate", label: pl("Ex. Rate"), align: "right" },
+          { key: "final_currency", label: pl("Final Currency"), align: "center" },
+          { key: "pur_amount", label: pl("Pur Amount"), align: "right", format: "number" },
+          { key: "invoice_pct", label: pl("Invoice %"), align: "right" },
+          { key: "invoice_amount", label: pl("Invoice Amount"), align: "right", format: "number" },
+          { key: "final_invoice_amount", label: pl("Final Invoice Amount"), align: "right", format: "number" },
+          { key: "payment_status", label: pl("Payment Status"), align: "center", format: "status" },
+          { key: "transfer_status", label: pl("Transfer Status"), align: "center", format: "status" },
+        ]}
+        rows={filtered.map(toPrintRow)}
+        fetchFullData={fetchAllOrdersForPrint}
+        filters={[
+          ...(search.trim() ? [{ label: t(activeLang, "sales.sodash_search_ph" as never, "Search"), value: search.trim() }] : []),
+          { label: "Status", value: t(activeLang, LIFECYCLE_TAB_LABEL_KEYS[activeTab] as never, activeTab) },
+        ]}
+        orientation="landscape"
+      />
+      <Button
+        onClick={() => router.push("/dashboard/sales/new-sales-booking-order")}
+        className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 rounded-lg shadow-md shadow-blue-100"
+      >
+        + {t(activeLang, "sales.sodash_create_booking", "Create Booking")}
+      </Button>
+    </div>
+  );
+
   return (
-    <div className="space-y-6 text-slate-800 bg-white dark:bg-slate-950 dark:text-slate-100 min-h-screen pb-16">
+    <div className="space-y-4 text-slate-800 bg-white dark:bg-slate-950 dark:text-slate-100 min-h-screen pb-16">
 
-      {/* Shared ERP Dashboard Page Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-2">
-        <DashboardPageHeader
-          titleKey="nav.sales_order_management"
-          titleFallback="Sales Order Management"
-          descKey="sales.sodash_subtitle"
-          descFallback="Real-time sales order tracking across every country and branch."
-        />
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            onClick={() => loadOrders()}
-            variant="outline"
-            size="sm"
-            className="rounded-xl border-slate-200 text-xs font-bold"
-          >
-            <RefreshCcw className="h-3.5 w-3.5 mr-1.5" />
-            {t(activeLang, "sales.sodash_refresh", "Refresh")}
-          </Button>
-          <JournalPrintButton
-            title={t(activeLang, "nav.sales_order_management" as never, "Sales Order Management")}
-            subtitle={t(activeLang, LIFECYCLE_TAB_LABEL_KEYS[activeTab] as never, activeTab)}
-            columns={[
-              { key: "journal_serial", label: pl("Journal Serial"), align: "center" },
-              { key: "country_serial", label: pl("Country Serial"), align: "center" },
-              { key: "branch_serial", label: pl("Branch Serial"), align: "center" },
-              { key: "sales_order_no", label: pl("Sales Order No"), align: "center" },
-              { key: "order_date", label: pl("Date"), format: "date" },
-              { key: "customer", label: pl("Customer") },
-              { key: "user", label: pl("User") },
-              { key: "branch", label: pl("Branch") },
-              { key: "country", label: pl("Country") },
-              { key: "sales_account", label: pl("Sales Account") },
-              { key: "purchase_account", label: pl("Purchase Account") },
-              { key: "goods", label: pl("Goods Name") },
-              { key: "brand", label: pl("Brand") },
-              { key: "size", label: pl("Goods Size") },
-              { key: "quantity", label: pl("Quantity"), align: "right", format: "number" },
-              { key: "unit", label: pl("Unit"), align: "center" },
-              { key: "gross_weight", label: pl("Gross Wt (KG)"), align: "right", format: "number" },
-              { key: "net_weight", label: pl("Net Wt (KG)"), align: "right", format: "number" },
-              { key: "pur_currency", label: pl("Pur Currency"), align: "center" },
-              { key: "exchange_rate", label: pl("Ex. Rate"), align: "right" },
-              { key: "final_currency", label: pl("Final Currency"), align: "center" },
-              { key: "pur_amount", label: pl("Pur Amount"), align: "right", format: "number" },
-              { key: "invoice_pct", label: pl("Invoice %"), align: "right" },
-              { key: "invoice_amount", label: pl("Invoice Amount"), align: "right", format: "number" },
-              { key: "final_invoice_amount", label: pl("Final Invoice Amount"), align: "right", format: "number" },
-              { key: "payment_status", label: pl("Payment Status"), align: "center", format: "status" },
-              { key: "transfer_status", label: pl("Transfer Status"), align: "center", format: "status" },
-            ]}
-            rows={filtered.map(toPrintRow)}
-            fetchFullData={fetchAllOrdersForPrint}
-            filters={[
-              ...(search.trim() ? [{ label: t(activeLang, "sales.sodash_search_ph" as never, "Search"), value: search.trim() }] : []),
-              { label: "Status", value: t(activeLang, LIFECYCLE_TAB_LABEL_KEYS[activeTab] as never, activeTab) },
-            ]}
-            orientation="landscape"
-          />
-          <Button
-            onClick={() => router.push("/dashboard/sales/new-sales-booking-order")}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 rounded-xl shadow-md shadow-blue-100"
-          >
-            + {t(activeLang, "sales.sodash_create_booking", "Create Booking")}
-          </Button>
-        </div>
-      </div>
+      {/* Approved Purchase Booking page top (title, one toolbar, reports panel, and the Summary / Booking Status / Country Wise
+          cards). Every figure is computed from the rows this page loaded, in the booking (final) currency. */}
+      <PurchasePageTop
+        lang={activeLang}
+        title={pageTitle}
+        superAdmin={scope.isSuperAdmin}
+        icon={BadgeDollarSign}
+        breadcrumb={[tr("Dashboard"), tr("Sales & Trade"), pageTitle]}
+        rows={pageRows}
+        rates={usdRates}
+        reports={[
+          { label: tr("Sales Booking"), href: "/dashboard/sales/sales-order" },
+          { label: tr("Sales Booking Journal"), href: "/dashboard/sales/sales-booking-journal-report" },
+          { label: tr("Sales Confirm"), href: "/dashboard/sales/sales-confirm" },
+          { label: tr("Local Sales"), href: "/dashboard/sales/local-sales" },
+        ]}
+        labels={{
+          summary: tr("Sales Booking Summary"),
+          totalBills: tr("Total Orders"),
+          totalAmount: tr("Total Sales"),
+          totalPaid: tr("Total Received"),
+          balance: tr("Balance (To Be Received)"),
+          countryTitle: tr("Country Wise Sales Booking"),
+          countryAmount: tr("Sales Amount"),
+        }}
+        search={search}
+        onSearch={setSearch}
+        searchPlaceholder={t(activeLang, "sales.sodash_search_ph", "Search order no, customer...")}
+        filterCount={activeTab === "Dashboard Overview" ? 0 : 1}
+        onOpenFilters={() => setFiltersOpen(true)}
+        onReset={resetFilters}
+        onRefresh={() => { void loadOrders(); }}
+        onApply={applyFilters}
+        loading={loading}
+        menu={toolbarMenu}
+      />
 
-
-      {/* Lifecycle tab strip + Search Controls */}
-      <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-wrap gap-4 items-center justify-between shadow-sm">
-        <div className="flex border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-1 rounded-xl shadow-xs">
-          {lifecycleTabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              type="button"
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                activeTab === tab
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
-              }`}
-            >
-              {t(activeLang, LIFECYCLE_TAB_LABEL_KEYS[tab] as never, tab)}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex gap-2">
-          <div className="relative w-64">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t(activeLang, "sales.sodash_search_ph", "Search order no, customer...")}
-              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100 placeholder-slate-400"
-            />
+      {/* FILTER DIALOG (opened from the page toolbar): stage selector with counts, Reset / Apply */}
+      {filtersOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[2px]" onClick={() => setFiltersOpen(false)} role="presentation">
+          <div role="dialog" aria-modal="true" aria-label={tr("Filter")} onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-5 shadow-[0_30px_60px_-20px_rgba(15,23,42,0.45),0_2px_0_0_#e2e8f0] dark:border-slate-800 dark:from-slate-950 dark:to-slate-900 animate-in fade-in duration-200">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-sm font-black uppercase tracking-wide text-slate-800 dark:text-slate-100">{tr("Filter")}</span>
+              <button type="button" onClick={() => setFiltersOpen(false)} aria-label={tr("Close")} className="h-8 w-8 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer dark:bg-slate-800 dark:text-slate-300">×</button>
+            </div>
+            <label className="block space-y-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{tr("Select Stage")}</span>
+              <select value={activeTab} onChange={(e) => setActiveTab(e.target.value as LifecycleTab)} aria-label={tr("Select Stage")}
+                className="h-9 w-full rounded border border-slate-300 bg-white px-2 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                {lifecycleTabs.map((tab) => (
+                  <option key={tab} value={tab}>
+                    {t(activeLang, LIFECYCLE_TAB_LABEL_KEYS[tab] as never, tab)} ({filterByTab(orders, tab).length})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button type="button" onClick={resetFilters} className="h-8 px-3 rounded-lg border border-slate-300 bg-white text-[11px] font-bold text-slate-700 cursor-pointer dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">{tr("Reset")}</button>
+              <button type="button" onClick={applyFilters} className="h-8 px-4 rounded-lg bg-[#2563eb] text-white text-[11px] font-bold shadow-[0_3px_0_0_#1e40af] cursor-pointer">{tr("Apply")}</button>
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
-
-      {/* Aggregate Cards with soft colors and proper spacing */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Sales Orders Count & Pending Transfers */}
-        <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/20 border border-blue-100 p-4 rounded-2xl shadow-xs flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-[11px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_total_sales_orders", "Total Sales Orders")}</span>
-            <span className="text-2xl font-black text-blue-700 font-sans">{dashboardStats.totalSalesOrders} {t(activeLang, "sales.sodash_orders_suffix", "Orders")}</span>
-            <span className="text-[11px] text-indigo-500 font-bold block">{t(activeLang, "sales.sodash_pending_transfers_colon", "Pending Transfers:")} {dashboardStats.pendingTransfers}</span>
-          </div>
-          <div className="bg-blue-100 text-blue-700 p-2.5 rounded-xl">
-            <Boxes className="h-6 w-6" />
-          </div>
+      {/* Register: the same section frame as the Purchase Booking table */}
+      <section className="w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-4 space-y-4">
+        <div className="flex flex-col items-center justify-center text-center w-full py-3 border-b border-slate-100 dark:border-slate-800/60">
+          <h2 className="text-sm font-black tracking-widest text-slate-800 dark:text-slate-100 uppercase">{tr("Transaction Log & Search Report")}</h2>
+          <p className="text-[11px] text-slate-400 mt-1.5 font-medium tracking-wide">{t(activeLang, "sales.sodash_subtitle", "Real-time sales order tracking across every country and branch.")}</p>
         </div>
-
-        {/* Card 2: Sales Amount & Invoice Amount */}
-        <div className="bg-gradient-to-br from-emerald-50/50 to-teal-50/20 border border-emerald-100 p-4 rounded-2xl shadow-xs flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-[11px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_original_total_sales", "Original Total Sales")}</span>
-            <span className="text-xl font-black text-emerald-700 font-sans">${dashboardStats.totalSalesAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-            <span className="text-[11px] text-teal-600 font-bold block">{t(activeLang, "sales.sodash_invoice_amount_colon", "Invoice Amount:")} ${dashboardStats.totalInvoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-          </div>
-          <div className="bg-emerald-100 text-emerald-700 p-2.5 rounded-xl">
-            <BadgeDollarSign className="h-6 w-6" />
-          </div>
-        </div>
-
-        {/* Card 3: Final Currency & Payments Received */}
-        <div className="bg-gradient-to-br from-purple-50/50 to-pink-50/20 border border-purple-100 p-4 rounded-2xl shadow-xs flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-[11px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_final_currency_value", "Final Currency Value")}</span>
-            <span className="text-xl font-black text-purple-700 font-sans">{dashboardStats.totalFinalCurrencyAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</span>
-            <span className="text-[11px] text-pink-600 font-bold block">{t(activeLang, "sales.sodash_payments_recd_colon", "Payments Recd:")} {dashboardStats.totalPaymentsReceived.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</span>
-          </div>
-          <div className="bg-purple-100 text-purple-700 p-2.5 rounded-xl">
-            <CheckCircle2 className="h-6 w-6" />
-          </div>
-        </div>
-
-        {/* Card 4: Outstanding Receivables & Finalized Orders */}
-        <div className="bg-gradient-to-br from-amber-50/50 to-orange-50/20 border border-amber-100 p-4 rounded-2xl shadow-xs flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-[11px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_outstanding_receivables", "Outstanding Receivables")}</span>
-            <span className="text-xl font-black text-amber-700 font-sans">{dashboardStats.outstandingReceivables.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</span>
-            <span className="text-[11px] text-orange-600 font-bold block">{t(activeLang, "sales.sodash_finalized_orders_colon", "Finalized Orders:")} {dashboardStats.finalizedOrders}</span>
-          </div>
-          <div className="bg-amber-100 text-amber-700 p-2.5 rounded-xl">
-            <Clock3 className="h-6 w-6" />
-          </div>
-        </div>
-      </div>
 
       {/* Master Data Grid with grouped header columns */}
       <div className={ERP_TABLE_STYLES.container}>
@@ -518,8 +463,9 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                   const raw = order.form_data || {};
                   const f = raw.form || {};
                   
-                  const purchaseAmount = Number(order.order_total || 0);
                   const exRate = Number(order.exchange_rate || 1);
+                  // order_total is in the final currency; the original-currency amount is order_total / rate
+                  const purchaseAmount = Number(order.order_total || 0) / exRate;
                   const finalAmount = purchaseAmount * exRate;
 
                   const invPct = Number(f.invoicePercentage || 100);
@@ -648,6 +594,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
         </table>
         </div>
       </div>
+      </section>
 
       {tradeDocsOrder && (
         <TradeDocumentCenter
