@@ -87,6 +87,7 @@ export function PurchaseBookingGlobalRegisterView({
   const [filterModalOpen, setFilterModalOpen] = useState<boolean>(false);
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const [activeRowMenuId, setActiveRowMenuId] = useState<string | null>(null);
+  const [activeAccountPopupId, setActiveAccountPopupId] = useState<string | null>(null);
 
   // Filters
   const [filterDateFrom, setFilterDateFrom] = useState<string>("");
@@ -112,6 +113,9 @@ export function PurchaseBookingGlobalRegisterView({
       const target = e.target as HTMLElement | null;
       if (!target?.closest("[data-row-menu]")) {
         setActiveRowMenuId(null);
+      }
+      if (!target?.closest("[data-account-popup]")) {
+        setActiveAccountPopupId(null);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -386,6 +390,96 @@ export function PurchaseBookingGlobalRegisterView({
       return <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#fef3c7] text-[#92400e]">{tr("In Transit")}</span>;
     }
     return <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700">{st || "Draft"}</span>;
+  };
+
+  // Transfer status helper
+  const isBillTransferred = useCallback((r: any) => {
+    const form = r.form_data?.form || {};
+    const workflow = r.workflow || {};
+    const st = String(r.status || "").toLowerCase();
+    const jst = String(r.journalStatus || r.ledger_posting_status || "").toLowerCase();
+    const formStatus = String(form.status || form.salesStatus || "").toLowerCase();
+
+    return Boolean(
+      r.is_transferred ||
+      r.isTransferred ||
+      r.transferred ||
+      r.transferred_at ||
+      r.roznamcha_entry_id ||
+      form.isTransferred ||
+      form.transferTimestamp ||
+      st === "transferred" ||
+      st === "completed" ||
+      st === "posted" ||
+      jst === "transferred" ||
+      jst === "posted" ||
+      formStatus === "transferred" ||
+      formStatus === "posted" ||
+      workflow.isTransferred
+    );
+  }, []);
+
+  // Sorted rows: Bills awaiting transfer appear in red at top, successfully transferred in black at bottom
+  const sortedRows = useMemo(() => {
+    return [...filteredRows].sort((a, b) => {
+      const aT = isBillTransferred(a);
+      const bT = isBillTransferred(b);
+      if (!aT && bT) return -1;
+      if (aT && !bT) return 1;
+      const dA = new Date(a.purchaseDate || a.bookingDate || a.createdAt || 0).getTime();
+      const dB = new Date(b.purchaseDate || b.bookingDate || b.createdAt || 0).getTime();
+      return dB - dA;
+    });
+  }, [filteredRows, isBillTransferred]);
+
+  const getCountryCurrency = (country: string) => {
+    const c = String(country || "").toLowerCase();
+    if (c.includes("uae") || c.includes("dubai") || c.includes("emirates")) return "AED";
+    if (c.includes("pakistan") || c.includes("pk")) return "PKR";
+    if (c.includes("afghanistan") || c.includes("af")) return "AFN";
+    if (c.includes("iran") || c.includes("ir")) return "IRR";
+    if (c.includes("china") || c.includes("cn")) return "CNY";
+    if (c.includes("india") || c.includes("in")) return "INR";
+    if (c.includes("saudi") || c.includes("ksa")) return "SAR";
+    if (c.includes("oman")) return "OMR";
+    return "AED";
+  };
+
+  const formatPaymentAction = (r: any) => {
+    const form = r.form_data?.form || {};
+    const rawMode = String(r.payment_mode || form.paymentMode || form.paymentType || r.paymentType || form.purchaseType || "").trim();
+    const pMode = rawMode.toLowerCase().includes("credit") ? "Credit"
+      : rawMode.toLowerCase().includes("cash") ? "Cash"
+      : rawMode.toLowerCase().includes("advance") ? "Advance"
+      : rawMode.toLowerCase().includes("bank") ? "Bank"
+      : rawMode ? rawMode.charAt(0).toUpperCase() + rawMode.slice(1)
+      : "Invoice";
+
+    const advPct = Number(form.advancePercentage || form.advancePercent || 0);
+    const creditDays = form.creditDays || form.creditPeriod;
+    const terms = String(r.payment_terms || form.purchaseTerms || form.creditTerms || form.termsAndConditions || "").trim();
+
+    let termsLabel = "";
+    if (advPct > 0) {
+      termsLabel = `${advPct}%`;
+    } else if (creditDays) {
+      termsLabel = `${creditDays} Days`;
+    } else if (terms && terms !== "-" && terms.toLowerCase() !== "n/a") {
+      termsLabel = terms.length > 18 ? terms.slice(0, 16) + "…" : terms;
+    } else if (pMode.toLowerCase() === "credit") {
+      termsLabel = tr("agreed terms");
+    } else {
+      const advPaid = Number(r.advance_paid || form.advancePaid || 0);
+      const pAmt = Number(r.purchaseAmount || r.totalPurchaseAmount || 0);
+      if (pAmt > 0 && advPaid > 0) {
+        const calcPct = Math.round((advPaid / pAmt) * 100);
+        termsLabel = `${calcPct}%`;
+      } else {
+        termsLabel = tr("agreed terms");
+      }
+    }
+
+    return { mode: pMode, terms: termsLabel };
   };
 
   const resetFilters = () => {
@@ -954,8 +1048,8 @@ export function PurchaseBookingGlobalRegisterView({
               <tr className="bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-extrabold text-[11px] uppercase border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
                 <th className="py-2.5 px-2 text-center w-8 border-r border-slate-200 dark:border-slate-700">#</th>
                 <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Bill No. / Date")}</th>
-                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Country (Ex. Rate)")}</th>
-                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Supplier Name")}</th>
+                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Location")}</th>
+                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Accounts")}</th>
                 <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Goods Name (Brand / Size)")}</th>
                 <th className="py-2.5 px-2 text-center border-r border-slate-200 dark:border-slate-700">{tr("Qty (Unit)")}</th>
                 <th className="py-2.5 px-3 text-right border-r border-slate-200 dark:border-slate-700">
@@ -964,17 +1058,14 @@ export function PurchaseBookingGlobalRegisterView({
                 </th>
                 <th className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-700">{tr("Origin")}</th>
                 <th className="py-2.5 px-2.5 text-right border-r border-slate-200 dark:border-slate-700">
-                  <div>{tr("Amount (Purchase / Final)")}</div>
-                  <div className="text-[10px] text-slate-500 font-mono font-normal">USD {"->"} AED</div>
+                  <div>{tr("Purchase")}</div>
+                  <div className="text-[10px] text-slate-500 font-mono font-normal">{tr("Final")}</div>
                 </th>
-                <th className="py-2.5 px-3 text-center border-r border-slate-200 dark:border-slate-700">{tr("Loading Country / Port / Date")}</th>
-                <th className="py-2.5 px-3 text-center border-r border-slate-200 dark:border-slate-700">{tr("Receiving Country / Port / Date")}</th>
-                <th className="py-2.5 px-2.5 text-right border-r border-slate-200 dark:border-slate-700">
-                  <div>{tr("Payment (Adv / Bal)")}</div>
-                  <div className="text-[10px] text-slate-500 font-mono font-normal">USD / AED</div>
-                </th>
-                <th className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-700">{tr("Status")}</th>
-                <th className="py-2.5 px-2.5 text-center w-20">{tr("Actions")}</th>
+                <th className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-700">{tr("Payment Action")}</th>
+                <th className="py-2.5 px-3 text-center border-r border-slate-200 dark:border-slate-700">{tr("Loading")}</th>
+                <th className="py-2.5 px-3 text-center border-r border-slate-200 dark:border-slate-700">{tr("Receiving")}</th>
+                <th className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-700">{tr("Transfer Status")}</th>
+                <th className="py-2.5 px-2 text-center w-12">{tr("Actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
@@ -985,22 +1076,24 @@ export function PurchaseBookingGlobalRegisterView({
                     <span>{tr("Loading purchase booking orders...")}</span>
                   </td>
                 </tr>
-              ) : filteredRows.length === 0 ? (
+              ) : sortedRows.length === 0 ? (
                 <tr>
                   <td colSpan={14} className="py-12 text-center text-slate-400">
                     {tr("No purchase booking records found.")}
                   </td>
                 </tr>
               ) : (
-                filteredRows.map((r, i) => {
+                sortedRows.map((r, i) => {
                   const form = r.form_data?.form || {};
                   const goods0 = r.form_data?.goodsEntries?.[0] || {};
                   const billNo = r.purchaseBookingOrderNumber || r.purchase_order_no || r.billNumber || "—";
                   const billDate = formatDashDate(r.purchaseDate || r.bookingDate || r.createdAt);
-                  const countryName = r.countryName || form.destinationCountry || "UAE";
+                  const countryName = r.countryName || form.destinationCountry || form.branchCountry || "UAE";
+                  const mainBranch = r.mainBranchName || form.mainBranch || form.countryBranch || r.branchName || "—";
+                  const cityBranch = r.cityBranchName || form.cityBranch || form.subBranch || r.cityName || "—";
                   const exRate = Number(r.exchange_rate || form.exchangeRate || 1);
 
-                  // 1. Purchase Account & Sales Account stacked
+                  // Accounts
                   const purchaseAcc = r.purchaseAccountName && r.purchaseAccountName !== "-" ? r.purchaseAccountName : (r.supplierName || form.supplierName || "—");
                   const salesAcc = r.salesAccountName && r.salesAccountName !== "-" ? r.salesAccountName : (r.buyerName || form.customerName || form.salesAccountName || "—");
 
@@ -1013,31 +1106,33 @@ export function PurchaseBookingGlobalRegisterView({
                   const netKg = Number(r.totalNetWeight || form.netWeight || 0);
                   const origin = form.originCountry || goods0.origin || r.originCountry || "—";
 
-                  const purchCurr = String(r.currency || "USD").toUpperCase();
-                  const finalCurr = String(r.finalCurrency || form.secondaryCurrency?.split(" ")?.[0] || (countryName.includes("Pakistan") ? "PKR" : "AED")).toUpperCase();
+                  // Currency & Amounts
+                  const purchCurr = String(r.currency || form.currencyType || "USD").toUpperCase();
+                  const finalCurr = String(r.finalCurrency || form.secondaryCurrency?.split(" ")?.[0] || getCountryCurrency(countryName)).toUpperCase();
                   const purchAmt = Number(r.purchaseAmount || r.totalPurchaseAmount || 0);
                   const finalAmt = r.finalAmount ? Number(r.finalAmount) : purchAmt * exRate;
 
-                  // 2. Loading Port & Date
+                  // Payment Action
+                  const pAction = formatPaymentAction(r);
+
+                  // Loading Port & Date
                   const rawLoadCountry = form.loadingCountry || form.originCountry || r.countryName || "";
                   const loadCountry = shortenCountry(rawLoadCountry);
                   const loadPort = form.loadingPort || form.exitPort || form.particularPort || r.loadingPort || "";
                   const loadDate = formatDashDate(form.loadingDate || form.expectedLoadingDate || r.loadingDate || r.workflow?.loadingDate || r.workflowDates?.loadingDate);
 
-                  // 3. Receiving Port & Date
+                  // Receiving Port & Date
                   const rawRcvCountry = form.receivingCountry || form.destinationCountry || r.countryName || "";
                   const rcvCountry = shortenCountry(rawRcvCountry);
                   const rcvPort = form.receivedPort || form.receivingPort || form.destinationPort || r.receivingPort || "";
                   const rcvDate = formatDashDate(form.receivingDate || form.receivedDate || form.arrivalDate || form.expectedReceivingDate || r.receivingDate || r.workflow?.receivingDate || r.workflowDates?.receivingDate);
 
-                  // 4. Payment: Total Paid vs Balance
-                  const totalPaidPC = Number(r.advance_paid || form.advancePaid || 0) + Number(r.remaining_paid || form.remainingPaid || 0);
-                  const balPC = Math.max(0, purchAmt - totalPaidPC);
-                  const balFC = balPC * exRate;
-                  const isCleared = purchAmt > 0 && balPC <= 0.05;
+                  // Transfer status
+                  const isTransferred = isBillTransferred(r);
+                  const rowKey = r.id || `booking-row-${i}`;
 
                   return (
-                    <tr key={r.id || i} className="hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors">
+                    <tr key={rowKey} className="hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors">
                       {/* 1. # */}
                       <td className="py-2 px-2 text-center text-slate-500 font-mono text-[11px] border-r border-slate-100 dark:border-slate-800">
                         {i + 1}
@@ -1051,23 +1146,93 @@ export function PurchaseBookingGlobalRegisterView({
                             setSelectedRow(r);
                             setDrawerOpen(true);
                           }}
-                          className="font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 hover:underline block text-start font-mono text-xs"
+                          className="font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 hover:underline block text-start font-mono text-xs cursor-pointer"
                         >
                           {billNo}
                         </button>
                         <div className="text-[10px] text-slate-500 font-mono">{billDate}</div>
                       </td>
 
-                      {/* 3. Country (Ex. Rate) */}
-                      <td className="py-2 px-3 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
-                        <div className="font-bold text-blue-600 dark:text-blue-400">{shortenCountry(countryName)}</div>
-                        <div className="text-[10px] text-slate-500 font-mono">Ex: {exRate.toFixed(4)}</div>
+                      {/* 3. Location: Country, Main Branch, City Branch on 3 short lines (no exchange rate) */}
+                      <td className="py-2 px-2.5 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap text-xs">
+                        <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1 leading-tight">
+                          <span>{getCountryFlag(countryName)}</span>
+                          <span>{shortenCountry(countryName)}</span>
+                        </div>
+                        <div className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 leading-tight truncate max-w-[130px] mt-0.5" title={mainBranch}>
+                          {mainBranch}
+                        </div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight truncate max-w-[130px]" title={cityBranch}>
+                          {cityBranch}
+                        </div>
                       </td>
 
-                      {/* 4. Supplier / Buyer (Accounts) */}
-                      <td className="py-2 px-3 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
-                        <div className="font-bold text-slate-900 dark:text-slate-100 leading-tight">{purchaseAcc}</div>
-                        <div className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 mt-0.5 leading-tight">{salesAcc}</div>
+                      {/* 4. Accounts: Combined in one column with message-style popup on hover / tap */}
+                      <td className="py-2 px-3 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap relative group" data-account-popup="true">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveAccountPopupId((curr) => (curr === rowKey ? null : rowKey));
+                          }}
+                          className="text-left w-full cursor-pointer focus:outline-none"
+                        >
+                          <div className="font-bold text-slate-900 dark:text-slate-100 leading-tight truncate max-w-[150px]" title={purchaseAcc}>
+                            {purchaseAcc}
+                          </div>
+                          <div className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 mt-0.5 leading-tight truncate max-w-[150px]" title={salesAcc}>
+                            {salesAcc}
+                          </div>
+                        </button>
+
+                        {/* Message-Style Speech Bubble Popup (Hover on desktop, Tap on mobile) */}
+                        <div
+                          className={cn(
+                            "absolute start-1/2 -translate-x-1/2 bottom-full mb-2 z-40 w-72 rounded-xl border border-slate-200 bg-white p-3 shadow-2xl dark:border-slate-700 dark:bg-slate-900 text-start text-xs transition-all duration-150 pointer-events-none",
+                            (activeAccountPopupId === rowKey) ? "opacity-100 pointer-events-auto block" : "opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto hidden sm:block"
+                          )}
+                        >
+                          {/* Speech Bubble Arrow Indicator */}
+                          <div className="absolute -bottom-1.5 start-1/2 -translate-x-1/2 w-3 h-3 bg-white dark:bg-slate-900 border-b border-r border-slate-200 dark:border-slate-700 rotate-45" />
+
+                          {/* Section 1: Purchase Account */}
+                          <div className="space-y-1 pb-2 border-b border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center justify-between">
+                              <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                🏢 {tr("Purchase Account")}
+                              </span>
+                              <span className="text-[10px] font-mono text-slate-400">
+                                {r.purchaseAccountNumber || form.purchaseAccountNo || "—"}
+                              </span>
+                            </div>
+                            <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                              {purchaseAcc}
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                              <span>{tr("Branch")}: {form.purchaseAccountBranch || r.branchName || "—"}</span>
+                              <span className="font-semibold text-slate-600 dark:text-slate-300">{tr("Supplier")}</span>
+                            </div>
+                          </div>
+
+                          {/* Section 2: Sales Account */}
+                          <div className="space-y-1 pt-2">
+                            <div className="flex items-center justify-between">
+                              <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                                👥 {tr("Sales Account")}
+                              </span>
+                              <span className="text-[10px] font-mono text-slate-400">
+                                {r.salesAccountNumber || form.salesAccountNo || "—"}
+                              </span>
+                            </div>
+                            <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                              {salesAcc}
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                              <span>{tr("Branch")}: {form.salesAccountBranch || r.branchName || "—"}</span>
+                              <span className="font-semibold text-slate-600 dark:text-slate-300">{tr("Customer")}</span>
+                            </div>
+                          </div>
+                        </div>
                       </td>
 
                       {/* 5. Goods Name (Brand / Size) */}
@@ -1096,7 +1261,7 @@ export function PurchaseBookingGlobalRegisterView({
                         {origin}
                       </td>
 
-                      {/* 9. Amount (Purchase / Final) USD -> AED (Compact) */}
+                      {/* 9. Amount (Purchase / Final) */}
                       <td className="py-2 px-2.5 text-right border-r border-slate-100 dark:border-slate-800 whitespace-nowrap font-mono">
                         <div className="font-bold text-[11px] text-slate-900 dark:text-slate-100">
                           <span className="text-[10px] opacity-70 mr-1">{purchCurr}</span>
@@ -1108,141 +1273,145 @@ export function PurchaseBookingGlobalRegisterView({
                         </div>
                       </td>
 
-                      {/* 10. Loading Country / Port / Date */}
-                      <td className="py-2 px-3 text-center border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
-                        <div className="font-medium text-slate-800 dark:text-slate-200">
-                          {loadCountry}{loadPort ? ` / ${loadPort}` : ""}
-                        </div>
-                        <div className="text-[10px] text-slate-500 font-mono mt-0.5">{loadDate !== "—" ? `📅 ${loadDate}` : "—"}</div>
-                      </td>
-
-                      {/* 11. Receiving Country / Port / Date */}
-                      <td className="py-2 px-3 text-center border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
-                        <div className="font-medium text-slate-800 dark:text-slate-200">
-                          {rcvCountry}{rcvPort ? ` / ${rcvPort}` : ""}
-                        </div>
-                        <div className="text-[10px] text-slate-500 font-mono mt-0.5">{rcvDate !== "—" ? `📅 ${rcvDate}` : "—"}</div>
-                      </td>
-
-                      {/* 12. Payment (Adv / Bal) USD / AED */}
-                      <td className="py-2 px-2.5 text-right border-r border-slate-100 dark:border-slate-800 whitespace-nowrap font-mono">
-                        <div className="font-bold text-[11px] text-slate-900 dark:text-slate-100">
-                          <span className="text-[10px] opacity-70 mr-0.5">{purchCurr}</span>
-                          {fmt(totalPaidPC > 0 ? totalPaidPC : (Number(r.advance_paid) || purchAmt * 0.1))}
-                        </div>
-                        <div className={cn("font-bold text-[10px]", isCleared ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
-                          <span className="text-[9px] opacity-70 mr-0.5">{finalCurr}</span>
-                          {fmt(balFC > 0 ? balFC : (totalPaidPC * exRate))}
-                        </div>
-                      </td>
-
-                      {/* 13. Status */}
+                      {/* 10. Payment Action: Route & Terms together */}
                       <td className="py-2 px-2.5 text-center border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
-                        {getStatusBadge(r.status || "Loading")}
+                        <div className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                          <span className="font-extrabold">{pAction.mode}</span>
+                          <span className="opacity-60">—</span>
+                          <span>{pAction.terms}</span>
+                        </div>
                       </td>
 
-                      {/* 14. Actions */}
-                      <td className="py-2 px-2.5 text-center whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-1">
+                      {/* 11. Loading: Country, Port, Date on 3 short lines */}
+                      <td className="py-2 px-2.5 text-center border-r border-slate-100 dark:border-slate-800 whitespace-nowrap text-xs">
+                        <div className="font-bold text-slate-900 dark:text-slate-100 leading-tight">
+                          {loadCountry || "—"}
+                        </div>
+                        <div className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 leading-tight truncate max-w-[120px] mx-auto mt-0.5">
+                          {loadPort || "—"}
+                        </div>
+                        <div className="text-[10px] text-slate-500 font-mono leading-tight mt-0.5">
+                          {loadDate}
+                        </div>
+                      </td>
+
+                      {/* 12. Receiving: Country, Port, Date on 3 short lines */}
+                      <td className="py-2 px-2.5 text-center border-r border-slate-100 dark:border-slate-800 whitespace-nowrap text-xs">
+                        <div className="font-bold text-slate-900 dark:text-slate-100 leading-tight">
+                          {rcvCountry || "—"}
+                        </div>
+                        <div className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 leading-tight truncate max-w-[120px] mx-auto mt-0.5">
+                          {rcvPort || "—"}
+                        </div>
+                        <div className="text-[10px] text-slate-500 font-mono leading-tight mt-0.5">
+                          {rcvDate}
+                        </div>
+                      </td>
+
+                      {/* 13. Transfer Status: immediately before ⋮ */}
+                      <td className="py-2 px-2.5 text-center border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
+                        {isTransferred ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-950 text-white border border-slate-800 dark:bg-white dark:text-slate-950 dark:border-slate-200 shadow-xs">
+                            <CheckCircle2 className="h-3 w-3 text-emerald-400 dark:text-emerald-600" />
+                            <span>{tr("Transferred")}</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 shadow-xs">
+                            <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
+                            <span>{tr("Awaiting Transfer")}</span>
+                          </span>
+                        )}
+                      </td>
+
+                      {/* 14. Actions: Only ⋮ menu with View inside */}
+                      <td className="py-2 px-2 text-center whitespace-nowrap">
+                        <div className="relative inline-block text-center" data-row-menu="true">
                           <button
                             type="button"
-                            onClick={() => {
-                              setSelectedRow(r);
-                              setDrawerOpen(true);
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveRowMenuId((curr) => curr === rowKey ? null : rowKey);
                             }}
-                            className="p-1 rounded hover:bg-slate-100 text-slate-600 hover:text-blue-600 dark:hover:bg-slate-800 dark:text-slate-400 cursor-pointer"
-                            title={tr("View Details")}
+                            className="p-1 rounded hover:bg-slate-100 text-slate-600 dark:hover:bg-slate-800 dark:text-slate-400 cursor-pointer"
+                            title={tr("Actions")}
                           >
-                            <Eye className="h-4 w-4" />
+                            <MoreVertical className="h-4 w-4" />
                           </button>
 
-                          <div className="relative" data-row-menu="true">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveRowMenuId((curr) => curr === r.id ? null : r.id);
-                              }}
-                              className="p-1 rounded hover:bg-slate-100 text-slate-600 dark:hover:bg-slate-800 dark:text-slate-400 cursor-pointer"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </button>
+                          {activeRowMenuId === rowKey && (
+                            <div className="absolute end-0 top-full mt-1 z-50 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 text-start text-xs animate-in fade-in-50 zoom-in-95">
+                              {/* 1. View Details */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedRow(r);
+                                  setDrawerOpen(true);
+                                  setActiveRowMenuId(null);
+                                }}
+                                className="w-full px-2.5 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold flex items-center gap-2 cursor-pointer"
+                              >
+                                <Eye className="h-3.5 w-3.5 text-blue-600" />
+                                <span>{tr("View Details")}</span>
+                              </button>
 
-                            {activeRowMenuId === r.id && (
-                              <div className="absolute end-0 top-full mt-1 z-30 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 text-start text-xs animate-in fade-in-50 zoom-in-95">
-                                {/* 1. View Details */}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setSelectedRow(r);
-                                    setDrawerOpen(true);
-                                    setActiveRowMenuId(null);
-                                  }}
-                                  className="w-full px-2.5 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold flex items-center gap-2"
-                                >
-                                  <Eye className="h-3.5 w-3.5 text-blue-600" />
-                                  <span>{tr("View Details")}</span>
-                                </button>
+                              {/* 2. View Full Bill */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setFullBillRow(r);
+                                  setActiveRowMenuId(null);
+                                }}
+                                className="w-full px-2.5 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold flex items-center gap-2 cursor-pointer"
+                              >
+                                <FileText className="h-3.5 w-3.5 text-slate-500" />
+                                <span>{tr("View Full Bill")}</span>
+                              </button>
 
-                                {/* 2. View Full Bill */}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setFullBillRow(r);
-                                    setActiveRowMenuId(null);
-                                  }}
-                                  className="w-full px-2.5 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold flex items-center gap-2"
-                                >
-                                  <FileText className="h-3.5 w-3.5 text-slate-500" />
-                                  <span>{tr("View Full Bill")}</span>
-                                </button>
+                              <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
 
-                                <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                              {/* 3. Payment Entry */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  router.push(`/dashboard/journal/purchase-order-payment/advance?purchaseOrderNo=${encodeURIComponent(billNo)}`);
+                                  setActiveRowMenuId(null);
+                                }}
+                                className="w-full px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-2 cursor-pointer"
+                              >
+                                <CreditCard className="h-3.5 w-3.5 text-emerald-600" />
+                                <span>{tr("PAYMENT ENTRY")}</span>
+                              </button>
 
-                                {/* 3. Payment Entry */}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    router.push(`/dashboard/journal/purchase-order-payment/advance?purchaseOrderNo=${encodeURIComponent(billNo)}`);
-                                    setActiveRowMenuId(null);
-                                  }}
-                                  className="w-full px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-2"
-                                >
-                                  <CreditCard className="h-3.5 w-3.5 text-emerald-600" />
-                                  <span>{tr("PAYMENT ENTRY")}</span>
-                                </button>
+                              {/* 4. Transfer Bill to Lane */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  router.push(`/dashboard/purchase/purchase-transit-lane?purchaseOrderNo=${encodeURIComponent(billNo)}`);
+                                  setActiveRowMenuId(null);
+                                }}
+                                className="w-full px-2.5 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-semibold flex items-center gap-2 cursor-pointer"
+                              >
+                                <ArrowRight className="h-3.5 w-3.5 text-blue-600" />
+                                <span>{tr("TRANSFER BILL")}</span>
+                              </button>
 
-                                {/* 4. Transfer Bill to Lane */}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    router.push(`/dashboard/purchase/purchase-transit-lane?purchaseOrderNo=${encodeURIComponent(billNo)}`);
-                                    setActiveRowMenuId(null);
-                                  }}
-                                  className="w-full px-2.5 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-semibold flex items-center gap-2"
-                                >
-                                  <ArrowRight className="h-3.5 w-3.5 text-blue-600" />
-                                  <span>{tr("TRANSFER BILL")}</span>
-                                </button>
+                              <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
 
-                                <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
-
-                                {/* 5. Edit Booking */}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setIsFormMode(true);
-                                    router.push(`/dashboard/purchase/new-purchase-booking-order?id=${encodeURIComponent(r.id)}&purchaseOrderNo=${encodeURIComponent(billNo)}`);
-                                    setActiveRowMenuId(null);
-                                  }}
-                                  className="w-full px-2.5 py-1.5 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-semibold flex items-center gap-2"
-                                >
-                                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                                  <span>{tr("Edit Booking")}</span>
-                                </button>
-                              </div>
-                            )}
-                          </div>
+                              {/* 5. Edit Booking */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsFormMode(true);
+                                  router.push(`/dashboard/purchase/new-purchase-booking-order?id=${encodeURIComponent(r.id)}&purchaseOrderNo=${encodeURIComponent(billNo)}`);
+                                  setActiveRowMenuId(null);
+                                }}
+                                className="w-full px-2.5 py-1.5 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-semibold flex items-center gap-2 cursor-pointer"
+                              >
+                                <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                                <span>{tr("Edit Booking")}</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -1268,14 +1437,11 @@ export function PurchaseBookingGlobalRegisterView({
                     <div className="text-slate-900 dark:text-slate-100">USD {fmt(tableTotals.totalPurchUSD)}</div>
                     <div className="text-red-600 dark:text-red-400 text-[10px]">AED {fmt(tableTotals.totalFinalAED)}</div>
                   </td>
-                  <td className="py-2.5 px-3 text-center border-r border-amber-200 dark:border-amber-900 text-slate-400 font-mono">—</td>
-                  <td className="py-2.5 px-3 text-center border-r border-amber-200 dark:border-amber-900 text-slate-400 font-mono">—</td>
-                  <td className="py-2.5 px-2.5 text-right font-mono font-black border-r border-amber-200 dark:border-amber-900">
-                    <div className="text-slate-900 dark:text-slate-100">USD {fmt(tableTotals.totalPaidUSD)}</div>
-                    <div className="text-red-600 dark:text-red-400 text-[10px]">AED {fmt(tableTotals.totalBalAED)}</div>
-                  </td>
                   <td className="py-2.5 px-2.5 text-center border-r border-amber-200 dark:border-amber-900 text-slate-400 font-mono">—</td>
-                  <td className="py-2.5 px-2.5 text-center text-slate-400 font-mono">—</td>
+                  <td className="py-2.5 px-3 text-center border-r border-amber-200 dark:border-amber-900 text-slate-400 font-mono">—</td>
+                  <td className="py-2.5 px-3 text-center border-r border-amber-200 dark:border-amber-900 text-slate-400 font-mono">—</td>
+                  <td className="py-2.5 px-2.5 text-center border-r border-amber-200 dark:border-amber-900 text-slate-400 font-mono">—</td>
+                  <td className="py-2.5 px-2 text-center text-slate-400 font-mono">—</td>
                 </tr>
               </tfoot>
             )}
