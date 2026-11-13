@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
+import Link from "next/link";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -59,6 +60,18 @@ function Panel({ title, children }: { title: string; children: ReactNode }) {
     </section>
   );
 }
+
+const VIEW_BASE = "/dashboard/stock/warehouse-register/view";
+
+/** View of a whole purchase bill (all its loading and transfer entries). */
+const billHref = (p: { billType: string; billId: string }) => `${VIEW_BASE}?kind=bill&type=${p.billType}&id=${p.billId}`;
+
+/** View of one entry: a loading entry (lane:<id>) or a stock transfer (stock:<id>). Goods transfers open their bill. */
+const movementHref = (p: { billType: string; billId: string }, m: { id: string }) => {
+  if (m.id.startsWith("lane:")) return `${VIEW_BASE}?kind=loading&id=${m.id.slice(5)}`;
+  if (m.id.startsWith("stock:")) return `${VIEW_BASE}?kind=transfer&id=${m.id.slice(6)}`;
+  return billHref(p);
+};
 
 export default function WarehouseStockRegisterPage() {
   const lang = useActiveLanguage();
@@ -398,17 +411,18 @@ export default function WarehouseStockRegisterPage() {
                   <th className="px-2 py-1 text-end">{t("NET WT (KG)")}</th>
                   <th className="px-2 py-1 text-start">{t("DESTINATION")}</th>
                   <th className="px-2 py-1 text-end">{t("REMAINING BALANCE")}</th>
+                  <th className="px-2 py-1 text-start">{t("VIEW")}</th>
                 </tr>
               </thead>
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan={15} className="px-2 py-4 text-center text-slate-500">{t("LOADING")}</td>
+                    <td colSpan={16} className="px-2 py-4 text-center text-slate-500">{t("LOADING")}</td>
                   </tr>
                 )}
                 {!loading && !failed && shownPurchases.length === 0 && (
                   <tr>
-                    <td colSpan={15} className="px-2 py-4 text-center text-slate-500">{t("NO PURCHASE RECORDS FOUND")}</td>
+                    <td colSpan={16} className="px-2 py-4 text-center text-slate-500">{t("NO PURCHASE RECORDS FOUND")}</td>
                   </tr>
                 )}
                 {shownPurchases.map((p, idx) => {
@@ -448,6 +462,9 @@ export default function WarehouseStockRegisterPage() {
                         <td className={`px-2 py-1 text-end font-mono font-black ${p.remaining > 0 ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"}`}>
                           {fmt(p.remaining)}
                         </td>
+                        <td className="whitespace-nowrap px-2 py-1">
+                          <Link href={billHref(p)} className="rounded border border-teal-300 bg-teal-50 px-1.5 py-0.5 text-[10px] font-black text-teal-900">{t("VIEW")}</Link>
+                        </td>
                       </tr>
                       {open &&
                         p.entries.map((e, k) => (
@@ -467,11 +484,14 @@ export default function WarehouseStockRegisterPage() {
                             <td className="px-2 py-1 text-end font-mono text-black">{fmt(e.net)}</td>
                             <td className="px-2 py-1 text-black">{e.destination}</td>
                             <td className={`px-2 py-1 text-end font-mono font-bold ${e.remaining > 0 ? "text-rose-700" : "text-emerald-700"}`}>{fmt(e.remaining)}</td>
+                            <td className="whitespace-nowrap px-2 py-1">
+                              <Link href={billHref(p)} className="rounded border border-teal-300 bg-teal-50 px-1.5 py-0.5 text-[10px] font-black text-teal-900">{t("VIEW")}</Link>
+                            </td>
                           </tr>
                         ))}
                       {open && p.movements.length > 0 && (
                         <tr className="border-t border-slate-200 bg-teal-50/60">
-                          <td colSpan={15} className="px-2 py-0.5 text-[10px] font-black uppercase text-teal-900">{t("LOADING & STOCK TRANSFER ENTRIES")}</td>
+                          <td colSpan={16} className="px-2 py-0.5 text-[10px] font-black uppercase text-teal-900">{t("LOADING & STOCK TRANSFER ENTRIES")}</td>
                         </tr>
                       )}
                       {open &&
@@ -499,6 +519,9 @@ export default function WarehouseStockRegisterPage() {
                               {m.destination !== DASH && <span className="text-slate-600"> · {m.destination}</span>}
                             </td>
                             <td className="px-2 py-1 text-end text-[10px] uppercase text-slate-600">{statusLabel(m.status)}</td>
+                            <td className="whitespace-nowrap px-2 py-1">
+                              <Link href={movementHref(p, m)} className="rounded border border-teal-300 bg-teal-50 px-1.5 py-0.5 text-[10px] font-black text-teal-900">{t("VIEW")}</Link>
+                            </td>
                           </tr>
                         ))}
                     </Fragment>
@@ -514,6 +537,7 @@ export default function WarehouseStockRegisterPage() {
                     <td className="px-2 py-1 text-end font-mono text-black">{fmt(purchaseGrand.net)}</td>
                     <td className="px-2 py-1" />
                     <td className="px-2 py-1 text-end font-mono text-black">{fmt(purchaseGrand.remaining)}</td>
+                    <td className="px-2 py-1" />
                   </tr>
                 )}
               </tbody>
