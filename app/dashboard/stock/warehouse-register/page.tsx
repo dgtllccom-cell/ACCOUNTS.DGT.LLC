@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { branchLabel, groupRegister, type RegisterGroup, type WarehouseBalanceRow } from "@/lib/stock/warehouse-register";
 import {
@@ -62,6 +63,8 @@ function Panel({ title, children }: { title: string; children: ReactNode }) {
 export default function WarehouseStockRegisterPage() {
   const lang = useActiveLanguage();
   const t = (label: string) => translateHeader(lang, label);
+  // status codes (loaded, customs_pending, re_export, completed ...) are shown as translated labels, never as raw codes
+  const statusLabel = (code: string) => (code === DASH ? DASH : code === "re_export" ? t("RE-EXPORT") : t(code.replace(/_/g, " ").toUpperCase()));
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const [rows, setRows] = useState<WarehouseBalanceRow[]>([]);
   const [purchaseRows, setPurchaseRows] = useState<PurchaseRow[]>([]);
@@ -178,6 +181,54 @@ export default function WarehouseStockRegisterPage() {
       return next;
     });
 
+  // Print through the one universal engine: every row of the active tab (not only the expanded ones), A4 landscape, active language.
+  const printRegister = () => {
+    const kind = (k: "loading" | "transfer") => (k === "loading" ? t("LOADING") : t("TRANSFER"));
+    const qty = (n: number, unit: string) => `${fmt(n)} ${unit}`.trim();
+    if (view === "purchase") {
+      const rows = shownPurchases.flatMap((p) => [
+        { no: p.purchaseNo, type: p.billType === "booking" ? t("PURCHASE BOOKING") : t("LOCAL PURCHASE"), date: p.purchaseDate || DASH, branch: p.branch, entry: "", loadingDate: "", goods: p.goodsNames.join(", "), brand: "", size: "", lot: "", qty: qty(p.qty, p.unit), gross: fmt(p.gross), net: fmt(p.net), destination: "", remaining: fmt(p.remaining) },
+        ...p.entries.map((e) => ({ no: "", type: "", date: "", branch: "", entry: e.entryNo, loadingDate: e.loadingDate || DASH, goods: e.goodsName, brand: e.brand, size: e.size, lot: e.lot, qty: qty(e.qty, e.unit), gross: fmt(e.gross), net: fmt(e.net), destination: e.destination, remaining: fmt(e.remaining) })),
+        ...p.movements.map((m) => ({ no: "", type: kind(m.kind), date: "", branch: "", entry: m.refNo, loadingDate: m.date || DASH, goods: m.goodsName, brand: m.brand, size: m.size, lot: m.lot, qty: qty(m.qty, m.unit), gross: fmt(m.gross), net: fmt(m.net), destination: m.destination === DASH ? t(CATEGORY_LABEL[m.category]) : `${t(CATEGORY_LABEL[m.category])} · ${m.destination}`, remaining: statusLabel(m.status) })),
+      ]);
+      openUniversalPrintReport({
+        moduleType: "inventory", reportType: "register", orientation: "landscape", lang,
+        title: t("WAREHOUSE STOCK REGISTER"), subtitle: t("PURCHASE STOCK DETAILS"),
+        kpis: [
+          { label: t("TOTAL PURCHASE"), value: purchaseRows.length, color: "blue" },
+          { label: t("TOTAL LOADING"), value: fmt(loadTotals.loaded), color: "amber" },
+          { label: t("REMAINING"), value: fmt(loadTotals.inLanes), color: "red" },
+          { label: t("WAREHOUSE STOCK (AVAILABLE)"), value: fmt(totals.available), color: "emerald" },
+        ],
+        columns: [
+          { key: "no", label: t("PURCHASE NO.") }, { key: "type", label: "" }, { key: "date", label: t("PURCHASE DATE") }, { key: "branch", label: t("BRANCH") },
+          { key: "entry", label: t("ENTRY NO.") }, { key: "loadingDate", label: t("LOADING DATE") }, { key: "goods", label: t("GOODS NAME") }, { key: "brand", label: t("BRAND") },
+          { key: "size", label: t("SIZE") }, { key: "lot", label: t("LOT NAME") }, { key: "qty", label: t("QTY"), align: "right" }, { key: "gross", label: t("GROSS WT (KG)"), align: "right" },
+          { key: "net", label: t("NET WT (KG)"), align: "right" }, { key: "destination", label: t("DESTINATION") }, { key: "remaining", label: t("REMAINING BALANCE"), align: "right" },
+        ],
+        rows,
+        totals: { no: t("GRAND TOTAL"), qty: fmt(purchaseGrand.qty), gross: fmt(purchaseGrand.gross), net: fmt(purchaseGrand.net), remaining: fmt(purchaseGrand.remaining) },
+      });
+      return;
+    }
+    const rows = shownDestinations.flatMap((g) => [
+      { destination: g.destination === DASH ? t(CATEGORY_LABEL[g.category]) : `${t(CATEGORY_LABEL[g.category])} · ${g.destination}`, type: "", no: "", date: "", entry: "", movedOn: "", goods: "", brand: "", size: "", lot: "", qty: fmt(g.qty), gross: fmt(g.gross), net: fmt(g.net), status: "" },
+      ...g.rows.map((r) => ({ destination: "", type: kind(r.kind), no: r.purchaseNo, date: r.purchaseDate || DASH, entry: r.refNo, movedOn: r.date || DASH, goods: r.goodsName, brand: r.brand, size: r.size, lot: r.lot, qty: qty(r.qty, r.unit), gross: fmt(r.gross), net: fmt(r.net), status: statusLabel(r.status) })),
+    ]);
+    openUniversalPrintReport({
+      moduleType: "inventory", reportType: "register", orientation: "landscape", lang,
+      title: t("WAREHOUSE STOCK REGISTER"), subtitle: t("DESTINATION & RE-EXPORT STOCK"),
+      kpis: DESTINATION_CATEGORIES.map((c) => ({ label: t(CATEGORY_LABEL[c]), value: fmt(destTotals[c] ?? 0) })),
+      columns: [
+        { key: "destination", label: t("DESTINATION") }, { key: "type", label: "" }, { key: "no", label: t("PURCHASE NO.") }, { key: "date", label: t("PURCHASE DATE") },
+        { key: "entry", label: t("ENTRY NO.") }, { key: "movedOn", label: t("DATE") }, { key: "goods", label: t("GOODS NAME") }, { key: "brand", label: t("BRAND") },
+        { key: "size", label: t("SIZE") }, { key: "lot", label: t("LOT NAME") }, { key: "qty", label: t("QTY"), align: "right" }, { key: "gross", label: t("GROSS WT (KG)"), align: "right" },
+        { key: "net", label: t("NET WT (KG)"), align: "right" }, { key: "status", label: t("STATUS") },
+      ],
+      rows,
+    });
+  };
+
   const emptyText = t("NO STOCK IN WAREHOUSES YET");
 
   return (
@@ -204,7 +255,8 @@ export default function WarehouseStockRegisterPage() {
           </button>
           <button
             type="button"
-            onClick={() => window.print()}
+            onClick={printRegister}
+            disabled={loading}
             className="h-8 rounded-md bg-teal-800 px-3 text-[11px] font-bold text-white"
           >
             {t("PRINT")}
@@ -446,7 +498,7 @@ export default function WarehouseStockRegisterPage() {
                               <span className="font-semibold">{t(CATEGORY_LABEL[m.category])}</span>
                               {m.destination !== DASH && <span className="text-slate-600"> · {m.destination}</span>}
                             </td>
-                            <td className="px-2 py-1 text-end text-[10px] uppercase text-slate-600">{m.status}</td>
+                            <td className="px-2 py-1 text-end text-[10px] uppercase text-slate-600">{statusLabel(m.status)}</td>
                           </tr>
                         ))}
                     </Fragment>
@@ -557,7 +609,7 @@ export default function WarehouseStockRegisterPage() {
                               <td className="whitespace-nowrap px-2 py-1 text-end font-mono text-black">{fmt(r.qty)} {r.unit}</td>
                               <td className="px-2 py-1 text-end font-mono text-black">{fmt(r.gross)}</td>
                               <td className="px-2 py-1 text-end font-mono text-black">{fmt(r.net)}</td>
-                              <td className="px-2 py-1 text-[10px] uppercase text-slate-600">{r.status}</td>
+                              <td className="px-2 py-1 text-[10px] uppercase text-slate-600">{statusLabel(r.status)}</td>
                             </tr>
                           ))}
                       </Fragment>

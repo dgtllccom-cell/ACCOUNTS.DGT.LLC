@@ -7,8 +7,8 @@
  *  - loading entries come from purchase_lane_loads (Purchase Booking and Local Purchase sources only, never sales loads);
  *  - stock transfer entries come from journal_stock_transfers (Stock Journal) and goods_transfers (Goods Transfer Journal).
  *
- * Destination register rule (no double count): a transfer entry is the destination of the goods it moved. A loading entry is listed
- * there only when no transfer entry was made from it; it then counts under its lane disposition, or as In Transit when it has none.
+ * Destination register rule (no double count): a transfer entry is the destination of the goods it moved. A loading entry counts
+ * only for what was NOT transferred out of it, under its lane disposition, or as In Transit when it has none.
  */
 import type { BalanceBill } from "@/lib/services/stock-balance-report-service";
 import { proportional } from "@/lib/stock-balance/model";
@@ -23,6 +23,8 @@ export type RawLaneLoad = {
   source_id: string | null;
   purchase_order_id: string | null;
   local_purchase_id: string | null;
+  /** Purchase Booking no. / Local Purchase journal no. */
+  purchase_ref_no?: string | null;
   loading_record_no: string | null;
   loading_date: unknown;
   goods_name: string | null;
@@ -196,15 +198,20 @@ function entryFor(bill: BalanceBill, ref: { loadingRecordId?: string | null; lin
   return bill.type === "local" ? bill.entries[0] : undefined;
 }
 
+/**
+ * Where the goods physically go: the disposition warehouse, else the lane's destination place. transfer_destination is NOT a place
+ * (it names the next workflow queue, e.g. remaining_payment or general_purchase_expenses), so it is never shown as a destination.
+ */
 function laneDestination(l: RawLaneLoad): string {
-  return str(l.disposition_warehouse_name) || str(l.transfer_destination) || str(l.destination_text) || DASH;
+  return str(l.disposition_warehouse_name) || str(l.destination_text) || DASH;
 }
 
 function loadingMovement(l: RawLaneLoad, entry: Entry | undefined): Movement {
   return {
     id: `lane:${l.id}`,
     kind: "loading",
-    refNo: orDash(l.loading_record_no),
+    // a Local Purchase load has no loading record of its own: its journal number identifies it
+    refNo: orDash(l.loading_record_no || l.purchase_ref_no),
     date: dateOnly(l.loading_date),
     goodsName: orDash(l.goods_name || entry?.goodsName),
     brand: orDash(entry?.brand),
@@ -326,22 +333,30 @@ export function buildPurchaseRows(
 
 /**
  * Destination & Re-Export register: every movement of every purchase, by destination category and destination name.
- * A loading entry is counted only when no transfer entry was made from it (see the rule at the top of this file).
+ * A loading entry counts only for its untransferred remainder (see the rule at the top of this file).
  */
 export function buildDestinationGroups(purchases: PurchaseRow[]): DestinationGroup[] {
   const groups = new Map<string, DestinationGroup>();
+  const add = (p: PurchaseRow, m: Movement) => {
+    const k = `${m.category}|${m.destination}`;
+    const g = groups.get(k) ?? { category: m.category, destination: m.destination, qty: 0, gross: 0, net: 0, rows: [] };
+    g.qty += m.qty;
+    g.gross += m.gross;
+    g.net += m.net;
+    g.rows.push({ ...m, purchaseNo: p.purchaseNo, purchaseDate: p.purchaseDate, billType: p.billType, branch: p.branch });
+    groups.set(k, g);
+  };
   for (const p of purchases) {
-    const transferred = new Set(p.movements.filter((m) => m.kind === "transfer").map((m) => m.sourceId).filter(Boolean));
-    const hasLocalTransfer = p.billType === "local" && p.movements.some((m) => m.kind === "transfer");
-    for (const m of p.movements) {
-      if (m.kind === "loading" && (hasLocalTransfer || (m.sourceId && transferred.has(m.sourceId)))) continue;
-      const k = `${m.category}|${m.destination}`;
-      const g = groups.get(k) ?? { category: m.category, destination: m.destination, qty: 0, gross: 0, net: 0, rows: [] };
-      g.qty += m.qty;
-      g.gross += m.gross;
-      g.net += m.net;
-      g.rows.push({ ...m, purchaseNo: p.purchaseNo, purchaseDate: p.purchaseDate, billType: p.billType, branch: p.branch });
-      groups.set(k, g);
+    const transfers = p.movements.filter((m) => m.kind === "transfer");
+    for (const m of transfers) add(p, m);
+    for (const m of p.movements.filter((x) => x.kind === "loading")) {
+      // what was transferred out of this loading: by loading record (booking), or anything moved from the bill (local purchase)
+      const moved = transfers
+        .filter((t) => (p.billType === "local" ? true : Boolean(m.sourceId) && t.sourceId === m.sourceId))
+        .reduce((sum, t) => sum + t.qty, 0);
+      const rest = m.qty - moved;
+      if (rest <= 1e-6) continue;
+      add(p, rest === m.qty ? m : { ...m, qty: rest, gross: proportional(m.gross, rest, m.qty), net: proportional(m.net, rest, m.qty) });
     }
   }
   const order = (c: DestinationCategory) => DESTINATION_CATEGORIES.indexOf(c);

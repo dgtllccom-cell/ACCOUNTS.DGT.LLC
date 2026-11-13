@@ -106,6 +106,20 @@ describe("purchase movements: purchase rows", () => {
     expect(lp.movements[1]).toMatchObject({ lot: "L7", qty: 20, gross: 208, net: 200 });
   });
 
+  it("shows the lane's place as destination, never a workflow queue, and the journal no. for a Local Purchase load", () => {
+    const rows = buildPurchaseRows(
+      [booking, local],
+      [
+        lane({ id: "a", source_id: "plr1", purchase_order_id: "po1", transfer_destination: "remaining_payment", destination_text: "Pakistan / Karachi Port (KPT)" }),
+        lane({ id: "b", source_type: "local_purchase", source_id: "lp1", local_purchase_id: "lp1", loading_record_no: null, purchase_ref_no: "LP-JRN-00000052", transfer_destination: "general_purchase_expenses" }),
+      ],
+      []
+    );
+    expect(rows[0].movements[0].destination).toBe("Pakistan / Karachi Port (KPT)");
+    expect(rows[0].entries[0].destination).toBe("Pakistan / Karachi Port (KPT)");
+    expect(rows[1].movements[0]).toMatchObject({ refNo: "LP-JRN-00000052", destination: "—" });
+  });
+
   it("never attaches a sales load to a purchase", () => {
     const rows = buildPurchaseRows([booking], [lane({ source_type: "sales_booking", purchase_order_id: "po1" })], []);
     expect(rows[0].movements).toEqual([]);
@@ -128,6 +142,15 @@ describe("purchase movements: destination & re-export register", () => {
     ]);
     expect(groups[0].rows[0]).toMatchObject({ purchaseNo: "PB-001", purchaseDate: "2026-11-01", billType: "booking" });
     expect(destinationTotals(groups)).toEqual({ warehouse: 100, re_export: 100, local_sale: 0, in_transit: 0, hold: 0 });
+  });
+
+  it("a partly transferred loading counts only its untransferred remainder, with weights per unit", () => {
+    const local = bill({ id: "lp1", type: "local", billNo: "LP-4", entries: [entry({ entryId: "lp:lp1::A::1", lotNo: "A", lotRef: "LOT-19" })] });
+    const lanes = [lane({ source_type: "local_purchase", source_id: "lp1", local_purchase_id: "lp1", loaded_quantity: 3292, gross_weight: 125344, net_weight: 122052 })];
+    const transfers = [transfer({ journal: "goods", local_purchase_id: "lp1", lot_ref: "LOT-19", destination: "hold", status: "completed", quantity: 1890 })];
+    const groups = buildDestinationGroups(buildPurchaseRows([local], lanes, transfers));
+    expect(groups.map((g) => [g.category, g.qty])).toEqual([["in_transit", 1402], ["hold", 1890]]);
+    expect(groups[0].rows[0].gross).toBeCloseTo((125344 * 1402) / 3292, 3);
   });
 
   it("an untransferred loading with no disposition is stock in transit", () => {
