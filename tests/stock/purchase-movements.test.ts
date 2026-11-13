@@ -106,6 +106,20 @@ describe("purchase movements: purchase rows", () => {
     expect(lp.movements[1]).toMatchObject({ lot: "L7", qty: 20, gross: 208, net: 200 });
   });
 
+  it("shows the lane's place as destination, never a workflow queue, and the journal no. for a Local Purchase load", () => {
+    const rows = buildPurchaseRows(
+      [booking, local],
+      [
+        lane({ id: "a", source_id: "plr1", purchase_order_id: "po1", transfer_destination: "remaining_payment", destination_text: "Pakistan / Karachi Port (KPT)" }),
+        lane({ id: "b", source_type: "local_purchase", source_id: "lp1", local_purchase_id: "lp1", loading_record_no: null, purchase_ref_no: "LP-JRN-00000052", transfer_destination: "general_purchase_expenses" }),
+      ],
+      []
+    );
+    expect(rows[0].movements[0].destination).toBe("Pakistan / Karachi Port (KPT)");
+    expect(rows[0].entries[0].destination).toBe("Pakistan / Karachi Port (KPT)");
+    expect(rows[1].movements[0]).toMatchObject({ refNo: "LP-JRN-00000052", destination: "—" });
+  });
+
   it("never attaches a sales load to a purchase", () => {
     const rows = buildPurchaseRows([booking], [lane({ source_type: "sales_booking", purchase_order_id: "po1" })], []);
     expect(rows[0].movements).toEqual([]);

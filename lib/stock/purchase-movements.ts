@@ -23,6 +23,8 @@ export type RawLaneLoad = {
   source_id: string | null;
   purchase_order_id: string | null;
   local_purchase_id: string | null;
+  /** Purchase Booking no. / Local Purchase journal no. */
+  purchase_ref_no?: string | null;
   loading_record_no: string | null;
   loading_date: unknown;
   goods_name: string | null;
@@ -196,15 +198,20 @@ function entryFor(bill: BalanceBill, ref: { loadingRecordId?: string | null; lin
   return bill.type === "local" ? bill.entries[0] : undefined;
 }
 
+/**
+ * Where the goods physically go: the disposition warehouse, else the lane's destination place. transfer_destination is NOT a place
+ * (it names the next workflow queue, e.g. remaining_payment or general_purchase_expenses), so it is never shown as a destination.
+ */
 function laneDestination(l: RawLaneLoad): string {
-  return str(l.disposition_warehouse_name) || str(l.transfer_destination) || str(l.destination_text) || DASH;
+  return str(l.disposition_warehouse_name) || str(l.destination_text) || DASH;
 }
 
 function loadingMovement(l: RawLaneLoad, entry: Entry | undefined): Movement {
   return {
     id: `lane:${l.id}`,
     kind: "loading",
-    refNo: orDash(l.loading_record_no),
+    // a Local Purchase load has no loading record of its own: its journal number identifies it
+    refNo: orDash(l.loading_record_no || l.purchase_ref_no),
     date: dateOnly(l.loading_date),
     goodsName: orDash(l.goods_name || entry?.goodsName),
     brand: orDash(entry?.brand),
