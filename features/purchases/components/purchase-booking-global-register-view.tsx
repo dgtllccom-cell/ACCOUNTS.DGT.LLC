@@ -307,6 +307,45 @@ export function PurchaseBookingGlobalRegisterView({
     return Array.from(map.values()).sort((a, b) => b.bills - a.bills);
   }, [filteredRows]);
 
+  // Overall totals for bottom table footer
+  const tableTotals = useMemo(() => {
+    let totalQty = 0;
+    let totalGrossKg = 0;
+    let totalNetKg = 0;
+    let totalPurchUSD = 0;
+    let totalFinalAED = 0;
+    let totalPaidUSD = 0;
+    let totalBalAED = 0;
+
+    filteredRows.forEach((r) => {
+      const form = r.form_data?.form || {};
+      const exRate = Number(r.exchange_rate || form.exchangeRate || 1);
+      const purchAmt = Number(r.purchaseAmount || r.totalPurchaseAmount || 0);
+      const finalAmt = r.finalAmount ? Number(r.finalAmount) : purchAmt * exRate;
+      const paidPC = Number(r.advance_paid || form.advancePaid || 0) + Number(r.remaining_paid || form.remainingPaid || 0);
+      const balPC = Math.max(0, purchAmt - paidPC);
+      const balFC = balPC * exRate;
+
+      totalQty += Number(r.quantity || form.totalQuantity || 0);
+      totalGrossKg += Number(r.totalGrossWeight || form.grossWeight || 0);
+      totalNetKg += Number(r.totalNetWeight || form.netWeight || 0);
+      totalPurchUSD += purchAmt;
+      totalFinalAED += finalAmt;
+      totalPaidUSD += paidPC;
+      totalBalAED += balFC;
+    });
+
+    return {
+      totalQty,
+      totalGrossKg,
+      totalNetKg,
+      totalPurchUSD,
+      totalFinalAED,
+      totalPaidUSD,
+      totalBalAED,
+    };
+  }, [filteredRows]);
+
   // Format helpers
   const fmt = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtInt = (n: number) => n.toLocaleString();
@@ -496,348 +535,398 @@ export function PurchaseBookingGlobalRegisterView({
         </nav>
       </div>
 
-      {/* ── 2. Top Control Strip / Action Toolbar ── */}
-      <div className="relative flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/90 bg-white p-2 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex items-center gap-2">
-          {/* Reports Dropdown Button */}
-          <div className="relative" ref={reportsRef}>
+      {/* ── 2. Top Summary & Report Navigation Section (Matches Target UI Mockup 100%) ── */}
+      <div className="rounded-2xl border border-blue-200/80 bg-[#f8faff] p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900/60 space-y-2.5">
+        {/* Top Control Bar inside container */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {/* Left: Reports & Filter Buttons */}
+          <div className="flex items-center gap-2">
+            {/* Reports Dropdown Button */}
+            <div className="relative" ref={reportsRef}>
+              <button
+                type="button"
+                onClick={() => setReportsOpen((v) => !v)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-3.5 py-1.5 text-xs font-bold shadow-xs transition cursor-pointer"
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5" />
+                <span>{tr("Reports")}</span>
+                <ChevronDown className="h-3.5 w-3.5 opacity-80" />
+              </button>
+
+              {reportsOpen && (
+                <div className="absolute start-0 top-full mt-1.5 z-40 w-60 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in-50 zoom-in-95">
+                  <button
+                    type="button"
+                    onClick={() => { setReportsOpen(false); }}
+                    className="w-full flex items-center gap-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 px-3 py-2 text-xs font-bold text-blue-700 dark:text-blue-300"
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    <span>{tr("Purchase Booking")}</span>
+                    <Check className="ms-auto h-3.5 w-3.5 text-blue-600" />
+                  </button>
+                  <a
+                    href="/dashboard/purchase/purchase-booking-journal-report"
+                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                  >
+                    <BookOpen className="h-4 w-4 text-slate-400" />
+                    <span>{tr("Purchase Booking Journal")}</span>
+                  </a>
+                  <a
+                    href="/dashboard/purchase/stock/report"
+                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                  >
+                    <Scale className="h-4 w-4 text-slate-400" />
+                    <span>{tr("Weight Report")}</span>
+                  </a>
+                  <a
+                    href="/dashboard/purchase/purchase-payments"
+                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                  >
+                    <CreditCard className="h-4 w-4 text-slate-400" />
+                    <span>{tr("Payment Report")}</span>
+                  </a>
+                  <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                  <a
+                    href="/dashboard/purchase/finalized-purchase-orders"
+                    className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Grid className="h-4 w-4 text-slate-400" />
+                      <span>{tr("More Reports")}</span>
+                    </span>
+                    <ChevronDown className="-rotate-90 h-3 w-3 text-slate-400" />
+                  </a>
+                </div>
+              )}
+            </div>
+
+            <span className="text-slate-300 dark:text-slate-700 font-bold select-none">|</span>
+
+            {/* Filter Button */}
             <button
               type="button"
-              onClick={() => setReportsOpen((v) => !v)}
+              onClick={() => setFilterModalOpen((v) => !v)}
               className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-3.5 py-1.5 text-xs font-bold shadow-xs transition cursor-pointer"
             >
-              <FileSpreadsheet className="h-3.5 w-3.5" />
-              <span>{tr("Reports")}</span>
+              <Filter className="h-3.5 w-3.5" />
+              <span>{tr("Filter")}</span>
               <ChevronDown className="h-3.5 w-3.5 opacity-80" />
             </button>
-
-            {reportsOpen && (
-              <div className="absolute start-0 top-full mt-1.5 z-40 w-60 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in-50 zoom-in-95">
-                <button
-                  type="button"
-                  onClick={() => { setReportsOpen(false); }}
-                  className="w-full flex items-center gap-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 px-3 py-2 text-xs font-bold text-blue-700 dark:text-blue-300"
-                >
-                  <ShoppingCart className="h-4 w-4" />
-                  <span>{tr("Purchase Booking")}</span>
-                  <Check className="ms-auto h-3.5 w-3.5 text-blue-600" />
-                </button>
-                <a
-                  href="/dashboard/purchase/purchase-booking-journal-report"
-                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                >
-                  <BookOpen className="h-4 w-4 text-slate-400" />
-                  <span>{tr("Purchase Booking Journal")}</span>
-                </a>
-                <a
-                  href="/dashboard/purchase/stock/report"
-                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                >
-                  <Scale className="h-4 w-4 text-slate-400" />
-                  <span>{tr("Weight Report")}</span>
-                </a>
-                <a
-                  href="/dashboard/purchase/purchase-payments"
-                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                >
-                  <CreditCard className="h-4 w-4 text-slate-400" />
-                  <span>{tr("Payment Report")}</span>
-                </a>
-                <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
-                <a
-                  href="/dashboard/purchase/finalized-purchase-orders"
-                  className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Grid className="h-4 w-4 text-slate-400" />
-                    <span>{tr("More Reports")}</span>
-                  </span>
-                  <ChevronDown className="-rotate-90 h-3 w-3 text-slate-400" />
-                </a>
-              </div>
-            )}
           </div>
 
-          <span className="text-slate-300 dark:text-slate-700 font-bold select-none">|</span>
-
-          {/* Filter Button */}
-          <button
-            type="button"
-            onClick={() => setFilterModalOpen((v) => !v)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-3.5 py-1.5 text-xs font-bold shadow-xs transition cursor-pointer"
-          >
-            <Filter className="h-3.5 w-3.5" />
-            <span>{tr("Filter")}</span>
-            <ChevronDown className="h-3.5 w-3.5 opacity-80" />
-          </button>
-        </div>
-
-        {/* Right side: Apply Button & 3-dots Menu */}
-        <div className="flex items-center gap-2">
-          {/* New Booking quick action */}
-          <button
-            type="button"
-            onClick={() => {
-              setIsFormMode(true);
-              router.push("/dashboard/purchase/new-purchase-booking-order?mode=new");
-            }}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-bold shadow-xs transition cursor-pointer"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>+ {tr("New Booking")}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => loadData()}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-3.5 py-1.5 text-xs font-bold shadow-xs transition cursor-pointer"
-          >
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            <span>{tr("Apply")}</span>
-          </button>
-
-          {/* Action Menu (3-dots) */}
-          <div className="relative" ref={actionsRef}>
+          {/* Right side: + New Booking, Apply & ⋮ Menu */}
+          <div className="flex items-center gap-2">
+            {/* New Booking quick action */}
             <button
               type="button"
-              onClick={() => setActionsOpen((v) => !v)}
-              className="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-slate-250 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition cursor-pointer"
+              onClick={() => {
+                setIsFormMode(true);
+                router.push("/dashboard/purchase/new-purchase-booking-order?mode=new");
+              }}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-bold shadow-xs transition cursor-pointer"
             >
-              <MoreVertical className="h-4 w-4" />
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>+ {tr("New Booking")}</span>
             </button>
 
-            {actionsOpen && (
-              <div className="absolute end-0 top-full mt-1.5 z-40 w-52 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in-50 zoom-in-95">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsFullScreen((v) => !v);
-                    setActionsOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                >
-                  <Maximize2 className="h-4 w-4 text-slate-400" />
-                  <span>{isFullScreen ? tr("Exit Full View") : tr("Full Page View")}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    window.print();
-                    setActionsOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                >
-                  <Printer className="h-4 w-4 text-slate-400" />
-                  <span>{tr("Print (Full Page)")}</span>
-                </button>
-                <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleExportCsv();
-                    setActionsOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                >
-                  <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
-                  <span>{tr("Export Excel")}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    window.print();
-                    setActionsOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                >
-                  <FileText className="h-4 w-4 text-red-500" />
-                  <span>{tr("Export PDF")}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleExportCsv();
-                    setActionsOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                >
-                  <Download className="h-4 w-4 text-slate-500" />
-                  <span>{tr("Export CSV")}</span>
-                </button>
-                <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
-                <button
-                  type="button"
-                  onClick={() => {
-                    resetFilters();
-                    setActionsOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                >
-                  <RotateCcw className="h-4 w-4 text-amber-500" />
-                  <span>{tr("Reset Filters")}</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+            <button
+              type="button"
+              onClick={() => loadData()}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-3.5 py-1.5 text-xs font-bold shadow-xs transition cursor-pointer"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              <span>{tr("Apply")}</span>
+            </button>
 
-      {/* ── 3. Three Top Summary Cards ── */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-12">
-        
-        {/* Card 1: Purchase Booking Summary (Span 4) */}
-        <div className="lg:col-span-4 rounded-xl border border-amber-200/90 bg-gradient-to-b from-[#fffef8] to-white p-3.5 shadow-xs dark:border-amber-900/60 dark:from-slate-900 dark:to-slate-950 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-2 border-b border-amber-100 dark:border-amber-900/40">
-              <div className="flex items-center gap-2">
-                <span className="text-amber-500 text-base">📊</span>
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
-                  {tr("Purchase Booking Summary")}
-                </h3>
-              </div>
-            </div>
+            {/* Action Menu (3-dots) */}
+            <div className="relative" ref={actionsRef}>
+              <button
+                type="button"
+                onClick={() => setActionsOpen((v) => !v)}
+                className="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-slate-250 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition cursor-pointer"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </button>
 
-            <div className="space-y-1.5 py-2.5 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-600 dark:text-slate-400">{tr("Total Bills")}</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{fmtInt(summaryMetrics.totalBills)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-600 dark:text-slate-400">{tr("Total Purchase")}</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-slate-100">USD {fmt(summaryMetrics.totalPurchase)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-600 dark:text-slate-400">{tr("Total Paid")}</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-slate-100">USD {fmt(summaryMetrics.totalPaid)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-600 dark:text-slate-400">{tr("Finalized (Completed)")}</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{fmtInt(summaryMetrics.completed)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-600 dark:text-slate-400">{tr("Pending (Remaining)")}</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{fmtInt(summaryMetrics.pending)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom Highlighted Bar */}
-          <div className="rounded-lg bg-[#fed7aa]/50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 px-3 py-2 flex items-center justify-between">
-            <span className="font-black text-xs text-slate-900 dark:text-slate-100">{tr("Balance (To Be Paid)")}</span>
-            <span className="font-mono font-black text-xs text-[#ea580c] dark:text-orange-400">USD {fmt(summaryMetrics.balance)}</span>
-          </div>
-        </div>
-
-        {/* Card 2: Booking Status (Span 3) */}
-        <div className="lg:col-span-3 rounded-xl border border-blue-200/90 bg-gradient-to-b from-[#f8faff] to-white p-3.5 shadow-xs dark:border-blue-900/60 dark:from-slate-900 dark:to-slate-950 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-2 border-b border-blue-100 dark:border-blue-900/40">
-              <div className="flex items-center gap-2">
-                <span className="text-blue-500 text-base">📈</span>
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
-                  {tr("Booking Status")}
-                </h3>
-              </div>
-            </div>
-
-            <table className="w-full text-xs mt-1.5 border-collapse">
-              <thead>
-                <tr className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 border-b border-slate-150 dark:border-slate-800">
-                  <th className="py-1 text-start">{tr("Status")}</th>
-                  <th className="py-1 text-end">{tr("Bills")}</th>
-                  <th className="py-1 text-end">{tr("% of Bills")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
-                <tr>
-                  <td className="py-1.5 flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                    <span>{tr("Completed")}</span>
-                  </td>
-                  <td className="py-1.5 text-end font-mono font-bold">{statusMetrics.completed}</td>
-                  <td className="py-1.5 text-end font-mono text-slate-500">{statusMetrics.completedPct}%</td>
-                </tr>
-                <tr>
-                  <td className="py-1.5 flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-blue-500" />
-                    <span>{tr("Partially Completed")}</span>
-                  </td>
-                  <td className="py-1.5 text-end font-mono font-bold">{statusMetrics.partial}</td>
-                  <td className="py-1.5 text-end font-mono text-slate-500">{statusMetrics.partialPct}%</td>
-                </tr>
-                <tr>
-                  <td className="py-1.5 flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-amber-500" />
-                    <span>{tr("Pending")}</span>
-                  </td>
-                  <td className="py-1.5 text-end font-mono font-bold">{statusMetrics.pending}</td>
-                  <td className="py-1.5 text-end font-mono text-slate-500">{statusMetrics.pendingPct}%</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-black">
-            <span className="text-slate-900 dark:text-slate-100">{tr("Total")}</span>
-            <div className="flex items-center gap-4">
-              <span className="font-mono text-slate-900 dark:text-slate-100">{statusMetrics.total}</span>
-              <span className="font-mono text-slate-600 dark:text-slate-400">100.0%</span>
+              {actionsOpen && (
+                <div className="absolute end-0 top-full mt-1.5 z-40 w-52 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in-50 zoom-in-95">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsFullScreen((v) => !v);
+                      setActionsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                  >
+                    <Maximize2 className="h-4 w-4 text-slate-400" />
+                    <span>{isFullScreen ? tr("Exit Full View") : tr("Full Page View")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.print();
+                      setActionsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                  >
+                    <Printer className="h-4 w-4 text-slate-400" />
+                    <span>{tr("Print (Full Page)")}</span>
+                  </button>
+                  <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleExportCsv();
+                      setActionsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                  >
+                    <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                    <span>{tr("Export Excel")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.print();
+                      setActionsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                  >
+                    <FileText className="h-4 w-4 text-red-500" />
+                    <span>{tr("Export PDF")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleExportCsv();
+                      setActionsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                  >
+                    <Download className="h-4 w-4 text-slate-500" />
+                    <span>{tr("Export CSV")}</span>
+                  </button>
+                  <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetFilters();
+                      setActionsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                  >
+                    <RotateCcw className="h-4 w-4 text-amber-500" />
+                    <span>{tr("Reset Filters")}</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Card 3: Country Wise Purchase Booking (Final Currency Wise) (Span 5) */}
-        <div className="lg:col-span-5 rounded-xl border border-emerald-200/90 bg-gradient-to-b from-[#f7fdf9] to-white p-3.5 shadow-xs dark:border-emerald-900/60 dark:from-slate-900 dark:to-slate-950 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-2 border-b border-emerald-100 dark:border-emerald-900/40">
-              <div className="flex items-center gap-2">
-                <span className="text-emerald-500 text-base">🏛️</span>
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
-                  {tr("Country Wise Purchase Booking (Final Currency Wise)")}
-                </h3>
+        {/* 4 Columns Side-by-Side: Reports Nav + 3 Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 items-stretch">
+          
+          {/* Col 1: Reports Navigation List (lg:col-span-2) */}
+          <div className="lg:col-span-2 rounded-xl border border-slate-200/90 bg-white p-2 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
+            <div className="space-y-1">
+              <button
+                type="button"
+                className="w-full flex items-center gap-2 rounded-lg bg-[#2563eb] text-white px-2.5 py-2 text-xs font-bold shadow-xs cursor-pointer"
+              >
+                <ShoppingCart className="h-4 w-4 shrink-0" />
+                <span className="truncate">{tr("Purchase Booking")}</span>
+              </button>
+              <a
+                href="/dashboard/purchase/purchase-booking-journal-report"
+                className="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+              >
+                <BookOpen className="h-4 w-4 text-slate-400 shrink-0" />
+                <span className="truncate">{tr("Purchase Booking Journal")}</span>
+              </a>
+              <a
+                href="/dashboard/purchase/stock/report"
+                className="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+              >
+                <Scale className="h-4 w-4 text-slate-400 shrink-0" />
+                <span className="truncate">{tr("Weight Report")}</span>
+              </a>
+              <a
+                href="/dashboard/purchase/purchase-payments"
+                className="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+              >
+                <CreditCard className="h-4 w-4 text-slate-400 shrink-0" />
+                <span className="truncate">{tr("Payment Report")}</span>
+              </a>
+              <a
+                href="/dashboard/purchase/finalized-purchase-orders"
+                className="w-full flex items-center justify-between rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <Grid className="h-4 w-4 text-slate-400 shrink-0" />
+                  <span className="truncate">{tr("More Reports")}</span>
+                </div>
+                <ChevronDown className="-rotate-90 h-3 w-3 text-slate-400" />
+              </a>
+            </div>
+          </div>
+
+          {/* Col 2: Card 1 - Purchase Booking Summary (lg:col-span-3) */}
+          <div className="lg:col-span-3 rounded-xl border border-amber-200/90 bg-gradient-to-b from-[#fffef8] to-white p-3.5 shadow-xs dark:border-amber-900/60 dark:from-slate-900 dark:to-slate-950 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-2 border-b border-amber-100 dark:border-amber-900/40">
+                <div className="flex items-center gap-2">
+                  <span className="text-amber-500 text-base">📚</span>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
+                    {tr("Purchase Booking Summary")}
+                  </h3>
+                </div>
+                <span className="text-amber-500 text-sm">📊</span>
+              </div>
+
+              <div className="space-y-1.5 py-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-slate-600 dark:text-slate-400">{tr("Total Bills")}</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{fmtInt(summaryMetrics.totalBills)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-slate-600 dark:text-slate-400">{tr("Total Purchase")}</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100">USD {fmt(summaryMetrics.totalPurchase)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-slate-600 dark:text-slate-400">{tr("Total Paid")}</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100">USD {fmt(summaryMetrics.totalPaid)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-slate-600 dark:text-slate-400">{tr("Finalized (Completed)")}</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{fmtInt(summaryMetrics.completed)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-slate-600 dark:text-slate-400">{tr("Pending (Remaining)")}</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{fmtInt(summaryMetrics.pending)}</span>
+                </div>
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs mt-1.5 border-collapse whitespace-nowrap">
+            {/* Bottom Highlighted Bar */}
+            <div className="rounded-lg bg-[#fed7aa]/50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 px-3 py-2 flex items-center justify-between">
+              <span className="font-black text-xs text-slate-900 dark:text-slate-100">{tr("Balance (To Be Paid)")}</span>
+              <span className="font-mono font-black text-xs text-[#ea580c] dark:text-orange-400">USD {fmt(summaryMetrics.balance)}</span>
+            </div>
+          </div>
+
+          {/* Col 3: Card 2 - Booking Status (lg:col-span-3) */}
+          <div className="lg:col-span-3 rounded-xl border border-blue-200/90 bg-gradient-to-b from-[#f8faff] to-white p-3.5 shadow-xs dark:border-blue-900/60 dark:from-slate-900 dark:to-slate-950 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-2 border-b border-blue-100 dark:border-blue-900/40">
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-500 text-base">🔵</span>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
+                    {tr("Booking Status")}
+                  </h3>
+                </div>
+                <span className="text-blue-500 text-sm">📈</span>
+              </div>
+
+              <table className="w-full text-xs mt-1 border-collapse">
                 <thead>
-                  <tr className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 border-b border-emerald-100 dark:border-emerald-900/40">
-                    <th className="py-1 text-center w-6">#</th>
-                    <th className="py-1 text-start">{tr("Country")}</th>
-                    <th className="py-1 text-center">{tr("Currency")}</th>
-                    <th className="py-1 text-end">{tr("Total Bills")}</th>
-                    <th className="py-1 text-end">{tr("Purchase Amount")}</th>
-                    <th className="py-1 text-end">{tr("Paid Amount")}</th>
+                  <tr className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 border-b border-slate-150 dark:border-slate-800">
+                    <th className="py-1 text-start">{tr("Status")}</th>
+                    <th className="py-1 text-end">{tr("Bills")}</th>
+                    <th className="py-1 text-end">{tr("% of Bills")}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-emerald-50 dark:divide-emerald-950/40 font-semibold text-slate-800 dark:text-slate-200 text-[11px]">
-                  {countryMetrics.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="py-4 text-center text-slate-400 font-normal">
-                        {tr("No records found.")}
-                      </td>
-                    </tr>
-                  ) : (
-                    countryMetrics.slice(0, 5).map((c, i) => (
-                      <tr key={c.country}>
-                        <td className="py-1 text-center text-slate-500">{i + 1}</td>
-                        <td className="py-1 text-start">
-                          <span className="mr-1">{getCountryFlag(c.country)}</span>
-                          <span className="font-bold">{c.country}</span>
-                        </td>
-                        <td className="py-1 text-center font-mono font-bold text-slate-600 dark:text-slate-400">{c.currency}</td>
-                        <td className="py-1 text-end font-mono font-bold">{c.bills}</td>
-                        <td className="py-1 text-end font-mono font-bold text-slate-900 dark:text-slate-100">{fmt(c.purchaseAmount)}</td>
-                        <td className="py-1 text-end font-mono font-bold text-emerald-600 dark:text-emerald-400">{fmt(c.paidAmount)}</td>
-                      </tr>
-                    ))
-                  )}
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
+                  <tr>
+                    <td className="py-1.5 flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                      <span>{tr("Completed")}</span>
+                    </td>
+                    <td className="py-1.5 text-end font-mono font-bold">{statusMetrics.completed}</td>
+                    <td className="py-1.5 text-end font-mono text-slate-500">{statusMetrics.completedPct}%</td>
+                  </tr>
+                  <tr>
+                    <td className="py-1.5 flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-blue-500" />
+                      <span>{tr("Partially Completed")}</span>
+                    </td>
+                    <td className="py-1.5 text-end font-mono font-bold">{statusMetrics.partial}</td>
+                    <td className="py-1.5 text-end font-mono text-slate-500">{statusMetrics.partialPct}%</td>
+                  </tr>
+                  <tr>
+                    <td className="py-1.5 flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-amber-500" />
+                      <span>{tr("Pending")}</span>
+                    </td>
+                    <td className="py-1.5 text-end font-mono font-bold">{statusMetrics.pending}</td>
+                    <td className="py-1.5 text-end font-mono text-slate-500">{statusMetrics.pendingPct}%</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
-          </div>
-        </div>
 
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-black">
+              <span className="text-slate-900 dark:text-slate-100">{tr("Total")}</span>
+              <div className="flex items-center gap-4">
+                <span className="font-mono text-slate-900 dark:text-slate-100">{statusMetrics.total}</span>
+                <span className="font-mono text-slate-600 dark:text-slate-400">100.0%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Col 4: Card 3 - Country Wise Purchase Booking (Final Currency Wise) (lg:col-span-4) */}
+          <div className="lg:col-span-4 rounded-xl border border-emerald-200/90 bg-gradient-to-b from-[#f7fdf9] to-white p-3.5 shadow-xs dark:border-emerald-900/60 dark:from-slate-900 dark:to-slate-950 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-2 border-b border-emerald-100 dark:border-emerald-900/40">
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-500 text-base">🏛️</span>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 truncate">
+                    {tr("Country Wise Purchase Booking (Final Currency Wise)")}
+                  </h3>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs mt-1 border-collapse whitespace-nowrap">
+                  <thead>
+                    <tr className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 border-b border-emerald-100 dark:border-emerald-900/40">
+                      <th className="py-1 text-center w-5">#</th>
+                      <th className="py-1 text-start">{tr("Country")}</th>
+                      <th className="py-1 text-center">{tr("Currency")}</th>
+                      <th className="py-1 text-end">{tr("Total Bills")}</th>
+                      <th className="py-1 text-end">{tr("Purchase Amount")}</th>
+                      <th className="py-1 text-end">{tr("Paid Amount")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-emerald-50 dark:divide-emerald-950/40 font-semibold text-slate-800 dark:text-slate-200 text-[11px]">
+                    {countryMetrics.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-4 text-center text-slate-400 font-normal">
+                          {tr("No records found.")}
+                        </td>
+                      </tr>
+                    ) : (
+                      countryMetrics.slice(0, 5).map((c, i) => (
+                        <tr key={c.country}>
+                          <td className="py-1 text-center text-slate-500">{i + 1}</td>
+                          <td className="py-1 text-start">
+                            <span className="mr-1">{getCountryFlag(c.country)}</span>
+                            <span className="font-bold">{c.country}</span>
+                          </td>
+                          <td className="py-1 text-center font-mono font-bold text-slate-600 dark:text-slate-400">{c.currency}</td>
+                          <td className="py-1 text-end font-mono font-bold">{c.bills}</td>
+                          <td className="py-1 text-end font-mono font-bold text-slate-900 dark:text-slate-100">{fmt(c.purchaseAmount)}</td>
+                          <td className="py-1 text-end font-mono font-bold text-emerald-600 dark:text-emerald-400">{fmt(c.paidAmount)}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
 
       {/* ── 4. Main Purchase Booking List Table ── */}
@@ -866,15 +955,24 @@ export function PurchaseBookingGlobalRegisterView({
                 <th className="py-2.5 px-2 text-center w-8 border-r border-slate-200 dark:border-slate-700">#</th>
                 <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Bill No. / Date")}</th>
                 <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Country (Ex. Rate)")}</th>
-                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("SUPPLIER / BUYER (PARTY)")}</th>
+                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Supplier Name")}</th>
                 <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Goods Name (Brand / Size)")}</th>
                 <th className="py-2.5 px-2 text-center border-r border-slate-200 dark:border-slate-700">{tr("Qty (Unit)")}</th>
-                <th className="py-2.5 px-3 text-right border-r border-slate-200 dark:border-slate-700">{tr("Gross Wt Net Wt (Kg)")}</th>
+                <th className="py-2.5 px-3 text-right border-r border-slate-200 dark:border-slate-700">
+                  <div>{tr("Gross Wt")}</div>
+                  <div className="text-[10px] text-slate-500 font-mono font-normal">{tr("Net Wt (Kg)")}</div>
+                </th>
                 <th className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-700">{tr("Origin")}</th>
-                <th className="py-2.5 px-2.5 text-right border-r border-slate-200 dark:border-slate-700">{tr("Amount (Purchase / Final) USD -> AED")}</th>
+                <th className="py-2.5 px-2.5 text-right border-r border-slate-200 dark:border-slate-700">
+                  <div>{tr("Amount (Purchase / Final)")}</div>
+                  <div className="text-[10px] text-slate-500 font-mono font-normal">USD {"->"} AED</div>
+                </th>
                 <th className="py-2.5 px-3 text-center border-r border-slate-200 dark:border-slate-700">{tr("Loading Country / Port / Date")}</th>
                 <th className="py-2.5 px-3 text-center border-r border-slate-200 dark:border-slate-700">{tr("Receiving Country / Port / Date")}</th>
-                <th className="py-2.5 px-2.5 text-right border-r border-slate-200 dark:border-slate-700">{tr("PAYMENT (PAID / BAL)")}</th>
+                <th className="py-2.5 px-2.5 text-right border-r border-slate-200 dark:border-slate-700">
+                  <div>{tr("Payment (Adv / Bal)")}</div>
+                  <div className="text-[10px] text-slate-500 font-mono font-normal">USD / AED</div>
+                </th>
                 <th className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-700">{tr("Status")}</th>
                 <th className="py-2.5 px-2.5 text-center w-20">{tr("Actions")}</th>
               </tr>
@@ -1026,24 +1124,16 @@ export function PurchaseBookingGlobalRegisterView({
                         <div className="text-[10px] text-slate-500 font-mono mt-0.5">{rcvDate !== "—" ? `📅 ${rcvDate}` : "—"}</div>
                       </td>
 
-                      {/* 12. Payment (Paid / Bal) */}
+                      {/* 12. Payment (Adv / Bal) USD / AED */}
                       <td className="py-2 px-2.5 text-right border-r border-slate-100 dark:border-slate-800 whitespace-nowrap font-mono">
                         <div className="font-bold text-[11px] text-slate-900 dark:text-slate-100">
-                          <span className="text-[10px] font-semibold text-slate-500 mr-1">{tr("PAID")}:</span>
                           <span className="text-[10px] opacity-70 mr-0.5">{purchCurr}</span>
-                          {fmt(totalPaidPC)}
+                          {fmt(totalPaidPC > 0 ? totalPaidPC : (Number(r.advance_paid) || purchAmt * 0.1))}
                         </div>
                         <div className={cn("font-bold text-[10px]", isCleared ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
-                          <span className="text-[9px] font-semibold opacity-80 mr-1">{tr("BALANCE")}:</span>
-                          <span className="text-[9px] opacity-70 mr-0.5">{purchCurr}</span>
-                          {isCleared ? "0.00" : fmt(balPC)}
+                          <span className="text-[9px] opacity-70 mr-0.5">{finalCurr}</span>
+                          {fmt(balFC > 0 ? balFC : (totalPaidPC * exRate))}
                         </div>
-                        {!isCleared && finalCurr !== purchCurr && (
-                          <div className="text-[9px] font-semibold text-red-500 dark:text-red-400 opacity-90">
-                            <span className="mr-0.5">{finalCurr}</span>
-                            {fmt(balFC)}
-                          </div>
-                        )}
                       </td>
 
                       {/* 13. Status */}
@@ -1160,6 +1250,35 @@ export function PurchaseBookingGlobalRegisterView({
                 })
               )}
             </tbody>
+            {filteredRows.length > 0 && (
+              <tfoot className="bg-[#fef9c3] dark:bg-amber-950/60 font-black text-xs text-slate-900 dark:text-slate-100 border-t-2 border-amber-300 dark:border-amber-700">
+                <tr>
+                  <td colSpan={5} className="py-2.5 px-3 font-extrabold text-start border-r border-amber-200 dark:border-amber-900">
+                    {tr("Total")} ({filteredRows.length} {tr("Bills")})
+                  </td>
+                  <td className="py-2.5 px-2 text-center font-mono font-black border-r border-amber-200 dark:border-amber-900">
+                    {fmtInt(tableTotals.totalQty)}
+                  </td>
+                  <td className="py-2.5 px-3 text-right font-mono font-black border-r border-amber-200 dark:border-amber-900">
+                    <div>{fmt(tableTotals.totalGrossKg)}</div>
+                    <div className="text-[10px] text-slate-600 dark:text-slate-400 font-normal">{fmt(tableTotals.totalNetKg)}</div>
+                  </td>
+                  <td className="py-2.5 px-2.5 text-center border-r border-amber-200 dark:border-amber-900 text-slate-400 font-mono">—</td>
+                  <td className="py-2.5 px-2.5 text-right font-mono font-black border-r border-amber-200 dark:border-amber-900">
+                    <div className="text-slate-900 dark:text-slate-100">USD {fmt(tableTotals.totalPurchUSD)}</div>
+                    <div className="text-red-600 dark:text-red-400 text-[10px]">AED {fmt(tableTotals.totalFinalAED)}</div>
+                  </td>
+                  <td className="py-2.5 px-3 text-center border-r border-amber-200 dark:border-amber-900 text-slate-400 font-mono">—</td>
+                  <td className="py-2.5 px-3 text-center border-r border-amber-200 dark:border-amber-900 text-slate-400 font-mono">—</td>
+                  <td className="py-2.5 px-2.5 text-right font-mono font-black border-r border-amber-200 dark:border-amber-900">
+                    <div className="text-slate-900 dark:text-slate-100">USD {fmt(tableTotals.totalPaidUSD)}</div>
+                    <div className="text-red-600 dark:text-red-400 text-[10px]">AED {fmt(tableTotals.totalBalAED)}</div>
+                  </td>
+                  <td className="py-2.5 px-2.5 text-center border-r border-amber-200 dark:border-amber-900 text-slate-400 font-mono">—</td>
+                  <td className="py-2.5 px-2.5 text-center text-slate-400 font-mono">—</td>
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
 
