@@ -76,7 +76,7 @@ describe("purchase movements: purchase rows", () => {
   it("includes Purchase Booking and Local Purchase bills with purchase date, lot, brand, size and remaining", () => {
     const rows = buildPurchaseRows([booking, local], [], [], { plr1: "2026-11-02" });
     expect(rows.map((r) => [r.billType, r.purchaseNo, r.purchaseDate])).toEqual([["booking", "PB-001", "2026-11-01"], ["local", "LP-7", "2026-10-20"]]);
-    expect(rows[0].entries[0]).toMatchObject({ entryNo: "LOT-A / Entry 1", loadingDate: "2026-11-02", brand: "Falcon", size: "25 KG", lot: "LOT-A", qty: 100, remaining: 60 });
+    expect(rows[0].entries[0]).toMatchObject({ entryNo: "Entry 1", loadingDate: "2026-11-02", brand: "Falcon", size: "25 KG", lot: "LOT-A", qty: 100, remaining: 60 });
     // blank brand and size show a dash, never an invented value
     expect(rows[1].entries[0]).toMatchObject({ brand: "—", size: "—", lot: "L7", qty: 50 });
     expect(rows[0].remaining).toBe(60);

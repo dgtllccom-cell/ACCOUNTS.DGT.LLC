@@ -91,7 +91,6 @@ export default function WarehouseStockRegisterPage() {
   const [failed, setFailed] = useState(false);
   const [query, setQuery] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
-  const [openPurchases, setOpenPurchases] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     let cancelled = false;
@@ -176,16 +175,6 @@ export default function WarehouseStockRegisterPage() {
     [shownPurchases]
   );
 
-  // The first purchase opens by default, as in the approved reference.
-  const firstKey = shownPurchases[0]?.key;
-  const isOpen = (key: string) => openPurchases.has(key) || (openPurchases.size === 0 && key === firstKey);
-  const toggle = (key: string) =>
-    setOpenPurchases((prev) => {
-      const base = prev.size === 0 && firstKey ? new Set([firstKey]) : new Set(prev);
-      if (base.has(key)) base.delete(key);
-      else base.add(key);
-      return base;
-    });
   const toggleDest = (key: string) =>
     setOpenDest((prev) => {
       const next = new Set(prev);
@@ -426,28 +415,18 @@ export default function WarehouseStockRegisterPage() {
                   </tr>
                 )}
                 {shownPurchases.map((p, idx) => {
-                  const open = isOpen(p.key);
+                  // Entries are always shown (no +/- toggle). A bill with one goods line is already its purchase row,
+                  // so that single entry is not repeated underneath it; a bill with several entries lists each one.
+                  const showEntries = p.entries.length > 1;
                   return (
                     <Fragment key={p.key}>
                       <tr className="border-t border-slate-200 bg-slate-50 font-semibold">
-                        <td className="whitespace-nowrap px-2 py-1">
-                          <button
-                            type="button"
-                            onClick={() => toggle(p.key)}
-                            aria-expanded={open}
-                            aria-label={p.purchaseNo}
-                            className="me-1 inline-flex h-5 w-5 items-center justify-center rounded border border-slate-300 bg-white text-[11px] font-black text-black"
-                          >
-                            {open ? "−" : "+"}
-                          </button>
-                          {idx + 1}
-                        </td>
+                        <td className="whitespace-nowrap px-2 py-1">{idx + 1}</td>
                         <td className="whitespace-nowrap px-2 py-1 font-black text-black">
                           {p.purchaseNo}
                           <span className={`ms-1 rounded px-1 text-[9px] font-black uppercase ${p.billType === "booking" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`}>
                             {p.billType === "booking" ? t("PURCHASE BOOKING") : t("LOCAL PURCHASE")}
                           </span>
-                          {p.manualNo && <div className="text-[10px] font-normal text-slate-500">{p.manualNo}</div>}
                         </td>
                         <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{p.purchaseDate || DASH}</td>
                         <td className="px-2 py-1 text-black">{p.branch}</td>
@@ -466,7 +445,7 @@ export default function WarehouseStockRegisterPage() {
                           <Link href={billHref(p)} className="rounded border border-teal-300 bg-teal-50 px-1.5 py-0.5 text-[10px] font-black text-teal-900">{t("VIEW")}</Link>
                         </td>
                       </tr>
-                      {open &&
+                      {showEntries &&
                         p.entries.map((e, k) => (
                           <tr key={e.id} className="border-t border-slate-100">
                             <td className="px-2 py-1 text-slate-500">{`${idx + 1}.${k + 1}`}</td>
@@ -489,13 +468,12 @@ export default function WarehouseStockRegisterPage() {
                             </td>
                           </tr>
                         ))}
-                      {open && p.movements.length > 0 && (
+                      {p.movements.length > 0 && (
                         <tr className="border-t border-slate-200 bg-teal-50/60">
                           <td colSpan={16} className="px-2 py-0.5 text-[10px] font-black uppercase text-teal-900">{t("LOADING & STOCK TRANSFER ENTRIES")}</td>
                         </tr>
                       )}
-                      {open &&
-                        p.movements.map((m) => (
+                      {p.movements.map((m) => (
                           <tr key={m.id} className="border-t border-slate-100 bg-teal-50/30">
                             <td className="px-2 py-1">
                               <span className={`rounded px-1 text-[9px] font-black uppercase ${m.kind === "loading" ? "bg-amber-100 text-amber-800" : "bg-violet-100 text-violet-800"}`}>
