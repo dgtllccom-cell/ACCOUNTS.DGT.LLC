@@ -144,6 +144,15 @@ describe("purchase movements: destination & re-export register", () => {
     expect(destinationTotals(groups)).toEqual({ warehouse: 100, re_export: 100, local_sale: 0, in_transit: 0, hold: 0 });
   });
 
+  it("a partly transferred loading counts only its untransferred remainder, with weights per unit", () => {
+    const local = bill({ id: "lp1", type: "local", billNo: "LP-4", entries: [entry({ entryId: "lp:lp1::A::1", lotNo: "A", lotRef: "LOT-19" })] });
+    const lanes = [lane({ source_type: "local_purchase", source_id: "lp1", local_purchase_id: "lp1", loaded_quantity: 3292, gross_weight: 125344, net_weight: 122052 })];
+    const transfers = [transfer({ journal: "goods", local_purchase_id: "lp1", lot_ref: "LOT-19", destination: "hold", status: "completed", quantity: 1890 })];
+    const groups = buildDestinationGroups(buildPurchaseRows([local], lanes, transfers));
+    expect(groups.map((g) => [g.category, g.qty])).toEqual([["in_transit", 1402], ["hold", 1890]]);
+    expect(groups[0].rows[0].gross).toBeCloseTo((125344 * 1402) / 3292, 3);
+  });
+
   it("an untransferred loading with no disposition is stock in transit", () => {
     const groups = buildDestinationGroups(buildPurchaseRows([booking], [lane({ source_id: "plr1", purchase_order_id: "po1" })], []));
     expect(groups.map((g) => [g.category, g.qty])).toEqual([["in_transit", 100]]);
