@@ -76,8 +76,10 @@ function filterByTab(list: SalesOrder[], tab: LifecycleTab): SalesOrder[] {
 }
 
 /**
- * Sales rows -> the PayRow shape the shared Purchase Booking page top reads. Money is in the booking (final) currency:
- * total = order_total x exchange_rate and paid = paid_amount x exchange_rate, the same formulas this list always used.
+ * Sales rows -> the PayRow shape the shared Purchase Booking page top reads. Money is in the booking (final) currency.
+ * order_total is saved ALREADY converted to the final currency (see app/api/erp/sales/orders/route.ts and the payments
+ * route, which divides it by the rate to get USD), so total = order_total; paid_amount is kept in the original currency,
+ * so paid = paid_amount x exchange_rate.
  * Receipts so far travel in PayRow.advance; the sales list has no advance / remaining / credit split, so those stay 0.
  */
 function salesOrdersToPayRows(list: SalesOrder[]): PayRow[] {
@@ -85,7 +87,7 @@ function salesOrdersToPayRows(list: SalesOrder[]): PayRow[] {
     const raw = o.form_data || {};
     const f = raw.form || {};
     const rate = Number(o.exchange_rate || 1);
-    const total = Number(o.order_total || 0) * rate;
+    const total = Number(o.order_total || 0);
     const paid = Number(o.paid_amount || 0) * rate;
     const due = Math.max(0, total - paid);
     return {
@@ -172,8 +174,9 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
   const toPrintRow = (order: SalesOrder): Record<string, unknown> => {
     const raw = order.form_data || {};
     const f = raw.form || {};
-    const purchaseAmount = Number(order.order_total || 0);
     const exRate = Number(order.exchange_rate || 1);
+    // order_total is in the final currency; the original-currency amount is order_total / rate
+    const purchaseAmount = Number(order.order_total || 0) / exRate;
     const invPct = Number(f.invoicePercentage || 100);
     const invoiceAmt = (purchaseAmount * invPct) / 100;
     const postingState = deriveSalesBookingPostingState(order as any);
@@ -460,8 +463,9 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                   const raw = order.form_data || {};
                   const f = raw.form || {};
                   
-                  const purchaseAmount = Number(order.order_total || 0);
                   const exRate = Number(order.exchange_rate || 1);
+                  // order_total is in the final currency; the original-currency amount is order_total / rate
+                  const purchaseAmount = Number(order.order_total || 0) / exRate;
                   const finalAmount = purchaseAmount * exRate;
 
                   const invPct = Number(f.invoicePercentage || 100);
