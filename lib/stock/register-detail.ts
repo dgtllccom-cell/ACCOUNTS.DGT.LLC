@@ -23,6 +23,19 @@ const day = (v: unknown): string => {
   return s || DASH;
 };
 
+/** Event detail as readable text: a plain string as is, a JSON object as "key: value" pairs (never "[object Object]"). */
+const detailText = (v: unknown): string => {
+  if (v === null || v === undefined) return DASH;
+  if (typeof v === "string") return txt(v);
+  if (typeof v === "object" && !Array.isArray(v)) {
+    const pairs = Object.entries(v as Record<string, unknown>)
+      .filter(([, x]) => x !== null && x !== undefined && String(x).trim() !== "")
+      .map(([k, x]) => `${k}: ${typeof x === "object" ? JSON.stringify(x) : String(x)}`);
+    return pairs.length ? pairs.join("; ") : DASH;
+  }
+  return txt(v);
+};
+
 const stamp = (v: unknown): string => {
   if (v instanceof Date) return Number.isNaN(v.getTime()) ? DASH : v.toISOString().slice(0, 16).replace("T", " ");
   const s = String(v ?? "").replace("T", " ").slice(0, 16);
@@ -288,7 +301,7 @@ export function loadDetailOf(lane: Row, events: Row[]): LoadDetail {
       event: txt(e.event_type),
       from: txt(e.from_status),
       to: txt(e.to_status),
-      detail: txt(e.detail),
+      detail: detailText(e.detail),
       actor: txt(e.actor_name),
     })),
   };
