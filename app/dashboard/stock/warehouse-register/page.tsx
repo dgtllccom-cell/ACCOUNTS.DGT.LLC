@@ -3,15 +3,11 @@
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { CurrentStockTab, SalesTab, useLotRegister } from "./lot-current-stock";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { branchLabel, groupRegister, type RegisterGroup, type WarehouseBalanceRow } from "@/lib/stock/warehouse-register";
-import {
-  DESTINATION_CATEGORIES,
-  type DestinationCategory,
-  type DestinationGroup,
-  type PurchaseRow,
-} from "@/lib/stock/purchase-movements";
+import { type DestinationCategory, type PurchaseRow } from "@/lib/stock/purchase-movements";
 
 type LoadTotals = { bills: number; loaded: number; inLanes: number };
 
@@ -22,14 +18,6 @@ const CATEGORY_LABEL: Record<DestinationCategory, string> = {
   in_transit: "IN TRANSIT",
   hold: "HOLD",
 };
-const CATEGORY_TONE: Record<DestinationCategory, "blue" | "amber" | "rose" | "emerald" | "slate"> = {
-  warehouse: "emerald",
-  re_export: "blue",
-  local_sale: "amber",
-  in_transit: "rose",
-  hold: "slate",
-};
-
 const fmt = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 3 });
 const DASH = "—";
 
@@ -81,10 +69,8 @@ export default function WarehouseStockRegisterPage() {
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const [rows, setRows] = useState<WarehouseBalanceRow[]>([]);
   const [purchaseRows, setPurchaseRows] = useState<PurchaseRow[]>([]);
-  const [destinations, setDestinations] = useState<DestinationGroup[]>([]);
-  const [destTotals, setDestTotals] = useState<Partial<Record<DestinationCategory, number>>>({});
-  const [view, setView] = useState<"purchase" | "destination">("purchase");
-  const [openDest, setOpenDest] = useState<Set<string>>(new Set());
+  const [view, setView] = useState<"current" | "purchase" | "sales">("current");
+  const lot = useLotRegister();
   const [loadTotals, setLoadTotals] = useState<LoadTotals>({ bills: 0, loaded: 0, inLanes: 0 });
   const [totals, setTotals] = useState({ lines: 0, onHand: 0, reserved: 0, available: 0 });
   const [loading, setLoading] = useState(true);
@@ -104,8 +90,6 @@ export default function WarehouseStockRegisterPage() {
           setRows(body.data.rows);
           setTotals(body.data.totals);
           setPurchaseRows(body.data.purchases ?? []);
-          setDestinations(body.data.destinations ?? []);
-          setDestTotals(body.data.destinationTotals ?? {});
           setLoadTotals(body.data.loadTotals ?? { bills: 0, loaded: 0, inLanes: 0 });
         }
       })
@@ -113,8 +97,6 @@ export default function WarehouseStockRegisterPage() {
         if (!cancelled) {
           setRows([]);
           setPurchaseRows([]);
-          setDestinations([]);
-          setDestTotals({});
           setFailed(true);
         }
       })
@@ -152,15 +134,6 @@ export default function WarehouseStockRegisterPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [purchaseRows, q]
   );
-  const shownDestinations = useMemo(
-    () =>
-      destinations
-        .map((g) => ({ ...g, rows: g.rows.filter((r) => matches([g.destination, r.purchaseNo, r.refNo, r.goodsName, r.lot, r.brand, r.size])) }))
-        .filter((g) => g.rows.length > 0),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [destinations, q]
-  );
-
   const unitLabel = useMemo(() => {
     const units = [...new Set(purchaseRows.map((p) => p.unit).filter(Boolean))];
     return units.length === 1 ? units[0] : "";
@@ -175,23 +148,15 @@ export default function WarehouseStockRegisterPage() {
     [shownPurchases]
   );
 
-  const toggleDest = (key: string) =>
-    setOpenDest((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-
   // Print through the one universal engine: every row of the active tab (not only the expanded ones), A4 landscape, active language.
   const printRegister = () => {
     const kind = (k: "loading" | "transfer") => (k === "loading" ? t("LOADING") : t("TRANSFER"));
     const qty = (n: number, unit: string) => `${fmt(n)} ${unit}`.trim();
     if (view === "purchase") {
       const rows = shownPurchases.flatMap((p) => [
-        { no: p.purchaseNo, type: p.billType === "booking" ? t("PURCHASE BOOKING") : t("LOCAL PURCHASE"), date: p.purchaseDate || DASH, branch: p.branch, entry: "", loadingDate: "", goods: p.goodsNames.join(", "), brand: "", size: "", lot: "", qty: qty(p.qty, p.unit), gross: fmt(p.gross), net: fmt(p.net), destination: "", remaining: fmt(p.remaining) },
-        ...p.entries.map((e) => ({ no: "", type: "", date: "", branch: "", entry: e.entryNo, loadingDate: e.loadingDate || DASH, goods: e.goodsName, brand: e.brand, size: e.size, lot: e.lot, qty: qty(e.qty, e.unit), gross: fmt(e.gross), net: fmt(e.net), destination: e.destination, remaining: fmt(e.remaining) })),
-        ...p.movements.map((m) => ({ no: "", type: kind(m.kind), date: "", branch: "", entry: m.refNo, loadingDate: m.date || DASH, goods: m.goodsName, brand: m.brand, size: m.size, lot: m.lot, qty: qty(m.qty, m.unit), gross: fmt(m.gross), net: fmt(m.net), destination: m.destination === DASH ? t(CATEGORY_LABEL[m.category]) : `${t(CATEGORY_LABEL[m.category])} · ${m.destination}`, remaining: statusLabel(m.status) })),
+        { no: `${p.purchaseNo} · ${p.purchaseDate || DASH}`, type: p.billType === "booking" ? t("PURCHASE BOOKING") : t("LOCAL PURCHASE"), entry: "", lot: "", goods: p.goodsNames.join(", "), brand: "", size: "", qty: qty(p.qty, p.unit), net: fmt(p.net), gross: fmt(p.gross), branch: p.branch, loadingDate: "", destination: "", remaining: fmt(p.remaining) },
+        ...p.entries.map((e) => ({ no: "", type: "", entry: e.entryNo, lot: e.lot, goods: e.goodsName, brand: e.brand, size: e.size, qty: qty(e.qty, e.unit), net: fmt(e.net), gross: fmt(e.gross), branch: p.branch, loadingDate: e.loadingDate || DASH, destination: e.destination, remaining: fmt(e.remaining) })),
+        ...p.movements.map((m) => ({ no: "", type: kind(m.kind), entry: m.refNo, lot: m.lot, goods: m.goodsName, brand: m.brand, size: m.size, qty: qty(m.qty, m.unit), net: fmt(m.net), gross: fmt(m.gross), branch: p.branch, loadingDate: m.date || DASH, destination: m.destination === DASH ? t(CATEGORY_LABEL[m.category]) : `${t(CATEGORY_LABEL[m.category])} · ${m.destination}`, remaining: statusLabel(m.status) })),
       ]);
       openUniversalPrintReport({
         moduleType: "inventory", reportType: "register", orientation: "landscape", lang,
@@ -203,32 +168,16 @@ export default function WarehouseStockRegisterPage() {
           { label: t("WAREHOUSE STOCK (AVAILABLE)"), value: fmt(totals.available), color: "emerald" },
         ],
         columns: [
-          { key: "no", label: t("PURCHASE NO.") }, { key: "type", label: "" }, { key: "date", label: t("PURCHASE DATE") }, { key: "branch", label: t("BRANCH") },
-          { key: "entry", label: t("ENTRY NO.") }, { key: "loadingDate", label: t("LOADING DATE") }, { key: "goods", label: t("GOODS NAME") }, { key: "brand", label: t("BRAND") },
-          { key: "size", label: t("SIZE") }, { key: "lot", label: t("LOT NAME") }, { key: "qty", label: t("QTY"), align: "right" }, { key: "gross", label: t("GROSS WT (KG)"), align: "right" },
-          { key: "net", label: t("NET WT (KG)"), align: "right" }, { key: "destination", label: t("DESTINATION") }, { key: "remaining", label: t("REMAINING BALANCE"), align: "right" },
+          { key: "no", label: t("PURCHASE NO. / DATE") }, { key: "type", label: "" },
+          { key: "entry", label: t("ENTRY NO.") }, { key: "lot", label: t("LOT NAME") }, { key: "goods", label: t("GOODS NAME") }, { key: "brand", label: t("BRAND") },
+          { key: "size", label: t("SIZE") }, { key: "qty", label: t("QTY"), align: "right" }, { key: "net", label: t("NET WT (KG)"), align: "right" }, { key: "gross", label: t("GROSS WT (KG)"), align: "right" },
+          { key: "branch", label: t("BRANCH") }, { key: "loadingDate", label: t("LOADING DATE") }, { key: "destination", label: t("DESTINATION") }, { key: "remaining", label: t("REMAINING BALANCE"), align: "right" },
         ],
         rows,
         totals: { no: t("GRAND TOTAL"), qty: fmt(purchaseGrand.qty), gross: fmt(purchaseGrand.gross), net: fmt(purchaseGrand.net), remaining: fmt(purchaseGrand.remaining) },
       });
       return;
     }
-    const rows = shownDestinations.flatMap((g) => [
-      { destination: g.destination === DASH ? t(CATEGORY_LABEL[g.category]) : `${t(CATEGORY_LABEL[g.category])} · ${g.destination}`, type: "", no: "", date: "", entry: "", movedOn: "", goods: "", brand: "", size: "", lot: "", qty: fmt(g.qty), gross: fmt(g.gross), net: fmt(g.net), status: "" },
-      ...g.rows.map((r) => ({ destination: "", type: kind(r.kind), no: r.purchaseNo, date: r.purchaseDate || DASH, entry: r.refNo, movedOn: r.date || DASH, goods: r.goodsName, brand: r.brand, size: r.size, lot: r.lot, qty: qty(r.qty, r.unit), gross: fmt(r.gross), net: fmt(r.net), status: statusLabel(r.status) })),
-    ]);
-    openUniversalPrintReport({
-      moduleType: "inventory", reportType: "register", orientation: "landscape", lang,
-      title: t("WAREHOUSE STOCK REGISTER"), subtitle: t("DESTINATION & RE-EXPORT STOCK"),
-      kpis: DESTINATION_CATEGORIES.map((c) => ({ label: t(CATEGORY_LABEL[c]), value: fmt(destTotals[c] ?? 0) })),
-      columns: [
-        { key: "destination", label: t("DESTINATION") }, { key: "type", label: "" }, { key: "no", label: t("PURCHASE NO.") }, { key: "date", label: t("PURCHASE DATE") },
-        { key: "entry", label: t("ENTRY NO.") }, { key: "movedOn", label: t("DATE") }, { key: "goods", label: t("GOODS NAME") }, { key: "brand", label: t("BRAND") },
-        { key: "size", label: t("SIZE") }, { key: "lot", label: t("LOT NAME") }, { key: "qty", label: t("QTY"), align: "right" }, { key: "gross", label: t("GROSS WT (KG)"), align: "right" },
-        { key: "net", label: t("NET WT (KG)"), align: "right" }, { key: "status", label: t("STATUS") },
-      ],
-      rows,
-    });
   };
 
   const emptyText = t("NO STOCK IN WAREHOUSES YET");
@@ -272,6 +221,8 @@ export default function WarehouseStockRegisterPage() {
         </div>
       )}
 
+      {view === "purchase" && (
+      <>
       <section className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         <Kpi label={t("TOTAL PURCHASE")} value={fmt(purchaseRows.length)} unit={t("BILLS")} tone="blue" />
         <Kpi label={t("TOTAL LOADING")} value={fmt(loadTotals.loaded)} unit={unitLabel} tone="amber" />
@@ -363,9 +314,11 @@ export default function WarehouseStockRegisterPage() {
           </Panel>
         </section>
       )}
+      </>
+      )}
 
       <nav className="flex gap-1 border-b border-slate-200" role="tablist">
-        {(["purchase", "destination"] as const).map((v) => (
+        {(["current", "purchase", "sales"] as const).map((v) => (
           <button
             key={v}
             type="button"
@@ -374,10 +327,13 @@ export default function WarehouseStockRegisterPage() {
             onClick={() => setView(v)}
             className={`rounded-t-md px-3 py-1.5 text-[11px] font-black uppercase ${view === v ? "bg-teal-800 text-white" : "bg-slate-100 text-slate-700"}`}
           >
-            {v === "purchase" ? t("PURCHASE STOCK DETAILS") : t("DESTINATION & RE-EXPORT STOCK")}
+            {v === "current" ? t("CURRENT STOCK") : v === "purchase" ? t("PURCHASE STOCK DETAILS") : t("SALES")}
           </button>
         ))}
       </nav>
+
+      {view === "current" && <CurrentStockTab data={lot.data} loading={lot.loading} failed={lot.failed} t={t} isRtl={isRtl} />}
+      {view === "sales" && <SalesTab data={lot.data} loading={lot.loading} failed={lot.failed} t={t} isRtl={isRtl} />}
 
       {view === "purchase" && (
         <section className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white">
@@ -385,19 +341,17 @@ export default function WarehouseStockRegisterPage() {
             <table className="w-full min-w-[1400px] text-[11px]">
               <thead className="sticky top-0 z-10 bg-teal-50 text-[10px] font-black uppercase text-slate-700">
                 <tr>
-                  <th className="px-2 py-1 text-start">#</th>
-                  <th className="px-2 py-1 text-start">{t("PURCHASE NO.")}</th>
-                  <th className="px-2 py-1 text-start">{t("PURCHASE DATE")}</th>
-                  <th className="px-2 py-1 text-start">{t("BRANCH")}</th>
+                  <th className="px-2 py-1 text-start">{t("PURCHASE NO. / DATE")}</th>
                   <th className="px-2 py-1 text-start">{t("ENTRY NO.")}</th>
-                  <th className="px-2 py-1 text-start">{t("LOADING DATE")}</th>
+                  <th className="px-2 py-1 text-start">{t("LOT NAME")}</th>
                   <th className="px-2 py-1 text-start">{t("GOODS NAME")}</th>
                   <th className="px-2 py-1 text-start">{t("BRAND")}</th>
                   <th className="px-2 py-1 text-start">{t("SIZE")}</th>
-                  <th className="px-2 py-1 text-start">{t("LOT NAME")}</th>
                   <th className="px-2 py-1 text-end">{t("QTY")}</th>
-                  <th className="px-2 py-1 text-end">{t("GROSS WT (KG)")}</th>
                   <th className="px-2 py-1 text-end">{t("NET WT (KG)")}</th>
+                  <th className="px-2 py-1 text-end">{t("GROSS WT (KG)")}</th>
+                  <th className="px-2 py-1 text-start">{t("BRANCH")}</th>
+                  <th className="px-2 py-1 text-start">{t("LOADING DATE")}</th>
                   <th className="px-2 py-1 text-start">{t("DESTINATION")}</th>
                   <th className="px-2 py-1 text-end">{t("REMAINING BALANCE")}</th>
                   <th className="px-2 py-1 text-start">{t("VIEW")}</th>
@@ -406,37 +360,41 @@ export default function WarehouseStockRegisterPage() {
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan={16} className="px-2 py-4 text-center text-slate-500">{t("LOADING")}</td>
+                    <td colSpan={14} className="px-2 py-4 text-center text-slate-500">{t("LOADING")}</td>
                   </tr>
                 )}
                 {!loading && !failed && shownPurchases.length === 0 && (
                   <tr>
-                    <td colSpan={16} className="px-2 py-4 text-center text-slate-500">{t("NO PURCHASE RECORDS FOUND")}</td>
+                    <td colSpan={14} className="px-2 py-4 text-center text-slate-500">{t("NO PURCHASE RECORDS FOUND")}</td>
                   </tr>
                 )}
-                {shownPurchases.map((p, idx) => {
-                  // Entries are always shown (no +/- toggle). A bill with one goods line is already its purchase row,
-                  // so that single entry is not repeated underneath it; a bill with several entries lists each one.
+                {shownPurchases.map((p) => {
+                  // Column order: purchase no and date in one cell, then each entry (Entry N, lot, goods, brand, size, qty, net, gross),
+                  // then branch, loading date, destination and balance. Entries are always shown. A bill with one goods line is already
+                  // its purchase row, so that single entry is not repeated underneath it.
                   const showEntries = p.entries.length > 1;
                   return (
                     <Fragment key={p.key}>
                       <tr className="border-t border-slate-200 bg-slate-50 font-semibold">
-                        <td className="whitespace-nowrap px-2 py-1">{idx + 1}</td>
-                        <td className="whitespace-nowrap px-2 py-1 font-black text-black">
-                          {p.purchaseNo}
-                          <span className={`ms-1 rounded px-1 text-[9px] font-black uppercase ${p.billType === "booking" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`}>
-                            {p.billType === "booking" ? t("PURCHASE BOOKING") : t("LOCAL PURCHASE")}
-                          </span>
+                        <td className="whitespace-nowrap px-2 py-1 text-black">
+                          <div className="font-black">
+                            {p.purchaseNo}
+                            <span className={`ms-1 rounded px-1 text-[9px] font-black uppercase ${p.billType === "booking" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`}>
+                              {p.billType === "booking" ? t("PURCHASE BOOKING") : t("LOCAL PURCHASE")}
+                            </span>
+                          </div>
+                          <div className="font-mono text-[10px] font-semibold text-slate-600">{p.purchaseDate || DASH}</div>
                         </td>
-                        <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{p.purchaseDate || DASH}</td>
-                        <td className="px-2 py-1 text-black">{p.branch}</td>
                         <td className="px-2 py-1 text-slate-500">{p.entries.length}</td>
                         <td className="px-2 py-1" />
                         <td className="px-2 py-1 text-black">{p.goodsNames.join(", ") || DASH}</td>
-                        <td className="px-2 py-1" colSpan={3} />
+                        <td className="px-2 py-1" />
+                        <td className="px-2 py-1" />
                         <td className="whitespace-nowrap px-2 py-1 text-end font-mono text-black">{fmt(p.qty)} {p.unit}</td>
-                        <td className="px-2 py-1 text-end font-mono text-black">{fmt(p.gross)}</td>
                         <td className="px-2 py-1 text-end font-mono text-black">{fmt(p.net)}</td>
+                        <td className="px-2 py-1 text-end font-mono text-black">{fmt(p.gross)}</td>
+                        <td className="px-2 py-1 text-black">{p.branch}</td>
+                        <td className="px-2 py-1" />
                         <td className="px-2 py-1" />
                         <td className={`px-2 py-1 text-end font-mono font-black ${p.remaining > 0 ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"}`}>
                           {fmt(p.remaining)}
@@ -446,21 +404,19 @@ export default function WarehouseStockRegisterPage() {
                         </td>
                       </tr>
                       {showEntries &&
-                        p.entries.map((e, k) => (
+                        p.entries.map((e) => (
                           <tr key={e.id} className="border-t border-slate-100">
-                            <td className="px-2 py-1 text-slate-500">{`${idx + 1}.${k + 1}`}</td>
-                            <td className="px-2 py-1 text-slate-500">{p.purchaseNo}</td>
-                            <td className="px-2 py-1 font-mono text-slate-500">{p.purchaseDate || DASH}</td>
-                            <td className="px-2 py-1 text-slate-500">{p.branch}</td>
+                            <td className="px-2 py-1" />
                             <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{e.entryNo}</td>
-                            <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{e.loadingDate || DASH}</td>
+                            <td className="px-2 py-1 text-black">{e.lot}</td>
                             <td className="px-2 py-1 text-black">{e.goodsName}</td>
                             <td className="px-2 py-1 text-black">{e.brand}</td>
                             <td className="px-2 py-1 text-black">{e.size}</td>
-                            <td className="px-2 py-1 text-black">{e.lot}</td>
                             <td className="whitespace-nowrap px-2 py-1 text-end font-mono text-black">{fmt(e.qty)} {e.unit}</td>
-                            <td className="px-2 py-1 text-end font-mono text-black">{fmt(e.gross)}</td>
                             <td className="px-2 py-1 text-end font-mono text-black">{fmt(e.net)}</td>
+                            <td className="px-2 py-1 text-end font-mono text-black">{fmt(e.gross)}</td>
+                            <td className="px-2 py-1 text-slate-500">{p.branch}</td>
+                            <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{e.loadingDate || DASH}</td>
                             <td className="px-2 py-1 text-black">{e.destination}</td>
                             <td className={`px-2 py-1 text-end font-mono font-bold ${e.remaining > 0 ? "text-rose-700" : "text-emerald-700"}`}>{fmt(e.remaining)}</td>
                             <td className="whitespace-nowrap px-2 py-1">
@@ -470,50 +426,48 @@ export default function WarehouseStockRegisterPage() {
                         ))}
                       {p.movements.length > 0 && (
                         <tr className="border-t border-slate-200 bg-teal-50/60">
-                          <td colSpan={16} className="px-2 py-0.5 text-[10px] font-black uppercase text-teal-900">{t("LOADING & STOCK TRANSFER ENTRIES")}</td>
+                          <td colSpan={14} className="px-2 py-0.5 text-[10px] font-black uppercase text-teal-900">{t("LOADING & STOCK TRANSFER ENTRIES")}</td>
                         </tr>
                       )}
                       {p.movements.map((m) => (
-                          <tr key={m.id} className="border-t border-slate-100 bg-teal-50/30">
-                            <td className="px-2 py-1">
-                              <span className={`rounded px-1 text-[9px] font-black uppercase ${m.kind === "loading" ? "bg-amber-100 text-amber-800" : "bg-violet-100 text-violet-800"}`}>
-                                {m.kind === "loading" ? t("LOADING") : t("TRANSFER")}
-                              </span>
-                            </td>
-                            <td className="px-2 py-1 text-slate-500">{p.purchaseNo}</td>
-                            <td className="px-2 py-1 font-mono text-slate-500">{p.purchaseDate || DASH}</td>
-                            <td className="px-2 py-1 text-slate-500">{p.branch}</td>
-                            <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{m.refNo}</td>
-                            <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{m.date || DASH}</td>
-                            <td className="px-2 py-1 text-black">{m.goodsName}</td>
-                            <td className="px-2 py-1 text-black">{m.brand}</td>
-                            <td className="px-2 py-1 text-black">{m.size}</td>
-                            <td className="px-2 py-1 text-black">{m.lot}</td>
-                            <td className="whitespace-nowrap px-2 py-1 text-end font-mono text-black">{fmt(m.qty)} {m.unit}</td>
-                            <td className="px-2 py-1 text-end font-mono text-black">{fmt(m.gross)}</td>
-                            <td className="px-2 py-1 text-end font-mono text-black">{fmt(m.net)}</td>
-                            <td className="px-2 py-1 text-black">
-                              <span className="font-semibold">{t(CATEGORY_LABEL[m.category])}</span>
-                              {m.destination !== DASH && <span className="text-slate-600"> · {m.destination}</span>}
-                            </td>
-                            <td className="px-2 py-1 text-end text-[10px] uppercase text-slate-600">{statusLabel(m.status)}</td>
-                            <td className="whitespace-nowrap px-2 py-1">
-                              <Link href={movementHref(p, m)} className="rounded border border-teal-300 bg-teal-50 px-1.5 py-0.5 text-[10px] font-black text-teal-900">{t("VIEW")}</Link>
-                            </td>
-                          </tr>
-                        ))}
+                        <tr key={m.id} className="border-t border-slate-100 bg-teal-50/30">
+                          <td className="px-2 py-1">
+                            <span className={`rounded px-1 text-[9px] font-black uppercase ${m.kind === "loading" ? "bg-amber-100 text-amber-800" : "bg-violet-100 text-violet-800"}`}>
+                              {m.kind === "loading" ? t("LOADING") : t("TRANSFER")}
+                            </span>
+                          </td>
+                          <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{m.refNo}</td>
+                          <td className="px-2 py-1 text-black">{m.lot}</td>
+                          <td className="px-2 py-1 text-black">{m.goodsName}</td>
+                          <td className="px-2 py-1 text-black">{m.brand}</td>
+                          <td className="px-2 py-1 text-black">{m.size}</td>
+                          <td className="whitespace-nowrap px-2 py-1 text-end font-mono text-black">{fmt(m.qty)} {m.unit}</td>
+                          <td className="px-2 py-1 text-end font-mono text-black">{fmt(m.net)}</td>
+                          <td className="px-2 py-1 text-end font-mono text-black">{fmt(m.gross)}</td>
+                          <td className="px-2 py-1 text-slate-500">{p.branch}</td>
+                          <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{m.date || DASH}</td>
+                          <td className="px-2 py-1 text-black">
+                            <span className="font-semibold">{t(CATEGORY_LABEL[m.category])}</span>
+                            {m.destination !== DASH && <span className="text-slate-600"> · {m.destination}</span>}
+                          </td>
+                          <td className="px-2 py-1 text-end text-[10px] uppercase text-slate-600">{statusLabel(m.status)}</td>
+                          <td className="whitespace-nowrap px-2 py-1">
+                            <Link href={movementHref(p, m)} className="rounded border border-teal-300 bg-teal-50 px-1.5 py-0.5 text-[10px] font-black text-teal-900">{t("VIEW")}</Link>
+                          </td>
+                        </tr>
+                      ))}
                     </Fragment>
                   );
                 })}
                 {shownPurchases.length > 0 && (
                   <tr className="border-t-2 border-emerald-300 bg-emerald-100 font-black">
-                    <td className="px-2 py-1" colSpan={10}>
+                    <td className="px-2 py-1" colSpan={6}>
                       <span className="text-black">{t("GRAND TOTAL")}</span>
                     </td>
                     <td className="px-2 py-1 text-end font-mono text-black">{fmt(purchaseGrand.qty)} {unitLabel}</td>
-                    <td className="px-2 py-1 text-end font-mono text-black">{fmt(purchaseGrand.gross)}</td>
                     <td className="px-2 py-1 text-end font-mono text-black">{fmt(purchaseGrand.net)}</td>
-                    <td className="px-2 py-1" />
+                    <td className="px-2 py-1 text-end font-mono text-black">{fmt(purchaseGrand.gross)}</td>
+                    <td className="px-2 py-1" colSpan={3} />
                     <td className="px-2 py-1 text-end font-mono text-black">{fmt(purchaseGrand.remaining)}</td>
                     <td className="px-2 py-1" />
                   </tr>
@@ -522,106 +476,6 @@ export default function WarehouseStockRegisterPage() {
             </table>
           </div>
         </section>
-      )}
-
-      {view === "destination" && (
-        <>
-          <section className="grid grid-cols-2 gap-2 md:grid-cols-5">
-            {DESTINATION_CATEGORIES.map((c) => (
-              <Kpi key={c} label={t(CATEGORY_LABEL[c])} value={fmt(destTotals[c] ?? 0)} unit={unitLabel} tone={CATEGORY_TONE[c]} />
-            ))}
-          </section>
-          <section className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white">
-            <div className="max-h-[600px] overflow-auto">
-              <table className="w-full min-w-[1400px] text-[11px]">
-                <thead className="sticky top-0 z-10 bg-teal-50 text-[10px] font-black uppercase text-slate-700">
-                  <tr>
-                    <th className="px-2 py-1 text-start">#</th>
-                    <th className="px-2 py-1 text-start">{t("DESTINATION")}</th>
-                    <th className="px-2 py-1 text-start">{t("PURCHASE NO.")}</th>
-                    <th className="px-2 py-1 text-start">{t("PURCHASE DATE")}</th>
-                    <th className="px-2 py-1 text-start">{t("ENTRY NO.")}</th>
-                    <th className="px-2 py-1 text-start">{t("DATE")}</th>
-                    <th className="px-2 py-1 text-start">{t("GOODS NAME")}</th>
-                    <th className="px-2 py-1 text-start">{t("BRAND")}</th>
-                    <th className="px-2 py-1 text-start">{t("SIZE")}</th>
-                    <th className="px-2 py-1 text-start">{t("LOT NAME")}</th>
-                    <th className="px-2 py-1 text-end">{t("QTY")}</th>
-                    <th className="px-2 py-1 text-end">{t("GROSS WT (KG)")}</th>
-                    <th className="px-2 py-1 text-end">{t("NET WT (KG)")}</th>
-                    <th className="px-2 py-1 text-start">{t("STATUS")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading && (
-                    <tr>
-                      <td colSpan={14} className="px-2 py-4 text-center text-slate-500">{t("LOADING")}</td>
-                    </tr>
-                  )}
-                  {!loading && !failed && shownDestinations.length === 0 && (
-                    <tr>
-                      <td colSpan={14} className="px-2 py-4 text-center text-slate-500">{t("NO LOADING OR TRANSFER ENTRIES FOUND")}</td>
-                    </tr>
-                  )}
-                  {shownDestinations.map((g, idx) => {
-                    const key = `${g.category}|${g.destination}`;
-                    const open = openDest.has(key);
-                    return (
-                      <Fragment key={key}>
-                        <tr className="border-t border-slate-200 bg-slate-50 font-semibold">
-                          <td className="whitespace-nowrap px-2 py-1">
-                            <button
-                              type="button"
-                              onClick={() => toggleDest(key)}
-                              aria-expanded={open}
-                              aria-label={g.destination}
-                              className="me-1 inline-flex h-5 w-5 items-center justify-center rounded border border-slate-300 bg-white text-[11px] font-black text-black"
-                            >
-                              {open ? "−" : "+"}
-                            </button>
-                            {idx + 1}
-                          </td>
-                          <td className="px-2 py-1 font-black text-black" colSpan={9}>
-                            {t(CATEGORY_LABEL[g.category])}
-                            {g.destination !== DASH && <span className="font-semibold text-slate-700"> · {g.destination}</span>}
-                            <span className="ms-2 text-[10px] font-normal text-slate-500">({g.rows.length})</span>
-                          </td>
-                          <td className="px-2 py-1 text-end font-mono text-black">{fmt(g.qty)}</td>
-                          <td className="px-2 py-1 text-end font-mono text-black">{fmt(g.gross)}</td>
-                          <td className="px-2 py-1 text-end font-mono text-black">{fmt(g.net)}</td>
-                          <td className="px-2 py-1" />
-                        </tr>
-                        {open &&
-                          g.rows.map((r, k) => (
-                            <tr key={r.id} className="border-t border-slate-100">
-                              <td className="px-2 py-1 text-slate-500">{`${idx + 1}.${k + 1}`}</td>
-                              <td className="px-2 py-1">
-                                <span className={`rounded px-1 text-[9px] font-black uppercase ${r.kind === "loading" ? "bg-amber-100 text-amber-800" : "bg-violet-100 text-violet-800"}`}>
-                                  {r.kind === "loading" ? t("LOADING") : t("TRANSFER")}
-                                </span>
-                              </td>
-                              <td className="whitespace-nowrap px-2 py-1 font-semibold text-black">{r.purchaseNo}</td>
-                              <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{r.purchaseDate || DASH}</td>
-                              <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{r.refNo}</td>
-                              <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{r.date || DASH}</td>
-                              <td className="px-2 py-1 text-black">{r.goodsName}</td>
-                              <td className="px-2 py-1 text-black">{r.brand}</td>
-                              <td className="px-2 py-1 text-black">{r.size}</td>
-                              <td className="px-2 py-1 text-black">{r.lot}</td>
-                              <td className="whitespace-nowrap px-2 py-1 text-end font-mono text-black">{fmt(r.qty)} {r.unit}</td>
-                              <td className="px-2 py-1 text-end font-mono text-black">{fmt(r.gross)}</td>
-                              <td className="px-2 py-1 text-end font-mono text-black">{fmt(r.net)}</td>
-                              <td className="px-2 py-1 text-[10px] uppercase text-slate-600">{statusLabel(r.status)}</td>
-                            </tr>
-                          ))}
-                      </Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </>
       )}
 
       <p className="text-[10px] text-slate-500">{t("STOCK ENTERS THIS REGISTER ONLY THROUGH A CONFIRMED WAREHOUSE TRANSFER.")}</p>

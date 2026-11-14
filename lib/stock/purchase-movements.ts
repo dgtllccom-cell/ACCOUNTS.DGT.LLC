@@ -318,7 +318,7 @@ export function buildPurchaseRows(
       manualNo: b.manualBillNo,
       purchaseDate: b.date ?? "",
       countryName: b.countryName,
-      branch: b.branchFullLabel || b.branchName || DASH,
+      branch: b.branchCode || b.branchName || DASH,
       goodsNames: [...new Set(b.entries.map((e) => e.goodsName).filter(Boolean))],
       unit: units.length === 1 ? units[0] : "",
       qty: b.totals.purchased.qty,

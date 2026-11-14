@@ -116,14 +116,10 @@ export interface BalanceTreatment {
   remarks: string | null;
 }
 
-/** Full branch label for a purchase: main (country) branch name with its code, then city branch name with its code. */
-export function branchLabelOf(countryBranch: unknown, countryBranchCode: unknown, city: unknown, cityBranchCode: unknown): string {
-  const part = (name: unknown, code: unknown) => {
-    const n = String(name ?? "").trim();
-    const c = String(code ?? "").trim();
-    return n ? (c ? `${n} (${c})` : n) : "";
-  };
-  return [part(countryBranch, countryBranchCode), part(city, cityBranchCode)].filter(Boolean).join(" / ");
+/** One branch code for a purchase on the Warehouse Stock Register: the city branch's code, else the main (country) branch's code. A name shows only where a branch has no code. */
+export function branchCodeOf(countryBranch: unknown, countryBranchCode: unknown, city: unknown, cityBranchCode: unknown): string {
+  const pick = (name: unknown, code: unknown) => String(code ?? "").trim() || String(name ?? "").trim();
+  return pick(city, cityBranchCode) || pick(countryBranch, countryBranchCode);
 }
 
 export interface BalanceBill {
@@ -143,8 +139,8 @@ export interface BalanceBill {
   cityBranchId: string | null;
   cityName: string;
   branchName: string;
-  /** Main and city branch names with their codes, for the Warehouse Stock Register. */
-  branchFullLabel?: string;
+  /** One branch code (city branch first, else main branch), for the Warehouse Stock Register. */
+  branchCode?: string;
   originCountry: string;
   currency: string;
   exchangeRate: number | null;
@@ -506,7 +502,7 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
       id: po.id, type: "booking", billNo: str(po.purchase_order_no) || "-", manualBillNo: manual && manual !== po.purchase_order_no ? manual : "", date: dateOnly(form.purchaseDate || form.receiptDate || po.created_at),
       purchaseAccountName: acctName, purchaseAccountDetails: [str(form.salesAccountNo || form.purchaseAccountNo), str(form.supplierAddress), str(form.supplierPhone)].filter(Boolean).join(" · "),
       companyId: po.company_id ?? null, companyName: po.company_id ? companyName.get(po.company_id) ?? "" : "", countryId: po.country_id, countryName: po.country_name || "", countryCode: po.country_code || "",
-      countryBranchId: po.country_branch_id, cityBranchId: po.city_branch_id, cityName: po.city_name || "", branchName: po.city_name || po.country_branch_name || "", branchFullLabel: branchLabelOf(po.country_branch_name, po.country_branch_code, po.city_name, po.city_branch_code),
+      countryBranchId: po.country_branch_id, cityBranchId: po.city_branch_id, cityName: po.city_name || "", branchName: po.city_name || po.country_branch_name || "", branchCode: branchCodeOf(po.country_branch_name, po.country_branch_code, po.city_name, po.city_branch_code),
       originCountry: str(form.origin || form.originCountry || extras[0]?.origin), currency, exchangeRate: po.exchange_rate == null ? null : num(po.exchange_rate), remarks: str(form.remarks),
       amount: null, totals: totalsOf([]), entries, sales, unallocatedSales: unallocated, payments: [], paid: null, pending: null, mixedCurrency: false, treatments: [], paymentStatus: str(po.payment_status),
     };
@@ -564,7 +560,7 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
       id: lp.id, type: "local", billNo: systemNo, manualBillNo: str(lp.manual_bill_no) && str(lp.manual_bill_no) !== systemNo ? str(lp.manual_bill_no) : "", date: dateOnly(lp.created_at),
       purchaseAccountName: str(lp.supplier_name), purchaseAccountDetails: str(lp.purchase_account_no), companyId: lp.company_id ?? null, companyName: lp.company_id ? companyName.get(lp.company_id) ?? "" : "",
       countryId: lp.country_id, countryName: lp.country_name || "", countryCode: lp.country_code || "", countryBranchId: lp.country_branch_id, cityBranchId: lp.city_branch_id, cityName: lp.city_name || "",
-      branchName: lp.city_name || lp.country_branch_name || "", branchFullLabel: branchLabelOf(lp.country_branch_name, lp.country_branch_code, lp.city_name, lp.city_branch_code), originCountry: str(lp.origin_country_name) || entries[0]?.origin || "", currency, exchangeRate: lp.exchange_rate == null ? null : num(lp.exchange_rate), remarks: str(lp.remarks),
+      branchName: lp.city_name || lp.country_branch_name || "", branchCode: branchCodeOf(lp.country_branch_name, lp.country_branch_code, lp.city_name, lp.city_branch_code), originCountry: str(lp.origin_country_name) || entries[0]?.origin || "", currency, exchangeRate: lp.exchange_rate == null ? null : num(lp.exchange_rate), remarks: str(lp.remarks),
       amount: null, totals: totalsOf([]), entries, sales, unallocatedSales: zero(), payments: [], paid: null, pending: null, mixedCurrency: false, treatments: [], paymentStatus: "",
     };
     const paidAll = (payByLp.get(lp.id) ?? []).filter((p: any) => str(p.status) === "posted" && str(p.kind) !== "booking").reduce((s: number, p: any) => s + num(p.amount), 0);
