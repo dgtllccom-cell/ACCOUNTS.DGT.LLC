@@ -11,21 +11,21 @@ describe("warehouse stock register", () => {
     });
   });
 
-  it("branch label shows the main branch then the city branch, each with its code", () => {
+  it("branch label is one code: the city branch's code, else the main branch's code", () => {
     const r = normalizeBalanceRow({
       country_branch_id: "cb1", country_branch_name: "Pakistan Main Branch", country_branch_code: "PK-MB",
       city_branch_id: "ci1", city_branch_name: "Quetta City Branch", city_branch_code: "QTA",
     });
-    expect(branchLabel(r)).toBe("Pakistan Main Branch (PK-MB) / Quetta City Branch (QTA)");
+    expect(branchLabel(r)).toBe("QTA");
     const noCity = normalizeBalanceRow({ country_branch_id: "cb1", country_branch_name: "Pakistan Main Branch", country_branch_code: "PK-MB" });
-    expect(branchLabel(noCity)).toBe("Pakistan Main Branch (PK-MB)");
+    expect(branchLabel(noCity)).toBe("PK-MB");
   });
 
-  it("branch label joins the country and city branch names and skips missing ones", () => {
+  it("branch label falls back to a name when a branch has no code, and to a dash when there is no branch", () => {
     const both = normalizeBalanceRow({ country_branch_id: "cb1", country_branch_name: "Dubai HQ", city_branch_id: "ci1", city_branch_name: "Deira" });
     const onlyCountry = normalizeBalanceRow({ country_branch_id: "cb1", country_branch_name: "Dubai HQ" });
     const none = normalizeBalanceRow({});
-    expect(branchLabel(both)).toBe("Dubai HQ / Deira");
+    expect(branchLabel(both)).toBe("Deira");
     expect(branchLabel(onlyCountry)).toBe("Dubai HQ");
     expect(branchLabel(none)).toBe("—");
   });

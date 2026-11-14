@@ -121,16 +121,14 @@ export function registerTotals(rows: WarehouseBalanceRow[]) {
   );
 }
 
-/** One branch part: its name, followed by its code in brackets when a code exists. */
-function branchPart(name: string, branchCode: string): string {
-  if (name === "—") return "";
-  return branchCode ? `${name} (${branchCode})` : name;
+/** A branch's short tag: its code, or its name when it has no code. A missing branch gives an empty tag. */
+function branchTag(name: string, code: string): string {
+  return code || (name === "—" ? "" : name);
 }
 
-/** Main (country) branch first, then city branch, each with its code. Missing parts are skipped. */
+/** One branch tag for the register: the city branch first, then the main (country) branch. */
 export function branchLabel(r: BranchFields): string {
-  const parts = [branchPart(r.countryBranchName, r.countryBranchCode), branchPart(r.cityBranchName, r.cityBranchCode)].filter(Boolean);
-  return parts.length ? parts.join(" / ") : "—";
+  return branchTag(r.cityBranchName, r.cityBranchCode) || branchTag(r.countryBranchName, r.countryBranchCode) || "—";
 }
 
 /** Sums the balances per key (goods, country or branch). Groups are sorted by label. */
