@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { createPortal } from "react-dom";
 import {
   ShoppingCart,
   Crown,
@@ -47,6 +48,8 @@ interface PurchaseBookingGlobalRegisterViewProps {
   initialPurchaseId?: string | null;
 }
 
+const DASH_PLACEHOLDER = "—";
+
 export function PurchaseBookingGlobalRegisterView({
   session,
   lang: propLang,
@@ -75,6 +78,11 @@ export function PurchaseBookingGlobalRegisterView({
 
   // Data states
   const [reports, setReports] = useState<any[]>([]);
+  // The Reports / Filter / New Booking / Apply controls live in the page's top white toolbar (its existing actions slot).
+  const [toolbarSlot, setToolbarSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    setToolbarSlot(document.getElementById("erp-page-actions-slot"));
+  }, []);
   const [loading, setLoading] = useState<boolean>(true);
   const [usdRates, setUsdRates] = useState<Record<string, number>>({});
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
@@ -88,6 +96,7 @@ export function PurchaseBookingGlobalRegisterView({
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const [activeRowMenuId, setActiveRowMenuId] = useState<string | null>(null);
   const [activeAccountPopupId, setActiveAccountPopupId] = useState<string | null>(null);
+  const [activeBillPopupId, setActiveBillPopupId] = useState<string | null>(null);
 
   // Filters
   const [filterDateFrom, setFilterDateFrom] = useState<string>("");
@@ -631,7 +640,8 @@ export function PurchaseBookingGlobalRegisterView({
 
       {/* ── 2. Top Summary & Report Navigation Section (Matches Target UI Mockup 100%) ── */}
       <div className="rounded-2xl border border-blue-200/80 bg-[#f8faff] p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900/60 space-y-2.5">
-        {/* Top Control Bar inside container */}
+        {/* Top Control Bar: rendered into the page's top white toolbar */}
+        {toolbarSlot && createPortal(
         <div className="flex flex-wrap items-center justify-between gap-2">
           {/* Left: Reports & Filter Buttons */}
           <div className="flex items-center gap-2">
@@ -816,7 +826,9 @@ export function PurchaseBookingGlobalRegisterView({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        toolbarSlot
+        )}
 
         {/* 4 Columns Side-by-Side: Reports Nav + 3 Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 items-stretch">
@@ -1138,19 +1150,61 @@ export function PurchaseBookingGlobalRegisterView({
                         {i + 1}
                       </td>
 
-                      {/* 2. Bill No. / Date */}
-                      <td className="py-2 px-3 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
+                      {/* 2. Bill No. / Date — hover (or tap) shows the original Super Admin, Country, Main Branch and City Branch references */}
+                      <td className="py-2 px-3 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap relative group" data-bill-popup="true">
                         <button
                           type="button"
-                          onClick={() => {
-                            setSelectedRow(r);
-                            setDrawerOpen(true);
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveBillPopupId((curr) => (curr === rowKey ? null : rowKey));
                           }}
                           className="font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 hover:underline block text-start font-mono text-xs cursor-pointer"
                         >
                           {billNo}
                         </button>
                         <div className="text-[10px] text-slate-500 font-mono">{billDate}</div>
+
+                        <div
+                          className={cn(
+                            "absolute start-0 top-full mt-1 z-40 w-72 rounded-xl border border-slate-200 bg-white p-3 shadow-2xl dark:border-slate-700 dark:bg-slate-900 text-xs",
+                            activeBillPopupId === rowKey ? "block" : "hidden group-hover:block"
+                          )}
+                        >
+                          <div className="mb-2 font-mono text-[11px] font-bold text-blue-700 dark:text-blue-300">{billNo}</div>
+                          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11px]">
+                            <dt className="font-semibold text-slate-500">{tr("Super Admin")}</dt>
+                            <dd className="font-mono text-slate-800 dark:text-slate-200">{r.superAdminSerialNo || DASH_PLACEHOLDER}</dd>
+                            <dt className="font-semibold text-slate-500">{tr("Country")}</dt>
+                            <dd className="text-slate-800 dark:text-slate-200">
+                              {r.countryName || DASH_PLACEHOLDER}
+                              {r.countryCode ? <span className="ms-1 font-mono text-slate-500">({r.countryCode})</span> : null}
+                              {r.countrySerialNo ? <span className="ms-1 font-mono text-slate-400">#{r.countrySerialNo}</span> : null}
+                            </dd>
+                            <dt className="font-semibold text-slate-500">{tr("Main Branch")}</dt>
+                            <dd className="text-slate-800 dark:text-slate-200">
+                              {r.branchName || DASH_PLACEHOLDER}
+                              {r.branchCode ? <span className="ms-1 font-mono text-slate-500">({r.branchCode})</span> : null}
+                              {r.branchSerialNo ? <span className="ms-1 font-mono text-slate-400">#{r.branchSerialNo}</span> : null}
+                            </dd>
+                            <dt className="font-semibold text-slate-500">{tr("City Branch")}</dt>
+                            <dd className="text-slate-800 dark:text-slate-200">
+                              {r.cityName || DASH_PLACEHOLDER}
+                              {r.cityCode ? <span className="ms-1 font-mono text-slate-500">({r.cityCode})</span> : null}
+                            </dd>
+                          </dl>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveBillPopupId(null);
+                              setSelectedRow(r);
+                              setDrawerOpen(true);
+                            }}
+                            className="mt-2.5 w-full rounded-lg bg-[#2563eb] px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-[#1d4ed8]"
+                          >
+                            {tr("Open Bill")}
+                          </button>
+                        </div>
                       </td>
 
                       {/* 3. Location: Country, Main Branch, City Branch on 3 short lines (no exchange rate) */}
@@ -1237,9 +1291,9 @@ export function PurchaseBookingGlobalRegisterView({
 
                       {/* 5. Goods Name (Brand / Size) */}
                       <td className="py-2 px-3 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
-                        <div className="font-bold text-slate-900 dark:text-slate-100">{goodsName}</div>
+                        <div className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[240px]" title={goodsName}>{goodsName}</div>
                         {(brand || size) && (
-                          <div className="text-[10px] text-slate-500">
+                          <div className="text-[10px] text-slate-500 truncate max-w-[240px]" title={[brand && `Brand: ${brand}`, size && `Size: ${size}`].filter(Boolean).join(" | ")}>
                             {brand ? `Brand: ${brand}` : ""}{brand && size ? " | " : ""}{size ? `Size: ${size}` : ""}
                           </div>
                         )}
@@ -1368,19 +1422,6 @@ export function PurchaseBookingGlobalRegisterView({
                               </button>
 
                               <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
-
-                              {/* 3. Payment Entry */}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  router.push(`/dashboard/journal/purchase-order-payment/advance?purchaseOrderNo=${encodeURIComponent(billNo)}`);
-                                  setActiveRowMenuId(null);
-                                }}
-                                className="w-full px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-2 cursor-pointer"
-                              >
-                                <CreditCard className="h-3.5 w-3.5 text-emerald-600" />
-                                <span>{tr("PAYMENT ENTRY")}</span>
-                              </button>
 
                               {/* 4. Transfer Bill to Lane */}
                               <button
