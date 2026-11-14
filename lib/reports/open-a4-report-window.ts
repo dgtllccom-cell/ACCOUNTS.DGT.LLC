@@ -1,6 +1,7 @@
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { printStore } from "@/lib/store/print-store";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 export type A4ReportRow = { label: string; value: string };
 
@@ -78,6 +79,9 @@ export type BranchReportData = {
   // Section 5: Permissions
   allowedPermissions?: string[];
   remarks?: string;
+
+  // Contact rows (type + value) for the compact Super Admin Branch page.
+  contactRows?: Array<{ type: string; value: string }>;
 };
 
 export type RoznamchaCashEntryReportData = {
@@ -135,6 +139,8 @@ export function openA4ReportWindow(input: {
   branchData?: BranchReportData;
   cashEntryData?: RoznamchaCashEntryReportData;
   lang?: string;
+  /** Super Admin Branch: render the compact one-page summary instead of the full branch report. */
+  compact?: boolean;
 }) {
   if (typeof window === "undefined") return;
 
@@ -158,7 +164,94 @@ export function openA4ReportWindow(input: {
     return s;
   };
 
-  if (input.branchData) {
+  if (input.branchData && input.compact) {
+    // Super Admin Branch: one compact A4 page with only the essentials. Blank values print as "-".
+    const b = input.branchData;
+    // Each value is bidi-isolated; codes and numbers stay LTR so "+971 50..." does not reorder inside RTL text.
+    const val = (value?: string, ltr = false) => {
+      const text = escapeHtml(clean(value) || "-");
+      return ltr ? `<bdi dir="ltr">${text}</bdi>` : `<bdi>${text}</bdi>`;
+    };
+    const field = (label: string, value?: string, wide = false, ltr = false) =>
+      `<div class="sa-field${wide ? " sa-wide" : ""}"><div class="sa-label">${escapeHtml(label)}</div><div class="sa-value">${val(value, ltr)}</div></div>`;
+    const statusRaw = clean(b.branchStatus);
+    const statusLabel = /^active$/i.test(statusRaw)
+      ? t(lang, "sabs.status_active")
+      : /^draft$/i.test(statusRaw)
+        ? t(lang, "sab.status_draft")
+        : /^ready$/i.test(statusRaw)
+          ? t(lang, "sab.status_ready")
+          : /^empty$/i.test(statusRaw)
+            ? t(lang, "sabs.status_empty")
+            : statusRaw || "-";
+    const contactRows = (b.contactRows || []).filter((row) => clean(row.value));
+    const contactsHtml = contactRows.length
+      ? `<table class="sa-contacts"><tbody>${contactRows
+          .map((row) => `<tr><th>${escapeHtml(translateHeader(lang, row.type))}</th><td><bdi dir="ltr">${escapeHtml(clean(row.value))}</bdi></td></tr>`)
+          .join("")}</tbody></table>`
+      : `<p class="sa-empty">${escapeHtml(t(lang, "sab.no_contacts"))}</p>`;
+
+    contentHtml = `
+      <header class="sa-head">
+        <div class="sa-brand">
+          <div class="sa-brand-name">ACCOUNTS.DGT.LLC</div>
+          <div class="sa-brand-sub">Enterprise ERP / FMS</div>
+        </div>
+        <div class="sa-title-block">
+          <h1 class="sa-title">${title}</h1>
+          ${subtitle ? `<div class="sa-subtitle">${subtitle}</div>` : ""}
+        </div>
+        <div class="sa-meta">${escapeHtml(t(lang, "ledger.col_date"))}: ${escapeHtml(stampDate)}</div>
+      </header>
+
+      <section class="sa-section">
+        <h2>${escapeHtml(t(lang, "sabs.sec_company_info"))}</h2>
+        <div class="sa-grid">
+          ${field(t(lang, "sabs.company_name"), b.companyName)}
+          ${field(t(lang, "sabs.company_code"), b.companyCode)}
+        </div>
+      </section>
+
+      <section class="sa-section">
+        <h2>${escapeHtml(t(lang, "sabs.sec_branch_info"))}</h2>
+        <div class="sa-grid">
+          ${field(t(lang, "sabs.branch_name"), b.branchName)}
+          ${field(t(lang, "sabs.branch_code"), b.branchCode, false, true)}
+          ${field(t(lang, "sabs.currency"), b.currency, false, true)}
+          ${field(t(lang, "sabs.status"), statusLabel)}
+        </div>
+      </section>
+
+      <section class="sa-section">
+        <h2>${escapeHtml(t(lang, "sabs.sec_location_info"))}</h2>
+        <div class="sa-grid sa-grid-3">
+          ${field(t(lang, "sabs.country"), b.country)}
+          ${field(t(lang, "sabs.state_province"), b.stateProvince)}
+          ${field(t(lang, "sabs.city"), b.city)}
+          ${field(t(lang, "sabs.zip_postal"), b.zipCode, false, true)}
+          ${field(t(lang, "sabs.address"), b.fullAddress, true)}
+        </div>
+      </section>
+
+      <section class="sa-section">
+        <h2>${escapeHtml(t(lang, "sabs.sec_owner_info"))}</h2>
+        <div class="sa-grid">
+          ${field(t(lang, "sabs.owner_name"), b.ownerName)}
+          ${field(t(lang, "sabs.owner_code"), b.ownerCode, false, true)}
+        </div>
+      </section>
+
+      <section class="sa-section">
+        <h2>${escapeHtml(t(lang, "sabs.sec_contact_info"))}</h2>
+        ${contactsHtml}
+      </section>
+
+      <footer class="sa-footer">
+        <span>ACCOUNTS.DGT.LLC | Enterprise ERP / FMS</span>
+        <span>${val(b.branchCode, true)}</span>
+      </footer>
+    `;
+  } else if (input.branchData) {
     const rawB = input.branchData;
     const b: typeof rawB = { ...rawB };
     for (const k of ["ownerPhone", "ownerEmail", "ownerAltEmail", "ownerWebsite", "companyPhone", "companyEmail", "companyWebsite", "companyOfficeAddress"] as const) {
@@ -950,6 +1043,31 @@ export function openA4ReportWindow(input: {
       .sig-line { border-bottom: 1px solid #94a3b8; margin-bottom: 4px; height: 22px; display: flex; align-items: flex-end; justify-content: center; font-family: 'Georgia', serif; font-style: italic; color: #0f172a; font-size: 11px; }
       .page-footer { display: flex; justify-content: space-between; font-size: 7.5px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 6px; margin-top: 10px; font-weight: 700; }
 
+      /* Super Admin Branch compact page (input.compact): one A4 page, logical properties so RTL flips automatically */
+      .page.sa-compact { display: block; min-height: 0; padding: 14mm 16mm; overflow: visible; }
+      .sa-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 16px; }
+      .sa-brand { min-width: 0; text-align: start; }
+      .sa-brand-name { font-size: 14px; font-weight: 900; color: #0f172a; }
+      .sa-brand-sub { font-size: 9px; color: #64748b; font-weight: 600; margin-top: 2px; }
+      .sa-title-block { flex: 1; min-width: 0; text-align: center; }
+      .sa-title { font-size: 17px; font-weight: 900; color: #1e3a8a; margin: 0; text-transform: uppercase; letter-spacing: 0.4px; }
+      .sa-subtitle { font-size: 9.5px; color: #2563eb; font-weight: 700; margin-top: 3px; }
+      .sa-meta { font-size: 9.5px; color: #334155; font-weight: 700; white-space: nowrap; text-align: end; }
+      .sa-section { margin-bottom: 14px; break-inside: avoid; page-break-inside: avoid; }
+      .sa-section h2 { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #1e3a8a; margin: 0 0 6px; padding-bottom: 4px; border-bottom: 1px solid #cbd5e1; text-align: start; }
+      .sa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+      .sa-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+      .sa-field { padding: 5px 0; border-bottom: 1px dashed #e2e8f0; min-width: 0; text-align: start; }
+      .sa-field.sa-wide { grid-column: 1 / -1; }
+      .sa-label { font-size: 8px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.4px; }
+      .sa-value { font-size: 11px; font-weight: 700; color: #0f172a; margin-top: 2px; overflow-wrap: anywhere; word-break: break-word; }
+      .sa-contacts { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      .sa-contacts th, .sa-contacts td { border: none; border-bottom: 1px dashed #e2e8f0; padding: 5px 0; font-size: 11px; background: transparent; text-align: start; }
+      .sa-contacts th { width: 34%; font-size: 8px; font-weight: 800; text-transform: uppercase; color: #64748b; }
+      .sa-contacts td { font-weight: 700; color: #0f172a; overflow-wrap: anywhere; word-break: break-word; }
+      .sa-empty { font-size: 10px; color: #64748b; margin: 0; text-align: start; }
+      .sa-footer { display: flex; justify-content: space-between; gap: 10px; font-size: 8px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 6px; margin-top: 18px; font-weight: 700; }
+
       /* RTL direction specific layouts */
       html[dir="rtl"] body { text-align: right; direction: rtl; }
       html[dir="rtl"] th, html[dir="rtl"] td { text-align: right; }
@@ -965,12 +1083,14 @@ export function openA4ReportWindow(input: {
         body { background: #ffffff; }
         .wrap { padding: 0; }
         .page { border: none; box-shadow: none; border-radius: 0; padding: 0; width: 100%; min-height: 100%; }
+        .page.sa-compact { padding: 0; min-height: 0; overflow: visible; }
+        .sa-section, .sa-field { break-inside: avoid; page-break-inside: avoid; }
       }
     </style>
   </head>
   <body>
     <div class="wrap">
-      <div class="page">
+      <div class="${input.branchData && input.compact ? "page sa-compact" : "page"}">
         ${contentHtml}
       </div>
     </div>

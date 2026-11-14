@@ -33,7 +33,7 @@ export function BranchLiveReportRow({ label, value }: BranchLiveReportField) {
   return (
     <div className="grid grid-cols-[140px_1fr] gap-3 border-b border-dashed py-2 text-sm last:border-b-0">
       <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
-      <span className={blank ? "font-semibold text-rose-600 dark:text-rose-400" : "font-semibold text-foreground"}>
+      <span className={blank ? "min-w-0 break-words font-semibold text-rose-600 dark:text-rose-400" : "min-w-0 break-words font-semibold text-foreground"}>
         {blank ? t(lang, "branch.not_configured", "[Not Configured]") : value}
       </span>
     </div>

@@ -151,7 +151,7 @@ export async function POST(request: Request) {
     } else {
       const supabase = createSupabaseAdminClient() as any;
       const { data, error } = await supabase.from("branches").insert(payload).select("id").single();
-      if (error) return NextResponse.json({ error: error.message }, { status: 403 });
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       insertedId = data?.id ?? null;
     }
 
@@ -254,7 +254,7 @@ export async function PUT(request: Request) {
         .is("deleted_at", null)
         .select("id")
         .single();
-      if (error) return NextResponse.json({ error: error.message }, { status: 403 });
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       updatedId = data?.id ?? null;
     }
 

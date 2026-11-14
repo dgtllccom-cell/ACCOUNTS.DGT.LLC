@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Building2,
@@ -35,6 +35,15 @@ import { cn } from "@/lib/utils";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import {
+  getSuperAdminMissingFields,
+  hasUsableMobileContact,
+  isDialCodePlaceholder,
+  isPhoneLikeContactType,
+  isWhatsAppContactType,
+  pickSuperAdminPhone,
+  type SuperAdminMissingField
+} from "@/features/branch-management/validation";
 import { BranchFinalReview } from "./branch-final-review";
 
 function isUuid(value: string) {
@@ -42,6 +51,7 @@ function isUuid(value: string) {
 }
 
 type ContactRow = { id: string; type: string; value: string };
+type Notice = { tone: "success" | "error" | "info"; text: string; fields?: string[]; detail?: string };
 type SavedBranch = {
   id: string;
   branchCode: string;
@@ -125,6 +135,26 @@ type OwnerPreview = {
 
 const initialContactTypes = ["Mobile Number", "Phone Number", "WhatsApp Number", "Email Address"];
 const currencies = [["USD", "US Dollar (USD)"]] as const;
+
+// Server validation field name -> [i18n key, English fallback] for the labels shown on the form.
+const SERVER_FIELD_LABELS: Record<string, [string, string]> = {
+  companyId: ["sabs.company_name", "Company Name"],
+  name: ["sabs.branch_name", "Branch Name"],
+  code: ["sabs.branch_code", "Branch Code"],
+  countryId: ["sabs.country", "Country"],
+  stateProvinceId: ["sabs.state", "State"],
+  districtId: ["sabs.district", "District"],
+  cityId: ["sabs.city", "City"],
+  currencyCode: ["sabs.currency", "Currency"],
+  address: ["sabs.address", "Address"],
+  phone: ["sabs.phone", "Phone"],
+  email: ["sabs.email", "Email"],
+  whatsappNumber: ["branch.row_whatsapp", "WhatsApp"],
+  ownerName: ["sabs.owner", "Owner"],
+  ownerCustomerId: ["sabs.owner", "Owner"],
+  ownerProfileId: ["sabs.owner", "Owner"],
+  contacts: ["sabs.contacts", "Contacts"]
+};
 
 function selectClass() {
   return "flex h-10 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
@@ -210,7 +240,7 @@ function ReportRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="grid grid-cols-[130px_1fr] gap-3 border-b border-dashed py-2 text-sm last:border-b-0">
       <span className="text-xs font-semibold uppercase text-muted-foreground">{label}</span>
-      <span className={blank ? "font-semibold text-muted-foreground" : "font-semibold text-foreground"}>
+      <span className={cn("min-w-0 break-words", blank ? "font-semibold text-muted-foreground" : "font-semibold text-foreground")}>
         {value || "-"}
       </span>
     </div>
@@ -252,7 +282,7 @@ function ChipList({
         <div key={row.id} className="flex items-center justify-between gap-3 rounded-lg border bg-muted/30 px-3 py-2">
           <div>
             <p className="text-xs font-semibold uppercase text-muted-foreground">{translateHeader(lang, row.type)}</p>
-            <p className="text-sm font-semibold text-foreground">{row.value}</p>
+            <p className="break-words text-sm font-semibold text-foreground">{row.value}</p>
           </div>
           <button
             type="button"
@@ -311,7 +341,8 @@ function SuperAdminBranchSetupContent() {
 
   const [modal, setModal] = useState<null | "contactType" | "report">(null);
   const [newType, setNewType] = useState("");
-  const [message, setMessage] = useState("");
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const noticeRef = useRef<HTMLDivElement | null>(null);
   const [isReviewMode, setIsReviewMode] = useState(false);
 
   const countryName = locationMeta.country?.name ?? "";
@@ -324,7 +355,7 @@ function SuperAdminBranchSetupContent() {
   const contactsText = contacts.length ? contacts.map((row) => `${translateHeader(lang, row.type)}: ${row.value}`).join(", ") : translateHeader(lang, "No Contacts");
   const companyName = companyDetails?.name ?? "";
   const companyCode = companyDetails?.id ? compactCode(companyDetails.id, "CMP") : "-";
-  const readyToSave = Boolean(countryName && stateName && (cityName || districtName) && branchCode && currency && companyName && owner && address);
+  const readyToSave = Boolean(countryName && stateName && (cityName || districtName) && branchCode && currency && companyName && owner && address && hasUsableMobileContact(contacts));
 
   const hasAny = useMemo(() => Boolean(
     location.countryId ||
@@ -500,7 +531,7 @@ function SuperAdminBranchSetupContent() {
       email: contacts.find((row) => row.type.toLowerCase().includes("email"))?.value || "",
 
       ownerName: ownerPreview?.name || owner || "-",
-      ownerCode: ownerPreview?.code || "OWN-0001",
+      ownerCode: ownerPreview?.code || "",
       fatherHusbandName: "-",
       cnicId: "-",
       nationality: "Pakistani",
@@ -529,7 +560,8 @@ function SuperAdminBranchSetupContent() {
       companyOfficeAddress: companyDetails?.address || address || "-",
 
       allowedPermissions: ["settings.access", "branch.super_admin", "settings.system"],
-      remarks: "Super Admin main headquarters and system configurations."
+      remarks: "Super Admin main headquarters and system configurations.",
+      contactRows: contacts.map((row) => ({ type: row.type, value: row.value }))
     };
   }, [
     editingBranchId,
@@ -556,7 +588,8 @@ function SuperAdminBranchSetupContent() {
       subtitle: t(activeLang, "sabs.report_subtitle_a4" as never, "Store Entry Preview (A4)"),
       autoPrint,
       branchData: liveBranchData,
-      lang: activeLang
+      lang: activeLang,
+      compact: true
     });
   }
 
@@ -585,7 +618,8 @@ function SuperAdminBranchSetupContent() {
     setOwner("");
     setOwnerPreview(null);
     setContacts([]);
-    setMessage("");
+    setContactValue("");
+    setNotice(null);
   }
 
   function normalizeContacts(value: unknown): ContactRow[] {
@@ -615,7 +649,7 @@ function SuperAdminBranchSetupContent() {
     setCompanyId(row.company_id || "");
     setOwner(row.owner_name || "");
     setContacts(normalizeContacts(row.contacts));
-    setMessage(`Editing: ${row.code}`);
+    setNotice({ tone: "info", text: `${tt("sab.editing_lbl", "Editing")}: ${row.code}` });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -836,33 +870,105 @@ function SuperAdminBranchSetupContent() {
     setModal(null);
   }
 
-  function addContact() {
+  // A typed value that was never "Added" still counts as a contact: it is committed before validation and save.
+  function contactsWithPending(): ContactRow[] {
     const value = contactValue.trim();
-    if (!value) return;
+    if (!value) return contacts;
+    return [...contacts, { id: `${contactType}-${value}-${Date.now()}`, type: contactType, value }];
+  }
 
-    setContacts((current) => [
-      ...current,
-      { id: `${contactType}-${value}-${Date.now()}`, type: contactType, value }
-    ]);
+  function addContact() {
+    const next = contactsWithPending();
+    if (next === contacts) return;
+    setContacts(next);
     setContactValue("");
   }
 
+  function missingFieldLabel(field: SuperAdminMissingField): string {
+    switch (field) {
+      case "country":
+        return tt("sabs.country", "Country");
+      case "state":
+        return tt("sabs.state", "State");
+      case "city":
+        return tt("sabs.city", "City");
+      case "company":
+        return tt("sabs.company_name", "Company Name");
+      case "owner":
+        return tt("sabs.owner", "Owner");
+      case "currency":
+        return tt("sabs.currency", "Currency");
+      case "address":
+        return tt("sabs.address", "Address");
+      case "mobile":
+        return translateHeader(lang, "Mobile Number");
+    }
+  }
+
+  function serverFieldLabel(field: string): string {
+    const entry = SERVER_FIELD_LABELS[field];
+    return entry ? tt(entry[0], entry[1]) : tt("sab.field_other", "Other field");
+  }
+
+  // Turns a failed API response into the notice shown on the form. Field names are localized;
+  // technical server text (database or auth messages) is shown in full as details.
+  function saveErrorNotice(body: unknown, status: number): Notice {
+    const base = tt("sab.err_save_failed", "Could not save the Super Admin Branch.");
+    const err = (body as { error?: unknown } | null)?.error;
+    if (typeof err === "string" && err.trim()) return { tone: "error", text: base, detail: err.trim() };
+    if (err && typeof err === "object") {
+      const shape = err as { message?: unknown; fieldErrors?: Record<string, unknown>; formErrors?: unknown };
+      const fields = Array.from(new Set(Object.keys(shape.fieldErrors ?? {}).map(serverFieldLabel)));
+      if (fields.length) return { tone: "error", text: base, fields };
+      const serverText = [
+        typeof shape.message === "string" ? shape.message : "",
+        ...(Array.isArray(shape.formErrors) ? shape.formErrors.filter((m): m is string => typeof m === "string") : [])
+      ]
+        .filter(Boolean)
+        .join("; ");
+      if (serverText) return { tone: "error", text: base, detail: serverText };
+    }
+    return { tone: "error", text: base, detail: `HTTP ${status}` };
+  }
+
   async function saveBranch() {
-    if (!readyToSave) {
-      setMessage("Complete country, state, city, company, owner, currency, and address first.");
+    // 1) Commit a typed-but-not-added contact first, so it is never silently lost.
+    const working = contactsWithPending();
+    // 2) Drop the country-prefill placeholder (only the dial code, e.g. "+971"); real rows are kept.
+    const dialCode = locationMeta.country?.phone_code;
+    const rows = working.filter((row) => !(isPhoneLikeContactType(row.type) && isDialCodePlaceholder(row.value, dialCode)));
+    if (working !== contacts || rows.length !== working.length) {
+      setContacts(rows);
+      setContactValue("");
+    }
+
+    // 3) Every required field, including a real Mobile Number, must be present.
+    setNotice(null);
+    const missing = getSuperAdminMissingFields({
+      country: countryName,
+      state: stateName,
+      cityOrDistrict: cityName || districtName,
+      company: companyName,
+      owner: owner.trim(),
+      currency,
+      address: address.trim(),
+      contacts: rows
+    });
+    if (missing.length) {
+      const labels = missing.map(missingFieldLabel).join(", ");
+      setNotice({ tone: "error", text: `${tt("sab.save_missing_prefix", "Complete these before saving:")} ${labels}` });
       return;
     }
 
-    setMessage("");
     try {
-      const contactsPayload = contacts
+      const contactsPayload = rows
         .map((row) => ({ type: row.type.trim(), value: row.value.trim() }))
         .filter((row) => row.type && row.value);
 
       const emailContact = contactsPayload.find((row) => row.type.toLowerCase().includes("email"))?.value;
       const email = emailContact && emailContact.includes("@") ? emailContact : `${branchCode.trim().toLowerCase()}@dgt.llc`;
-      const phone = contactsPayload.find((row) => row.type.toLowerCase().includes("phone") || row.type.toLowerCase().includes("mobile"))?.value;
-      const whatsappNumber = contactsPayload.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value;
+      const phone = pickSuperAdminPhone(contactsPayload);
+      const whatsappNumber = contactsPayload.find((row) => isWhatsAppContactType(row.type))?.value;
 
       const branchName = companyName ? `${companyName} Super Admin Branch` : "Super Admin Branch";
 
@@ -890,34 +996,31 @@ function SuperAdminBranchSetupContent() {
         })
       });
 
-      const json = await res.json().catch(() => ({}));
+      const json: unknown = await res.json().catch(() => null);
       if (!res.ok) {
-        let errorMessage = "Failed to save Super Admin Branch.";
-        if (json?.error) {
-          if (typeof json.error === "string") {
-            errorMessage = json.error;
-          } else if (json.error.message && typeof json.error.message === "string") {
-            errorMessage = json.error.message;
-          } else if (json.error.fieldErrors && typeof json.error.fieldErrors === "object") {
-            const fieldMsgs = Object.entries(json.error.fieldErrors)
-              .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`)
-              .join("; ");
-            errorMessage = `Validation Error: ${fieldMsgs}`;
-          } else {
-            errorMessage = JSON.stringify(json.error);
-          }
-        }
-        setMessage(errorMessage);
+        setNotice(saveErrorNotice(json, res.status));
         return;
       }
 
-      setMessage(`${editingBranchId ? "Updated" : "Saved"}: ${branchCode}`);
+      setNotice({
+        tone: "success",
+        text: `${editingBranchId ? tt("sab.updated_lbl", "Updated") : tt("sab.saved_lbl", "Saved")}: ${branchCode}`
+      });
       setEditingBranchId("");
       await loadSavedBranches();
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Failed to save Super Admin Branch.");
+      setNotice({
+        tone: "error",
+        text: tt("sab.err_save_failed", "Could not save the Super Admin Branch."),
+        detail: err instanceof Error ? err.message : undefined
+      });
     }
   }
+
+  // Bring a save error into view, next to the Save button, so it is never missed off-screen.
+  useEffect(() => {
+    if (notice?.tone === "error") noticeRef.current?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+  }, [notice]);
 
   useEffect(() => {
     loadSavedBranches().catch(() => null);
@@ -1013,7 +1116,7 @@ function SuperAdminBranchSetupContent() {
             onClick={() => setIsReviewMode(true)}
             className="h-8 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs cursor-pointer"
           >
-            Final Review & Approval →
+            {tt("sab.final_review", "Final Review & Approval →")}
           </Button>
           <span className={pillClassName()}>
             <CheckCircle2 className="h-4 w-4 text-primary" aria-hidden />
@@ -1023,7 +1126,7 @@ function SuperAdminBranchSetupContent() {
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card className="border-slate-200/80 shadow-sm">
+        <Card className="min-w-0 border-slate-200/80 shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <Building2 className="h-5 w-5 text-primary" aria-hidden />
@@ -1073,7 +1176,7 @@ function SuperAdminBranchSetupContent() {
                   onChange={(next, meta) => {
                     setLocation(next);
                     setLocationMeta(meta);
-                    setMessage("");
+                    setNotice(null);
                   }}
                 />
 
@@ -1147,7 +1250,18 @@ function SuperAdminBranchSetupContent() {
                   </div>
                   <div className="space-y-2">
                     <Label>{tt("sab.value_lbl", "Value")}</Label>
-                    <Input value={contactValue} onChange={(event) => setContactValue(event.target.value)} placeholder={tt("sab.value_ph", "Enter value")} />
+                    <Input
+                      value={contactValue}
+                      onChange={(event) => setContactValue(event.target.value)}
+                      onKeyDown={(event) => {
+                        // Enter adds the contact (ignored while an IME is composing Urdu/Arabic/Farsi/Pashto text).
+                        if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+                          event.preventDefault();
+                          addContact();
+                        }
+                      }}
+                      placeholder={tt("sab.value_ph", "Enter value")}
+                    />
                   </div>
                   <Button
                     type="button"
@@ -1160,8 +1274,38 @@ function SuperAdminBranchSetupContent() {
                   </Button>
                 </div>
                 <ChipList empty={tt("sab.no_contacts", "No contacts added yet.")} rows={contacts} onRemove={(id) => setContacts((rows) => rows.filter((row) => row.id !== id))} />
+                {hasUsableMobileContact(contacts) ? null : (
+                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                    {tt("sab.mobile_hint", "A Mobile Number contact is required. Type the number and press Add (or Enter).")}
+                  </p>
+                )}
               </div>
             </section>
+
+            {notice ? (
+              <div
+                ref={noticeRef}
+                role={notice.tone === "error" ? "alert" : "status"}
+                className={cn(
+                  "rounded-lg border px-3 py-2 text-sm font-medium break-words",
+                  notice.tone === "success" && "border-emerald-200 bg-emerald-50 text-emerald-800",
+                  notice.tone === "error" && "border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200",
+                  notice.tone === "info" && "border-amber-200 bg-amber-50 text-amber-800"
+                )}
+              >
+                <p className="font-semibold">{notice.text}</p>
+                {notice.fields?.length ? (
+                  <p className="mt-1">
+                    {tt("sab.err_check_fields", "Please check these fields:")} {notice.fields.join(", ")}
+                  </p>
+                ) : null}
+                {notice.detail ? (
+                  <p className="mt-1 text-xs break-words">
+                    {tt("sab.err_details", "Details:")} {notice.detail}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
 
             <div className="flex flex-wrap justify-end gap-3 border-t border-slate-100 dark:border-slate-800 pt-5">
               <Button
@@ -1189,21 +1333,10 @@ function SuperAdminBranchSetupContent() {
               </Button>
             </div>
 
-            {message ? (
-              <div
-                className={
-                  message.startsWith("Saved") || message.startsWith("Updated")
-                    ? "rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800"
-                    : "rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800"
-                }
-              >
-                {message}
-              </div>
-            ) : null}
           </CardContent>
         </Card>
 
-        <div className="space-y-4 lg:sticky lg:top-4">
+        <div className="min-w-0 space-y-4 lg:sticky lg:top-4">
           <BranchLiveReportPanel
             title={tt("sabs.live_preview_title", "Store Entry (Live Preview)")}
             status={hasAny ? "Draft" : "Empty"}

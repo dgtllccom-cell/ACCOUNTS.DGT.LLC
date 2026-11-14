@@ -144,3 +144,92 @@ export type CreateCountryInput = z.infer<typeof createCountrySchema>;
 export type CreateCountryBranchInput = z.infer<typeof createCountryBranchSchema>;
 export type CreateCityBranchInput = z.infer<typeof createCityBranchSchema>;
 export type CreateSuperAdminBranchInput = z.infer<typeof createSuperAdminBranchSchema>;
+
+// ---------------------------------------------------------------------------
+// Super Admin Branch form helpers (pure, no I/O). Shared by the form and its unit tests.
+// Names, phone numbers and emails may repeat across records: nothing here checks uniqueness.
+// ---------------------------------------------------------------------------
+
+/** Fewest digits that make a real phone number. A bare dial code such as "+971" is not one. */
+export const SUPER_ADMIN_MIN_PHONE_DIGITS = 7;
+
+export type SuperAdminContactRow = { type: string; value: string };
+
+export type SuperAdminMissingField =
+  | "country"
+  | "state"
+  | "city"
+  | "company"
+  | "owner"
+  | "currency"
+  | "address"
+  | "mobile";
+
+export function phoneDigits(value: string | null | undefined): string {
+  return String(value ?? "").replace(/\D/g, "");
+}
+
+export function isMobileContactType(type: string): boolean {
+  return /mobile/i.test(type);
+}
+
+export function isPhoneLikeContactType(type: string): boolean {
+  return /mobile|phone/i.test(type);
+}
+
+export function isWhatsAppContactType(type: string): boolean {
+  return /whatsapp/i.test(type);
+}
+
+function isUsablePhoneValue(value: string): boolean {
+  return phoneDigits(value).length >= SUPER_ADMIN_MIN_PHONE_DIGITS;
+}
+
+/**
+ * The country prefill puts the dial code (for example "+971 ") into an empty phone row.
+ * A row that holds nothing but that dial code is a placeholder, not a contact.
+ */
+export function isDialCodePlaceholder(value: string, dialCode: string | null | undefined): boolean {
+  const dial = phoneDigits(dialCode);
+  return Boolean(dial) && phoneDigits(value) === dial;
+}
+
+/** True when at least one Mobile Number contact holds a real number (not only a dial code). */
+export function hasUsableMobileContact(rows: SuperAdminContactRow[]): boolean {
+  return rows.some((row) => isMobileContactType(row.type) && isUsablePhoneValue(row.value));
+}
+
+/**
+ * The value stored in the branch `phone` column: the first usable mobile number,
+ * then the first usable phone number, then whatever phone-like value exists.
+ */
+export function pickSuperAdminPhone(rows: SuperAdminContactRow[]): string | undefined {
+  return (
+    rows.find((row) => isMobileContactType(row.type) && isUsablePhoneValue(row.value))?.value ??
+    rows.find((row) => /phone/i.test(row.type) && isUsablePhoneValue(row.value))?.value ??
+    rows.find((row) => isPhoneLikeContactType(row.type))?.value
+  );
+}
+
+/** Required fields that are still empty before a Super Admin Branch can be saved. */
+export function getSuperAdminMissingFields(input: {
+  country: string;
+  state: string;
+  cityOrDistrict: string;
+  company: string;
+  owner: string;
+  currency: string;
+  address: string;
+  contacts: SuperAdminContactRow[];
+}): SuperAdminMissingField[] {
+  const missing: SuperAdminMissingField[] = [];
+  if (!input.country.trim()) missing.push("country");
+  if (!input.state.trim()) missing.push("state");
+  if (!input.cityOrDistrict.trim()) missing.push("city");
+  if (!input.company.trim()) missing.push("company");
+  if (!input.owner.trim()) missing.push("owner");
+  if (!input.currency.trim()) missing.push("currency");
+  if (!input.address.trim()) missing.push("address");
+  if (!hasUsableMobileContact(input.contacts)) missing.push("mobile");
+  return missing;
+}
