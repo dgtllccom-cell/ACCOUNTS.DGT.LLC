@@ -223,6 +223,8 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: nt("Final Payment"), href: "/dashboard/journal/sales-order-payment/final", icon: CheckCircle2 },
         ],
       },
+      { label: nt("Daily Operational Expenses"), href: "/dashboard/roznamcha/daily-expenses-bill", icon: Banknote },
+      { label: nt("Office / Home Expenses Bill"), href: "/dashboard/roznamcha/expenses-bill", icon: FileSpreadsheet },
       { label: nt("Daily Exchange Rate"), href: "/dashboard/reports/exchange-rate", icon: RefreshCw, upgraded: true },
       { label: nt("Money Changer (Currency Exchange)"), href: "/dashboard/roznamcha/money-exchange", icon: ArrowRightLeft },
     ],
