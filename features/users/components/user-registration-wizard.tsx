@@ -360,7 +360,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const toggleDeviceKind = (kind: DeviceKind) =>
     setDeviceKinds((prev) => (prev.includes(kind) ? prev.filter((k) => k !== kind) : normalizeDeviceKinds([...prev, kind])));
   // names of the warehouses / shipping lines the login is bound to (the ids are what is saved; names are for the report)
-  const [scopeNames, setScopeNames] = useState<{ warehouses: Record<string, string>; lines: Record<string, string> }>({ warehouses: {}, lines: {} });
+  const [scopeNames, setScopeNames] = useState<{ warehouses: Record<string, string>; lines: Record<string, string>; agents: Record<string, string> }>({ warehouses: {}, lines: {}, agents: {} });
   // RBAC v2: access profile (operations / shipping line), shipping line, warehouses, effective dates, financial field access
   const [accessValue, setAccessValue] = useState<AccessProfileValue>(EMPTY_ACCESS_PROFILE);
   // server-computed effective access of the user being edited (same resolver as login)
@@ -592,13 +592,16 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     Promise.all([
       fetch(`/api/erp/warehouses?status=Active&lang=${activeLang}`).then((r) => r.json()).catch(() => null),
       fetch(`/api/erp/shipping-lines?limit=200&lang=${activeLang}`).then((r) => r.json()).catch(() => null),
-    ]).then(([w, l]) => {
+      fetch(`/api/erp/clearing-agents?limit=200&lang=${activeLang}`).then((r) => r.json()).catch(() => null),
+    ]).then(([w, l, a]) => {
       if (!alive) return;
       const warehouseRows = (w?.data?.warehouses ?? w?.warehouses ?? []) as Array<{ id: string; warehouse_name?: string; name?: string }>;
       const lineRows = (l?.data?.shippingLines ?? l?.shippingLines ?? []) as Array<{ id: string; name?: string }>;
+      const agentRows = (a?.data?.clearingAgents ?? a?.clearingAgents ?? []) as Array<{ id: string; name?: string }>;
       setScopeNames({
         warehouses: Object.fromEntries(warehouseRows.filter((x) => x?.id).map((x) => [x.id, x.warehouse_name || x.name || x.id])),
         lines: Object.fromEntries(lineRows.filter((x) => x?.id).map((x) => [x.id, x.name || x.id])),
+        agents: Object.fromEntries(agentRows.filter((x) => x?.id).map((x) => [x.id, x.name || x.id])),
       });
     });
     return () => {
@@ -1122,10 +1125,17 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     return buildRbacRoleSummary(role, effectivePermissions);
   }, [role, effectivePermissions]);
 
+  // the field-level financial token the server adds on save (same rule as the users API: deny always wins)
+  const financeToken = accessValue.financialAccess === "deny" ? "finance_amounts:deny" : accessValue.financialAccess === "allow" ? "finance_amounts:read" : "";
+  const savedPermissions = useMemo(
+    () => (financeToken ? [...effectivePermissions, financeToken] : effectivePermissions),
+    [effectivePermissions, financeToken]
+  );
+
   // The complete rights list of what this user is being given (live: follows every checkbox on step 4)
   const rightsList = useMemo(
-    () => buildUserRightsList({ role: templateRole, permissions: effectivePermissions, matrixState: hierarchicalState }),
-    [templateRole, effectivePermissions, hierarchicalState]
+    () => buildUserRightsList({ role: templateRole, permissions: savedPermissions, matrixState: hierarchicalState }),
+    [templateRole, savedPermissions, hierarchicalState]
   );
 
   function isStepValid(currentStep: WizardStep) {
@@ -1359,6 +1369,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         effectiveFrom: accessValue.effectiveFrom || null,
         effectiveTo: accessValue.effectiveTo || null,
         shippingLineName: accessValue.shippingLineId ? scopeNames.lines[accessValue.shippingLineId] ?? accessValue.shippingLineId : null,
+        clearingAgentName: clearingAgentId ? scopeNames.agents[clearingAgentId] ?? clearingAgentId : null,
         warehouseNames: accessValue.warehouseIds.map((id) => scopeNames.warehouses[id] ?? id),
       });
       if (resUserId) void refreshSavedRights(resUserId);
@@ -1429,7 +1440,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     kycStatus: kycStatus,
     residentialAddress: residentialAddress,
     passwordVaultRef: `VAULT-DGT-${userCode}`,
-    permissions: effectivePermissions,
+    permissions: savedPermissions,
     matrixState: hierarchicalState,
     moduleCapabilities,
     employmentType: employeeProfile.employmentType,
@@ -1445,6 +1456,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     effectiveFrom: accessValue.effectiveFrom || null,
     effectiveTo: accessValue.effectiveTo || null,
     shippingLineName: accessValue.shippingLineId ? scopeNames.lines[accessValue.shippingLineId] ?? accessValue.shippingLineId : null,
+    clearingAgentName: clearingAgentId ? scopeNames.agents[clearingAgentId] ?? clearingAgentId : null,
     warehouseNames: accessValue.warehouseIds.map((id) => scopeNames.warehouses[id] ?? id),
   });
 
