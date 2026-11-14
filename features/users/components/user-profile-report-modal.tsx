@@ -30,11 +30,15 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
-import { buildRbacRoleSummary, buildAllModulesCapabilities, ModulePermissionCapability } from "@/lib/permissions/rbac-matrix-builder";
+import { buildRbacRoleSummary, buildAllModulesCapabilities, ModulePermissionCapability, type HierarchicalMatrixState } from "@/lib/permissions/rbac-matrix-builder";
 import { EffectiveAccessForUser } from "@/features/users/components/user-access-profile-panel";
-import { openUserA4ReportWindow, UserReportData } from "@/lib/reports/open-user-a4-report-window";
+import { UserRightsListPanel } from "@/features/users/components/user-rights-list-panel";
+import { buildUserRightsList, roleDisplayLabel } from "@/lib/permissions/user-rights-list";
+import { openUserRightsReportWindow, type UserRightsReportInput } from "@/lib/reports/user-rights-report";
+import { normalizeDeviceKinds } from "@/lib/mobile/device-access";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { t as centralT } from "@/lib/i18n/ui";
 import { Th } from "@/components/ui/translated-th";
 
 export interface UserProfileData {
@@ -75,6 +79,80 @@ export interface UserProfileData {
   createdAt?: string;
   lastUpdatedBy?: string;
   updatedAt?: string;
+  /** device kinds this login may sign in from; null / absent = not restricted */
+  deviceAccess?: string[] | null;
+  /** registered mobile device records of this login (mobile_devices model) */
+  mobileDevices?: MobileDeviceSummary[];
+  operationalDomain?: string | null;
+  accessProfile?: string | null;
+  mobileProfile?: string | null;
+  financialAccess?: string | null;
+  effectiveFrom?: string | null;
+  effectiveTo?: string | null;
+  shippingLineName?: string | null;
+  clearingAgentName?: string | null;
+  warehouseNames?: string[];
+}
+
+export type MobileDeviceSummary = {
+  id: string;
+  app: string;
+  platform: string | null;
+  model: string | null;
+  status: string;
+  requestedAt: string | null;
+  activatedAt: string | null;
+};
+
+/** The one converter from a user record to the complete rights report. The modal, the wizard and the print all use it. */
+export function userProfileToRightsReport(
+  user: UserProfileData & { matrixState?: HierarchicalMatrixState | null },
+  lang: string
+): UserRightsReportInput {
+  const rights = buildUserRightsList({ role: user.role, permissions: user.permissions ?? [], matrixState: user.matrixState ?? null });
+  return {
+    lang,
+    identity: {
+      userCode: user.userCode,
+      fullName: user.fullName,
+      username: user.username || user.userCode,
+      employeeCode: user.employeeCode ?? null,
+      designation: user.designation ?? null,
+      department: user.department ?? null,
+      phone: user.phone ?? null,
+      email: user.email ?? null,
+      address: user.residentialAddress ?? null,
+      kycStatus: user.kycStatus ?? null,
+      idNumber: user.cnicPassportNo ?? null,
+      idExpiry: user.idExpiryDate ?? null,
+      status: user.status ?? null,
+      createdAt: user.createdAt ?? null,
+      updatedAt: user.updatedAt ?? null,
+    },
+    scope: {
+      domain: user.operationalDomain ?? "business",
+      accessProfile: user.accessProfile ?? null,
+      countryName: user.countryName ?? null,
+      mainBranchName: user.mainBranchName ?? null,
+      mainBranchCode: user.mainBranchCode ?? null,
+      cityBranchName: user.cityBranchName ?? null,
+      cityBranchCode: user.cityBranchCode ?? null,
+      localCurrency: user.localCurrency ?? null,
+      shippingLineName: user.shippingLineName ?? null,
+      clearingAgentName: user.clearingAgentName ?? null,
+      warehouseNames: user.warehouseNames ?? [],
+      effectiveFrom: user.effectiveFrom ?? null,
+      effectiveTo: user.effectiveTo ?? null,
+      mobileProfile: user.mobileProfile ?? "standard",
+      financialAccess: user.financialAccess ?? "role_default",
+    },
+    deviceAccess: user.deviceAccess === undefined || user.deviceAccess === null ? null : normalizeDeviceKinds(user.deviceAccess),
+    registeredDevices: (user.mobileDevices ?? []).map((d) => ({ app: d.app, platform: d.platform, model: d.model, status: d.status, requestedAt: d.requestedAt })),
+    roleLabel: roleDisplayLabel(lang, user.role),
+    rights,
+    loginUrl: typeof window !== "undefined" ? `${window.location.origin}/auth/login` : "/auth/login",
+    generatedAt: new Date(),
+  };
 }
 
 interface UserProfileReportModalProps {
@@ -105,52 +183,17 @@ export function UserProfileReportModal({
     return buildAllModulesCapabilities(user.role, user.permissions || []);
   }, [user.role, user.permissions, user.moduleCapabilities]);
 
+  // the complete rights list: every granted form, the expense bill types and every other granted token (never truncated)
+  const userRights = useMemo(
+    () => buildUserRightsList({ role: user.role, permissions: user.permissions ?? [] }),
+    [user.role, user.permissions]
+  );
+
   if (!isOpen) return null;
 
   const handlePrint = () => {
-    const reportData: UserReportData = {
-      userId: user.userId,
-      userCode: user.userCode,
-      fullName: user.fullName,
-      firstName: user.firstName,
-      middleName: user.middleName,
-      lastName: user.lastName,
-      countryName: user.countryName || "—",
-      branchName: user.cityBranchName || user.mainBranchName || "—",
-      branchCode: user.cityBranchCode || user.mainBranchCode || "—",
-      branchType: user.designation || "Staff",
-      role: user.role,
-      registrationDate: user.createdAt || new Date().toISOString(),
-      status: user.status || "Active",
-      permissions: user.permissions || [],
-      department: user.department,
-      designation: user.designation,
-      employeeCode: user.employeeCode,
-      phone: user.phone,
-      email: user.email,
-      cnicPassportNo: user.cnicPassportNo,
-      idExpiryDate: user.idExpiryDate,
-      kycStatus: user.kycStatus,
-      residentialAddress: user.residentialAddress,
-      passwordVaultRef: user.passwordVaultRef || `VAULT-DGT-${user.userCode}`,
-      employmentType: user.employmentType,
-      joiningDate: user.joiningDate,
-      contractStartDate: user.contractStartDate,
-      contractEndDate: user.contractEndDate,
-      jobStatus: user.jobStatus,
-      workingShift: user.workingShift,
-      createdBy: user.createdBy,
-      lastUpdatedBy: user.lastUpdatedBy,
-      lastActivity: user.updatedAt || new Date().toISOString(),
-      lastActivityAction: "user.profile_viewed",
-    };
-
-    openUserA4ReportWindow({
-      title: th("Comprehensive User Profile & Authorization Report"),
-      subtitle: th("Official Centralized ERP User Registry & RBAC Permissions Record"),
-      userData: reportData,
-      lang: activeLang
-    });
+    // one complete A4 document: identity, scope, device access, every granted form, expense bill types, other rights (all 5 languages)
+    openUserRightsReportWindow(userProfileToRightsReport(user, activeLang));
   };
 
   return (
@@ -286,6 +329,7 @@ export function UserProfileReportModal({
                 <div className="flex justify-between"><span className="text-slate-400">{th("KYC Status")}:</span><span className="font-bold text-emerald-600">{user.kycStatus === "VERIFIED" ? "✅ Verified" : "⏳ Pending"}</span></div>
                 <div className="flex justify-between"><span className="text-slate-400">{th("CNIC / Passport")}:</span><span className="font-mono">{user.cnicPassportNo || "Verified"}</span></div>
                 <div className="flex justify-between"><span className="text-slate-400">{th("ID Expiry Date")}:</span><span>{user.idExpiryDate || "Permanent"}</span></div>
+                <div className="flex justify-between gap-2"><span className="text-slate-400 shrink-0">{centralT(activeLang, "udr.r.f_devices_allowed" as never, "Allowed devices")}:</span><span className="font-semibold text-right">{user.deviceAccess === undefined || user.deviceAccess === null ? centralT(activeLang, "udr.r.dev_any" as never, "Any device (not restricted)") : normalizeDeviceKinds(user.deviceAccess).map((k) => (k === "mobile" ? centralT(activeLang, "udr.r.dev_mobile" as never, "Mobile") : centralT(activeLang, "udr.r.dev_computer" as never, "Computer"))).join(" · ")}</span></div>
               </div>
             </div>
 
@@ -316,8 +360,8 @@ export function UserProfileReportModal({
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-              <table className="w-full text-left text-xs">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-x-auto">
+              <table className="w-full min-w-[640px] text-left text-xs">
                 <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-[11px]">
                   <tr>
                     <Th className="p-3">{th("ERP Form / Module")}</Th>
@@ -411,6 +455,15 @@ export function UserProfileReportModal({
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Section 2b: the COMPLETE rights list of this user (readable on desktop, iPad and phone; no table scroll) */}
+          <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-3">
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-emerald-600" />
+              <span>{centralT(activeLang, "udr.r.sec_rights" as never, "Granted module rights (every form)")}</span>
+            </h3>
+            <UserRightsListPanel rights={userRights} lang={activeLang} />
           </div>
 
           {/* Section 3: Audit Information & Metadata */}

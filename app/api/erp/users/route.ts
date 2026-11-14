@@ -18,6 +18,7 @@ import { localizeRecordFields } from "@/lib/i18n/localize-records";
 import { SUPER_ADMIN_ONLY_ROLES, assignmentBranchDomainError, domainManagerTargetError, isUserManager, userInManagerScope, userCreationTargetError, canDelegateUserRole } from "@/lib/permissions/user-management-scope";
 import { domainSuperAdminDomain } from "@/lib/permissions/enterprise-roles";
 import { assertNoDuplicateAssignment, assertNoDuplicateUser } from "@/lib/branch-network/duplicate-guard";
+import { DEFAULT_DEVICE_ACCESS, canManageDeviceAccess, normalizeDeviceKinds, sameDeviceAccess } from "@/lib/mobile/device-access";
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -110,6 +111,43 @@ function permissionSetSource(requested: string[], issued: string[], template: st
 }
 
 const ACCESS_COLUMNS =/access_profile|shipping_line_id|warehouse_ids|effective_from|effective_to/;
+
+/**
+ * Device access needs migration 20261252_user_device_access. Probe the column BEFORE anything is created, so a database without it refuses
+ * an explicit device allotment with a clear message instead of leaving a half-created login behind.
+ */
+async function deviceAccessColumnExists(admin: any): Promise<boolean> {
+  const { error } = await admin.from("user_role_assignments").select("device_access").limit(1);
+  return !(error && /device_access/i.test(String(error.message ?? "")));
+}
+
+const DEVICE_MIGRATION_MESSAGE = "This database does not yet support device access (migration 20261252_user_device_access).";
+
+/** The user's store-app / mobile device records from the existing mobile_devices model (read-only here). */
+async function loadRegisteredMobileDevices(admin: any, userId: string, identifiers: Array<string | null | undefined>) {
+  const logins = [...new Set(identifiers.map((v) => String(v ?? "").trim().toLowerCase()).filter(Boolean))];
+  const statuses = ["pending", "approved", "active"];
+  const columns = "id, app, platform, device_model, status, requested_at, activated_at, requested_identifier, bound_user_id";
+  try {
+    const byLogin = logins.length
+      ? (await admin.from("mobile_devices").select(columns).in("requested_identifier", logins).in("status", statuses).limit(50)).data ?? []
+      : [];
+    const byBinding = (await admin.from("mobile_devices").select(columns).eq("bound_user_id", userId).in("status", statuses).limit(50)).data ?? [];
+    const merged = new Map<string, any>();
+    for (const row of [...byLogin, ...byBinding]) merged.set(row.id, row);
+    return [...merged.values()].map((row) => ({
+      id: row.id,
+      app: row.app,
+      platform: row.platform ?? null,
+      model: row.device_model ?? null,
+      status: row.status,
+      requestedAt: row.requested_at ?? null,
+      activatedAt: row.activated_at ?? null,
+    }));
+  } catch {
+    return [];
+  }
+}
 
 function normalizePermissions(input: unknown) {
   return Array.isArray(input)
@@ -275,6 +313,15 @@ export async function POST(request: NextRequest) {
 
     const mobileProfile = normalizeMobileProfile(body.mobileProfile);
 
+    // Device access (Mobile / Computer): only a Super Admin or Country Admin chooses it. Anyone else creating a login gets every device.
+    if (body.deviceAccess !== undefined) {
+      if (!canManageDeviceAccess(session)) {
+        throw new ApiClientError("Only a Super Admin or Country Admin can set device access.", { status: 403, code: "DEVICE_ACCESS_FORBIDDEN" });
+      }
+      if (!(await deviceAccessColumnExists(admin))) throw new ApiClientError(DEVICE_MIGRATION_MESSAGE, { status: 409 });
+    }
+    const deviceAccess = body.deviceAccess !== undefined ? normalizeDeviceKinds(body.deviceAccess) : [...DEFAULT_DEVICE_ACCESS];
+
     const requestedPermissions = normalizePermissions(body.permissions);
     // The template of the EFFECTIVE role: an Operations / Shipping Line login starts from its narrow template, never the
     // stored admin role's full template.
@@ -342,6 +389,7 @@ export async function POST(request: NextRequest) {
         clearing_agent_id: body.clearingAgentId ?? null,
         ledger_visibility: ledgerVisibility,
         mobile_profile: mobileProfile,
+        device_access: deviceAccess,
         access_profile: accessProfile,
         shipping_line_id: body.shippingLineId ?? null,
         warehouse_ids: body.warehouseIds?.length ? body.warehouseIds : null,
@@ -362,6 +410,11 @@ export async function POST(request: NextRequest) {
       }
       if (assignmentError && /mobile_profile/.test(assignmentError.message)) {
         delete assignmentPayload.mobile_profile;
+        ({ data: insAssign, error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload).select().maybeSingle());
+      }
+      // pre-migration database: a device allotment that was NOT chosen is simply left out (an explicit one was refused by the preflight)
+      if (assignmentError && /device_access/i.test(assignmentError.message)) {
+        delete assignmentPayload.device_access;
         ({ data: insAssign, error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload).select().maybeSingle());
       }
       if (assignmentError && /operational_domain|clearing_agent_id|ledger_visibility/.test(assignmentError.message)) {
@@ -532,6 +585,7 @@ export async function POST(request: NextRequest) {
       clearing_agent_id: body.clearingAgentId ?? null,
       ledger_visibility: ledgerVisibility,
       mobile_profile: mobileProfile,
+      device_access: deviceAccess,
       access_profile: accessProfile,
       shipping_line_id: body.shippingLineId ?? null,
       warehouse_ids: body.warehouseIds?.length ? body.warehouseIds : null,
@@ -554,6 +608,11 @@ export async function POST(request: NextRequest) {
     }
     if (assignmentError && /mobile_profile/.test(assignmentError.message)) {
       delete assignmentPayload.mobile_profile;
+      ({ error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload));
+    }
+    // pre-migration database: a device allotment that was NOT chosen is left out (an explicit one was refused before anything was created)
+    if (assignmentError && /device_access/i.test(assignmentError.message)) {
+      delete assignmentPayload.device_access;
       ({ error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload));
     }
     if (assignmentError && /operational_domain|clearing_agent_id|ledger_visibility/.test(assignmentError.message)) {
@@ -592,6 +651,7 @@ export async function POST(request: NextRequest) {
         clearingAgentId: body.clearingAgentId ?? null,
         ledgerVisibility,
         mobileProfile,
+        deviceAccess,
         accessProfile,
         effectiveRole,
         shippingLineId: body.shippingLineId ?? null,
@@ -648,6 +708,8 @@ export async function GET(request: NextRequest) {
     const authUser = authUserRes.data?.user;
     const effective = await resolveEffectiveAccessForUser(userId, authUser?.email ?? null);
 
+    const mobileDevices = await loadRegisteredMobileDevices(admin, userId, [authUser?.email, profile.user_code, authUser?.user_metadata?.username]);
+
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     let localizedFullName = profile.full_name;
     try {
@@ -668,6 +730,9 @@ export async function GET(request: NextRequest) {
       countryBranchId: assignment?.country_branch_id ?? null,
       cityBranchId: assignment?.city_branch_id ?? null,
       mobileProfile: normalizeMobileProfile(assignment?.mobile_profile),
+      // null = not restricted (legacy row); otherwise the device kinds this login may sign in from
+      deviceAccess: Array.isArray(assignment?.device_access) ? normalizeDeviceKinds(assignment.device_access) : null,
+      mobileDevices,
       operationalDomain: assignment?.operational_domain ?? "business",
       clearingAgentId: assignment?.clearing_agent_id ?? null,
       accessProfile: assignment?.access_profile ?? null,
@@ -804,6 +869,10 @@ export async function PATCH(request: NextRequest) {
 
     const admin = createSupabaseAdminClient() as any;
 
+    if (body.deviceAccess !== undefined && canManageDeviceAccess(session) && !(await deviceAccessColumnExists(admin))) {
+      throw new ApiClientError(DEVICE_MIGRATION_MESSAGE, { status: 409 });
+    }
+
     // Resolve target userId if non-UUID reference ID was provided
     let targetUserId = body.userId;
     if (!isUuid(targetUserId)) {
@@ -871,6 +940,15 @@ export async function PATCH(request: NextRequest) {
       .limit(1)
       .maybeSingle();
     const { data: beforePermissionSet } = await admin.from("user_permission_sets").select("permissions").eq("user_id", targetUserId).maybeSingle();
+
+    // Device access is changed only by a Super Admin / Country Admin. A manager without that right may re-send the current allotment
+    // (an unchanged form submit); any real change is refused.
+    if (body.deviceAccess !== undefined && !canManageDeviceAccess(session)) {
+      if (!sameDeviceAccess(body.deviceAccess, targetAssignment?.device_access)) {
+        throw new ApiClientError("Only a Super Admin or Country Admin can change device access.", { status: 403, code: "DEVICE_ACCESS_FORBIDDEN" });
+      }
+      body.deviceAccess = undefined;
+    }
 
     if (!session.isSuperAdmin) {
       if (!targetAssignment || !userInManagerScope(session, targetAssignment)) {
@@ -1006,6 +1084,7 @@ export async function PATCH(request: NextRequest) {
       body.mobileProfile !== undefined ||
       body.operationalDomain !== undefined ||
       body.clearingAgentId !== undefined ||
+      body.deviceAccess !== undefined ||
       accessChanged
     ) {
       // Fetch latest assignment row
@@ -1055,6 +1134,7 @@ export async function PATCH(request: NextRequest) {
         if (body.countryBranchId !== undefined) assignmentUpdates.country_branch_id = body.countryBranchId;
         if (body.cityBranchId !== undefined) assignmentUpdates.city_branch_id = body.cityBranchId;
         if (body.mobileProfile !== undefined) assignmentUpdates.mobile_profile = body.mobileProfile;
+        if (body.deviceAccess !== undefined) assignmentUpdates.device_access = normalizeDeviceKinds(body.deviceAccess);
         if (body.accessProfile !== undefined) assignmentUpdates.access_profile = body.accessProfile;
         if (body.accessProfile !== undefined && body.accessProfile !== "shipping_line") assignmentUpdates.shipping_line_id = null;
         if (body.shippingLineId !== undefined) assignmentUpdates.shipping_line_id = body.shippingLineId;
@@ -1142,7 +1222,8 @@ export async function PATCH(request: NextRequest) {
       before: targetAssignment ? {
         role: targetAssignment.role, isActive: targetAssignment.is_active, countryId: targetAssignment.country_id,
         countryBranchId: targetAssignment.country_branch_id, cityBranchId: targetAssignment.city_branch_id,
-        mobileProfile: targetAssignment.mobile_profile ?? null, accessProfile: targetAssignment.access_profile ?? null,
+        mobileProfile: targetAssignment.mobile_profile ?? null, deviceAccess: targetAssignment.device_access ?? null,
+        accessProfile: targetAssignment.access_profile ?? null,
         shippingLineId: targetAssignment.shipping_line_id ?? null, warehouseIds: targetAssignment.warehouse_ids ?? null,
         effectiveFrom: targetAssignment.effective_from ?? null, effectiveTo: targetAssignment.effective_to ?? null,
         permissions: beforePermissionSet?.permissions ?? null,
@@ -1156,6 +1237,7 @@ export async function PATCH(request: NextRequest) {
         countryBranchId: body.countryBranchId,
         cityBranchId: body.cityBranchId,
         mobileProfile: body.mobileProfile,
+        deviceAccess: body.deviceAccess,
         accessProfile: body.accessProfile,
         effectiveRole: deriveEffectiveRole(nextStoredRole, nextAccessProfile, targetAssignment?.operational_domain ?? null),
         shippingLineId: body.shippingLineId,

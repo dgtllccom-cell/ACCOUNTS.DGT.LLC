@@ -44,7 +44,9 @@ import {
   Clock,
   Layers,
   Sparkles,
-  AlertTriangle
+  AlertTriangle,
+  Smartphone,
+  Monitor
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -82,8 +84,11 @@ import {
 import { deriveEffectiveRole, type StoredEnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { apiPost } from "@/lib/api/client";
 import { normalizeUserCode } from "@/lib/services/user-identity-service";
-import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
-import { UserProfileReportModal, UserProfileData } from "./user-profile-report-modal";
+import { openUserRightsReportWindow } from "@/lib/reports/user-rights-report";
+import { DEFAULT_DEVICE_ACCESS, DEVICE_KINDS, canManageDeviceAccess, normalizeDeviceKinds, type DeviceKind } from "@/lib/mobile/device-access";
+import { authorityTierLabel, buildUserRightsList } from "@/lib/permissions/user-rights-list";
+import { UserRightsListPanel } from "@/features/users/components/user-rights-list-panel";
+import { UserProfileReportModal, UserProfileData, userProfileToRightsReport, type MobileDeviceSummary } from "./user-profile-report-modal";
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { Th } from "@/components/ui/translated-th";
@@ -348,6 +353,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   // permissions). "standard" = full ERP; "mobile_cash_ledger" = Brother User;
   // "mobile_field" = Munshi / field user.
   const [mobileProfile, setMobileProfile] = useState<"standard" | "mobile_cash_ledger" | "mobile_field">("standard");
+  // Device access: the device kinds (Mobile / Computer) this login may sign in from. Only Super Admin / Country Admin change it.
+  const [deviceKinds, setDeviceKinds] = useState<DeviceKind[]>([...DEFAULT_DEVICE_ACCESS]);
+  const [registeredDevices, setRegisteredDevices] = useState<MobileDeviceSummary[]>([]);
+  const canManageDevices = canManageDeviceAccess({ isSuperAdmin: erpScope.isSuperAdmin, roles: erpScope.roles });
+  const toggleDeviceKind = (kind: DeviceKind) =>
+    setDeviceKinds((prev) => (prev.includes(kind) ? prev.filter((k) => k !== kind) : normalizeDeviceKinds([...prev, kind])));
+  // names of the warehouses / shipping lines the login is bound to (the ids are what is saved; names are for the report)
+  const [scopeNames, setScopeNames] = useState<{ warehouses: Record<string, string>; lines: Record<string, string> }>({ warehouses: {}, lines: {} });
   // RBAC v2: access profile (operations / shipping line), shipping line, warehouses, effective dates, financial field access
   const [accessValue, setAccessValue] = useState<AccessProfileValue>(EMPTY_ACCESS_PROFILE);
   // server-computed effective access of the user being edited (same resolver as login)
@@ -574,6 +587,25 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLang]);
 
+  useEffect(() => {
+    let alive = true;
+    Promise.all([
+      fetch(`/api/erp/warehouses?status=Active&lang=${activeLang}`).then((r) => r.json()).catch(() => null),
+      fetch(`/api/erp/shipping-lines?limit=200&lang=${activeLang}`).then((r) => r.json()).catch(() => null),
+    ]).then(([w, l]) => {
+      if (!alive) return;
+      const warehouseRows = (w?.data?.warehouses ?? w?.warehouses ?? []) as Array<{ id: string; warehouse_name?: string; name?: string }>;
+      const lineRows = (l?.data?.shippingLines ?? l?.shippingLines ?? []) as Array<{ id: string; name?: string }>;
+      setScopeNames({
+        warehouses: Object.fromEntries(warehouseRows.filter((x) => x?.id).map((x) => [x.id, x.warehouse_name || x.name || x.id])),
+        lines: Object.fromEntries(lineRows.filter((x) => x?.id).map((x) => [x.id, x.name || x.id])),
+      });
+    });
+    return () => {
+      alive = false;
+    };
+  }, [activeLang]);
+
   // When Employee or Customer is selected or language changes, populate rich profile across steps
   useEffect(() => {
     if (!selectedEmployeeId) {
@@ -764,6 +796,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         if (data.mobileProfile === "mobile_cash_ledger" || data.mobileProfile === "mobile_field") {
           setMobileProfile(data.mobileProfile);
         }
+        // device access: null = not restricted (a legacy login) → shown as every device
+        setDeviceKinds(Array.isArray(data.deviceAccess) ? normalizeDeviceKinds(data.deviceAccess) : [...DEFAULT_DEVICE_ACCESS]);
+        setRegisteredDevices(Array.isArray(data.mobileDevices) ? data.mobileDevices : []);
         setCountryId(data.countryId || "");
         setAccessValue({
           accessProfile: data.accessProfile === "operations" || data.accessProfile === "shipping_line" ? data.accessProfile : null,
@@ -827,6 +862,23 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       }
     } catch (err) {
       console.error("Failed to load user for edit", err);
+    }
+  }
+
+  /** After a save, re-read the record so the rights list and the report show what the server actually stored. */
+  async function refreshSavedRights(savedId: string) {
+    try {
+      const res = await fetch(`/api/erp/users?userId=${encodeURIComponent(savedId)}&lang=${activeLang}`).then((r) => r.json());
+      const d = res?.data;
+      if (!d) return;
+      setSavedUserData((prev) => prev ? {
+        ...prev,
+        permissions: Array.isArray(d.permissions) ? d.permissions : prev.permissions,
+        deviceAccess: d.deviceAccess ?? null,
+        mobileDevices: Array.isArray(d.mobileDevices) ? d.mobileDevices : prev.mobileDevices,
+      } : prev);
+    } catch {
+      // keep the locally saved view
     }
   }
 
@@ -1070,6 +1122,12 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     return buildRbacRoleSummary(role, effectivePermissions);
   }, [role, effectivePermissions]);
 
+  // The complete rights list of what this user is being given (live: follows every checkbox on step 4)
+  const rightsList = useMemo(
+    () => buildUserRightsList({ role: templateRole, permissions: effectivePermissions, matrixState: hierarchicalState }),
+    [templateRole, effectivePermissions, hierarchicalState]
+  );
+
   function isStepValid(currentStep: WizardStep) {
     if (currentStep === 1) {
       return Boolean(selectedEmployeeId || fullName.trim().length >= 2);
@@ -1082,6 +1140,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       return true;
     }
     if (currentStep === 3) {
+      // a device allotment must name at least one device kind (only the admins who may change it are held to this)
+      if (canManageDevices && deviceKinds.length === 0) return false;
       if (registrationMode === "use_existing") return Boolean(selectedExistingUserId);
       if (!loginUsername.trim()) return false;
       const cleanEmail = personalEmail.trim();
@@ -1215,6 +1275,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         lastName: employeeProfile.lastName || lastName || (fullName.trim().split(" ").slice(1).join(" ") || null),
         photoUrl: employeeProfile.photoUrl || null,
         permissions: effectivePermissions,
+        // only a Super Admin / Country Admin sends the allotment; anyone else leaves it as the server has it
+        ...(canManageDevices ? { deviceAccess: deviceKinds } : {}),
         ...accessProfilePayload(accessValue)
       };
 
@@ -1286,7 +1348,20 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         updatedAt: new Date().toISOString()
       };
 
-      setSavedUserData(completedUser);
+      setSavedUserData({
+        ...completedUser,
+        deviceAccess: deviceKinds,
+        mobileDevices: registeredDevices,
+        operationalDomain,
+        mobileProfile,
+        accessProfile: accessValue.accessProfile,
+        financialAccess: accessValue.financialAccess,
+        effectiveFrom: accessValue.effectiveFrom || null,
+        effectiveTo: accessValue.effectiveTo || null,
+        shippingLineName: accessValue.shippingLineId ? scopeNames.lines[accessValue.shippingLineId] ?? accessValue.shippingLineId : null,
+        warehouseNames: accessValue.warehouseIds.map((id) => scopeNames.warehouses[id] ?? id),
+      });
+      if (resUserId) void refreshSavedRights(resUserId);
       setBanner({ tone: "ok", text: isEdit ? "User profile & customized RBAC permissions updated successfully." : registrationMode === "use_existing" ? "Additional company/branch scope assigned to existing user successfully." : "User registered & customized RBAC permissions saved successfully." });
     } catch (e: any) {
       const errMsg = e?.message || (typeof e === "string" ? e : "User registration operation failed.");
@@ -1310,6 +1385,16 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     }
   }
 
+  /** "Any device" when both kinds are allotted (or the allotment is not restricted), otherwise the chosen kinds. */
+  function deviceKindsText(kinds: readonly DeviceKind[] | null): string {
+    if (!kinds || kinds.length === 0 || kinds.length === DEVICE_KINDS.length) {
+      return centralT(activeLang, "udr.r.dev_any" as never, "Any device (not restricted)");
+    }
+    return kinds
+      .map((k) => (k === "mobile" ? centralT(activeLang, "udr.r.dev_mobile" as never, "Mobile") : centralT(activeLang, "udr.r.dev_computer" as never, "Computer")))
+      .join(" · ");
+  }
+
   const steps = [
     { number: 1 as const, label: centralT(activeLang, "urw2.step1_title" as never, "Employee & Operational Section"), icon: <Users className="h-4 w-4" /> },
     { number: 2 as const, label: centralT(activeLang, "urw2.step2_title" as never, "Role & Branch Scope"), icon: <MapPin className="h-4 w-4" /> },
@@ -1317,46 +1402,54 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     { number: 4 as const, label: centralT(activeLang, "urw2.step4_title" as never, "Permissions & Confirmation"), icon: <ShieldCheck className="h-4 w-4" /> }
   ];
 
+  /** The record as it stands on screen (what the print shows); after a save the server's stored rights replace it. */
+  const buildDraftProfile = (): UserProfileData & { matrixState: HierarchicalMatrixState } => ({
+    userId: editUserId || "USR-PREVIEW",
+    userCode: userCode,
+    fullName: fullName || "User Name",
+    username: loginUsername || userCode,
+    firstName: employeeProfile.firstName,
+    middleName: employeeProfile.middleName,
+    lastName: employeeProfile.lastName,
+    email: personalEmail,
+    phone: contactPhone,
+    designation: designation,
+    department: department,
+    employeeCode: employeeCode || employeeProfile.employeeCode,
+    countryName: selectedCountry?.name,
+    mainBranchName: selectedMainBranch?.name,
+    mainBranchCode: selectedMainBranch?.code,
+    cityBranchName: selectedCityBranch?.name,
+    cityBranchCode: selectedCityBranch?.code,
+    localCurrency: effectiveCurrency,
+    role: templateRole,
+    status: "Active",
+    cnicPassportNo: cnicPassportNo,
+    idExpiryDate: idExpiryDate,
+    kycStatus: kycStatus,
+    residentialAddress: residentialAddress,
+    passwordVaultRef: `VAULT-DGT-${userCode}`,
+    permissions: effectivePermissions,
+    matrixState: hierarchicalState,
+    moduleCapabilities,
+    employmentType: employeeProfile.employmentType,
+    jobStatus: employeeProfile.jobStatus,
+    workingShift: employeeProfile.workingShift,
+    joiningDate: employeeProfile.joiningDate,
+    deviceAccess: deviceKinds,
+    mobileDevices: registeredDevices,
+    operationalDomain,
+    mobileProfile,
+    accessProfile: accessValue.accessProfile,
+    financialAccess: accessValue.financialAccess,
+    effectiveFrom: accessValue.effectiveFrom || null,
+    effectiveTo: accessValue.effectiveTo || null,
+    shippingLineName: accessValue.shippingLineId ? scopeNames.lines[accessValue.shippingLineId] ?? accessValue.shippingLineId : null,
+    warehouseNames: accessValue.warehouseIds.map((id) => scopeNames.warehouses[id] ?? id),
+  });
+
   const handlePrintCard = () => {
-    openUserA4ReportWindow({
-      title: centralT(activeLang, "urw2.report_title" as never, "Comprehensive User Profile & Authorization Report"),
-      subtitle: centralT(activeLang, "urw2.report_subtitle" as never, "Official Centralized ERP User Registry Record"),
-      userData: {
-        userId: editUserId || "USR-PREVIEW",
-        userCode: userCode,
-        fullName: fullName || "User Name",
-        firstName: employeeProfile.firstName,
-        middleName: employeeProfile.middleName,
-        lastName: employeeProfile.lastName,
-        countryName: selectedCountry?.name || "Pakistan",
-        branchName: (branchType === "main" ? selectedMainBranch?.name : selectedCityBranch?.name) || "Main Branch",
-        branchCode: branchCode || "PK-MAIN-001",
-        branchType: designation || "Company Staff",
-        role: role,
-        registrationDate: new Date().toISOString(),
-        status: "Active",
-        permissions: effectivePermissions,
-        department: department,
-        designation: designation,
-        employeeCode: employeeCode,
-        phone: contactPhone,
-        email: personalEmail,
-        cnicPassportNo: cnicPassportNo,
-        idExpiryDate: idExpiryDate,
-        kycStatus: kycStatus,
-        residentialAddress: residentialAddress,
-        passwordVaultRef: `VAULT-DGT-${userCode}`,
-        employmentType: employeeProfile.employmentType,
-        joiningDate: employeeProfile.joiningDate,
-        contractStartDate: employeeProfile.contractStartDate,
-        contractEndDate: employeeProfile.contractEndDate,
-        jobStatus: employeeProfile.jobStatus,
-        workingShift: employeeProfile.workingShift,
-        lastActivity: new Date().toISOString(),
-        lastActivityAction: "user.registered",
-      },
-      lang: activeLang
-    });
+    openUserRightsReportWindow(userProfileToRightsReport(buildDraftProfile(), activeLang));
   };
 
   const allowedFormsCount = useMemo(() => {
@@ -2785,6 +2878,81 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                           )}
                     </p>
                   </div>
+
+                  {/* Device access: the kinds of device this login may sign in from (Mobile / Computer) */}
+                  <div className="space-y-2 rounded-xl border border-teal-200 bg-teal-50/60 p-3.5 dark:border-teal-900 dark:bg-teal-950/20">
+                    <Label className="text-xs font-black uppercase tracking-wide text-teal-900 dark:text-teal-200 flex items-center gap-1.5">
+                      <Smartphone className="h-3.5 w-3.5" aria-hidden />
+                      <span>{centralT(activeLang, "udr.w.devices_label" as never, "Device access (sign-in devices)")}</span>
+                    </Label>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {DEVICE_KINDS.map((kind) => {
+                        const on = deviceKinds.includes(kind);
+                        const Icon = kind === "mobile" ? Smartphone : Monitor;
+                        return (
+                          <button
+                            key={kind}
+                            type="button"
+                            aria-pressed={on}
+                            disabled={!canManageDevices}
+                            onClick={() => toggleDeviceKind(kind)}
+                            className={`flex min-w-0 items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-80 ${
+                              on
+                                ? "border-teal-600 bg-teal-600 text-white shadow-sm"
+                                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                            }`}
+                          >
+                            <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                            <span className="min-w-0 flex-1">
+                              <span className="block">
+                                {kind === "mobile"
+                                  ? centralT(activeLang, "udr.w.dev_mobile" as never, "Mobile")
+                                  : centralT(activeLang, "udr.w.dev_computer" as never, "Computer")}
+                              </span>
+                              <span className={`block text-[11px] font-normal ${on ? "text-teal-50" : "text-slate-500 dark:text-slate-400"}`}>
+                                {kind === "mobile"
+                                  ? centralT(activeLang, "udr.w.dev_mobile_hint" as never, "Phone or tablet, including the DGT.llc B and BS store apps")
+                                  : centralT(activeLang, "udr.w.dev_computer_hint" as never, "Desktop or laptop browser")}
+                              </span>
+                            </span>
+                            {on && <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[11px] text-teal-800 dark:text-teal-300">
+                      {canManageDevices
+                        ? centralT(activeLang, "udr.w.devices_hint" as never, "The user can sign in from any device kind selected here.")
+                        : centralT(activeLang, "udr.w.devices_readonly" as never, "Only a Super Admin or Country Admin can change device access. This is the current allotment.")}
+                    </p>
+                    {canManageDevices && deviceKinds.length === 0 && (
+                      <p className="text-[11px] font-bold text-rose-600">
+                        {centralT(activeLang, "udr.w.devices_required" as never, "Select at least one device. The user needs a device to sign in.")}
+                      </p>
+                    )}
+                    <div className="border-t border-teal-200/70 pt-2 dark:border-teal-900/60">
+                      <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        {centralT(activeLang, "udr.w.devices_registered" as never, "Registered mobile devices for this login")}
+                      </div>
+                      {registeredDevices.length === 0 ? (
+                        <p className="text-[11px] text-slate-500">
+                          {centralT(activeLang, "udr.w.devices_none" as never, "No mobile device registered for this login yet.")}
+                        </p>
+                      ) : (
+                        <ul className="mt-1 space-y-1">
+                          {registeredDevices.map((d) => (
+                            <li key={d.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-700 dark:text-slate-300">
+                              <span className="font-mono font-bold">{String(d.app).toUpperCase()}</span>
+                              <span className="min-w-0 break-words">{[d.platform, d.model].filter(Boolean).join(" ") || "-"}</span>
+                              <span className="rounded border border-teal-200 bg-white px-1.5 py-0.5 font-semibold dark:bg-slate-900">
+                                {centralT(activeLang, ("udr.dst." + d.status) as never, d.status)}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -2941,6 +3109,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                             : "Standard ERP"}
                         </strong>
                       </div>
+                      <div>
+                        <span className="text-slate-500">{centralT(activeLang, "udr.w.sum_devices" as never, "Device access")}:</span>{" "}
+                        <strong className="text-teal-700 dark:text-teal-300">{deviceKindsText(deviceKinds)}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">{centralT(activeLang, "udr.r.f_authority" as never, "Authority tier")}:</span>{" "}
+                        <strong>{authorityTierLabel(activeLang, rightsList.authorityTier)}</strong>
+                      </div>
                     </div>
                   </div>
 
@@ -2962,6 +3138,16 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                           : "Branch Operational User: Created under branch operational ledger with assigned form permissions and transaction limits."}
                       </p>
                     </div>
+                  </div>
+
+                  {/* COMPLETE RIGHTS LIST: every granted form with its actions, the expense bill types, other granted rights and the restricted modules.
+                      Never truncated; it follows the matrix below live. */}
+                  <div className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50/30 p-3.5 dark:border-emerald-900 dark:bg-emerald-950/10">
+                    <Label className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                      <Layers className="h-4 w-4 text-emerald-700" aria-hidden />
+                      <span>{centralT(activeLang, "udr.r.sec_rights" as never, "Granted module rights (every form)")}</span>
+                    </Label>
+                    <UserRightsListPanel rights={rightsList} lang={activeLang} />
                   </div>
 
                   {/* 4-TIER INTERACTIVE GRANULAR PERMISSION MATRIX (Module -> Section -> Form -> 8 Actions) */}
@@ -3027,7 +3213,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     {/* Hierarchical Accordions */}
-                    <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
+                    <div className="space-y-3">
                       {filteredHierarchy.map((mod) => {
                         const isExpanded = expandedModules[mod.key] ?? true;
                         const modForms = mod.sections.flatMap(s => s.forms);

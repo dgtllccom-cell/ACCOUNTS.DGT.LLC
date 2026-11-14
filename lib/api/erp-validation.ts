@@ -2,6 +2,7 @@ import { z } from "zod";
 import { approvalActions, approvalStatuses } from "@/lib/approval/approval-actions";
 import { paymentEntryTypes, roznamchaTypes } from "@/lib/accounting/roznamcha-flow";
 import { enterpriseRoles } from "@/lib/permissions/enterprise-roles";
+import { DEVICE_KINDS } from "@/lib/mobile/device-access";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -194,7 +195,9 @@ export const assignmentAccessFields = {
   warehouseIds: z.array(uuidSchema).max(50).nullable().optional(),
   effectiveFrom: z.string().date().nullable().optional(),
   effectiveTo: z.string().date().nullable().optional(),
-  financialAccess: z.enum(["role_default", "deny", "allow"]).optional()
+  financialAccess: z.enum(["role_default", "deny", "allow"]).optional(),
+  // device kinds this assignment may sign in from (lib/mobile/device-access); absent = leave unchanged
+  deviceAccess: z.array(z.enum(DEVICE_KINDS)).min(1).max(DEVICE_KINDS.length).optional()
 };
 
 export const userCreateSchema = scopeSchema.extend({

@@ -14,6 +14,9 @@ import { setTempSuperAdminSession, setDirectUserSession } from "@/lib/auth/temp-
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { appChannelFromUserAgent } from "@/lib/mobile/app-channel";
 import { DEVICE_COOKIE, checkDeviceForUser, recordLoginBlocked, verifyDeviceToken } from "@/lib/mobile/device-service";
+import { deviceKindAllowed, deviceKindFromUserAgent, effectiveDeviceKinds } from "@/lib/mobile/device-access";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { t } from "@/lib/i18n/ui";
 
 function toEnterpriseRole(role: string): EnterpriseRole {
   if (role === "staff") return "staff_user";
@@ -32,7 +35,10 @@ function dashboardForRolesLocal(roles: EnterpriseRole[]) {
 async function loadLoginAccountState(admin: any, userId: string): Promise<{ blocked: boolean; roles: EnterpriseRole[]; assignments: any[] }> {
   type Row = { role: string; country_id: string | null; country_branch_id: string | null; city_branch_id: string | null; clearing_agent_id: string | null;
     ledger_visibility: string | null; mobile_profile: string | null; operational_domain: string | null; access_profile: string | null;
-    shipping_line_id: string | null; effective_from: string | null; effective_to: string | null };
+    shipping_line_id: string | null; effective_from: string | null; effective_to: string | null; device_access?: string[] | null };
+  // device_access is read tolerantly: a database that predates migration 20261252 must keep signing users in (no allotment = not restricted)
+  const ASSIGNMENT_COLUMNS = "role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, mobile_profile, operational_domain, access_profile, shipping_line_id, effective_from, effective_to";
+  const isMissingDeviceColumn = (err: unknown) => /device_access/i.test(String((err as { message?: unknown })?.message ?? err ?? ""));
   let blocked = false;
   let rows: Row[] | null = null;
   const viaPg = await withLocalPg(async (sql) => {
@@ -40,25 +46,43 @@ async function loadLoginAccountState(admin: any, userId: string): Promise<{ bloc
       select u.banned_until, p.id as profile_id, p.deleted_at
       from auth.users u left join public.profiles p on p.id = u.id
       where u.id = ${userId}::uuid limit 1`;
-    const a = await sql`
-      select role::text as role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, mobile_profile,
-             operational_domain, access_profile, shipping_line_id, effective_from::text as effective_from, effective_to::text as effective_to
-      from public.user_role_assignments
-      where user_id = ${userId}::uuid and is_active = true and deleted_at is null`;
-    return { st: (st as any[])[0] ?? null, a: a as unknown as Row[] };
+    let a: any[];
+    try {
+      a = (await sql`
+        select role::text as role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, mobile_profile,
+               operational_domain, access_profile, shipping_line_id, effective_from::text as effective_from, effective_to::text as effective_to,
+               device_access
+        from public.user_role_assignments
+        where user_id = ${userId}::uuid and is_active = true and deleted_at is null`) as any[];
+    } catch (err) {
+      if (!isMissingDeviceColumn(err)) throw err;
+      a = (await sql`
+        select role::text as role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, mobile_profile,
+               operational_domain, access_profile, shipping_line_id, effective_from::text as effective_from, effective_to::text as effective_to
+        from public.user_role_assignments
+        where user_id = ${userId}::uuid and is_active = true and deleted_at is null`) as any[];
+    }
+    return { st: (st as any[])[0] ?? null, a: a as Row[] };
   }).catch(() => null);
   if (viaPg) {
     const st = viaPg.st;
     blocked = !st || !st.profile_id || Boolean(st.deleted_at) || Boolean(st.banned_until && new Date(st.banned_until).getTime() > Date.now());
     rows = viaPg.a;
   } else {
-    const [{ data: authUser }, { data: prof }, { data: a }] = await Promise.all([
+    const [{ data: authUser }, { data: prof }, withDevice] = await Promise.all([
       admin.auth.admin.getUserById(userId),
       admin.from("profiles").select("id, deleted_at").eq("id", userId).maybeSingle(),
       admin.from("user_role_assignments")
-        .select("role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, mobile_profile, operational_domain, access_profile, shipping_line_id, effective_from, effective_to")
+        .select(`${ASSIGNMENT_COLUMNS}, device_access`)
         .eq("user_id", userId).eq("is_active", true).is("deleted_at", null),
     ]);
+    let a: Row[] | null = withDevice.data as Row[] | null;
+    if (withDevice.error && isMissingDeviceColumn(withDevice.error)) {
+      const { data: legacy } = await admin.from("user_role_assignments")
+        .select(ASSIGNMENT_COLUMNS)
+        .eq("user_id", userId).eq("is_active", true).is("deleted_at", null);
+      a = legacy as Row[] | null;
+    }
     const bannedUntil = authUser?.user?.banned_until ? new Date(authUser.user.banned_until).getTime() : 0;
     blocked = !prof?.id || Boolean(prof?.deleted_at) || bannedUntil > Date.now();
     rows = (a ?? []) as Row[];
@@ -77,6 +101,8 @@ async function loadLoginAccountState(admin: any, userId: string): Promise<{ bloc
         clearingAgentId: r.clearing_agent_id, ledgerVisibility: r.ledger_visibility ?? "scoped",
         mobileProfile: r.mobile_profile ?? "standard", operationalDomain: domain, accessProfile: profile,
         shippingLineId: r.shipping_line_id, effectiveFrom: r.effective_from, effectiveTo: r.effective_to,
+        // device kinds allotted to this assignment; null = not restricted
+        deviceAccess: Array.isArray(r.device_access) ? r.device_access : null,
       };
     })
     .filter((x): x is NonNullable<typeof x> => Boolean(x));
@@ -575,6 +601,30 @@ export async function POST(request: NextRequest) {
   if (!accountState.roles.length) {
     return respondError("This account has no active access assignment. Please contact your administrator.", 403);
   }
+  // Device access (Mobile / Computer): sign-in is allowed only from a device kind allotted to this user (lib/mobile/device-access).
+  // A login with no allotment restriction (device_access NULL, every legacy row) is not affected.
+  const signInDevice = deviceKindFromUserAgent(request.headers.get("user-agent"));
+  const allowedDevices = effectiveDeviceKinds(accountState.assignments.map((a: { deviceAccess: string[] | null }) => ({ device_access: a.deviceAccess })));
+  if (!deviceKindAllowed(allowedDevices, signInDevice)) {
+    try {
+      await admin.from("audit_logs").insert({
+        company_id: null,
+        actor_id: profileRecord.id,
+        action: "auth.login_device_denied",
+        entity_table: "profiles",
+        entity_id: profileRecord.id,
+        before: null,
+        after: { identifier: rawIdentifier, device: signInDevice, allowedDevices },
+        ip_address: request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? null
+      });
+    } catch { /* audit is best effort; the refusal below is what matters */ }
+    const lang = await getRequestLanguage();
+    return respondError(
+      t(lang, "udr.login_device_denied", "This account cannot sign in from this type of device. Ask your administrator to allow this device type."),
+      403
+    );
+  }
+
   userRoles = accountState.roles;
   roleAssignments = accountState.assignments;
 
