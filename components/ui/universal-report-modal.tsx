@@ -179,7 +179,7 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
     let html = `<html dir="${typeof document !== "undefined" && document.documentElement.dir === "rtl" ? "rtl" : "ltr"}" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">`;
     html += `<head><meta charset="utf-8"/><style>
       table { border-collapse: collapse; width: 100%; font-family: Arial; }
-      th { background-color: #1e293b; color: #ffffff; font-weight: bold; border: 1px solid #334155; padding: 8px; }
+      th { background-color: #f1f5f9; color: #0f172a; font-weight: bold; border: 1px solid #334155; padding: 8px; }
       td { border: 1px solid #cbd5e1; padding: 6px; }
       .header-title { font-size: 18px; font-weight: bold; color: #0f172a; }
       .meta { color: #475569; font-size: 12px; }
@@ -224,25 +224,25 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
 
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto print:p-0 print:bg-white print:static">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/95 p-4 overflow-y-auto print:p-0 print:bg-white print:static">
       <div
         dir={dir}
-        className="relative w-full max-w-6xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] print:max-h-none print:border-none print:shadow-none print:w-full print:bg-white print:text-slate-900"
+        className="relative w-full max-w-6xl rounded-2xl bg-white border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] print:max-h-none print:border-none print:shadow-none print:w-full print:bg-white print:text-slate-900"
       >
         {/* Top Control Bar (Hidden on Print) */}
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-950/90 border-b border-slate-800 px-6 py-4 print:hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 border-b border-slate-200 px-6 py-4 print:hidden">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 text-cyan-400 border border-cyan-500/30">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-900 border border-cyan-500/30">
               <FileText className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-10 text-white flex items-center gap-2">
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 {th(title)}
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-mono">
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-slate-900 border border-cyan-500/20 font-mono">
                   {data.length} {uiText(currentLanguage, "report.records")}
                 </span>
               </h2>
-              <p className="text-xs text-slate-400">{companyName} • {branchName}</p>
+              <p className="text-xs text-slate-600">{companyName} • {branchName}</p>
             </div>
           </div>
 
@@ -270,14 +270,14 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
             </button>
             <button
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors border border-slate-700"
+              className="flex items-center gap-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-900 transition-colors border border-slate-300"
             >
-              <FileText className="h-3.5 w-3.5 text-slate-400" />
+              <FileText className="h-3.5 w-3.5 text-slate-600" />
               {uiText(currentLanguage, "report.export_csv")}
             </button>
             <button
               onClick={onClose}
-              className="ml-2 flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
+              className="ml-2 flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors"
             >
               <X className="h-4 w-4" />
             </button>
@@ -287,48 +287,48 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
         {/* Report Canvas Content (Printable area) */}
         <div ref={printRef} className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 print:p-0 print:overflow-visible">
           {/* Header Banner */}
-          <div className="rounded-xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-6 border border-slate-800 print:bg-none print:border-b-2 print:border-slate-900 print:p-0 print:pb-4">
+          <div className="rounded-xl bg-white p-6 border border-slate-200 print:bg-none print:border-b-2 print:border-slate-900 print:p-0 print:pb-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-cyan-400 print:text-slate-800" />
-                  <span className="text-lg font-bold text-white tracking-wide uppercase print:text-slate-900">
+                  <Building2 className="h-5 w-5 text-slate-900 print:text-slate-800" />
+                  <span className="text-lg font-bold text-slate-900 tracking-wide uppercase print:text-slate-900">
                     {companyName}
                   </span>
                 </div>
-                <h1 className="text-xl font-extrabold text-cyan-400 print:text-slate-800">
+                <h1 className="text-xl font-extrabold text-slate-900 print:text-slate-800">
                   {th(title)}
                 </h1>
-                {subtitle && <p className="text-xs text-slate-400 print:text-slate-600">{th(subtitle)}</p>}
+                {subtitle && <p className="text-xs text-slate-600 print:text-slate-600">{th(subtitle)}</p>}
               </div>
 
               {/* Scope & Metadata Details */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs bg-slate-900/80 p-3 rounded-lg border border-slate-800/80 print:bg-slate-50 print:border-slate-200 print:text-slate-800">
-                <div className="flex items-center gap-1.5 text-slate-300 print:text-slate-700">
-                  <Globe className="h-3.5 w-3.5 text-cyan-400 print:text-slate-600" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs bg-slate-50 p-3 rounded-lg border border-slate-200 print:bg-slate-50 print:border-slate-200 print:text-slate-800">
+                <div className="flex items-center gap-1.5 text-slate-800 print:text-slate-700">
+                  <Globe className="h-3.5 w-3.5 text-slate-900 print:text-slate-600" />
                   <span>{countryName}</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-slate-300 print:text-slate-700">
-                  <MapPin className="h-3.5 w-3.5 text-cyan-400 print:text-slate-600" />
+                <div className="flex items-center gap-1.5 text-slate-800 print:text-slate-700">
+                  <MapPin className="h-3.5 w-3.5 text-slate-900 print:text-slate-600" />
                   <span>{branchName}</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-slate-300 print:text-slate-700">
-                  <User className="h-3.5 w-3.5 text-cyan-400 print:text-slate-600" />
+                <div className="flex items-center gap-1.5 text-slate-800 print:text-slate-700">
+                  <User className="h-3.5 w-3.5 text-slate-900 print:text-slate-600" />
                   <span>{userName}</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-slate-300 print:text-slate-700">
-                  <Clock className="h-3.5 w-3.5 text-cyan-400 print:text-slate-600" />
+                <div className="flex items-center gap-1.5 text-slate-800 print:text-slate-700">
+                  <Clock className="h-3.5 w-3.5 text-slate-900 print:text-slate-600" />
                   <span>{nowString}</span>
                 </div>
                 {fromDate && (
-                  <div className="flex items-center gap-1.5 text-slate-300 print:text-slate-700">
-                    <Calendar className="h-3.5 w-3.5 text-cyan-400 print:text-slate-600" />
+                  <div className="flex items-center gap-1.5 text-slate-800 print:text-slate-700">
+                    <Calendar className="h-3.5 w-3.5 text-slate-900 print:text-slate-600" />
                     <span>From: {fromDate}</span>
                   </div>
                 )}
                 {toDate && (
-                  <div className="flex items-center gap-1.5 text-slate-300 print:text-slate-700">
-                    <Calendar className="h-3.5 w-3.5 text-cyan-400 print:text-slate-600" />
+                  <div className="flex items-center gap-1.5 text-slate-800 print:text-slate-700">
+                    <Calendar className="h-3.5 w-3.5 text-slate-900 print:text-slate-600" />
                     <span>To: {toDate}</span>
                   </div>
                 )}
@@ -337,16 +337,16 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
 
             {/* Filter Badges */}
             {filters.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center gap-2 print:border-slate-300">
-                <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1 print:text-slate-600">
+              <div className="mt-4 pt-3 border-t border-slate-200 flex flex-wrap items-center gap-2 print:border-slate-300">
+                <span className="text-[11px] font-semibold text-slate-600 flex items-center gap-1 print:text-slate-600">
                   <Filter className="h-3 w-3" /> {uiText(currentLanguage, "report.filters")}:
                 </span>
                 {filters.map((f, idx) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-800 text-cyan-300 border border-slate-700 print:bg-slate-200 print:text-slate-800 print:border-slate-300"
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-800 border border-slate-300 print:bg-slate-200 print:text-slate-800 print:border-slate-300"
                   >
-                    <span className="text-slate-400">{th(f.label)}:</span>
+                    <span className="text-slate-600">{th(f.label)}:</span>
                     <span className="font-semibold">{tv(f.value)}</span>
                   </span>
                 ))}
@@ -355,16 +355,16 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
           </div>
 
           {/* Main Data Table */}
-          <div className="rounded-xl border border-slate-800 bg-slate-950/60 overflow-hidden print:border-slate-300 print:bg-white">
+          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden print:border-slate-300 print:bg-white">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs print:text-[11px]">
-                <thead className="bg-slate-900/90 text-slate-200 uppercase font-semibold border-b border-slate-800 print:bg-slate-100 print:text-slate-900 print:border-slate-300">
+                <thead className="bg-slate-100 text-slate-900 uppercase font-semibold border-b border-slate-200 print:bg-slate-100 print:text-slate-900 print:border-slate-300">
                   <tr>
-                    <Th className="px-4 py-3 text-center w-12 border-r border-slate-800 print:border-slate-300">#</Th>
+                    <Th className="px-4 py-3 text-center w-12 border-r border-slate-200 print:border-slate-300">#</Th>
                     {columns.map(col => (
                       <Th
                         key={col.key}
-                        className={`px-4 py-3 border-r border-slate-800 print:border-slate-300 last:border-r-0 ${
+                        className={`px-4 py-3 border-r border-slate-200 print:border-slate-300 last:border-r-0 ${
                           col.align === "right" || col.isNumeric ? "text-right" : col.align === "center" ? "text-center" : "text-left"
                         }`}
                       >
@@ -373,7 +373,7 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/80 print:divide-slate-200">
+                <tbody className="divide-y divide-slate-200 print:divide-slate-200">
                   {data.length === 0 ? (
                     <tr>
                       <td colSpan={columns.length + 1} className="px-4 py-8 text-center text-slate-500 print:text-slate-400">
@@ -382,14 +382,14 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
                     </tr>
                   ) : (
                     data.map((row, idx) => (
-                      <tr key={idx} className="hover:bg-slate-900/40 transition-colors print:hover:bg-transparent">
-                        <td className="px-4 py-2.5 text-center font-mono text-slate-500 border-r border-slate-800/60 print:text-slate-600 print:border-slate-200">
+                      <tr key={idx} className="hover:bg-slate-50 transition-colors print:hover:bg-transparent">
+                        <td className="px-4 py-2.5 text-center font-mono text-slate-500 border-r border-slate-200 print:text-slate-600 print:border-slate-200">
                           {idx + 1}
                         </td>
                         {columns.map(col => (
                           <td
                             key={col.key}
-                            className={`px-4 py-2.5 border-r border-slate-800/60 print:border-slate-200 last:border-r-0 text-slate-300 print:text-slate-900 ${
+                            className={`px-4 py-2.5 border-r border-slate-200 print:border-slate-200 last:border-r-0 text-slate-800 print:text-slate-900 ${
                               col.align === "right" || col.isNumeric ? "text-right font-mono" : col.align === "center" ? "text-center" : ""
                             }`}
                           >
@@ -402,9 +402,9 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
                 </tbody>
                 {/* Financial Summary & Totals Footer */}
                 {showTotals && data.length > 0 && (
-                  <tfoot className="bg-slate-900 font-bold border-t-2 border-slate-700 text-white print:bg-slate-100 print:text-slate-900 print:border-slate-400">
+                  <tfoot className="bg-white font-bold border-t-2 border-slate-300 text-slate-900 print:bg-slate-100 print:text-slate-900 print:border-slate-400">
                     <tr>
-                      <td colSpan={2} className="px-4 py-3 uppercase text-xs tracking-wider text-cyan-400 print:text-slate-800">
+                      <td colSpan={2} className="px-4 py-3 uppercase text-xs tracking-wider text-slate-900 print:text-slate-800">
                         {uiText(currentLanguage, "report.totals")} ({data.length} {uiText(currentLanguage, "report.items")})
                       </td>
                       {columns.slice(1).map(col => {
@@ -453,7 +453,7 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
           </div>
 
           {/* Footer Metadata */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-4 border-t border-slate-800 text-[11px] text-slate-500 print:border-slate-300 print:text-slate-600">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-4 border-t border-slate-200 text-[11px] text-slate-500 print:border-slate-300 print:text-slate-600">
             <div className="flex items-center gap-1.5">
               <CheckCircle className="h-3.5 w-3.5 text-emerald-500 print:text-slate-600" />
               <span>{uiText(currentLanguage, "report.official_system_verified_document")} • {projectName}</span>

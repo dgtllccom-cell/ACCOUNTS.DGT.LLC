@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { goodsRegistryText } from "@/lib/i18n/goods-registry";
+import { formatGoodsCodeInput } from "@/lib/goods/code-input";
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -191,6 +193,15 @@ export function GoodsMasterRegistry() {
   const [masterModalTab, setMasterModalTab] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
   const [activeModalGoods, setActiveModalGoods] = useState<GoodsRecord | null>(null);
   const [savingMasterSection1, setSavingMasterSection1] = useState(false);
+  const saveInFlight = useRef(false);
+  const [masterFeedback, setMasterFeedback] = useState<{ type: "error" | "success" | "status"; message: string } | null>(null);
+  useEffect(() => {
+    if (!savingMasterSection1) return;
+    const timer = window.setTimeout(() => {
+      setMasterFeedback({ type: "status", message: goodsRegistryText(lang, "slow") });
+    }, 15000);
+    return () => window.clearTimeout(timer);
+  }, [savingMasterSection1, lang]);
   const [masterSection1Saved, setMasterSection1Saved] = useState(false);
 
   const [masterForm, setMasterForm] = useState({
@@ -364,6 +375,7 @@ export function GoodsMasterRegistry() {
   // Open Master Add / Edit Goods Dialog (The 6-Step Workflow)
   // =========================================================================
   function openAddGoodsModal() {
+    setMasterFeedback(null);
     setActiveModalGoods(null);
     setMasterSection1Saved(false);
     setMasterModalTab(1);
@@ -380,6 +392,7 @@ export function GoodsMasterRegistry() {
   }
 
   function openEditGoodsModal(item: GoodsRecord) {
+    setMasterFeedback(null);
     setActiveModalGoods(item);
     setMasterSection1Saved(true);
     setMasterModalTab(1);
@@ -399,10 +412,13 @@ export function GoodsMasterRegistry() {
   // Save Section 1 (Main Goods - Save Once)
   async function handleSaveMasterSection1(e: React.FormEvent) {
     e.preventDefault();
+    if (saveInFlight.current) return;
     if (!masterForm.name.trim() || !masterForm.chsCode.trim()) {
-      alert("Please fill in Goods Name and HS Code.");
+      setMasterFeedback({ type: "error", message: goodsRegistryText(lang, "required") });
       return;
     }
+    saveInFlight.current = true;
+    setMasterFeedback(null);
     setSavingMasterSection1(true);
     try {
       if (activeModalGoods) {
@@ -441,7 +457,8 @@ export function GoodsMasterRegistry() {
           isActive: masterForm.isActive,
         });
 
-        const newId = res.id;
+        const newId = res?.id;
+        if (!newId) throw new Error(goodsRegistryText(lang, "unconfirmed"));
         const newGood: GoodsRecord = {
           id: newId,
           name: masterForm.name.trim(),
@@ -460,9 +477,12 @@ export function GoodsMasterRegistry() {
         await loadGoods(newId);
         loadGoodsParameters(newGood);
       }
-    } catch (err: any) {
-      alert(`Failed to save Goods Item: ${err.message}`);
+      setMasterFeedback({ type: "success", message: goodsRegistryText(lang, "saved") });
+    } catch (err: unknown) {
+      const detail = err instanceof Error ? err.message : "";
+      setMasterFeedback({ type: "error", message: `${goodsRegistryText(lang, "failed")}${detail ? ` ${detail}` : ""}` });
     } finally {
+      saveInFlight.current = false;
       setSavingMasterSection1(false);
     }
   }
@@ -1138,9 +1158,17 @@ export function GoodsMasterRegistry() {
 
             {/* Modal Body */}
             <div className="p-6 overflow-y-auto flex-1 space-y-5">
+              {masterFeedback && (
+                <div role={masterFeedback.type === "error" ? "alert" : "status"}
+                  className={cn("rounded-lg border p-3 text-sm", masterFeedback.type === "error"
+                    ? "border-red-300 bg-red-50 text-red-900" : masterFeedback.type === "success"
+                    ? "border-emerald-300 bg-emerald-50 text-emerald-900" : "border-amber-300 bg-amber-50 text-amber-900")}>
+                  {masterFeedback.message}
+                </div>
+              )}
               {/* SECTION 1: Main Goods (Save Once) */}
               {masterModalTab === 1 && (
-                <form onSubmit={handleSaveMasterSection1} className="space-y-4">
+                <form onSubmit={handleSaveMasterSection1} noValidate aria-busy={savingMasterSection1} className="space-y-4">
                   <div className="bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-3.5 rounded-xl flex items-center gap-3">
                     <Sparkles className="w-5 h-5 text-blue-600 shrink-0" />
                     <p className="text-xs text-blue-900 dark:text-blue-200">
@@ -1169,9 +1197,10 @@ export function GoodsMasterRegistry() {
                         HS / PCT Code <span className="text-rose-500">*</span>
                       </label>
                       <Input
-                        placeholder="e.g. 0802.12 / 0802.32"
+                        placeholder="0000-0000"
+                        dir="ltr"
                         value={masterForm.chsCode}
-                        onChange={(e) => setMasterForm({ ...masterForm, chsCode: e.target.value.toUpperCase() })}
+                        onChange={(e) => setMasterForm({ ...masterForm, chsCode: formatGoodsCodeInput(e.target.value) })}
                         required
                         className="h-10 text-sm font-mono font-bold text-blue-600"
                       />
