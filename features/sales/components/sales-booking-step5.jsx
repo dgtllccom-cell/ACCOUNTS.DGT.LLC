@@ -111,7 +111,7 @@ export function SalesBookingStep5({
       {/* Main 2-Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* LEFT COLUMN: FINAL VERIFICATION & TRANSFER PANEL */}
-        <div className="lg:col-span-4 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5">
+        <div className="lg:col-span-4 min-w-0 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5">
           {/* Header */}
           <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
             <span className="w-6 h-6 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center shrink-0">
@@ -230,7 +230,7 @@ export function SalesBookingStep5({
         {/* RIGHT COLUMN: COMPLETE PDF-STYLE SALES BOOKING VOUCHER */}
         <div
           id="sales-booking-voucher-root"
-          className="lg:col-span-8 bg-white text-slate-900 border border-slate-300 rounded-2xl p-5 shadow-sm space-y-4 font-sans"
+          className="lg:col-span-8 min-w-0 bg-white text-slate-900 border border-slate-300 rounded-2xl p-5 shadow-sm space-y-4 font-sans"
         >
           {/* Voucher Document Top Header */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b-2 border-slate-200 pb-3">

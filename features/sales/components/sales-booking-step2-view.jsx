@@ -175,7 +175,7 @@ export function SalesBookingStep2({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start animate-in fade-in duration-200">
       {/* LEFT COLUMN: GOODS ENTRY DETAILS FORM */}
-      <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
+      <div className="lg:col-span-5 min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
           <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <Package className="w-4 h-4 text-blue-600" />
@@ -556,7 +556,7 @@ export function SalesBookingStep2({
       </div>
 
       {/* RIGHT COLUMN: CUSTOMER ACCOUNT (DR) + GOODS ITEMS TABLE */}
-      <div className="lg:col-span-7 space-y-4">
+      <div className="lg:col-span-7 min-w-0 space-y-4">
         {/* Customer Account (DR) & Company Details Card */}
         <SalesBookingUpperCards
           form={form}
