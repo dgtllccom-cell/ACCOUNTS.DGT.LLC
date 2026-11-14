@@ -8,6 +8,7 @@ import {
   ShoppingCart, ShoppingBag, Wallet, CreditCard, TrendingUp, Coins,
   ChevronDown, X, Ship
 } from "lucide-react";
+import { DashboardTools } from "@/components/layout/dashboard-tools";
 import { Button } from "@/components/ui/button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
@@ -121,42 +122,36 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
       id: "countries",
       label: tt("dash.total_countries", "Active Countries"),
       value: filteredData.counts.countries || 0,
-      bg: "bg-[#087ef1]",
       subtitle: tt("dash.live_records", "Live data")
     },
     {
       id: "branches",
       label: tt("dash.total_branches", "Active Branches"),
       value: filteredData.counts.branches || 0,
-      bg: "bg-[#03ba8b]",
       subtitle: tt("dash.live_records", "Live data")
     },
     {
       id: "customers",
       label: tt("dash.total_customers", "Customers"),
       value: filteredData.counts.customers || 0,
-      bg: "bg-[#8253dd]",
       subtitle: tt("dash.live_records", "Live data")
     },
     {
       id: "suppliers",
       label: tt("dash.companies_suppliers", "Companies / Suppliers"),
       value: filteredData.counts.suppliers || 0,
-      bg: "bg-[#ff9113]",
       subtitle: tt("dash.live_records", "Live data")
     },
     {
       id: "purchases",
       label: tt("nav.purchases", "Purchase Bookings"),
       value: filteredData.counts.purchasesCount || 0,
-      bg: "bg-[#f43d59]",
       subtitle: tt("dash.live_records", "Live data")
     },
     {
       id: "users",
       label: tt("dash.active_users", "Active Users"),
       value: filteredData.activeUsers || filteredData.counts.users || 0,
-      bg: "bg-[#10a5c2]",
       subtitle: tt("dash.live_records", "Live data")
     }
   ];
@@ -211,19 +206,30 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
   ];
 
   return (
-    <div className="w-full space-y-4 pb-12 text-[#123a61] dark:text-slate-100" dir={rtl ? "rtl" : "ltr"}>
-      {/* 2. V20 APPROVED MARITIME HERO BANNER */}
-      <section className="relative rounded-2xl border border-slate-200/80 shadow-md dark:border-slate-800">
-        {/* Background layer with rounded corners and clipping */}
-        <div
-          className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none"
-          style={{
-            backgroundImage: `linear-gradient(90deg, rgba(2,22,46,0.85) 0%, rgba(4,28,55,0.60) 52%, rgba(3,17,40,0.72) 100%), url('/assets/dgt-maritime-banner.png')`,
-            backgroundPosition: "center 52%",
-            backgroundSize: "cover"
-          }}
-        />
-        <div className="relative z-10 min-h-[140px] sm:min-h-[160px] md:min-h-[184px] w-full p-4 sm:p-6 md:p-8 flex flex-col justify-between">
+    <div data-erp-dashboard className="w-full space-y-4 pb-12 text-[#123a61] dark:text-slate-100" dir={rtl ? "rtl" : "ltr"}>
+      {/* 2. Compact dashboard heading and existing actions */}
+      <section data-erp-dashboard-hero className="relative rounded-2xl border border-border bg-card text-card-foreground">
+        <div data-slot="hero-content" className="relative z-10 min-h-[140px] sm:min-h-[160px] md:min-h-[184px] w-full p-4 sm:p-6 md:p-8 flex flex-col justify-between">
+          {/* Dashboard title */}
+          <div data-slot="hero-title" className="min-w-0 flex-1 border-s-2 border-primary ps-3">
+            <h1 className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight">
+              {tt("nav.super_admin_menu", "Super Admin Dashboard")}
+            </h1>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {tt("dash.hero_tagline", "Import • Export • Shipping • Finance")}
+            </p>
+            {/* Date + live status sit with the title (left), the actions sit right: a balanced hero instead of a stacked right column */}
+            <div className="mt-2 inline-flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+
+              <span>{todayStr}</span>
+              <span className="text-muted-foreground/50">•</span>
+              <span className="flex items-center gap-1 text-[11px] font-semibold tracking-wide text-emerald-700 dark:text-emerald-300">
+                <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                {tt("dash.live_sync", "Live Sync")}
+              </span>
+            </div>
+          </div>
+          <DashboardTools>
           {/* Top Tools: Action Buttons & Enclosed Date/Time */}
           <div className="z-20 flex w-full flex-col gap-2 sm:w-auto sm:items-end sm:self-end">
             {/* Action buttons: an even grid on phones, one right-aligned row from tablet up (all the same 36px height) */}
@@ -380,29 +386,12 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
           </div>
         </div>
 
-          {/* Title with yellow vertical accent bar */}
-          <div className="mt-4 max-w-xl rounded-r-2xl border-l-[3.5px] border-[#ffd66a] bg-gradient-to-r from-[#01132d]/40 via-[#01132d]/20 to-transparent p-3 sm:p-4 rtl:border-l-0 rtl:border-r-[3.5px] rtl:rounded-r-none rtl:rounded-l-2xl">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight drop-shadow-md">
-              {tt("nav.super_admin_menu", "Super Admin Dashboard")}
-            </h1>
-            <p className="mt-1 text-xs sm:text-sm font-medium text-slate-200/90 drop-shadow-xs">
-              {tt("dash.hero_tagline", "Import • Export • Shipping • Finance")}
-            </p>
-            {/* Date + live status sit with the title (left), the actions sit right: a balanced hero instead of a stacked right column */}
-            <div className="mt-2 inline-flex items-center gap-2 whitespace-nowrap rounded-lg border border-white/25 bg-black/40 px-3 py-1 text-[11px] font-bold text-white shadow-inner backdrop-blur-md">
-              <span className="text-[#ffd66a]">📅</span>
-              <span>{todayStr}</span>
-              <span className="text-white/40">•</span>
-              <span className="flex items-center gap-1 text-[11px] font-semibold tracking-wide text-emerald-300">
-                <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-                {tt("dash.live_sync", "Live Sync")}
-              </span>
-            </div>
-          </div>
+
+          </DashboardTools>
         </div>
       </section>
 
-      {/* 3. KEY BUSINESS INDICATORS (6 VIBRANT CARDS) */}
+      {/* 3. KEY BUSINESS INDICATORS */}
       <DashboardWidget id="kpis">
         <section className="space-y-2.5">
           <div className="flex items-center justify-between px-1">
@@ -414,23 +403,23 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <div data-erp-stat-grid className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 xl:grid-cols-6">
             {kpis.map((kpi) => (
               <div
                 key={kpi.id}
-                className={`relative overflow-hidden rounded-xl ${kpi.bg} p-2.5 sm:p-3.5 text-white shadow-sm transition hover:shadow-md`}
+                data-erp-stat-card className="relative min-w-0 overflow-hidden rounded-lg border border-border bg-card p-3 text-card-foreground shadow-sm"
               >
                 {/* Watermark circular arc */}
-                <div className="pointer-events-none absolute -right-4 top-2 h-16 w-16 rounded-full border-2 border-white/20 rtl:-left-4 rtl:right-auto" />
 
-                <div className="text-[11px] sm:text-xs font-black opacity-85">◇</div>
-                <div className="mt-1 sm:mt-1.5 text-lg sm:text-2xl md:text-3xl font-black tracking-tight leading-none">
+
+
+                <div data-slot="stat-value" className="text-xl sm:text-2xl font-semibold tracking-tight leading-tight tabular-nums">
                   {kpi.value.toLocaleString()}
                 </div>
                 <div className="mt-1 text-[11px] sm:text-[11px] font-bold leading-tight truncate">
                   {kpi.label}
                 </div>
-                <div className="mt-1 text-[11px] sm:text-[11px] font-medium text-white/80 truncate">
+                <div className="mt-1 text-[11px] sm:text-[11px] font-medium text-muted-foreground truncate">
                   {kpi.subtitle}
                 </div>
               </div>
@@ -448,11 +437,11 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-3">
+          <div data-erp-stat-grid className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-3">
             {finances.map((fin) => (
               <div
                 key={fin.id}
-                className="flex flex-col justify-between rounded-xl border border-slate-200/90 bg-white p-2.5 sm:p-3.5 shadow-xs transition hover:shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                data-erp-stat-card className="flex min-w-0 flex-col justify-between rounded-xl border border-slate-200/90 bg-white p-2.5 sm:p-3.5 shadow-xs transition hover:shadow-sm dark:border-slate-800 dark:bg-slate-900"
               >
                 <div>
                   <div className="text-[11px] sm:text-[11px] font-bold text-[#7394ba] truncate">

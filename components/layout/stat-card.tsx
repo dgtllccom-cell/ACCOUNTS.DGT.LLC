@@ -11,13 +11,13 @@ export function StatCard({
   icon: LucideIcon;
 }) {
   return (
-    <Card>
+    <Card data-erp-stat-card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
         <Icon className="h-4 w-4 text-primary" aria-hidden />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-semibold">{value}</div>
+        <div data-slot="stat-value" className="text-2xl font-semibold">{value}</div>
       </CardContent>
     </Card>
   );

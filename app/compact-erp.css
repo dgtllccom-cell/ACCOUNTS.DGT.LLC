@@ -1,0 +1,90 @@
+/* Shared ERP control-center presentation. Screen-only: invoice/receipt PDF and A4 rules keep their existing layouts. */
+@media screen {
+  [data-erp-density="compact"] .erp-topbar { background: hsl(var(--card) / .97); }
+  [data-erp-density="compact"] .erp-language-select {
+    display: flex; align-items: center; gap: .375rem; flex-shrink: 0;
+    min-height: 2.25rem; border: 1px solid hsl(var(--border)); border-radius: .5rem;
+    padding-inline: .5rem; background: hsl(var(--background)); color: hsl(var(--foreground));
+  }
+  [data-erp-density="compact"] .erp-language-select select {
+    width: 6.25rem; max-width: 100%; min-width: 0; background: transparent; border: 0;
+    font-size: .75rem; outline-offset: 3px; cursor: pointer;
+  }
+  .erp-topbar-tools, .erp-topbar-tools-content { display: flex; align-items: center; gap: .5rem; }
+  .erp-topbar-tools { position: relative; }
+  .erp-tools-trigger { display: none; }
+  [data-erp-density="compact"] [data-erp-page-header] h1 { font-size: 1.375rem; line-height: 1.5; }
+  [data-erp-density="compact"] [data-erp-stat-card] { min-width: 0; border-radius: .625rem; }
+  [data-erp-density="compact"] [data-slot="stat-value"] { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+  [data-erp-density="compact"] [data-erp-dashboard] { min-width: 0; }
+  [data-erp-density="compact"] [data-erp-dashboard-hero] { border-radius: .625rem; box-shadow: none; }
+  [data-erp-density="compact"] [data-erp-dashboard-hero] [data-slot="hero-content"] { min-height: 0; padding: 1.125rem; gap: .75rem; }
+  [data-erp-density="compact"] [data-erp-dashboard-hero] [data-slot="hero-title"] { margin-top: 0; padding: .625rem; }
+}
+@media screen and (max-width: 1023.98px) {
+  /* CSS follows viewport changes, so rotating/resizing never leaves body scroll locked on desktop. */
+  body:has([data-erp-density="compact"] .erp-drawer-overlay) { overflow: hidden; }
+  [data-erp-density="compact"] main[data-erp-content] { padding: .75rem; padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+  [data-erp-density="compact"] [data-erp-dashboard] { padding: 0; min-height: 0; }
+  [data-erp-density="compact"] [data-erp-dashboard] > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+  [data-erp-density="compact"] [data-slot="card"] { border-radius: .625rem; box-shadow: none; }
+  [data-erp-density="compact"] [data-slot="card-header"] { padding: .75rem; gap: .25rem; }
+  [data-erp-density="compact"] [data-slot="card-content"] { padding: .75rem; padding-top: 0; }
+  [data-erp-density="compact"] [data-slot="card-title"] { font-size: .875rem; line-height: 1.5; }
+  [data-erp-density="compact"] [data-erp-dashboard-hero] { padding: .875rem; }
+  [data-erp-density="compact"] [data-erp-dashboard-hero]:has([data-slot="hero-content"]) { padding: 0; }
+  [data-erp-density="compact"] [data-erp-dashboard-hero] h1,
+  [data-erp-density="compact"] [data-erp-dashboard-hero] h2 { font-size: 1.25rem; line-height: 1.5; }
+  [data-erp-density="compact"] [data-erp-dashboard-hero] .gap-6 { gap: .75rem; }
+  [data-erp-density="compact"] [data-erp-dashboard-hero] .h-24 { height: 3rem; width: 3rem; }
+  /* Preserve actual table semantics. Only the immediate wrapper scrolls; the page does not. */
+  [data-erp-density="compact"] [data-erp-content] :has(> table) { min-width: 0; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+  [data-erp-density="compact"] [data-erp-content]:not([data-view-mode="grid"]) table { display: table !important; overflow: visible; }
+  [data-erp-density="compact"] [data-erp-content] table :is(th, td) { padding: .5rem .625rem; font-size: .75rem; line-height: 1.5; }
+  [data-erp-density="compact"] [data-erp-content] table th { letter-spacing: 0; font-weight: 600; }
+  [data-erp-density="compact"] .erp-table-wrap.erp-sticky-col :is(th, td):first-child { left: auto; right: auto; inset-inline-start: 0; }
+  [data-erp-density="compact"] .erp-table-wrap.erp-sticky-col :is(th, td):last-child:not(:first-child) { position: static; }
+  [data-erp-density="compact"] .erp-mobile-drawer { height: 100dvh; overflow-y: auto; }
+  [data-erp-density="compact"] .erp-bottom-nav { box-shadow: 0 -1px 8px rgb(0 0 0 / .04); }
+  [data-erp-density="compact"] .erp-bottom-nav :is(a, button) { min-width: 0; flex: 1; font-size: .6875rem; padding-inline: .25rem; }
+  [data-erp-density="compact"] .erp-bottom-nav :is(a, button) span { max-width: 100%; overflow-wrap: anywhere; text-align: center; }
+}
+@media screen and (max-width: 639.98px) {
+  [data-erp-density="compact"] .erp-topbar > div { gap: .25rem; padding-inline: .5rem; min-height: 3.5rem; height: auto; }
+  [data-erp-density="compact"] .erp-topbar-actions { min-width: 0; gap: .25rem; }
+  [data-erp-density="compact"] .erp-preferences { gap: .125rem; }
+  [data-erp-density="compact"] .erp-language-select { min-height: 44px; padding-inline: .25rem; }
+  [data-erp-density="compact"] .erp-language-select > svg { display: none; }
+  /* Retain 16px inputs and 44px controls: density must not trigger iOS zoom or shrink touch targets. */
+  [data-erp-density="compact"] .erp-language-select select { width: 5.625rem; font-size: 16px; min-height: 44px; }
+  [data-erp-density="compact"] .erp-preferences > button { width: 44px; padding-inline: 0; }
+  [data-erp-density="compact"] .erp-tools-trigger { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; border-radius: .5rem; }
+  [data-erp-density="compact"] .erp-topbar-tools-content { display: none; }
+  [data-erp-density="compact"] .erp-topbar-tools[data-open="true"] .erp-topbar-tools-content {
+    display: flex; position: absolute; top: calc(100% + .5rem); inset-inline-end: 0; z-index: 50;
+    padding: .5rem; gap: .5rem; background: hsl(var(--popover)); color: hsl(var(--popover-foreground));
+    border: 1px solid hsl(var(--border)); border-radius: .625rem; box-shadow: 0 8px 24px rgb(0 0 0 / .12);
+  }
+  [data-erp-density="compact"] [data-erp-stat-grid] { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .625rem; }
+  [data-erp-density="compact"] [data-erp-stat-card] { padding: .75rem; }
+  [data-erp-density="compact"] [data-erp-stat-card] [data-slot="stat-value"] { font-size: 1.5rem; line-height: 1.4; }
+  [data-erp-density="compact"] [data-erp-stat-card] .truncate { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.6; }
+  [data-erp-density="compact"] [data-erp-page-header] h1 { font-size: 1.125rem; }
+  [data-erp-density="compact"] [data-erp-page-header] > p { font-size: .75rem; letter-spacing: normal; }
+}
+@media print {
+  /* The shared shell is never part of an ERP printout. */
+  [data-erp-density="compact"] .erp-drawer-overlay,
+  [data-erp-density="compact"] .erp-topbar-tools { display: none !important; }
+}
+@media screen and (max-width: 639.98px) {
+  [data-erp-density="compact"] [data-erp-notifications] { position: fixed; top: 3.75rem; inset-inline: .5rem; width: auto; max-width: none; }
+}
+@media screen {
+  [data-erp-density="compact"] [data-erp-dashboard-hero] [data-slot="hero-content"] { flex-direction: row; align-items: center; }
+  [data-erp-density="compact"] [data-erp-dashboard-hero] [data-slot="hero-title"] { padding-inline-start: .75rem; }
+}
+@media screen and (max-width: 639.98px) {
+  [data-erp-density="compact"] [data-erp-dashboard-hero] .erp-topbar-tools-content { width: min(340px, calc(100vw - 3rem)); }
+  [data-erp-density="compact"] [data-erp-dashboard-hero] .erp-topbar-tools[data-open="true"] .erp-topbar-tools-content { padding: .75rem; }
+}

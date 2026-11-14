@@ -178,7 +178,7 @@ export function BranchShippingDashboardView({ data }: { data: BranchShippingData
   }, [data.portWiseShipments, lang]);
 
   return (
-    <div className="space-y-6 text-foreground p-3 sm:p-5 lg:p-6 min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
+    <div data-erp-dashboard className="space-y-6 text-foreground p-3 sm:p-5 lg:p-6 min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
       {/* 1. Header Bar: Branch Title + Switcher + Localized Date */}
       <section className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-border/80 pb-4">
         <div className="flex items-center gap-3">
@@ -224,7 +224,7 @@ export function BranchShippingDashboardView({ data }: { data: BranchShippingData
       </section>
 
       {/* 2. Hero Banner: Maritime Container Ship Theme */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#061838] via-[#0b285a] to-[#0a3875] text-white p-6 sm:p-8 shadow-xl border border-blue-900/40">
+      <section data-erp-dashboard-hero className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#061838] via-[#0b285a] to-[#0a3875] text-white p-6 sm:p-8 shadow-xl border border-blue-900/40">
         <div
           className="absolute inset-0 opacity-25 mix-blend-luminosity bg-cover bg-center pointer-events-none"
           style={{ backgroundImage: `url('/images/shipping_port_hero.jpg'), url('/public/images/shipping_port_hero.jpg')` }}

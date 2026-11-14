@@ -148,7 +148,7 @@ export function SuperAdminShippingDashboardView({ data }: { data: SuperAdminShip
   }, [data.countryWiseShipments, lang]);
 
   return (
-    <div className="space-y-6 text-foreground p-3 sm:p-5 lg:p-6 min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
+    <div data-erp-dashboard className="space-y-6 text-foreground p-3 sm:p-5 lg:p-6 min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
       {/* 1. Header Bar: Title + Switcher + Super Admin Badge + Localized Date */}
       <section className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-border/80 pb-4">
         <div className="flex items-center gap-3">
@@ -208,7 +208,7 @@ export function SuperAdminShippingDashboardView({ data }: { data: SuperAdminShip
       </section>
 
       {/* 2. Executive Global Logistics Hero Banner */}
-      <section className="relative overflow-hidden rounded-3xl border border-blue-950/20 bg-gradient-to-r from-[#061830] via-[#092d5a] to-[#0c4384] p-6 text-white shadow-xl">
+      <section data-erp-dashboard-hero className="relative overflow-hidden rounded-3xl border border-blue-950/20 bg-gradient-to-r from-[#061830] via-[#092d5a] to-[#0c4384] p-6 text-white shadow-xl">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-overlay"
           style={{ backgroundImage: `url('/images/global_logistics_hero.jpg')` }}
