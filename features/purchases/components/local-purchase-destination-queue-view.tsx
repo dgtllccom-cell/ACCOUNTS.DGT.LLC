@@ -21,6 +21,7 @@ import {
   Flag,
   FileText,
   Plus,
+  MoreVertical,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -99,6 +100,8 @@ export interface LocalPurchaseDestinationRecord {
   country_name?: string;
   countryBranchId?: string;
   country_branch_id?: string;
+  countryBranchName?: string;
+  country_branch_name?: string;
   branchName?: string;
   branch_name?: string;
   status?: string;
@@ -244,6 +247,30 @@ export function LocalPurchaseDestinationQueueView({
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [selectedRowForVoucher, setSelectedRowForVoucher] = useState<LocalPurchaseDestinationRecord | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
+  const [openRowMenuId, setOpenRowMenuId] = useState<string | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as HTMLElement | null;
+      if (!target?.closest("[data-row-menu]")) {
+        setOpenRowMenuId(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const deriveCountryShort = (name?: string | null): string => {
+    const s = String(name || "").toLowerCase();
+    if (s.includes("emirates") || s.includes("uae") || s.includes("dubai")) return "AE";
+    if (s.includes("pakistan")) return "PK";
+    if (s.includes("afghanistan")) return "AF";
+    if (s.includes("iran")) return "IR";
+    if (s.includes("india")) return "IN";
+    if (s.includes("china")) return "CN";
+    if (s.includes("oman")) return "OM";
+    return String(name || "AE").slice(0, 2).toUpperCase();
+  };
 
   // Partial / Multiple Loading Modal State
   const [loadingModalBill, setLoadingModalBill] = useState<LocalPurchaseDestinationRecord | null>(null);
@@ -923,50 +950,40 @@ export function LocalPurchaseDestinationQueueView({
                 {stage === "loading" ? (
                   <tr>
                     <Th className="p-2.5 text-center border-r border-slate-200 dark:border-slate-700 w-8"></Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-start">
+                      {th("BILL NO. / DATE")}
+                    </Th>
                     <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">
-                      {th("SR#")}
+                      {th("COUNTRY")}
                     </Th>
-                    {isSuperAdmin && (
-                      <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
-                        {th("COUNTRY")}
-                      </Th>
-                    )}
-                    {(isSuperAdmin || isCountryAdmin) && (
-                      <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
-                        {th("BRANCH NAME")}
-                      </Th>
-                    )}
-                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
-                      {th("VOUCHER NO")}
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-start">
+                      {th("BRANCH NAME")}
                     </Th>
-                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
-                      {th("DATE")}
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-start">
+                      {th("Purchase / Sales Accounts")}
                     </Th>
-                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
-                      {th("SUPPLIER / PURCHASE ACCOUNT")}
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-start">
+                      {th("GOODS NAME (BRAND / SIZE)")}
                     </Th>
-                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">
-                      {th("GOODS NAME")}
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-start">
+                      {th("Origin")}
                     </Th>
-                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
-                      {th("ORIGINAL PURCHASE QTY")}
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-end">
+                      <div>{th("ORIGINAL PURCHASE")}</div>
+                      <div className="text-[9.5px] text-slate-400 font-normal">Qty · G.W. · N.W.</div>
                     </Th>
-                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
-                      {th("TOTAL LOADED QTY")}
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-end text-teal-700 dark:text-teal-400">
+                      <div>{th("TOTAL LOADED")}</div>
+                      <div className="text-[9.5px] text-teal-600/70 font-normal">Qty · G.W. · N.W.</div>
                     </Th>
-                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
-                      {th("REMAINING QTY")}
-                    </Th>
-                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
-                      {th("GROSS WT")}
-                    </Th>
-                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">
-                      {th("NET WT")}
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-end text-rose-700 dark:text-rose-400">
+                      <div>{th("REMAINING TO LOAD")}</div>
+                      <div className="text-[9.5px] text-rose-600/70 font-normal">Qty · G.W. · N.W.</div>
                     </Th>
                     <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">
                       {th("LOADING STATUS")}
                     </Th>
-                    <Th className="p-2.5 text-center">{th("ACTIONS")}</Th>
+                    <Th className="p-2.5 text-center w-12">{th("ACTIONS")}</Th>
                   </tr>
                 ) : (
                   <tr>
@@ -1040,14 +1057,14 @@ export function LocalPurchaseDestinationQueueView({
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[11px]">
                 {loading ? (
                   <tr>
-                    <td colSpan={stage === "loading" ? (11 + (isSuperAdmin ? 1 : 0) + (isSuperAdmin || isCountryAdmin ? 1 : 0)) : 22} className="p-8 text-center text-slate-400 font-mono">
+                    <td colSpan={stage === "loading" ? 12 : 22} className="p-8 text-center text-slate-400 font-mono">
                       <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600 mb-2" />
                       {th("LOADING PURCHASE RECORDS")}
                     </td>
                   </tr>
                 ) : filteredPurchases.length === 0 ? (
                   <tr>
-                    <td colSpan={stage === "loading" ? (11 + (isSuperAdmin ? 1 : 0) + (isSuperAdmin || isCountryAdmin ? 1 : 0)) : 22} className="p-12 text-center text-slate-400 font-sans">
+                    <td colSpan={stage === "loading" ? 12 : 22} className="p-12 text-center text-slate-400 font-sans">
                       <Package className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-700 mb-3" />
                       <p className="font-bold text-slate-700 dark:text-slate-300">
                         {tt("lpjr.no_transactions", "No local purchase transactions found")}
@@ -1063,7 +1080,7 @@ export function LocalPurchaseDestinationQueueView({
                       {/* Country Group Header Row */}
                       <tr className="bg-slate-100 dark:bg-slate-800/80 font-black text-slate-800 dark:text-slate-200 text-[11px]">
                         <td
-                          colSpan={stage === "loading" ? (11 + (isSuperAdmin ? 1 : 0) + (isSuperAdmin || isCountryAdmin ? 1 : 0)) : 22}
+                          colSpan={stage === "loading" ? 12 : 22}
                           className="px-4 py-2 uppercase tracking-wider border-y border-slate-200 dark:border-slate-700"
                         >
                           <div className="flex items-center justify-between">
@@ -1131,11 +1148,24 @@ export function LocalPurchaseDestinationQueueView({
                           const isFullyLoaded = stats.loaded >= stats.booked && stats.booked > 0;
                           const isPartiallyLoaded = stats.loaded > 0 && stats.loaded < stats.booked;
 
+                          const booked = stats.booked;
+                          const loaded = stats.loaded;
+                          const remaining = stats.remaining;
+
+                          const totalGross = grossWt;
+                          const totalNet = netWt;
+
+                          const loadedGross = stats.entries.reduce((s: number, e: any) => s + Number(e.grossWeight || 0), 0) || (booked > 0 ? (loaded / booked) * totalGross : 0);
+                          const loadedNet = stats.entries.reduce((s: number, e: any) => s + Number(e.netWeight || 0), 0) || (booked > 0 ? (loaded / booked) * totalNet : 0);
+                          const remainingGross = Math.max(0, totalGross - loadedGross);
+                          const remainingNet = Math.max(0, totalNet - loadedNet);
+                          const rowMenuOpen = openRowMenuId === String(row.id);
+
                           return (
                             <Fragment key={row.id}>
                               <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                                {/* Expand toggle */}
-                                <td className="p-2 text-center border-r border-slate-150 dark:border-slate-800">
+                                {/* 1. Expand toggle */}
+                                <td className="p-2 text-center border-r border-slate-150 dark:border-slate-800 w-8">
                                   <button
                                     type="button"
                                     onClick={() =>
@@ -1144,96 +1174,122 @@ export function LocalPurchaseDestinationQueueView({
                                         [row.id]: !prev[row.id],
                                       }))
                                     }
-                                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                                   >
                                     {isExpanded ? (
-                                      <ChevronDown className="h-3.5 w-3.5" />
+                                      <ChevronDown className="h-3.5 w-3.5 text-blue-600" />
                                     ) : (
                                       <ChevronRight className="h-3.5 w-3.5" />
                                     )}
                                   </button>
                                 </td>
 
-                                {/* SR# */}
-                                <td className="p-2 font-mono text-center border-r border-slate-150 dark:border-slate-800 text-slate-600 dark:text-slate-400">
-                                  {isSuperAdmin ? superSerial : isCountryAdmin ? countrySerial : branchSerial}
-                                </td>
-
-                                {/* Country (Super Admin only) */}
-                                {isSuperAdmin && (
-                                  <td className="p-2 border-r border-slate-150 dark:border-slate-800 font-semibold">
-                                    {row.countryName || row.country_name || "-"}
-                                  </td>
-                                )}
-
-                                {/* Branch (Super Admin & Country Admin only) */}
-                                {(isSuperAdmin || isCountryAdmin) && (
-                                  <td className="p-2 border-r border-slate-150 dark:border-slate-800 text-slate-600 dark:text-slate-300">
-                                    {row.branchName || row.branch_name || "-"}
-                                  </td>
-                                )}
-
-                                {/* Bill Number */}
-                                <td className="p-2 font-mono font-bold text-blue-600 dark:text-blue-400 border-r border-slate-150 dark:border-slate-800">
-                                  {voucherCode}
-                                </td>
-
-                                {/* Purchase Date */}
-                                <td className="p-2 font-mono text-slate-500 border-r border-slate-150 dark:border-slate-800">
-                                  {new Date(
-                                    row.createdAt || row.created_at || Date.now()
-                                  ).toLocaleDateString("en-GB")}
-                                </td>
-
-                                {/* Supplier / Purchase Account */}
-                                <td className="p-2 border-r border-slate-150 dark:border-slate-800">
-                                  <div className="font-mono text-[11px] font-bold text-blue-600 dark:text-blue-400">
-                                    {row.purchaseAccountNo || row.purchase_account_no || "—"}
-                                  </div>
-                                  <div className="text-[10px] text-slate-500 truncate max-w-[120px]" title={row.supplierName || row.supplier_name || ""}>
-                                    {row.supplierName || row.supplier_name || ""}
+                                {/* 2. Bill No. / Date (Combined at beginning) */}
+                                <td className="p-2 border-r border-slate-150 dark:border-slate-800 font-mono whitespace-nowrap">
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedRowForVoucher(row)}
+                                    className="font-bold text-blue-600 dark:text-blue-400 hover:underline block leading-tight text-xs cursor-pointer text-start"
+                                  >
+                                    {voucherCode}
+                                  </button>
+                                  <div className="text-[10px] text-slate-500 font-medium mt-0.5">
+                                    {new Date(row.createdAt || row.created_at || Date.now()).toLocaleDateString("en-GB")}
                                   </div>
                                 </td>
 
-                                {/* Goods Name */}
-                                <td className="p-2 font-bold text-slate-900 dark:text-slate-100 border-r border-slate-150 dark:border-slate-800">
-                                  {row.goodsName || row.goods_name || "-"}
+                                {/* 3. Country (short code) */}
+                                <td className="p-2 border-r border-slate-150 dark:border-slate-800 text-center whitespace-nowrap">
+                                  <span className="inline-block px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 font-mono font-black text-[10px]">
+                                    {deriveCountryShort(row.countryName || row.country_name)}
+                                  </span>
                                 </td>
 
-                                {/* Original Local Purchase Qty */}
-                                <td className="p-2 text-right font-mono font-bold border-r border-slate-150 dark:border-slate-800">
-                                  {stats.booked.toLocaleString()} {row.quantityName || "Bags"}
+                                {/* 4. Branch Name (Main Branch above, City Branch below) */}
+                                <td className="p-2 border-r border-slate-150 dark:border-slate-800 whitespace-nowrap">
+                                  <div className="font-bold text-slate-800 dark:text-slate-100 text-xs truncate max-w-[130px]" title={row.countryBranchName || row.country_branch_name || row.branchName}>
+                                    {row.countryBranchName || row.country_branch_name || row.branchName || row.branch_name || "Main Branch"}
+                                  </div>
+                                  <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate max-w-[130px] mt-0.5">
+                                    {row.branchName || row.branch_name || "City Branch"}
+                                  </div>
                                 </td>
 
-                                {/* Total Loaded Qty */}
-                                <td className="p-2 text-right font-mono font-bold text-teal-600 dark:text-teal-400 border-r border-slate-150 dark:border-slate-800">
-                                  {stats.loaded.toLocaleString()} {row.quantityName || "Bags"}
+                                {/* 5. Purchase Account above, Sales Account below */}
+                                <td className="p-2 border-r border-slate-150 dark:border-slate-800 whitespace-nowrap">
+                                  <div className="font-bold text-slate-900 dark:text-slate-100 text-xs leading-tight truncate max-w-[140px]" title={row.purchaseAccountNo || row.purchase_account_no}>
+                                    {row.purchaseAccountNo || row.purchase_account_no || "Purchase Acc"}
+                                  </div>
+                                  <div className="text-[10.5px] font-semibold text-blue-600 dark:text-blue-400 mt-0.5 leading-tight truncate max-w-[140px]" title={row.supplierName || row.supplier_name || row.salesAccountNo}>
+                                    {row.supplierName || row.supplier_name || row.salesAccountNo || "Supplier / Sales"}
+                                  </div>
                                 </td>
 
-                                {/* Remaining Qty */}
-                                <td className="p-2 text-right font-mono font-bold text-rose-600 border-r border-slate-150 dark:border-slate-800">
-                                  {stats.remaining.toLocaleString()} {row.quantityName || "Bags"}
+                                {/* 6. Goods Name (Brand / Size) */}
+                                <td className="p-2 border-r border-slate-150 dark:border-slate-800 whitespace-nowrap">
+                                  <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                                    {row.goodsName || row.goods_name || "-"}
+                                  </div>
+                                  {(row.brand || row.size) && (
+                                    <div className="text-[10px] text-slate-500 font-medium mt-0.5">
+                                      {row.brand ? `Brand: ${row.brand}` : ""}{row.brand && row.size ? " | " : ""}{row.size ? `Size: ${row.size}` : ""}
+                                    </div>
+                                  )}
                                 </td>
 
-                                {/* Gross Weight */}
-                                <td className="p-2 text-right font-mono border-r border-slate-150 dark:border-slate-800">
-                                  {grossWt.toLocaleString()} kg
+                                {/* 7. Origin */}
+                                <td className="p-2 border-r border-slate-150 dark:border-slate-800 whitespace-nowrap text-xs text-slate-700 dark:text-slate-300 font-medium">
+                                  {row.originCountryName || row.origin_country_name || "Local"}
                                 </td>
 
-                                {/* Net Weight */}
-                                <td className="p-2 text-right font-mono border-r border-slate-150 dark:border-slate-800">
-                                  {netWt.toLocaleString()} kg
+                                {/* 8. Stock Position 1: Original Purchase */}
+                                <td className="p-2 border-r border-slate-150 dark:border-slate-800 text-end font-mono whitespace-nowrap">
+                                  <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                                    {booked.toLocaleString()} {row.quantityName || "Bags"}
+                                  </div>
+                                  <div className="text-[10px] text-slate-500 mt-0.5">
+                                    G.W. {totalGross.toLocaleString()} kg
+                                  </div>
+                                  <div className="text-[10px] text-slate-400">
+                                    N.W. {totalNet.toLocaleString()} kg
+                                  </div>
                                 </td>
 
-                                {/* Loading Status */}
-                                <td className="p-2 text-center border-r border-slate-150 dark:border-slate-800">
+                                {/* 9. Stock Position 2: Total Loaded */}
+                                <td className="p-2 border-r border-slate-150 dark:border-slate-800 text-end font-mono whitespace-nowrap bg-teal-50/40 dark:bg-teal-950/20">
+                                  <div className="font-bold text-teal-700 dark:text-teal-400 text-xs">
+                                    {loaded.toLocaleString()} {row.quantityName || "Bags"}
+                                  </div>
+                                  <div className="text-[10px] text-teal-600/80 dark:text-teal-400/80 mt-0.5">
+                                    G.W. {loadedGross.toLocaleString(undefined, { maximumFractionDigits: 1 })} kg
+                                  </div>
+                                  <div className="text-[10px] text-teal-600/70 dark:text-teal-400/70">
+                                    N.W. {loadedNet.toLocaleString(undefined, { maximumFractionDigits: 1 })} kg
+                                  </div>
+                                </td>
+
+                                {/* 10. Stock Position 3: Remaining to Load */}
+                                <td className="p-2 border-r border-slate-150 dark:border-slate-800 text-end font-mono whitespace-nowrap bg-rose-50/40 dark:bg-rose-950/20">
+                                  <div className="font-bold text-rose-600 dark:text-rose-400 text-xs">
+                                    {remaining.toLocaleString()} {row.quantityName || "Bags"}
+                                  </div>
+                                  <div className="text-[10px] text-rose-500/80 mt-0.5">
+                                    G.W. {remainingGross.toLocaleString(undefined, { maximumFractionDigits: 1 })} kg
+                                  </div>
+                                  <div className="text-[10px] text-rose-500/70">
+                                    N.W. {remainingNet.toLocaleString(undefined, { maximumFractionDigits: 1 })} kg
+                                  </div>
+                                </td>
+
+                                {/* 11. Loading Status */}
+                                <td className="p-2 text-center border-r border-slate-150 dark:border-slate-800 whitespace-nowrap">
                                   {isFullyLoaded ? (
                                     <span className="inline-flex items-center rounded-full bg-slate-900 px-2.5 py-0.5 text-[10px] font-black uppercase text-white dark:bg-black">
                                       {th("FULLY LOADED")}
                                     </span>
                                   ) : isPartiallyLoaded ? (
                                     <span className="inline-flex items-center rounded-full bg-amber-400 px-2.5 py-0.5 text-[10px] font-black uppercase text-amber-950">
-                                      {th("PARTIALLY LOADED")} ({((stats.loaded / stats.booked) * 100).toFixed(0)}%)
+                                      {th("PARTIALLY LOADED")} ({((loaded / booked) * 100).toFixed(0)}%)
                                     </span>
                                   ) : (
                                     <span className="inline-flex items-center rounded-full bg-rose-600 px-2.5 py-0.5 text-[10px] font-black uppercase text-white">
@@ -1242,75 +1298,110 @@ export function LocalPurchaseDestinationQueueView({
                                   )}
                                 </td>
 
-                                {/* Actions */}
-                                <td className="p-2 text-center">
-                                  <div className="flex items-center justify-center gap-1.5">
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => openLoadingModal(row)}
-                                      disabled={isFullyLoaded}
-                                      title={isFullyLoaded ? "Everything is already loaded." : undefined}
-                                      className="h-6 px-2 text-[10px] font-bold uppercase text-emerald-700 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 gap-1 shadow-sm disabled:opacity-50"
-                                    >
-                                      <Plus className="h-3 w-3 text-emerald-600" />
-                                      {th("ADD LOADING")}
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => setSelectedRowForVoucher(row)}
-                                      className="h-6 px-2 text-[10px] font-bold uppercase tracking-wider gap-1"
-                                    >
-                                      <Eye className="h-3 w-3 text-blue-600" />
-                                      {th("VIEW")}
-                                    </Button>
-                                  </div>
+                                {/* 12. Actions (Clean three-dot ⋮ menu) */}
+                                <td className="p-2 text-center relative" data-row-menu>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setOpenRowMenuId((prev) =>
+                                        prev === String(row.id) ? null : String(row.id)
+                                      )
+                                    }
+                                    className="inline-flex items-center justify-center h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition cursor-pointer shadow-2xs"
+                                  >
+                                    <MoreVertical className="h-3.5 w-3.5" />
+                                  </button>
+
+                                  {rowMenuOpen && (
+                                    <div className="absolute right-2 top-8 z-40 w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 text-start animate-in fade-in-50 zoom-in-95 text-xs">
+                                      <button
+                                        type="button"
+                                        disabled={isFullyLoaded}
+                                        onClick={() => {
+                                          setOpenRowMenuId(null);
+                                          openLoadingModal(row);
+                                        }}
+                                        className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 font-semibold text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 disabled:opacity-40 cursor-pointer"
+                                      >
+                                        <Plus className="h-3.5 w-3.5 text-emerald-600" />
+                                        <span>{th("ADD LOADING")}</span>
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenRowMenuId(null);
+                                          setSelectedRowForVoucher(row);
+                                        }}
+                                        className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                                      >
+                                        <Eye className="h-3.5 w-3.5 text-blue-600" />
+                                        <span>{th("VIEW")}</span>
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenRowMenuId(null);
+                                          setSelectedRowForVoucher(row);
+                                          setTimeout(() => window.print(), 80);
+                                        }}
+                                        className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                                      >
+                                        <Printer className="h-3.5 w-3.5 text-slate-500" />
+                                        <span>{th("Print")}</span>
+                                      </button>
+                                    </div>
+                                  )}
                                 </td>
                               </tr>
 
-                              {/* Expanded Loading Sub-rows for this row */}
+                              {/* 13. Expandable Bill Detail: Clean nested table */}
                               {isExpanded && (
                                 <tr className="bg-slate-50/90 dark:bg-slate-900/60">
                                   <td
-                                    colSpan={11 + (isSuperAdmin ? 1 : 0) + (isSuperAdmin || isCountryAdmin ? 1 : 0)}
+                                    colSpan={12}
                                     className="p-3 border-r border-b border-slate-200 dark:border-slate-800"
                                   >
                                     {stats.entries.length === 0 ? (
-                                      <div className="text-center py-2 text-slate-400 font-mono text-[11px]">
-                                        No partial loading records created yet.
+                                      <div className="text-center py-3 text-slate-400 font-mono text-[11px]">
+                                        No loading dispatch records created yet. Use ⋮ → Add Loading to record trucks.
                                       </div>
                                     ) : (
-                                      <div className="space-y-1.5">
-                                        <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-                                          Recorded Loading Details ({stats.entries.length} entries):
+                                      <div className="space-y-2">
+                                        <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                                          <span>Recorded Loading Dispatch Records ({stats.entries.length} entries)</span>
+                                          <span className="font-mono text-emerald-600">Total Loaded: {stats.loaded.toLocaleString()} {row.quantityName || "Bags"}</span>
                                         </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                                          {stats.entries.map((entry: any, eIdx: number) => (
-                                            <div
-                                              key={eIdx}
-                                              className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2 text-[11px] shadow-2xs"
-                                            >
-                                              <div className="flex justify-between items-center font-bold text-slate-800 dark:text-slate-200">
-                                                <span>#{eIdx + 1} · {entry.loadingDate || "—"}</span>
-                                                <span className="font-mono text-emerald-600 font-black">
-                                                  {Number(entry.loadedQuantity || 0).toLocaleString()} {row.quantityName || "Bags"}
-                                                </span>
-                                              </div>
-                                              <div className="mt-1 text-slate-500 space-y-0.5 text-[10px]">
-                                                <div>Truck: <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{entry.truckNo || "—"}</span></div>
-                                                <div>Driver: <span className="font-semibold text-slate-700 dark:text-slate-300">{entry.driverName || "—"}</span></div>
-                                                {entry.grossWeight && (
-                                                  <div>Gross: <span className="font-mono">{Number(entry.grossWeight).toLocaleString()} kg</span> | Net: <span className="font-mono">{Number(entry.netWeight || 0).toLocaleString()} kg</span></div>
-                                                )}
-                                                {entry.remarks && (
-                                                  <div className="italic text-slate-400 truncate">"{entry.remarks}"</div>
-                                                )}
-                                              </div>
-                                            </div>
-                                          ))}
+                                        <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-950">
+                                          <table className="w-full text-left text-xs border-collapse">
+                                            <thead className="bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-[10.5px] font-bold uppercase border-b border-slate-200 dark:border-slate-800">
+                                              <tr>
+                                                <th className="py-2 px-3 text-center w-8">#</th>
+                                                <th className="py-2 px-3">{th("Date")}</th>
+                                                <th className="py-2 px-3 font-mono">{th("Truck No")}</th>
+                                                <th className="py-2 px-3">{th("Driver Name")}</th>
+                                                <th className="py-2 px-3 text-end font-mono">{th("Loaded Qty")}</th>
+                                                <th className="py-2 px-3 text-end font-mono">G.W. (KG)</th>
+                                                <th className="py-2 px-3 text-end font-mono">N.W. (KG)</th>
+                                                <th className="py-2 px-3">{th("Remarks / Status")}</th>
+                                              </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100 dark:divide-slate-900 text-[11px]">
+                                              {stats.entries.map((entry: any, eIdx: number) => (
+                                                <tr key={eIdx} className="hover:bg-slate-50/80 dark:hover:bg-slate-900/50">
+                                                  <td className="py-1.5 px-3 text-center font-mono text-slate-400">{eIdx + 1}</td>
+                                                  <td className="py-1.5 px-3 font-mono">{entry.loadingDate || "—"}</td>
+                                                  <td className="py-1.5 px-3 font-mono font-bold text-slate-800 dark:text-slate-200">{entry.truckNo || "—"}</td>
+                                                  <td className="py-1.5 px-3 font-medium">{entry.driverName || "—"}</td>
+                                                  <td className="py-1.5 px-3 text-end font-mono font-bold text-emerald-600">{Number(entry.loadedQuantity || 0).toLocaleString()} {row.quantityName || "Bags"}</td>
+                                                  <td className="py-1.5 px-3 text-end font-mono">{entry.grossWeight ? `${Number(entry.grossWeight).toLocaleString()} kg` : "—"}</td>
+                                                  <td className="py-1.5 px-3 text-end font-mono">{entry.netWeight ? `${Number(entry.netWeight).toLocaleString()} kg` : "—"}</td>
+                                                  <td className="py-1.5 px-3 text-slate-500 italic">{entry.remarks || <span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[9.5px] font-bold not-italic">Dispatched</span>}</td>
+                                                </tr>
+                                              ))}
+                                            </tbody>
+                                          </table>
                                         </div>
                                       </div>
                                     )}
