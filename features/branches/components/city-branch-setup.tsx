@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
-import { Pencil, Eye, ArrowLeft, ArrowRight, Printer, Download, History } from "lucide-react";
+import { Pencil, Eye, ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,6 @@ import { SearchSelect } from "@/components/ui/search-select";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
 import { BranchOwnerPicker } from "@/features/branches/components/branch-owner-picker";
 import { BranchLiveReportPanel } from "@/features/branches/components/branch-live-report-panel";
-import { BranchRecordProfile, type BranchProfileSection } from "@/features/branches/components/branch-record-profile";
 import { BranchReportActionsMenu } from "@/features/branches/components/branch-report-actions-menu";
 import { downloadCsv } from "@/features/branches/components/branch-report-export";
 import { PermissionAssignmentSection } from "@/features/users/components/permission-assignment-section";
@@ -23,15 +22,42 @@ import {
   type LocationHierarchyValue
 } from "@/features/locations/components/location-hierarchy-select";
 import type { LocationCountry } from "@/features/locations/location-api";
-import { apiGet } from "@/lib/api/client";
+import type { ContactTypeKey } from "@/features/contact-types/contact-type-api";
 import { cn } from "@/lib/utils";
 import { getPermissionKeysForTemplate } from "@/lib/permissions/catalog";
-import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
+import type { BranchReportData } from "@/lib/reports/open-a4-report-window";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import type { ContactTypeKey } from "@/features/contact-types/contact-type-api";
-import { BranchFinalReview } from "./branch-final-review";
+import { BranchFinalReview, type BranchReviewDocumentItem, type BranchUserPermissionItem } from "./branch-final-review";
+import {
+  emptyOwnerView,
+  loadCompanyBankCount,
+  loadCompanyView,
+  loadOwnerView,
+  type CompanyView,
+  type OwnerView
+} from "@/features/branches/lib/city-branch-owner-company";
+import { evaluateCityBranchChecklist } from "@/features/branches/lib/city-branch-checklist";
+import { describeCityBranchServerError, CITY_BRANCH_FIELD_KEYS } from "@/features/branches/lib/city-branch-server-error";
+import {
+  documentTypeLabel,
+  formatFileSize,
+  locationMetaFromSaved,
+  normalizeCityBranchDetail,
+  type CityBranchDetail,
+  type CityBranchLocationNames
+} from "@/features/branches/lib/city-branch-detail";
+import {
+  accessProfileLabel,
+  buildCityBranchDrawerData,
+  buildCityBranchReportConfig,
+  buildCityBranchReportSections,
+  domainLabel,
+  emailOf,
+  roleLabel,
+  type CityBranchReportInput
+} from "@/features/branches/lib/city-branch-report";
 
 type CountryBranchRow = {
   id: string;
@@ -76,62 +102,41 @@ type CityBranchRow = {
 };
 
 type ContactRow = { type: string; value: string };
-
-const CONTACT_TYPE_I18N: Record<string, Record<string, string>> = {
-  "Mobile": { ur: "موبائل", ar: "جوال", ps: "موبایل", fa: "موبایل" },
-  "Phone": { ur: "فون", ar: "هاتف", ps: "تلیفون", fa: "تلفن" },
-  "WhatsApp": { ur: "واٹس ایپ", ar: "واتساب", ps: "واټس اپ", fa: "واتساپ" },
-  "Email": { ur: "ای میل", ar: "البريد الإلكتروني", ps: "بریښنالیک", fa: "ایمیل" },
-  "Fax": { ur: "فیکس", ar: "فاكس", ps: "فکس", fa: "فکس" }
-};
-
-function localizeContactType(type: string, lang: string): string {
-  if (!type || lang === "en") return type;
-  const match = CONTACT_TYPE_I18N[type];
-  if (match && match[lang]) return match[lang];
-  return type;
-}
-
-type CompanyRow = { id: string; name: string; legal_name: string | null; base_currency: string; owner_person_id?: string | null };
-type OwnerCustomerRow = {
-  id: string;
-  customer_name: string;
-  person_code?: string | null;
-  company_name: string | null;
-  contact_person: string | null;
-  mobile: string | null;
-  whatsapp: string | null;
-  email: string | null;
-  address: string | null;
-  country_name?: string | null;
-  city_name?: string | null;
-};
-type OwnerProfileRow = {
-  userId: string;
-  userCode: string;
-  fullName: string;
-  countryName: string;
-  branchName: string;
-  branchType: string;
-  role: string;
-  permissions: string[];
-};
-type OwnerPreview = {
-  source: "customer" | "profile";
-  code: string;
-  name: string;
-  companyName: string;
-  contactPerson: string;
-  mobile: string;
-  whatsapp: string;
-  email: string;
-  address: string;
-  country: string;
-  branch: string;
-  role: string;
-};
+type Banner = { type: "success" | "error"; message: string };
+type Domain = "business" | "shipping" | "";
 
 const contactTypeOptions = ["Mobile", "Phone", "WhatsApp", "Email", "Fax"] as const;
+
+/** Stored contact type (English data value) -> central label key. */
+const CONTACT_TYPE_KEYS: Record<string, string> = {
+  Mobile: "cbs.contact_type_mobile",
+  Phone: "cbs.contact_type_phone",
+  WhatsApp: "cbs.contact_type_whatsapp",
+  Email: "cbs.contact_type_email",
+  Fax: "cbs.contact_type_fax"
+};
+
+const EMPTY_LOCATION: LocationHierarchyValue = { countryId: "", stateProvinceId: "", districtId: "", cityId: "", areaId: "" };
+const EMPTY_META: LocationHierarchyMeta = { country: null, state: null, district: null, city: null, area: null };
+const EMPTY_LOCATION_NAMES: CityBranchLocationNames = {
+  countryName: "",
+  countryIso2: "",
+  countryIso3: "",
+  countryCurrency: "",
+  countryPhoneCode: "",
+  stateName: "",
+  districtName: "",
+  cityName: "",
+  cityCode: "",
+  cityZip: "",
+  areaName: "",
+  areaPostal: ""
+};
+
+function localizeContactType(type: string, tt: (key: string, fallback: string) => string): string {
+  const key = CONTACT_TYPE_KEYS[type];
+  return key ? tt(key, type) : type;
+}
 
 function toContactTypeKey(label: string): ContactTypeKey | null {
   const normalized = (label || "").toLowerCase();
@@ -157,27 +162,14 @@ function buildMailtoHref(subject: string, rows: Array<{ label: string; value: st
   return `mailto:?${params.toString()}`;
 }
 
-function ReportRow({ label, value }: { label: string; value: string }) {
-  const blank = !value || value === "-";
-
+function DetailLine({ label, value }: { label: string; value: string }) {
   return (
-    <div className="grid grid-cols-[130px_1fr] gap-3 border-b border-dashed py-2 text-sm last:border-b-0">
-      <span className="text-xs font-semibold uppercase text-muted-foreground">{label}</span>
-      <span className={blank ? "font-semibold text-muted-foreground" : "font-semibold text-foreground"}>
-        {value || "-"}
+    <div className="flex items-start justify-between gap-2 border-b border-dashed border-slate-100 py-1 last:border-0 dark:border-slate-800/60">
+      <span className="shrink-0 text-[11px] font-semibold text-slate-500 dark:text-slate-400">{label}</span>
+      <span className={cn("text-end text-[11px] font-semibold break-words", value ? "text-slate-800 dark:text-slate-100" : "text-slate-300 dark:text-slate-600")}>
+        {value || "—"}
       </span>
     </div>
-  );
-}
-
-function formatBulletList(items: string[]) {
-  if (!items.length) return <span className="text-sm text-muted-foreground">-</span>;
-  return (
-    <ul className="ms-4 list-disc text-sm text-slate-700 dark:text-slate-200">
-      {items.map((item, idx) => (
-        <li key={`${item}-${idx}`}>{item}</li>
-      ))}
-    </ul>
   );
 }
 
@@ -203,66 +195,159 @@ function compactCode(value: string, fallback: string) {
   return clean.slice(0, 4);
 }
 
-function normalizeSearch(value: string) {
+/** Route codes for a partly-loaded saved record, translated here; any other text is a database message passed through. */
+function describeDetailError(code: string, lang: string): string {
+  if (!code) return "";
+  if (code === "NO_DATABASE") return t(lang, "cbs.detail_no_database");
+  if (code === "DETAIL_FAILED") return t(lang, "cbs.detail_load_failed");
+  return code;
+}
+
+function messageOf(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return typeof error === "string" ? error : "";
+}
+
+function normalizeContacts(value: unknown): ContactRow[] {
+  if (!Array.isArray(value)) return [];
   return value
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+    .map((row) => {
+      const item = row as { type?: string; value?: string };
+      const type = String(item.type ?? "").trim();
+      const contactValue = String(item.value ?? "").trim();
+      return type && contactValue ? { type, value: contactValue } : null;
+    })
+    .filter((row): row is ContactRow => Boolean(row));
+}
+
+function formatDateShort(iso: string): string {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function suggestBranchCode(meta: LocationHierarchyMeta, existingBranchesList: CityBranchRow[], domain: Domain) {
+  const prefix = asIso3(meta.country);
+  const rawCity = meta.city?.code || meta.city?.name || "";
+  const cityCode = compactCode(rawCity, "CITY");
+  const existingCodes = new Set((existingBranchesList || []).map((b) => (b.code || "").toUpperCase().trim()));
+
+  if (domain === "shipping") {
+    for (let n = 1; n <= 99; n++) {
+      const candidate = `${prefix}-${cityCode}-SHIP-${String(n).padStart(2, "0")}`;
+      if (!existingCodes.has(candidate)) return candidate;
+    }
+    return `${prefix}-${cityCode}-SHIP-01`;
+  }
+
+  for (let n = 1; n <= 999; n++) {
+    const candidate = `${prefix}-${cityCode}-${String(n).padStart(3, "0")}`;
+    if (!existingCodes.has(candidate)) return candidate;
+  }
+  return `${prefix}-${cityCode}-${String((existingBranchesList || []).length + 1).padStart(3, "0")}`;
+}
+
+function suggestBranchName(meta: LocationHierarchyMeta, existingBranchesList: CityBranchRow[], domain: Domain) {
+  const city = meta.city?.name?.trim();
+  if (!city) return "";
+  const existingNames = new Set(
+    (existingBranchesList || [])
+      .filter((b) => isCityBranchMatch(b, meta.city?.id ?? "", meta.city?.name ?? ""))
+      .map((b) => (b.name || "").toLowerCase().trim())
+  );
+
+  const baseName = domain === "shipping" ? `${city} Shipping & Clearing Branch` : `${city} City Branch`;
+  if (!existingNames.has(baseName.toLowerCase())) return baseName;
+  for (let n = 2; n <= 100; n++) {
+    const candidate = domain === "shipping" ? `${city} Shipping & Clearing Branch ${n}` : `${city} City Branch ${n}`;
+    if (!existingNames.has(candidate.toLowerCase())) return candidate;
+  }
+  return `${baseName} ${(existingBranchesList || []).length + 1}`;
+}
+
+async function fetchMainBranchList(countryId: string, domain: Domain): Promise<CountryBranchRow[]> {
+  if (!isUuid(countryId) || !domain) return [];
+  const res = await fetch(
+    `/api/branch-management/country-branches?countryId=${encodeURIComponent(countryId)}&operationalDomain=${domain}`,
+    { cache: "no-store" }
+  );
+  if (!res.ok) return [];
+  const json = (await res.json()) as { countryBranches?: CountryBranchRow[] };
+  const list = Array.isArray(json.countryBranches) ? json.countryBranches : [];
+  const mains = list.filter((b) => b.is_main !== false);
+  return mains.length > 0 ? mains : list;
+}
+
+async function fetchExistingCityBranches(countryId: string, countryBranchId: string | undefined, domain: Domain): Promise<CityBranchRow[]> {
+  if (!isUuid(countryId)) return [];
+  const params = new URLSearchParams({ countryId });
+  if (countryBranchId && isUuid(countryBranchId)) params.set("countryBranchId", countryBranchId);
+  if (domain) params.set("operationalDomain", domain);
+  const res = await fetch(`/api/branch-management/city-branches?${params.toString()}`, { cache: "no-store" });
+  if (!res.ok) return [];
+  const json = (await res.json()) as { cityBranches?: CityBranchRow[] };
+  return Array.isArray(json.cityBranches) ? json.cityBranches : [];
+}
+
+async function fetchSavedCityBranch(id: string): Promise<{ row: CityBranchRow; detail: CityBranchDetail | null; detailError: string }> {
+  const res = await fetch(`/api/branch-management/city-branches?id=${encodeURIComponent(id)}&detail=1`, { cache: "no-store" });
+  const json = (await res.json().catch(() => ({}))) as {
+    cityBranches?: CityBranchRow[];
+    detail?: unknown;
+    detailError?: string | null;
+    error?: unknown;
+  };
+  if (!res.ok) {
+    throw new Error(describeCityBranchServerError(json, "", () => ""));
+  }
+  const row = Array.isArray(json.cityBranches) ? json.cityBranches[0] : null;
+  if (!row) throw new Error("");
+  return { row, detail: normalizeCityBranchDetail(json.detail), detailError: json.detailError ?? "" };
 }
 
 function CityBranchSetupContent() {
   const lang = useActiveLanguage();
-  const tt = useCallback((key: string, fallback: string) => t(lang, key as never, fallback), [lang]);
+  const tt = useCallback((key: string, fallback: string) => t(lang, key, fallback), [lang]);
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId") ?? "";
-  const [drawerBranchData, setDrawerBranchData] = useState<any>(null);
-  const [activeStep, setActiveStep] = useState(1);
-  const [location, setLocation] = useState<LocationHierarchyValue>({
-    countryId: "",
-    stateProvinceId: "",
-    districtId: "",
-    cityId: "",
-    areaId: ""
-  });
-  const [locationMeta, setLocationMeta] = useState<LocationHierarchyMeta>({
-    country: null,
-    state: null,
-    district: null,
-    city: null,
-    area: null
-  });
 
+  const [drawerBranchData, setDrawerBranchData] = useState<BranchReportData | null>(null);
+  const [activeStep, setActiveStep] = useState(1);
+  const [location, setLocation] = useState<LocationHierarchyValue>(EMPTY_LOCATION);
+  const [locationMeta, setLocationMeta] = useState<LocationHierarchyMeta>(EMPTY_META);
   const [currency, setCurrency] = useState("");
   const [fullAddress, setFullAddress] = useState("");
+  const [manualZip, setManualZip] = useState("");
 
   const [companyId, setCompanyId] = useState("");
-  const [company, setCompany] = useState<CompanyRow | null>(null);
+  const [companyView, setCompanyView] = useState<CompanyView | null>(null);
+  const [companyBankCount, setCompanyBankCount] = useState(0);
   const [ownerName, setOwnerName] = useState("");
   const [ownerId, setOwnerId] = useState("");
   const [ownerCustomerId, setOwnerCustomerId] = useState<string | null>(null);
   const [ownerProfileId, setOwnerProfileId] = useState<string | null>(null);
-  const [ownerPreview, setOwnerPreview] = useState<OwnerPreview | null>(null);
+  const [ownerView, setOwnerView] = useState<OwnerView | null>(null);
+  const [linkedRecordError, setLinkedRecordError] = useState("");
 
   const [countryBranchId, setCountryBranchId] = useState("");
   const [mainBranches, setMainBranches] = useState<CountryBranchRow[]>([]);
-
+  const [operationalDomain, setOperationalDomain] = useState<Domain>("");
+  const [branchCategory, setBranchCategory] = useState<"business" | "clearing_agent" | "">("");
   const [existingCityBranches, setExistingCityBranches] = useState<CityBranchRow[]>([]);
   const [existingCitySearch, setExistingCitySearch] = useState("");
   const [editingCityBranchId, setEditingCityBranchId] = useState("");
+  const [savedRow, setSavedRow] = useState<CityBranchRow | null>(null);
+  const [savedDetail, setSavedDetail] = useState<CityBranchDetail | null>(null);
+  const [refreshNonce, setRefreshNonce] = useState(0);
 
   const [branchName, setBranchName] = useState("");
-  const [operationalDomain, setOperationalDomain] = useState<"business" | "shipping" | "">("");
-  const [branchCategory, setBranchCategory] = useState<"business" | "clearing_agent" | "">("");
   const [branchCode, setBranchCode] = useState("");
   const [permissionTemplate, setPermissionTemplate] = useState("city-standard");
   const [permissionGrants, setPermissionGrants] = useState<string[]>(() => getPermissionKeysForTemplate("city-standard"));
 
   const [contacts, setContacts] = useState<ContactRow[]>([]);
-  const [manualZip, setManualZip] = useState("");
-
-  const [banner, setBanner] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [banner, setBanner] = useState<Banner | null>(null);
   const [saving, setSaving] = useState(false);
   const [formTouched, setFormTouched] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
@@ -290,7 +375,7 @@ function CityBranchSetupContent() {
 
   const generatedEmail = emailPrefix ? `${emailPrefix.trim().toLowerCase()}@dgt.llc` : "";
 
-  // Auto-sync email prefix to main contacts list
+  // Official branch email and WhatsApp number are kept in the contacts list.
   useEffect(() => {
     if (generatedEmail) {
       setContacts((prev) => {
@@ -315,78 +400,113 @@ function CityBranchSetupContent() {
     }
   }, [whatsappNumber]);
 
+  // Company record (one loader; the form, live summary, saved record and print all read this view).
+  useEffect(() => {
+    let cancelled = false;
+    if (!companyId) {
+      setCompanyView(null);
+      setCompanyBankCount(0);
+      return;
+    }
+    (async () => {
+      try {
+        const company = await loadCompanyView(companyId);
+        const bankCount = await loadCompanyBankCount(companyId);
+        if (cancelled) return;
+        setCompanyView(company);
+        setCompanyBankCount(bankCount);
+      } catch (error) {
+        if (!cancelled) setLinkedRecordError(`${tt("cbs.company_load_failed", "Company details could not be loaded.")} ${messageOf(error)}`.trim());
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [companyId, refreshNonce, tt]);
+
+  // Owner record (customer master), same loader for every surface.
+  useEffect(() => {
+    let cancelled = false;
+    if (!ownerCustomerId) {
+      setOwnerView(null);
+      return;
+    }
+    (async () => {
+      try {
+        const owner = await loadOwnerView(ownerCustomerId);
+        if (!cancelled) setOwnerView(owner);
+      } catch (error) {
+        if (!cancelled) setLinkedRecordError(`${tt("cbs.owner_load_failed", "Owner details could not be loaded.")} ${messageOf(error)}`.trim());
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ownerCustomerId, refreshNonce, tt]);
+
   const selectedMainBranch = useMemo(
     () => mainBranches.find((b) => b.id === countryBranchId) ?? null,
     [mainBranches, countryBranchId]
   );
+  const parentPermissionGrants = selectedMainBranch?.permission_grants?.length ? selectedMainBranch.permission_grants : undefined;
 
   useEffect(() => {
-    let cancelled = false;
+    if (!parentPermissionGrants?.length) return;
+    setPermissionGrants((current) => current.filter((permission) => parentPermissionGrants.includes(permission)));
+  }, [parentPermissionGrants]);
 
-    (async () => {
-      if (!companyId) {
-        setCompany(null);
-        return;
-      }
-      try {
-        const res = await apiGet<{ company: CompanyRow }>(`/api/erp/companies/${encodeURIComponent(companyId)}`);
-        if (!cancelled && res.company) {
-          setCompany(res.company);
-          if (res.company.owner_person_id) {
-            setOwnerId(res.company.owner_person_id);
-            setOwnerCustomerId(res.company.owner_person_id);
-            setOwnerProfileId(null);
-          }
-        }
-      } catch {
-        if (!cancelled) setCompany(null);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [companyId]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const targetCustomerId = ownerCustomerId || (isUuid(ownerId) ? ownerId : null);
-    if (!targetCustomerId) {
-      if (!ownerName) setOwnerPreview(null);
-      return;
+  const autoZip = locationMeta.area?.postal_code ?? locationMeta.city?.zip_code ?? "";
+  const zip = manualZip || autoZip;
+  const resolvedCityName = locationMeta.city?.name?.trim() || savedRow?.city_name?.trim() || "";
+  const effectiveBranchName = useMemo(() => {
+    if (branchName.trim()) return branchName.trim();
+    if (locationMeta.city?.name?.trim()) {
+      return suggestBranchName(locationMeta, existingCityBranches, operationalDomain) || `${locationMeta.city.name.trim()} City Branch`;
     }
+    return "";
+  }, [branchName, locationMeta, existingCityBranches, operationalDomain]);
+  const resolvedBranchName = branchName.trim() || effectiveBranchName;
 
-    (async () => {
-      try {
-        const res = await apiGet<{ customer: OwnerCustomerRow }>(`/api/erp/customers/${encodeURIComponent(targetCustomerId)}`);
-        if (cancelled || !res.customer) return;
+  // Auto-suggest the branch name from the city while the branch is still a draft.
+  useEffect(() => {
+    if (editingCityBranchId) return;
+    const city = locationMeta.city?.name?.trim();
+    if (!city) return;
+    if (!branchName.trim() || branchName.endsWith("City Branch") || /City Branch \d+$/.test(branchName)) {
+      const suggested = suggestBranchName(locationMeta, existingCityBranches, operationalDomain) || `${city} City Branch`;
+      if (suggested && suggested !== branchName) setBranchName(suggested);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationMeta.city?.name, editingCityBranchId, existingCityBranches]);
 
-        const customer = res.customer;
-        setOwnerPreview({
-          source: "customer",
-          code: customer.person_code || compactCode(customer.id, "PER"),
-          name: customer.customer_name,
-          companyName: customer.company_name ?? company?.name ?? "-",
-          contactPerson: customer.contact_person ?? customer.customer_name,
-          mobile: customer.mobile ?? "-",
-          whatsapp: customer.whatsapp ?? customer.mobile ?? "-",
-          email: customer.email ?? "-",
-          address: customer.address ?? "-",
-          country: customer.country_name || locationMeta.country?.name || "-",
-          branch: customer.city_name || selectedMainBranch?.name || "-",
-          role: "Company Owner"
-        });
-        setOwnerName(customer.customer_name);
-      } catch {
-        // Keep existing preview if fetch fails
-      }
-    })();
+  const codeAlreadyExists = Boolean(
+    branchCode.trim() &&
+      existingCityBranches.some((b) => {
+        if (editingCityBranchId && b.id === editingCityBranchId) return false;
+        return b.code && b.code.trim().toUpperCase() === branchCode.trim().toUpperCase();
+      })
+  );
 
-    return () => {
-      cancelled = true;
-    };
-  }, [ownerCustomerId, ownerId, company?.name, selectedMainBranch?.name, locationMeta.country?.name]);
+  const nameAlreadyExists = Boolean(
+    resolvedBranchName &&
+      existingCityBranches.some((b) => {
+        if (editingCityBranchId && b.id === editingCityBranchId) return false;
+        const sameCity =
+          (location.cityId && b.city_id && b.city_id === location.cityId) ||
+          (b.city_name && resolvedCityName && b.city_name.trim().toLowerCase() === resolvedCityName.toLowerCase());
+        const sameDomain = !operationalDomain || !b.operational_domain || b.operational_domain === operationalDomain;
+        return Boolean(sameCity && sameDomain && b.name && b.name.trim().toLowerCase() === resolvedBranchName.toLowerCase());
+      })
+  );
 
+  const branchConflict = codeAlreadyExists || nameAlreadyExists;
+  const cityAlreadyExists = branchConflict;
+
+  const contactsPayload = useMemo(
+    () => contacts.map((row) => ({ type: row.type.trim(), value: row.value.trim() })).filter((row) => row.type && row.value),
+    [contacts]
+  );
+  const effectiveEmail = generatedEmail || emailOf(contactsPayload);
   const hasAny = Boolean(
     location.countryId ||
       countryBranchId ||
@@ -402,419 +522,135 @@ function CityBranchSetupContent() {
       contacts.some((c) => c.type || c.value)
   );
 
-  const autoZip = locationMeta.area?.postal_code ?? locationMeta.city?.zip_code ?? "";
-  // zip: manual entry wins; if empty, fall back to auto-derived value
-  const zip = manualZip || autoZip;
-  const compactInputClass = (alert = false) =>
-    cn(
-      "h-9 text-sm",
-      alert &&
-        "border-rose-300 bg-rose-50/70 text-rose-900 placeholder:text-rose-300 focus-visible:ring-rose-300 dark:border-rose-800 dark:bg-rose-950/20"
-    );
-  const compactTextareaClass = (alert = false) =>
-    cn(
-      "min-h-16 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-      alert && "border-rose-300 bg-rose-50/70 text-rose-900 focus-visible:ring-rose-300 dark:border-rose-800 dark:bg-rose-950/20"
-    );
-  const compactSectionClass = (alert = false) =>
-    cn(
-      "order-1 rounded-xl border bg-white p-4 shadow-sm space-y-3 dark:bg-slate-950",
-      alert ? "border-rose-200 ring-1 ring-rose-100 dark:border-rose-900/70 dark:ring-rose-950" : "border-slate-100 dark:border-slate-800/80"
-    );
-  const changedFromSaved = (current: string, saved?: string | null) =>
-    Boolean(editingCityBranchId && saved && current.trim() && current.trim() !== saved.trim());
-  const previewCountry = locationMeta.country?.name || "-";
-  const previewMainBranch = selectedMainBranch?.name || "-";
-  const previewLocation = [locationMeta.state?.name, locationMeta.city?.name, locationMeta.area?.name, zip].filter(Boolean).join(" / ") || "-";
-  const previewCompany = company?.name || "-";
-  const companyCode = company?.id ? compactCode(company.id, "CMP") : "-";
-  const parentPermissionGrants = selectedMainBranch?.permission_grants?.length ? selectedMainBranch.permission_grants : undefined;
+  const linkedUsers = editingCityBranchId ? savedDetail?.linkedUsers ?? [] : [];
+  const linkedDocuments = editingCityBranchId ? savedDetail?.linkedDocuments ?? [] : [];
 
-  useEffect(() => {
-    if (!parentPermissionGrants?.length) return;
-    setPermissionGrants((current) => current.filter((permission) => parentPermissionGrants.includes(permission)));
-  }, [parentPermissionGrants]);
-
-  const effectiveBranchName = useMemo(() => {
-    if (branchName.trim()) return branchName.trim();
-    if (locationMeta.city?.name?.trim()) {
-      return suggestBranchName(locationMeta, existingCityBranches) || `${locationMeta.city.name.trim()} City Branch`;
-    }
-    return "";
-  }, [branchName, locationMeta, existingCityBranches]);
-
-  // Auto-sync branch name from city name whenever city changes or branch name is empty
-  useEffect(() => {
-    if (editingCityBranchId) return;
-    const city = locationMeta.city?.name?.trim();
-    if (!city) return;
-    if (!branchName.trim() || branchName.endsWith("City Branch") || /City Branch \d+$/.test(branchName)) {
-      const suggested = suggestBranchName(locationMeta, existingCityBranches) || `${city} City Branch`;
-      if (suggested && suggested !== branchName) {
-        setBranchName(suggested);
-      }
-    }
-  }, [locationMeta.city?.name, editingCityBranchId, existingCityBranches]);
-
-  const matchingExistingCityBranch = useMemo(() => {
-    if (!countryBranchId) return null;
-    if (branchCode.trim()) {
-      const match = existingCityBranches.find(
-        (b) => b.country_branch_id === countryBranchId && b.code.toUpperCase() === branchCode.trim().toUpperCase()
-      );
-      if (match) return match;
-    }
-    if (branchName.trim() && (location.cityId || locationMeta.city?.name)) {
-      const match = existingCityBranches.find(
-        (b) =>
-          b.country_branch_id === countryBranchId &&
-          b.name.trim().toLowerCase() === branchName.trim().toLowerCase() &&
-          isCityBranchMatch(b, location.cityId, locationMeta.city?.name ?? "")
-      );
-      if (match) return match;
-    }
-    return null;
-  }, [countryBranchId, existingCityBranches, branchCode, branchName, location.cityId, locationMeta.city?.name]);
-
-  const activeExistingCityBranch = useMemo(() => {
-    if (editingCityBranchId) {
-      return existingCityBranches.find((branch) => branch.id === editingCityBranchId) ?? matchingExistingCityBranch;
-    }
-    return matchingExistingCityBranch;
-  }, [editingCityBranchId, existingCityBranches, matchingExistingCityBranch]);
-
-  const codeAlreadyExists = Boolean(
-    branchCode.trim() &&
-      existingCityBranches.some((b) => {
-        if (editingCityBranchId && b.id === editingCityBranchId) return false;
-        return b.code && b.code.trim().toUpperCase() === branchCode.trim().toUpperCase();
-      })
-  );
-
-  const nameAlreadyExists = Boolean(
-    branchName.trim() &&
-      existingCityBranches.some((b) => {
-        if (editingCityBranchId && b.id === editingCityBranchId) return false;
-        const sameCity =
-          (location.cityId && b.city_id && b.city_id === location.cityId) ||
-          (b.city_name && locationMeta.city?.name && b.city_name.trim().toLowerCase() === locationMeta.city.name.trim().toLowerCase());
-        const sameDomain = !operationalDomain || !b.operational_domain || b.operational_domain === operationalDomain;
-        return Boolean(sameCity && sameDomain && b.name && b.name.trim().toLowerCase() === branchName.trim().toLowerCase());
-      })
-  );
-
-  const branchConflict = codeAlreadyExists || nameAlreadyExists;
-  const cityAlreadyExists = branchConflict;
-
-  const contactItems = contacts
-    .map((row) => {
-      if (!row.type && !row.value) return null;
-      return `${row.type || "Type"}: ${row.value || "-"}`;
-    })
-    .filter((row): row is string => Boolean(row));
-
-  const reportRows = useMemo(
-    () => [
-      { label: tt("cbs.country", "Country"), value: previewCountry },
-      { label: tt("cbs.country_code", "Country Code"), value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
-      { label: tt("cbs.country_main_branch", "Country Main Branch"), value: previewMainBranch },
-      { label: tt("cbs.city_branch_lbl", "City Branch"), value: activeExistingCityBranch?.name || branchName || "-" },
-      { label: tt("cbs.branch_code", "Branch Code"), value: activeExistingCityBranch?.code || branchCode || "-" },
-      { label: tt("cbs.currency", "Currency"), value: activeExistingCityBranch?.local_currency || currency || "-" },
-      { label: tt("cbs.location", "Location"), value: previewLocation },
-      { label: tt("cbs.address", "Address"), value: activeExistingCityBranch?.address || fullAddress || "-" },
-      { label: tt("cbs.company_name", "Company Name"), value: previewCompany },
-      { label: tt("cbs.company_code", "Company Code"), value: companyCode },
-      { label: tt("cbs.company_owner", "Company Owner"), value: ownerPreview?.name || activeExistingCityBranch?.owner_name || ownerName || "-" },
-      { label: tt("cbs.owner_details", "Owner Details"), value: ownerPreview ? `${ownerPreview.source.toUpperCase()} · ${ownerPreview.code}` : activeExistingCityBranch?.owner_name || ownerName || "-" },
-      { label: tt("cbs.permission_template", "Permission Template"), value: activeExistingCityBranch?.permission_template || permissionTemplate || "-" },
-      {
-        label: tt("cbs.permission_grants", "Permission Grants"),
-        value: activeExistingCityBranch?.permission_grants?.length
-          ? activeExistingCityBranch.permission_grants.join(", ")
-          : permissionGrants.length
-            ? permissionGrants.join(", ")
-            : "-"
-      },
-      { label: tt("cbs.contacts", "Contacts"), value: contactItems.length ? contactItems.join(", ") : "-" }
-    ],
+  const checklist = useMemo(
+    () =>
+      evaluateCityBranchChecklist({
+        countryId: location.countryId,
+        countryBranchId,
+        operationalDomain,
+        branchCategory,
+        branchName: resolvedBranchName,
+        branchCode,
+        stateProvinceId: location.stateProvinceId,
+        cityId: location.cityId,
+        cityName: resolvedCityName,
+        fullAddress,
+        currency: currency || locationMeta.country?.currency_code?.toUpperCase() || "",
+        companyId,
+        ownerCustomerId,
+        ownerProfileId,
+        contacts: contactsPayload,
+        emailAddress: effectiveEmail,
+        permissionGrants,
+        savedBranchId: editingCityBranchId,
+        linkedUsers,
+        linkedDocumentCount: linkedDocuments.length,
+        companyBankCount
+      }),
     [
-      tt,
-      activeExistingCityBranch?.address,
-      activeExistingCityBranch?.code,
-      activeExistingCityBranch?.local_currency,
-      activeExistingCityBranch?.name,
-      activeExistingCityBranch?.owner_name,
+      location.countryId,
+      location.stateProvinceId,
+      location.cityId,
+      countryBranchId,
+      operationalDomain,
+      branchCategory,
+      resolvedBranchName,
       branchCode,
-      branchName,
-      contactItems,
-      currency,
+      resolvedCityName,
       fullAddress,
-      companyCode,
-      ownerName,
-      ownerPreview,
+      currency,
+      locationMeta.country?.currency_code,
+      companyId,
+      ownerCustomerId,
+      ownerProfileId,
+      contactsPayload,
+      effectiveEmail,
       permissionGrants,
-      permissionTemplate,
-      previewCompany,
-      previewCountry,
-      previewLocation,
-      previewMainBranch
+      editingCityBranchId,
+      linkedUsers,
+      linkedDocuments.length,
+      companyBankCount
     ]
   );
 
-  const editIdentityRows = useMemo(
-    () => [
-      { label: tt("cbs.country", "Country"), value: previewCountry },
-      { label: tt("cbs.main_branch", "Main Branch"), value: previewMainBranch },
-      { label: tt("cbs.city_branch_lbl", "City Branch"), value: activeExistingCityBranch?.name || branchName },
-      { label: tt("cbs.branch_code", "Branch Code"), value: activeExistingCityBranch?.code || branchCode },
-      { label: tt("cbs.record_id", "Record ID"), value: editingCityBranchId },
-      { label: tt("cbs.status", "Status"), value: activeExistingCityBranch?.status || "active" },
-      { label: tt("cbs.created_date", "Created Date"), value: activeExistingCityBranch?.created_at ? new Date(activeExistingCityBranch.created_at).toLocaleString() : "" },
-      { label: tt("cbs.last_updated", "Last Updated"), value: activeExistingCityBranch?.updated_at ? new Date(activeExistingCityBranch.updated_at).toLocaleString() : "" }
-    ],
-    [tt, activeExistingCityBranch, branchCode, branchName, editingCityBranchId, previewCountry, previewMainBranch]
-  );
+  // Owner shown everywhere: the loaded customer record, or the name for a non-customer owner.
+  const ownerForView: OwnerView | null =
+    ownerView ?? (ownerCustomerId || ownerProfileId || ownerName.trim() ? emptyOwnerView(ownerName.trim(), ownerProfileId ? "profile" : "customer") : null);
 
-  const editProfileSections: BranchProfileSection[] = useMemo(
-    () => [
-      {
-        title: tt("cbs.sec_branch_info", "Branch Information"),
-        items: [
-          { label: tt("cbs.branch_name", "Branch Name"), value: activeExistingCityBranch?.name || branchName },
-          { label: tt("cbs.branch_code", "Branch Code"), value: activeExistingCityBranch?.code || branchCode },
-          { label: tt("cbs.currency", "Currency"), value: activeExistingCityBranch?.local_currency || currency },
-          { label: tt("cbs.status", "Status"), value: activeExistingCityBranch?.status || "active" }
-        ]
-      },
-      {
-        title: tt("cbs.sec_location_info", "Location Information"),
-        items: [
-          { label: tt("cbs.country", "Country"), value: previewCountry },
-          { label: tt("cbs.main_branch", "Main Branch"), value: previewMainBranch },
-          { label: tt("cbs.location", "Location"), value: previewLocation },
-          { label: tt("cbs.address", "Address"), value: activeExistingCityBranch?.address || fullAddress }
-        ]
-      },
-      {
-        title: tt("cbs.sec_company_info", "Company Information"),
-        items: [
-          { label: tt("cbs.company_name", "Company Name"), value: company?.name },
-          { label: tt("cbs.company_code", "Company Code"), value: company?.id ? compactCode(company.id, "CMP") : "" },
-          { label: tt("cbs.legal_name", "Legal Name"), value: company?.legal_name },
-          { label: tt("cbs.base_currency", "Base Currency"), value: company?.base_currency }
-        ]
-      },
-      {
-        title: tt("cbs.sec_owner_info", "Owner Information"),
-        items: [
-          { label: tt("cbs.owner_name", "Owner Name"), value: ownerPreview?.name || activeExistingCityBranch?.owner_name || ownerName },
-          { label: tt("cbs.owner_code", "Owner Code"), value: ownerPreview?.code || "N/A" },
-          { label: tt("cbs.owner_source", "Owner Source"), value: ownerPreview?.source || "custom" },
-          { label: tt("cbs.owner_role", "Owner Role"), value: ownerPreview?.role || "Owner" }
-        ]
-      },
-      {
-        title: tt("cbs.sec_contact_info", "Contact Information"),
-        items: [
-          { label: tt("cbs.contacts", "Contacts"), value: contactItems.length ? contactItems.join(", ") : "" },
-          { label: tt("cbs.phone", "Phone"), value: contacts.find((row) => row.type.toLowerCase().includes("phone"))?.value },
-          { label: tt("cbs.whatsapp", "WhatsApp"), value: contacts.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value },
-          { label: tt("cbs.email", "Email"), value: contacts.find((row) => row.type.toLowerCase().includes("email"))?.value || activeExistingCityBranch?.email }
-        ]
-      },
-      {
-        title: tt("cbs.sec_permissions", "Permissions"),
-        items: [
-          { label: tt("cbs.template", "Template"), value: activeExistingCityBranch?.permission_template || permissionTemplate },
-          {
-            label: tt("cbs.granted_permissions", "Granted Permissions"),
-            value: activeExistingCityBranch?.permission_grants?.length
-              ? activeExistingCityBranch.permission_grants.join(", ")
-              : permissionGrants.length
-                ? permissionGrants.join(", ")
-                : ""
-          }
-        ]
-      }
-    ],
-    [
-      tt,
-      activeExistingCityBranch,
-      branchCode,
-      branchName,
-      company,
-      contactItems,
-      contacts,
-      currency,
-      fullAddress,
-      ownerName,
-      ownerPreview,
-      permissionGrants,
+  const categoryLabel =
+    branchCategory === "clearing_agent" ? tt("cbs.category_clearing_agent", "Clearing Agent") : branchCategory === "business" ? tt("cbs.category_business", "Business Branch") : "";
+
+  const reportInput: CityBranchReportInput = useMemo(
+    () => ({
+      savedId: editingCityBranchId,
+      name: resolvedBranchName,
+      code: branchCode.trim(),
+      status: savedRow?.status || (editingCityBranchId ? "active" : tt("cbs.new_draft_word", "Draft")),
+      currency: currency || locationMeta.country?.currency_code?.toUpperCase() || "",
+      operationalDomain,
+      createdAt: savedRow?.created_at ?? "",
+      updatedAt: savedRow?.updated_at ?? "",
+      createdByName: savedDetail?.createdByName ?? "",
+      country: locationMeta.country?.name ?? "",
+      countryIso2: locationMeta.country?.iso2 ?? "",
+      state: locationMeta.state?.name ?? "",
+      district: locationMeta.district?.name ?? "",
+      city: resolvedCityName,
+      area: locationMeta.area?.name ?? "",
+      zip,
+      fullAddress: fullAddress.trim(),
+      mainBranchName: selectedMainBranch?.name ?? "",
+      mainBranchCode: selectedMainBranch?.code ?? "",
+      mainBranchCurrency: selectedMainBranch?.local_currency ?? "",
+      contacts: contactsPayload,
       permissionTemplate,
-      previewCountry,
-      previewLocation,
-      previewMainBranch
+      permissionGrants,
+      company: companyView,
+      owner: ownerForView,
+      users: linkedUsers,
+      documents: linkedDocuments
+    }),
+    [
+      editingCityBranchId,
+      resolvedBranchName,
+      branchCode,
+      savedRow,
+      tt,
+      currency,
+      locationMeta,
+      operationalDomain,
+      savedDetail,
+      resolvedCityName,
+      zip,
+      fullAddress,
+      selectedMainBranch,
+      contactsPayload,
+      permissionTemplate,
+      permissionGrants,
+      companyView,
+      ownerForView,
+      linkedUsers,
+      linkedDocuments
     ]
   );
 
-  const liveBranchData = useMemo(() => {
-    const active = activeExistingCityBranch;
-    const phoneVal = contacts.find((row) => row.type.toLowerCase().includes("phone"))?.value || "";
-    const emailVal = contacts.find((row) => row.type.toLowerCase().includes("email"))?.value || active?.email || "";
-    const whatsappVal = contacts.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value || "";
+  const reportSections = useMemo(() => buildCityBranchReportSections(reportInput, tt), [reportInput, tt]);
+  const flatReportRows = useMemo(
+    () => reportSections.sections.flatMap((section) => section.rows.map((row) => ({ label: row.label, value: row.value ?? "" }))),
+    [reportSections]
+  );
 
-    return {
-      serialNumber: active?.id ? active.id.slice(0, 4).toUpperCase() : "0001",
-      branchStatus: active?.status || (hasAny ? "Draft" : "Empty"),
-      branchCode: active?.code || branchCode || "-",
-      branchType: "CITY",
-      country: previewCountry,
-      currency: active?.local_currency || currency || "USD",
-      
-      grandparentBranch: {
-        name: "ACCOUNTS.DGT.LLC Headquarters",
-        code: "SUPER-HQ-001",
-        type: "SUPER_ADMIN",
-        status: "ACTIVE",
-        currency: "USD"
-      },
-      parentBranch: selectedMainBranch
-        ? {
-            name: selectedMainBranch.name,
-            code: selectedMainBranch.code,
-            type: "MAIN",
-            status: selectedMainBranch.status,
-            currency: selectedMainBranch.local_currency
-          }
-        : undefined,
-
-      branchName: active?.name || branchName || "-",
-      createdDate: active?.created_at ? new Date(active.created_at).toLocaleDateString() : undefined,
-      updatedDate: active?.updated_at ? new Date(active.updated_at).toLocaleDateString() : undefined,
-      createdBy: "",
-      updatedBy: "",
-      establishedOn: "-",
-      taxRegNo: "-",
-      ntnGstNo: "-",
-
-      city: locationMeta.city?.name || active?.city_name || "-",
-      cityCode: locationMeta.city?.code || "-",
-      stateProvince: locationMeta.state?.name || "-",
-      areaRegion: locationMeta.area?.name || "-",
-      zipCode: zip || "-",
-      fullAddress: active?.address || fullAddress || "-",
-
-      ownerName: ownerPreview?.name || active?.owner_name || ownerName || "-",
-      ownerCode: ownerPreview?.code || "OWN-0001",
-      fatherHusbandName: "-",
-      cnicId: "-",
-      nationality: "Pakistani",
-      designation: "Branch Manager",
-      ownershipType: "Individual",
-      ownershipPercent: "100%",
-      ownerPhone: phoneVal || ownerPreview?.mobile || "-",
-      ownerWhatsApp: whatsappVal || ownerPreview?.whatsapp || "-",
-      ownerEmail: emailVal || ownerPreview?.email || "-",
-      ownerAltEmail: "-",
-      ownerLandline: "-",
-      ownerWebsite: ownerPreview?.address || "-",
-
-      companyName: previewCompany || "-",
-      companyCode: companyCode || "-",
-      companyType: "-",
-      companyRegNo: "-",
-      companyIncDate: "-",
-      companyTaxRegNo: "-",
-      companyNtnGstNo: "-",
-      companyStatus: "-",
-      companyPhone: phoneVal || "-",
-      companyEmail: emailVal || "-",
-      companyWebsite: "-",
-      companyOfficeAddress: active?.address || fullAddress || "-",
-
-      allowedPermissions: active?.permission_grants || permissionGrants,
-      remarks: "This is a detailed city branch report representing live settings."
-    };
-  }, [
-    activeExistingCityBranch,
-    contacts,
-    branchCode,
-    previewCountry,
-    currency,
-    branchName,
-    locationMeta,
-    zip,
-    fullAddress,
-    ownerPreview,
-    ownerName,
-    previewCompany,
-    companyCode,
-    permissionGrants,
-    hasAny
-  ]);
+  const filteredExistingCityBranches = useMemo(() => {
+    const q = existingCitySearch.trim().toLowerCase();
+    if (!q) return existingCityBranches;
+    return existingCityBranches.filter((b) => [b.code, b.name, b.city_name].filter(Boolean).join(" ").toLowerCase().includes(q));
+  }, [existingCityBranches, existingCitySearch]);
 
   function openReport(autoPrint: boolean) {
-    const activeLang = (typeof document !== "undefined" ? document.documentElement.lang : "en") || "en";
-    const tt = (key: string, fallback: string) => t(activeLang as never, key as never, fallback);
-    const lb = liveBranchData;
-    const phone = contacts.find((c) => c.type.toLowerCase().includes("phone"))?.value;
-    const email = contacts.find((c) => c.type.toLowerCase().includes("email"))?.value;
-    const whatsapp = contacts.find((c) => c.type.toLowerCase().includes("whatsapp"))?.value;
-    // Canonical master-profile engine — same A4 design/i18n/RTL as every other master. Real record data only.
-    openMasterProfileReportWindow({
-      lang: activeLang,
-      autoPrint,
-      title: tt("branch.report_title", "City Branch Profile Report"),
-      subtitle: tt("branch.report_subtitle", "Branch Profile Summary"),
-      overviewLabel: tt("branch.overview", "Branch Profile Overview"),
-      name: lb.branchName,
-      status: lb.branchStatus,
-      createdBy: lb.createdBy,
-      reportIdPrefix: "BRANCH",
-      reportIdValue: lb.branchCode,
-      meta: [
-        { label: tt("branch.branch_code", "Branch Code"), value: lb.branchCode },
-        { label: tt("branch.branch_type", "Branch Type"), value: lb.branchType },
-        { label: tt("acct.country", "Country"), value: lb.country },
-        { label: tt("acct.currency", "Currency"), value: lb.currency }
-      ],
-      sections: [
-        { title: tt("branch.sec_branch_info", "Branch Information"), rows: [
-          { label: tt("branch.branch_name", "Branch Name"), value: lb.branchName },
-          { label: tt("branch.branch_code", "Branch Code"), value: lb.branchCode },
-          { label: tt("branch.branch_type", "Branch Type"), value: lb.branchType },
-          { label: tt("branch.serial", "Serial No."), value: lb.serialNumber },
-          { label: tt("acct.currency", "Currency"), value: lb.currency },
-          { label: tt("acct.status", "Status"), value: lb.branchStatus }
-        ]},
-        { title: tt("branch.sec_location", "Location & Address"), rows: [
-          { label: tt("acct.country", "Country"), value: lb.country },
-          { label: tt("acct.city", "City"), value: lb.city },
-          { label: tt("acct.address", "Address"), value: lb.fullAddress }
-        ]},
-        { title: tt("branch.sec_hierarchy", "Branch Hierarchy"), rows: [
-          { label: tt("branch.parent_branch", "Parent (Main) Branch"), value: lb.parentBranch?.name },
-          { label: tt("branch.branch_code", "Branch Code"), value: lb.parentBranch?.code },
-          { label: tt("branch.branch_type", "Branch Type"), value: lb.parentBranch?.type }
-        ]},
-        { title: tt("branch.sec_contact", "Contact Information"), rows: [
-          { label: tt("acct.phone", "Phone"), value: phone },
-          { label: tt("acct.email", "Email"), value: email },
-          { label: tt("branch.whatsapp", "WhatsApp"), value: whatsapp }
-        ]},
-        { title: tt("branch.sec_company", "Company & Ownership"), rows: [
-          { label: tt("acct.company_name", "Company Name"), value: lb.companyName },
-          { label: tt("branch.owner_name", "Owner / Manager"), value: lb.ownerName }
-        ]},
-        { title: tt("acct.sec_audit_info", "System / Audit Information"), rows: [
-          { label: tt("acct.created_by", "Created By"), value: lb.createdBy },
-          { label: tt("acct.created_on", "Created On"), value: lb.createdDate },
-          { label: tt("acct.updated_by", "Last Updated By"), value: lb.updatedBy },
-          { label: tt("acct.updated_on", "Last Updated On"), value: lb.updatedDate }
-        ]}
-      ]
-    });
+    openMasterProfileReportWindow(buildCityBranchReportConfig(reportInput, { lang, autoPrint, tt }));
   }
 
   function printReport() {
@@ -831,359 +667,226 @@ function CityBranchSetupContent() {
     firstField?.focus?.();
   }
 
-  function normalizeContacts(value: unknown): ContactRow[] {
-    if (!Array.isArray(value)) return [];
-    return value
-      .map((row) => {
-        const item = row as { type?: string; value?: string };
-        const type = String(item.type ?? "").trim();
-        const contactValue = String(item.value ?? "").trim();
-        return type && contactValue ? { type, value: contactValue } : null;
-      })
-      .filter((row): row is ContactRow => Boolean(row));
+  function emailReport() {
+    if (typeof window === "undefined") return;
+    window.location.href = buildMailtoHref(tt("cbs.report_mail_subject", "City Branch Report"), flatReportRows);
   }
 
-  function beginEditCityBranch(row: CityBranchRow) {
-    setEditingCityBranchId(row.id);
-    setCountryBranchId(row.country_branch_id);
-    const domain = (row.operational_domain === "shipping" ? "shipping" : "business") as "business" | "shipping";
-    setOperationalDomain(domain);
-    setBranchCategory(domain === "shipping" ? "clearing_agent" : "business");
-    setLocation({
+  function exportReportCsv() {
+    const rows = [[tt("cbs.csv_field", "Field"), tt("cbs.csv_value", "Value")], ...flatReportRows.map((row) => [row.label, row.value])];
+    downloadCsv(`city-branch_${new Date().toISOString().slice(0, 10)}.csv`, rows);
+  }
+
+  /** Read-only view of a saved branch in the drawer. Built from the saved record, never from the open form. */
+  async function viewSavedBranch(row: CityBranchRow) {
+    setBanner(null);
+    try {
+      const { row: fresh, detail } = await fetchSavedCityBranch(row.id);
+      const [company, owner, mains] = await Promise.all([
+        fresh.company_id ? loadCompanyView(fresh.company_id) : Promise.resolve(null),
+        fresh.owner_customer_id ? loadOwnerView(fresh.owner_customer_id) : Promise.resolve(null),
+        fetchMainBranchList(fresh.country_id, fresh.operational_domain === "shipping" ? "shipping" : "business")
+      ]);
+      const main = mains.find((m) => m.id === fresh.country_branch_id) ?? null;
+      const input = buildSavedInput(fresh, detail, {
+        company,
+        owner,
+        mainBranch: main ? { name: main.name, code: main.code, currency: main.local_currency } : null
+      });
+      setDrawerBranchData(buildCityBranchDrawerData(input, tt));
+    } catch (error) {
+      setBanner({ type: "error", message: `${t(lang, "cbs.failed_load_branch")}\n${messageOf(error) || t(lang, "cbs.branch_not_found")}` });
+    }
+  }
+
+  /** Loads one saved branch into the form, the live summary and the print input (edit, refresh, drawer). */
+  async function applySavedCityBranch(row: CityBranchRow, detail: CityBranchDetail | null) {
+    const domain: Domain = row.operational_domain === "shipping" ? "shipping" : "business";
+    const [mains, cityList] = await Promise.all([
+      fetchMainBranchList(row.country_id, domain),
+      fetchExistingCityBranches(row.country_id, row.country_branch_id, domain)
+    ]);
+    const ids = {
       countryId: row.country_id,
       stateProvinceId: row.state_province_id ?? "",
       districtId: row.district_id ?? "",
       cityId: row.city_id ?? "",
       areaId: row.area_location_id ?? ""
-    });
-    setLocationMeta({
-      country: null,
-      state: null,
-      district: null,
-      city: row.city_name
-        ? { id: row.city_id ?? "", country_id: "", state_province_id: null, district_id: null, name: row.city_name, code: "", zip_code: null, phone_area_code: null, is_active: true }
-        : null,
-      area: null
-    });
+    };
+    const names: CityBranchLocationNames = detail?.location ?? { ...EMPTY_LOCATION_NAMES, cityName: row.city_name ?? "" };
+
+    setMainBranches(mains);
+    setExistingCityBranches(cityList);
+    setOperationalDomain(domain);
+    setBranchCategory(domain === "shipping" ? "clearing_agent" : "business");
+    setEditingCityBranchId(row.id);
+    setSavedRow(row);
+    setSavedDetail(detail);
+    setCountryBranchId(row.country_branch_id);
+    setLocation(ids);
+    setLocationMeta(locationMetaFromSaved(ids, names));
+    setManualZip("");
     setCurrency(row.local_currency || "");
     setFullAddress(row.address ?? "");
     setCompanyId(row.company_id ?? "");
+    setOwnerCustomerId(row.owner_customer_id ?? null);
+    setOwnerProfileId(row.owner_profile_id ?? null);
+    setOwnerId(row.owner_customer_id ?? row.owner_profile_id ?? "");
     setOwnerName(row.owner_name ?? "");
     setContacts(normalizeContacts(row.contacts));
     setBranchName(row.name || "");
     setBranchCode(row.code || "");
     setPermissionTemplate(row.permission_template ?? "city-standard");
-    setPermissionGrants(Array.isArray(row.permission_grants) ? row.permission_grants : getPermissionKeysForTemplate("city-standard"));
-    setBanner({
-      type: "success",
-      message: `${t(lang, "cbs.editing_existing_branch")}\n${t(lang, "cbs.branch_name")}: ${row.name}\n${t(lang, "cbs.branch_code_word")}: ${row.code}`
-    });
+    setPermissionGrants(
+      Array.isArray(row.permission_grants) && row.permission_grants.length ? row.permission_grants : getPermissionKeysForTemplate("city-standard")
+    );
+    setRefreshNonce((n) => n + 1);
 
-    // Load communication configs
+    // Keep the saved record in the URL, so a page refresh loads the same values back.
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get("editId") !== row.id) {
+        url.searchParams.set("editId", row.id);
+        window.history.replaceState(window.history.state, "", url.toString());
+      }
+    }
+
+    // Communication settings saved for this branch.
     setEmailPrefix("");
     setWhatsappNumber("");
     setPhoneNumberId("");
     setWabaId("");
     setAccessToken("");
-
-    (async () => {
-      try {
-        const res = await fetch(`/api/erp/email/config?countryId=${row.country_id}&countryBranchId=${row.country_branch_id}&cityBranchId=${row.id}`);
-        const data = await res.json();
-        if (data?.config) {
-          const emailAddr = data.config.fromEmail || "";
-          const prefix = emailAddr.split("@")[0] || "";
-          setEmailPrefix(prefix);
-          if (data.config.smtpHost) setSmtpHost(data.config.smtpHost);
-          if (data.config.smtpPort) setSmtpPort(String(data.config.smtpPort));
-          if (data.config.smtpSecure !== undefined) setSslSecure(data.config.smtpSecure);
-          if (data.config.smtpUser) setSmtpUser(data.config.smtpUser);
-          setSmtpStatus("Ready");
-        }
-      } catch (err) {
-        console.error("Failed to load email config for edit:", err);
+    try {
+      const res = await fetch(`/api/erp/email/config?countryId=${row.country_id}&countryBranchId=${row.country_branch_id}&cityBranchId=${row.id}`);
+      const data = await res.json();
+      if (data?.config) {
+        const emailAddr = data.config.fromEmail || "";
+        setEmailPrefix(emailAddr.split("@")[0] || "");
+        if (data.config.smtpHost) setSmtpHost(data.config.smtpHost);
+        if (data.config.smtpPort) setSmtpPort(String(data.config.smtpPort));
+        if (data.config.smtpSecure !== undefined) setSslSecure(data.config.smtpSecure);
+        if (data.config.smtpUser) setSmtpUser(data.config.smtpUser);
+        setSmtpStatus("Ready");
       }
-    })();
-
-    (async () => {
-      try {
-        const res = await fetch("/api/erp/whatsapp/accounts");
-        const data = await res.json();
-        const accounts = Array.isArray(data?.data) ? data.data : Array.isArray(data?.accounts) ? data.accounts : [];
-        const match = accounts.find((acc: any) => acc.city_branch_id === row.id);
-        if (match) {
-          setWhatsappNumber(match.phone_number || "");
-          setPhoneNumberId(match.phone_number_id || "");
-          setWabaId(match.waba_id || "");
-          setWhatsappStatus("Ready");
-        }
-      } catch (err) {
-        console.error("Failed to load whatsapp config for edit:", err);
+    } catch (err) {
+      console.error("Failed to load email config for edit:", err);
+    }
+    try {
+      const res = await fetch("/api/erp/whatsapp/accounts");
+      const data = await res.json();
+      const accounts = Array.isArray(data?.data) ? data.data : Array.isArray(data?.accounts) ? data.accounts : [];
+      const match = accounts.find((acc: any) => acc.city_branch_id === row.id);
+      if (match) {
+        setWhatsappNumber(match.phone_number || "");
+        setPhoneNumberId(match.phone_number_id || "");
+        setWabaId(match.waba_id || "");
+        setWhatsappStatus("Ready");
       }
-    })();
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      console.error("Failed to load whatsapp config for edit:", err);
+    }
   }
 
-  function viewSavedBranch(row: CityBranchRow) {
-    const phoneVal = normalizeContacts(row.contacts).find((c) => c.type.toLowerCase().includes("phone") || c.type.toLowerCase().includes("mobile"))?.value || "";
-    const emailVal = normalizeContacts(row.contacts).find((c) => c.type.toLowerCase().includes("email"))?.value || row.email || "";
-    const whatsappVal = normalizeContacts(row.contacts).find((c) => c.type.toLowerCase().includes("whatsapp"))?.value || "";
-
-    const payload = {
-      serialNumber: row.id.slice(0, 4).toUpperCase(),
-      branchStatus: row.status || "ACTIVE",
-      branchCode: row.code || "-",
-      branchType: "CITY",
-      country: locationMeta.country?.name || "Country",
-      currency: row.local_currency || currency || "USD",
-      
-      parentBranch: {
-        name: selectedMainBranch?.name || "Main Branch",
-        code: selectedMainBranch?.code || "MAIN",
-        type: "MAIN",
-        status: "ACTIVE",
-        currency: selectedMainBranch?.local_currency || "USD"
-      },
-
-      branchName: row.name,
-      createdDate: row.created_at ? new Date(row.created_at).toLocaleDateString() : undefined,
-      updatedDate: row.updated_at ? new Date(row.updated_at).toLocaleDateString() : undefined,
-      createdBy: "",
-      updatedBy: "",
-      establishedOn: "-",
-      taxRegNo: "-",
-      ntnGstNo: "-",
-
-      city: row.city_name || locationMeta.city?.name || "-",
-      cityCode: "-",
-      stateProvince: locationMeta.state?.name || "-",
-      areaRegion: locationMeta.area?.name || "-",
-      zipCode: zip || "-",
-      fullAddress: row.address || "-",
-
-      ownerName: row.owner_name || "-",
-      ownerCode: "OWN-0001",
-      fatherHusbandName: "-",
-      cnicId: "-",
-      nationality: "Pakistani",
-      designation: "City Branch Manager",
-      ownershipType: "Individual",
-      ownershipPercent: "100%",
-      ownerPhone: phoneVal || "-",
-      ownerWhatsApp: whatsappVal || "-",
-      ownerEmail: emailVal || "-",
-      ownerAltEmail: "-",
-      ownerLandline: "-",
-      ownerWebsite: "-",
-
-      companyName: previewCompany || "-",
-      companyCode: companyCode || "-",
-      companyType: "-",
-      companyRegNo: "-",
-      companyIncDate: "-",
-      companyTaxRegNo: "-",
-      companyNtnGstNo: "-",
-      companyStatus: "-",
-      companyPhone: phoneVal || "-",
-      companyEmail: emailVal || "-",
-      companyWebsite: "-",
-      companyOfficeAddress: row.address || "-",
-
-      allowedPermissions: Array.isArray(row.permission_grants) ? row.permission_grants : [],
-      remarks: "Saved city branch details registry."
-    };
-
-    setDrawerBranchData(payload);
+  async function editCityBranch(id: string) {
+    setEditLoading(true);
+    setBanner(null);
+    try {
+      const { row, detail, detailError } = await fetchSavedCityBranch(id);
+      await applySavedCityBranch(row, detail);
+      setBanner({
+        type: detailError ? "error" : "success",
+        message: [
+          t(lang, "cbs.editing_existing_branch"),
+          `${t(lang, "cbs.branch_name")}: ${row.name}`,
+          `${t(lang, "cbs.branch_code_word")}: ${row.code}`,
+          detailError ? `${t(lang, "cbs.detail_partial_warning")} ${describeDetailError(detailError, lang)}` : ""
+        ]
+          .filter(Boolean)
+          .join("\n")
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      setBanner({ type: "error", message: `${t(lang, "cbs.failed_load_branch")}\n${messageOf(error) || t(lang, "cbs.branch_not_found")}` });
+    } finally {
+      setEditLoading(false);
+    }
   }
 
+  // Edit from the URL (?editId=) — a page refresh restores the same saved values.
   useEffect(() => {
     if (!isUuid(editId)) return;
     if (editingCityBranchId === editId) return;
-
-    let cancelled = false;
-    (async () => {
-      setEditLoading(true);
-      try {
-        const res = await fetch(`/api/branch-management/city-branches?id=${encodeURIComponent(editId)}`, {
-          cache: "no-store"
-        });
-        const json = (await res.json().catch(() => ({}))) as { cityBranches?: CityBranchRow[]; error?: string };
-        if (cancelled) return;
-        if (!res.ok) {
-          setBanner({ type: "error", message: json.error || t(lang, "cbs.branch_not_found") });
-          return;
-        }
-        const row = Array.isArray(json.cityBranches) ? json.cityBranches[0] : null;
-        if (!row) {
-          setBanner({ type: "error", message: t(lang, "cbs.branch_not_found") });
-          return;
-        }
-        await loadMainBranches(row.country_id);
-        await loadExistingCityBranches(row.country_id, row.country_branch_id);
-        beginEditCityBranch(row);
-      } catch (error) {
-        if (!cancelled) setBanner({ type: "error", message: error instanceof Error ? error.message : t(lang, "cbs.failed_load_branch") });
-      } finally {
-        if (!cancelled) setEditLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
+    void editCityBranch(editId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId]);
 
-  function emailReport() {
-    if (typeof window === "undefined") return;
-    window.location.href = buildMailtoHref("City Branch Report", reportRows);
+  /** Report input for a saved record. Every value comes from the saved row, its detail and the loaded views. */
+  function buildSavedInput(
+    row: CityBranchRow,
+    detail: CityBranchDetail | null,
+    views: { company: CompanyView | null; owner: OwnerView | null; mainBranch: { name: string; code: string; currency: string } | null }
+  ): CityBranchReportInput {
+    const names = detail?.location ?? { ...EMPTY_LOCATION_NAMES, cityName: row.city_name ?? "" };
+    const savedContacts = normalizeContacts(row.contacts);
+    const main = views.mainBranch;
+    return {
+      savedId: row.id,
+      name: row.name,
+      code: row.code,
+      status: row.status || "active",
+      currency: row.local_currency || "",
+      operationalDomain: row.operational_domain === "shipping" ? "shipping" : "business",
+      createdAt: row.created_at ?? "",
+      updatedAt: row.updated_at ?? "",
+      createdByName: detail?.createdByName ?? "",
+      country: names.countryName,
+      countryIso2: names.countryIso2,
+      state: names.stateName,
+      district: names.districtName,
+      city: row.city_name || names.cityName,
+      area: names.areaName,
+      zip: names.cityZip || names.areaPostal,
+      fullAddress: row.address ?? "",
+      mainBranchName: main?.name ?? "",
+      mainBranchCode: main?.code ?? "",
+      mainBranchCurrency: main?.currency ?? "",
+      contacts: savedContacts,
+      permissionTemplate: row.permission_template ?? "city-standard",
+      permissionGrants: Array.isArray(row.permission_grants) ? row.permission_grants : [],
+      company: views.company,
+      owner: views.owner ?? (row.owner_name ? emptyOwnerView(row.owner_name, row.owner_profile_id ? "profile" : "customer") : null),
+      users: detail?.linkedUsers ?? [],
+      documents: detail?.linkedDocuments ?? []
+    };
   }
 
-  function exportReportCsv() {
-    const rows = [["Field", "Value"], ...reportRows.map((row) => [row.label, row.value])];
-    downloadCsv(`city-branch_${new Date().toISOString().slice(0, 10)}.csv`, rows);
-  }
-
-  const filteredExistingCityBranches = useMemo(() => {
-    const q = existingCitySearch.trim().toLowerCase();
-    if (!q) return existingCityBranches;
-    return existingCityBranches.filter((b) => {
-      const haystack = [b.code, b.name, b.city_name].filter(Boolean).join(" ").toLowerCase();
-      return haystack.includes(q);
-    });
-  }, [existingCityBranches, existingCitySearch]);
-
-  async function loadMainBranches(nextCountryId: string, domain?: "business" | "shipping" | "") {
-    const effectiveDomain = domain ?? operationalDomain;
-    if (!nextCountryId?.trim() || !effectiveDomain) {
+  async function loadMainBranches(nextCountryId: string, domain: Domain) {
+    if (!isUuid(nextCountryId) || !domain) {
       setMainBranches([]);
       setCountryBranchId("");
       return;
     }
-    try {
-      const res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(nextCountryId)}&operationalDomain=${effectiveDomain}`, {
-        cache: "no-store"
-      });
-      if (!res.ok) {
-        setMainBranches([]);
-        setCountryBranchId("");
-        return;
+    const finalBranches = await fetchMainBranchList(nextCountryId, domain);
+    setMainBranches(finalBranches);
+    if (finalBranches.length > 0) {
+      if (!countryBranchId || !finalBranches.some((b) => b.id === countryBranchId)) {
+        await onMainBranchSelected(finalBranches[0].id, domain);
       }
-      const json = (await res.json()) as { countryBranches?: CountryBranchRow[] };
-      const list = Array.isArray(json.countryBranches) ? json.countryBranches : [];
-
-      const mains = list.filter((b) => b.is_main !== false);
-      const finalBranches = mains.length > 0 ? mains : list;
-      setMainBranches(finalBranches);
-      if (finalBranches.length > 0) {
-        if (!countryBranchId || !finalBranches.some((b) => b.id === countryBranchId)) {
-          await onMainBranchSelected(finalBranches[0].id, effectiveDomain);
-        }
-      } else {
-        setCountryBranchId("");
-      }
-    } catch (e) {
-      console.error("Failed to load main branches:", e);
-      setMainBranches([]);
+    } else {
       setCountryBranchId("");
     }
-  }
-
-  async function loadExistingCityBranches(nextCountryId: string, nextCountryBranchId?: string, domain?: "business" | "shipping" | "") {
-    const effectiveDomain = domain ?? operationalDomain;
-    if (!isUuid(nextCountryId)) {
-      setExistingCityBranches([]);
-      return [];
-    }
-    const params = new URLSearchParams({ countryId: nextCountryId });
-    if (nextCountryBranchId && isUuid(nextCountryBranchId)) {
-      params.set("countryBranchId", nextCountryBranchId);
-    }
-    if (effectiveDomain) {
-      params.set("operationalDomain", effectiveDomain);
-    }
-    const url = `/api/branch-management/city-branches?${params.toString()}`;
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) {
-      setExistingCityBranches([]);
-      return [];
-    }
-    const json = (await res.json()) as { cityBranches?: CityBranchRow[] };
-    const list = Array.isArray(json.cityBranches) ? json.cityBranches : [];
-    setExistingCityBranches(list);
-    return list;
-  }
-
-  function suggestBranchCode(meta: LocationHierarchyMeta, existingBranchesList: CityBranchRow[] = existingCityBranches, domain: "business" | "shipping" | "" = operationalDomain) {
-    const prefix = asIso3(meta.country);
-    const rawCity = meta.city?.code || meta.city?.name || "";
-    const cityCode = compactCode(rawCity, "CITY");
-    const existingCodes = new Set((existingBranchesList || []).map((b) => (b.code || "").toUpperCase().trim()));
-
-    if (domain === "shipping") {
-      let n = 1;
-      while (n <= 99) {
-        const num = String(n).padStart(2, "0");
-        const candidate = `${prefix}-${cityCode}-SHIP-${num}`;
-        if (!existingCodes.has(candidate)) {
-          return candidate;
-        }
-        n++;
-      }
-      return `${prefix}-${cityCode}-SHIP-01`;
-    }
-
-    // Find the first available number starting from 1
-    let n = 1;
-    while (n <= 999) {
-      const num = String(n).padStart(3, "0");
-      const candidate = `${prefix}-${cityCode}-${num}`;
-      if (!existingCodes.has(candidate)) {
-        return candidate;
-      }
-      n++;
-    }
-    return `${prefix}-${cityCode}-${String((existingBranchesList || []).length + 1).padStart(3, "0")}`;
-  }
-
-  function suggestBranchName(meta: LocationHierarchyMeta, existingBranchesList: CityBranchRow[] = existingCityBranches, domain: "business" | "shipping" | "" = operationalDomain) {
-    const city = meta.city?.name?.trim();
-    if (!city) return "";
-    const existingNames = new Set(
-      (existingBranchesList || [])
-        .filter((b) => isCityBranchMatch(b, meta.city?.id ?? "", meta.city?.name ?? ""))
-        .map((b) => (b.name || "").toLowerCase().trim())
-    );
-
-    const baseName = domain === "shipping" ? `${city} Shipping & Clearing Branch` : `${city} City Branch`;
-    let candidate = baseName;
-    if (!existingNames.has(candidate.toLowerCase())) {
-      return candidate;
-    }
-
-    let n = 2;
-    while (n <= 100) {
-      candidate = domain === "shipping" ? `${city} Shipping & Clearing Branch ${n}` : `${city} City Branch ${n}`;
-      if (!existingNames.has(candidate.toLowerCase())) {
-        return candidate;
-      }
-      n++;
-    }
-    return `${baseName} ${(existingBranchesList || []).length + 1}`;
   }
 
   async function onOperationalDomainChange(nextDomain: "business" | "shipping") {
     setOperationalDomain(nextDomain);
     setBranchCategory(nextDomain === "shipping" ? "clearing_agent" : "business");
     setBanner(null);
-
     if (!isUuid(location.countryId)) return;
-
+    const list = await fetchExistingCityBranches(location.countryId, undefined, nextDomain);
+    setExistingCityBranches(list);
     await loadMainBranches(location.countryId, nextDomain);
-    const list = await loadExistingCityBranches(location.countryId, undefined, nextDomain);
-
-    if (locationMeta.city?.name) {
+    if (locationMeta.city?.name && !editingCityBranchId) {
       setBranchName(suggestBranchName(locationMeta, list, nextDomain));
       setBranchCode(suggestBranchCode(locationMeta, list, nextDomain));
     }
@@ -1194,57 +897,47 @@ function CityBranchSetupContent() {
     if (editingCityBranchId && next.countryId === location.countryId) {
       setLocation(next);
       setLocationMeta(meta);
-      if (meta.country?.currency_code) {
-        setCurrency(meta.country.currency_code.toUpperCase());
-      }
+      if (meta.country?.currency_code) setCurrency(meta.country.currency_code.toUpperCase());
       return;
     }
     setLocation(next);
     setLocationMeta(meta);
-
     setCurrency(meta.country?.currency_code?.toUpperCase() || "");
     setFullAddress("");
-
     setCountryBranchId("");
     setMainBranches([]);
     setExistingCityBranches([]);
     setPermissionTemplate("city-standard");
     setPermissionGrants(getPermissionKeysForTemplate("city-standard"));
     setEditingCityBranchId("");
-
+    setSavedRow(null);
+    setSavedDetail(null);
     setBranchName("");
     setBranchCode("");
 
     if (meta.country?.phone_code) {
       const code = meta.country.phone_code;
       setContacts((prev) => {
-        if (prev.length === 0) {
-          return [{ type: "Mobile", value: code + " " }];
-        }
-        return prev.map((c) => {
-          if (["Mobile", "Phone", "WhatsApp"].includes(c.type) && !c.value.trim()) {
-            return { ...c, value: code + " " };
-          }
-          return c;
-        });
+        if (prev.length === 0) return [{ type: "Mobile", value: code + " " }];
+        return prev.map((c) => (["Mobile", "Phone", "WhatsApp"].includes(c.type) && !c.value.trim() ? { ...c, value: code + " " } : c));
       });
     }
 
-    if (!isUuid(next.countryId)) return;
-    if (operationalDomain) {
-      await loadMainBranches(next.countryId, operationalDomain);
-      await loadExistingCityBranches(next.countryId, undefined, operationalDomain);
-    }
+    if (!isUuid(next.countryId) || !operationalDomain) return;
+    const list = await fetchExistingCityBranches(next.countryId, undefined, operationalDomain);
+    setExistingCityBranches(list);
+    await loadMainBranches(next.countryId, operationalDomain);
   }
 
-  async function onMainBranchSelected(nextId: string, domain?: "business" | "shipping") {
+  async function onMainBranchSelected(nextId: string, domain?: Domain) {
     const effectiveDomain = domain ?? operationalDomain;
     setBanner(null);
     setCountryBranchId(nextId);
-    const list = await loadExistingCityBranches(location.countryId, nextId, effectiveDomain);
-    setBranchCode(suggestBranchCode(locationMeta, list, effectiveDomain));
-    if (!editingCityBranchId && locationMeta.city?.name?.trim()) {
-      if (!branchName.trim() || branchName.includes("Branch")) {
+    const list = await fetchExistingCityBranches(location.countryId, nextId, effectiveDomain);
+    setExistingCityBranches(list);
+    if (!editingCityBranchId) {
+      setBranchCode(suggestBranchCode(locationMeta, list, effectiveDomain));
+      if (locationMeta.city?.name?.trim() && (!branchName.trim() || branchName.includes("Branch"))) {
         const nextName = suggestBranchName(locationMeta, list, effectiveDomain) || `${locationMeta.city.name.trim()} City Branch`;
         if (nextName) setBranchName(nextName);
       }
@@ -1257,125 +950,94 @@ function CityBranchSetupContent() {
   function onLocationChange(next: LocationHierarchyValue, meta: LocationHierarchyMeta) {
     setLocation(next);
     setLocationMeta(meta);
-
-    // Auto-fill ZIP from newly selected area or city (only if user hasn't typed a manual zip)
     const derivedZip = meta.area?.postal_code ?? meta.city?.zip_code ?? "";
-    if (derivedZip) setManualZip(""); // clear manual so auto shows through
-
+    if (derivedZip) setManualZip("");
     if (editingCityBranchId) return;
-
     if (!branchName.trim() || branchName.includes("Branch")) {
       const nextName = suggestBranchName(meta, existingCityBranches, operationalDomain) || (meta.city?.name ? `${meta.city.name.trim()} City Branch` : "");
       if (nextName) setBranchName(nextName);
     }
-
-    if (countryBranchId) {
-      setBranchCode(suggestBranchCode(meta, existingCityBranches, operationalDomain));
-    }
+    if (countryBranchId) setBranchCode(suggestBranchCode(meta, existingCityBranches, operationalDomain));
   }
 
-  function addNewTypePrompt() {
-    const value = window.prompt("Enter new type");
-    if (!value) return null;
-    const clean = value.trim();
-    if (!clean) return null;
-    return clean;
+  async function onCompanyPicked(nextId: string) {
+    setCompanyId(nextId);
+    setLinkedRecordError("");
+    if (!nextId) return;
+    try {
+      const company = await loadCompanyView(nextId);
+      if (company?.ownerPersonId) {
+        setOwnerId(company.ownerPersonId);
+        setOwnerCustomerId(company.ownerPersonId);
+        setOwnerProfileId(null);
+      }
+    } catch (error) {
+      setLinkedRecordError(`${tt("cbs.company_load_failed", "Company details could not be loaded.")} ${messageOf(error)}`.trim());
+    }
   }
 
   function updateContact(idx: number, updates: Partial<ContactRow>) {
     setContacts((current) => current.map((row, i) => (i === idx ? { ...row, ...updates } : row)));
   }
 
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function addNewTypePrompt() {
+    const value = window.prompt(tt("cbs.enter_new_type", "Enter new type"));
+    if (!value) return null;
+    const clean = value.trim();
+    return clean || null;
+  }
+
+  /** Checks the form before saving. Returns the message to show, or null when the form is ready. */
+  function validationProblem(): string | null {
+    if (!operationalDomain) return tt("cbs.err_domain_required", "Select the operational section first (Business & Trading or Shipping Line & Clearing Agent).");
+    if (!isUuid(location.countryId) || !isUuid(countryBranchId)) return t(lang, "cbs.select_valid_country_branch");
+    if (!isUuid(location.stateProvinceId) || !isUuid(location.cityId) || !resolvedCityName) return t(lang, "cbs.select_state_city_msg");
+    if (!resolvedBranchName) return t(lang, "cbs.branch_name_required");
+    if (codeAlreadyExists) return `${t(lang, "cbs.branch_code_exists_title")}\n${t(lang, "cbs.branch_code_in_use_msg").replace("{0}", branchCode)}`;
+    if (nameAlreadyExists) return `${t(lang, "cbs.branch_name_exists_title")}\n${t(lang, "cbs.branch_name_in_use_msg").replace("{0}", resolvedBranchName)}`;
+    if (!branchCode.trim()) return t(lang, "cbs.branch_code_required");
+    if (!permissionTemplate || !permissionGrants.length) return t(lang, "cbs.select_template_permission_msg");
+    if (parentPermissionGrants?.length && permissionGrants.some((permission) => !parentPermissionGrants.includes(permission))) {
+      return t(lang, "cbs.permissions_scope_msg");
+    }
+    return null;
+  }
+
+  function describeSaveFailure(json: unknown): string {
+    const body = (json ?? {}) as { code?: string; field?: string };
+    const headline = t(lang, "cbs.save_failed_title");
+    if (body.code === "DUPLICATE_BRANCH") {
+      const key = body.field === "code" ? "cbs.dup_code_msg" : body.field === "name" ? "cbs.dup_name_msg" : "cbs.dup_scope_msg";
+      return `${headline}\n${t(lang, key)}`;
+    }
+    const fieldLabel = (field: string) => tt(CITY_BRANCH_FIELD_KEYS[field] ?? "cbs.field_unknown", field);
+    const text = describeCityBranchServerError(json, t(lang, "cbs.save_failed_generic"), fieldLabel);
+    return `${headline}\n${text}`;
+  }
+
+  /** Saves the branch: POST for a new branch, PUT for the saved record being edited. */
+  async function saveBranch(): Promise<void> {
     setFormTouched(true);
     setBanner(null);
-
-    if (!operationalDomain) {
-      setBanner({
-        type: "error",
-        message: "Mandatory: Please select an Operational Section (Option 1: Business & Trading OR Option 2: Shipping Line & Clearing Agent)."
-      });
+    const problem = validationProblem();
+    if (problem) {
+      setBanner({ type: "error", message: `${t(lang, "cbs.save_failed_title")}\n${problem}` });
       return;
     }
 
-    if (!isUuid(location.countryId) || !isUuid(countryBranchId)) {
-      setBanner({ type: "error", message: t(lang, "cbs.select_valid_country_branch") });
-      return;
-    }
-
-    const resolvedCityName = locationMeta.city?.name?.trim() || activeExistingCityBranch?.city_name?.trim() || "";
-    if (!isUuid(location.stateProvinceId) || !isUuid(location.cityId) || !resolvedCityName) {
-      setBanner({ type: "error", message: t(lang, "cbs.select_state_city_msg") });
-      return;
-    }
-
-    let finalBranchName = branchName.trim() || effectiveBranchName;
-    if (!finalBranchName && resolvedCityName) {
-      finalBranchName = suggestBranchName(locationMeta, existingCityBranches) || `${resolvedCityName} City Branch`;
-    }
-    if (!branchName.trim() && finalBranchName) {
-      setBranchName(finalBranchName);
-    }
-
-    if (!finalBranchName) {
-      setBanner({ type: "error", message: t(lang, "cbs.branch_name_required") });
-      return;
-    }
-
-    if (codeAlreadyExists) {
-      setBanner({
-        type: "error",
-        message: `${t(lang, "cbs.branch_code_exists_title")}\n${t(lang, "cbs.branch_code_in_use_msg").replace("{0}", branchCode)}`
-      });
-      return;
-    }
-
-    if (nameAlreadyExists) {
-      setBanner({
-        type: "error",
-        message: `${t(lang, "cbs.branch_name_exists_title")}\n${t(lang, "cbs.branch_name_in_use_msg").replace("{0}", finalBranchName)}`
-      });
-      return;
-    }
-
-    if (!branchCode.trim()) {
-      setBanner({ type: "error", message: t(lang, "cbs.branch_code_required") });
-      return;
-    }
-
-    if (!permissionTemplate || !permissionGrants.length) {
-      setBanner({
-        type: "error",
-        message: t(lang, "cbs.select_template_permission_msg")
-      });
-      return;
-    }
-
-    if (parentPermissionGrants?.length && permissionGrants.some((permission) => !parentPermissionGrants.includes(permission))) {
-      setBanner({
-        type: "error",
-        message: t(lang, "cbs.permissions_scope_msg")
-      });
-      return;
-    }
+    const isUpdate = Boolean(editingCityBranchId);
+    const emailContact = contactsPayload.find((row) => row.type.toLowerCase().includes("email"))?.value;
+    const emailForSave = (emailPrefix ? `${emailPrefix.trim().toLowerCase()}@dgt.llc` : emailContact && emailContact.includes("@") ? emailContact : `${branchCode.trim().toLowerCase()}@dgt.llc`) || "";
+    const phone = contactsPayload.find((row) => row.type.toLowerCase().includes("phone") || row.type.toLowerCase().includes("mobile"))?.value;
+    const whatsappForSave = contactsPayload.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value;
 
     setSaving(true);
     try {
-      const contactsPayload = contacts
-        .map((row) => ({ type: row.type.trim(), value: row.value.trim() }))
-        .filter((row) => row.type && row.value);
-
-      const emailContact = contactsPayload.find((row) => row.type.toLowerCase().includes("email"))?.value;
-      const email = emailContact && emailContact.includes("@") ? emailContact : `${branchCode.trim().toLowerCase()}@dgt.llc`;
-      const phone = contactsPayload.find((row) => row.type.toLowerCase().includes("phone") || row.type.toLowerCase().includes("mobile"))?.value;
-      const whatsappNumber = contactsPayload.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value;
-
       const res = await fetch("/api/branch-management/city-branches", {
-        method: editingCityBranchId ? "PUT" : "POST",
+        method: isUpdate ? "PUT" : "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          id: editingCityBranchId || undefined,
+          id: isUpdate ? editingCityBranchId : undefined,
           countryId: location.countryId,
           countryBranchId,
           operationalDomain,
@@ -1384,90 +1046,93 @@ function CityBranchSetupContent() {
           districtId: location.districtId || undefined,
           cityId: location.cityId || undefined,
           areaLocationId: location.areaId || undefined,
-          name: finalBranchName,
+          name: resolvedBranchName,
           code: branchCode,
           currencyCode: currency || locationMeta.country?.currency_code || "USD",
           address: fullAddress.trim() || undefined,
           phone: phone || undefined,
-          email: (emailPrefix ? `${emailPrefix.trim().toLowerCase()}@dgt.llc` : email) || "",
-          whatsappNumber: whatsappNumber || undefined,
+          email: emailForSave,
+          whatsappNumber: whatsappForSave || undefined,
           companyId: companyId || undefined,
-          ownerName: ownerName.trim() || undefined,
+          ownerName: (ownerView?.name || ownerName.trim()) || undefined,
           ownerCustomerId: ownerCustomerId || undefined,
           ownerProfileId: ownerProfileId || undefined,
           permissionTemplate,
           permissionGrants,
           contacts: contactsPayload.length ? contactsPayload : undefined,
           emailPrefix,
-          emailServerSettings: emailPrefix ? {
-            mailServerName: emailServerName,
-            localIp,
-            publicIp,
-            smtpHost,
-            smtpPort: smtpPort ? Number(smtpPort) : null,
-            imapHost,
-            imapPort: imapPort ? Number(imapPort) : null,
-            sslSecure,
-            smtpUser: smtpUser || (emailPrefix ? `${emailPrefix.trim().toLowerCase()}@dgt.llc` : ""),
-            smtpPass: smtpPass || undefined
-          } : undefined,
-          whatsappConfig: whatsappNumber ? {
-            whatsappNumber,
-            wabaId,
-            phoneNumberId,
-            accessToken,
-            isActive: true
-          } : undefined
+          emailServerSettings: emailPrefix
+            ? {
+                mailServerName: emailServerName,
+                localIp,
+                publicIp,
+                smtpHost,
+                smtpPort: smtpPort ? Number(smtpPort) : null,
+                imapHost,
+                imapPort: imapPort ? Number(imapPort) : null,
+                sslSecure,
+                smtpUser: smtpUser || (emailPrefix ? `${emailPrefix.trim().toLowerCase()}@dgt.llc` : ""),
+                smtpPass: smtpPass || undefined
+              }
+            : undefined,
+          whatsappConfig: whatsappForSave
+            ? { whatsappNumber: whatsappForSave, wabaId, phoneNumberId, accessToken, isActive: true }
+            : undefined
         })
       });
 
-      const json = await res.json().catch(() => ({}));
+      const json = (await res.json().catch(() => ({}))) as {
+        id?: string;
+        code?: string;
+        name?: string;
+        warnings?: unknown;
+      };
       if (!res.ok) {
-        let message = "Failed to save city branch.";
-        if (json?.error) {
-          if (typeof json.error === "string") {
-            message = json.error;
-          } else if (json.error.message && typeof json.error.message === "string") {
-            message = json.error.message;
-          } else if (json.error.fieldErrors && typeof json.error.fieldErrors === "object") {
-            const fieldMsgs = Object.entries(json.error.fieldErrors)
-              .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`)
-              .join("; ");
-            message = `Validation Error: ${fieldMsgs}`;
-          } else {
-            message = JSON.stringify(json.error);
-          }
-        }
-        setBanner({ type: "error", message });
+        setBanner({ type: "error", message: describeSaveFailure(json) });
         return;
       }
 
-      setBanner({ type: "success", message: `${editingCityBranchId ? t(lang, "cbs.updated_status_word") : t(lang, "cbs.saved_status_word")}: ${branchName} (${branchCode})` });
-      const list = await loadExistingCityBranches(location.countryId, countryBranchId, operationalDomain);
-      setEditingCityBranchId("");
-      if (!editingCityBranchId) {
-        setBranchCode(suggestBranchCode(locationMeta, list, operationalDomain));
-        setBranchName("");
-        setPermissionTemplate("city-standard");
-        setPermissionGrants(parentPermissionGrants?.length ? getPermissionKeysForTemplate("city-standard").filter((p) => parentPermissionGrants.includes(p)) : getPermissionKeysForTemplate("city-standard"));
-        setEmailPrefix("");
-        setWhatsappNumber("");
-        setPhoneNumberId("");
-        setWabaId("");
-        setAccessToken("");
+      const savedId = typeof json.id === "string" && json.id ? json.id : editingCityBranchId;
+      const savedName = typeof json.name === "string" ? json.name : resolvedBranchName;
+      const savedCode = typeof json.code === "string" ? json.code : branchCode.trim();
+      const warnings = Array.isArray(json.warnings) ? json.warnings.map((w) => String(w)) : [];
+
+      // Reload the stored record: the form, live summary and print then show exactly what was saved.
+      let reloadWarning = "";
+      try {
+        const loaded = await fetchSavedCityBranch(savedId);
+        await applySavedCityBranch(loaded.row, loaded.detail);
+        reloadWarning = loaded.detailError ? `${t(lang, "cbs.detail_partial_warning")} ${describeDetailError(loaded.detailError, lang)}` : "";
+      } catch (reloadError) {
+        reloadWarning = `${t(lang, "cbs.reload_after_save_failed")} ${messageOf(reloadError)}`.trim();
       }
+
+      const lines = [
+        t(lang, isUpdate ? "cbs.saved_update_ok" : "cbs.saved_create_ok"),
+        `${t(lang, "cbs.branch_name")}: ${savedName}`,
+        `${t(lang, "cbs.branch_code_word")}: ${savedCode}`,
+        `${t(lang, "cbs.record_id")}: ${savedId}`,
+        ...warnings.map((w) => `⚠ ${w}`),
+        reloadWarning ? `⚠ ${reloadWarning}` : ""
+      ].filter(Boolean);
+      setBanner({ type: warnings.length || reloadWarning ? "error" : "success", message: lines.join("\n") });
     } catch (err) {
-      setBanner({ type: "error", message: err instanceof Error ? err.message : t(lang, "cbs.failed_save_branch") });
+      setBanner({ type: "error", message: `${t(lang, "cbs.save_failed_title")}\n${messageOf(err) || t(lang, "cbs.save_failed_generic")}` });
     } finally {
       setSaving(false);
     }
   }
 
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void saveBranch();
+  }
+
   function onReset() {
     setBanner(null);
     setActiveStep(1);
-    setLocation({ countryId: "", stateProvinceId: "", districtId: "", cityId: "", areaId: "" });
-    setLocationMeta({ country: null, state: null, district: null, city: null, area: null });
+    setLocation(EMPTY_LOCATION);
+    setLocationMeta(EMPTY_META);
     setCurrency("");
     setFullAddress("");
     setCountryBranchId("");
@@ -1476,12 +1141,18 @@ function CityBranchSetupContent() {
     setBranchName("");
     setBranchCode("");
     setOwnerName("");
-    setOwnerPreview(null);
+    setOwnerId("");
+    setOwnerCustomerId(null);
+    setOwnerProfileId(null);
+    setCompanyId("");
     setContacts([]);
     setPermissionTemplate("city-standard");
     setPermissionGrants(getPermissionKeysForTemplate("city-standard"));
     setOperationalDomain("");
     setBranchCategory("");
+    setEditingCityBranchId("");
+    setSavedRow(null);
+    setSavedDetail(null);
     setEmailPrefix("");
     setWhatsappNumber("");
     setPhoneNumberId("");
@@ -1489,49 +1160,84 @@ function CityBranchSetupContent() {
     setAccessToken("");
   }
 
+  const bannerView = banner ? (
+    <div
+      className={
+        banner.type === "success"
+          ? "mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
+          : "mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900"
+      }
+      role={banner.type === "error" ? "alert" : "status"}
+    >
+      <div className="whitespace-pre-line break-words">{banner.message}</div>
+    </div>
+  ) : null;
+
+  const reviewFields = {
+    country: reportInput.country,
+    stateProvince: locationMeta.state?.name ?? "",
+    city: resolvedCityName,
+    companyName: companyView?.name ?? "",
+    currency: reportInput.currency,
+    mainBranchName: selectedMainBranch?.name ?? "",
+    category: categoryLabel
+  };
+
+  const documentItems: BranchReviewDocumentItem[] = linkedDocuments.map((doc) => ({
+    id: doc.id,
+    name: doc.name,
+    type: documentTypeLabel(doc.mimeType, doc.name),
+    size: formatFileSize(doc.sizeBytes),
+    isRequired: false,
+    isUploaded: true,
+    uploadedAt: formatDateShort(doc.createdAt)
+  }));
+
+  const userItems: BranchUserPermissionItem[] = linkedUsers.map((u) => ({
+    id: u.assignmentId,
+    userName: u.userName || u.userCode || "—",
+    role: roleLabel(u.role, tt),
+    operationalDomain: u.operationalDomain === "both" ? tt("cbs.domain_both", "Both") : domainLabel(u.operationalDomain, tt),
+    countryScope: reviewFields.country,
+    branchScope: resolvedBranchName,
+    permissionGroup: accessProfileLabel(u.accessProfile, tt),
+    ledgerVisibility: domainLabel(u.operationalDomain, tt),
+    status: u.isActive ? "Active" : "Warning",
+    statusReason: u.isActive ? undefined : tt("cbs.user_inactive_reason", "Assignment is inactive")
+  }));
+
   if (activeStep === 9) {
     return (
       <div className="space-y-6">
+        {bannerView}
+        {linkedRecordError ? (
+          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{linkedRecordError}</div>
+        ) : null}
         <BranchFinalReview
           branchLevel="city"
-          branchLevelTitle="City Branch"
-          branchName={branchName.trim() || effectiveBranchName}
-          branchCode={branchCode}
-          branchType="City Branch"
-          category="Own Operation"
-          country={previewCountry}
-          stateProvince={locationMeta.state?.name || ""}
-          city={locationMeta.city?.name || activeExistingCityBranch?.city_name || ""}
-          fullAddress={fullAddress}
-          companyName={company?.name || ""}
-          businessDomain="Trading & Distribution"
-          shippingDomain="Import & Export"
-          currency={currency}
-          mainBranchName={previewMainBranch || "Head Office (DXB-001)"}
+          branchLevelTitle={tt("cbs.city_branch_word", "City Branch")}
+          branchName={resolvedBranchName}
+          branchCode={branchCode.trim()}
+          branchType={tt("cbs.pr_city_branch", "City Branch")}
+          category={reviewFields.category}
+          country={reviewFields.country}
+          stateProvince={reviewFields.stateProvince}
+          city={reviewFields.city}
+          fullAddress={fullAddress.trim()}
+          companyName={reviewFields.companyName}
+          businessDomain={operationalDomain === "business" ? domainLabel("business", tt) : "—"}
+          shippingDomain={operationalDomain === "shipping" ? domainLabel("shipping", tt) : "—"}
+          currency={reviewFields.currency}
+          mainBranchName={reviewFields.mainBranchName || "—"}
+          documents={documentItems}
+          usersAndPermissions={userItems}
+          sampleFallback={false}
+          showSavedBanner={false}
+          emptyDocumentsText={tt("cbs.docs_empty", "No documents are linked to this branch yet.")}
+          emptyUsersText={tt("cbs.users_empty", "No users are assigned to this branch yet.")}
           isSaving={saving}
           isEditing={Boolean(editingCityBranchId)}
-          checklistStatus={{
-            countrySelected: Boolean(location.countryId),
-            mainBranchSelected: Boolean(countryBranchId),
-            branchNameCodeGenerated: Boolean((branchName.trim() || effectiveBranchName) && branchCode.trim()),
-            branchCategoryType: true,
-            ownerResponsiblePerson: true,
-            companyLinked: true,
-            businessShippingDomain: true,
-            fullAddressLocation: Boolean(fullAddress.trim() || locationMeta.city?.name || activeExistingCityBranch?.city_name),
-            mobileEmail: true,
-            currencySelected: Boolean(currency),
-            bankAccountSetup: true,
-            userAdminAssigned: true,
-            rolePermissions: Boolean(permissionGrants.length),
-            requiredDocumentsUploaded: true,
-            serialNumbersGenerated: true,
-            approvalStatusReady: true,
-            businessAdminAssigned: true,
-            shippingClearingAdminAssigned: true,
-            operationsAdminAssigned: true,
-            ledgerScopeConfirmed: true
-          }}
+          checklistStatus={checklist.status}
           onBack={() => setActiveStep(8)}
           onGoToStep={(step) => {
             if (step === 1) setActiveStep(1);
@@ -1550,12 +1256,11 @@ function CityBranchSetupContent() {
             else if (sec === "roles") setActiveStep(8);
           }}
           onApproveAndActivate={async () => {
-            const fakeEvent = { preventDefault: () => {} } as FormEvent<HTMLFormElement>;
-            await onSubmit(fakeEvent);
+            await saveBranch();
           }}
           onSendBackForEdit={() => setActiveStep(1)}
-          onRequestChanges={(note) => {
-            alert(`Change request sent for City Branch:\n${note || "Please review and revise requested branch details."}`);
+          onRequestChanges={() => {
+            setBanner({ type: "error", message: tt("cbs.request_changes_unavailable", "Request Changes is not connected to a workflow for city branches yet. Nothing was sent.") });
           }}
           onViewSummary={viewReport}
           onPrint={printReport}
@@ -1563,6 +1268,9 @@ function CityBranchSetupContent() {
       </div>
     );
   }
+
+  const companyRowsView = companyView;
+  const ownerRowsView = ownerForView;
 
   return (
     <div className="space-y-6">
@@ -1577,12 +1285,12 @@ function CityBranchSetupContent() {
             onClick={() => setActiveStep((step) => Math.max(1, step - 1))}
             className="h-8 px-2.5 text-xs text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-900/50"
           >
-            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> {t(lang, "common.previous")}
+            <ArrowLeft className="me-1.5 h-3.5 w-3.5" /> {t(lang, "common.previous")}
           </Button>
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
           <div className="flex flex-col">
             <span className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">
-              {t(lang, "cbs.new_entry")}
+              {editingCityBranchId ? t(lang, "cbs.editing_existing_branch_short") : t(lang, "cbs.new_entry")}
             </span>
             <span className="text-[11px] font-bold text-slate-500 mt-0.5">
               {t(lang, "cbs.step_word")} {activeStep} {t(lang, "cbs.of_9")}
@@ -1590,18 +1298,18 @@ function CityBranchSetupContent() {
           </div>
         </div>
 
-        {/* Center Section: Compact 1-9 Step Navigator with Tooltips/Checkmarks */}
+        {/* Center Section: Compact 1-9 Step Navigator */}
         <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-800">
           {[
-            { n: 1, label: t(lang, "cbs.step1_label"), done: Boolean(branchName && branchCode) },
+            { n: 1, label: t(lang, "cbs.step1_label"), done: Boolean(resolvedBranchName && branchCode) },
             { n: 2, label: t(lang, "cbs.step2_label"), done: Boolean(locationMeta.city?.name) },
-            { n: 3, label: t(lang, "cbs.step3_label"), done: false },
-            { n: 4, label: t(lang, "cbs.step4_label"), done: contacts.some(c => c.value) },
+            { n: 3, label: t(lang, "cbs.step3_label"), done: Boolean(companyId || ownerCustomerId) },
+            { n: 4, label: t(lang, "cbs.step4_label"), done: contacts.some((c) => c.value) },
             { n: 5, label: t(lang, "cbs.step5_label"), done: hasAny },
-            { n: 6, label: t(lang, "cbs.step6_label"), done: false },
+            { n: 6, label: t(lang, "cbs.step6_label"), done: linkedDocuments.length > 0 },
             { n: 7, label: t(lang, "cbs.step7_label"), done: false },
             { n: 8, label: t(lang, "cbs.step8_label"), done: permissionGrants.length > 0 },
-            { n: 9, label: t(lang, "cbs.step9_label"), done: false },
+            { n: 9, label: t(lang, "cbs.step9_label"), done: false }
           ].map(({ n, label, done }) => {
             const active = activeStep === n;
             return (
@@ -1625,7 +1333,7 @@ function CityBranchSetupContent() {
           })}
         </div>
 
-        {/* Right Section: Actions Dropdown, Next/Save button, and Scope badge */}
+        {/* Right Section: Actions, Next / Save, scope */}
         <div className="flex items-center gap-2">
           <BranchReportActionsMenu
             ariaLabel={tt("cbs.actions_aria", "City branch actions")}
@@ -1647,7 +1355,7 @@ function CityBranchSetupContent() {
               className="h-8 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-lg border-0"
               onClick={() => setActiveStep((step) => Math.min(9, step + 1))}
             >
-              {t(lang, "common.next")} <ArrowRight className="ml-1 h-3.5 w-3.5" />
+              {t(lang, "common.next")} <ArrowRight className="ms-1 h-3.5 w-3.5" />
             </Button>
           ) : (
             <Button
@@ -1668,272 +1376,230 @@ function CityBranchSetupContent() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full max-w-[1600px] mx-auto items-start">
-        <div className={cn(activeStep === 9 ? "col-span-12" : "lg:col-span-7 xl:col-span-7", "space-y-6 w-full")}>
+        <div className="lg:col-span-7 xl:col-span-7 space-y-6 w-full">
           <Card className="border-slate-200/80 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle>{t(lang, "cbs.title")}</CardTitle>
-          </CardHeader>
+            <CardHeader className="pb-3">
+              <CardTitle>{t(lang, "cbs.title")}</CardTitle>
+            </CardHeader>
 
-          <CardContent>
-            {editLoading ? (
-              <div className="mb-4 rounded-lg border bg-muted/30 px-4 py-3 text-sm font-medium text-muted-foreground">
-                {t(lang, "cbs.loading_edit")}
-              </div>
-            ) : null}
-            {banner ? (
-              <div
-                className={
-                  banner.type === "success"
-                    ? "mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
-                    : "mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900"
-                }
-                role="status"
-              >
-                <div className="whitespace-pre-line">{banner.message}</div>
-                {activeExistingCityBranch && !editingCityBranchId ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="mt-3"
-                    onClick={() => beginEditCityBranch(activeExistingCityBranch)}
-                  >
-                    <Pencil className="h-3.5 w-3.5" aria-hidden />
-                    {t(lang, "cbs.edit_existing_branch")}
-                  </Button>
-                ) : null}
-              </div>
-            ) : null}
-
-            <form id="city-branch-wizard-form" onSubmit={onSubmit} onReset={onReset} className="flex flex-col gap-6">
-              <section hidden={activeStep !== 1} className={compactSectionClass(!location.countryId || !currency)}>
-                <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step1a_title")}</h2>
+            <CardContent>
+              {editLoading ? (
+                <div className="mb-4 rounded-lg border bg-muted/30 px-4 py-3 text-sm font-medium text-muted-foreground">
+                  {t(lang, "cbs.loading_edit")}
                 </div>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <LocationHierarchySelect
-                    value={location}
-                    showState={false}
-                    showCity={false}
-                    showArea={false}
-                    onChange={onCountrySelected}
-                  />
+              ) : null}
+              {bannerView}
+              {linkedRecordError ? (
+                <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{linkedRecordError}</div>
+              ) : null}
 
-                  <div className="space-y-2">
-                    <Label className="text-xs text-slate-600">{t(lang, "cbs.currency_label")}</Label>
-                    <Input value={currency} readOnly placeholder={t(lang, "cbs.currency_placeholder")} className={compactInputClass(!currency)} />
+              <form id="city-branch-wizard-form" onSubmit={onSubmit} onReset={onReset} className="flex flex-col gap-6">
+                <section hidden={activeStep !== 1} className={cn("order-1 rounded-xl border bg-white p-4 shadow-sm space-y-3 dark:bg-slate-950", !location.countryId || !currency ? "border-rose-200 ring-1 ring-rose-100 dark:border-rose-900/70 dark:ring-rose-950" : "border-slate-100 dark:border-slate-800/80")}>
+                  <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step1a_title")}</h2>
                   </div>
-                </div>
-              </section>
-
-              <section hidden={activeStep !== 1} className={compactSectionClass(!operationalDomain || !countryBranchId)}>
-                <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step1b_title")}</h2>
-                </div>
-
-                {/* 1. Mandatory City Branch Operational Section Selector (Business & Trading vs Shipping Line & Clearing Agent) */}
-                <div className={cn(
-                  "mt-2 space-y-3 p-4 rounded-xl border-2 transition-all font-sans",
-                  !operationalDomain
-                    ? "border-amber-400 bg-amber-50/60 dark:bg-amber-950/20 shadow-xs"
-                    : operationalDomain === "business"
-                    ? "border-indigo-300 bg-indigo-50/40 dark:bg-indigo-950/30"
-                    : "border-blue-300 bg-blue-50/40 dark:bg-blue-950/30"
-                )}>
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2 border-slate-200 dark:border-slate-800">
-                    <div>
-                      <Label className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                        <span>WHAT TYPE OF CITY BRANCH DO YOU WANT TO CREATE?</span>
-                        <span className="text-rose-500 text-sm">*</span>
-                      </Label>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                        Mandatory: Choose the operational domain before assigning the parent Country Main Branch.
-                      </p>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <LocationHierarchySelect value={location} showState={false} showCity={false} showArea={false} onChange={onCountrySelected} />
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-600">{t(lang, "cbs.currency_label")}</Label>
+                      <Input value={currency} readOnly placeholder={t(lang, "cbs.currency_placeholder")} className="h-9 text-sm" />
                     </div>
-                    {operationalDomain ? (
-                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1 whitespace-nowrap">
-                        ✓ Selected: {operationalDomain === "shipping" ? "Shipping Line & Clearing Agent" : "Business & Trading"}
-                      </span>
-                    ) : (
-                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 animate-pulse whitespace-nowrap">
-                        ⚠️ Mandatory Selection Required
-                      </span>
-                    )}
+                  </div>
+                </section>
+
+                <section hidden={activeStep !== 1} className={cn("order-1 rounded-xl border bg-white p-4 shadow-sm space-y-3 dark:bg-slate-950", !operationalDomain || !countryBranchId ? "border-rose-200 ring-1 ring-rose-100 dark:border-rose-900/70 dark:ring-rose-950" : "border-slate-100 dark:border-slate-800/80")}>
+                  <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step1b_title")}</h2>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    <button
-                      type="button"
-                      id="operational-domain-business-btn"
-                      onClick={() => void onOperationalDomainChange("business")}
-                      className={`p-3.5 rounded-xl border-2 text-start flex items-start gap-3 transition-all ${
-                        operationalDomain === "business"
-                          ? "border-indigo-600 bg-white dark:bg-slate-950 text-indigo-900 dark:text-indigo-100 shadow-md ring-2 ring-indigo-500/30"
-                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-400 hover:border-indigo-300 hover:bg-slate-50"
-                      }`}
-                    >
-                      <span className="text-2xl mt-0.5">🏢</span>
-                      <div className="flex-1">
-                        <div className="text-xs font-black tracking-wide text-slate-900 dark:text-slate-100 flex items-center justify-between">
-                          <span>Option 1: Business & Trading</span>
-                          {operationalDomain === "business" && <span className="text-indigo-600 dark:text-indigo-400 font-extrabold text-sm">✓</span>}
-                        </div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">
-                          General commercial & trading branch. Handles authorized purchases, sales, inventory, business payments, business ledgers, and expenses.
-                        </div>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      id="operational-domain-shipping-btn"
-                      onClick={() => void onOperationalDomainChange("shipping")}
-                      className={`p-3.5 rounded-xl border-2 text-start flex items-start gap-3 transition-all ${
-                        operationalDomain === "shipping"
-                          ? "border-blue-600 bg-white dark:bg-slate-950 text-blue-900 dark:text-blue-100 shadow-md ring-2 ring-blue-500/30"
-                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-400 hover:border-blue-300 hover:bg-slate-50"
-                      }`}
-                    >
-                      <span className="text-2xl mt-0.5">🚢</span>
-                      <div className="flex-1">
-                        <div className="text-xs font-black tracking-wide text-slate-900 dark:text-slate-100 flex items-center justify-between">
-                          <span>Option 2: Shipping Line & Clearing Agent</span>
-                          {operationalDomain === "shipping" && <span className="text-blue-600 dark:text-blue-400 font-extrabold text-sm">✓</span>}
-                        </div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">
-                          Ports, shipping line operations, customs clearing agents, freight forwarders, cargo logistics, and shipping ledgers/expenses.
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
-                {/* 2. Main Branch Selector (scoped to selected Operational Section) */}
-                <div className="mt-3 grid gap-3 md:grid-cols-2">
-                  <SearchSelect
-                    label={
+                  {/* Mandatory operational section (Business & Trading vs Shipping Line & Clearing Agent) */}
+                  <div
+                    className={cn(
+                      "mt-2 space-y-3 p-4 rounded-xl border-2 transition-all",
                       !operationalDomain
-                        ? "Select Parent Main Branch *"
-                        : operationalDomain === "shipping"
-                        ? "Select Shipping Line / Country Main Branch *"
-                        : "Select Business / Country Main Branch *"
-                    }
-                    value={countryBranchId}
-                    placeholder={
-                      !location.countryId
-                        ? t(lang, "cbs.select_country_first")
-                        : !operationalDomain
-                        ? "⚠️ Select Operational Section above first"
-                        : mainBranches.length === 0
-                        ? `No Country Main Branch found for this country`
-                        : operationalDomain === "shipping"
-                        ? "Select Shipping / Country Main Branch..."
-                        : t(lang, "cbs.select_main_branch_ph")
-                    }
-                    disabled={!location.countryId || !operationalDomain}
-                    options={mainBranches.map((b) => ({ value: b.id, label: `${b.name} (${b.code})` }))}
-                    onValueChange={(value) => void onMainBranchSelected(value)}
-                  />
-
-                  <div className="space-y-2">
-                    <Label className="text-xs text-slate-600">{t(lang, "cbs.main_branch_code")}</Label>
-                    <Input value={selectedMainBranch?.code ?? ""} readOnly className={compactInputClass(!countryBranchId)} />
-                  </div>
-                </div>
-              </section>
-
-              <section hidden={activeStep !== 1} className={compactSectionClass(!location.stateProvinceId || !location.cityId || !fullAddress.trim() || changedFromSaved(fullAddress, activeExistingCityBranch?.address))}>
-                <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step1c_title")}</h2>
-                </div>
-                <div className="grid gap-3 md:grid-cols-12">
-                  <div className="space-y-2 md:col-span-4">
-                    <Label className="text-xs text-slate-600">{t(lang, "cbs.country_auto")}</Label>
-                    <Input value={locationMeta.country?.name ?? ""} readOnly className={compactInputClass(!location.countryId)} />
-                  </div>
-                  <div className="space-y-2 md:col-span-8">
-                    <LocationHierarchySelect
-                      value={location}
-                      showCountry={false}
-                      showDistrict={false}
-                      showArea={true}
-                      allowManageLink={false}
-                      onChange={onLocationChange}
-                      disabled={!location.countryId}
-                    />
-                  </div>
-
-                  <div className="space-y-1.5 md:col-span-4">
-                    <Label className="text-xs text-slate-600">{t(lang, "cbs.zip_postal_code")}</Label>
-                    <Input
-                      value={zip}
-                      onChange={(e) => setManualZip(e.target.value)}
-                      placeholder={autoZip ? autoZip : t(lang, "cbs.zip_placeholder")}
-                      className={compactInputClass(formTouched && !zip)}
-                    />
-                    {!manualZip && autoZip && (
-                      <p className="text-[11px] text-slate-400 leading-tight">
-                        {t(lang, "cbs.zip_auto_hint")}
-                      </p>
+                        ? "border-amber-400 bg-amber-50/60 dark:bg-amber-950/20"
+                        : operationalDomain === "business"
+                        ? "border-indigo-300 bg-indigo-50/40 dark:bg-indigo-950/30"
+                        : "border-blue-300 bg-blue-50/40 dark:bg-blue-950/30"
                     )}
-                    {manualZip && (
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2 border-slate-200 dark:border-slate-800">
+                      <div>
+                        <Label className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                          <span>{t(lang, "cbs.domain_question")}</span>
+                          <span className="text-rose-500 text-sm">*</span>
+                        </Label>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{t(lang, "cbs.domain_mandatory_hint")}</p>
+                      </div>
+                      {operationalDomain ? (
+                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 whitespace-nowrap">
+                          ✓ {t(lang, "cbs.domain_selected_prefix")} {operationalDomain === "shipping" ? t(lang, "cbs.domain_shipping") : t(lang, "cbs.domain_business")}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 whitespace-nowrap">
+                          ⚠ {t(lang, "cbs.domain_required_badge")}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                       <button
                         type="button"
-                        onClick={() => setManualZip("")}
-                        className="text-[11px] text-indigo-500 hover:text-indigo-700 underline leading-tight"
+                        id="operational-domain-business-btn"
+                        onClick={() => void onOperationalDomainChange("business")}
+                        className={`p-3.5 rounded-xl border-2 text-start flex items-start gap-3 transition-all ${
+                          operationalDomain === "business"
+                            ? "border-indigo-600 bg-white dark:bg-slate-950 text-indigo-900 dark:text-indigo-100 shadow-md ring-2 ring-indigo-500/30"
+                            : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-400 hover:border-indigo-300 hover:bg-slate-50"
+                        }`}
                       >
-                        {t(lang, "cbs.zip_clear_manual").replace("{0}", autoZip || t(lang, "cbs.zip_none"))}
+                        <span className="text-2xl mt-0.5">🏢</span>
+                        <div className="flex-1">
+                          <div className="text-xs font-black tracking-wide text-slate-900 dark:text-slate-100 flex items-center justify-between">
+                            <span>{t(lang, "cbs.domain_option_business")}</span>
+                            {operationalDomain === "business" && <span className="text-indigo-600 dark:text-indigo-400 font-extrabold text-sm">✓</span>}
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">{t(lang, "cbs.domain_business_desc")}</div>
+                        </div>
                       </button>
-                    )}
+
+                      <button
+                        type="button"
+                        id="operational-domain-shipping-btn"
+                        onClick={() => void onOperationalDomainChange("shipping")}
+                        className={`p-3.5 rounded-xl border-2 text-start flex items-start gap-3 transition-all ${
+                          operationalDomain === "shipping"
+                            ? "border-blue-600 bg-white dark:bg-slate-950 text-blue-900 dark:text-blue-100 shadow-md ring-2 ring-blue-500/30"
+                            : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-400 hover:border-blue-300 hover:bg-slate-50"
+                        }`}
+                      >
+                        <span className="text-2xl mt-0.5">🚢</span>
+                        <div className="flex-1">
+                          <div className="text-xs font-black tracking-wide text-slate-900 dark:text-slate-100 flex items-center justify-between">
+                            <span>{t(lang, "cbs.domain_option_shipping")}</span>
+                            {operationalDomain === "shipping" && <span className="text-blue-600 dark:text-blue-400 font-extrabold text-sm">✓</span>}
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">{t(lang, "cbs.domain_shipping_desc")}</div>
+                        </div>
+                      </button>
+                    </div>
                   </div>
-                  <div className="space-y-2 md:col-span-8">
-                    <Label className="text-xs text-slate-600">{t(lang, "cbs.full_address")}</Label>
-                    <textarea
-                      value={fullAddress}
-                      onChange={(event) => setFullAddress(event.target.value)}
-                      placeholder={t(lang, "cbs.full_address_placeholder")}
-                      className={compactTextareaClass(formTouched && (!fullAddress.trim() || changedFromSaved(fullAddress, activeExistingCityBranch?.address)))}
+
+                  {/* Parent Main Branch, scoped to the selected operational section */}
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <SearchSelect
+                      label={
+                        !operationalDomain
+                          ? t(lang, "cbs.main_branch_label_none")
+                          : operationalDomain === "shipping"
+                          ? t(lang, "cbs.main_branch_label_shipping")
+                          : t(lang, "cbs.main_branch_label_business")
+                      }
+                      value={countryBranchId}
+                      placeholder={
+                        !location.countryId
+                          ? t(lang, "cbs.select_country_first")
+                          : !operationalDomain
+                          ? t(lang, "cbs.select_domain_first")
+                          : mainBranches.length === 0
+                          ? t(lang, "cbs.no_main_branch_found")
+                          : t(lang, "cbs.select_main_branch_ph")
+                      }
+                      disabled={!location.countryId || !operationalDomain}
+                      options={mainBranches.map((b) => ({ value: b.id, label: `${b.name} (${b.code})` }))}
+                      onValueChange={(value) => void onMainBranchSelected(value)}
                     />
-                  </div>
-                </div>
-              </section>
 
-              <section hidden={activeStep !== 1} className={compactSectionClass(!branchName.trim() || !branchCode.trim() || changedFromSaved(branchName, activeExistingCityBranch?.name) || changedFromSaved(branchCode, activeExistingCityBranch?.code))}>
-                <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step1d_title")}</h2>
-                </div>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label className="text-xs text-slate-600">{t(lang, "cbs.branch_name")}</Label>
-                    <Input value={branchName} onChange={(event) => setBranchName(event.target.value)} placeholder={t(lang, "cbs.branch_name_placeholder")} className={compactInputClass(!branchName.trim() || changedFromSaved(branchName, activeExistingCityBranch?.name))} />
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-600">{t(lang, "cbs.main_branch_code")}</Label>
+                      <Input value={selectedMainBranch?.code ?? ""} readOnly className="h-9 text-sm" />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs text-slate-600">{t(lang, "cbs.branch_code")}</Label>
-                    <Input value={branchCode} onChange={(event) => setBranchCode(event.target.value)} placeholder={t(lang, "cbs.branch_code_placeholder")} className={compactInputClass(!branchCode.trim() || changedFromSaved(branchCode, activeExistingCityBranch?.code))} />
+                </section>
+
+                <section hidden={activeStep !== 1} className="order-1 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-4 shadow-sm space-y-3">
+                  <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step1c_title")}</h2>
                   </div>
-                </div>
-              </section>
+                  <div className="grid gap-3 md:grid-cols-12">
+                    <div className="space-y-2 md:col-span-4">
+                      <Label className="text-xs text-slate-600">{t(lang, "cbs.country_auto")}</Label>
+                      <Input value={locationMeta.country?.name ?? ""} readOnly className="h-9 text-sm" />
+                    </div>
+                    <div className="space-y-2 md:col-span-8">
+                      <LocationHierarchySelect
+                        value={location}
+                        showCountry={false}
+                        showDistrict={false}
+                        showArea={true}
+                        allowManageLink={false}
+                        onChange={onLocationChange}
+                        disabled={!location.countryId}
+                      />
+                    </div>
 
-              <section hidden={activeStep !== 3} className="order-3 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
-                <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">3</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step3_section_title")}</h2>
-                </div>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <CompanyPicker
-                    label={t(lang, "cbs.company_name_field")}
-                    value={companyId}
-                    onValueChange={setCompanyId}
-                    placeholder={t(lang, "cbs.search_company_ph")}
-                    createButtonPlacement="below"
-                    disabled={!location.countryId}
-                  />
+                    <div className="space-y-1.5 md:col-span-4">
+                      <Label className="text-xs text-slate-600">{t(lang, "cbs.zip_postal_code")}</Label>
+                      <Input
+                        value={zip}
+                        onChange={(e) => setManualZip(e.target.value)}
+                        placeholder={autoZip ? autoZip : t(lang, "cbs.zip_placeholder")}
+                        className="h-9 text-sm"
+                      />
+                      {!manualZip && autoZip && <p className="text-[11px] text-slate-400 leading-tight">{t(lang, "cbs.zip_auto_hint")}</p>}
+                      {manualZip && (
+                        <button type="button" onClick={() => setManualZip("")} className="text-[11px] text-indigo-500 hover:text-indigo-700 underline leading-tight">
+                          {t(lang, "cbs.zip_clear_manual").replace("{0}", autoZip || t(lang, "cbs.zip_none"))}
+                        </button>
+                      )}
+                    </div>
+                    <div className="space-y-2 md:col-span-8">
+                      <Label className="text-xs text-slate-600">{t(lang, "cbs.full_address")}</Label>
+                      <textarea
+                        value={fullAddress}
+                        onChange={(event) => setFullAddress(event.target.value)}
+                        placeholder={t(lang, "cbs.full_address_placeholder")}
+                        className="min-h-16 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      />
+                    </div>
+                  </div>
+                </section>
 
-                  <div className="space-y-2">
+                <section hidden={activeStep !== 1} className="order-1 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-4 shadow-sm space-y-3">
+                  <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step1d_title")}</h2>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-600">{t(lang, "cbs.branch_name")}</Label>
+                      <Input value={branchName} onChange={(event) => setBranchName(event.target.value)} placeholder={t(lang, "cbs.branch_name_placeholder")} className="h-9 text-sm" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-600">{t(lang, "cbs.branch_code")}</Label>
+                      <Input value={branchCode} onChange={(event) => setBranchCode(event.target.value)} placeholder={t(lang, "cbs.branch_code_placeholder")} className="h-9 text-sm" />
+                    </div>
+                  </div>
+                </section>
+
+                <section hidden={activeStep !== 3} className="order-3 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
+                  <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">3</span>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step3_section_title")}</h2>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <CompanyPicker
+                      label={t(lang, "cbs.company_name_field")}
+                      value={companyId}
+                      onValueChange={(next) => void onCompanyPicked(next)}
+                      placeholder={t(lang, "cbs.search_company_ph")}
+                      createButtonPlacement="below"
+                      disabled={!location.countryId}
+                    />
+
                     <BranchOwnerPicker
                       value={ownerId}
                       companyId={companyId}
@@ -1944,25 +1610,10 @@ function CityBranchSetupContent() {
                           setOwnerName(customer.customer_name);
                           setOwnerCustomerId(customer.id);
                           setOwnerProfileId(null);
-                          setOwnerPreview({
-                            source: "customer",
-                            code: customer.person_code || compactCode(customer.id, "PER"),
-                            name: customer.customer_name,
-                            companyName: customer.company_name ?? company?.name ?? "-",
-                            contactPerson: customer.contact_person ?? customer.customer_name,
-                            mobile: customer.mobile ?? "-",
-                            whatsapp: customer.whatsapp ?? customer.mobile ?? "-",
-                            email: customer.email ?? "-",
-                            address: customer.address ?? "-",
-                            country: customer.country_name || locationMeta.country?.name || "-",
-                            branch: customer.city_name || selectedMainBranch?.name || "-",
-                            role: "Company Owner"
-                          });
                         } else if (!owner) {
                           setOwnerName("");
                           setOwnerCustomerId(null);
                           setOwnerProfileId(null);
-                          setOwnerPreview(null);
                         } else {
                           setOwnerName(owner.name);
                           setOwnerCustomerId(owner.kind === "customer" ? owner.id : null);
@@ -1974,689 +1625,439 @@ function CityBranchSetupContent() {
                       createButtonPlacement="below"
                     />
                   </div>
-                </div>
-              </section>
 
-              <section hidden={activeStep !== 4} className="order-4 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
-                <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">4</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "branch.sec_contact", "Step 4 - Contact Information")}</h2>
-                </div>
-                <div className="space-y-3">
-                  {contacts.map((row, idx) => {
-                    const isEmail = (row.type || "").toLowerCase().includes("email");
-                    const isPhone = toContactTypeKey(row.type);
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="rounded-lg border bg-slate-50/40 p-3 dark:bg-slate-900/30">
+                      <h3 className="mb-2 text-xs font-black uppercase tracking-wider text-slate-500">{t(lang, "cbs.linked_company_details")}</h3>
+                      {companyRowsView ? (
+                        <div>
+                          <DetailLine label={t(lang, "cbs.company_name_field")} value={companyRowsView.name} />
+                          <DetailLine label={t(lang, "cbs.pr_legal_name")} value={companyRowsView.legalName} />
+                          <DetailLine label={t(lang, "cbs.pr_company_code")} value={companyRowsView.companyCode} />
+                          <DetailLine label={t(lang, "cbs.pr_base_currency")} value={companyRowsView.baseCurrency} />
+                          <DetailLine label={t(lang, "cbs.pr_business_type")} value={companyRowsView.businessType} />
+                          <DetailLine label={t(lang, "cbs.pr_registration_no")} value={companyRowsView.registrationNumber} />
+                          <DetailLine label={t(lang, "cbs.pr_tax_no")} value={companyRowsView.taxNumber} />
+                          <DetailLine label={t(lang, "cbs.pr_company_status")} value={companyRowsView.companyStatus} />
+                          <DetailLine label={t(lang, "acct.country")} value={companyRowsView.country} />
+                          <DetailLine label={t(lang, "acct.city")} value={companyRowsView.city} />
+                          <DetailLine label={t(lang, "acct.address")} value={companyRowsView.address} />
+                          <DetailLine label={t(lang, "cbs.pr_bank_accounts")} value={String(companyBankCount)} />
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-slate-400">{t(lang, "cbs.no_company_selected")}</p>
+                      )}
+                    </div>
 
-                    return (
-                      <div key={`contact-${idx}`} className="grid gap-2 md:grid-cols-[180px_1fr_120px]">
-                        <select
-                          className={selectClassName()}
-                          value={row.type}
-                          onChange={(event) => {
-                            const value = event.target.value;
-                            if (value === "__new__") {
-                              const next = addNewTypePrompt();
-                              if (!next) return;
-                              updateContact(idx, { type: next });
-                              return;
-                            }
-                            updateContact(idx, { type: value });
-                          }}
-                        >
-                          <option value="">{t(lang, "common.select_type", "Select Type")}</option>
-                          {contactTypeOptions.map((type) => (
-                            <option key={type} value={type}>
-                              {localizeContactType(type, lang)}
-                            </option>
-                          ))}
-                          <option value="__new__">{t(lang, "common.add_new_type", "+ Add New Type")}</option>
-                        </select>
-
-                        {isPhone ? (
-                          <ContactNumberInput
-                            label=""
-                            hideLabel
-                            showHelp={false}
-                            countryId={location.countryId || null}
-                            contactTypeKey={toContactTypeKey(row.type) as ContactTypeKey}
-                            value={row.value}
-                            disabled={!location.countryId}
-                            onValueChange={(next) => updateContact(idx, { value: next })}
-                          />
-                        ) : isEmail ? (
-                          <Input
-                            type="email"
-                            dir="ltr"
-                            value={row.value}
-                            onChange={(event) => updateContact(idx, { value: event.target.value })}
-                            placeholder="branch@dgt.llc"
-                            className="font-sans text-left bg-white text-slate-900"
-                          />
-                        ) : (
-                          <Input
-                            dir="ltr"
-                            value={row.value}
-                            onChange={(event) => updateContact(idx, { value: event.target.value })}
-                            placeholder={t(lang, "branch.enter_val", "Enter value")}
-                            className="font-mono text-left bg-white text-slate-900"
-                          />
-                        )}
-
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
-                          onClick={() => setContacts((current) => current.filter((_, i) => i !== idx))}
-                        >
-                          {t(lang, "common.remove", "Remove")}
-                        </Button>
-                      </div>
-                    );
-                  })}
-
-                  <div className="flex flex-wrap gap-2">
-                    <Button type="button" variant="outline" onClick={() => setContacts((current) => [...current, { type: "", value: "" }])}>
-                      {t(lang, "branch.add_contact_btn", "+ Add Contact")}
-                    </Button>
-                  </div>
-                </div>
-              </section>
-
-              <section hidden={activeStep !== 7} className="order-7 rounded-xl border border-indigo-100 dark:border-indigo-900/40 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-indigo-100 dark:border-indigo-900/40 pb-3">
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">7</span>
-                    <div>
-                      <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step7_title2")}</h2>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{t(lang, "cbs.step7_subtitle")}</p>
+                    <div className="rounded-lg border bg-slate-50/40 p-3 dark:bg-slate-900/30">
+                      <h3 className="mb-2 text-xs font-black uppercase tracking-wider text-slate-500">{t(lang, "cbs.linked_owner_details")}</h3>
+                      {ownerRowsView ? (
+                        <div>
+                          <DetailLine label={t(lang, "branch.owner_name")} value={ownerRowsView.name} />
+                          <DetailLine label={t(lang, "cbs.pr_owner_code")} value={ownerRowsView.code} />
+                          <DetailLine label={t(lang, "acct.company_name")} value={ownerRowsView.companyName} />
+                          <DetailLine label={t(lang, "cbs.pr_contact_person")} value={ownerRowsView.contactPerson} />
+                          <DetailLine label={t(lang, "cbs.pr_mobile")} value={ownerRowsView.mobile} />
+                          <DetailLine label={t(lang, "branch.whatsapp")} value={ownerRowsView.whatsapp} />
+                          <DetailLine label={t(lang, "acct.email")} value={ownerRowsView.email} />
+                          <DetailLine label={t(lang, "acct.country")} value={ownerRowsView.country} />
+                          <DetailLine label={t(lang, "acct.city")} value={ownerRowsView.city} />
+                          <DetailLine label={t(lang, "acct.address")} value={ownerRowsView.address} />
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-slate-400">{t(lang, "cbs.no_owner_selected")}</p>
+                      )}
                     </div>
                   </div>
-                  <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] font-bold text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/30 dark:text-indigo-300">
-                    🔐 {t(lang, "cbs.permissions_active").replace("{0}", String(permissionGrants.length))}
-                  </span>
-                </div>
-                <PermissionAssignmentSection
-                  level="city"
-                  template={permissionTemplate}
-                  selected={permissionGrants}
-                  onTemplateChange={setPermissionTemplate}
-                  onSelectedChange={setPermissionGrants}
-                  parentPermissions={parentPermissionGrants}
-                  required
-                  note={t(lang, "cbs.step7_note")}
-                />
-              </section>
+                </section>
 
-              <section hidden={activeStep !== 5} className="order-5 rounded-xl border border-cyan-200/80 bg-cyan-50/40 p-5 shadow-sm space-y-4 dark:border-cyan-900/60 dark:bg-cyan-950/20">
-                <div className="flex items-center justify-between gap-3 border-b border-cyan-100 pb-3 dark:border-cyan-900/60">
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-cyan-600 text-xs font-bold text-white">5</span>
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step5_title2")}</h2>
+                <section hidden={activeStep !== 4} className="order-4 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
+                  <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">4</span>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "branch.sec_contact", "Step 4 - Contact Information")}</h2>
                   </div>
-                  <Button type="button" variant="outline" size="sm" onClick={() => openReport(true)} disabled={!hasAny}>{t(lang, "cbs.download_pdf")}</Button>
-                </div>
-                <div className="grid gap-3 md:grid-cols-3 text-xs">
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.country_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{previewCountry || "-"}</p></div>
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.main_branch_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{previewMainBranch || "-"}</p></div>
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.city_branch_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{branchName || t(lang, "status.draft")}</p></div>
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.branch_code_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{branchCode || "-"}</p></div>
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.currency_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{currency || "USD"}</p></div>
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.field_contacts")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{contactItems.length || 0}</p></div>
-                </div>
-              </section>
+                  <div className="space-y-3">
+                    {contacts.map((row, idx) => {
+                      const isEmail = (row.type || "").toLowerCase().includes("email");
+                      const isPhone = toContactTypeKey(row.type);
+                      return (
+                        <div key={`contact-${idx}`} className="grid gap-2 md:grid-cols-[180px_1fr_120px]">
+                          <select
+                            className={selectClassName()}
+                            value={row.type}
+                            onChange={(event) => {
+                              const value = event.target.value;
+                              if (value === "__new__") {
+                                const next = addNewTypePrompt();
+                                if (!next) return;
+                                updateContact(idx, { type: next });
+                                return;
+                              }
+                              updateContact(idx, { type: value });
+                            }}
+                          >
+                            <option value="">{t(lang, "common.select_type", "Select Type")}</option>
+                            {contactTypeOptions.map((type) => (
+                              <option key={type} value={type}>
+                                {localizeContactType(type, tt)}
+                              </option>
+                            ))}
+                            {row.type && !(contactTypeOptions as readonly string[]).includes(row.type) ? (
+                              <option value={row.type}>{row.type}</option>
+                            ) : null}
+                            <option value="__new__">{t(lang, "common.add_new_type", "+ Add New Type")}</option>
+                          </select>
 
-              <section hidden={activeStep !== 6} className="order-6 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
-                <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">6</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step6_title2")}</h2>
-                </div>
-                <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/60 p-4 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-900/30">{t(lang, "cbs.step6_desc")}</div>
-              </section>
+                          {isPhone ? (
+                            <ContactNumberInput
+                              label=""
+                              hideLabel
+                              showHelp={false}
+                              countryId={location.countryId || null}
+                              contactTypeKey={toContactTypeKey(row.type) as ContactTypeKey}
+                              value={row.value}
+                              disabled={!location.countryId}
+                              onValueChange={(next) => updateContact(idx, { value: next })}
+                            />
+                          ) : isEmail ? (
+                            <Input
+                              type="email"
+                              dir="ltr"
+                              value={row.value}
+                              onChange={(event) => updateContact(idx, { value: event.target.value })}
+                              placeholder="branch@dgt.llc"
+                              className="font-sans text-left bg-white text-slate-900"
+                            />
+                          ) : (
+                            <Input
+                              dir="ltr"
+                              value={row.value}
+                              onChange={(event) => updateContact(idx, { value: event.target.value })}
+                              placeholder={t(lang, "branch.enter_val", "Enter value")}
+                              className="font-mono text-left bg-white text-slate-900"
+                            />
+                          )}
 
-              <section hidden={activeStep !== 2} className="order-2 rounded-xl border border-emerald-200/80 bg-emerald-50/40 p-5 shadow-sm space-y-4 dark:border-emerald-900/60 dark:bg-emerald-950/20">
-                <div className="flex items-center gap-2.5 border-b border-emerald-100 pb-3 dark:border-emerald-900/60">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">2</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step2_title2")}</h2>
-                </div>
-                <div className="grid gap-3 md:grid-cols-3 text-xs">
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.template_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{permissionTemplate || "-"}</p></div>
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.permissions_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{permissionGrants.length}</p></div>
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.parent_limited_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{parentPermissionGrants?.length ? t(lang, "common.yes") : t(lang, "common.no")}</p></div>
-                </div>
-              </section>
-              <section hidden={activeStep !== 8} className="order-8 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
-                <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">8</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step8_title2")}</h2>
-                </div>
-                
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-4 rounded-lg border p-4 bg-slate-50/30">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">{t(lang, "cbs.official_branch_email")}</h3>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
+                            onClick={() => setContacts((current) => current.filter((_, i) => i !== idx))}
+                          >
+                            {t(lang, "common.remove", "Remove")}
+                          </Button>
+                        </div>
+                      );
+                    })}
 
-                    <div className="space-y-2">
-                      <Label className="text-xs text-slate-600">{t(lang, "cbs.official_email_prefix")}</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={emailPrefix}
-                          onChange={(e) => setEmailPrefix(e.target.value)}
-                          placeholder={t(lang, "cbs.email_prefix_ph")}
-                          className="flex-1"
-                        />
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant="outline" onClick={() => setContacts((current) => [...current, { type: "", value: "" }])}>
+                        {t(lang, "branch.add_contact_btn", "+ Add Contact")}
+                      </Button>
+                    </div>
+                  </div>
+                </section>
+
+                <section hidden={activeStep !== 7} className="order-7 rounded-xl border border-indigo-100 dark:border-indigo-900/40 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-indigo-100 dark:border-indigo-900/40 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">7</span>
+                      <div>
+                        <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step7_title2")}</h2>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">{t(lang, "cbs.step7_subtitle")}</p>
+                      </div>
+                    </div>
+                    <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] font-bold text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/30 dark:text-indigo-300">
+                      🔐 {t(lang, "cbs.permissions_active").replace("{0}", String(permissionGrants.length))}
+                    </span>
+                  </div>
+                  <PermissionAssignmentSection
+                    level="city"
+                    template={permissionTemplate}
+                    selected={permissionGrants}
+                    onTemplateChange={setPermissionTemplate}
+                    onSelectedChange={setPermissionGrants}
+                    parentPermissions={parentPermissionGrants}
+                    required
+                    note={t(lang, "cbs.step7_note")}
+                  />
+                </section>
+
+                <section hidden={activeStep !== 5} className="order-5 rounded-xl border border-cyan-200/80 bg-cyan-50/40 p-5 shadow-sm space-y-4 dark:border-cyan-900/60 dark:bg-cyan-950/20">
+                  <div className="flex items-center justify-between gap-3 border-b border-cyan-100 pb-3 dark:border-cyan-900/60">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-cyan-600 text-xs font-bold text-white">5</span>
+                      <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step5_title2")}</h2>
+                    </div>
+                    <Button type="button" variant="outline" size="sm" onClick={() => openReport(true)} disabled={!hasAny}>{t(lang, "cbs.download_pdf")}</Button>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-3 text-xs">
+                    <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.country_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{reviewFields.country || "—"}</p></div>
+                    <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.main_branch_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{reviewFields.mainBranchName || "—"}</p></div>
+                    <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.city_branch_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{resolvedBranchName || t(lang, "status.draft")}</p></div>
+                    <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.branch_code_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{branchCode || "—"}</p></div>
+                    <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.currency_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{reportInput.currency || "—"}</p></div>
+                    <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.field_contacts")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{contactsPayload.length}</p></div>
+                  </div>
+                </section>
+
+                <section hidden={activeStep !== 6} className="order-6 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
+                  <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">6</span>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step6_title2")}</h2>
+                  </div>
+                  <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/60 p-4 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-900/30">{t(lang, "cbs.step6_desc")}</div>
+                  {!editingCityBranchId ? (
+                    <p className="text-xs text-slate-500">{t(lang, "cbs.docs_need_save")}</p>
+                  ) : documentItems.length === 0 ? (
+                    <p className="text-xs text-slate-500">{t(lang, "cbs.docs_empty")}</p>
+                  ) : (
+                    <ul className="grid gap-2 sm:grid-cols-2">
+                      {documentItems.map((doc) => (
+                        <li key={doc.id} className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-900/40">
+                          <span className="min-w-0 truncate font-semibold text-slate-800 dark:text-slate-100">{doc.name}</span>
+                          <span className="shrink-0 text-slate-500">{[doc.type, doc.size].filter(Boolean).join(" · ")}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+
+                <section hidden={activeStep !== 2} className="order-2 rounded-xl border border-emerald-200/80 bg-emerald-50/40 p-5 shadow-sm space-y-4 dark:border-emerald-900/60 dark:bg-emerald-950/20">
+                  <div className="flex items-center gap-2.5 border-b border-emerald-100 pb-3 dark:border-emerald-900/60">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">2</span>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step2_title2")}</h2>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-3 text-xs">
+                    <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.template_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{permissionTemplate || "—"}</p></div>
+                    <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.permissions_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{permissionGrants.length}</p></div>
+                    <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.parent_limited_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{parentPermissionGrants?.length ? t(lang, "common.yes") : t(lang, "common.no")}</p></div>
+                  </div>
+                </section>
+
+                <section hidden={activeStep !== 8} className="order-8 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
+                  <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">8</span>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step8_title2")}</h2>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-4 rounded-lg border p-4 bg-slate-50/30">
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">{t(lang, "cbs.official_branch_email")}</h3>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-600">{t(lang, "cbs.official_email_prefix")}</Label>
+                        <div className="flex gap-2">
+                          <Input value={emailPrefix} onChange={(e) => setEmailPrefix(e.target.value)} placeholder={t(lang, "cbs.email_prefix_ph")} className="flex-1" />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={aiLoading || !resolvedBranchName}
+                            onClick={() => {
+                              setAiLoading(true);
+                              setTimeout(() => {
+                                const suggested = resolvedBranchName.toLowerCase().replace(/city|branch|store|office/gi, "").trim().replace(/\s+/g, ".");
+                                setEmailPrefix(suggested);
+                                setAiLoading(false);
+                              }, 500);
+                            }}
+                          >
+                            {aiLoading ? t(lang, "cbs.ai_thinking") : t(lang, "cbs.ai_suggest")}
+                          </Button>
+                        </div>
+                        {generatedEmail && (
+                          <p className="text-[11px] text-green-600 font-semibold mt-1">
+                            {t(lang, "cbs.generated_email_label")} {generatedEmail}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-600">{t(lang, "cbs.email_server")}</Label>
+                        <select className={selectClassName()} value={emailServerName} onChange={(e) => setEmailServerName(e.target.value)}>
+                          <option value="Local IP Server (UPS Linked)">{t(lang, "cbs.email_server_local")}</option>
+                          <option value="Google Workspace Cloud Server">{t(lang, "cbs.email_server_google")}</option>
+                          <option value="Microsoft Office 365 Cloud Server">{t(lang, "cbs.email_server_o365")}</option>
+                        </select>
+                      </div>
+
+                      {emailServerName.includes("Local IP") && (
+                        <div className="grid gap-2 grid-cols-2 pt-2 border-t text-[11px] space-y-1">
+                          <div className="col-span-2 space-y-1">
+                            <Label className="text-[11px] text-slate-500">{t(lang, "cbs.local_ip_address")}</Label>
+                            <Input value={localIp} onChange={(e) => setLocalIp(e.target.value)} className="h-8 text-xs" />
+                          </div>
+                          <div className="col-span-2 space-y-1">
+                            <Label className="text-[11px] text-slate-500">{t(lang, "cbs.public_ip_address")}</Label>
+                            <Input value={publicIp} onChange={(e) => setPublicIp(e.target.value)} className="h-8 text-xs" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[11px] text-slate-500">{t(lang, "cbs.smtp_host")}</Label>
+                            <Input value={smtpHost} onChange={(e) => setSmtpHost(e.target.value)} className="h-8 text-xs" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[11px] text-slate-500">{t(lang, "cbs.smtp_port")}</Label>
+                            <Input value={smtpPort} onChange={(e) => setSmtpPort(e.target.value)} className="h-8 text-xs" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[11px] text-slate-500">{t(lang, "cbs.imap_host")}</Label>
+                            <Input value={imapHost} onChange={(e) => setImapHost(e.target.value)} className="h-8 text-xs" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[11px] text-slate-500">{t(lang, "cbs.imap_port")}</Label>
+                            <Input value={imapPort} onChange={(e) => setImapPort(e.target.value)} className="h-8 text-xs" />
+                          </div>
+                          <div className="col-span-2 flex items-center gap-2 pt-1.5">
+                            <input type="checkbox" checked={sslSecure} onChange={(e) => setSslSecure(e.target.checked)} id="ssl-checkbox" />
+                            <Label htmlFor="ssl-checkbox" className="text-[11px] text-slate-600">{t(lang, "cbs.ssl_tls")}</Label>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="grid gap-2 grid-cols-2 pt-2 border-t">
+                        <div className="space-y-1">
+                          <Label className="text-[11px] text-slate-500">{t(lang, "cbs.smtp_username")}</Label>
+                          <Input value={smtpUser} onChange={(e) => setSmtpUser(e.target.value)} placeholder={generatedEmail} className="h-8 text-xs" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[11px] text-slate-500">{t(lang, "cbs.app_password")}</Label>
+                          <Input type="password" value={smtpPass} onChange={(e) => setSmtpPass(e.target.value)} placeholder="••••••••••••" className="h-8 text-xs" />
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t flex items-center justify-between">
+                        <div className="text-[11px] font-bold text-slate-500">
+                          {t(lang, "cbs.email_status_label")}{" "}
+                          <span className={cn("px-1.5 py-0.5 rounded", smtpStatus === "Ready" ? "text-green-700 bg-green-50" : "text-red-700 bg-red-50")}>
+                            {smtpStatus === "Ready" ? t(lang, "cbs.status_ready") : smtpStatus === "Connection Failed" ? t(lang, "cbs.status_connection_failed") : t(lang, "cbs.not_configured", "Not Configured")}
+                          </span>
+                        </div>
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          disabled={aiLoading || !branchName}
-                          onClick={() => {
-                            setAiLoading(true);
-                            setTimeout(() => {
-                              const suggested = branchName.toLowerCase().replace(/city|branch|store|office/gi, "").trim().replace(/\s+/g, ".");
-                              setEmailPrefix(suggested);
-                              setAiLoading(false);
-                            }, 500);
+                          className="h-7 text-[11px]"
+                          disabled={testingEmail || !emailPrefix}
+                          onClick={async () => {
+                            try {
+                              setTestingEmail(true);
+                              const res = await fetch("/api/erp/messages/test-connection", {
+                                method: "POST",
+                                headers: { "content-type": "application/json" },
+                                body: JSON.stringify({
+                                  countryId: location.countryId,
+                                  countryBranchId,
+                                  cityBranchId: editingCityBranchId || undefined,
+                                  settings: { smtpHost, smtpPort: Number(smtpPort), smtpSecure: sslSecure, smtpUser: smtpUser || generatedEmail, smtpPass }
+                                })
+                              });
+                              const data = await res.json();
+                              if (!res.ok) throw new Error(data?.error || t(lang, "cbs.connection_failed_generic"));
+                              alert(t(lang, "cbs.email_ready_alert").replace("{0}", resolvedBranchName || t(lang, "cbs.branch_fallback")));
+                              setSmtpStatus("Ready");
+                            } catch (err: any) {
+                              alert(t(lang, "cbs.smtp_auth_failed_alert").replace("{0}", err.message || t(lang, "cbs.invalid_credentials")));
+                              setSmtpStatus("Connection Failed");
+                            } finally {
+                              setTestingEmail(false);
+                            }
                           }}
                         >
-                          {aiLoading ? t(lang, "cbs.ai_thinking") : t(lang, "cbs.ai_suggest")}
+                          {testingEmail ? t(lang, "cbs.testing_ellipsis") : t(lang, "cbs.test_email_server")}
                         </Button>
                       </div>
-                      {generatedEmail && (
-                        <p className="text-[11px] text-green-600 font-semibold mt-1">
-                          {t(lang, "cbs.generated_email_label")} {generatedEmail}
-                        </p>
-                      )}
                     </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-xs text-slate-600">{t(lang, "cbs.email_server")}</Label>
-                      <select
-                        className={selectClassName()}
-                        value={emailServerName}
-                        onChange={(e) => setEmailServerName(e.target.value)}
-                      >
-                        <option value="Local IP Server (UPS Linked)">{t(lang, "cbs.email_server_local")}</option>
-                        <option value="Google Workspace Cloud Server">{t(lang, "cbs.email_server_google")}</option>
-                        <option value="Microsoft Office 365 Cloud Server">{t(lang, "cbs.email_server_o365")}</option>
-                      </select>
-                    </div>
+                    <div className="space-y-4 rounded-lg border p-4 bg-slate-50/30">
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">{t(lang, "cbs.whatsapp_api_integration")}</h3>
 
-                    {emailServerName.includes("Local IP") && (
-                      <div className="grid gap-2 grid-cols-2 pt-2 border-t text-[11px] space-y-1">
-                        <div className="col-span-2 space-y-1">
-                          <Label className="text-[11px] text-slate-500">{t(lang, "cbs.local_ip_address")}</Label>
-                          <Input value={localIp} onChange={(e) => setLocalIp(e.target.value)} className="h-8 text-xs" />
-                        </div>
-                        <div className="col-span-2 space-y-1">
-                          <Label className="text-[11px] text-slate-500">{t(lang, "cbs.public_ip_address")}</Label>
-                          <Input value={publicIp} onChange={(e) => setPublicIp(e.target.value)} className="h-8 text-xs" />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-[11px] text-slate-500">{t(lang, "cbs.smtp_host")}</Label>
-                          <Input value={smtpHost} onChange={(e) => setSmtpHost(e.target.value)} className="h-8 text-xs" />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-[11px] text-slate-500">{t(lang, "cbs.smtp_port")}</Label>
-                          <Input value={smtpPort} onChange={(e) => setSmtpPort(e.target.value)} className="h-8 text-xs" />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-[11px] text-slate-500">{t(lang, "cbs.imap_host")}</Label>
-                          <Input value={imapHost} onChange={(e) => setImapHost(e.target.value)} className="h-8 text-xs" />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-[11px] text-slate-500">{t(lang, "cbs.imap_port")}</Label>
-                          <Input value={imapPort} onChange={(e) => setImapPort(e.target.value)} className="h-8 text-xs" />
-                        </div>
-                        <div className="col-span-2 flex items-center gap-2 pt-1.5">
-                          <input type="checkbox" checked={sslSecure} onChange={(e) => setSslSecure(e.target.checked)} id="ssl-checkbox" />
-                          <Label htmlFor="ssl-checkbox" className="text-[11px] text-slate-600">{t(lang, "cbs.ssl_tls")}</Label>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="grid gap-2 grid-cols-2 pt-2 border-t">
-                      <div className="space-y-1">
-                        <Label className="text-[11px] text-slate-500">{t(lang, "cbs.smtp_username")}</Label>
-                        <Input value={smtpUser} onChange={(e) => setSmtpUser(e.target.value)} placeholder={generatedEmail} className="h-8 text-xs" />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[11px] text-slate-500">{t(lang, "cbs.app_password")}</Label>
-                        <Input type="password" value={smtpPass} onChange={(e) => setSmtpPass(e.target.value)} placeholder="••••••••••••" className="h-8 text-xs" />
-                      </div>
-                    </div>
-
-                    <div className="pt-2 border-t flex items-center justify-between">
-                      <div className="text-[11px] font-bold text-slate-500">
-                        {t(lang, "cbs.email_status_label")}{" "}
-                        <span className={cn(
-                          "px-1.5 py-0.5 rounded",
-                          smtpStatus === "Ready" ? "text-green-700 bg-green-50" : "text-red-700 bg-red-50"
-                        )}>
-                          {smtpStatus === "Ready" ? t(lang, "cbs.status_ready") : smtpStatus === "Connection Failed" ? t(lang, "cbs.status_connection_failed") : t(lang, "cbs.not_configured", "Not Configured")}
-                        </span>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-[11px]"
-                        disabled={testingEmail || !emailPrefix}
-                        onClick={async () => {
-                          try {
-                            setTestingEmail(true);
-                            const res = await fetch("/api/erp/messages/test-connection", {
-                              method: "POST",
-                              headers: { "content-type": "application/json" },
-                              body: JSON.stringify({
-                                countryId: location.countryId,
-                                countryBranchId,
-                                cityBranchId: editingCityBranchId || undefined,
-                                settings: {
-                                  smtpHost,
-                                  smtpPort: Number(smtpPort),
-                                  smtpSecure: sslSecure,
-                                  smtpUser: smtpUser || generatedEmail,
-                                  smtpPass: smtpPass
-                                }
-                              })
-                            });
-                            const data = await res.json();
-                            if (!res.ok) throw new Error(data?.error || "Connection failed.");
-                            alert(t(lang, "cbs.email_ready_alert").replace("{0}", branchName || t(lang, "cbs.branch_fallback")));
-                            setSmtpStatus("Ready");
-                          } catch (err: any) {
-                            alert(t(lang, "cbs.smtp_auth_failed_alert").replace("{0}", err.message || "Invalid credentials."));
-                            setSmtpStatus("Connection Failed");
-                          } finally {
-                            setTestingEmail(false);
-                          }
-                        }}
-                      >
-                        {testingEmail ? t(lang, "cbs.testing_ellipsis") : t(lang, "cbs.test_email_server")}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 rounded-lg border p-4 bg-slate-50/30">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">{t(lang, "cbs.whatsapp_api_integration")}</h3>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs text-slate-600">{t(lang, "cbs.official_whatsapp_number")}</Label>
-                      <Input
-                        value={whatsappNumber}
-                        onChange={(e) => setWhatsappNumber(e.target.value)}
-                        placeholder="e.g. +923001234567"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs text-slate-600">{t(lang, "cbs.phone_number_id")}</Label>
-                      <Input
-                        value={phoneNumberId}
-                        onChange={(e) => setPhoneNumberId(e.target.value)}
-                        placeholder={t(lang, "cbs.phone_number_id_ph")}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs text-slate-600">{t(lang, "cbs.waba_id")}</Label>
-                      <Input
-                        value={wabaId}
-                        onChange={(e) => setWabaId(e.target.value)}
-                        placeholder={t(lang, "cbs.waba_id_ph")}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs text-slate-600">{t(lang, "cbs.system_user_access_token")}</Label>
-                      <textarea
-                        value={accessToken}
-                        onChange={(e) => setAccessToken(e.target.value)}
-                        placeholder={t(lang, "cbs.access_token_ph")}
-                        className="min-h-16 w-full rounded-lg border bg-background px-3 py-1.5 text-xs outline-none shadow-sm focus:border-primary"
-                      />
-                    </div>
-
-                    <div className="pt-2 border-t flex items-center justify-between">
-                      <div className="text-[11px] font-bold text-slate-500">
-                        {t(lang, "cbs.whatsapp_status_label")}{" "}
-                        <span className={cn(
-                          "px-1.5 py-0.5 rounded",
-                          whatsappStatus === "Ready" ? "text-green-700 bg-green-50" :
-                          whatsappStatus === "Verification Pending" ? "text-amber-700 bg-amber-50" :
-                          "text-red-700 bg-red-50"
-                        )}>
-                          {whatsappStatus === "Ready" ? t(lang, "cbs.status_ready") : whatsappStatus === "Verification Pending" ? t(lang, "cbs.status_verification_pending") : t(lang, "cbs.not_configured", "Not Configured")}
-                        </span>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-[11px]"
-                        disabled={testingWhatsapp || !whatsappNumber || !phoneNumberId || !accessToken}
-                        onClick={() => {
-                          setTestingWhatsapp(true);
-                          setTimeout(() => {
-                            alert(t(lang, "cbs.whatsapp_verified_alert"));
-                            setWhatsappStatus("Ready");
-                            setTestingWhatsapp(false);
-                          }, 600);
-                        }}
-                      >
-                        {testingWhatsapp ? t(lang, "cbs.verifying_ellipsis") : t(lang, "cbs.verify_whatsapp")}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-
-
-              <section hidden={activeStep !== 9} className="order-9 space-y-0 -mx-1">
-
-                {/* ══ TOP HEADER BAR ══ */}
-                <div className="rounded-t-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950 overflow-hidden">
-                  <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 px-6 py-4 dark:border-slate-800">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md">
-                        <span className="text-lg font-black">D</span>
-                      </div>
-                      <div>
-                        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">DGT LLC · {t(lang, "cbs.erp_system_label", "ERP System")}</p>
-                        <h1 className="text-lg font-black text-slate-900 dark:text-slate-100 leading-tight">{t(lang, "cbs.step9_title")}</h1>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">{t(lang, "cbs.step9_subtitle")}</p>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Step Progress Bar */}
-                  <div className="flex items-stretch overflow-x-auto border-b border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/40">
-                    {[
-                      { n: 1, label: t(lang, "cbs.pb_branch_info"), done: Boolean(branchName && branchCode) },
-                      { n: 2, label: t(lang, "cbs.pb_address_location"), done: Boolean(locationMeta.city?.name) },
-                      { n: 3, label: t(lang, "cbs.pb_bank_setup"), done: false },
-                      { n: 4, label: t(lang, "cbs.pb_contact_info"), done: contacts.some(c => c.value) },
-                      { n: 5, label: t(lang, "cbs.pb_review_summary"), done: hasAny },
-                      { n: 6, label: t(lang, "cbs.pb_upload_docs"), done: false },
-                      { n: 7, label: t(lang, "cbs.pb_accounting_setup"), done: false },
-                      { n: 8, label: t(lang, "cbs.pb_roles_permissions"), done: permissionGrants.length > 0 },
-                      { n: 9, label: t(lang, "cbs.pb_final_approval"), done: false, active: true },
-                    ].map(({ n, label, done, active }) => (
-                      <button key={n} type="button" onClick={() => setActiveStep(n < 9 ? n : 9)} className={`relative flex min-w-[80px] flex-1 flex-col items-center justify-center px-2 py-2.5 transition-colors ${active ? "bg-indigo-50 dark:bg-indigo-950/20" : "hover:bg-slate-100 dark:hover:bg-slate-800/40"}` }>
-                        <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-black border-2 ${
-                          active ? "border-indigo-600 bg-indigo-600 text-white"
-                          : done ? "border-emerald-500 bg-emerald-500 text-white"
-                          : "border-slate-300 bg-white text-slate-400 dark:border-slate-600 dark:bg-slate-800"
-                        }`}>{done && !active ? "✓" : n}</div>
-                        <span className={`mt-1 text-center text-[11px] font-semibold leading-tight ${
-                          active ? "text-indigo-700 dark:text-indigo-400"
-                          : done ? "text-emerald-700 dark:text-emerald-400"
-                          : "text-slate-400"
-                        }`}>{label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* ══ REVIEW SUMMARY BANNER ══ */}
-                <div className="border-x border-slate-200 bg-white px-6 py-4 dark:border-slate-700 dark:bg-slate-950">
-                  <p className="mb-3 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">⑤ {t(lang, "cbs.review_summary_label")}</p>
-                  {(() => {
-                    const resolvedBranchName = branchName.trim() || effectiveBranchName;
-                    const missing: string[] = [];
-                    if (!location.countryId) missing.push(t(lang, "common.country"));
-                    if (!countryBranchId) missing.push(t(lang, "cbs.main_branch_word"));
-                    if (!resolvedBranchName) missing.push(t(lang, "cbs.city_branch_name_word"));
-                    if (!branchCode) missing.push(t(lang, "cbs.branch_code_word"));
-                    if (!currency) missing.push(t(lang, "cbs.currency_word"));
-                    if (!location.cityId && !locationMeta.city?.name) missing.push(t(lang, "common.city"));
-                    if (!contacts.some(c => c.type && c.value)) missing.push(t(lang, "cbs.contact_info_word"));
-                    if (!permissionGrants.length) missing.push(t(lang, "cbs.permissions_word"));
-                    if (missing.length) return (
-                      <div className="flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-200">
-                        <span className="text-base">⚠️</span>
-                        <div><p className="font-bold">{t(lang, "cbs.fields_missing_label")}</p><p className="mt-0.5 text-xs">{missing.join(" · ")}</p></div>
-                      </div>
-                    );
-                    return (
-                      <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white text-[11px]">✓</span>
-                        {t(lang, "cbs.all_saved_ready")}
-                      </div>
-                    );
-                  })()}
-                </div>
-
-                {/* ══ FOUR INFO CARDS ══ */}
-                <div className="grid gap-0 border-x border-t border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950 sm:grid-cols-2 xl:grid-cols-4">
-                  {[
-                    { num: 1, title: t(lang, "cbs.pb_branch_info"), icon: "🏢", color: "text-blue-700 dark:text-blue-400", rows: [
-                      { label: t(lang, "common.country"), value: previewCountry },
-                      { label: t(lang, "cbs.main_branch_word"), value: previewMainBranch },
-                      { label: t(lang, "cbs.city_branch_word"), value: branchName.trim() || effectiveBranchName || "—" },
-                      { label: t(lang, "cbs.branch_code_word"), value: branchCode },
-                      { label: t(lang, "cbs.currency_word"), value: currency },
-                      { label: t(lang, "common.status"), value: editingCityBranchId ? (activeExistingCityBranch?.status || t(lang, "common.active")) : t(lang, "cbs.new_draft_word") },
-                      { label: t(lang, "cbs.est_date_word"), value: activeExistingCityBranch?.created_at ? new Date(activeExistingCityBranch.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : t(lang, "cbs.pending_save_word") },
-                    ]},
-                    { num: 2, title: t(lang, "cbs.pb_address_location"), icon: "📍", color: "text-emerald-700 dark:text-emerald-400", rows: [
-                      { label: t(lang, "cbs.address_word"), value: fullAddress },
-                      { label: t(lang, "common.city"), value: locationMeta.city?.name },
-                      { label: t(lang, "cbs.state_province_word"), value: locationMeta.state?.name },
-                      { label: t(lang, "cbs.postal_code_word"), value: zip },
-                      { label: t(lang, "cbs.district_word"), value: locationMeta.district?.name },
-                      { label: t(lang, "cbs.area_word"), value: locationMeta.area?.name },
-                      { label: t(lang, "common.country"), value: previewCountry },
-                    ]},
-                    { num: 3, title: t(lang, "cbs.pb_contact_info"), icon: "📞", color: "text-violet-700 dark:text-violet-400", rows: [
-                      { label: t(lang, "cbs.phone_word"), value: contacts.find(c => c.type.toLowerCase().includes("phone"))?.value },
-                      { label: t(lang, "cbs.mobile_word"), value: contacts.find(c => c.type.toLowerCase().includes("mobile"))?.value },
-                      { label: t(lang, "cbs.email_word"), value: contacts.find(c => c.type.toLowerCase().includes("email"))?.value || generatedEmail },
-                      { label: t(lang, "cbs.whatsapp_word"), value: contacts.find(c => c.type.toLowerCase().includes("whatsapp"))?.value },
-                      { label: t(lang, "cbs.contact_person_word"), value: ownerPreview?.name || ownerName },
-                      { label: t(lang, "cbs.designation_word"), value: ownerPreview?.role || t(lang, "cbs.branch_manager_word") },
-                      { label: t(lang, "cbs.website_word"), value: contacts.find(c => c.type.toLowerCase().includes("website"))?.value },
-                    ]},
-                    { num: 4, title: t(lang, "cbs.company_owner_title"), icon: "🏦", color: "text-amber-700 dark:text-amber-400", rows: [
-                      { label: t(lang, "cbs.company_name_field"), value: company?.name },
-                      { label: t(lang, "cbs.legal_name_word"), value: company?.legal_name },
-                      { label: t(lang, "cbs.company_code_word"), value: companyCode },
-                      { label: t(lang, "cbs.base_currency_word"), value: company?.base_currency },
-                      { label: t(lang, "cbs.owner_name_word"), value: ownerPreview?.name || ownerName },
-                      { label: t(lang, "cbs.owner_code_word"), value: ownerPreview?.code },
-                      { label: t(lang, "cbs.owner_role_word"), value: ownerPreview?.role || t(lang, "cbs.owner_word") },
-                    ]},
-                  ].map(({ num, title, icon, color, rows }, ci) => (
-                    <div key={num} className={`p-5 ${ci > 0 ? "border-l border-slate-100 dark:border-slate-800" : ""} ${ci >= 2 ? "border-t border-slate-100 dark:border-slate-800 xl:border-t-0" : ""}` }>
-                      <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
-                        <span className={`flex h-5 w-5 items-center justify-center rounded-full border border-current text-[11px] font-black ${color}`}>{num}</span>
-                        <span className="text-sm">{icon}</span>
-                        <span className={`text-[11px] font-black uppercase tracking-wider ${color}`}>{title}</span>
-                      </div>
                       <div className="space-y-2">
-                        {rows.map(({ label, value }) => (
-                          <div key={label} className="flex items-start justify-between gap-2">
-                            <span className="shrink-0 w-24 text-[11px] text-slate-400 dark:text-slate-500 leading-5">{label}</span>
-                            <span className={`text-right text-xs font-semibold leading-5 truncate max-w-[130px] ${!value ? "italic text-slate-300 dark:text-slate-600" : "text-slate-800 dark:text-slate-100"}`}>{value || "—"}</span>
-                          </div>
-                        ))}
+                        <Label className="text-xs text-slate-600">{t(lang, "cbs.official_whatsapp_number")}</Label>
+                        <Input value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} placeholder="+923001234567" />
                       </div>
-                    </div>
-                  ))}
-                </div>
 
-                {/* ══ DOCUMENTS SECTION ══ */}
-                <div className="border-x border-t border-slate-200 bg-white px-6 py-5 dark:border-slate-700 dark:bg-slate-950">
-                  <div className="mb-4 flex items-center gap-2">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[11px] font-black text-white">6</span>
-                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-amber-700 dark:text-amber-400">📄 {t(lang, "cbs.uploaded_documents_label")}</p>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    {[
-                      { name: "Branch Registration Certificate.pdf", type: "PDF", size: "245 KB", color: "bg-rose-500" },
-                      { name: "Branch Location Image.jpg", type: "JPG", size: "1.2 MB", color: "bg-emerald-500" },
-                      { name: "Bank Statement.pdf", type: "PDF", size: "342 KB", color: "bg-blue-500" },
-                      { name: "Branch NOC.pdf", type: "PDF", size: "180 KB", color: "bg-violet-500" },
-                    ].map((doc) => (
-                      <div key={doc.name} className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/40">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${doc.color} text-white text-[11px] font-black flex-shrink-0`}>{doc.type}</div>
-                          <div className="min-w-0">
-                            <p className="text-[11px] font-bold text-slate-800 dark:text-slate-100 leading-tight truncate">{doc.name}</p>
-                            <p className="text-[11px] text-slate-400 mt-0.5">{doc.size} · {t(lang, "cbs.uploaded_on_label")} 25 Jul 2025</p>
-                          </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-600">{t(lang, "cbs.phone_number_id")}</Label>
+                        <Input value={phoneNumberId} onChange={(e) => setPhoneNumberId(e.target.value)} placeholder={t(lang, "cbs.phone_number_id_ph")} />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-600">{t(lang, "cbs.waba_id")}</Label>
+                        <Input value={wabaId} onChange={(e) => setWabaId(e.target.value)} placeholder={t(lang, "cbs.waba_id_ph")} />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-600">{t(lang, "cbs.system_user_access_token")}</Label>
+                        <textarea
+                          value={accessToken}
+                          onChange={(e) => setAccessToken(e.target.value)}
+                          placeholder={t(lang, "cbs.access_token_ph")}
+                          className="min-h-16 w-full rounded-lg border bg-background px-3 py-1.5 text-xs outline-none shadow-sm focus:border-primary"
+                        />
+                      </div>
+
+                      <div className="pt-2 border-t flex items-center justify-between">
+                        <div className="text-[11px] font-bold text-slate-500">
+                          {t(lang, "cbs.whatsapp_status_label")}{" "}
+                          <span
+                            className={cn(
+                              "px-1.5 py-0.5 rounded",
+                              whatsappStatus === "Ready" ? "text-green-700 bg-green-50" : whatsappStatus === "Verification Pending" ? "text-amber-700 bg-amber-50" : "text-red-700 bg-red-50"
+                            )}
+                          >
+                            {whatsappStatus === "Ready" ? t(lang, "cbs.status_ready") : whatsappStatus === "Verification Pending" ? t(lang, "cbs.status_verification_pending") : t(lang, "cbs.not_configured", "Not Configured")}
+                          </span>
                         </div>
-                        <div className="flex gap-2">
-                          <button type="button" className="flex-1 rounded-md border border-slate-200 bg-white py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">👁 {t(lang, "cbs.preview_word")}</button>
-                          <button type="button" className="flex-1 rounded-md border border-slate-200 bg-white py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">⬇ {t(lang, "cbs.download_word")}</button>
-                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-[11px]"
+                          disabled={testingWhatsapp || !whatsappNumber || !phoneNumberId || !accessToken}
+                          onClick={() => {
+                            setTestingWhatsapp(true);
+                            setTimeout(() => {
+                              alert(t(lang, "cbs.whatsapp_verified_alert"));
+                              setWhatsappStatus("Ready");
+                              setTestingWhatsapp(false);
+                            }, 600);
+                          }}
+                        >
+                          {testingWhatsapp ? t(lang, "cbs.verifying_ellipsis") : t(lang, "cbs.verify_whatsapp")}
+                        </Button>
                       </div>
-                    ))}
+                    </div>
                   </div>
-                  <button type="button" className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">📂 {t(lang, "cbs.view_all_documents").replace("{0}", "4")}</button>
-                </div>
+                </section>
 
-                {/* ══ THREE COLUMN LOWER SECTIONS ══ */}
-                <div className="grid gap-0 border-x border-t border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950 lg:grid-cols-3">
-                  {/* Roles & Permissions */}
-                  <div className="p-5">
-                    <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full border border-indigo-400 text-[11px] font-black text-indigo-600 dark:text-indigo-400">6</span>
-                      <span className="text-[11px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-400">🔐 {t(lang, "cbs.pb_roles_permissions")}</span>
-                    </div>
-                    <div className="mb-1.5 grid grid-cols-3 gap-1 border-b border-slate-100 pb-1 dark:border-slate-800">
-                      <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "cbs.role_word")}</span>
-                      <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "cbs.users_word")}</span>
-                      <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "cbs.access_word")}</span>
-                    </div>
-                    {[{ role: t(lang, "cbs.role_branch_admin"), users: 2, access: t(lang, "cbs.access_full") }, { role: t(lang, "cbs.role_accountant"), users: 3, access: t(lang, "cbs.access_finance_only") }, { role: t(lang, "cbs.role_store_manager"), users: 1, access: t(lang, "cbs.access_inventory") }, { role: t(lang, "cbs.role_sales_executive"), users: 4, access: t(lang, "cbs.access_sales") }, { role: t(lang, "cbs.role_viewer"), users: 2, access: t(lang, "cbs.access_view_only") }].map(({ role, users, access }) => (
-                      <div key={role} className="grid grid-cols-3 gap-1 border-b border-dashed border-slate-100 py-1.5 dark:border-slate-800">
-                        <span className="text-[11px] font-semibold text-slate-800 dark:text-slate-100">{role}</span>
-                        <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">{users}</span>
-                        <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">{access}</span>
-                      </div>
-                    ))}
-                    <p className="mt-2 text-[11px] text-indigo-600 dark:text-indigo-400">{t(lang, "cbs.template_word")}: <strong>{permissionTemplate || "city-standard"}</strong> · {permissionGrants.length} {t(lang, "cbs.total_word")}</p>
-                    <button type="button" className="mt-2 text-[11px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400">↗ {t(lang, "cbs.view_all_roles_permissions")}</button>
-                  </div>
-
-                  {/* Accounting Setup */}
-                  <div className="border-l border-slate-100 p-5 dark:border-slate-800">
-                    <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full border border-emerald-400 text-[11px] font-black text-emerald-600 dark:text-emerald-400">7</span>
-                      <span className="text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">📒 {t(lang, "cbs.pb_accounting_setup")}</span>
-                    </div>
-                    {/* this form does not set the branch's accounts: show them as not set, never sample account names */}
-                    {[{ label: t(lang, "cbs.default_purchase_account"), value: "—" }, { label: t(lang, "cbs.default_sales_account"), value: "—" }, { label: t(lang, "cbs.cash_account"), value: "—" }, { label: t(lang, "cbs.bank_account_word"), value: "—" }, { label: t(lang, "cbs.tax_account"), value: "—" }, { label: t(lang, "cbs.current_year_start"), value: "—" }, { label: t(lang, "cbs.accounting_method"), value: "—" }].map(({ label, value }) => (
-                      <div key={label} className="flex items-start justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 dark:border-slate-800">
-                        <span className="text-[11px] text-slate-400 dark:text-slate-500 leading-4 w-28 shrink-0">{label}</span>
-                        <span className="text-right text-[11px] font-semibold text-slate-800 dark:text-slate-100 leading-4">{value}</span>
-                      </div>
-                    ))}
-                    <button type="button" className="mt-2 text-[11px] font-semibold text-emerald-600 hover:underline dark:text-emerald-400">↗ {t(lang, "cbs.view_chart_of_accounts")}</button>
-                  </div>
-
-                  {/* Communication Setup */}
-                  <div className="border-l border-slate-100 p-5 dark:border-slate-800">
-                    <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full border border-cyan-400 text-[11px] font-black text-cyan-600 dark:text-cyan-400">8</span>
-                      <span className="text-[11px] font-black uppercase tracking-wider text-cyan-700 dark:text-cyan-400">📡 {t(lang, "cbs.communication_setup_label")}</span>
-                    </div>
-                    {[{ label: t(lang, "cbs.email_documents_row"), value: generatedEmail || "—" }, { label: t(lang, "cbs.email_notif_addr_row"), value: generatedEmail ? `notify@${generatedEmail.split("@")[1]}` : "—" }, { label: t(lang, "cbs.whatsapp_number_row"), value: whatsappNumber || "—" }, { label: t(lang, "cbs.sms_notifications_row"), value: whatsappNumber ? t(lang, "cbs.enabled_word") : t(lang, "cbs.disabled_word") }, { label: t(lang, "cbs.email_notifications_row"), value: generatedEmail ? t(lang, "cbs.enabled_word") : t(lang, "cbs.disabled_word") }, { label: t(lang, "cbs.smtp_server_row"), value: emailServerName === "Local IP Server (UPS Linked)" ? t(lang, "cbs.email_server_local") : emailServerName === "Google Workspace Cloud Server" ? t(lang, "cbs.email_server_google") : emailServerName === "Microsoft Office 365 Cloud Server" ? t(lang, "cbs.email_server_o365") : emailServerName || t(lang, "cbs.not_configured_word") }, { label: t(lang, "cbs.language_row"), value: t(lang, "cbs.lang_english_word") }, { label: t(lang, "cbs.timezone_row"), value: "(GMT+05:00) PKT" }].map(({ label, value }) => (
-                      <div key={label} className="flex items-start justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 dark:border-slate-800">
-                        <span className="text-[11px] text-slate-400 dark:text-slate-500 leading-4 w-28 shrink-0">{label}</span>
-                        <span className={`text-right text-[11px] font-semibold leading-4 ${ value === t(lang, "cbs.enabled_word") ? "text-emerald-600 dark:text-emerald-400" : value === t(lang, "cbs.disabled_word") ? "text-rose-500 dark:text-rose-400" : value === "—" ? "text-slate-300 dark:text-slate-600" : "text-slate-800 dark:text-slate-100"}`}>{value}</span>
-                      </div>
-                    ))}
-                    <button type="button" className="mt-2 text-[11px] font-semibold text-cyan-600 hover:underline dark:text-cyan-400">↗ {t(lang, "cbs.test_communication_settings")}</button>
-                  </div>
-                </div>
-
-                {/* ══ FINAL APPROVAL ACTIONS ══ */}
-                <div className="border-x border-t border-slate-200 bg-white px-6 py-5 dark:border-slate-700 dark:bg-slate-950">
-                  <div className="mb-4 flex items-center gap-2">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-700 text-[11px] font-black text-white dark:bg-slate-300 dark:text-slate-800">9</span>
-                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-700 dark:text-slate-300">⚡ {t(lang, "cbs.final_approval_actions_label")}</p>
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    {/* Approve */}
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-900/50 dark:bg-emerald-950/20">
-                      <div className="mb-3 flex items-center gap-2.5">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40"><span className="text-xl">✅</span></div>
-                        <p className="text-sm font-black text-emerald-800 dark:text-emerald-300">{t(lang, "cbs.approve_activate_title")}</p>
-                      </div>
-                      <p className="mb-4 text-xs text-emerald-700 dark:text-emerald-400">{t(lang, "cbs.approve_activate_desc")}</p>
-                      <Button type="submit" disabled={saving || !location.countryId || !countryBranchId || cityAlreadyExists} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 rounded-lg">
-                        {saving ? t(lang, "common.saving") : `✓ ${t(lang, "cbs.approve_activate_btn")}`}
-                      </Button>
-                    </div>
-                    {/* Send Back */}
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/50 dark:bg-amber-950/20">
-                      <div className="mb-3 flex items-center gap-2.5">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/40"><span className="text-xl">✏️</span></div>
-                        <p className="text-sm font-black text-amber-800 dark:text-amber-300">{t(lang, "cbs.send_back_title")}</p>
-                      </div>
-                      <p className="mb-4 text-xs text-amber-700 dark:text-amber-400">{t(lang, "cbs.send_back_desc")}</p>
-                      <Button type="button" variant="outline" onClick={() => setActiveStep(1)} className="w-full border-amber-400 bg-amber-100 text-amber-800 hover:bg-amber-200 font-bold text-xs h-9 rounded-lg dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                        ↩ {t(lang, "cbs.send_back_title")}
-                      </Button>
-                    </div>
-                    {/* Request Changes */}
-                    <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 dark:border-rose-900/50 dark:bg-rose-950/20">
-                      <div className="mb-3 flex items-center gap-2.5">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-rose-600 dark:bg-rose-900/40"><span className="text-xl">⚠️</span></div>
-                        <p className="text-sm font-black text-rose-800 dark:text-rose-300">{t(lang, "cbs.request_changes")}</p>
-                      </div>
-                      <p className="mb-4 text-xs text-rose-700 dark:text-rose-400">{t(lang, "cbs.request_changes_desc")}</p>
-                      <Button type="button" variant="outline" className="w-full border-rose-400 bg-rose-100 text-rose-800 hover:bg-rose-200 font-bold text-xs h-9 rounded-lg dark:border-rose-700 dark:bg-rose-900/30 dark:text-rose-300">
-                        ⚐ {t(lang, "cbs.request_changes")}
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 dark:border-blue-900/40 dark:bg-blue-950/20">
-                    <span className="text-blue-500 text-base flex-shrink-0">ℹ</span>
-                    <p className="text-[11px] text-blue-800 dark:text-blue-300">{t(lang, "cbs.review_notice")}</p>
-                  </div>
-                </div>
-
-                {/* Bottom nav bar */}
-                <div className="rounded-b-2xl border border-t-0 border-slate-200 bg-slate-50 px-6 py-3 dark:border-slate-700 dark:bg-slate-900/60 flex items-center justify-between gap-3">
-                  <button type="button" onClick={() => setActiveStep(8)} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                    {t(lang, "cbs.back_to_previous")}
-                  </button>
-                  <button type="reset" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-500 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-                    {t(lang, "cbs.close_review")}
-                  </button>
-                </div>
-              </section>
-              <div className="order-10 flex flex-wrap justify-between gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
-                <Button type="reset" variant="outline" disabled={saving}>
-                  {t(lang, "common.cancel")}
-                </Button>
-                <div className="flex flex-wrap gap-2">
-                  <Button type="button" variant="outline" disabled={saving || activeStep === 1} onClick={() => setActiveStep((step) => Math.max(1, step - 1))} className="border-slate-300 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 disabled:bg-slate-100 disabled:text-slate-400">
-                    <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> {t(lang, "common.previous")}
+                <div className="order-10 flex flex-wrap justify-between gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
+                  <Button type="reset" variant="outline" disabled={saving}>
+                    {t(lang, "common.cancel")}
                   </Button>
-                  {activeStep < 9 ? (
-                    <Button type="button" onClick={() => setActiveStep((step) => Math.min(9, step + 1))} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md hover:shadow-lg border-0">
-                      {t(lang, "common.next")} <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" variant="outline" disabled={saving || activeStep === 1} onClick={() => setActiveStep((step) => Math.max(1, step - 1))}>
+                      <ArrowLeft className="me-1.5 h-3.5 w-3.5" /> {t(lang, "common.previous")}
                     </Button>
-                  ) : (
-                    <Button type="submit" disabled={saving || !location.countryId || !countryBranchId || cityAlreadyExists} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md hover:shadow-lg border-0 disabled:bg-slate-300 disabled:text-slate-500">
-                      {saving ? t(lang, "common.saving") : editingCityBranchId ? t(lang, "common.update") : t(lang, "cbs.save")}
-                    </Button>
-                  )}
+                    {activeStep < 9 ? (
+                      <Button type="button" onClick={() => setActiveStep((step) => Math.min(9, step + 1))} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md hover:shadow-lg border-0">
+                        {t(lang, "common.next")} <ArrowRight className="ms-1.5 h-3.5 w-3.5" />
+                      </Button>
+                    ) : (
+                      <Button type="submit" disabled={saving || !location.countryId || !countryBranchId || cityAlreadyExists} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md hover:shadow-lg border-0 disabled:bg-slate-300 disabled:text-slate-500">
+                        {saving ? t(lang, "common.saving") : editingCityBranchId ? t(lang, "common.update") : t(lang, "cbs.save")}
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
 
-        <div hidden={activeStep === 9} className="lg:col-span-5 xl:col-span-5 w-full space-y-3 lg:sticky lg:top-4">
-          {/* ── Compact Right-Side Summary Panel ─────────────────── */}
+        <div className="lg:col-span-5 xl:col-span-5 w-full space-y-3 lg:sticky lg:top-4">
+          {/* Live summary: same rows as the print and the drawer */}
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 overflow-hidden">
-
-            {/* Panel Header */}
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900/60">
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -2679,12 +2080,11 @@ function CityBranchSetupContent() {
               </div>
             </div>
 
-            {/* Quick Metrics Strip */}
             <div className="grid grid-cols-3 divide-x divide-slate-100 border-b border-slate-100 dark:divide-slate-800 dark:border-slate-800">
               {[
-                { label: t(lang, "cbs.branch_word"), value: branchName || "—" },
-                { label: t(lang, "cbs.currency_word"), value: currency || "USD" },
-                { label: t(lang, "cbs.permissions_word"), value: String(permissionGrants.length) },
+                { label: t(lang, "cbs.branch_word"), value: resolvedBranchName || "—" },
+                { label: t(lang, "cbs.currency_word"), value: reportInput.currency || "—" },
+                { label: t(lang, "cbs.permissions_word"), value: String(permissionGrants.length) }
               ].map(({ label, value }) => (
                 <div key={label} className="px-3 py-2 text-center">
                   <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{label}</div>
@@ -2693,227 +2093,81 @@ function CityBranchSetupContent() {
               ))}
             </div>
 
-            {/* Summary Sections */}
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
-
-              {/* Step 1 — Branch Info */}
-              <details open className="group">
-                <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                  <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-600 text-[11px] font-bold text-white leading-none px-1">1</span>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.branch_information")}</span>
-                  <span className="ml-auto text-[11px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
-                </summary>
-                <div className="px-4 pb-3 pt-1 space-y-0">
-                  {[
-                    { label: t(lang, "cbs.country_word"), value: previewCountry },
-                    { label: t(lang, "cbs.main_branch_word"), value: previewMainBranch },
-                    { label: t(lang, "cbs.city_branch_word"), value: branchName },
-                    { label: t(lang, "cbs.branch_code_word"), value: branchCode },
-                    { label: t(lang, "cbs.currency_word"), value: currency },
-                    { label: t(lang, "cbs.state_word"), value: locationMeta.state?.name },
-                    { label: t(lang, "cbs.city_word"), value: locationMeta.city?.name },
-                    { label: t(lang, "cbs.zip_word"), value: zip },
-                    { label: t(lang, "cbs.address_word"), value: fullAddress },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="flex items-baseline justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 last:border-0 dark:border-slate-800/60">
-                      <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
-                      <span className={`text-right text-[11px] font-semibold truncate max-w-[150px] ${!value || value === "-" ? "text-rose-400 italic" : "text-slate-800 dark:text-slate-100"}`}>
-                        {value || "—"}
-                      </span>
+              {reportSections.sections
+                .filter((section) => section.title !== t(lang, "acct.sec_audit_info", "System / Audit Information"))
+                .map((section) => (
+                  <details key={section.title} className="group" open={section.title === t(lang, "branch.sec_branch_info", "Branch Information")}>
+                    <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{section.title}</span>
+                      <span className="ms-auto text-[11px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
+                    </summary>
+                    <div className="px-4 pb-3 pt-1">
+                      {section.rows.map((row, idx) => (
+                        <DetailLine key={`${section.title}-${idx}`} label={row.label} value={row.value ?? ""} />
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </details>
-
-              {/* Step 2 — Access Scope */}
-              <details className="group">
-                <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                  <span className="flex items-center justify-center rounded-full bg-sky-600 text-[11px] font-bold text-white leading-none px-1">2</span>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.access_scope_word")}</span>
-                  <span className="ml-auto text-[11px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
-                </summary>
-                <div className="px-4 pb-3 pt-1 space-y-0">
-                  {[
-                    { label: t(lang, "cbs.template_word", "Template"), value: permissionTemplate },
-                    { label: t(lang, "cbs.grants_word", "Grants"), value: `${permissionGrants.length} ${t(lang, "cbs.permissions_word", "permissions")}` },
-                    { label: t(lang, "cbs.parent_limit_word", "Parent Limit"), value: parentPermissionGrants?.length ? t(lang, "cbs.yes_with_count", "Yes ({count})").replace("{count}", String(parentPermissionGrants.length)) : t(lang, "cbs.none_word", "None") },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="flex items-baseline justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 last:border-0 dark:border-slate-800/60">
-                      <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
-                      <span className="text-right text-[11px] font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[150px]">{value}</span>
-                    </div>
-                  ))}
-                </div>
-              </details>
-
-              {/* Step 3 — User Account */}
-              <details className="group">
-                <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                  <span className="flex items-center justify-center rounded-full bg-violet-600 text-[11px] font-bold text-white leading-none px-1">3</span>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.user_account_word")}</span>
-                  <span className="ml-auto text-[11px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
-                </summary>
-                <div className="px-4 pb-3 pt-1">
-                  {[
-                    { label: t(lang, "cbs.company_word", "Company"), value: company?.name },
-                    { label: t(lang, "cbs.company_code_word", "Comp. Code"), value: companyCode !== "-" ? companyCode : undefined },
-                    { label: t(lang, "cbs.owner_word", "Owner"), value: ownerPreview?.name || ownerName },
-                    { label: t(lang, "cbs.owner_code_word", "Owner Code"), value: ownerPreview?.code },
-                    { label: t(lang, "cbs.owner_role_word", "Owner Role"), value: ownerPreview?.role },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="flex items-baseline justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 last:border-0 dark:border-slate-800/60">
-                      <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
-                      <span className={`text-right text-[11px] font-semibold truncate max-w-[150px] ${!value ? "text-rose-400 italic" : "text-slate-800 dark:text-slate-100"}`}>
-                        {value || "—"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </details>
-
-              {/* Step 4 — Contacts */}
-              <details className="group">
-                <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                  <span className="flex items-center justify-center rounded-full bg-teal-600 text-[11px] font-bold text-white leading-none px-1">4</span>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.contact_info_word")}</span>
-                  <span className="ml-auto text-[11px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
-                </summary>
-                <div className="px-4 pb-3 pt-1">
-                  {contacts.filter(c => c.type || c.value).length > 0 ? (
-                    contacts.filter(c => c.type || c.value).map((c, i) => (
-                      <div key={i} className="flex items-baseline justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 last:border-0 dark:border-slate-800/60">
-                        <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{c.type || "—"}</span>
-                        <span className="text-right text-[11px] font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[150px]">{c.value}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="py-2 text-[11px] italic text-rose-400">{t(lang, "cbs.no_contacts_entered", "No contacts entered.")}</p>
-                  )}
-                </div>
-              </details>
-
-              {/* Step 7 — Permissions */}
-              <details className="group">
-                <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                  <span className="flex items-center justify-center rounded-full bg-indigo-600 text-[11px] font-bold text-white leading-none px-1">7</span>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.roles_permissions_word")}</span>
-                  <span className="ml-auto text-[11px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
-                </summary>
-                <div className="px-4 pb-3 pt-2">
-                  <div className="flex flex-wrap gap-1">
-                    {permissionGrants.length > 0 ? permissionGrants.map(key => (
-                      <span key={key} className="rounded-full border border-indigo-100 bg-indigo-50 px-1.5 py-0.5 text-[11px] font-semibold text-indigo-700 dark:border-indigo-900/40 dark:bg-indigo-950/30 dark:text-indigo-300 whitespace-nowrap">
-                        {key}
-                      </span>
-                    )) : (
-                      <span className="text-[11px] italic text-rose-400">{t(lang, "cbs.no_permissions_assigned", "No permissions assigned.")}</span>
-                    )}
-                  </div>
-                </div>
-              </details>
-
-              {/* Step 8 — AI Communication */}
-              <details className="group">
-                <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                  <span className="flex items-center justify-center rounded-full bg-cyan-600 text-[11px] font-bold text-white leading-none px-1">8</span>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.communication_word")}</span>
-                  <span className="ml-auto text-[11px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
-                </summary>
-                <div className="px-4 pb-3 pt-1">
-                  {[
-                    { label: t(lang, "cbs.email_word", "Email"), value: generatedEmail },
-                    { label: t(lang, "cbs.smtp_word", "SMTP"), value: smtpStatus === "Ready" ? t(lang, "cbs.ready", "Ready") : smtpStatus === "Not Configured" ? t(lang, "cbs.not_configured", "Not Configured") : smtpStatus },
-                    { label: t(lang, "cbs.whatsapp_word", "WhatsApp"), value: whatsappNumber || (whatsappStatus === "Ready" ? t(lang, "cbs.ready", "Ready") : whatsappStatus === "Not Configured" ? t(lang, "cbs.not_configured", "Not Configured") : whatsappStatus) },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="flex items-baseline justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 last:border-0 dark:border-slate-800/60">
-                      <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
-                      <span className={`text-right text-[11px] font-semibold truncate max-w-[150px] ${
-                        !value || value === "Not Configured" || value === t(lang, "cbs.not_configured", "Not Configured") ? "text-rose-400 italic"
-                        : value === "Ready" || value === t(lang, "cbs.ready", "Ready") ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-slate-800 dark:text-slate-100"
-                      }`}>{value || t(lang, "cbs.not_configured", "Not Configured")}</span>
-                    </div>
-                  ))}
-                </div>
-              </details>
+                  </details>
+                ))}
             </div>
 
-            {/* Missing Fields Warning */}
+            {/* Missing items, from the same checklist as step 9 */}
             {hasAny && (() => {
-              const missing: string[] = [];
-              if (!location.countryId) missing.push(t(lang, "cbs.field_country"));
-              if (!countryBranchId) missing.push(t(lang, "cbs.field_main_branch"));
-              if (!branchName) missing.push(t(lang, "cbs.field_branch_name"));
-              if (!branchCode) missing.push(t(lang, "cbs.field_branch_code"));
-              if (!currency) missing.push(t(lang, "cbs.field_currency"));
-              if (!location.cityId && !locationMeta.city?.name) missing.push(t(lang, "cbs.field_city"));
-              if (!contacts.some(c => c.type && c.value)) missing.push(t(lang, "cbs.field_contacts"));
-              if (!permissionGrants.length) missing.push(t(lang, "cbs.permissions_word"));
+              const missing = [
+                !location.countryId && t(lang, "cbs.field_country"),
+                !countryBranchId && t(lang, "cbs.field_main_branch"),
+                !resolvedBranchName && t(lang, "cbs.field_branch_name"),
+                !branchCode.trim() && t(lang, "cbs.field_branch_code"),
+                !currency && t(lang, "cbs.field_currency"),
+                !(location.cityId || locationMeta.city?.name) && t(lang, "cbs.field_city"),
+                !contactsPayload.length && t(lang, "cbs.field_contacts"),
+                !permissionGrants.length && t(lang, "cbs.permissions_word")
+              ].filter((m): m is string => Boolean(m));
               if (!missing.length) return null;
               return (
                 <div className="border-t border-rose-100 bg-rose-50 px-4 py-3 dark:border-rose-900/40 dark:bg-rose-950/20">
                   <p className="mb-1.5 text-[11px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">⚠ {t(lang, "cbs.incomplete_fields")}</p>
                   <div className="flex flex-wrap gap-1">
-                    {missing.map(m => (
-                      <span key={m} className="rounded border border-rose-200 bg-rose-100 px-1.5 py-0.5 text-[11px] font-semibold text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300 whitespace-nowrap">{m}</span>
+                    {missing.map((m) => (
+                      <span key={m} className="rounded border border-rose-200 bg-rose-100 px-1.5 py-0.5 text-[11px] font-semibold text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300 whitespace-nowrap">
+                        {m}
+                      </span>
                     ))}
                   </div>
                 </div>
               );
             })()}
 
-            {/* Existing Branch Conflict */}
             {branchConflict && (
               <div className="border-t border-amber-100 bg-amber-50 px-4 py-3 dark:border-amber-900/40 dark:bg-amber-950/20">
                 <p className="text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">⚠ {t(lang, "cbs.duplicate_code_name_detected")}</p>
                 <div className="mt-1 text-[11px] text-amber-800 dark:text-amber-300 space-y-1">
-                  {codeAlreadyExists && (
-                    <p>{t(lang, "cbs.branch_code_word")} <b>{branchCode}</b> {t(lang, "cbs.already_in_use_short")}</p>
-                  )}
-                  {nameAlreadyExists && (
-                    <p>{t(lang, "cbs.branch_name")} <b>{branchName}</b> {t(lang, "cbs.already_exists_in_city").replace("{0}", locationMeta.city?.name || t(lang, "cbs.this_city_word"))}</p>
-                  )}
+                  {codeAlreadyExists && <p>{t(lang, "cbs.branch_code_word")} <b>{branchCode}</b> {t(lang, "cbs.already_in_use_short")}</p>}
+                  {nameAlreadyExists && <p>{t(lang, "cbs.branch_name")} <b>{resolvedBranchName}</b> {t(lang, "cbs.already_exists_in_city").replace("{0}", resolvedCityName || t(lang, "cbs.this_city_word"))}</p>}
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {codeAlreadyExists && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="h-6 text-[11px] bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50"
-                      onClick={() => setBranchCode(suggestBranchCode(locationMeta, existingCityBranches))}
-                    >
+                    <Button type="button" size="sm" variant="outline" className="h-6 text-[11px] bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50" onClick={() => setBranchCode(suggestBranchCode(locationMeta, existingCityBranches, operationalDomain))}>
                       ⚡ {t(lang, "cbs.auto_fix_code")}
-                    </Button>
-                  )}
-                  {activeExistingCityBranch && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="h-6 text-[11px]"
-                      onClick={() => beginEditCityBranch(activeExistingCityBranch)}
-                    >
-                      <Pencil className="h-3 w-3 mr-1" aria-hidden /> {t(lang, "cbs.edit_existing_btn")}
                     </Button>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Existing Branches List */}
+            {hasAny && (
+              <div className="border-t border-slate-100 px-4 py-3 dark:border-slate-800">
+                <p className="text-[11px] font-black uppercase tracking-wider text-slate-500">{t(lang, "cbs.checklist_progress").replace("{0}", String(checklist.completed)).replace("{1}", String(checklist.total))}</p>
+              </div>
+            )}
+
             {hasAny && existingCityBranches.length > 0 && (
               <details className="border-t border-slate-100 dark:border-slate-800">
                 <summary className="cursor-pointer px-4 py-2 text-[11px] font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
-                  {existingCityBranches.length} existing city branch{existingCityBranches.length !== 1 ? "es" : ""} in this main branch
+                  {t(lang, "cbs.existing_branches_count").replace("{0}", String(existingCityBranches.length))}
                 </summary>
                 <div className="px-3 pb-3 pt-1 space-y-1.5">
-                  <Input
-                    value={existingCitySearch}
-                    onChange={(event) => setExistingCitySearch(event.target.value)}
-                    placeholder={t(lang, "cbs.search_branches_ph")}
-                    className="h-7 text-xs"
-                  />
+                  <Input value={existingCitySearch} onChange={(event) => setExistingCitySearch(event.target.value)} placeholder={t(lang, "cbs.search_branches_ph")} className="h-7 text-xs" />
                   {filteredExistingCityBranches.slice(0, 5).map((b) => (
                     <div key={b.id} className="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-2.5 py-1.5 dark:border-slate-800 dark:bg-slate-900/40">
                       <div>
@@ -2921,28 +2175,25 @@ function CityBranchSetupContent() {
                         <span className="text-[11px] text-slate-400"> — {b.name}</span>
                       </div>
                       <div className="flex gap-1">
-                        <Button type="button" size="sm" variant="outline" className="h-5 px-1.5 text-[11px]" onClick={() => viewSavedBranch(b)}>
+                        <Button type="button" size="sm" variant="outline" className="h-5 px-1.5 text-[11px]" onClick={() => viewSavedBranch(b)} aria-label={t(lang, "cbs.view_branch_aria")}>
                           <Eye className="h-2.5 w-2.5" aria-hidden />
                         </Button>
-                        <Button type="button" size="sm" variant="outline" className="h-5 px-1.5 text-[11px]" onClick={() => beginEditCityBranch(b)}>
+                        <Button type="button" size="sm" variant="outline" className="h-5 px-1.5 text-[11px]" onClick={() => void editCityBranch(b.id)} aria-label={t(lang, "cbs.edit_branch_aria")}>
                           <Pencil className="h-2.5 w-2.5" aria-hidden />
                         </Button>
                       </div>
                     </div>
                   ))}
-                  {filteredExistingCityBranches.length > 5 && (
-                    <p className="text-[11px] text-slate-400 px-1">+{filteredExistingCityBranches.length - 5} more…</p>
-                  )}
+                  {filteredExistingCityBranches.length > 5 && <p className="text-[11px] text-slate-400 px-1">{t(lang, "cbs.more_count").replace("{0}", String(filteredExistingCityBranches.length - 5))}</p>}
                 </div>
               </details>
             )}
 
-            {/* Edit Mode Banner */}
             {editingCityBranchId && (
               <div className="border-t border-sky-100 bg-sky-50 px-4 py-3 dark:border-sky-900/40 dark:bg-sky-950/20">
-                <p className="text-[11px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400">✏ {t(lang, "cbs.editing_existing_branch", "Editing Existing Branch")}</p>
+                <p className="text-[11px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400">✏ {t(lang, "cbs.editing_existing_branch")}</p>
                 <p className="mt-0.5 text-[11px] text-sky-800 dark:text-sky-300">
-                  {activeExistingCityBranch?.name} · {activeExistingCityBranch?.code}
+                  {savedRow?.name} · {savedRow?.code}
                 </p>
               </div>
             )}
@@ -2957,11 +2208,7 @@ function CityBranchSetupContent() {
         subtitle={t(lang, "cbs.verification_cert_subtitle")}
       >
         {drawerBranchData && (
-          <BranchLiveReportPanel
-            title={t(lang, "cbs.saved_city_branch_title")}
-            status={drawerBranchData.branchStatus}
-            branchData={drawerBranchData}
-          />
+          <BranchLiveReportPanel title={t(lang, "cbs.saved_city_branch_title")} status={drawerBranchData.branchStatus ?? ""} branchData={drawerBranchData} />
         )}
       </DetailDrawer>
     </div>
@@ -2976,18 +2223,3 @@ export function CityBranchSetup() {
     </Suspense>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

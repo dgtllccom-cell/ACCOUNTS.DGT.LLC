@@ -43,6 +43,126 @@ function normalizeCityBranchRows(rows: any[] | null | undefined) {
   }));
 }
 
+/** Live unique indexes on city_branches (see 0002_multi_country_branch_management.sql and 20261229_branch_network_integrity.sql). */
+const CITY_BRANCH_UNIQUE_INDEX_FIELD: Record<string, { field: "code" | "name" | "scope"; message: string }> = {
+  city_branches_code_idx: {
+    field: "code",
+    message: "Branch Code is already used by another City Branch in this country. Use a different Branch Code."
+  },
+  city_branches_name_idx: {
+    field: "name",
+    message: "Branch Name is already used by another City Branch in this city. Use a different Branch Name."
+  },
+  city_branches_country_city_domain_idx: {
+    field: "scope",
+    message: "This city already has a City Branch in the same operational section. Only one is allowed per city and section."
+  }
+};
+
+/**
+ * Runs a linked-account write after the branch row is already saved. A failure is reported back as a
+ * warning instead of an error, so the branch is never reported as "not saved" when it was.
+ */
+async function sideEffect(warnings: string[], label: string, run: () => Promise<unknown>) {
+  try {
+    await run();
+  } catch (error) {
+    warnings.push(`${label} was not saved: ${error instanceof Error ? error.message : "unknown error"}`);
+  }
+}
+
+/** Maps a unique-index violation (SQLSTATE 23505) to the field that clashed. Returns null for any other error. */
+function uniqueViolation(error: unknown): { field: string; message: string } | null {
+  const e = (error ?? {}) as { code?: string; constraint_name?: string; constraint?: string };
+  if (e.code !== "23505") return null;
+  const hit = CITY_BRANCH_UNIQUE_INDEX_FIELD[e.constraint_name || e.constraint || ""];
+  return hit
+    ? { field: hit.field, message: hit.message }
+    : { field: "scope", message: "Duplicate City Branch: this country, city, code or operational section already exists. Nothing was changed." };
+}
+
+/**
+ * Saved-record detail for the City Branch page: location names (the ids alone cannot show a name),
+ * the users actually assigned to this branch, the documents linked to it, and who created it.
+ */
+async function loadCityBranchDetail(row: { id: string; created_by?: string | null }) {
+  return withLocalPg(async (sql) => {
+    const locRows = (await sql`
+      select cnt.name as country_name, cnt.iso2 as country_iso2, cnt.iso3 as country_iso3,
+             cnt.currency_code as country_currency, cnt.phone_code as country_phone_code,
+             sp.name as state_name, di.name as district_name,
+             ct.name as city_name, ct.code as city_code, ct.zip_code as city_zip,
+             al.name as area_name, al.postal_code as area_postal,
+             pf.full_name as created_by_name
+        from public.city_branches cb
+        left join public.countries cnt on cnt.id = cb.country_id
+        left join public.states_provinces sp on sp.id = cb.state_province_id
+        left join public.districts di on di.id = cb.district_id
+        left join public.cities ct on ct.id = cb.city_id
+        left join public.areas_locations al on al.id = cb.area_location_id
+        left join public.profiles pf on pf.id = cb.created_by
+       where cb.id = ${row.id}::uuid
+       limit 1
+    `) as any[];
+    const loc = locRows[0] ?? {};
+
+    const users = (await sql`
+      select ura.id as assignment_id, ura.user_id, ura.role::text as role,
+             ura.operational_domain, ura.access_profile, ura.is_active,
+             p.full_name, p.user_code
+        from public.user_role_assignments ura
+        left join public.profiles p on p.id = ura.user_id
+       where ura.city_branch_id = ${row.id}::uuid
+         and ura.is_active = true
+         and ura.deleted_at is null
+       order by ura.created_at asc
+    `) as any[];
+
+    const docs = (await sql`
+      select id, name, mime_type, size_bytes, created_at
+        from public.erp_documents
+       where deleted_at is null
+         and (city_branch_id = ${row.id}::uuid or (entity_type = 'city_branch' and entity_id = ${row.id}::uuid))
+       order by created_at desc
+    `) as any[];
+
+    return {
+      location: {
+        countryName: loc.country_name ?? "",
+        countryIso2: loc.country_iso2 ?? "",
+        countryIso3: loc.country_iso3 ?? "",
+        countryCurrency: loc.country_currency ?? "",
+        countryPhoneCode: loc.country_phone_code ?? "",
+        stateName: loc.state_name ?? "",
+        districtName: loc.district_name ?? "",
+        cityName: loc.city_name ?? "",
+        cityCode: loc.city_code ?? "",
+        cityZip: loc.city_zip ?? "",
+        areaName: loc.area_name ?? "",
+        areaPostal: loc.area_postal ?? ""
+      },
+      createdByName: loc.created_by_name ?? "",
+      linkedUsers: users.map((u) => ({
+        assignmentId: u.assignment_id,
+        userId: u.user_id,
+        userName: u.full_name ?? "",
+        userCode: u.user_code ?? "",
+        role: u.role ?? "",
+        operationalDomain: u.operational_domain ?? "business",
+        accessProfile: u.access_profile ?? "",
+        isActive: u.is_active !== false
+      })),
+      linkedDocuments: docs.map((d) => ({
+        id: d.id,
+        name: d.name,
+        mimeType: d.mime_type ?? "",
+        sizeBytes: d.size_bytes ?? null,
+        createdAt: d.created_at ? new Date(d.created_at).toISOString() : ""
+      }))
+    };
+  });
+}
+
 function validatePermissionGroups(permissionGrants: string[]) {
   const allowed = new Set(allPermissionGroupKeys());
   const invalid = permissionGrants.filter((permission) => !allowed.has(permission));
@@ -176,6 +296,20 @@ export async function GET(request: Request) {
 
     const lang = await getRequestLanguage();
     cityBranches = await localizeRecordNames(cityBranches, "city_branches", "name", lang);
+
+    // Saved-record detail (edit / refresh / print): one branch, with its location names, linked users and documents.
+    if (id && isUuid(id) && url.searchParams.get("detail") === "1") {
+      const row = cityBranches[0] ?? null;
+      if (!row) return NextResponse.json({ cityBranches, detail: null, detailError: null }, { status: 200 });
+      try {
+        const detail = await loadCityBranchDetail({ id: row.id });
+        // Codes (NO_DATABASE / DETAIL_FAILED) are translated by the page; a database error text is passed through as data.
+        return NextResponse.json({ cityBranches, detail, detailError: detail ? null : "NO_DATABASE" }, { status: 200 });
+      } catch (detailError) {
+        const message = detailError instanceof Error && detailError.message ? detailError.message : "DETAIL_FAILED";
+        return NextResponse.json({ cityBranches, detail: null, detailError: message }, { status: 200 });
+      }
+    }
     return NextResponse.json({ cityBranches }, { status: 200 });
   } catch (error) {
     rethrowIfNextControlFlow(error);
@@ -449,7 +583,8 @@ export async function POST(request: Request) {
       smtpPass: encryptedSmtpPass
     } : {};
 
-    await linkEmailAccount({
+    const warnings: string[] = [];
+    await sideEffect(warnings, "Email server settings", () => linkEmailAccount({
       countryId: parsed.data.countryId,
       countryBranchId: parsed.data.countryBranchId,
       cityBranchId: insertedId,
@@ -457,25 +592,26 @@ export async function POST(request: Request) {
       displayName: parsed.data.name.trim(),
       emailAddress: parsed.data.email,
       settings: emailSettings
-    });
+    }));
 
-    if (parsed.data.whatsappConfig?.whatsappNumber && parsed.data.whatsappConfig?.phoneNumberId) {
-      const encryptedAccessToken = parsed.data.whatsappConfig.accessToken
-        ? encrypt(parsed.data.whatsappConfig.accessToken)
+    const waCfg = parsed.data.whatsappConfig;
+    if (waCfg?.whatsappNumber && waCfg.phoneNumberId) {
+      const encryptedAccessToken = waCfg.accessToken
+        ? encrypt(waCfg.accessToken)
         : "";
 
-      await linkWhatsAppAccount({
+      await sideEffect(warnings, "WhatsApp settings", () => linkWhatsAppAccount({
         countryId: parsed.data.countryId,
         countryBranchId: parsed.data.countryBranchId,
         cityBranchId: insertedId,
         scope: "city_branch",
         displayName: parsed.data.name.trim(),
-        phoneNumber: parsed.data.whatsappConfig.whatsappNumber,
-        phoneNumberId: parsed.data.whatsappConfig.phoneNumberId,
-        wabaId: parsed.data.whatsappConfig.wabaId || "",
+        phoneNumber: waCfg.whatsappNumber ?? "",
+        phoneNumberId: waCfg.phoneNumberId ?? "",
+        wabaId: waCfg.wabaId || "",
         accessToken: encryptedAccessToken,
-        isActive: parsed.data.whatsappConfig.isActive !== false
-      });
+        isActive: waCfg.isActive !== false
+      }));
     }
 
     await auditApiAction(request as any, {
@@ -485,12 +621,14 @@ export async function POST(request: Request) {
       after: payload
     });
 
-    return NextResponse.json({ id: insertedId }, { status: 201 });
+    return NextResponse.json({ id: insertedId, code: payload.code, name: payload.name, warnings }, { status: 201 });
   } catch (error) {
     rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
+    const dup = uniqueViolation(error);
+    if (dup) return NextResponse.json({ error: dup.message, code: "DUPLICATE_BRANCH", field: dup.field }, { status: 409 });
     const isSuperAdmin = typeof session !== "undefined" && (session as any)?.isSuperAdmin;
     const msg = error instanceof Error ? error.message : "Server error";
     return NextResponse.json({ error: formatError(msg, isSuperAdmin) }, { status: 500 });
@@ -765,7 +903,8 @@ export async function PUT(request: Request) {
       smtpPass: encryptedSmtpPass
     } : {};
 
-    await linkEmailAccount({
+    const warnings: string[] = [];
+    await sideEffect(warnings, "Email server settings", () => linkEmailAccount({
       countryId: parsed.data.countryId,
       countryBranchId: parsed.data.countryBranchId,
       cityBranchId: id,
@@ -773,25 +912,26 @@ export async function PUT(request: Request) {
       displayName: parsed.data.name.trim(),
       emailAddress: parsed.data.email,
       settings: emailSettings
-    });
+    }));
 
-    if (parsed.data.whatsappConfig?.whatsappNumber && parsed.data.whatsappConfig?.phoneNumberId) {
-      const encryptedAccessToken = parsed.data.whatsappConfig.accessToken
-        ? encrypt(parsed.data.whatsappConfig.accessToken)
+    const waCfg = parsed.data.whatsappConfig;
+    if (waCfg?.whatsappNumber && waCfg.phoneNumberId) {
+      const encryptedAccessToken = waCfg.accessToken
+        ? encrypt(waCfg.accessToken)
         : "";
 
-      await linkWhatsAppAccount({
+      await sideEffect(warnings, "WhatsApp settings", () => linkWhatsAppAccount({
         countryId: parsed.data.countryId,
         countryBranchId: parsed.data.countryBranchId,
         cityBranchId: id,
         scope: "city_branch",
         displayName: parsed.data.name.trim(),
-        phoneNumber: parsed.data.whatsappConfig.whatsappNumber,
-        phoneNumberId: parsed.data.whatsappConfig.phoneNumberId,
-        wabaId: parsed.data.whatsappConfig.wabaId || "",
+        phoneNumber: waCfg.whatsappNumber ?? "",
+        phoneNumberId: waCfg.phoneNumberId ?? "",
+        wabaId: waCfg.wabaId || "",
         accessToken: encryptedAccessToken,
-        isActive: parsed.data.whatsappConfig.isActive !== false
-      });
+        isActive: waCfg.isActive !== false
+      }));
     }
 
     await auditApiAction(request as any, {
@@ -801,12 +941,14 @@ export async function PUT(request: Request) {
       after: payload
     });
 
-    return NextResponse.json({ id: updatedId || id }, { status: 200 });
+    return NextResponse.json({ id: updatedId || id, code: payload.code, name: payload.name, warnings }, { status: 200 });
   } catch (error) {
     rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
+    const dup = uniqueViolation(error);
+    if (dup) return NextResponse.json({ error: dup.message, code: "DUPLICATE_BRANCH", field: dup.field }, { status: 409 });
     const isSuperAdmin = typeof session !== "undefined" && (session as any)?.isSuperAdmin;
     const msg = error instanceof Error ? error.message : "Server error";
     return NextResponse.json({ error: formatError(msg, isSuperAdmin) }, { status: 500 });

@@ -116,6 +116,16 @@ export interface BranchFinalReviewProps {
   onRequestChanges?: (note: string) => void;
   onViewSummary?: () => void;
   onPrint?: () => void;
+
+  /**
+   * Default true: an empty `documents` / `usersAndPermissions` list shows the built-in sample rows (existing
+   * country / super-admin behaviour). Pass false to show the real list only, with the empty text below.
+   */
+  sampleFallback?: boolean;
+  /** Default true: the built-in "saved successfully" strip. Pass false when the page reports its own save status. */
+  showSavedBanner?: boolean;
+  emptyDocumentsText?: string;
+  emptyUsersText?: string;
 }
 
 export function BranchFinalReview({
@@ -147,7 +157,11 @@ export function BranchFinalReview({
   onSendBackForEdit,
   onRequestChanges,
   onViewSummary,
-  onPrint
+  onPrint,
+  sampleFallback = true,
+  showSavedBanner = true,
+  emptyDocumentsText = "No documents are linked yet.",
+  emptyUsersText = "No users are assigned yet."
 }: BranchFinalReviewProps) {
   const lang = useActiveLanguage();
   const [approvalNote, setApprovalNote] = useState("");
@@ -164,6 +178,7 @@ export function BranchFinalReview({
   // Default document metrics if none provided
   const docList = useMemo(() => {
     if (documents.length > 0) return documents;
+    if (!sampleFallback) return [];
     return [
       { id: "d1", name: "Trade License / Commercial Reg", type: "PDF", isRequired: true, isUploaded: true },
       { id: "d2", name: "Tax Registration Certificate", type: "PDF", isRequired: true, isUploaded: true },
@@ -174,7 +189,7 @@ export function BranchFinalReview({
       { id: "d7", name: "Identity Proof of Branch Manager", type: "PDF", isRequired: false, isUploaded: true },
       { id: "d8", name: "Customs & Clearing Authorization", type: "PDF", isRequired: false, isUploaded: true }
     ];
-  }, [documents]);
+  }, [documents, sampleFallback]);
 
   const totalDocs = docList.length;
   const requiredDocs = docList.filter((d) => d.isRequired).length;
@@ -184,6 +199,7 @@ export function BranchFinalReview({
   // Default users & permissions if none provided
   const userPermsList = useMemo(() => {
     if (usersAndPermissions.length > 0) return usersAndPermissions;
+    if (!sampleFallback) return [];
     return [
       {
         id: "u1",
@@ -230,7 +246,7 @@ export function BranchFinalReview({
         status: "Active" as const
       }
     ];
-  }, [usersAndPermissions, country, branchName]);
+  }, [usersAndPermissions, country, branchName, sampleFallback]);
 
   // Evaluate the 20 checklist items
   const evaluatedChecklist = useMemo(() => {
@@ -573,6 +589,7 @@ export function BranchFinalReview({
       </div>
 
       {/* ── SAVE STATUS NOTIFICATION BANNER ── */}
+      {showSavedBanner && (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-xs font-semibold text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300 shadow-xs">
         <div className="flex items-center gap-2.5">
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[11px] font-black shrink-0">
@@ -584,6 +601,7 @@ export function BranchFinalReview({
           Last saved: {lastSavedText}
         </div>
       </div>
+      )}
 
       {/* ── 4 SUMMARY CARDS (Top Row) ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -775,6 +793,7 @@ export function BranchFinalReview({
             </div>
           </div>
 
+          {totalDocs === 0 && <p className="pt-2 text-[11px] text-slate-500 dark:text-slate-400">{emptyDocumentsText}</p>}
           <div className="pt-3 border-t border-slate-100 dark:border-slate-800 mt-3">
             <Button
               type="button"
@@ -909,6 +928,13 @@ export function BranchFinalReview({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
+                {userPermsList.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="py-4 px-3 text-center text-slate-500 dark:text-slate-400">
+                      {emptyUsersText}
+                    </td>
+                  </tr>
+                )}
                 {userPermsList.map((user) => (
                   <tr key={user.id} className="hover:bg-white dark:hover:bg-slate-800/40 transition-colors">
                     <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap">
