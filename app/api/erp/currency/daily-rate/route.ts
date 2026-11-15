@@ -51,10 +51,17 @@ export async function GET(request: NextRequest) {
     const supabase = await createApiSupabaseClient();
     const targetDate = date || new Date().toISOString().slice(0, 10);
     if (!Number.isFinite(Date.parse(`${targetDate}T00:00:00Z`)) || new Date(`${targetDate}T00:00:00Z`).toISOString().slice(0, 10) !== targetDate) throw new ApiClientError("Invalid transaction date.");
+    // The Daily Exchange Rate module keeps one approved rate per country and date: units of the country's
+    // currency for 1 USD. A USD entry in a non-USD country is converted with that same rate, so the country
+    // rate is resolved here whatever the entry currency is. Only a USD-based country returns 1.
+    const { data: countryData } = await supabase.from("countries").select("currency_code").eq("id", countryId).maybeSingle();
+    const countryRow = countryData as { currency_code?: string | null } | null;
+    const countryCurrency = String(countryRow?.currency_code || "").toUpperCase() || null;
     let row;
     try {
-      row = currency === "USD" ? { rate_date: targetDate, currency_code: "USD", credit_rate: 1, debit_rate: 1 } :
-        await loadExactDailyRate(supabase, { countryId, branchId: countryBranchId, date: targetDate, currency });
+      row = countryCurrency === "USD"
+        ? { rate_date: targetDate, currency_code: "USD", credit_rate: 1, debit_rate: 1 }
+        : await loadExactDailyRate(supabase, { countryId, branchId: countryBranchId, date: targetDate, currency: "" });
     } catch (error) {
       console.error("[daily-rate] lookup unavailable", error);
       throw new ApiClientError(t(session.preferredLanguage, "common.error"), { status: 503, code: "FX_LOOKUP_UNAVAILABLE" });
@@ -73,7 +80,10 @@ export async function GET(request: NextRequest) {
       debitRate: found ? values.debitRate : null,
       currencyCode: found ? row!.currency_code : null,
       isExactDate: found,
-      isBranchSpecific: found && Boolean(row?.country_branch_id || row?.is_branch_specific)
+      isBranchSpecific: found && Boolean(row?.country_branch_id || row?.is_branch_specific),
+      countryCurrency,
+      entryCurrency: currency || countryCurrency,
+      isBaseCurrency: !currency || currency === countryCurrency
     });
   } catch (error) {
     return handleApiError(error);

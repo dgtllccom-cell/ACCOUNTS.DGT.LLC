@@ -126,7 +126,12 @@ export const ledgerPostingSchema = scopeSchema
 
 export const roznamchaLineSchema = ledgerPostingLineCoreSchema
   .extend({
-    paymentEntryType: z.enum(paymentEntryTypes)
+    paymentEntryType: z.enum(paymentEntryTypes),
+    // How this line's USD equivalent is set: "approved" = the country's approved daily rate,
+    // "manual" = the rate typed inline for this entry (no approved rate), "base" = base-currency line.
+    rateSource: z.enum(["base", "approved", "manual"]).optional().nullable(),
+    // The currency the user selected for the entry (for example USD converted into the account currency).
+    entryCurrency: z.string().trim().length(3).transform((value) => value.toUpperCase()).optional().nullable()
   })
   .superRefine((input, context) => {
     if (!input.accountId && !input.enterpriseAccountId && !input.ledgerId) {
