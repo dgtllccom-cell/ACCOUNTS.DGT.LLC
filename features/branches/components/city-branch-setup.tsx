@@ -22,7 +22,14 @@ import {
   type LocationHierarchyMeta,
   type LocationHierarchyValue
 } from "@/features/locations/components/location-hierarchy-select";
-import type { LocationCountry } from "@/features/locations/location-api";
+import {
+  listAreas,
+  listCountries,
+  listStates,
+  type LocationCity,
+  type LocationCountry,
+  type LocationDistrict
+} from "@/features/locations/location-api";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { getPermissionKeysForTemplate } from "@/lib/permissions/catalog";
@@ -269,6 +276,10 @@ function CityBranchSetupContent() {
   const [editLoading, setEditLoading] = useState(false);
   // The id of the latest edit-load request; responses for any other id are ignored.
   const editRequestRef = useRef("");
+  // Saved branch whose location names are being resolved; cleared when the user changes the location.
+  const locationResolveRef = useRef("");
+  // The save-result element on the Final Review step; scrolled into view when a result appears.
+  const reviewFeedbackRef = useRef<HTMLDivElement | null>(null);
 
   const [emailPrefix, setEmailPrefix] = useState("");
   const [emailServerName, setEmailServerName] = useState("Local IP Server (UPS Linked)");
@@ -850,7 +861,8 @@ function CityBranchSetupContent() {
       .filter((row): row is ContactRow => Boolean(row));
   }
 
-  function beginEditCityBranch(row: CityBranchRow) {
+  // Fills the form from a saved row. Also used to reload the saved values after an update.
+  function applyCityBranchRow(row: CityBranchRow) {
     setEditingCityBranchId(row.id);
     setCountryBranchId(row.country_branch_id);
     const domain = (row.operational_domain === "shipping" ? "shipping" : "business") as "business" | "shipping";
@@ -881,6 +893,60 @@ function CityBranchSetupContent() {
     setBranchCode(row.code || "");
     setPermissionTemplate(row.permission_template ?? "city-standard");
     setPermissionGrants(Array.isArray(row.permission_grants) ? row.permission_grants : getPermissionKeysForTemplate("city-standard"));
+    // Names for the saved ids come from the location APIs, so the review shows names instead of "-".
+    void resolveLocationMetaForRow(row);
+  }
+
+  async function resolveLocationMetaForRow(row: CityBranchRow) {
+    const rowId = row.id;
+    locationResolveRef.current = rowId;
+    const attempt = async <T,>(load: () => Promise<T>): Promise<T | null> => {
+      try {
+        return await load();
+      } catch {
+        return null;
+      }
+    };
+    const [countryRows, stateRows, districtRes, cityRes, areaRows] = await Promise.all([
+      attempt(() => listCountries({ all: true })),
+      attempt(() => listStates({ countryId: row.country_id })),
+      row.district_id
+        ? attempt(() => apiGet<{ district: LocationDistrict | null }>(`/api/erp/locations/districts/${encodeURIComponent(row.district_id as string)}`))
+        : Promise.resolve(null),
+      row.city_id
+        ? attempt(() => apiGet<{ city: LocationCity | null }>(`/api/erp/locations/cities/${encodeURIComponent(row.city_id as string)}`))
+        : Promise.resolve(null),
+      row.area_location_id && row.city_id
+        ? attempt(() => listAreas({ cityId: row.city_id as string }))
+        : Promise.resolve(null)
+    ]);
+    // Drop the result if the user changed the location or opened another branch meanwhile.
+    if (locationResolveRef.current !== rowId) return;
+    setLocationMeta((current) => ({
+      country: countryRows?.find((c) => c.id === row.country_id) ?? current.country,
+      state: stateRows?.find((s) => s.id === row.state_province_id) ?? current.state,
+      district: districtRes?.district ?? current.district,
+      city: cityRes?.city ?? current.city,
+      area: areaRows?.find((a) => a.id === row.area_location_id) ?? current.area
+    }));
+  }
+
+  // Reloads the saved row after an update so the form and the review show what the server stored.
+  async function refreshSavedCityBranch(id: string): Promise<boolean> {
+    try {
+      const res = await fetch(`/api/branch-management/city-branches?id=${encodeURIComponent(id)}`, { cache: "no-store" });
+      const json = (await res.json().catch(() => ({}))) as { cityBranches?: CityBranchRow[] };
+      const row = Array.isArray(json.cityBranches) ? json.cityBranches[0] : null;
+      if (!res.ok || !row) return false;
+      applyCityBranchRow(row);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function beginEditCityBranch(row: CityBranchRow) {
+    applyCityBranchRow(row);
     setBanner({
       type: "success",
       message: `${t(lang, "cbs.editing_existing_branch")}\n${t(lang, "cbs.branch_name")}: ${row.name}\n${t(lang, "cbs.branch_code_word")}: ${row.code}`
@@ -1003,6 +1069,14 @@ function CityBranchSetupContent() {
 
     setDrawerBranchData(payload);
   }
+
+  // A save result on the Final Review must be visible: bring it into view when it appears.
+  const scrolledBannerRef = useRef<object | null>(null);
+  useEffect(() => {
+    if (activeStep !== 9 || !banner || scrolledBannerRef.current === banner) return;
+    scrolledBannerRef.current = banner;
+    reviewFeedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [banner, activeStep]);
 
   useEffect(() => {
     if (!isUuid(editId)) return;
@@ -1205,6 +1279,7 @@ function CityBranchSetupContent() {
 
   async function onCountrySelected(next: LocationHierarchyValue, meta: LocationHierarchyMeta) {
     setBanner(null);
+    locationResolveRef.current = "";
     if (editingCityBranchId && next.countryId === location.countryId) {
       setLocation(next);
       setLocationMeta(meta);
@@ -1270,6 +1345,7 @@ function CityBranchSetupContent() {
   }
 
   function onLocationChange(next: LocationHierarchyValue, meta: LocationHierarchyMeta) {
+    locationResolveRef.current = "";
     setLocation(next);
     setLocationMeta(meta);
 
@@ -1457,10 +1533,19 @@ function CityBranchSetupContent() {
         return;
       }
 
-      setBanner({ type: "success", message: `${editingCityBranchId ? t(lang, "cbs.updated_status_word") : t(lang, "cbs.saved_status_word")}: ${branchName} (${branchCode})` });
+      const savedId = editingCityBranchId;
       const list = await loadExistingCityBranches(location.countryId, countryBranchId, operationalDomain);
-      setEditingCityBranchId("");
-      if (!editingCityBranchId) {
+      if (savedId) {
+        // Stay in edit mode: the next Save & Update is another PUT for this id, never a create.
+        const reloaded = await refreshSavedCityBranch(savedId);
+        setBanner({
+          type: "success",
+          message: `${t(lang, "cbs.updated_status_word")}: ${finalBranchName} (${branchCode})\n${reloaded ? "Saved values reloaded from the server." : "Saved, but the saved values could not be reloaded. Refresh the page to confirm."}`
+        });
+      } else {
+        setBanner({ type: "success", message: `${t(lang, "cbs.saved_status_word")}: ${finalBranchName} (${branchCode})` });
+      }
+      if (!savedId) {
         setBranchCode(suggestBranchCode(locationMeta, list, operationalDomain));
         setBranchName("");
         setPermissionTemplate("city-standard");
@@ -1504,6 +1589,22 @@ function CityBranchSetupContent() {
     setAccessToken("");
   }
 
+  // The page banner is not rendered on the Final Review, so the result is shown beside its Save button.
+  const reviewFeedback = banner ? (
+    <div
+      ref={reviewFeedbackRef}
+      role={banner.type === "error" ? "alert" : "status"}
+      className={cn(
+        "whitespace-pre-line rounded-lg border px-3 py-2 text-xs font-semibold",
+        banner.type === "success"
+          ? "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200"
+          : "border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-200"
+      )}
+    >
+      {banner.message}
+    </div>
+  ) : null;
+
   if (activeStep === 9) {
     return (
       <div className="space-y-6">
@@ -1525,6 +1626,8 @@ function CityBranchSetupContent() {
           mainBranchName={previewMainBranch || "Head Office (DXB-001)"}
           isSaving={saving}
           isEditing={Boolean(editingCityBranchId)}
+          showSavedNotice={false}
+          feedback={reviewFeedback}
           checklistStatus={{
             countrySelected: Boolean(location.countryId),
             mainBranchSelected: Boolean(countryBranchId),
@@ -1875,7 +1978,7 @@ function CityBranchSetupContent() {
                     <LocationHierarchySelect
                       value={location}
                       showCountry={false}
-                      showDistrict={false}
+                      showDistrict={true}
                       showArea={true}
                       allowManageLink={false}
                       onChange={onLocationChange}

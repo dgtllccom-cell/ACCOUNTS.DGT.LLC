@@ -104,6 +104,10 @@ export interface BranchFinalReviewProps {
 
   // Timestamp
   lastSavedText?: string;
+  // false hides the static "All information has been saved" line (the page must say what really happened).
+  showSavedNotice?: boolean;
+  // Save result or validation message, rendered right above the approval buttons.
+  feedback?: React.ReactNode;
   isSaving?: boolean;
   isEditing?: boolean;
 
@@ -138,6 +142,8 @@ export function BranchFinalReview({
   usersAndPermissions = [],
   checklistStatus = {},
   lastSavedText = "",
+  showSavedNotice = true,
+  feedback = null,
   isSaving = false,
   isEditing = false,
   onBack,
@@ -513,20 +519,22 @@ export function BranchFinalReview({
         </div>
       </div>
 
-      {/* ── SAVE STATUS NOTIFICATION BANNER ── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-xs font-semibold text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300 shadow-xs">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[11px] font-black shrink-0">
-            ✓
-          </span>
-          <span>All information has been saved successfully and is ready for final review.</span>
-        </div>
-        {lastSavedText ? (
-          <div className="text-emerald-700 dark:text-emerald-400 text-[11px] font-medium">
-            Last saved: {lastSavedText}
+      {/* ── SAVE STATUS NOTIFICATION BANNER (static; pages that pass showSavedNotice=false show their own result) ── */}
+      {showSavedNotice ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-xs font-semibold text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[11px] font-black shrink-0">
+              ✓
+            </span>
+            <span>All information has been saved successfully and is ready for final review.</span>
           </div>
-        ) : null}
-      </div>
+          {lastSavedText ? (
+            <div className="text-emerald-700 dark:text-emerald-400 text-[11px] font-medium">
+              Last saved: {lastSavedText}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {/* ── 4 SUMMARY CARDS (Top Row) ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -971,6 +979,9 @@ export function BranchFinalReview({
             />
           </div>
         </div>
+
+        {/* Save result / validation message, directly above the action buttons */}
+        {feedback ? <div className="pt-1">{feedback}</div> : null}
 
         {/* Action Buttons Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
