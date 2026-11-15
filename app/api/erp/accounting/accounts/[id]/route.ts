@@ -7,6 +7,9 @@ import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
 import { rowInSessionDomain } from "@/lib/permissions/domain-scope";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames, wantsRawRecord } from "@/lib/i18n/localize-records";
+import { resolveCustomerName } from "@/lib/i18n/customer-name";
+import { customersRepository } from "@/lib/repositories/customers-repository";
+import { storableLinkedMaster } from "@/lib/services/account-linked-masters";
 import { ledgerScopeSchema, optionalUuidSchema, scopeSchema, supportedLanguageSchema } from "@/lib/api/erp-validation";
 import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
 
@@ -320,14 +323,48 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
           { phraseFallback: true }
         );
     const localizedName = resolvedAccount?.name ?? account.name;
+
+    // The linked master records (customer / owner, companies, banks, the ledger) are shown in the viewer's language by the same
+    // rule as the Customer Register and the pickers: an authorized variant of THAT saved name, otherwise the saved name itself.
+    // Edit forms (?raw=1) keep the saved names; `*_raw` / `original_*` fields always carry the saved legal name.
+    const raw = wantsRawRecord(request);
+    let customer: any = account.customer ?? null;
+    if (!raw && customer?.id) {
+      const customerRow = await customersRepository.getById(customer.id).catch(() => null);
+      if (customerRow) {
+        const view = resolveCustomerName(customerRow as any, language);
+        customer = { ...customer, customer_name: view.primary, original_customer_name: view.savedName };
+      }
+    }
+    let companies: any[] = account.companies ?? [];
+    if (!raw && companies.length > 0) {
+      const names = await localizeRecordNames(companies.map((c: any) => ({ id: c.id, name: String(c.name ?? "") })), "companies", "name", language);
+      const byId = new Map(names.map((c) => [c.id, c.name] as const));
+      companies = companies.map((c: any) => ({ ...c, name: byId.get(c.id) ?? c.name, original_name: c.name }));
+    }
+    let banks: any[] = account.banks ?? [];
+    if (!raw && banks.length > 0) {
+      const names = await localizeRecordNames(banks.map((b: any) => ({ id: b.id, bank_name: String(b.name ?? "") })), "banks", "bank_name", language);
+      const byId = new Map(names.map((b: any) => [b.id, b.bank_name] as const));
+      banks = banks.map((b: any) => ({ ...b, name: byId.get(b.id) ?? b.name, original_name: b.name }));
+    }
+    let ledgerOut: any = ledger ?? null;
+    if (!raw && ledgerOut?.id) {
+      const [localizedLedger] = await localizeRecordNames([{ id: ledgerOut.id, name: String(ledgerOut.name ?? "") }], "ledgers", "name", language);
+      if (localizedLedger) ledgerOut = { ...ledgerOut, name: localizedLedger.name, original_name: ledgerOut.name };
+    }
+
     const localizedAccount = {
       ...account,
       raw_name: account.name,
       localized_name: localizedName,
-      name: localizedName
+      name: localizedName,
+      customer,
+      companies,
+      banks
     };
 
-    return apiOk({ account: localizedAccount, ledger: ledger ?? null });
+    return apiOk({ account: localizedAccount, ledger: ledgerOut });
   } catch (error) {
     return handleApiError(error);
   }
@@ -427,7 +464,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         const id = item?.id ? String(item.id).trim() : null;
         return id ? arr.findIndex((x: any) => String(x?.id).trim() === id) === idx : true;
       });
-      updatePayload.linked_companies = dedupedComps;
+      updatePayload.linked_companies = dedupedComps.map((item: any) => storableLinkedMaster(item));
       if (!rawHas("companyId")) {
         const primaryComp = dedupedComps.find((c: any) => c.isPrimary) || dedupedComps[0];
         if (primaryComp?.id) {
@@ -440,7 +477,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         const id = item?.id ? String(item.id).trim() : null;
         return id ? arr.findIndex((x: any) => String(x?.id).trim() === id) === idx : true;
       });
-      updatePayload.linked_banks = dedupedBnks;
+      updatePayload.linked_banks = dedupedBnks.map((item: any) => storableLinkedMaster(item));
       if (!rawHas("bankId")) {
         const primaryBank = dedupedBnks.find((b: any) => b.isPrimary) || dedupedBnks[0];
         if (primaryBank?.id) {

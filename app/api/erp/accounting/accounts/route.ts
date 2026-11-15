@@ -10,6 +10,7 @@ import { getSupabasePublicKey, getSupabaseSecretKey } from "@/lib/supabase/confi
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
+import { storableLinkedMaster } from "@/lib/services/account-linked-masters";
 import { allowedRowDomains, sqlRowDomainCondition } from "@/lib/permissions/domain-scope";
 import { accountNeedsApprovalChain, initialChainState } from "@/lib/approval/account-approval-chain";
 
@@ -863,8 +864,8 @@ export async function POST(request: NextRequest) {
             bank_id: validBankId,
             shipping_line_id: validShippingLineId,
             linked_countries: tx.json(body.linkedCountries || []),
-            linked_companies: tx.json(dedupedCompanies),
-            linked_banks: tx.json(dedupedBanks),
+            linked_companies: tx.json(dedupedCompanies.map((item: any) => storableLinkedMaster(item))),
+            linked_banks: tx.json(dedupedBanks.map((item: any) => storableLinkedMaster(item))),
             code: issuedCode,
             account_number: globalAccountNumber,
             customer_number: customerNumber,
