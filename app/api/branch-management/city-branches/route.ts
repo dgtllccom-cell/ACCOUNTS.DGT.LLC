@@ -493,6 +493,7 @@ export async function POST(request: Request) {
 
     // Every new City Branch (business or shipping) gets its New Account automatically. A failure here is
     // reported in the response; the branch itself is already saved and is not rolled back.
+    const accountFailedText = t(await getRequestLanguage(), "cbs.account_create_failed", "Account creation failed.");
     const branchAccount = insertedId
       ? await createCityBranchAccount(request, {
           cityBranchId: insertedId,
@@ -502,7 +503,7 @@ export async function POST(request: Request) {
           name: normName,
           currency: payload.local_currency,
           customerId: parsed.data.ownerCustomerId ?? null
-        }).catch((err) => ({ created: false as const, reason: err instanceof Error ? err.message : t(await getRequestLanguage(), "cbs.account_create_failed", "Account creation failed.") }))
+        }).catch((err) => ({ created: false as const, reason: err instanceof Error ? err.message : accountFailedText }))
       : null;
 
     return NextResponse.json({ id: insertedId, account: branchAccount }, { status: 201 });
