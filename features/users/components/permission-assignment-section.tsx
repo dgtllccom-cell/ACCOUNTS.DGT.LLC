@@ -15,6 +15,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { cn } from "@/lib/utils";
+import { parseJsonArray } from "@/lib/utils/parse-json-array";
 
 type PermissionAssignmentSectionProps = {
   title?: string;
@@ -80,8 +81,15 @@ export function PermissionAssignmentSection({
     () => permissionTemplates.filter((item) => item.level === level || item.level === "user"),
     [level]
   );
-  const allowedByParent = useMemo(() => new Set(parentPermissions ?? []), [parentPermissions]);
-  const hasParentLimit = Boolean(parentPermissions?.length);
+  // A parent's grant list must be an array of permission keys. If it arrives as a JSON string
+  // (double-encoded jsonb), `new Set(string)` would hold single characters, no key would match,
+  // every permission would be removed and the branch could not be saved.
+  const parentGrantKeys = useMemo(
+    () => parseJsonArray(parentPermissions).filter((key): key is string => typeof key === "string" && key.length > 0),
+    [parentPermissions]
+  );
+  const allowedByParent = useMemo(() => new Set(parentGrantKeys), [parentGrantKeys]);
+  const hasParentLimit = parentGrantKeys.length > 0;
 
   const filteredGroups = useMemo<Record<string, PermissionDefinition[]>>(() => {
     const q = query.trim().toLowerCase();

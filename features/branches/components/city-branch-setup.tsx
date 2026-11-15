@@ -26,6 +26,7 @@ import type { LocationCountry } from "@/features/locations/location-api";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { getPermissionKeysForTemplate } from "@/lib/permissions/catalog";
+import { parseJsonArray } from "@/lib/utils/parse-json-array";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
 import { t } from "@/lib/i18n/ui";
@@ -428,7 +429,11 @@ function CityBranchSetupContent() {
   const previewLocation = [locationMeta.state?.name, locationMeta.city?.name, locationMeta.area?.name, zip].filter(Boolean).join(" / ") || "-";
   const previewCompany = company?.name || "-";
   const companyCode = company?.id ? compactCode(company.id, "CMP") : "-";
-  const parentPermissionGrants = selectedMainBranch?.permission_grants?.length ? selectedMainBranch.permission_grants : undefined;
+  // Normalised: a double-encoded (string) grant list must never reach the Set/filter logic below.
+  const parentGrantList = parseJsonArray(selectedMainBranch?.permission_grants).filter(
+    (key): key is string => typeof key === "string" && key.length > 0
+  );
+  const parentPermissionGrants = parentGrantList.length ? parentGrantList : undefined;
 
   useEffect(() => {
     if (!parentPermissionGrants?.length) return;
@@ -1250,7 +1255,8 @@ function CityBranchSetupContent() {
       }
     }
     const parent = mainBranches.find((branch) => branch.id === nextId);
-    const parentPermissions = parent?.permission_grants?.length ? parent.permission_grants : undefined;
+    const parentGrants = parseJsonArray(parent?.permission_grants).filter((key): key is string => typeof key === "string");
+    const parentPermissions = parentGrants.length ? parentGrants : undefined;
     setPermissionGrants((current) => (parentPermissions ? current.filter((permission) => parentPermissions.includes(permission)) : current));
   }
 
@@ -1514,23 +1520,25 @@ function CityBranchSetupContent() {
             countrySelected: Boolean(location.countryId),
             mainBranchSelected: Boolean(countryBranchId),
             branchNameCodeGenerated: Boolean((branchName.trim() || effectiveBranchName) && branchCode.trim()),
-            branchCategoryType: true,
-            ownerResponsiblePerson: true,
-            companyLinked: true,
-            businessShippingDomain: true,
+            // Derived from real form state. An item with no data source in this wizard is NOT
+            // marked complete (previously every one of these was hard-coded to true).
+            branchCategoryType: Boolean(operationalDomain),
+            ownerResponsiblePerson: Boolean(ownerCustomerId || ownerId),
+            companyLinked: Boolean(companyId),
+            businessShippingDomain: Boolean(operationalDomain),
             fullAddressLocation: Boolean(fullAddress.trim() || locationMeta.city?.name || activeExistingCityBranch?.city_name),
-            mobileEmail: true,
+            mobileEmail: contacts.some((c) => c.value.trim() && /mobile|phone|email/i.test(c.type)),
             currencySelected: Boolean(currency),
-            bankAccountSetup: true,
-            userAdminAssigned: true,
+            bankAccountSetup: false,
+            userAdminAssigned: false,
             rolePermissions: Boolean(permissionGrants.length),
-            requiredDocumentsUploaded: true,
-            serialNumbersGenerated: true,
-            approvalStatusReady: true,
-            businessAdminAssigned: true,
-            shippingClearingAdminAssigned: true,
-            operationsAdminAssigned: true,
-            ledgerScopeConfirmed: true
+            requiredDocumentsUploaded: false,
+            serialNumbersGenerated: false,
+            approvalStatusReady: Boolean(activeExistingCityBranch),
+            businessAdminAssigned: false,
+            shippingClearingAdminAssigned: false,
+            operationsAdminAssigned: false,
+            ledgerScopeConfirmed: Boolean(countryBranchId)
           }}
           onBack={() => setActiveStep(8)}
           onGoToStep={(step) => {

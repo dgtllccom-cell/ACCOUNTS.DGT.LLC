@@ -29,6 +29,7 @@ import { PermissionAssignmentSection } from "@/features/users/components/permiss
 import { apiGet, apiPost } from "@/lib/api/client";
 import { getPermissionKeysForTemplate } from "@/lib/permissions/catalog";
 import { cn } from "@/lib/utils";
+import { parseJsonArray } from "@/lib/utils/parse-json-array";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
@@ -495,7 +496,7 @@ export function CityBranchRegistrationWizard() {
               selected={permissionGrants}
               onTemplateChange={setPermissionTemplate}
               onSelectedChange={setPermissionGrants}
-              parentPermissions={selectedMainBranch?.permission_grants ?? undefined}
+              parentPermissions={parseJsonArray(selectedMainBranch?.permission_grants).filter((key): key is string => typeof key === "string")}
               required
               note={_("cbr.perm_section_note", "The city branch can only receive permissions allowed by the selected country main branch.")}
             />

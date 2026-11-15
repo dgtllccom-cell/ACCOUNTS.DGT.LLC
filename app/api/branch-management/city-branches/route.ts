@@ -14,6 +14,7 @@ import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { parseJsonArray } from "@/lib/utils/parse-json-array";
 import { hasRolePermission } from "@/lib/permissions/middleware";
 import { domainSuperAdminDomain, isCountryLevelRole } from "@/lib/permissions/enterprise-roles";
 
@@ -36,10 +37,13 @@ function isMissingOptionalColumn(message: string) {
 }
 
 function normalizeCityBranchRows(rows: any[] | null | undefined) {
+  // Normalised fields come AFTER the spread so a raw double-encoded value cannot overwrite them.
   return (rows ?? []).map((row) => ({
     permission_template: row.permission_template ?? "city-standard",
-    permission_grants: Array.isArray(row.permission_grants) ? row.permission_grants : [],
-    ...row
+    ...row,
+    permission_grants: parseJsonArray(row.permission_grants),
+    contacts: parseJsonArray(row.contacts),
+    documents: parseJsonArray(row.documents),
   }));
 }
 
@@ -53,7 +57,7 @@ function validatePermissionGroups(permissionGrants: string[]) {
 
 function constrainToParentPermissions(parentGrants: unknown, requestedGrants: string[]) {
   validatePermissionGroups(requestedGrants);
-  const parent = Array.isArray(parentGrants) ? parentGrants.filter((permission) => typeof permission === "string") : [];
+  const parent = parseJsonArray(parentGrants).filter((permission): permission is string => typeof permission === "string");
   if (!parent.length) return requestedGrants;
   const constrained = constrainChildPermissions(parent, requestedGrants);
   if (constrained.length !== requestedGrants.length) {
@@ -405,7 +409,7 @@ export async function POST(request: Request) {
           ${payload.whatsapp_number}, ${payload.company_id}, ${payload.owner_name},
           ${payload.owner_customer_id}, ${payload.owner_profile_id},
           ${sql.json(payload.contacts as any)}, ${sql.json(payload.documents as any)},
-          ${payload.permission_template}, ${JSON.stringify(payload.permission_grants)}::jsonb,
+          ${payload.permission_template}, ${sql.json((payload.permission_grants ?? []) as any)},
           ${payload.created_by}, ${payload.created_at}, ${payload.updated_at}
         )
         returning id
@@ -720,7 +724,7 @@ export async function PUT(request: Request) {
           contacts = ${sql.json(payload.contacts as any)},
           documents = ${sql.json(payload.documents as any)},
           permission_template = ${payload.permission_template},
-          permission_grants = ${JSON.stringify(payload.permission_grants)}::jsonb,
+          permission_grants = ${sql.json((payload.permission_grants ?? []) as any)},
           updated_at = ${payload.updated_at}
         where id = ${id}
           and deleted_at is null
