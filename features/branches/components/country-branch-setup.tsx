@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { Pencil, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -252,6 +252,8 @@ function CountryBranchSetupContent() {
   const [banner, setBanner] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  // The record id whose load was started last. It lives in a ref, so it survives an effect cleanup or re-run.
+  const editLoadRef = useRef("");
 
   const fieldLabel = useCallback((field: string) => tt(CITY_BRANCH_FIELD_KEYS[field] ?? "cbs.field_unknown", field), [tt]);
 
@@ -340,11 +342,12 @@ function CountryBranchSetupContent() {
   const zip = locationMeta.area?.postal_code ?? locationMeta.city?.zip_code ?? "";
   const previewCountry = countryName || "-";
   const previewLocation = [locationMeta.state?.name, locationMeta.city?.name, locationMeta.area?.name, zip].filter(Boolean).join(" / ") || "-";
+  // The country name arrives with the location list; until then a saved record shows its own saved name.
   const resolvedBranchName = countryName
     ? operationalDomain === "shipping"
       ? `${countryName} Shipping Line Main Branch`
       : `${countryName} Main Branch`
-    : "";
+    : existingMainBranch?.name || "";
 
   const contactsPayload = useMemo(
     () =>
@@ -710,19 +713,23 @@ function CountryBranchSetupContent() {
     }
   }
 
+  // Loads the record named by ?editId. The request belongs to the id it was started for, not to this effect run:
+  // a cleanup or re-render while the request is pending (for example the query parameter flickering) must neither
+  // drop the response nor leave the loading state on. Only a different record id supersedes the request.
   useEffect(() => {
     if (!isUuid(editId)) return;
-    if (editingCountryBranchId === editId) return;
+    if (editingCountryBranchId === editId || editLoadRef.current === editId) return;
 
-    let cancelled = false;
+    const requestedId = editId;
+    editLoadRef.current = requestedId;
+    setEditLoading(true);
     (async () => {
-      setEditLoading(true);
       try {
-        const res = await fetch(`/api/branch-management/country-branches?id=${encodeURIComponent(editId)}`, {
+        const res = await fetch(`/api/branch-management/country-branches?id=${encodeURIComponent(requestedId)}`, {
           cache: "no-store"
         });
         const json = (await res.json().catch(() => ({}))) as { countryBranches?: CountryBranchRow[]; error?: string };
-        if (cancelled) return;
+        if (editLoadRef.current !== requestedId) return;
         if (!res.ok) {
           setBanner({ type: "error", message: json.error || tt("cnbs.record_not_found", "Branch record not found.") });
           return;
@@ -735,15 +742,13 @@ function CountryBranchSetupContent() {
         setCountryBranches(json.countryBranches ?? []);
         beginEditCountryBranch(row);
       } catch (error) {
-        if (!cancelled) setBanner({ type: "error", message: error instanceof Error ? error.message : tt("cnbs.detail_load_failed", "The saved branch details could not be loaded.") });
+        if (editLoadRef.current === requestedId) {
+          setBanner({ type: "error", message: error instanceof Error ? error.message : tt("cnbs.detail_load_failed", "The saved branch details could not be loaded.") });
+        }
       } finally {
-        if (!cancelled) setEditLoading(false);
+        if (editLoadRef.current === requestedId) setEditLoading(false);
       }
     })();
-
-    return () => {
-      cancelled = true;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId]);
 
