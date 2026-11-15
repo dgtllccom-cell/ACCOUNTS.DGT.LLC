@@ -7944,6 +7944,22 @@ export type UiKey =
   | "fx.country_wide_all_branches"
   | "fx.country_level"
   | "fx.rate_in_placeholder"
+  | "fx.latest_approved_title"
+  | "fx.latest_approved_none"
+  | "fx.latest_from"
+  | "fx.status_today_ok"
+  | "fx.status_missing_today"
+  | "fx.base_currency_short"
+  | "fx.base_currency_blocked"
+  | "fx.carry_forward_btn"
+  | "fx.carry_forward_confirm"
+  | "fx.confirm_carry_forward"
+  | "fx.enter_today_rate"
+  | "fx.carry_forward_done"
+  | "fx.correction_needed"
+  | "fx.status_superseded"
+  | "fx.status_active"
+  | "fx.col_rate_date"
   | "common.actions_for"
   | "sarh.urdu_audit_excel"
   | "logi.shipping_dash_subtitle"
@@ -38622,6 +38638,22 @@ const en: Dict = {
   "fx.country_wide_all_branches": "Country-wide (All Branches)",
   "fx.country_level": "Country level",
   "fx.rate_in_placeholder": "e.g. Rate in {code}",
+  "fx.latest_approved_title": "LATEST APPROVED RATE PER COUNTRY",
+  "fx.latest_approved_none": "No approved rate on file",
+  "fx.latest_from": "Latest approved: {date} · Credit {credit} · Debit {debit}",
+  "fx.status_today_ok": "Approved for today",
+  "fx.status_missing_today": "Missing today",
+  "fx.base_currency_short": "Base currency",
+  "fx.base_currency_blocked": "{currency} is the base currency: its rate is fixed at 1.0000 and cannot be entered.",
+  "fx.carry_forward_btn": "Carry forward to today",
+  "fx.carry_forward_confirm": "Save {credit} / {debit} as {date} for {country}? This copies the latest approved rate from {source}.",
+  "fx.confirm_carry_forward": "Confirm carry-forward",
+  "fx.enter_today_rate": "Enter today's rate",
+  "fx.carry_forward_done": "Rate carried forward to {date} for {country}.",
+  "fx.correction_needed": "A rate already exists for this date. Enter a reason and save again to supersede it.",
+  "fx.status_superseded": "Superseded",
+  "fx.status_active": "Active",
+  "fx.col_rate_date": "RATE DATE",
   "common.actions_for": "Actions for {name}",
   "exp.tax_mode": "Tax treatment",
   "exp.tax_exclusive": "Tax added on top",
@@ -65061,6 +65093,22 @@ const ur: Dict = {
   "fx.country_wide_all_branches": "ملک بھر (تمام برانچز)",
   "fx.country_level": "ملکی سطح",
   "fx.rate_in_placeholder": "مثلاً {code} میں ریٹ",
+  "fx.latest_approved_title": "ہر ملک کی تازہ ترین منظور شدہ شرح",
+  "fx.latest_approved_none": "کوئی منظور شدہ شرح درج نہیں",
+  "fx.latest_from": "تازہ ترین منظور شدہ: {date} · کریڈٹ {credit} · ڈیبٹ {debit}",
+  "fx.status_today_ok": "آج کے لیے منظور شدہ",
+  "fx.status_missing_today": "آج کی شرح موجود نہیں",
+  "fx.base_currency_short": "بنیادی کرنسی",
+  "fx.base_currency_blocked": "{currency} بنیادی کرنسی ہے: اس کی شرح 1.0000 مقرر ہے اور درج نہیں کی جا سکتی۔",
+  "fx.carry_forward_btn": "آج کے لیے آگے بڑھائیں",
+  "fx.carry_forward_confirm": "{country} کے لیے {credit} / {debit} کو {date} کی شرح کے طور پر محفوظ کریں؟ یہ {source} کی تازہ ترین منظور شدہ شرح نقل کرے گا۔",
+  "fx.confirm_carry_forward": "آگے بڑھانے کی تصدیق کریں",
+  "fx.enter_today_rate": "آج کی شرح درج کریں",
+  "fx.carry_forward_done": "{country} کی شرح {date} کے لیے آگے بڑھا دی گئی۔",
+  "fx.correction_needed": "اس تاریخ کی شرح پہلے سے موجود ہے۔ وجہ لکھ کر دوبارہ محفوظ کریں تاکہ پرانی شرح منسوخ ہو جائے۔",
+  "fx.status_superseded": "منسوخ شدہ",
+  "fx.status_active": "فعال",
+  "fx.col_rate_date": "شرح کی تاریخ",
   "common.actions_for": "{name} کے لیے کارروائیاں",
   "exp.tax_mode": "ٹیکس کا طریقہ",
   "exp.tax_exclusive": "ٹیکس اوپر سے شامل",
@@ -91501,6 +91549,22 @@ const ar: Dict = {
   "fx.country_wide_all_branches": "على مستوى الدولة (جميع الفروع)",
   "fx.country_level": "على مستوى الدولة",
   "fx.rate_in_placeholder": "مثال: السعر بـ {code}",
+  "fx.latest_approved_title": "أحدث سعر معتمد لكل دولة",
+  "fx.latest_approved_none": "لا يوجد سعر معتمد مسجل",
+  "fx.latest_from": "آخر سعر معتمد: {date} · دائن {credit} · مدين {debit}",
+  "fx.status_today_ok": "معتمد لليوم",
+  "fx.status_missing_today": "سعر اليوم غير مسجل",
+  "fx.base_currency_short": "العملة الأساسية",
+  "fx.base_currency_blocked": "{currency} هي العملة الأساسية: سعرها ثابت عند 1.0000 ولا يمكن إدخاله.",
+  "fx.carry_forward_btn": "ترحيل إلى اليوم",
+  "fx.carry_forward_confirm": "حفظ {credit} / {debit} بتاريخ {date} لـ {country}؟ سيتم نسخ آخر سعر معتمد من {source}.",
+  "fx.confirm_carry_forward": "تأكيد الترحيل",
+  "fx.enter_today_rate": "أدخل سعر اليوم",
+  "fx.carry_forward_done": "تم ترحيل السعر إلى {date} لـ {country}.",
+  "fx.correction_needed": "يوجد سعر مسجل لهذا التاريخ. أدخل السبب واحفظ مجدداً لاستبداله.",
+  "fx.status_superseded": "مستبدل",
+  "fx.status_active": "نشط",
+  "fx.col_rate_date": "تاريخ السعر",
   "common.actions_for": "إجراءات {name}",
   "exp.tax_mode": "معاملة الضريبة",
   "exp.tax_exclusive": "الضريبة تُضاف فوق السعر",
@@ -117940,6 +118004,22 @@ const fa: Dict = {
   "fx.country_wide_all_branches": "سراسر کشور (همه شعبه‌ها)",
   "fx.country_level": "سطح کشور",
   "fx.rate_in_placeholder": "مثلاً نرخ به {code}",
+  "fx.latest_approved_title": "آخرین نرخ تأییدشده هر کشور",
+  "fx.latest_approved_none": "هنوز نرخ تأییدشده‌ای ثبت نشده است",
+  "fx.latest_from": "آخرین نرخ تأییدشده: {date} · بستانکار {credit} · بدهکار {debit}",
+  "fx.status_today_ok": "برای امروز تأیید شده است",
+  "fx.status_missing_today": "نرخ امروز ثبت نشده است",
+  "fx.base_currency_short": "ارز پایه",
+  "fx.base_currency_blocked": "{currency} ارز پایه است: نرخ آن ثابت 1.0000 است و قابل ثبت نیست.",
+  "fx.carry_forward_btn": "انتقال به امروز",
+  "fx.carry_forward_confirm": "ذخیره {credit} / {debit} با تاریخ {date} برای {country}؟ این کار آخرین نرخ تأییدشده از {source} را کپی می‌کند.",
+  "fx.confirm_carry_forward": "تأیید انتقال",
+  "fx.enter_today_rate": "ثبت نرخ امروز",
+  "fx.carry_forward_done": "نرخ {country} با تاریخ {date} منتقل شد.",
+  "fx.correction_needed": "برای این تاریخ نرخی ثبت شده است. دلیل را وارد و دوباره ذخیره کنید تا جایگزین شود.",
+  "fx.status_superseded": "جایگزین‌شده",
+  "fx.status_active": "فعال",
+  "fx.col_rate_date": "تاریخ نرخ",
   "common.actions_for": "عملیات برای {name}",
   "exp.tax_mode": "نحوه محاسبه مالیات",
   "exp.tax_exclusive": "مالیات به قیمت اضافه می‌شود",
@@ -144386,6 +144466,22 @@ const ps: Dict = {
   "fx.country_wide_all_branches": "د هېواد په کچه (ټولې څانګې)",
   "fx.country_level": "د هېواد کچه",
   "fx.rate_in_placeholder": "د بېلګې په توګه په {code} کې نرخ",
+  "fx.latest_approved_title": "د هرې هیواد وروستی تاییدشوی نرخ",
+  "fx.latest_approved_none": "تر اوسه تاییدشوی نرخ نشته",
+  "fx.latest_from": "وروستی تاییدشوی نرخ: {date} · کریډیټ {credit} · ډیبیټ {debit}",
+  "fx.status_today_ok": "د نن لپاره تاییدشوی",
+  "fx.status_missing_today": "د نن نرخ نشته",
+  "fx.base_currency_short": "اساسي اسعار",
+  "fx.base_currency_blocked": "{currency} اساسي اسعار دی: نرخ یې ثابت 1.0000 دی او ثبت نشي.",
+  "fx.carry_forward_btn": "نن ته لیږدول",
+  "fx.carry_forward_confirm": "د {country} لپاره {credit} / {debit} د {date} په نامه وساتو؟ دا به د {source} وروستی تاییدشوی نرخ کاپي کړي.",
+  "fx.confirm_carry_forward": "د لیږد تایید",
+  "fx.enter_today_rate": "د نن نرخ ولیکئ",
+  "fx.carry_forward_done": "د {country} نرخ د {date} لپاره ولیږدول شو.",
+  "fx.correction_needed": "د دې نیټې لپاره نرخ مخکې ثبت دی. علت ولیکئ او بیا وساتئ ترڅو بدل شي.",
+  "fx.status_superseded": "بدل شوی",
+  "fx.status_active": "فعال",
+  "fx.col_rate_date": "د نرخ نیټه",
   "common.actions_for": "د {name} لپاره کړنې",
   "exp.tax_mode": "د مالیې حساب",
   "exp.tax_exclusive": "مالیه پر بیه اضافه کېږي",

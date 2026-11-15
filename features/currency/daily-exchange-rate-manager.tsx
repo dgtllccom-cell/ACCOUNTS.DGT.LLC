@@ -45,6 +45,29 @@ type CountryOption = {
   iso2: string | null;
 };
 
+// Whole-scope status for the requested date (from the server; not affected by the table filters).
+type CountryStatus = {
+  countryId: string;
+  status: "APPROVED" | "PENDING_MISSING";
+  rateDate: string;
+  creditRate: number | null;
+  debitRate: number | null;
+};
+
+// Latest APPROVED (active) rate per country, with its own date. Source for the carry-forward and the summary.
+type LatestApproved = {
+  countryId: string;
+  countryName: string;
+  currencyCode: string;
+  iso2: string | null;
+  rateId: string;
+  rateDate: string;
+  rateTime: string | null;
+  creditRate: number;
+  debitRate: number;
+  enteredBy: string | null;
+};
+
 type SessionInfo = {
   user?: { fullName?: string | null; email?: string | null };
   scopes?: {
@@ -66,9 +89,15 @@ function money(value: number, digits = 4) {
   }).format(Number.isFinite(value) ? value : 0);
 }
 
+// The operator's own calendar date (Dubai for UAE operators). toISOString() is UTC, which still reads
+// yesterday between 00:00 and 04:00 in Dubai, so a rate entered at 01:26 AM was filed under the previous day.
 function isoToday() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
+
+// USD is the base currency: 1 USD = 1.0000 USD by definition, so it never needs a daily rate.
+const isBaseCurrency = (code: string | null | undefined) => String(code || "").toUpperCase() === "USD";
 
 function currentTimeString() {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -106,6 +135,11 @@ export function DailyExchangeRateManager() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
+  const [countriesStatus, setCountriesStatus] = useState<CountryStatus[]>([]);
+  const [latestApproved, setLatestApproved] = useState<LatestApproved[]>([]);
+  const [carryTarget, setCarryTarget] = useState<string | null>(null);
+  // Set when the server says a rate already exists for this date: the form then asks for a reason and corrects it.
+  const [correctionNeeded, setCorrectionNeeded] = useState(false);
 
   // Form Fields State
   const [selectedCountryId, setSelectedCountryId] = useState<string>("");
@@ -164,6 +198,8 @@ export function DailyExchangeRateManager() {
       if (dateFrom) params.set("dateFrom", dateFrom);
       if (dateTo) params.set("dateTo", dateTo);
       if (searchQuery) params.set("query", searchQuery);
+      // The operator's local date: the server's whole-scope status and latest rates are computed for this day.
+      params.set("today", isoToday());
 
       const [ratesRes, countriesRes, sessionRes] = await Promise.all([
         apiGet<any>(`/api/erp/currency/daily-rates?${params.toString()}`),
@@ -176,6 +212,8 @@ export function DailyExchangeRateManager() {
         : ratesRes?.rates ?? ratesRes?.data ?? [];
       
       setRates(ratesList);
+      setCountriesStatus(Array.isArray(ratesRes?.countriesStatus) ? ratesRes.countriesStatus : []);
+      setLatestApproved(Array.isArray(ratesRes?.latestApproved) ? ratesRes.latestApproved : []);
 
       const fetchedCountries: CountryOption[] = Array.isArray(countriesRes)
         ? countriesRes
@@ -233,22 +271,18 @@ export function DailyExchangeRateManager() {
     return [...new Set(rates.map((rate) => rate.branch_name).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b));
   }, [rates]);
 
-  // Countries in this session's own scope that have NO active (non-superseded)
-  // rate dated today — these still need today's rate approved before any
-  // cross-currency posting against them is trustworthy.
+  // In-scope countries with NO approved rate dated today (the server's whole-scope status, so the
+  // table filters can never make an approved rate look missing). USD is the base currency: never pending.
   const countriesPendingTodayRate = useMemo(() => {
-    const today = isoToday();
-    const scopedCountryIds = sessionInfo?.scopes?.isSuperAdmin
-      ? null
-      : sessionInfo?.scopes?.countryIds ?? null;
-    const scopedCountries = scopedCountryIds
-      ? countries.filter((c) => scopedCountryIds.includes(c.id))
-      : countries;
-    const haveTodayRate = new Set(
-      rates.filter((r) => r.rate_date === today && !r.superseded_at).map((r) => r.country_id)
-    );
-    return scopedCountries.filter((c) => !haveTodayRate.has(c.id));
-  }, [countries, rates, sessionInfo]);
+    const approvedToday = new Set(countriesStatus.filter((s) => s.status === "APPROVED").map((s) => s.countryId));
+    return countries.filter((c) => !isBaseCurrency(c.currency_code) && !approvedToday.has(c.id));
+  }, [countries, countriesStatus]);
+  const latestById = useMemo(() => new Map<string, LatestApproved>(latestApproved.map((l) => [l.countryId, l] as const)), [latestApproved]);
+  const statusById = useMemo(() => new Map<string, CountryStatus>(countriesStatus.map((s) => [s.countryId, s] as const)), [countriesStatus]);
+
+  useEffect(() => {
+    setCorrectionNeeded(false);
+  }, [selectedCountryId, rateDate]);
 
   useEffect(() => {
     if (!selectedCountryId || !selectedCountry) return;
@@ -273,6 +307,10 @@ export function DailyExchangeRateManager() {
       setMessage({ type: "error", text: "Please select a valid country from the dropdown." });
       return;
     }
+    if (isBaseCurrency(selectedCountry.currency_code)) {
+      setMessage({ type: "error", text: t(lang, "fx.base_currency_blocked", "{currency} is the base currency: its rate is fixed at 1.0000 and cannot be entered.").replace("{currency}", "USD") });
+      return;
+    }
     const credit = Number(creditPrice);
     const debit = Number(debitPrice);
 
@@ -295,8 +333,8 @@ export function DailyExchangeRateManager() {
         rateDate: rateDate || isoToday(),
         rateTime: rateTime || currentTimeString(),
         timeZoneOffsetMinutes: new Date(`${rateDate || isoToday()}T12:00:00`).getTimezoneOffset(),
-        action: existingSelectedRate ? "correct" : "create",
-        reason: existingSelectedRate ? correctionReason.trim() : undefined,
+        action: existingSelectedRate || correctionNeeded ? "correct" : "create",
+        reason: existingSelectedRate || correctionNeeded ? correctionReason.trim() : undefined,
         buyingRate: debit,
         sellingRate: credit,
         creditRate: credit,
@@ -314,9 +352,57 @@ export function DailyExchangeRateManager() {
       });
 
       setCorrectionReason("");
+      setCorrectionNeeded(false);
       await loadData();
     } catch (err: any) {
-      setMessage({ type: "error", text: err?.message || "Failed to save exchange rate." });
+      // The table filters may hide an existing rate from this form. The server then says a rate exists,
+      // so switch to correction mode (reason required) instead of asking the operator to re-enter everything.
+      if (err?.message === "RATE_EXISTS_CORRECTION_REQUIRED") {
+        setCorrectionNeeded(true);
+        setMessage({ type: "error", text: t(lang, "fx.correction_needed", "A rate already exists for this date. Enter a reason and save again to supersede it.") });
+      } else {
+        setMessage({ type: "error", text: err?.message || "Failed to save exchange rate." });
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // Carry-forward: copy the latest APPROVED rate to today as a new row. Runs only after the operator confirms.
+  // The source date is kept in the audit reason so the history shows where the rate came from.
+  async function handleCarryForward(c: CountryOption, src: LatestApproved) {
+    const today = isoToday();
+    setSaving(true);
+    setMessage(null);
+    try {
+      await apiPost("/api/erp/currency/daily-rates", {
+        countryId: c.id,
+        rateDate: today,
+        rateTime: currentTimeString(),
+        timeZoneOffsetMinutes: new Date(`${today}T12:00:00`).getTimezoneOffset(),
+        action: "create",
+        reason: `Carried forward from ${src.rateDate} (latest approved rate)`,
+        buyingRate: src.debitRate,
+        sellingRate: src.creditRate,
+        creditRate: src.creditRate,
+        debitRate: src.debitRate,
+        countryName: c.name,
+        currencyCode: c.currency_code,
+        iso2: c.iso2,
+        userName: operatorUser || sessionInfo?.user?.fullName || sessionInfo?.user?.email || "ERP USER",
+        branchName: operatorBranch || sessionInfo?.scopes?.summary?.branchDisplayName || "",
+      });
+      setCarryTarget(null);
+      setMessage({ type: "success", text: t(lang, "fx.carry_forward_done", "Rate carried forward to {date} for {country}.").replace("{date}", today).replace("{country}", c.name) });
+      await loadData();
+    } catch (err: any) {
+      setCarryTarget(null);
+      setMessage({
+        type: "error",
+        text: err?.message === "RATE_EXISTS_CORRECTION_REQUIRED"
+          ? t(lang, "fx.correction_needed", "A rate already exists for this date. Enter a reason and save again to supersede it.")
+          : err?.message || "Failed to carry forward the rate.",
+      });
     } finally {
       setSaving(false);
     }
@@ -420,17 +506,70 @@ export function DailyExchangeRateManager() {
         actionsSlot
       )}
 
-      {/* Today's-rate pending alert — prominent red until every scoped country has
-          an approved rate dated today, then it disappears (no banner = up to date). */}
+      {/* Today's-rate panel: red until every in-scope country has an approved rate dated today (then it disappears).
+          For each pending country it shows the latest approved rate WITH ITS DATE and offers a carry-forward that
+          the operator confirms, so a rate that already exists never has to be re-typed. */}
       {!loading && countriesPendingTodayRate.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 rounded-2xl border-2 border-red-400 bg-red-50 px-4 py-3 shadow-sm dark:border-red-800 dark:bg-red-950/40">
-          <AlertCircle className="h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
-          <span className="text-xs font-black uppercase tracking-wide text-red-700 dark:text-red-300">
-            {th("Today's Exchange Rate Pending")}
-          </span>
-          <span className="text-[11px] font-semibold text-red-600/90 dark:text-red-400/90">
-            {countriesPendingTodayRate.map((c) => c.name).join(", ")}
-          </span>
+        <div data-testid="fx-pending-panel" className="space-y-2 rounded-2xl border-2 border-red-400 bg-red-50 px-4 py-3 shadow-sm dark:border-red-800 dark:bg-red-950/40">
+          <div className="flex flex-wrap items-center gap-2">
+            <AlertCircle className="h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+            <span className="text-xs font-black uppercase tracking-wide text-red-700 dark:text-red-300">
+              {th("Today's Exchange Rate Pending")}
+            </span>
+            <span className="text-[11px] font-mono font-bold text-red-600/90 dark:text-red-400/90">{isoToday()}</span>
+          </div>
+          {countriesPendingTodayRate.map((c) => {
+            const src = latestById.get(c.id);
+            const confirming = carryTarget === c.id && Boolean(src);
+            const key = c.iso2 ?? c.id;
+            return (
+              <div key={c.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-red-200 bg-white/80 px-3 py-2 dark:border-red-900 dark:bg-slate-900/70">
+                <div className="min-w-0 space-y-0.5">
+                  <div className="text-[12px] font-black text-slate-900 dark:text-slate-100">
+                    {getFlag(c.iso2)} {c.name} <span className="font-mono text-slate-500">({c.currency_code})</span>
+                  </div>
+                  <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                    {src
+                      ? t(lang, "fx.latest_from", "Latest approved: {date} · Credit {credit} · Debit {debit}")
+                          .replace("{date}", src.rateDate)
+                          .replace("{credit}", money(src.creditRate, 4))
+                          .replace("{debit}", money(src.debitRate, 4))
+                      : t(lang, "fx.latest_approved_none", "No approved rate on file")}
+                  </div>
+                  {confirming && src && (
+                    <div data-testid={`fx-carry-confirm-text-${key}`} className="text-[11px] font-bold text-amber-700 dark:text-amber-400">
+                      {t(lang, "fx.carry_forward_confirm", "Save {credit} / {debit} as {date} for {country}? This copies the latest approved rate from {source}.")
+                        .replace("{credit}", money(src.creditRate, 4))
+                        .replace("{debit}", money(src.debitRate, 4))
+                        .replace("{date}", isoToday())
+                        .replace("{country}", c.name)
+                        .replace("{source}", src.rateDate)}
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {src && !confirming && (
+                    <Button type="button" data-testid={`fx-carry-forward-${key}`} disabled={saving} onClick={() => setCarryTarget(c.id)} className="h-8 text-[11px] font-black uppercase bg-amber-500 hover:bg-amber-600 text-white">
+                      {t(lang, "fx.carry_forward_btn", "Carry forward to today")}
+                    </Button>
+                  )}
+                  {confirming && src && (
+                    <>
+                      <Button type="button" data-testid={`fx-carry-confirm-${key}`} disabled={saving} onClick={() => handleCarryForward(c, src)} className="h-8 text-[11px] font-black uppercase bg-emerald-600 hover:bg-emerald-700 text-white">
+                        {t(lang, "fx.confirm_carry_forward", "Confirm carry-forward")}
+                      </Button>
+                      <Button type="button" variant="outline" disabled={saving} onClick={() => setCarryTarget(null)} className="h-8 text-[11px] font-black uppercase">
+                        {t(lang, "common.cancel", "Cancel")}
+                      </Button>
+                    </>
+                  )}
+                  <Button type="button" variant="outline" disabled={saving} onClick={() => { setSelectedCountryId(c.id); setRateDate(isoToday()); setCarryTarget(null); }} className="h-8 text-[11px] font-black uppercase">
+                    {t(lang, "fx.enter_today_rate", "Enter today's rate")}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -598,7 +737,7 @@ export function DailyExchangeRateManager() {
               )}
             </div>
 
-            {existingSelectedRate && (
+            {(existingSelectedRate || correctionNeeded) && (
               <label className="block space-y-1 text-xs">
                 <span>{t(lang, "report.reason", "Reason")}</span>
                 <Input required value={correctionReason} onChange={(event) => setCorrectionReason(event.target.value)} />
@@ -635,6 +774,55 @@ export function DailyExchangeRateManager() {
         {/* ── Right Column (8 Cols): Expanded Super Admin Table with Header Search Filters ── */}
         <div className="lg:col-span-8 space-y-3">
           
+          {/* Latest APPROVED rate per country and currency, with its own date. Whole scope: the table filters below never change it. */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-2">
+            <h3 className="text-xs font-black uppercase tracking-wide flex items-center gap-2 text-slate-700 dark:text-slate-200">
+              <Globe className="w-4 h-4 text-blue-600" />
+              {t(lang, "fx.latest_approved_title", "LATEST APPROVED RATE PER COUNTRY")}
+            </h3>
+            <div className="overflow-auto max-h-80">
+              <table className="w-full text-xs text-left border-collapse">
+                <thead className="sticky top-0">
+                  <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black uppercase text-[11px] border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
+                    <Th className="py-2 px-3">{th("COUNTRY NAME")}</Th>
+                    <Th className="py-2 px-3 text-center">{th("CURRENCY")}</Th>
+                    <Th className="py-2 px-3">{t(lang, "fx.col_rate_date", "RATE DATE")}</Th>
+                    <Th className="py-2 px-3 text-right text-emerald-600 dark:text-emerald-400">{th("CREDIT RATE (LOCAL/$)")}</Th>
+                    <Th className="py-2 px-3 text-right text-blue-600 dark:text-blue-400">{th("DEBIT RATE (LOCAL/$)")}</Th>
+                    <Th className="py-2 px-3">{th("STATUS")}</Th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-200">
+                  {countries.map((c) => {
+                    const src = latestById.get(c.id);
+                    const approvedToday = statusById.get(c.id)?.status === "APPROVED";
+                    const base = isBaseCurrency(c.currency_code);
+                    return (
+                      <tr key={c.id} data-testid={`fx-latest-${c.iso2 ?? c.id}`} className="text-[11px]">
+                        <td className="py-2 px-3 font-bold uppercase">{getFlag(c.iso2)} {c.name}</td>
+                        <td className="py-2 px-3 text-center font-mono font-black">{c.currency_code}</td>
+                        <td className="py-2 px-3 font-mono">{base ? "-" : src?.rateDate ?? "-"}</td>
+                        <td className="py-2 px-3 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400">{base ? money(1, 4) : src ? money(src.creditRate, 4) : "-"}</td>
+                        <td className="py-2 px-3 text-right font-mono font-extrabold text-blue-600 dark:text-blue-400">{base ? money(1, 4) : src ? money(src.debitRate, 4) : "-"}</td>
+                        <td className="py-2 px-3 whitespace-nowrap">
+                          {base ? (
+                            <span className="text-slate-500 dark:text-slate-400">{t(lang, "fx.base_currency_short", "Base currency")}</span>
+                          ) : approvedToday ? (
+                            <span className="font-black text-emerald-700 dark:text-emerald-400">{t(lang, "fx.status_today_ok", "Approved for today")}</span>
+                          ) : src ? (
+                            <span className="font-black text-amber-700 dark:text-amber-400">{t(lang, "fx.status_missing_today", "Missing today")}</span>
+                          ) : (
+                            <span className="font-black text-red-700 dark:text-red-400">{t(lang, "fx.latest_approved_none", "No approved rate on file")}</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           {/* Header Filter Controls Bar */}
           <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
@@ -780,7 +968,8 @@ export function DailyExchangeRateManager() {
                                   onClick={() => handleSelectRow(r)}
                                   className={cn(
                                     "cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-850",
-                                    isSelected && "bg-blue-50/50 dark:bg-blue-950/30"
+                                    isSelected && "bg-blue-50/50 dark:bg-blue-950/30",
+                                    r.superseded_at && "opacity-60"
                                   )}
                                 >
                                   <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-400 text-[11px]">
@@ -803,6 +992,11 @@ export function DailyExchangeRateManager() {
                                   </td>
                                   <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600 dark:text-slate-300">
                                     {r.rate_date || isoToday()} {r.rate_time || "09:00 AM"}
+                                    {r.superseded_at ? (
+                                      <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300 text-[10px] font-black uppercase">{t(lang, "fx.status_superseded", "Superseded")}</span>
+                                    ) : (
+                                      <span className="ml-2 inline-flex px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 text-[10px] font-black uppercase">{t(lang, "fx.status_active", "Active")}</span>
+                                    )}
                                   </td>
                                   <td className="py-2.5 px-3 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400 text-[11px]">
                                     {money(r.credit_rate || r.selling_rate, 2)} {currencyCode}
