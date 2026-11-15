@@ -31,7 +31,17 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { ContactTypeKey } from "@/features/contact-types/contact-type-api";
 import { BranchFinalReview, type BranchReviewDocumentItem, type BranchUserPermissionItem } from "./branch-final-review";
 import { CITY_BRANCH_FIELD_KEYS, describeCityBranchServerError } from "@/features/branches/lib/city-branch-server-error";
-import { loadCompanyOwnerViews, emptyOwnerView, type CompanyView, type OwnerView } from "@/features/branches/lib/city-branch-owner-company";
+import {
+  loadCompanyOwnerViews,
+  loadCompanyView,
+  loadOwnerView,
+  loadCompanyBankCount,
+  normalizeCompanyRecord,
+  normalizeOwnerRecord,
+  emptyOwnerView,
+  type CompanyView,
+  type OwnerView
+} from "@/features/branches/lib/city-branch-owner-company";
 import { normalizeCityBranchDetail, documentTypeLabel, formatFileSize, type CityBranchDetail } from "@/features/branches/lib/city-branch-detail";
 import { domainLabel, roleLabel, accessProfileLabel } from "@/features/branches/lib/city-branch-report";
 import { evaluateCountryBranchChecklist } from "@/features/branches/lib/country-branch-checklist";
@@ -229,6 +239,11 @@ function CountryBranchSetupContent() {
   const [ownerCustomerId, setOwnerCustomerId] = useState<string | null>(null);
   const [ownerProfileId, setOwnerProfileId] = useState<string | null>(null);
   const [ownerView, setOwnerView] = useState<OwnerView | null>(null);
+  // The company and owner saved with the record (from the detail response); used when the live loads are not there.
+  const [savedCompany, setSavedCompany] = useState<CompanyView | null>(null);
+  const [savedOwner, setSavedOwner] = useState<OwnerView | null>(null);
+  // Set once the user changes the location; cleared when a saved record is applied.
+  const locationTouchedRef = useRef(false);
   const [linkedRecordFailed, setLinkedRecordFailed] = useState(false);
 
   const [existingMainBranch, setExistingMainBranch] = useState<CountryBranchRow | null>(null);
@@ -273,28 +288,27 @@ function CountryBranchSetupContent() {
   }, [locationMeta.country]);
 
   // Company and owner: one loader for the form, the live preview, the checklist and the print.
+  // The company, the owner and the bank count are loaded independently: one failed request must not clear the others.
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const views = await loadCompanyOwnerViews({ companyId, ownerCustomerId });
-        if (cancelled) return;
-        setCompanyView(views.company);
-        setCompanyBankCount(views.companyBankCount);
-        setOwnerView(views.owner);
-        setLinkedRecordFailed(false);
-        if (views.owner?.name) setOwnerName(views.owner.name);
-        // A company that names its owner fills the owner only when no owner is chosen yet.
-        if (views.company?.ownerPersonId && !ownerCustomerId && !ownerProfileId) {
-          setOwnerId(views.company.ownerPersonId);
-          setOwnerCustomerId(views.company.ownerPersonId);
-        }
-      } catch {
-        if (cancelled) return;
-        setCompanyView(null);
-        setCompanyBankCount(0);
-        setOwnerView(null);
-        setLinkedRecordFailed(true);
+      const [company, owner, bankCount] = await Promise.allSettled([
+        loadCompanyView(companyId),
+        loadOwnerView(ownerCustomerId ?? ""),
+        loadCompanyBankCount(companyId)
+      ]);
+      if (cancelled) return;
+      setCompanyView(company.status === "fulfilled" ? company.value : null);
+      setOwnerView(owner.status === "fulfilled" ? owner.value : null);
+      setCompanyBankCount(bankCount.status === "fulfilled" ? bankCount.value : 0);
+      setLinkedRecordFailed(
+        company.status === "rejected" || owner.status === "rejected" || bankCount.status === "rejected"
+      );
+      if (owner.status === "fulfilled" && owner.value?.name) setOwnerName(owner.value.name);
+      // A company that names its owner fills the owner only when no owner is chosen yet.
+      if (company.status === "fulfilled" && company.value?.ownerPersonId && !ownerCustomerId && !ownerProfileId) {
+        setOwnerId(company.value.ownerPersonId);
+        setOwnerCustomerId(company.value.ownerPersonId);
       }
     })();
     return () => {
@@ -308,6 +322,8 @@ function CountryBranchSetupContent() {
     if (!isUuid(editingCountryBranchId)) {
       setSavedDetail(null);
       setDetailFailed("");
+      setSavedCompany(null);
+      setSavedOwner(null);
       return;
     }
     (async () => {
@@ -327,6 +343,10 @@ function CountryBranchSetupContent() {
         const detail = normalizeCityBranchDetail(json.detail);
         setSavedDetail(detail);
         setDetailFailed(detail ? "" : json.detailError || "NO_DATABASE");
+        // The saved company and owner rows, read by the server from their tables (same shape as the company / customer APIs).
+        const saved = (json.detail ?? null) as { company?: unknown; owner?: unknown; ownerSource?: string } | null;
+        setSavedCompany(normalizeCompanyRecord(saved?.company ?? null));
+        setSavedOwner(normalizeOwnerRecord(saved?.owner ?? null, saved?.ownerSource === "profile" ? "profile" : "customer"));
       } catch {
         if (cancelled) return;
         setSavedDetail(null);
@@ -338,10 +358,23 @@ function CountryBranchSetupContent() {
     };
   }, [editingCountryBranchId]);
 
-  const countryName = locationMeta.country?.name || "";
-  const zip = locationMeta.area?.postal_code ?? locationMeta.city?.zip_code ?? "";
+  // Country, state and city names. The location lists fill locationMeta when the location step is on screen; the review
+  // step does not render it, and a saved record names these places by id. So each name falls back to the saved
+  // record's own location names, but only while the id on the form still equals the saved id.
+  const savedLoc = savedDetail?.location ?? null;
+  const savedCountryMatch = Boolean(existingMainBranch) && location.countryId === existingMainBranch?.country_id;
+  const savedStateMatch = Boolean(existingMainBranch?.state_province_id) && location.stateProvinceId === existingMainBranch?.state_province_id;
+  const savedCityMatch = Boolean(existingMainBranch?.city_id) && location.cityId === existingMainBranch?.city_id;
+  const countryName = locationMeta.country?.name || (savedCountryMatch ? savedLoc?.countryName ?? "" : "");
+  const countryIso2 = locationMeta.country?.iso2 || (savedCountryMatch ? savedLoc?.countryIso2 ?? "" : "");
+  const countryIso3 = locationMeta.country?.iso3 || (savedCountryMatch ? savedLoc?.countryIso3 ?? "" : "");
+  const stateName = locationMeta.state?.name || (savedStateMatch ? savedLoc?.stateName ?? "" : "");
+  const districtName = locationMeta.district?.name || "";
+  const cityName = locationMeta.city?.name || (savedCityMatch ? savedLoc?.cityName ?? "" : "");
+  const cityCode = locationMeta.city?.code || (savedCityMatch ? savedLoc?.cityCode ?? "" : "");
+  const zip = locationMeta.area?.postal_code ?? locationMeta.city?.zip_code ?? (savedCityMatch ? savedLoc?.cityZip ?? "" : "");
   const previewCountry = countryName || "-";
-  const previewLocation = [locationMeta.state?.name, locationMeta.city?.name, locationMeta.area?.name, zip].filter(Boolean).join(" / ") || "-";
+  const previewLocation = [stateName, cityName, locationMeta.area?.name, zip].filter(Boolean).join(" / ") || "-";
   // The country name arrives with the location list; until then a saved record shows its own saved name.
   const resolvedBranchName = countryName
     ? operationalDomain === "shipping"
@@ -373,8 +406,13 @@ function CountryBranchSetupContent() {
   );
 
   // Owner as shown everywhere: the loaded customer record, or the name for a non-customer owner.
+  // Company and owner as shown everywhere: the live load for the selected id, else the one saved with the record, else
+  // the name alone. A value the saved record does not have stays empty.
+  const companyForView: CompanyView | null = companyView ?? (savedCompany && savedCompany.id === companyId ? savedCompany : null);
+  const savedOwnerMatches = Boolean(savedOwner) && (savedOwner?.id === ownerCustomerId || savedOwner?.id === ownerProfileId);
   const ownerForView: OwnerView | null =
     ownerView ??
+    (savedOwnerMatches ? savedOwner : null) ??
     (ownerCustomerId || ownerProfileId || ownerName.trim()
       ? emptyOwnerView(ownerName.trim(), ownerProfileId ? "profile" : "customer")
       : null);
@@ -400,15 +438,15 @@ function CountryBranchSetupContent() {
       updatedAt: existingMainBranch?.updated_at ?? "",
       createdByName: savedDetail?.createdByName ?? "",
       country: countryName,
-      countryIso2: locationMeta.country?.iso2 ?? "",
-      stateProvince: locationMeta.state?.name ?? "",
-      district: locationMeta.district?.name ?? "",
-      city: locationMeta.city?.name ?? "",
+      countryIso2,
+      stateProvince: stateName,
+      district: districtName,
+      city: cityName,
       fullAddress: fullAddress.trim(),
       contacts: contactsPayload,
       branchEmail: branchEmail.trim(),
       ownerName: ownerForView?.name ?? ownerName,
-      company: companyView,
+      company: companyForView,
       owner: ownerForView,
       permissionTemplate,
       permissionGrants
@@ -421,10 +459,10 @@ function CountryBranchSetupContent() {
       tt,
       currency,
       locationMeta.country?.currency_code,
-      locationMeta.country?.iso2,
-      locationMeta.state?.name,
-      locationMeta.district?.name,
-      locationMeta.city?.name,
+      countryIso2,
+      stateName,
+      districtName,
+      cityName,
       operationalDomain,
       savedDetail?.createdByName,
       countryName,
@@ -433,7 +471,7 @@ function CountryBranchSetupContent() {
       branchEmail,
       ownerForView,
       ownerName,
-      companyView,
+      companyForView,
       permissionTemplate,
       permissionGrants
     ]
@@ -541,7 +579,7 @@ function CountryBranchSetupContent() {
         title: tt("cnbs.sec_location_info", "Location Information"),
         items: [
           { label: tt("cnbs.country", "Country"), value: previewCountry },
-          { label: tt("cnbs.country_code", "Country Code"), value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "" },
+          { label: tt("cnbs.country_code", "Country Code"), value: countryIso2 || countryIso3 || "" },
           { label: tt("cnbs.location", "Location"), value: previewLocation === "-" ? "" : previewLocation },
           { label: tt("cnbs.address", "Address"), value: fullAddress }
         ]
@@ -549,11 +587,11 @@ function CountryBranchSetupContent() {
       {
         title: tt("cnbs.sec_company_info", "Company Information"),
         items: [
-          { label: tt("cnbs.company_name", "Company Name"), value: companyView?.name || "" },
-          { label: tt("cnbs.company_code", "Company Code"), value: companyView?.companyCode || "" },
-          { label: tt("cnbs.legal_name", "Legal Name"), value: companyView?.legalName || "" },
-          { label: tt("cbs.pr_tax_no", "Tax / NTN No."), value: companyView?.taxNumber || "" },
-          { label: tt("cnbs.base_currency", "Base Currency"), value: companyView?.baseCurrency || "" }
+          { label: tt("cnbs.company_name", "Company Name"), value: companyForView?.name || "" },
+          { label: tt("cnbs.company_code", "Company Code"), value: companyForView?.companyCode || "" },
+          { label: tt("cnbs.legal_name", "Legal Name"), value: companyForView?.legalName || "" },
+          { label: tt("cbs.pr_tax_no", "Tax / NTN No."), value: companyForView?.taxNumber || "" },
+          { label: tt("cnbs.base_currency", "Base Currency"), value: companyForView?.baseCurrency || "" }
         ]
       },
       {
@@ -584,14 +622,14 @@ function CountryBranchSetupContent() {
     [
       tt,
       branchCode,
-      companyView,
+      companyForView,
       contactItems,
       contactsPayload,
       currency,
       existingMainBranch,
       fullAddress,
-      locationMeta.country?.iso2,
-      locationMeta.country?.iso3,
+      countryIso2,
+      countryIso3,
       ownerForView,
       permissionGrants,
       permissionTemplate,
@@ -630,6 +668,7 @@ function CountryBranchSetupContent() {
     const domain = (row.operational_domain === "shipping" ? "shipping" : "business") as "business" | "shipping";
     setEditingCountryBranchId(row.id);
     setExistingMainBranch(row);
+    locationTouchedRef.current = false;
     setOperationalDomain(domain);
     setBranchCategory(domain === "shipping" ? "clearing_agent" : "business");
     setLocation({
@@ -752,6 +791,20 @@ function CountryBranchSetupContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId]);
 
+  // Safety net for the saved location: when a saved record is on the form and nothing the user did has changed the
+  // location, the form's country, state and city must be the saved ids. If they are ever empty, restore them.
+  useEffect(() => {
+    if (!existingMainBranch || !isUuid(editingCountryBranchId)) return;
+    if (locationTouchedRef.current || location.countryId) return;
+    setLocation({
+      countryId: existingMainBranch.country_id,
+      stateProvinceId: existingMainBranch.state_province_id ?? "",
+      districtId: existingMainBranch.district_id ?? "",
+      cityId: existingMainBranch.city_id ?? "",
+      areaId: ""
+    });
+  }, [existingMainBranch, editingCountryBranchId, location.countryId]);
+
   function emailReport() {
     if (typeof window === "undefined") return;
     window.location.href = buildMailtoHref("Country Main Branch Report", reportRows);
@@ -823,6 +876,7 @@ function CountryBranchSetupContent() {
   }
 
   async function onLocationChange(next: LocationHierarchyValue, meta: LocationHierarchyMeta) {
+    locationTouchedRef.current = true;
     const isCountryChanged = next.countryId !== location.countryId;
     setLocation(next);
     setLocationMeta(meta);
@@ -1064,10 +1118,10 @@ function CountryBranchSetupContent() {
           branchType={tt("branch.report_country_main_branch", "Country Main Branch")}
           category={branchCategory === "clearing_agent" ? tt("cbs.category_clearing_agent", "Clearing Agent") : tt("cbs.category_business", "Business Branch")}
           country={countryName}
-          stateProvince={locationMeta.state?.name || ""}
-          city={locationMeta.city?.name || ""}
+          stateProvince={stateName}
+          city={cityName}
           fullAddress={fullAddress.trim()}
-          companyName={companyView?.name || ""}
+          companyName={companyForView?.name || ""}
           businessDomain={operationalDomain === "business" ? domainLabel("business", tt) : "—"}
           shippingDomain={operationalDomain === "shipping" ? domainLabel("shipping", tt) : "—"}
           currency={currency || locationMeta.country?.currency_code?.toUpperCase() || ""}
@@ -1579,30 +1633,6 @@ function CountryBranchSetupContent() {
           </div>
         )}
 
-        {activeStep === 9 && existingMainBranch && !editingCountryBranchId && (
-          <div className="rounded-xl border border-amber-300 bg-amber-50/90 p-4 shadow-sm text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
-            <div className="flex items-center gap-2 font-bold text-sm">
-              <span className="text-base">⚠️</span>
-              <span>{tt("cnbs.existing_branch_alert_title", "Country Main Branch Already Exists")}</span>
-            </div>
-            <p className="mt-1.5 text-xs leading-relaxed">
-              A Main Branch already exists for {previewCountry}: <strong>{existingMainBranch.name}</strong> ({existingMainBranch.code}).
-              Under system rules, each country can have only <strong>1 Country Main Branch</strong>. All other offices in this country must be created as <strong>City Branches</strong>.
-            </p>
-            <div className="mt-3 flex items-center gap-3">
-              <Button
-                type="button"
-                size="sm"
-                className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs h-8 px-4"
-                onClick={() => beginEditCountryBranch(existingMainBranch)}
-              >
-                <Pencil className="h-3.5 w-3.5 mr-1.5" aria-hidden />
-                {t(lang, "cbs.edit_existing_branch")}
-              </Button>
-            </div>
-          </div>
-        )}
-
         {activeStep === 9 && banner && (
           <div
             className={
@@ -1641,11 +1671,11 @@ function CountryBranchSetupContent() {
               {
                 title: tt("cnbs.step1_company_owner", "Step 1 - Company & Owner"),
                 rows: [
-                  { label: tt("cnbs.company_name", "Company Name"), value: companyView?.name || "-" },
-                  { label: tt("cnbs.company_code", "Company Code"), value: companyView?.companyCode || "-" },
-                  { label: tt("cnbs.legal_name", "Legal Name"), value: companyView?.legalName || "-" },
-                  { label: tt("cbs.pr_tax_no", "Tax / NTN No."), value: companyView?.taxNumber || "-" },
-                  { label: tt("cnbs.base_currency", "Base Currency"), value: companyView?.baseCurrency || "-" },
+                  { label: tt("cnbs.company_name", "Company Name"), value: companyForView?.name || "-" },
+                  { label: tt("cnbs.company_code", "Company Code"), value: companyForView?.companyCode || "-" },
+                  { label: tt("cnbs.legal_name", "Legal Name"), value: companyForView?.legalName || "-" },
+                  { label: tt("cbs.pr_tax_no", "Tax / NTN No."), value: companyForView?.taxNumber || "-" },
+                  { label: tt("cnbs.base_currency", "Base Currency"), value: companyForView?.baseCurrency || "-" },
                   { label: tt("cnbs.owner", "Owner"), value: ownerForView?.name || ownerName || "-" },
                   { label: tt("cnbs.owner_code", "Owner Code"), value: ownerForView?.code || "-" },
                   { label: tt("cnbs.source", "Source"), value: ownerForView ? ownerForView.source : "-" }
@@ -1655,13 +1685,13 @@ function CountryBranchSetupContent() {
                 title: tt("cnbs.step2_location", "Step 2 - Location"),
                 rows: [
                   { label: tt("cnbs.country", "Country"), value: previewCountry || "-" },
-                  { label: tt("cnbs.country_code", "Country Code"), value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
-                  { label: tt("cnbs.state", "State"), value: locationMeta.state?.name || "-" },
+                  { label: tt("cnbs.country_code", "Country Code"), value: countryIso2 || countryIso3 || "-" },
+                  { label: tt("cnbs.state", "State"), value: stateName || "-" },
                   { label: tt("cnbs.state_code", "State Code"), value: locationMeta.state?.code || "-" },
-                  { label: tt("cnbs.district", "District"), value: locationMeta.district?.name || "-" },
-                  { label: tt("cnbs.city", "City"), value: locationMeta.city?.name || "-" },
-                  { label: tt("cnbs.city_code", "City Code"), value: locationMeta.city?.code || "-" },
-                  { label: tt("cnbs.branch_name", "Branch Name"), value: locationMeta.country?.name ? `${locationMeta.country.name} Main Branch` : "-" },
+                  { label: tt("cnbs.district", "District"), value: districtName || "-" },
+                  { label: tt("cnbs.city", "City"), value: cityName || "-" },
+                  { label: tt("cnbs.city_code", "City Code"), value: cityCode || "-" },
+                  { label: tt("cnbs.branch_name", "Branch Name"), value: countryName ? `${countryName} Main Branch` : "-" },
                   { label: tt("cnbs.branch_code", "Branch Code"), value: branchCode || "-" },
                   { label: tt("cnbs.zip_postal", "Zip / Postal Code"), value: zip || "-" }
                 ]

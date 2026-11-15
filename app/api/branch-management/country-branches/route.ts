@@ -12,9 +12,18 @@ import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { locationsRepository } from "@/lib/repositories/locations-repository";
+import { t } from "@/lib/i18n/ui";
 
 function formatError(message: string, _isSuperAdmin?: boolean) {
   return message;
+}
+
+/** Text for an unexpected error that carries no message, in the requester's language. */
+async function fallbackErrorText(kind: "load" | "server"): Promise<string> {
+  const lang = await getRequestLanguage().catch(() => "en" as const);
+  return kind === "load"
+    ? t(lang, "cnbs.err_load_failed", "Failed to load country branches.")
+    : t(lang, "cnbs.err_server_error", "Server error");
 }
 
 function isUuid(value: string) {
@@ -136,7 +145,66 @@ async function readSavedBranch(id: string) {
   });
 }
 
-/** Saved-record detail for the Country Main Branch page: location names, the users assigned directly to this branch, linked documents, creator. */
+/**
+ * The saved company and owner of one country branch, read from the company and customer tables, in the same
+ * snake_case shape the company and customer APIs return. A NULL column stays NULL: nothing is filled in.
+ */
+async function loadSavedCompanyAndOwner(sql: any, branchId: string) {
+  const [branch] = (await sql`
+    select company_id, owner_customer_id, owner_profile_id
+      from public.country_branches
+     where id = ${branchId}::uuid
+     limit 1
+  `) as any[];
+
+  let company: Record<string, unknown> | null = null;
+  if (branch?.company_id) {
+    const [row] = (await sql`
+      select c.id, c.name, c.legal_name, c.trade_name, c.company_code, c.base_currency, c.business_type,
+             c.company_type, c.company_status, c.registration_number, c.tax_number, c.owner_person_id,
+             c.address, c.contacts,
+             cnt.name as country_name, sp.name as state_name, ct.name as city_name
+        from public.companies c
+        left join public.countries cnt on cnt.id = c.country_id
+        left join public.states_provinces sp on sp.id = c.state_province_id
+        left join public.cities ct on ct.id = c.city_id
+       where c.id = ${branch.company_id}::uuid and c.deleted_at is null
+       limit 1
+    `) as any[];
+    company = row ?? null;
+  }
+
+  let owner: Record<string, unknown> | null = null;
+  let ownerSource: "customer" | "profile" = "customer";
+  if (branch?.owner_customer_id) {
+    const [row] = (await sql`
+      select cu.id, cu.person_code, cu.customer_name, cu.company_name, cu.contact_person, cu.mobile,
+             cu.whatsapp, cu.email, cu.address,
+             cnt.name as country_name, sp.name as state_province_name, d.name as district_name, ct.name as city_name
+        from public.customers cu
+        left join public.countries cnt on cnt.id = cu.country_id
+        left join public.states_provinces sp on sp.id = cu.state_province_id
+        left join public.districts d on d.id = cu.district_id
+        left join public.cities ct on ct.id = cu.city_id
+       where cu.id = ${branch.owner_customer_id}::uuid and cu.deleted_at is null
+       limit 1
+    `) as any[];
+    owner = row ?? null;
+  } else if (branch?.owner_profile_id) {
+    const [profile] = (await sql`
+      select id, full_name, user_code
+        from public.profiles
+       where id = ${branch.owner_profile_id}::uuid and deleted_at is null
+       limit 1
+    `) as any[];
+    ownerSource = "profile";
+    owner = profile ? { id: profile.id, person_code: profile.user_code, customer_name: profile.full_name } : null;
+  }
+
+  return { company, owner, ownerSource };
+}
+
+/** Saved-record detail for the Country Main Branch page: location names, the saved company and owner, the users assigned directly to this branch, linked documents, creator. */
 async function loadCountryBranchDetail(row: { id: string }) {
   return withLocalPg(async (sql) => {
     const locRows = (await sql`
@@ -179,7 +247,11 @@ async function loadCountryBranchDetail(row: { id: string }) {
        order by created_at desc
     `) as any[];
 
+    const saved = await loadSavedCompanyAndOwner(sql, row.id);
     return {
+      company: saved.company,
+      owner: saved.owner,
+      ownerSource: saved.ownerSource,
       location: {
         countryName: loc.country_name ?? "",
         countryIso2: loc.country_iso2 ?? "",
@@ -296,7 +368,7 @@ export async function GET(request: Request) {
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-    const message = error instanceof Error ? error.message : "Failed to load country branches.";
+    const message = error instanceof Error ? error.message : await fallbackErrorText("load");
     return NextResponse.json({ error: message, countryBranches: [] }, { status: 500 });
   }
 }
@@ -532,7 +604,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     const isSuperAdmin = typeof session !== "undefined" && (session as any)?.isSuperAdmin;
-    const msg = error instanceof Error ? error.message : "Server error";
+    const msg = error instanceof Error ? error.message : await fallbackErrorText("server");
     return NextResponse.json({ error: formatError(msg, isSuperAdmin) }, { status: 500 });
   }
 }
@@ -687,7 +759,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     const isSuperAdmin = typeof session !== "undefined" && (session as any)?.isSuperAdmin;
-    const msg = error instanceof Error ? error.message : "Server error";
+    const msg = error instanceof Error ? error.message : await fallbackErrorText("server");
     return NextResponse.json({ error: formatError(msg, isSuperAdmin) }, { status: 500 });
   }
 }

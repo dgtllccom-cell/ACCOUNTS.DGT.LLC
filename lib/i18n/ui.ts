@@ -6375,6 +6375,7 @@ export type UiKey =
   | "cbs.step3_section_title" | "cbs.company_name_field" | "cbs.search_company_ph" | "cbs.search_owner_ph"
   | "cbs.step7_title2" | "cbs.step7_subtitle" | "cbs.permissions_active" | "cbs.step7_note"
   | "cbs.step5_title2" | "cbs.download_pdf" | "cbs.step6_title2" | "cbs.step6_desc"
+  | "cnbs.err_load_failed" | "cnbs.err_server_error"
   | "cnbs.err_country_required" | "cnbs.err_state_city_required" | "cnbs.err_branch_code_required" | "cnbs.err_branch_email_required" | "cnbs.err_permissions_required" | "cnbs.available_in"
   | "cnbs.record_not_found" | "cnbs.err_duplicate_branch"
   | "cnbs.saved_ok" | "cnbs.updated_ok" | "cnbs.save_failed" | "cnbs.existing_loaded" | "cnbs.country_no_currency" | "cnbs.request_changes_unavailable"
@@ -16394,6 +16395,8 @@ const en: Dict = {
   "cbs.download_pdf": "Download PDF Summary",
   "cbs.step6_title2": "Step 6 - Branch Documents",
   "cbs.step6_desc": "Branch documents are optional. Existing document workflow remains unchanged and can be attached where applicable.",
+  "cnbs.err_load_failed": "Failed to load country branches.",
+  "cnbs.err_server_error": "Server error",
   "cnbs.err_country_required": "Please select a valid country from Location Settings.",
   "cnbs.err_state_city_required": "Please select State/Province and City from Location Settings.",
   "cnbs.err_branch_code_required": "Branch Code is required.",
@@ -44339,6 +44342,8 @@ const ur: Dict = {
   "cbs.download_pdf": "PDF خلاصہ ڈاؤن لوڈ کریں",
   "cbs.step6_title2": "مرحلہ 6 - برانچ دستاویزات",
   "cbs.step6_desc": "برانچ دستاویزات اختیاری ہیں۔ موجودہ دستاویز ورک فلو غیر تبدیل شدہ رہتا ہے اور جہاں قابل اطلاق ہو منسلک کیا جا سکتا ہے۔",
+  "cnbs.err_load_failed": "کنٹری برانچز لوڈ نہیں ہو سکیں۔",
+  "cnbs.err_server_error": "سرور کی خرابی",
   "cnbs.err_country_required": "لوکیشن سیٹنگز سے درست ملک منتخب کریں۔",
   "cnbs.err_state_city_required": "لوکیشن سیٹنگز سے صوبہ/ریاست اور شہر منتخب کریں۔",
   "cnbs.err_branch_code_required": "برانچ کوڈ درکار ہے۔",
@@ -70880,6 +70885,8 @@ const ar: Dict = {
   "cbs.download_pdf": "تنزيل ملخص PDF",
   "cbs.step6_title2": "الخطوة 6 - مستندات الفرع",
   "cbs.step6_desc": "مستندات الفرع اختيارية. سير عمل المستندات الحالي يبقى دون تغيير ويمكن إرفاقه عند الاقتضاء.",
+  "cnbs.err_load_failed": "تعذّر تحميل فروع الدول.",
+  "cnbs.err_server_error": "خطأ في الخادم",
   "cnbs.err_country_required": "يرجى اختيار دولة صالحة من إعدادات الموقع.",
   "cnbs.err_state_city_required": "يرجى اختيار الولاية/المحافظة والمدينة من إعدادات الموقع.",
   "cnbs.err_branch_code_required": "رمز الفرع مطلوب.",
@@ -97468,6 +97475,8 @@ const fa: Dict = {
   "cbs.download_pdf": "دانلود خلاصه PDF",
   "cbs.step6_title2": "مرحله 6 - مدارک شعبه",
   "cbs.step6_desc": "مدارک شعبه اختیاری هستند. جریان کار مدارک موجود بدون تغییر باقی می‌ماند و در صورت لزوم قابل پیوست است.",
+  "cnbs.err_load_failed": "بارگذاری شعبه‌های کشور انجام نشد.",
+  "cnbs.err_server_error": "خطای سرور",
   "cnbs.err_country_required": "لطفاً یک کشور معتبر را از تنظیمات مکان انتخاب کنید.",
   "cnbs.err_state_city_required": "لطفاً استان/ایالت و شهر را از تنظیمات مکان انتخاب کنید.",
   "cnbs.err_branch_code_required": "کد شعبه الزامی است.",
@@ -124050,6 +124059,8 @@ const ps: Dict = {
   "cbs.download_pdf": "د PDF لنډیز ډاونلوډ کول",
   "cbs.step6_title2": "پړاو 6 - د برانچ اسناد",
   "cbs.step6_desc": "د برانچ اسناد اختیاري دي. موجوده د اسنادو کاري بهیر بدون بدلون پاتې کیږي او په اړونده صورت کې ضمیمه کیدی شي.",
+  "cnbs.err_load_failed": "د هیواد څانګې ونه پورته شوې.",
+  "cnbs.err_server_error": "د سرور تېروتنه",
   "cnbs.err_country_required": "د موقعیت تنظیماتو څخه سم هیواد وټاکئ.",
   "cnbs.err_state_city_required": "د موقعیت تنظیماتو څخه ایالت/ولایت او ښار وټاکئ.",
   "cnbs.err_branch_code_required": "د څانګې کوډ اړین دی.",
