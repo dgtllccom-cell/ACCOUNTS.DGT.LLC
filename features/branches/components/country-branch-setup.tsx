@@ -1,5 +1,4 @@
 "use client";
-import { translateHeader } from "@/lib/i18n/table-headers";
 
 import { Suspense, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
@@ -23,14 +22,27 @@ import { BranchReportActionsMenu } from "@/features/branches/components/branch-r
 import { downloadCsv } from "@/features/branches/components/branch-report-export";
 import { PermissionAssignmentSection } from "@/features/users/components/permission-assignment-section";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
-import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { getPermissionKeysForTemplate } from "@/lib/permissions/catalog";
 import { openBranchProfileReport } from "@/lib/reports/build-branch-profile-report";
+import type { BranchReportData } from "@/lib/reports/open-a4-report-window";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { ContactTypeKey } from "@/features/contact-types/contact-type-api";
-import { BranchFinalReview } from "./branch-final-review";
+import { BranchFinalReview, type BranchReviewDocumentItem, type BranchUserPermissionItem } from "./branch-final-review";
+import { CITY_BRANCH_FIELD_KEYS, describeCityBranchServerError } from "@/features/branches/lib/city-branch-server-error";
+import { loadCompanyOwnerViews, emptyOwnerView, type CompanyView, type OwnerView } from "@/features/branches/lib/city-branch-owner-company";
+import { normalizeCityBranchDetail, documentTypeLabel, formatFileSize, type CityBranchDetail } from "@/features/branches/lib/city-branch-detail";
+import { domainLabel, roleLabel, accessProfileLabel } from "@/features/branches/lib/city-branch-report";
+import { evaluateCountryBranchChecklist } from "@/features/branches/lib/country-branch-checklist";
+import {
+  buildCountryBranchDrawerData,
+  buildCountryBranchProfileData,
+  buildCountryBranchRows,
+  countryBranchContact,
+  type CountryBranchReportInput
+} from "@/features/branches/lib/country-branch-report";
+import { COUNTRY_DEFAULT_PERMISSION_TEMPLATE, countryGrantsForForm } from "@/features/branches/lib/country-branch-grants";
 
 type CountryBranchRow = {
   id: string;
@@ -53,48 +65,23 @@ type CountryBranchRow = {
   district_id?: string | null;
   city_id?: string | null;
   address?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  whatsapp_number?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
 };
 
 type ContactRow = { type: string; value: string };
-type CompanyRow = { id: string; name: string; legal_name: string | null; base_currency: string; owner_person_id?: string | null };
-type OwnerCustomerRow = {
-  id: string;
-  customer_name: string;
-  person_code?: string | null;
-  company_name: string | null;
-  contact_person: string | null;
-  mobile: string | null;
-  whatsapp: string | null;
-  email: string | null;
-  address: string | null;
-  country_name?: string | null;
-  city_name?: string | null;
-};
-type OwnerProfileRow = {
-  userId: string;
-  userCode: string;
-  fullName: string;
-  countryName: string;
-  branchName: string;
-  branchType: string;
-  role: string;
-  permissions: string[];
-};
-type OwnerPreview = {
-  source: "customer" | "profile";
-  code: string;
-  name: string;
-  companyName: string;
-  contactPerson: string;
-  mobile: string;
-  whatsapp: string;
-  email: string;
-  address: string;
-  country: string;
-  branch: string;
-  role: string;
+
+type SaveResponse = {
+  id?: string;
+  code?: string;
+  name?: string;
+  status?: string;
+  updatedAt?: string | null;
+  warnings?: string[];
+  domainAccess?: { business: boolean; shipping: boolean } | null;
 };
 
 const contactTypeOptions = ["Mobile", "Phone", "WhatsApp", "Email", "Fax"] as const;
@@ -121,7 +108,7 @@ function normalizeSearch(value: string) {
   return value
     .toLowerCase()
     .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -171,6 +158,39 @@ function asIso3(country: LocationCountry | null) {
   return iso.slice(0, 3).toUpperCase() || "CTR";
 }
 
+/** Contact rows from the saved JSON list. */
+function normalizeContactRows(value: unknown): ContactRow[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((row) => {
+      const item = row as { type?: string; value?: string };
+      const type = String(item.type ?? "").trim();
+      const contactValue = String(item.value ?? "").trim();
+      return type && contactValue ? { type, value: contactValue } : null;
+    })
+    .filter((row): row is ContactRow => Boolean(row));
+}
+
+/**
+ * Contacts for the form. A row whose JSON contact list is empty still carries the phone / WhatsApp columns;
+ * those are loaded too, so a save does not erase them.
+ */
+function contactsForForm(row: CountryBranchRow): ContactRow[] {
+  const fromJson = normalizeContactRows(row.contacts);
+  if (fromJson.length) return fromJson;
+  const legacy: ContactRow[] = [];
+  if (row.phone) legacy.push({ type: "Phone", value: row.phone });
+  if (row.whatsapp_number) legacy.push({ type: "WhatsApp", value: row.whatsapp_number });
+  return legacy;
+}
+
+function shortDate(iso: string | null | undefined) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
 function CountryBranchSetupContent() {
   const lang = useActiveLanguage();
   const tt = useCallback((key: string, fallback: string) => t(lang as never, key as never, fallback), [lang]);
@@ -178,7 +198,7 @@ function CountryBranchSetupContent() {
   const editId = searchParams.get("editId") ?? "";
   const stepParam = searchParams.get("step");
   const parsedStep = stepParam ? parseInt(stepParam, 10) : 1;
-  const [drawerBranchData, setDrawerBranchData] = useState<any>(null);
+  const [drawerBranchData, setDrawerBranchData] = useState<BranchReportData | null>(null);
   const [activeStep, setActiveStep] = useState(() =>
     Number.isFinite(parsedStep) && parsedStep >= 1 && parsedStep <= 9 ? parsedStep : 1
   );
@@ -202,29 +222,38 @@ function CountryBranchSetupContent() {
   const [fullAddress, setFullAddress] = useState("");
 
   const [companyId, setCompanyId] = useState("");
-  const [company, setCompany] = useState<CompanyRow | null>(null);
+  const [companyView, setCompanyView] = useState<CompanyView | null>(null);
+  const [companyBankCount, setCompanyBankCount] = useState(0);
   const [ownerName, setOwnerName] = useState("");
   const [ownerId, setOwnerId] = useState("");
   const [ownerCustomerId, setOwnerCustomerId] = useState<string | null>(null);
   const [ownerProfileId, setOwnerProfileId] = useState<string | null>(null);
-  const [ownerPreview, setOwnerPreview] = useState<OwnerPreview | null>(null);
+  const [ownerView, setOwnerView] = useState<OwnerView | null>(null);
+  const [linkedRecordFailed, setLinkedRecordFailed] = useState(false);
 
   const [existingMainBranch, setExistingMainBranch] = useState<CountryBranchRow | null>(null);
   const [editingCountryBranchId, setEditingCountryBranchId] = useState("");
+  const [savedDetail, setSavedDetail] = useState<CityBranchDetail | null>(null);
+  const [detailFailed, setDetailFailed] = useState("");
+  const [grantsPrefilled, setGrantsPrefilled] = useState(false);
   const [countryBranches, setCountryBranches] = useState<CountryBranchRow[]>([]);
   const [countryBranchSearch, setCountryBranchSearch] = useState("");
   const [branchType, setBranchType] = useState("");
   const [operationalDomain, setOperationalDomain] = useState<"business" | "shipping">("business");
   const [branchCategory, setBranchCategory] = useState<"business" | "clearing_agent">("business");
   const [branchCode, setBranchCode] = useState("");
-  const [permissionTemplate, setPermissionTemplate] = useState("country-standard");
-  const [permissionGrants, setPermissionGrants] = useState<string[]>(() => getPermissionKeysForTemplate("country-standard"));
+  const [permissionTemplate, setPermissionTemplate] = useState(COUNTRY_DEFAULT_PERMISSION_TEMPLATE);
+  const [permissionGrants, setPermissionGrants] = useState<string[]>(() =>
+    getPermissionKeysForTemplate(COUNTRY_DEFAULT_PERMISSION_TEMPLATE)
+  );
 
   const [contacts, setContacts] = useState<ContactRow[]>([]);
 
   const [banner, setBanner] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+
+  const fieldLabel = useCallback((field: string) => tt(CITY_BRANCH_FIELD_KEYS[field] ?? "cbs.field_unknown", field), [tt]);
 
   const filteredCountryBranches = useMemo(() => {
     const q = countryBranchSearch.trim().toLowerCase();
@@ -241,83 +270,90 @@ function CountryBranchSetupContent() {
     }
   }, [locationMeta.country]);
 
+  // Company and owner: one loader for the form, the live preview, the checklist and the print.
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (!companyId) {
-        setCompany(null);
-        return;
-      }
       try {
-        const res = await apiGet<{ company: CompanyRow }>(`/api/erp/companies/${encodeURIComponent(companyId)}`);
-        if (!cancelled && res.company) {
-          setCompany(res.company);
-          if (res.company.owner_person_id) {
-            setOwnerId(res.company.owner_person_id);
-            setOwnerCustomerId(res.company.owner_person_id);
-            setOwnerProfileId(null);
-          }
+        const views = await loadCompanyOwnerViews({ companyId, ownerCustomerId });
+        if (cancelled) return;
+        setCompanyView(views.company);
+        setCompanyBankCount(views.companyBankCount);
+        setOwnerView(views.owner);
+        setLinkedRecordFailed(false);
+        if (views.owner?.name) setOwnerName(views.owner.name);
+        // A company that names its owner fills the owner only when no owner is chosen yet.
+        if (views.company?.ownerPersonId && !ownerCustomerId && !ownerProfileId) {
+          setOwnerId(views.company.ownerPersonId);
+          setOwnerCustomerId(views.company.ownerPersonId);
         }
       } catch {
-        if (!cancelled) setCompany(null);
+        if (cancelled) return;
+        setCompanyView(null);
+        setCompanyBankCount(0);
+        setOwnerView(null);
+        setLinkedRecordFailed(true);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [companyId]);
+  }, [companyId, ownerCustomerId, ownerProfileId]);
 
+  // Saved-record detail (location names, users assigned to this main branch, documents).
   useEffect(() => {
     let cancelled = false;
-    const targetCustomerId = ownerCustomerId || (isUuid(ownerId) ? ownerId : null);
-    if (!targetCustomerId) {
-      if (!ownerName) setOwnerPreview(null);
+    if (!isUuid(editingCountryBranchId)) {
+      setSavedDetail(null);
+      setDetailFailed("");
       return;
     }
-
     (async () => {
       try {
-        const res = await apiGet<{ customer: OwnerCustomerRow }>(`/api/erp/customers/${encodeURIComponent(targetCustomerId)}`);
-        if (cancelled || !res.customer) return;
-
-        const customer = res.customer;
-        setOwnerPreview({
-          source: "customer",
-          code: customer.person_code || compactCode(customer.id, "PER"),
-          name: customer.customer_name,
-          companyName: customer.company_name ?? company?.name ?? "-",
-          contactPerson: customer.contact_person ?? customer.customer_name,
-          mobile: customer.mobile ?? "-",
-          whatsapp: customer.whatsapp ?? customer.mobile ?? "-",
-          email: customer.email ?? "-",
-          address: customer.address ?? "-",
-          country: customer.country_name || locationMeta.country?.name || "-",
-          branch: customer.city_name || existingMainBranch?.name || "-",
-          role: "Company Owner"
-        });
-        setOwnerName(customer.customer_name);
+        const res = await fetch(
+          `/api/branch-management/country-branches?id=${encodeURIComponent(editingCountryBranchId)}&detail=1`,
+          { cache: "no-store" }
+        );
+        if (cancelled) return;
+        if (!res.ok) {
+          setSavedDetail(null);
+          setDetailFailed("DETAIL_FAILED");
+          return;
+        }
+        const json = (await res.json().catch(() => ({}))) as { detail?: unknown; detailError?: string | null };
+        if (cancelled) return;
+        const detail = normalizeCityBranchDetail(json.detail);
+        setSavedDetail(detail);
+        setDetailFailed(detail ? "" : json.detailError || "NO_DATABASE");
       } catch {
-        // Keep existing preview if fetch fails
+        if (cancelled) return;
+        setSavedDetail(null);
+        setDetailFailed("DETAIL_FAILED");
       }
     })();
-
     return () => {
       cancelled = true;
     };
-  }, [ownerCustomerId, ownerId, company?.name, existingMainBranch?.name, locationMeta.country?.name]);
+  }, [editingCountryBranchId]);
 
+  const countryName = locationMeta.country?.name || "";
   const zip = locationMeta.area?.postal_code ?? locationMeta.city?.zip_code ?? "";
-  const previewCountry = locationMeta.country?.name || "-";
+  const previewCountry = countryName || "-";
   const previewLocation = [locationMeta.state?.name, locationMeta.city?.name, locationMeta.area?.name, zip].filter(Boolean).join(" / ") || "-";
-  const previewCompany = company?.name || "-";
-  const companyCode = company?.id ? compactCode(company.id, "CMP") : "-";
+  const resolvedBranchName = countryName
+    ? operationalDomain === "shipping"
+      ? `${countryName} Shipping Line Main Branch`
+      : `${countryName} Main Branch`
+    : "";
 
-  const contactItems = contacts
-    .map((row) => {
-      if (!row.type && !row.value) return null;
-      return `${row.type || "Type"}: ${row.value || "-"}`;
-    })
-    .filter((row): row is string => Boolean(row));
+  const contactsPayload = useMemo(
+    () =>
+      contacts
+        .map((row) => ({ type: row.type.trim(), value: row.value.trim() }))
+        .filter((row) => row.type && row.value),
+    [contacts]
+  );
+  const contactItems = contactsPayload.map((row) => `${row.type}: ${row.value}`);
 
   const hasAny = Boolean(
     location.countryId ||
@@ -333,52 +369,155 @@ function CountryBranchSetupContent() {
     contacts.some((c) => c.type || c.value)
   );
 
-  const reportRows = useMemo(
-    () => [
-      { label: tt("cnbs.country", "Country"), value: previewCountry },
-      { label: tt("cnbs.country_code", "Country Code"), value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
-      { label: tt("cnbs.branch_type", "Branch Type"), value: branchType || "-" },
-      { label: tt("cnbs.branch_code", "Branch Code"), value: branchCode || "-" },
-      { label: tt("cnbs.currency", "Currency"), value: currency || "-" },
-      { label: tt("cnbs.location", "Location"), value: previewLocation },
-      { label: tt("cnbs.address", "Address"), value: fullAddress || "-" },
-      { label: tt("cnbs.company_name", "Company Name"), value: previewCompany },
-      { label: tt("cnbs.company_code", "Company Code"), value: companyCode },
-      { label: tt("cnbs.company_owner", "Company Owner"), value: ownerPreview?.name || ownerName || "-" },
-      { label: tt("cnbs.owner_details", "Owner Details"), value: ownerPreview ? `${ownerPreview.source.toUpperCase()} · ${ownerPreview.code}` : ownerName || "-" },
-      { label: tt("cnbs.permission_template", "Permission Template"), value: permissionTemplate || "-" },
-      { label: tt("cnbs.permission_grants", "Permission Grants"), value: permissionGrants.length ? permissionGrants.join(", ") : "-" },
-      { label: tt("cnbs.contacts", "Contacts"), value: contactItems.length ? contactItems.join(", ") : "-" }
-    ],
-    [
-      tt,
-      branchCode,
-      branchType,
-      contactItems,
-      companyCode,
-      currency,
-      fullAddress,
-      locationMeta.country?.iso2,
-      locationMeta.country?.iso3,
-      ownerName,
-      ownerPreview,
-      permissionGrants,
+  // Owner as shown everywhere: the loaded customer record, or the name for a non-customer owner.
+  const ownerForView: OwnerView | null =
+    ownerView ??
+    (ownerCustomerId || ownerProfileId || ownerName.trim()
+      ? emptyOwnerView(ownerName.trim(), ownerProfileId ? "profile" : "customer")
+      : null);
+
+  const linkedUsers = useMemo(
+    () => (editingCountryBranchId ? savedDetail?.linkedUsers ?? [] : []),
+    [editingCountryBranchId, savedDetail]
+  );
+  const linkedDocuments = useMemo(
+    () => (editingCountryBranchId ? savedDetail?.linkedDocuments ?? [] : []),
+    [editingCountryBranchId, savedDetail]
+  );
+
+  const reportInput: CountryBranchReportInput = useMemo(
+    () => ({
+      savedId: editingCountryBranchId,
+      name: resolvedBranchName,
+      code: branchCode.trim(),
+      status: existingMainBranch?.status || (editingCountryBranchId ? "active" : tt("cbs.new_draft_word", "Draft")),
+      currency: currency || locationMeta.country?.currency_code?.toUpperCase() || "",
+      operationalDomain,
+      createdAt: existingMainBranch?.created_at ?? "",
+      updatedAt: existingMainBranch?.updated_at ?? "",
+      createdByName: savedDetail?.createdByName ?? "",
+      country: countryName,
+      countryIso2: locationMeta.country?.iso2 ?? "",
+      stateProvince: locationMeta.state?.name ?? "",
+      district: locationMeta.district?.name ?? "",
+      city: locationMeta.city?.name ?? "",
+      fullAddress: fullAddress.trim(),
+      contacts: contactsPayload,
+      branchEmail: branchEmail.trim(),
+      ownerName: ownerForView?.name ?? ownerName,
+      company: companyView,
+      owner: ownerForView,
       permissionTemplate,
-      previewCompany,
-      previewCountry,
-      previewLocation
+      permissionGrants
+    }),
+    [
+      editingCountryBranchId,
+      resolvedBranchName,
+      branchCode,
+      existingMainBranch,
+      tt,
+      currency,
+      locationMeta.country?.currency_code,
+      locationMeta.country?.iso2,
+      locationMeta.state?.name,
+      locationMeta.district?.name,
+      locationMeta.city?.name,
+      operationalDomain,
+      savedDetail?.createdByName,
+      countryName,
+      fullAddress,
+      contactsPayload,
+      branchEmail,
+      ownerForView,
+      ownerName,
+      companyView,
+      permissionTemplate,
+      permissionGrants
     ]
   );
+
+  const liveBranchData = useMemo(() => buildCountryBranchDrawerData(reportInput, tt), [reportInput, tt]);
+  const reportRows = useMemo(() => buildCountryBranchRows(reportInput, tt), [reportInput, tt]);
+
+  const checklist = useMemo(
+    () =>
+      evaluateCountryBranchChecklist({
+        countryId: location.countryId,
+        operationalDomain,
+        branchCategory,
+        branchName: resolvedBranchName,
+        branchCode: branchCode.trim(),
+        stateProvinceId: location.stateProvinceId,
+        cityId: location.cityId,
+        address: fullAddress,
+        currency: currency || locationMeta.country?.currency_code?.toUpperCase() || "",
+        companyId,
+        ownerCustomerId,
+        ownerProfileId,
+        contacts: contactsPayload,
+        emailAddress: branchEmail.trim(),
+        permissionGrants,
+        savedBranchId: editingCountryBranchId,
+        linkedUsers,
+        linkedDocumentCount: linkedDocuments.length,
+        companyBankCount
+      }),
+    [
+      location.countryId,
+      location.stateProvinceId,
+      location.cityId,
+      operationalDomain,
+      branchCategory,
+      resolvedBranchName,
+      branchCode,
+      fullAddress,
+      currency,
+      locationMeta.country?.currency_code,
+      companyId,
+      ownerCustomerId,
+      ownerProfileId,
+      contactsPayload,
+      branchEmail,
+      permissionGrants,
+      editingCountryBranchId,
+      linkedUsers,
+      linkedDocuments.length,
+      companyBankCount
+    ]
+  );
+
+  const documentItems: BranchReviewDocumentItem[] = linkedDocuments.map((doc) => ({
+    id: doc.id,
+    name: doc.name,
+    type: documentTypeLabel(doc.mimeType, doc.name),
+    size: formatFileSize(doc.sizeBytes),
+    isRequired: false,
+    isUploaded: true,
+    uploadedAt: shortDate(doc.createdAt)
+  }));
+
+  const userItems: BranchUserPermissionItem[] = linkedUsers.map((u) => ({
+    id: u.assignmentId,
+    userName: u.userName || u.userCode || "—",
+    role: roleLabel(u.role, tt),
+    operationalDomain: u.operationalDomain === "both" ? tt("cbs.domain_both", "Both") : domainLabel(u.operationalDomain, tt),
+    countryScope: previewCountry,
+    branchScope: resolvedBranchName,
+    permissionGroup: accessProfileLabel(u.accessProfile, tt),
+    ledgerVisibility: domainLabel(u.operationalDomain, tt),
+    status: u.isActive ? "Active" : "Warning",
+    statusReason: u.isActive ? undefined : tt("cbs.user_inactive_reason", "Assignment is inactive")
+  }));
 
   const editIdentityRows = useMemo(
     () => [
       { label: tt("cnbs.country", "Country"), value: previewCountry },
-      { label: tt("cnbs.main_branch", "Main Branch"), value: existingMainBranch?.name || (previewCountry && previewCountry !== "-" ? `${previewCountry} Main Branch` : "") },
+      { label: tt("cnbs.main_branch", "Main Branch"), value: existingMainBranch?.name || "" },
       { label: tt("cnbs.branch_code", "Branch Code"), value: existingMainBranch?.code || branchCode },
       { label: tt("cnbs.record_id", "Record ID"), value: editingCountryBranchId },
-      { label: tt("cnbs.status", "Status"), value: existingMainBranch?.status || "active" },
-      { label: tt("cnbs.created_date", "Created Date"), value: existingMainBranch?.created_at ? new Date(existingMainBranch.created_at).toLocaleString() : "" },
-      { label: tt("cnbs.last_updated", "Last Updated"), value: existingMainBranch?.updated_at ? new Date(existingMainBranch.updated_at).toLocaleString() : "" },
+      { label: tt("cnbs.status", "Status"), value: existingMainBranch?.status || "" },
+      { label: tt("cnbs.created_date", "Created Date"), value: shortDate(existingMainBranch?.created_at) },
+      { label: tt("cnbs.last_updated", "Last Updated"), value: shortDate(existingMainBranch?.updated_at) },
       { label: tt("cnbs.currency", "Currency"), value: currency }
     ],
     [tt, branchCode, currency, editingCountryBranchId, existingMainBranch, previewCountry]
@@ -389,217 +528,83 @@ function CountryBranchSetupContent() {
       {
         title: tt("cnbs.sec_branch_info", "Branch Information"),
         items: [
-          { label: tt("cnbs.branch_type", "Branch Type"), value: branchType },
+          { label: tt("cnbs.branch_type", "Branch Type"), value: tt("branch.report_country_main_branch", "Country Main Branch") },
           { label: tt("cnbs.branch_code", "Branch Code"), value: existingMainBranch?.code || branchCode },
           { label: tt("cnbs.currency", "Currency"), value: currency },
-          { label: tt("cnbs.status", "Status"), value: existingMainBranch?.status || "active" }
+          { label: tt("cnbs.status", "Status"), value: existingMainBranch?.status || "" }
         ]
       },
       {
         title: tt("cnbs.sec_location_info", "Location Information"),
         items: [
           { label: tt("cnbs.country", "Country"), value: previewCountry },
-          { label: tt("cnbs.country_code", "Country Code"), value: locationMeta.country?.iso2 || locationMeta.country?.iso3 },
-          { label: tt("cnbs.location", "Location"), value: previewLocation },
+          { label: tt("cnbs.country_code", "Country Code"), value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "" },
+          { label: tt("cnbs.location", "Location"), value: previewLocation === "-" ? "" : previewLocation },
           { label: tt("cnbs.address", "Address"), value: fullAddress }
         ]
       },
       {
         title: tt("cnbs.sec_company_info", "Company Information"),
         items: [
-          { label: tt("cnbs.company_name", "Company Name"), value: company?.name },
-          { label: tt("cnbs.company_code", "Company Code"), value: company?.id ? compactCode(company.id, "CMP") : "" },
-          { label: tt("cnbs.legal_name", "Legal Name"), value: company?.legal_name },
-          { label: tt("cnbs.base_currency", "Base Currency"), value: company?.base_currency }
+          { label: tt("cnbs.company_name", "Company Name"), value: companyView?.name || "" },
+          { label: tt("cnbs.company_code", "Company Code"), value: companyView?.companyCode || "" },
+          { label: tt("cnbs.legal_name", "Legal Name"), value: companyView?.legalName || "" },
+          { label: tt("cbs.pr_tax_no", "Tax / NTN No."), value: companyView?.taxNumber || "" },
+          { label: tt("cnbs.base_currency", "Base Currency"), value: companyView?.baseCurrency || "" }
         ]
       },
       {
         title: tt("cnbs.sec_owner_info", "Owner Information"),
         items: [
-          { label: tt("cnbs.owner_name", "Owner Name"), value: ownerPreview?.name || ownerName },
-          { label: tt("cnbs.owner_code", "Owner Code"), value: ownerPreview?.code || "N/A" },
-          { label: tt("cnbs.owner_source", "Owner Source"), value: ownerPreview?.source || "custom" },
-          { label: tt("cnbs.owner_role", "Owner Role"), value: ownerPreview?.role || "Owner" }
+          { label: tt("cnbs.owner_name", "Owner Name"), value: ownerForView?.name || "" },
+          { label: tt("cnbs.owner_code", "Owner Code"), value: ownerForView?.code || "" },
+          { label: tt("cnbs.owner_source", "Owner Source"), value: ownerForView?.source || "" }
         ]
       },
       {
         title: tt("cnbs.sec_contact_info", "Contact Information"),
         items: [
-          { label: tt("cnbs.contacts", "Contacts"), value: contactItems.length ? contactItems.join(", ") : "" },
-          { label: tt("cnbs.phone", "Phone"), value: contacts.find((row) => row.type.toLowerCase().includes("phone"))?.value },
-          { label: tt("cnbs.whatsapp", "WhatsApp"), value: contacts.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value },
-          { label: tt("cnbs.email", "Email"), value: contacts.find((row) => row.type.toLowerCase().includes("email"))?.value }
+          { label: tt("cnbs.contacts", "Contacts"), value: contactItems.join(", ") },
+          { label: tt("cnbs.phone", "Phone"), value: countryBranchContact(contactsPayload, (x) => x.includes("phone") || x.includes("mobile")) },
+          { label: tt("cnbs.whatsapp", "WhatsApp"), value: countryBranchContact(contactsPayload, (x) => x.includes("whatsapp")) },
+          { label: tt("cnbs.email", "Email"), value: branchEmail.trim() }
         ]
       },
       {
         title: tt("cnbs.permissions", "Permissions"),
         items: [
           { label: tt("cnbs.template", "Template"), value: permissionTemplate },
-          { label: tt("cnbs.granted_permissions", "Granted Permissions"), value: permissionGrants.length ? permissionGrants.join(", ") : "" }
+          { label: tt("cnbs.granted_permissions", "Granted Permissions"), value: permissionGrants.join(", ") }
         ]
       }
     ],
     [
       tt,
       branchCode,
-      branchType,
-      company,
+      companyView,
       contactItems,
-      contacts,
+      contactsPayload,
       currency,
       existingMainBranch,
       fullAddress,
       locationMeta.country?.iso2,
       locationMeta.country?.iso3,
-      ownerName,
-      ownerPreview,
+      ownerForView,
       permissionGrants,
       permissionTemplate,
       previewCountry,
-      previewLocation
+      previewLocation,
+      branchEmail
     ]
   );
 
-  const liveBranchData = useMemo(() => {
-    const active = existingMainBranch;
-    const phoneVal = contacts.find((row) => row.type.toLowerCase().includes("phone"))?.value || "";
-    const emailVal = contacts.find((row) => row.type.toLowerCase().includes("email"))?.value || "";
-    const whatsappVal = contacts.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value || "";
-
-    return {
-      serialNumber: active?.id ? active.id.slice(0, 4).toUpperCase() : "0001",
-      branchStatus: active?.status || (hasAny ? "Draft" : "Empty"),
-      branchCode: active?.code || branchCode || "-",
-      branchType: "MAIN",
-      country: previewCountry,
-      currency: active?.local_currency || currency || "USD",
-
-      parentBranch: {
-        name: "ACCOUNTS.DGT.LLC Headquarters",
-        code: "SUPER-HQ-001",
-        type: "SUPER_ADMIN",
-        status: "ACTIVE",
-        currency: "USD"
-      },
-
-      branchName: active?.name || (previewCountry && previewCountry !== "-" ? `${previewCountry} Main Branch` : "Main Branch"),
-      createdDate: active?.created_at ? new Date(active.created_at).toLocaleDateString() : undefined,
-      updatedDate: active?.updated_at ? new Date(active.updated_at).toLocaleDateString() : undefined,
-      createdBy: "",
-      updatedBy: "",
-      establishedOn: "-",
-      taxRegNo: "-",
-      ntnGstNo: "-",
-
-      city: locationMeta.city?.name || "-",
-      cityCode: locationMeta.city?.code || "-",
-      stateProvince: locationMeta.state?.name || "-",
-      district: locationMeta.district?.name || "-",
-      areaRegion: locationMeta.area?.name || "-",
-      zipCode: zip || "-",
-      fullAddress: active?.address || fullAddress || "-",
-
-      ownerName: ownerPreview?.name || active?.owner_name || ownerName || "-",
-      ownerCode: ownerPreview?.code || "OWN-0001",
-      fatherHusbandName: "-",
-      cnicId: "-",
-      nationality: "Pakistani",
-      designation: translateHeader(lang, "Country Admin"),
-      ownershipType: "Individual",
-      ownershipPercent: "100%",
-      ownerPhone: phoneVal || ownerPreview?.mobile || "-",
-      ownerWhatsApp: whatsappVal || ownerPreview?.whatsapp || "-",
-      ownerEmail: emailVal || ownerPreview?.email || "-",
-      ownerAltEmail: "-",
-      ownerLandline: "-",
-      ownerWebsite: ownerPreview?.address || "-",
-
-      companyName: previewCompany || "-",
-      companyCode: companyCode || "-",
-      companyType: "-",
-      companyRegNo: "-",
-      companyIncDate: "-",
-      companyTaxRegNo: "-",
-      companyNtnGstNo: "-",
-      companyStatus: "-",
-      companyPhone: phoneVal || "-",
-      companyEmail: emailVal || "-",
-      companyWebsite: "-",
-      companyOfficeAddress: active?.address || fullAddress || "-",
-
-      allowedPermissions: active?.permission_grants || permissionGrants,
-      remarks: "-"
-    };
-  }, [
-    lang,
-    existingMainBranch,
-    contacts,
-    branchCode,
-    previewCountry,
-    currency,
-    locationMeta,
-    zip,
-    fullAddress,
-    ownerPreview,
-    ownerName,
-    previewCompany,
-    companyCode,
-    permissionGrants,
-    hasAny
-  ]);
-
   function openReport(autoPrint: boolean) {
     const activeLang = (typeof document !== "undefined" ? document.documentElement.lang : "en") || "en";
-    const lb: any = liveBranchData;
     openBranchProfileReport({
       kind: "country",
       lang: activeLang,
       autoPrint,
-      data: {
-        branchName: lb.branchName,
-        branchCode: lb.branchCode,
-        branchType: lb.branchType,
-        branchStatus: lb.branchStatus,
-        serialNumber: lb.serialNumber,
-        currency: lb.currency,
-        country: lb.country,
-        countryCode: locationMeta.country?.iso2 || locationMeta.country?.iso3 || null,
-        stateProvince: lb.stateProvince,
-        district: lb.district,
-        city: lb.city,
-        areaRegion: lb.areaRegion,
-        zipCode: lb.zipCode,
-        fullAddress: lb.fullAddress,
-        parentBranch: lb.parentBranch,
-        establishedOn: lb.establishedOn,
-        taxRegNo: lb.taxRegNo,
-        ntnGstNo: lb.ntnGstNo,
-        ownerName: lb.ownerName,
-        ownerCode: lb.ownerCode,
-        designation: lb.designation,
-        nationality: lb.nationality,
-        ownershipType: lb.ownershipType,
-        ownershipPercent: lb.ownershipPercent,
-        ownerPhone: lb.ownerPhone,
-        ownerWhatsApp: lb.ownerWhatsApp,
-        ownerEmail: lb.ownerEmail,
-        ownerLandline: lb.ownerLandline,
-        ownerWebsite: lb.ownerWebsite,
-        companyName: lb.companyName,
-        companyCode: lb.companyCode,
-        companyType: lb.companyType,
-        companyRegNo: lb.companyRegNo,
-        companyIncDate: lb.companyIncDate,
-        companyStatus: lb.companyStatus,
-        companyOfficeAddress: lb.companyOfficeAddress,
-        createdBy: lb.createdBy,
-        createdDate: lb.createdDate,
-        updatedBy: lb.updatedBy,
-        updatedDate: lb.updatedDate,
-        allowedPermissions: Array.isArray(lb.allowedPermissions) ? lb.allowedPermissions : permissionGrants,
-        permissionTemplate,
-        remarks: lb.remarks,
-      },
+      data: buildCountryBranchProfileData(reportInput, tt)
     });
   }
 
@@ -617,22 +622,11 @@ function CountryBranchSetupContent() {
     firstField?.focus?.();
   }
 
-  function normalizeContacts(value: unknown): ContactRow[] {
-    if (!Array.isArray(value)) return [];
-    return value
-      .map((row) => {
-        const item = row as { type?: string; value?: string };
-        const type = String(item.type ?? "").trim();
-        const contactValue = String(item.value ?? "").trim();
-        return type && contactValue ? { type, value: contactValue } : null;
-      })
-      .filter((row): row is ContactRow => Boolean(row));
-  }
-
-  function beginEditCountryBranch(row: CountryBranchRow) {
+  /** Loads a saved main branch into the form. Saving from here updates this record (never a second main). */
+  function applySavedRow(row: CountryBranchRow) {
+    const domain = (row.operational_domain === "shipping" ? "shipping" : "business") as "business" | "shipping";
     setEditingCountryBranchId(row.id);
     setExistingMainBranch(row);
-    const domain = (row.operational_domain === "shipping" ? "shipping" : "business") as "business" | "shipping";
     setOperationalDomain(domain);
     setBranchCategory(domain === "shipping" ? "clearing_agent" : "business");
     setLocation({
@@ -646,93 +640,74 @@ function CountryBranchSetupContent() {
     setBranchType("MAIN");
     setBranchCode(row.code || "");
     setCurrency(row.local_currency || "");
+    setBranchEmail(row.email || "");
     setFullAddress(row.address ?? "");
     setCompanyId(row.company_id ?? "");
     setOwnerName(row.owner_name ?? "");
     setOwnerCustomerId(row.owner_customer_id ?? null);
     setOwnerProfileId(row.owner_profile_id ?? null);
     setOwnerId(row.owner_customer_id || row.owner_profile_id || "");
-    setContacts(normalizeContacts(row.contacts));
-    setPermissionTemplate(row.permission_template ?? "country-standard");
-    setPermissionGrants(Array.isArray(row.permission_grants) ? row.permission_grants : getPermissionKeysForTemplate("country-standard"));
-    setBanner({
-      type: "success",
-      message: `Editing Existing Branch\nBranch Name: ${row.name}\nBranch Code: ${row.code}`
-    });
+    setContacts(contactsForForm(row));
+    setPermissionTemplate(row.permission_template || COUNTRY_DEFAULT_PERMISSION_TEMPLATE);
+    const grants = countryGrantsForForm(row.permission_grants, row.permission_template);
+    setPermissionGrants(grants.grants);
+    setGrantsPrefilled(grants.prefilled);
+  }
+
+  function existingBranchMessage(main: CountryBranchRow) {
+    return [
+      tt("cnbs.existing_loaded", "A main branch already exists for this country and section. It is loaded now. Saving updates it; no duplicate is created."),
+      `${tt("cbs.field_branch_name", "Branch Name")}: ${main.name}`,
+      `${tt("cbs.field_branch_code", "Branch Code")}: ${main.code}`
+    ].join("\n");
+  }
+
+  function beginEditCountryBranch(row: CountryBranchRow) {
+    applySavedRow(row);
+    setBanner(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function viewSavedBranch(row: CountryBranchRow) {
-    const phoneVal = normalizeContacts(row.contacts).find((c) => c.type.toLowerCase().includes("phone") || c.type.toLowerCase().includes("mobile"))?.value || "";
-    const emailVal = normalizeContacts(row.contacts).find((c) => c.type.toLowerCase().includes("email"))?.value || "";
-    const whatsappVal = normalizeContacts(row.contacts).find((c) => c.type.toLowerCase().includes("whatsapp"))?.value || "";
-
-    const payload = {
-      serialNumber: row.id.slice(0, 4).toUpperCase(),
-      branchStatus: row.status || "ACTIVE",
-      branchCode: row.code || "-",
-      branchType: "MAIN",
-      country: previewCountry || row.name.split(" ")[0] || "Country",
-      currency: row.local_currency || currency || "USD",
-
-      parentBranch: {
-        name: "ACCOUNTS.DGT.LLC Headquarters",
-        code: "SUPER-HQ-001",
-        type: "SUPER_ADMIN",
-        status: "ACTIVE",
-        currency: "USD"
-      },
-
-      branchName: row.name,
-      createdDate: row.created_at ? new Date(row.created_at).toLocaleDateString() : undefined,
-      updatedDate: row.updated_at ? new Date(row.updated_at).toLocaleDateString() : undefined,
-      createdBy: "",
-      updatedBy: "",
-      establishedOn: "-",
-      taxRegNo: "-",
-      ntnGstNo: "-",
-
-      city: locationMeta.city?.name || "-",
-      cityCode: locationMeta.city?.code || "-",
-      stateProvince: locationMeta.state?.name || "-",
-      district: locationMeta.district?.name || "-",
-      areaRegion: locationMeta.area?.name || "-",
-      zipCode: zip || "-",
-      fullAddress: row.address || "-",
-
-      ownerName: row.owner_name || "-",
-      ownerCode: "OWN-0001",
-      fatherHusbandName: "-",
-      cnicId: "-",
-      nationality: "Pakistani",
-      designation: translateHeader(lang, "Country Admin"),
-      ownershipType: "Individual",
-      ownershipPercent: "100%",
-      ownerPhone: phoneVal || "-",
-      ownerWhatsApp: whatsappVal || "-",
-      ownerEmail: emailVal || "-",
-      ownerAltEmail: "-",
-      ownerLandline: "-",
-      ownerWebsite: "-",
-
-      companyName: previewCompany || "-",
-      companyCode: companyCode || "-",
-      companyType: "-",
-      companyRegNo: "-",
-      companyIncDate: "-",
-      companyTaxRegNo: "-",
-      companyNtnGstNo: "-",
-      companyStatus: "-",
-      companyPhone: phoneVal || "-",
-      companyEmail: emailVal || "-",
-      companyWebsite: "-",
-      companyOfficeAddress: row.address || "-",
-
-      allowedPermissions: Array.isArray(row.permission_grants) ? row.permission_grants : [],
-      remarks: "Saved country main branch details registry."
-    };
-
-    setDrawerBranchData(payload);
+  async function viewSavedBranch(row: CountryBranchRow) {
+    try {
+      const [detailJson, views] = await Promise.all([
+        fetch(`/api/branch-management/country-branches?id=${encodeURIComponent(row.id)}&detail=1`, { cache: "no-store" })
+          .then((res) => res.json())
+          .catch(() => ({})) as Promise<{ detail?: unknown }>,
+        loadCompanyOwnerViews({ companyId: row.company_id ?? "", ownerCustomerId: row.owner_customer_id ?? null })
+      ]);
+      const detail = normalizeCityBranchDetail(detailJson?.detail);
+      const input: CountryBranchReportInput = {
+        savedId: row.id,
+        name: row.name,
+        code: row.code,
+        status: row.status || "",
+        currency: row.local_currency || "",
+        operationalDomain: row.operational_domain === "shipping" ? "shipping" : "business",
+        createdAt: row.created_at ?? "",
+        updatedAt: row.updated_at ?? "",
+        createdByName: detail?.createdByName ?? "",
+        country: detail?.location.countryName ?? "",
+        countryIso2: detail?.location.countryIso2 ?? "",
+        stateProvince: detail?.location.stateName ?? "",
+        district: detail?.location.districtName ?? "",
+        city: detail?.location.cityName ?? "",
+        fullAddress: row.address ?? "",
+        contacts: contactsForForm(row),
+        branchEmail: row.email ?? "",
+        ownerName: row.owner_name ?? "",
+        company: views.company,
+        owner: views.owner ?? (row.owner_profile_id ? emptyOwnerView(row.owner_name ?? "", "profile") : null),
+        permissionTemplate: row.permission_template ?? "",
+        permissionGrants: Array.isArray(row.permission_grants) ? row.permission_grants : []
+      };
+      setDrawerBranchData(buildCountryBranchDrawerData(input, tt));
+    } catch (error) {
+      setBanner({
+        type: "error",
+        message: error instanceof Error && error.message ? error.message : tt("cnbs.detail_load_failed", "The saved branch details could not be loaded.")
+      });
+    }
   }
 
   useEffect(() => {
@@ -749,18 +724,18 @@ function CountryBranchSetupContent() {
         const json = (await res.json().catch(() => ({}))) as { countryBranches?: CountryBranchRow[]; error?: string };
         if (cancelled) return;
         if (!res.ok) {
-          setBanner({ type: "error", message: json.error || "Branch record not found." });
+          setBanner({ type: "error", message: json.error || tt("cnbs.record_not_found", "Branch record not found.") });
           return;
         }
         const row = Array.isArray(json.countryBranches) ? json.countryBranches[0] : null;
         if (!row) {
-          setBanner({ type: "error", message: "Branch record not found." });
+          setBanner({ type: "error", message: tt("cnbs.record_not_found", "Branch record not found.") });
           return;
         }
         setCountryBranches(json.countryBranches ?? []);
         beginEditCountryBranch(row);
       } catch (error) {
-        if (!cancelled) setBanner({ type: "error", message: error instanceof Error ? error.message : "Failed to load branch record." });
+        if (!cancelled) setBanner({ type: "error", message: error instanceof Error ? error.message : tt("cnbs.detail_load_failed", "The saved branch details could not be loaded.") });
       } finally {
         if (!cancelled) setEditLoading(false);
       }
@@ -782,12 +757,14 @@ function CountryBranchSetupContent() {
     downloadCsv(`country-branch_${new Date().toISOString().slice(0, 10)}.csv`, rows);
   }
 
+  /** Loads the saved main branch of this country for one section (business or shipping). */
   async function loadExistingMainBranch(nextCountryId: string, domain?: "business" | "shipping") {
     const effectiveDomain = domain ?? operationalDomain;
     if (!isUuid(nextCountryId)) {
       setExistingMainBranch(null);
+      setEditingCountryBranchId("");
       setCountryBranches([]);
-      return;
+      return null;
     }
 
     const res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(nextCountryId)}&operationalDomain=${effectiveDomain}`, {
@@ -795,30 +772,21 @@ function CountryBranchSetupContent() {
     });
     if (!res.ok) {
       setExistingMainBranch(null);
+      setEditingCountryBranchId("");
       setCountryBranches([]);
-      return;
+      return null;
     }
 
     const json = (await res.json()) as { countryBranches?: CountryBranchRow[] };
     const list = Array.isArray(json.countryBranches) ? json.countryBranches : [];
     setCountryBranches(list);
-    const main = list.find((b) => b.is_main) ?? null;
-    setExistingMainBranch(main);
-
-    // If a main branch already exists, treat it as "loaded" data for the form.
+    // The lookup also returns every main branch of the country (each is visible in both sections), so pick by section.
+    const main = list.find((b) => b.is_main && (b.operational_domain || "business") === effectiveDomain) ?? null;
     if (main) {
-      setBranchType("MAIN");
-      setBranchCode(main.code);
-      setCurrency(main.local_currency || "");
-      setFullAddress(main.address ?? "");
-      setCompanyId(main.company_id ?? "");
-      setOwnerName(main.owner_name ?? "");
-      setOwnerCustomerId(main.owner_customer_id ?? null);
-      setOwnerProfileId(main.owner_profile_id ?? null);
-      setOwnerId(main.owner_customer_id || main.owner_profile_id || "");
-      setContacts(normalizeContacts(main.contacts));
-      setPermissionTemplate(main.permission_template ?? "country-standard");
-      setPermissionGrants(Array.isArray(main.permission_grants) ? main.permission_grants : getPermissionKeysForTemplate("country-standard"));
+      applySavedRow(main);
+    } else {
+      setExistingMainBranch(null);
+      setEditingCountryBranchId("");
     }
     return { list, main };
   }
@@ -837,18 +805,14 @@ function CountryBranchSetupContent() {
     setOperationalDomain(nextDomain);
     setBranchCategory(nextDomain === "shipping" ? "clearing_agent" : "business");
     setBanner(null);
+    setGrantsPrefilled(false);
 
     if (!isUuid(location.countryId)) return;
 
     const existing = await loadExistingMainBranch(location.countryId, nextDomain);
     if (existing?.main) {
-      setBranchCode(existing.main.code);
-      setBanner({
-        type: "error",
-        message: `${nextDomain === "shipping" ? "Shipping Line" : "Business"} Main Branch Already Exists for this country.\nBranch Name: ${existing.main.name}\nBranch Code: ${existing.main.code}\nStatus: ${existing.main.status}`
-      });
+      setBanner({ type: "success", message: existingBranchMessage(existing.main) });
     } else {
-      setExistingMainBranch(null);
       setBranchCode(nextSuggestedCode(locationMeta.country, existing?.list?.length ?? 0, nextDomain));
     }
   }
@@ -874,6 +838,7 @@ function CountryBranchSetupContent() {
       setCountryBranchSearch("");
       setBranchCode("");
       setEditingCountryBranchId("");
+      setGrantsPrefilled(false);
 
       const defaultCurrency = meta.country?.currency_code?.toUpperCase() || "";
       setCurrency(defaultCurrency);
@@ -897,12 +862,7 @@ function CountryBranchSetupContent() {
 
       const existing = await loadExistingMainBranch(next.countryId, operationalDomain);
       if (existing?.main) {
-        setBranchCode(existing.main.code);
-        setBanner({
-          type: "error",
-          message:
-            `${operationalDomain === "shipping" ? "Shipping Line" : "Business"} Main Branch Already Exists\nBranch Name: ${existing.main.name}\nBranch Code: ${existing.main.code}\nStatus: ${existing.main.status}`
-        });
+        setBanner({ type: "success", message: existingBranchMessage(existing.main) });
         return;
       }
 
@@ -922,59 +882,66 @@ function CountryBranchSetupContent() {
     setContacts((current) => current.map((row, i) => (i === idx ? { ...row, ...updates } : row)));
   }
 
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  /** Maps a failed save response to the text shown. Known codes use the page's translations. */
+  function saveErrorMessage(json: SaveResponse & { error?: unknown; code?: string; existingBranch?: { id?: string } }, status: number) {
+    if (json?.code === "MAIN_BRANCH_EXISTS") {
+      return json.existingBranch?.id
+        ? existingBranchMessage(json.existingBranch as CountryBranchRow)
+        : tt("cnbs.existing_loaded", "A main branch already exists for this country and section. It is loaded now. Saving updates it; no duplicate is created.");
+    }
+    if (json?.code === "COUNTRY_CURRENCY_MISSING") return tt("cnbs.country_no_currency", "The selected country has no currency code. Set it in Location settings, then save again.");
+    if (json?.code === "DUPLICATE_BRANCH") return tt("cnbs.err_duplicate_branch", "Branch Code is already used by another Country branch in this country. Use a different Branch Code.");
+    const fallback = status >= 500 ? tt("cbs.save_failed_generic", "The server did not return a reason. Please try again.") : tt("cnbs.save_failed", "The country main branch could not be saved.");
+    return describeCityBranchServerError(json, fallback, fieldLabel);
+  }
+
+  /**
+   * Save and Approve & Activate both come here. A record id (edit, or an existing main branch of this
+   * country and section) is updated with PUT; otherwise a new main is created with POST. A duplicate
+   * conflict re-targets the existing branch once, so a repeated approval never creates a second main.
+   */
+  async function submitCountryBranch(targetId: string, allowRetry: boolean): Promise<void> {
     setBanner(null);
 
     if (!isUuid(location.countryId)) {
-      setBanner({ type: "error", message: "Please select a valid country from Location Settings." });
+      setBanner({ type: "error", message: tt("cnbs.err_country_required", "Please select a valid country from Location Settings.") });
       return;
     }
-
     if (!isUuid(location.stateProvinceId) || !isUuid(location.cityId)) {
-      setBanner({ type: "error", message: "Please select State/Province and City from Location Settings." });
+      setBanner({ type: "error", message: tt("cnbs.err_state_city_required", "Please select State/Province and City from Location Settings.") });
       return;
     }
-
     if (!branchCode.trim()) {
-      setBanner({ type: "error", message: "Branch Code is required." });
+      setBanner({ type: "error", message: tt("cnbs.err_branch_code_required", "Branch Code is required.") });
       return;
     }
-
-    if (!branchEmail || !branchEmail.includes("@")) {
-      setBanner({ type: "error", message: "Branch Email (Hostinger Titan Mailbox) is required." });
+    if (!branchEmail.trim() || !branchEmail.includes("@")) {
+      setBanner({ type: "error", message: tt("cnbs.err_branch_email_required", "Branch Email (Hostinger Titan Mailbox) is required.") });
       return;
     }
-
     if (!permissionTemplate || !permissionGrants.length) {
-      setBanner({ type: "error", message: "Please select a Role Template and at least one permission before saving the Country." });
+      setBanner({ type: "error", message: tt("cnbs.err_permissions_required", "Please select a Role Template and at least one permission before saving the Country.") });
       return;
     }
 
-    const countryName = locationMeta.country?.name || "Country";
-    const branchName = operationalDomain === "shipping"
-      ? `${countryName} Shipping Line Main Branch`
-      : `${countryName} Main Branch`;
+    const branchName = resolvedBranchName || `${locationMeta.country?.name || "Country"} Main Branch`;
+    const isUpdate = Boolean(targetId);
 
     setSaving(true);
     try {
-      const contactsPayload = contacts
-        .map((row) => ({ type: row.type.trim(), value: row.value.trim() }))
-        .filter((row) => row.type && row.value);
-
       const email = branchEmail.trim().toLowerCase();
       const phone = contactsPayload.find((row) => row.type.toLowerCase().includes("phone") || row.type.toLowerCase().includes("mobile"))?.value;
       const whatsappNumber = contactsPayload.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value;
 
       const res = await fetch("/api/branch-management/country-branches", {
-        method: editingCountryBranchId ? "PUT" : "POST",
+        method: isUpdate ? "PUT" : "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          id: editingCountryBranchId || undefined,
+          id: targetId || undefined,
           countryId: location.countryId,
           operationalDomain,
           name: branchName,
-          code: branchCode,
+          code: branchCode.trim(),
           stateProvinceId: location.stateProvinceId || undefined,
           districtId: location.districtId || undefined,
           cityId: location.cityId || undefined,
@@ -992,38 +959,48 @@ function CountryBranchSetupContent() {
         })
       });
 
-      const json = await res.json().catch(() => ({}));
+      const json = (await res.json().catch(() => ({}))) as SaveResponse & { error?: unknown; code?: string; existingBranch?: CountryBranchRow };
       if (!res.ok) {
-        let message = "Failed to save country branch.";
-        if (json?.error) {
-          if (typeof json.error === "string") {
-            message = json.error;
-          } else if (json.error.message && typeof json.error.message === "string") {
-            message = json.error.message;
-          } else if (json.error.fieldErrors && typeof json.error.fieldErrors === "object") {
-            const fieldMsgs = Object.entries(json.error.fieldErrors)
-              .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`)
-              .join("; ");
-            message = `Validation Error: ${fieldMsgs}`;
-          } else {
-            message = JSON.stringify(json.error);
-          }
+        if (json?.code === "MAIN_BRANCH_EXISTS" && json.existingBranch?.id && allowRetry && !isUpdate) {
+          // The main branch exists already: continue as an update of that same record.
+          await loadExistingMainBranch(location.countryId, operationalDomain);
+          return await submitCountryBranch(String(json.existingBranch.id), false);
         }
-        if (json?.existingBranch?.id) {
-          setExistingMainBranch(json.existingBranch);
-          setBranchCode(json.existingBranch.code ?? branchCode);
+        if (json?.code === "MAIN_BRANCH_EXISTS") {
+          await loadExistingMainBranch(location.countryId, operationalDomain);
         }
-        setBanner({ type: "error", message });
+        setBanner({ type: "error", message: saveErrorMessage(json, res.status) });
         return;
       }
-      setBanner({ type: "success", message: `${editingCountryBranchId ? "Updated" : "Saved"}: ${branchName} (${branchCode})` });
-      setEditingCountryBranchId("");
+
+      const savedId = String(json.id || targetId || "");
+      setEditingCountryBranchId(savedId);
+      // Reload the saved record so the form, checklist and final review show what the database holds.
       await loadExistingMainBranch(location.countryId, operationalDomain);
+
+      const visibleIn = json.domainAccess
+        ? [
+            json.domainAccess.business ? tt("cbs.domain_business", "Business & Trading") : "",
+            json.domainAccess.shipping ? tt("cbs.domain_shipping", "Shipping Line & Clearing Agent") : ""
+          ].filter(Boolean).join(" · ")
+        : "";
+      const lines = [
+        isUpdate ? tt("cnbs.updated_ok", "Country main branch updated.") : tt("cnbs.saved_ok", "Country main branch saved."),
+        `${json.name || branchName} (${json.code || branchCode.trim().toUpperCase()})`,
+        visibleIn ? `${tt("cnbs.available_in", "Available in")}: ${visibleIn}` : "",
+        ...(Array.isArray(json.warnings) ? json.warnings : [])
+      ].filter(Boolean);
+      setBanner({ type: "success", message: lines.join("\n") });
     } catch (err) {
-      setBanner({ type: "error", message: err instanceof Error ? err.message : "Failed to save country branch." });
+      setBanner({ type: "error", message: err instanceof Error && err.message ? err.message : tt("cnbs.save_failed", "The country main branch could not be saved.") });
     } finally {
       setSaving(false);
     }
+  }
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await submitCountryBranch(editingCountryBranchId, true);
   }
 
   function onReset() {
@@ -1031,66 +1008,74 @@ function CountryBranchSetupContent() {
     setLocation({ countryId: "", stateProvinceId: "", districtId: "", cityId: "", areaId: "" });
     setLocationMeta({ country: null, state: null, district: null, city: null, area: null });
     setCurrency("");
+    setBranchEmail("");
     setFullAddress("");
     setCompanyId("");
-    setCompany(null);
+    setCompanyView(null);
+    setCompanyBankCount(0);
     setOwnerName("");
-    setOwnerPreview(null);
+    setOwnerId("");
+    setOwnerCustomerId(null);
+    setOwnerProfileId(null);
+    setOwnerView(null);
     setContacts([]);
     setExistingMainBranch(null);
     setEditingCountryBranchId("");
+    setSavedDetail(null);
+    setDetailFailed("");
+    setGrantsPrefilled(false);
     setCountryBranches([]);
     setCountryBranchSearch("");
     setBranchType("");
     setBranchCode("");
-    setPermissionTemplate("country-standard");
-    setPermissionGrants(getPermissionKeysForTemplate("country-standard"));
+    setPermissionTemplate(COUNTRY_DEFAULT_PERMISSION_TEMPLATE);
+    setPermissionGrants(getPermissionKeysForTemplate(COUNTRY_DEFAULT_PERMISSION_TEMPLATE));
     setActiveStep(1);
   }
 
   if (activeStep === 9) {
     return (
       <div className="space-y-6">
+        {linkedRecordFailed ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {tt("cnbs.linked_record_failed", "Company or owner details could not be loaded from their saved records.")}
+          </div>
+        ) : null}
+        {detailFailed ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {detailFailed === "NO_DATABASE" ? tt("cbs.detail_no_database", "Location names and linked users cannot be loaded: the database connection is not configured.") : tt("cnbs.detail_load_failed", "The saved branch details could not be loaded.")}
+          </div>
+        ) : null}
+        {grantsPrefilled ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {tt("cnbs.grants_prefilled", "No valid permissions were stored on this branch, so the Country Standard template is pre-selected. Review the permissions, then save.")}
+          </div>
+        ) : null}
         <BranchFinalReview
           branchLevel="country"
-          branchLevelTitle="Country Branch"
-          branchName={existingMainBranch?.name || (previewCountry && previewCountry !== "-" ? `${previewCountry} Main Branch` : "Country Main Branch")}
-          branchCode={existingMainBranch?.code || branchCode}
-          branchType="Country Main Branch"
-          category="Main Operation"
-          country={previewCountry}
+          branchLevelTitle={tt("cnbs.title", "Country Branch")}
+          branchName={resolvedBranchName || tt("cnbs.title", "Country Branch")}
+          branchCode={branchCode.trim()}
+          branchType={tt("branch.report_country_main_branch", "Country Main Branch")}
+          category={branchCategory === "clearing_agent" ? tt("cbs.category_clearing_agent", "Clearing Agent") : tt("cbs.category_business", "Business Branch")}
+          country={countryName}
           stateProvince={locationMeta.state?.name || ""}
           city={locationMeta.city?.name || ""}
-          fullAddress={fullAddress}
-          companyName={company?.name || ""}
-          businessDomain="Trading & Distribution"
-          shippingDomain="Import & Export"
-          currency={currency || "USD"}
-          mainBranchName="Head Office (DXB-001)"
+          fullAddress={fullAddress.trim()}
+          companyName={companyView?.name || ""}
+          businessDomain={operationalDomain === "business" ? domainLabel("business", tt) : "—"}
+          shippingDomain={operationalDomain === "shipping" ? domainLabel("shipping", tt) : "—"}
+          currency={currency || locationMeta.country?.currency_code?.toUpperCase() || ""}
+          mainBranchName="—"
+          documents={documentItems}
+          usersAndPermissions={userItems}
+          sampleFallback={false}
+          showSavedBanner={false}
+          emptyDocumentsText={tt("cbs.docs_empty", "No documents are linked to this branch yet. Documents uploaded in the document module appear here.")}
+          emptyUsersText={tt("cbs.users_empty", "No users are assigned to this branch yet.")}
           isSaving={saving}
-          isEditing={Boolean(existingMainBranch?.id)}
-          checklistStatus={{
-            countrySelected: Boolean(location.countryId),
-            mainBranchSelected: true,
-            branchNameCodeGenerated: Boolean(branchCode.trim()),
-            branchCategoryType: true,
-            ownerResponsiblePerson: true,
-            companyLinked: true,
-            businessShippingDomain: true,
-            fullAddressLocation: Boolean(fullAddress.trim() || locationMeta.city?.name),
-            mobileEmail: true,
-            currencySelected: Boolean(currency),
-            bankAccountSetup: true,
-            userAdminAssigned: true,
-            rolePermissions: true,
-            requiredDocumentsUploaded: true,
-            serialNumbersGenerated: true,
-            approvalStatusReady: true,
-            businessAdminAssigned: true,
-            shippingClearingAdminAssigned: true,
-            operationsAdminAssigned: true,
-            ledgerScopeConfirmed: true
-          }}
+          isEditing={Boolean(editingCountryBranchId)}
+          checklistStatus={checklist.status}
           onBack={() => setActiveStep(8)}
           onGoToStep={(step) => {
             if (step === 1) setActiveStep(1);
@@ -1109,12 +1094,11 @@ function CountryBranchSetupContent() {
             else if (sec === "roles") setActiveStep(7);
           }}
           onApproveAndActivate={async () => {
-            const fakeEvent = { preventDefault: () => {} } as FormEvent<HTMLFormElement>;
-            await onSubmit(fakeEvent);
+            await submitCountryBranch(editingCountryBranchId, true);
           }}
           onSendBackForEdit={() => setActiveStep(1)}
-          onRequestChanges={(note) => {
-            alert(`Change request sent for Country Branch:\n${note || "Please review and revise requested branch details."}`);
+          onRequestChanges={() => {
+            setBanner({ type: "error", message: tt("cnbs.request_changes_unavailable", "Request Changes is not connected to a workflow for country branches yet. Nothing was sent.") });
           }}
           onViewSummary={viewReport}
           onPrint={printReport}
@@ -1202,7 +1186,7 @@ function CountryBranchSetupContent() {
                 type="submit"
                 form="country-branch-wizard-form"
                 size="sm"
-                disabled={saving || Boolean(existingMainBranch && !editingCountryBranchId) || !location.countryId}
+                disabled={saving || !location.countryId}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm h-8 px-4 cursor-pointer disabled:opacity-40"
               >
                 {saving ? t(lang, "common.saving") : editingCountryBranchId ? t(lang, "cnbs.update_branch") : t(lang, "cbs.accept_save")}
@@ -1377,29 +1361,15 @@ function CountryBranchSetupContent() {
                       countryId={location.countryId}
                       onValueChange={setOwnerId}
                       onOwnerResolved={(owner, customer) => {
+                        // The owner record itself is loaded by the company / owner loader (one source for every view).
                         if (customer) {
                           setOwnerName(customer.customer_name);
                           setOwnerCustomerId(customer.id);
                           setOwnerProfileId(null);
-                          setOwnerPreview({
-                            source: "customer",
-                            code: customer.person_code || compactCode(customer.id, "PER"),
-                            name: customer.customer_name,
-                            companyName: customer.company_name ?? company?.name ?? "-",
-                            contactPerson: customer.contact_person ?? customer.customer_name,
-                            mobile: customer.mobile ?? "-",
-                            whatsapp: customer.whatsapp ?? customer.mobile ?? "-",
-                            email: customer.email ?? "-",
-                            address: customer.address ?? "-",
-                            country: customer.country_name || locationMeta.country?.name || "-",
-                            branch: customer.city_name || existingMainBranch?.name || "-",
-                            role: "Company Owner"
-                          });
                         } else if (!owner) {
                           setOwnerName("");
                           setOwnerCustomerId(null);
                           setOwnerProfileId(null);
-                          setOwnerPreview(null);
                         } else {
                           setOwnerName(owner.name);
                           setOwnerCustomerId(owner.kind === "customer" ? owner.id : null);
@@ -1541,7 +1511,7 @@ function CountryBranchSetupContent() {
                   ) : (
                     <Button
                       type="submit"
-                      disabled={saving || Boolean(existingMainBranch && !editingCountryBranchId) || !location.countryId}
+                      disabled={saving || !location.countryId}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm h-9 px-6 cursor-pointer disabled:opacity-40"
                     >
                       {saving ? t(lang, "common.saving") : editingCountryBranchId ? t(lang, "cnbs.update_country_branch") : t(lang, "cnbs.accept_save_country_branch")}
@@ -1648,7 +1618,7 @@ function CountryBranchSetupContent() {
             summary={[
               { label: tt("cnbs.branch", "Branch"), value: branchType || "-" },
               { label: tt("cnbs.country", "Country"), value: previewCountry || "-" },
-              { label: tt("cnbs.currency", "Currency"), value: currency || "USD" }
+              { label: tt("cnbs.currency", "Currency"), value: currency || "-" }
             ]}
             actions={
               <BranchReportActionsMenu
@@ -1666,14 +1636,14 @@ function CountryBranchSetupContent() {
               {
                 title: tt("cnbs.step1_company_owner", "Step 1 - Company & Owner"),
                 rows: [
-                  { label: tt("cnbs.company_name", "Company Name"), value: company?.name || "-" },
-                  { label: tt("cnbs.company_code", "Company Code"), value: company?.id ? compactCode(company.id, "CMP") : "-" },
-                  { label: tt("cnbs.legal_name", "Legal Name"), value: company?.legal_name || "-" },
-                  { label: tt("cnbs.base_currency", "Base Currency"), value: company?.base_currency || currency || "USD" },
-                  { label: tt("cnbs.owner", "Owner"), value: ownerPreview?.name || ownerName || "-" },
-                  { label: tt("cnbs.owner_code", "Owner Code"), value: ownerPreview?.code || "-" },
-                  { label: tt("cnbs.source", "Source"), value: ownerPreview ? ownerPreview.source : "-" },
-                  { label: tt("cnbs.role_branch", "Role / Branch"), value: ownerPreview ? [ownerPreview.role, ownerPreview.branch].filter(Boolean).join(" · ") : "-" }
+                  { label: tt("cnbs.company_name", "Company Name"), value: companyView?.name || "-" },
+                  { label: tt("cnbs.company_code", "Company Code"), value: companyView?.companyCode || "-" },
+                  { label: tt("cnbs.legal_name", "Legal Name"), value: companyView?.legalName || "-" },
+                  { label: tt("cbs.pr_tax_no", "Tax / NTN No."), value: companyView?.taxNumber || "-" },
+                  { label: tt("cnbs.base_currency", "Base Currency"), value: companyView?.baseCurrency || "-" },
+                  { label: tt("cnbs.owner", "Owner"), value: ownerForView?.name || ownerName || "-" },
+                  { label: tt("cnbs.owner_code", "Owner Code"), value: ownerForView?.code || "-" },
+                  { label: tt("cnbs.source", "Source"), value: ownerForView ? ownerForView.source : "-" }
                 ]
               },
               {
@@ -1694,7 +1664,7 @@ function CountryBranchSetupContent() {
               {
                 title: tt("cnbs.step3_contact_address", "Step 3 - Contact & Address"),
                 rows: [
-                  { label: tt("cnbs.currency", "Currency"), value: currency || "USD" },
+                  { label: tt("cnbs.currency", "Currency"), value: currency || "-" },
                   { label: tt("cnbs.address", "Address"), value: fullAddress || "-" },
                   { label: tt("cnbs.contacts", "Contacts"), value: contactItems.length ? contactItems.join(", ") : "-" }
                 ]
@@ -1835,7 +1805,7 @@ function CountryBranchSetupContent() {
         {drawerBranchData && (
           <BranchLiveReportPanel
             title={tt("cnbs.saved_branch_title", "Saved Country Branch")}
-            status={drawerBranchData.branchStatus}
+            status={drawerBranchData.branchStatus ?? ""}
             branchData={drawerBranchData}
           />
         )}

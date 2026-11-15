@@ -46,6 +46,7 @@ export const COUNTRY_CURRENCY_MAP: Record<string, string> = {
   "Italy": "EUR",
   "Spain": "EUR",
   "Turkey": "TRY",
+  "Turkiye": "TRY",
   "Russia": "RUB",
 
   // Americas
@@ -53,6 +54,7 @@ export const COUNTRY_CURRENCY_MAP: Record<string, string> = {
   "USA": "USD",
   "United States of America": "USD",
   "Canada": "CAD",
+  "Chile": "CLP",
 
   // Africa
   "Egypt": "EGP",
