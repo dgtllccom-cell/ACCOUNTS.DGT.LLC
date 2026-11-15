@@ -47,7 +47,7 @@ import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { rtlLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
-import { openMasterProfile } from "@/lib/reports/master-profiles";
+import { openMasterProfile, buildMasterProfileHtml } from "@/lib/reports/master-profiles";
 import { getLabel } from "./translations";
 import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
 import { Th } from "@/components/ui/translated-th";
@@ -208,6 +208,9 @@ export function AccountProfileView({
   const [activeSection, setActiveSection] = useState<"all" | "01" | "02" | "03" | "04" | "05">("all");
   const [selectedReportType, setSelectedReportType] = useState<string>("certificate");
   const [handoffModalOpen, setHandoffModalOpen] = useState(false);
+  // Customer Account Profile (the owner's sample layout): the on-screen preview is the SAME HTML the print window receives
+  const [profileCardOpen, setProfileCardOpen] = useState(false);
+  const [profileCardHtml, setProfileCardHtml] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -454,6 +457,77 @@ export function AccountProfileView({
     });
   }
 
+  // Customer Account Profile record: real account / customer / bank values only (the builder shows "-" for anything not held)
+  function profileCardRecord() {
+    if (!selectedRow) return null;
+    const cust = liveAccount?.customer ?? null;
+    return {
+      accountId: selectedRow.accountId,
+      accountCode: selectedRow.accountCode,
+      accountName: selectedRow.accountName,
+      globalAccountNumber: liveAccount?.account_number ?? null,
+      accountType: cust ? "Customer" : liveAccount?.company_id ? "Company" : liveAccount?.bank_id ? "Bank" : "Personal",
+      accountCategory: liveAccount?.category ?? null,
+      status: selectedRow.status,
+      currency: selectedRow.currency,
+      createdAt: selectedRow.createdAt,
+      countryName: selectedRow.countryName,
+      mainBranchName: selectedRow.mainBranchName ?? null,
+      mainBranchCode: null,
+      branchName: selectedRow.branchName,
+      branchCode: selectedRow.branchCode,
+      cityBranchName: selectedRow.cityBranchName ?? null,
+      companyName: selectedRow.companyName,
+      companyCode: selectedRow.companyCode,
+      createdByName: null,
+      customerId: cust?.id ?? null,
+      customerNumber: selectedRow.customerNumber ?? null,
+      customerName: cust?.customer_name ?? selectedRow.customerName ?? null,
+      customerFatherName: cust?.father_name ?? null,
+      customerPhotoUrl: cust?.photo_url ?? null,
+      customerMobile: cust?.mobile_number || cust?.phone_number || null,
+      customerEmail: cust?.email_address || null,
+      customerAddress: cust?.address || null,
+      banks: (liveAccount?.banks ?? []).map((b: { name?: string; accountNumber?: string; ibanNumber?: string; branchName?: string; currency?: string }) => ({
+        name: b.name ?? null,
+        accountNumber: b.accountNumber ?? null,
+        ibanNumber: b.ibanNumber ?? null,
+        branchName: b.branchName ?? null,
+        currency: b.currency ?? null,
+        status: null,
+      })),
+      remarks: [] as string[],
+      activities: [] as string[],
+    };
+  }
+
+  function profileCardScope() {
+    return {
+      countryId: selectedRow?.countryId ?? undefined,
+      countryName: selectedRow?.countryName ?? undefined,
+      branchName: selectedRow?.cityBranchName || selectedRow?.branchName || undefined,
+    };
+  }
+
+  function printProfileCard() {
+    const rec = profileCardRecord();
+    if (!rec) return;
+    void openMasterProfile({ entity: "account", layout: "profile_card", lang, autoPrint: true, record: rec, scope: profileCardScope() });
+  }
+
+  useEffect(() => {
+    if (!profileCardOpen || !selectedRow) return;
+    let cancelled = false;
+    const rec = profileCardRecord();
+    if (!rec) return;
+    void buildMasterProfileHtml({ entity: "account", layout: "profile_card", lang, record: rec, scope: profileCardScope() }).then((html) => {
+      if (!cancelled) setProfileCardHtml(html);
+    });
+    return () => { cancelled = true; };
+    // rebuild when the open state, the language or the loaded account changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileCardOpen, lang, selectedRow?.accountId, liveAccount]);
+
   function handleOpenCustomerProfile() {
     if (!selectedRow?.customer) return;
     const cust = selectedRow.customer;
@@ -605,6 +679,38 @@ export function AccountProfileView({
           }
         }
       `}</style>
+
+      {/* ── Customer Account Profile (owner's sample layout). Same HTML as the print window. ── */}
+      {selectedRow && (
+        <div className="no-print mx-auto max-w-5xl px-4 pt-4 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setProfileCardOpen((open) => !open)}
+              className="h-9 px-4 rounded-lg bg-[#0b2d5b] text-white text-xs font-black uppercase tracking-wider hover:bg-[#123a72]"
+            >
+              {t(lang, "acctprof.title", "Customer Account Profile")}
+            </button>
+            {profileCardOpen && (
+              <button
+                type="button"
+                onClick={printProfileCard}
+                className="h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700"
+              >
+                <Printer className="h-3.5 w-3.5 inline-block mr-1" />
+                {t(lang, "common.print", "Print")}
+              </button>
+            )}
+          </div>
+          {profileCardOpen && profileCardHtml && (
+            <iframe
+              title={t(lang, "acctprof.title", "Customer Account Profile")}
+              srcDoc={profileCardHtml}
+              className="w-full h-[1180px] rounded-xl border border-slate-200 bg-white shadow-sm"
+            />
+          )}
+        </div>
+      )}
 
       {/* ── Top Header Navigation Bar ───────────────────────────────── */}
       <div className="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xs px-4 sm:px-8 py-3 no-print">

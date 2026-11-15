@@ -200,7 +200,7 @@ async function loadAccount(id: string) {
       try {
         const { data: custRow } = await admin
           .from("customers")
-          .select("id, customer_name, company_name, mobile, whatsapp, email, address, country_id, person_code")
+          .select("id, customer_name, father_name, photo_url, company_name, mobile, whatsapp, email, address, country_id, person_code")
           .eq("id", data.customer_id)
           .maybeSingle();
         if (custRow) {
