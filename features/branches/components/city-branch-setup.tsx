@@ -1024,8 +1024,11 @@ function CityBranchSetupContent() {
           setBanner({ type: "error", message: t(lang, "cbs.branch_not_found") });
           return;
         }
-        await loadMainBranches(row.country_id);
-        await loadExistingCityBranches(row.country_id, row.country_branch_id);
+        // Load the parent list for the SAVED record's domain. Without the domain the list is empty
+        // and the review shows "-" for the main branch.
+        const rowDomain = row.operational_domain === "shipping" ? "shipping" : "business";
+        await loadMainBranches(row.country_id, rowDomain);
+        await loadExistingCityBranches(row.country_id, row.country_branch_id, rowDomain);
         beginEditCityBranch(row);
       } catch (error) {
         if (!cancelled) setBanner({ type: "error", message: error instanceof Error ? error.message : t(lang, "cbs.failed_load_branch") });
@@ -1504,14 +1507,14 @@ function CityBranchSetupContent() {
           branchName={branchName.trim() || effectiveBranchName}
           branchCode={branchCode}
           branchType="City Branch"
-          category="Own Operation"
+          category="-"
           country={previewCountry}
           stateProvince={locationMeta.state?.name || ""}
           city={locationMeta.city?.name || activeExistingCityBranch?.city_name || ""}
           fullAddress={fullAddress}
           companyName={company?.name || ""}
-          businessDomain="Trading & Distribution"
-          shippingDomain="Import & Export"
+          businessDomain={operationalDomain === "business" ? "Business & Trading" : "-"}
+          shippingDomain={operationalDomain === "shipping" ? "Shipping Line & Clearing Agent" : "-"}
           currency={currency}
           mainBranchName={previewMainBranch || "Head Office (DXB-001)"}
           isSaving={saving}
