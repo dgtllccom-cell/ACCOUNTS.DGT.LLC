@@ -13,6 +13,44 @@ import { getAppEnvironment } from "@/lib/env/environment";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { translateCountry } from "@/lib/i18n/table-values";
 
+type SerialLevelKey = "account" | "branch" | "country" | "super_admin";
+type SerialLevel = { level: 1 | 2 | 3 | 4; key: SerialLevelKey; value: string };
+
+/**
+ * Which account-number levels a viewer may see. Levels are numbered outward from the account:
+ * 1 = account number, 2 = branch, 3 = country, 4 = super admin.
+ * General users see 1; branch admins see 2; country admins see 2 and 3; super admins see all four.
+ * Decided on the server so levels a viewer may not see are never sent to the browser.
+ */
+function visibleSerialLevelsFor(session: { isSuperAdmin?: boolean; roles?: string[] }): Set<number> {
+  const roles = session.roles ?? [];
+  const isSuper =
+    Boolean(session.isSuperAdmin) || roles.some((r) => (DOMAIN_SUPER_ADMIN_ROLES as readonly string[]).includes(r));
+  if (isSuper) return new Set([1, 2, 3, 4]);
+  if (roles.some((r) => r.includes("country"))) return new Set([2, 3]);
+  if (roles.some((r) => r.includes("branch"))) return new Set([2]);
+  return new Set([1]);
+}
+
+function buildSerialLevels(
+  account: {
+    account_number?: string | null;
+    code?: string | null;
+    branch_serial?: string | null;
+    country_serial?: string | null;
+    super_admin_serial?: string | null;
+  },
+  visible: Set<number>
+): SerialLevel[] {
+  const all: SerialLevel[] = [
+    { level: 1, key: "account", value: account.account_number || account.code || "-" },
+    { level: 2, key: "branch", value: account.branch_serial || "-" },
+    { level: 3, key: "country", value: account.country_serial || "-" },
+    { level: 4, key: "super_admin", value: account.super_admin_serial || "-" },
+  ];
+  return all.filter((item) => visible.has(item.level));
+}
+
 /**
  * Localize the free-form account NAME of a set of report rows through the single ERP
  * 3-tier resolver (record-specific approved translation → central system_dictionary →
@@ -861,7 +899,7 @@ export async function GET(request: NextRequest) {
     let accountQuery = supabase
       .from("enterprise_accounts")
       .select(
-        "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, created_by, created_at, updated_at"
+        "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, super_admin_serial, country_serial, branch_serial, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, created_by, created_at, updated_at"
       )
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
@@ -910,7 +948,7 @@ export async function GET(request: NextRequest) {
       const { data: coreCountryData } = await supabase
         .from("enterprise_accounts")
         .select(
-          "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, created_at, updated_at"
+          "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, super_admin_serial, country_serial, branch_serial, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, created_at, updated_at"
         )
         .is("deleted_at", null)
         .in("code", ALLOWED_COUNTRY_ACCOUNT_CODES)
@@ -1293,6 +1331,7 @@ export async function GET(request: NextRequest) {
         branchSerialNumber: account.branch_serial_number ?? "-",
         manualReferenceNumber: account.manual_reference_number ?? null,
         branchAccountSequence: Number(account.branch_account_sequence ?? 0),
+        serialLevels: buildSerialLevels(account, visibleSerialLevelsFor(session)),
         // Raw stored name; localized as a batch below via the 3-tier resolver so the
         // central system_dictionary tier applies for English selection too.
         accountName: account.name,
