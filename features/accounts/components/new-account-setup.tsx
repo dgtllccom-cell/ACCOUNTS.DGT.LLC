@@ -1304,9 +1304,11 @@ export function NewAccountSetup({
   // Load Categories from database
   async function loadCategories(domain = operationalDomain) {
     try {
-      const res = await fetch(`/api/erp/account-categories?domain=${domain}&language=${encodeURIComponent(lang)}`).then((r) => r.json());
-      if (res && res.ok && Array.isArray(res.categories)) {
-        setDbCategories(res.categories);
+      // The API wraps its payload as { ok, data: { categories } } and filters by operationalDomain.
+      const res = await fetch(`/api/erp/account-categories?operationalDomain=${domain}&language=${encodeURIComponent(lang)}`).then((r) => r.json());
+      const list = res?.data?.categories;
+      if (res && res.ok && Array.isArray(list)) {
+        setDbCategories(list);
       }
     } catch (err) {
       console.error("Failed to load account categories:", err);
@@ -1328,7 +1330,7 @@ export function NewAccountSetup({
   }
 
   function handleOpenEditCategory() {
-    const item = dbCategories.find((c) => c.name === category || c.id === selectedCategoryId);
+    const item = dbCategories.find((c) => c.code === category || c.id === selectedCategoryId);
     if (!item) return;
     setCategoryModalMode("edit");
     setEditingCategoryId(item.id);
@@ -1360,8 +1362,9 @@ export function NewAccountSetup({
         }).then((r) => r.json());
         if (!res.ok) throw new Error(res.error?.message || "Failed to create category");
         await loadCategories(operationalDomain);
-        setCategory(res.category.name);
-        setSelectedCategoryId(res.category.id);
+        // Dropdown values are category codes (the same values existing accounts store in enterprise_accounts.category).
+        setCategory(res.data.category.code);
+        setSelectedCategoryId(res.data.category.id);
         setShowCategoryModal(false);
       } else if (editingCategoryId) {
         const res = await fetch(`/api/erp/account-categories/${editingCategoryId}`, {
@@ -1376,8 +1379,8 @@ export function NewAccountSetup({
         }).then((r) => r.json());
         if (!res.ok) throw new Error(res.error?.message || "Failed to update category");
         await loadCategories(operationalDomain);
-        setCategory(res.category.name);
-        setSelectedCategoryId(res.category.id);
+        setCategory(res.data.category.code);
+        setSelectedCategoryId(res.data.category.id);
         setShowCategoryModal(false);
       }
     } catch (err: any) {
@@ -2688,7 +2691,8 @@ export function NewAccountSetup({
                   <div className="flex items-center justify-between">
                     <Label htmlFor="category">{getLabel("category", lang)} *</Label>
                     <div className="flex items-center gap-2">
-                      {category && dbCategories.some((c) => c.name === category || c.id === selectedCategoryId) && (
+                      {/* Editing a category is limited to super admins (the PATCH route enforces the same rule). */}
+                      {erpScope.isSuperAdmin && category && dbCategories.some((c) => c.code === category || c.id === selectedCategoryId) && (
                         <button
                           type="button"
                           onClick={handleOpenEditCategory}
@@ -2717,7 +2721,7 @@ export function NewAccountSetup({
                         handleOpenAddCategory();
                       } else {
                         setCategory(val);
-                        const matched = dbCategories.find((c) => c.name === val || c.id === val);
+                        const matched = dbCategories.find((c) => c.code === val || c.id === val);
                         if (matched) {
                           setSelectedCategoryId(matched.id);
                         } else {
@@ -2730,7 +2734,7 @@ export function NewAccountSetup({
                     <option value="">{getLabel("selectCategory", lang)}</option>
                     {dbCategories.length > 0
                       ? dbCategories.map((item) => (
-                          <option key={item.id} value={item.name}>
+                          <option key={item.id} value={item.code}>
                             {item.name} ({item.code})
                           </option>
                         ))

@@ -23,6 +23,8 @@ export async function GET(request: NextRequest) {
     const domain = request.nextUrl.searchParams.get("operationalDomain");
     const requestedLang = request.nextUrl.searchParams.get("language") || request.nextUrl.searchParams.get("lang");
     const lang = await getRequestLanguage(requestedLang);
+    // Inactive categories are hidden from the New Account form; the settings page asks for them explicitly.
+    const includeInactive = ["1", "true", "yes"].includes((request.nextUrl.searchParams.get("includeInactive") || "").toLowerCase());
 
     const rows = await withLocalPg(async (sql) => {
       if (domain && (domain === "business" || domain === "shipping")) {
@@ -31,6 +33,7 @@ export async function GET(request: NextRequest) {
           from public.account_categories
           where deleted_at is null
             and operational_domain = ${domain}
+            and (${includeInactive}::boolean or is_active)
           order by sort_order asc, name asc
         `;
       }
@@ -38,15 +41,23 @@ export async function GET(request: NextRequest) {
         select id, code, name, operational_domain, description, is_system, is_active, sort_order, created_at, updated_at
         from public.account_categories
         where deleted_at is null
+          and (${includeInactive}::boolean or is_active)
         order by sort_order asc, name asc
       `;
     });
 
-    let localized = (rows ?? []) as any[];
+    // base_name / base_description keep the stored (un-localized) values so the settings editor
+    // edits the real record, never a translation. name / description are the localized display values.
+    const baseRows = ((rows ?? []) as any[]).map((row) => ({
+      ...row,
+      base_name: row.name,
+      base_description: row.description ?? null
+    }));
+    let localized = baseRows;
     try {
-      localized = await localizeRecordFields<any>(localized, "account_categories", ["name", "description"], lang);
+      localized = await localizeRecordFields<any>(baseRows, "account_categories", ["name", "description"], lang);
     } catch {
-      localized = (rows ?? []) as any[];
+      localized = baseRows;
     }
 
     return apiOk({

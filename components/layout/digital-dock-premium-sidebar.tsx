@@ -628,6 +628,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: nt("Dashboard Settings"), href: "/dashboard/settings/dashboard-settings", icon: Sliders },
       { label: nt("Company Settings"), href: "/dashboard/settings/company", icon: Building2 },
       { label: nt("Account Types Setup"), href: "/dashboard/settings/account-type", icon: BookOpen },
+      { label: nt("Account Categories"), href: "/dashboard/settings/account-categories", icon: BookOpen },
       { label: nt("Locations & Cities"), href: "/dashboard/settings/locations", icon: Globe2 },
       { label: nt("Country Tax & Currency"), href: "/dashboard/settings/tax", icon: Landmark },
       { label: nt("Email Accounts"), href: "/dashboard/settings/email-accounts", icon: Mail },

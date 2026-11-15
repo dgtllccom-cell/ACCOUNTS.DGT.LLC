@@ -215,6 +215,7 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/settings/dashboard-settings": ["settings:read", "route:/dashboard/settings/dashboard-settings"],
   "/dashboard/settings/company-setup": ["companies:update", "companies:read", "route:/dashboard/settings/company-setup"],
   "/dashboard/settings/account-type": ["accounts:read", "settings:read", "route:/dashboard/settings/account-type"],
+  "/dashboard/settings/account-categories": ["accounts:read", "settings:read", "route:/dashboard/settings/account-categories"],
   "/dashboard/settings/locations": ["countries:read", "settings:read", "route:/dashboard/settings/locations"],
   "/dashboard/settings/tax": ["uae_tax:read", "settings:read", "route:/dashboard/settings/tax"],
   "/dashboard/settings/translations": ["translations:read", "settings:read", "route:/dashboard/settings/translations"],
