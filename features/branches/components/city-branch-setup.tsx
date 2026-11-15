@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { Pencil, Eye, ArrowLeft, ArrowRight, Printer, Download, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -267,6 +267,8 @@ function CityBranchSetupContent() {
   const [saving, setSaving] = useState(false);
   const [formTouched, setFormTouched] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  // The id of the latest edit-load request; responses for any other id are ignored.
+  const editRequestRef = useRef("");
 
   const [emailPrefix, setEmailPrefix] = useState("");
   const [emailServerName, setEmailServerName] = useState("Local IP Server (UPS Linked)");
@@ -1006,15 +1008,18 @@ function CityBranchSetupContent() {
     if (!isUuid(editId)) return;
     if (editingCityBranchId === editId) return;
 
-    let cancelled = false;
+    // Keyed by the requested id, not by the effect's lifetime: the old `cancelled` flag let an
+    // effect re-run or unmount leave "Loading City Branch Setup..." on screen forever (the same
+    // race the Country page had). A response is applied only when it belongs to the latest request.
+    editRequestRef.current = editId;
+    setEditLoading(true);
     (async () => {
-      setEditLoading(true);
       try {
         const res = await fetch(`/api/branch-management/city-branches?id=${encodeURIComponent(editId)}`, {
           cache: "no-store"
         });
         const json = (await res.json().catch(() => ({}))) as { cityBranches?: CityBranchRow[]; error?: string };
-        if (cancelled) return;
+        if (editRequestRef.current !== editId) return;
         if (!res.ok) {
           setBanner({ type: "error", message: json.error || t(lang, "cbs.branch_not_found") });
           return;
@@ -1024,22 +1029,23 @@ function CityBranchSetupContent() {
           setBanner({ type: "error", message: t(lang, "cbs.branch_not_found") });
           return;
         }
-        // Load the parent list for the SAVED record's domain. Without the domain the list is empty
-        // and the review shows "-" for the main branch.
+        // Parent list and sibling list load in parallel, both for the SAVED record's domain
+        // (without the domain the parent list is empty and the review shows "-").
         const rowDomain = row.operational_domain === "shipping" ? "shipping" : "business";
-        await loadMainBranches(row.country_id, rowDomain);
-        await loadExistingCityBranches(row.country_id, row.country_branch_id, rowDomain);
+        await Promise.all([
+          loadMainBranches(row.country_id, rowDomain),
+          loadExistingCityBranches(row.country_id, row.country_branch_id, rowDomain)
+        ]);
+        if (editRequestRef.current !== editId) return;
         beginEditCityBranch(row);
       } catch (error) {
-        if (!cancelled) setBanner({ type: "error", message: error instanceof Error ? error.message : t(lang, "cbs.failed_load_branch") });
+        if (editRequestRef.current === editId) {
+          setBanner({ type: "error", message: error instanceof Error ? error.message : t(lang, "cbs.failed_load_branch") });
+        }
       } finally {
-        if (!cancelled) setEditLoading(false);
+        if (editRequestRef.current === editId) setEditLoading(false);
       }
     })();
-
-    return () => {
-      cancelled = true;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId]);
 

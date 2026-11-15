@@ -12,8 +12,10 @@ import { encrypt } from "@/lib/crypto";
 import { translateToUrdu, rethrowIfNextControlFlow } from "@/lib/api/response";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { getRequestLanguage } from "@/lib/i18n/server";
+import { t } from "@/lib/i18n/ui";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { createCityBranchAccount } from "@/lib/branch-network/city-branch-account";
 import { parseJsonArray } from "@/lib/utils/parse-json-array";
 import { hasRolePermission } from "@/lib/permissions/middleware";
 import { domainSuperAdminDomain, isCountryLevelRole } from "@/lib/permissions/enterprise-roles";
@@ -489,7 +491,21 @@ export async function POST(request: Request) {
       after: payload
     });
 
-    return NextResponse.json({ id: insertedId }, { status: 201 });
+    // Every new City Branch (business or shipping) gets its New Account automatically. A failure here is
+    // reported in the response; the branch itself is already saved and is not rolled back.
+    const branchAccount = insertedId
+      ? await createCityBranchAccount(request, {
+          cityBranchId: insertedId,
+          countryId: parsed.data.countryId,
+          countryBranchId: parsed.data.countryBranchId,
+          operationalDomain: domain === "shipping" ? "shipping" : "business",
+          name: normName,
+          currency: payload.local_currency,
+          customerId: parsed.data.ownerCustomerId ?? null
+        }).catch((err) => ({ created: false as const, reason: err instanceof Error ? err.message : t(await getRequestLanguage(), "cbs.account_create_failed", "Account creation failed.") }))
+      : null;
+
+    return NextResponse.json({ id: insertedId, account: branchAccount }, { status: 201 });
   } catch (error) {
     rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
