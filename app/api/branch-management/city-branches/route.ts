@@ -539,7 +539,7 @@ export async function POST(request: Request) {
           ${payload.whatsapp_number}, ${payload.company_id}, ${payload.owner_name},
           ${payload.owner_customer_id}, ${payload.owner_profile_id},
           ${sql.json(payload.contacts as any)}, ${sql.json(payload.documents as any)},
-          ${payload.permission_template}, ${JSON.stringify(payload.permission_grants)}::jsonb,
+          ${payload.permission_template}, ${sql.json(payload.permission_grants as any)},
           ${payload.created_by}, ${payload.created_at}, ${payload.updated_at}
         )
         returning id
@@ -858,7 +858,7 @@ export async function PUT(request: Request) {
           contacts = ${sql.json(payload.contacts as any)},
           documents = ${sql.json(payload.documents as any)},
           permission_template = ${payload.permission_template},
-          permission_grants = ${JSON.stringify(payload.permission_grants)}::jsonb,
+          permission_grants = ${sql.json(payload.permission_grants as any)},
           updated_at = ${payload.updated_at}
         where id = ${id}
           and deleted_at is null
