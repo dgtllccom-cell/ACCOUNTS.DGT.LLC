@@ -59,7 +59,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 async function loadAccount(id: string) {
   const admin = createSupabaseAdminClient() as any;
-  const selectFields = "id, scope, operational_domain, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, shipping_line_id, linked_countries, linked_companies, linked_banks, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, address_country_id, address_state_id, address_city_id, address_postal_code, full_address, account_address, created_at, updated_at, deleted_at";
+  const selectFields = "id, scope, operational_domain, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, shipping_line_id, linked_countries, linked_companies, linked_banks, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, address_country_id, address_state_id, address_city_id, address_postal_code, full_address, account_address, created_at, updated_at, deleted_at, category, created_by";
 
   let data = null;
   if (isUuid(id)) {
@@ -354,8 +354,23 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       if (localizedLedger) ledgerOut = { ...ledgerOut, name: localizedLedger.name, original_name: ledgerOut.name };
     }
 
+    // Customer Account Profile: the main branch code and the creator's name, read from their master records (null when not held)
+    let mainBranchCode: string | null = null;
+    if (account.country_branch_id) {
+      const { data: countryBranch } = await admin.from("country_branches").select("code").eq("id", account.country_branch_id).maybeSingle();
+      mainBranchCode = (countryBranch as { code?: string } | null)?.code ?? null;
+    }
+    let createdByName: string | null = null;
+    const creatorId = (account as { created_by?: string | null }).created_by ?? null;
+    if (creatorId) {
+      const { data: creator } = await admin.from("profiles").select("full_name").eq("id", creatorId).maybeSingle();
+      createdByName = (creator as { full_name?: string } | null)?.full_name ?? null;
+    }
+
     const localizedAccount = {
       ...account,
+      main_branch_code: mainBranchCode,
+      created_by_name: createdByName,
       raw_name: account.name,
       localized_name: localizedName,
       name: localizedName,

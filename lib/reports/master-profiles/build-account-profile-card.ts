@@ -80,7 +80,9 @@ export function buildAccountProfileCardConfig(
     footerReport: tt("acctprof.footer_report", "Customer Account Profile Report"),
     companyLines: [branding.address, branding.phone, branding.email, branding.website],
     logoUrl: branding.logoUrl || null,
-    brandEntityName: branding.entityName || branding.legalName || null,
+    // the company's own name only — the branding resolver falls back to the COUNTRY name when no company name is configured,
+    // which must never be printed as the company (shows "-" until the entity's branding is set)
+    brandEntityName: branding.legalName || (branding.entityName && branding.entityName !== branding.countryName ? branding.entityName : null),
     photoUrl: dash(r.customerPhotoUrl),
     holderName: dash(r.customerName) || dash(r.accountName) || "-",
     holderIdLabel: tt("acctprof.holder_id", "Customer ID"),
