@@ -20,14 +20,20 @@ export async function PATCH(
 ) {
   try {
     const session = await requireErpSession();
+    // Editing categories is limited to super admins (the settings page and the form's edit control both call this).
+    if (!session.isSuperAdmin && !session.roles?.includes("super_admin")) {
+      throw new ApiClientError("Only super admins can edit account categories.", { status: 403, code: "FORBIDDEN" });
+    }
     authorizeApiScope(session, { resource: "accounts", action: "update" });
     const { id } = await params;
     const body = await request.json();
     const parsed = updateCategorySchema.parse(body);
+    // An explicit description (even null/empty) replaces the stored one; a missing key leaves it unchanged.
+    const hasDescription = Object.prototype.hasOwnProperty.call(body ?? {}, "description");
 
     const updated = await withLocalPg(async (sql) => {
       const existing = await sql`
-        select id, name, code, is_system
+        select id, name, code, is_system, operational_domain
         from public.account_categories
         where id = ${id}::uuid and deleted_at is null
         limit 1
@@ -36,12 +42,27 @@ export async function PATCH(
         throw new ApiClientError("Category not found", { status: 404 });
       }
 
+      if (parsed.name) {
+        const duplicate = await sql`
+          select id
+          from public.account_categories
+          where lower(trim(name)) = lower(trim(${parsed.name}))
+            and operational_domain = ${existing[0].operational_domain}
+            and id <> ${id}::uuid
+            and deleted_at is null
+          limit 1
+        `;
+        if (duplicate.length > 0) {
+          throw new ApiClientError(`Category "${parsed.name}" already exists in this domain.`, { status: 409, code: "DUPLICATE" });
+        }
+      }
+
       const rows = await sql`
         update public.account_categories
         set
           name = coalesce(${parsed.name ?? null}, name),
           code = coalesce(${parsed.code ?? null}, code),
-          description = coalesce(${parsed.description ?? null}, description),
+          description = case when ${hasDescription}::boolean then ${parsed.description || null} else description end,
           sort_order = coalesce(${parsed.sortOrder ?? null}, sort_order),
           is_active = coalesce(${parsed.isActive ?? null}, is_active),
           updated_at = now()
@@ -56,8 +77,8 @@ export async function PATCH(
         table: "account_categories",
         recordId: updated.id,
         record: {
-          name: parsed.name,
-          description: parsed.description ?? updated.description
+          name: updated.name,
+          description: updated.description ?? null
         },
         originalLanguage: session.preferredLanguage || "en",
         actorId: session.userId
