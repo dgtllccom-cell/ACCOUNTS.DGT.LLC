@@ -15,7 +15,8 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
 
   // New Variation Form
   const [showAddForm, setShowAddForm] = useState(false);
-  const [addForm, setAddForm] = useState({ originCountryId: "", size: "", brand: "" });
+  // Variations carry size and brand only: goods_variations has no origin column. Origin is the goods record's own field.
+  const [addForm, setAddForm] = useState({ size: "", brand: "" });
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState("");
 
@@ -27,9 +28,12 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
         fetch("/api/erp/locations/countries?limit=500").then(r => r.json())
       ]);
 
-      if (goodsRes.ok && goodsRes.data) {
-        setGoods(goodsRes.data);
-        setVariations(goodsRes.data.variations || []);
+      // The detail route returns { goods: { ...record, variations } }. Read the record from `goods`;
+      // reading the envelope itself left the header, HS code and variation list empty.
+      const record = goodsRes.ok ? goodsRes.data?.goods ?? null : null;
+      if (record) {
+        setGoods(record);
+        setVariations(record.variations || []);
       }
       
       // Transit countries from db
@@ -46,7 +50,7 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
   useEffect(() => {
     if (goodsId) {
       setShowAddForm(false);
-      setAddForm({ originCountryId: "", size: "", brand: "" });
+      setAddForm({ size: "", brand: "" });
       fetchData();
     }
   }, [goodsId]);
@@ -66,7 +70,6 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           goodsId,
-          originCountryId: addForm.originCountryId || null,
           size: addForm.size.trim().toUpperCase(),
           brand: addForm.brand.trim().toUpperCase()
         })
@@ -78,7 +81,7 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
       }
       
       // Reset form and refresh
-      setAddForm({ originCountryId: "", size: "", brand: "" });
+      setAddForm({ size: "", brand: "" });
       setShowAddForm(false);
       fetchData();
       
@@ -92,7 +95,7 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
   const getCountryName = (id: string | null) => {
     if (!id) return "-";
     const c = countries.find(x => x.id === id);
-    return c ? c.name : id;
+    return c ? c.name : "-";
   };
 
   if (loading) {
@@ -134,19 +137,6 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
           <h3 className="text-xs font-bold uppercase tracking-wider text-primary mb-3">{t(lang, "goods.gvg_new_variation", "New Variation")}</h3>
           {addError && <div className="text-destructive text-[11px] mb-2">{addError}</div>}
           <div className="flex gap-3 items-end">
-            <div className="flex-1">
-              <label className="block text-[11px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">{t(lang, "purchase.f_origin_country", "Origin Country")}</label>
-              <select
-                value={addForm.originCountryId}
-                onChange={e => setAddForm(p => ({ ...p, originCountryId: e.target.value }))}
-                className="w-full bg-white border border-input rounded px-3 py-2 text-foreground text-sm outline-none focus:border-primary"
-              >
-                <option value="">{t(lang, "goods.gvg_select_origin_ph", "Select Origin...")}</option>
-                {countries.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
             <div className="flex-1">
               <label className="block text-[11px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">{t(lang, "goods.gvg_size_required", "Size *")}</label>
               <input
@@ -190,17 +180,17 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-50 border-b border-border">
                 <tr>
-                  <Th className="px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Goods Name</Th>
-                  <Th className="px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Origin</Th>
-                  <Th className="px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Size</Th>
-                  <Th className="px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Brand</Th>
+                  <Th className="px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">{t(lang, "goods.gvg_col_goods_name", "Goods Name")}</Th>
+                  <Th className="px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">{t(lang, "goods.gvg_col_origin", "Origin")}</Th>
+                  <Th className="px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">{t(lang, "goods.gvg_col_size", "Size")}</Th>
+                  <Th className="px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">{t(lang, "goods.gvg_col_brand", "Brand")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {variations.map(v => (
                   <tr key={v.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-4 py-3 font-semibold text-slate-800">{goods.goods_name || goods.goodsName}</td>
-                    <td className="px-4 py-3 text-slate-600">{getCountryName(v.origin_country_id)}</td>
+                    <td className="px-4 py-3 text-slate-600">{getCountryName(goods.origin_country_id ?? null)}</td>
                     <td className="px-4 py-3 text-slate-600 font-medium">{v.size}</td>
                     <td className="px-4 py-3 text-slate-600 font-medium">{v.brand}</td>
                   </tr>

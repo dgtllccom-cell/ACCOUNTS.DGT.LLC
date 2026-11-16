@@ -199,6 +199,7 @@ export class CustomersRepository {
           WHERE rt.record_table = 'customers' 
             AND rt.record_id = c.id 
             AND rt.field_name = 'customer_name'
+            AND rt.deleted_at IS NULL
           LIMIT 1
         ) name_trans ON true
         LEFT JOIN public.countries cnt ON c.country_id = cnt.id
@@ -396,6 +397,7 @@ export class CustomersRepository {
             WHERE rt.record_table = 'customers' 
               AND rt.record_id = c.id 
               AND rt.field_name = 'customer_name'
+              AND rt.deleted_at IS NULL
             LIMIT 1
           ) name_trans ON true
           LEFT JOIN public.countries cnt ON c.country_id = cnt.id

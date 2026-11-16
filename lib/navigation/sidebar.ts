@@ -1422,6 +1422,11 @@ export const sidebarTree: SidebarNode[] = [
             href: "/dashboard/settings/account-type" as Route
           },
           {
+            key: "mgmt-account-categories",
+            labelKey: "nav.account_categories",
+            href: "/dashboard/settings/account-categories" as Route
+          },
+          {
             key: "mgmt-goods-group",
             labelKey: "nav.goods_master",
             iconKey: "clipboard-list",

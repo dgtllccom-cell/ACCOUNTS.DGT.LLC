@@ -13,6 +13,7 @@ export function GoodsMasterPageClient() {
   const [loading, setLoading] = useState(true);
   const [selectedGoodsId, setSelectedGoodsId] = useState<string | null>(null);
   const [showWizard, setShowWizard] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const fetchGoods = async () => {
     setLoading(true);
@@ -40,7 +41,7 @@ export function GoodsMasterPageClient() {
         <div className="p-4 border-b border-border flex items-center justify-between bg-white">
           <h2 className="font-semibold text-sm">{t(lang, "goods.gmp_goods_masters", "Goods Masters")}</h2>
           <button
-            onClick={() => setShowWizard(true)}
+            onClick={() => { setNotice(null); setShowWizard(true); }}
             className="flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1.5 rounded text-xs font-semibold hover:opacity-90 transition-opacity"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -48,6 +49,11 @@ export function GoodsMasterPageClient() {
           </button>
         </div>
 
+        {notice ? (
+          <p role="status" className="px-4 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border-b border-emerald-200">
+            {notice}
+          </p>
+        ) : null}
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {loading ? (
             <p className="text-xs text-muted-foreground p-4 text-center animate-pulse">{t(lang, "goods.gmp_loading_goods", "Loading goods...")}</p>
@@ -99,9 +105,10 @@ export function GoodsMasterPageClient() {
         <GoodsMasterWizard 
           onClose={() => setShowWizard(false)} 
           onSaved={(id) => {
+            setNotice(t(lang, "goods_wizard.saved", "Goods Master saved."));
             fetchGoods();
             setSelectedGoodsId(id);
-          }} 
+          }}
         />
       )}
     </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
@@ -104,6 +104,10 @@ export interface BranchFinalReviewProps {
 
   // Timestamp
   lastSavedText?: string;
+  // false hides the static "All information has been saved" line (the page must say what really happened).
+  showSavedNotice?: boolean;
+  // Save result or validation message, rendered right above the approval buttons.
+  feedback?: React.ReactNode;
   isSaving?: boolean;
   isEditing?: boolean;
 
@@ -137,7 +141,9 @@ export function BranchFinalReview({
   documents = [],
   usersAndPermissions = [],
   checklistStatus = {},
-  lastSavedText = "28 Oct 2024, 10:24 AM",
+  lastSavedText = "",
+  showSavedNotice = true,
+  feedback = null,
   isSaving = false,
   isEditing = false,
   onBack,
@@ -162,75 +168,16 @@ export function BranchFinalReview({
   );
 
   // Default document metrics if none provided
-  const docList = useMemo(() => {
-    if (documents.length > 0) return documents;
-    return [
-      { id: "d1", name: "Trade License / Commercial Reg", type: "PDF", isRequired: true, isUploaded: true },
-      { id: "d2", name: "Tax Registration Certificate", type: "PDF", isRequired: true, isUploaded: true },
-      { id: "d3", name: "Branch Lease Agreement", type: "PDF", isRequired: true, isUploaded: true },
-      { id: "d4", name: "Board Resolution for Branch Opening", type: "PDF", isRequired: true, isUploaded: true },
-      { id: "d5", name: "NOC from Local Authority", type: "PDF", isRequired: true, isUploaded: true },
-      { id: "d6", name: "Bank Account Verification Letter", type: "PDF", isRequired: true, isUploaded: true },
-      { id: "d7", name: "Identity Proof of Branch Manager", type: "PDF", isRequired: false, isUploaded: true },
-      { id: "d8", name: "Customs & Clearing Authorization", type: "PDF", isRequired: false, isUploaded: true }
-    ];
-  }, [documents]);
+  // Real data only: no sample documents or users are invented. Empty lists render as empty states.
+  const docList = useMemo(() => documents, [documents]);
 
   const totalDocs = docList.length;
   const requiredDocs = docList.filter((d) => d.isRequired).length;
   const uploadedDocs = docList.filter((d) => d.isUploaded).length;
   const pendingDocs = totalDocs - uploadedDocs;
 
-  // Default users & permissions if none provided
-  const userPermsList = useMemo(() => {
-    if (usersAndPermissions.length > 0) return usersAndPermissions;
-    return [
-      {
-        id: "u1",
-        userName: "Amrullah Abdullah",
-        role: "Branch Manager / Operations Admin",
-        operationalDomain: "Operations & Administration",
-        countryScope: country || "Afghanistan",
-        branchScope: branchName || "Kabul City Branch",
-        permissionGroup: "Full Branch Admin",
-        ledgerVisibility: "All Branch Ledgers",
-        status: "Active" as const
-      },
-      {
-        id: "u2",
-        userName: "Farooq Siddiqui",
-        role: "Branch Accountant",
-        operationalDomain: "Finance & Accounting",
-        countryScope: country || "Afghanistan",
-        branchScope: branchName || "Kabul City Branch",
-        permissionGroup: "Finance Read & Write",
-        ledgerVisibility: "Cash & Bank Ledgers",
-        status: "Active" as const
-      },
-      {
-        id: "u3",
-        userName: "Nisar Ahmad",
-        role: "Business Admin",
-        operationalDomain: "Sales & Distribution",
-        countryScope: country || "Afghanistan",
-        branchScope: branchName || "Kabul City Branch",
-        permissionGroup: "Commercial Access",
-        ledgerVisibility: "Customer Accounts",
-        status: "Active" as const
-      },
-      {
-        id: "u4",
-        userName: "Shipping Desk Agent",
-        role: "Shipping / Clearing Admin",
-        operationalDomain: "Logistics & Clearance",
-        countryScope: country || "Afghanistan",
-        branchScope: branchName || "Kabul City Branch",
-        permissionGroup: "Customs Clearance Group",
-        ledgerVisibility: "Logistics Expenses",
-        status: "Active" as const
-      }
-    ];
-  }, [usersAndPermissions, country, branchName]);
+  // Real users & permissions only (no invented assignments).
+  const userPermsList = useMemo(() => usersAndPermissions, [usersAndPermissions]);
 
   // Evaluate the 20 checklist items
   const evaluatedChecklist = useMemo(() => {
@@ -272,7 +219,7 @@ export function BranchFinalReview({
       {
         id: 5,
         title: "Owner / Responsible Person",
-        isCompleted: checklistStatus.ownerResponsiblePerson ?? true,
+        isCompleted: checklistStatus.ownerResponsiblePerson ?? false,
         stepNumber: 2,
         sectionKey: "company"
       },
@@ -300,7 +247,7 @@ export function BranchFinalReview({
       {
         id: 9,
         title: "Mobile / Email",
-        isCompleted: checklistStatus.mobileEmail ?? true,
+        isCompleted: checklistStatus.mobileEmail ?? false,
         stepNumber: 3,
         sectionKey: "location"
       },
@@ -314,7 +261,7 @@ export function BranchFinalReview({
       {
         id: 11,
         title: "Bank / Account setup",
-        isCompleted: checklistStatus.bankAccountSetup ?? true,
+        isCompleted: checklistStatus.bankAccountSetup ?? false,
         stepNumber: 2,
         sectionKey: "company"
       },
@@ -342,14 +289,14 @@ export function BranchFinalReview({
       {
         id: 15,
         title: "Serial numbers generated",
-        isCompleted: checklistStatus.serialNumbersGenerated ?? true,
+        isCompleted: checklistStatus.serialNumbersGenerated ?? false,
         stepNumber: 4,
         sectionKey: "business"
       },
       {
         id: 16,
         title: "Approval status ready",
-        isCompleted: checklistStatus.approvalStatusReady ?? true,
+        isCompleted: checklistStatus.approvalStatusReady ?? false,
         stepNumber: 7,
         sectionKey: "branch_info"
       },
@@ -381,7 +328,7 @@ export function BranchFinalReview({
       {
         id: 20,
         title: "Ledger scope confirmed",
-        isCompleted: checklistStatus.ledgerScopeConfirmed ?? true,
+        isCompleted: checklistStatus.ledgerScopeConfirmed ?? false,
         stepNumber: 4,
         sectionKey: "business"
       }
@@ -572,18 +519,22 @@ export function BranchFinalReview({
         </div>
       </div>
 
-      {/* ── SAVE STATUS NOTIFICATION BANNER ── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-xs font-semibold text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300 shadow-xs">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[11px] font-black shrink-0">
-            ✓
-          </span>
-          <span>All information has been saved successfully and is ready for final review.</span>
+      {/* ── SAVE STATUS NOTIFICATION BANNER (static; pages that pass showSavedNotice=false show their own result) ── */}
+      {showSavedNotice ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-xs font-semibold text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[11px] font-black shrink-0">
+              ✓
+            </span>
+            <span>All information has been saved successfully and is ready for final review.</span>
+          </div>
+          {lastSavedText ? (
+            <div className="text-emerald-700 dark:text-emerald-400 text-[11px] font-medium">
+              Last saved: {lastSavedText}
+            </div>
+          ) : null}
         </div>
-        <div className="text-emerald-700 dark:text-emerald-400 text-[11px] font-medium">
-          Last saved: {lastSavedText}
-        </div>
-      </div>
+      ) : null}
 
       {/* ── 4 SUMMARY CARDS (Top Row) ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1028,6 +979,9 @@ export function BranchFinalReview({
             />
           </div>
         </div>
+
+        {/* Save result / validation message, directly above the action buttons */}
+        {feedback ? <div className="pt-1">{feedback}</div> : null}
 
         {/* Action Buttons Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">

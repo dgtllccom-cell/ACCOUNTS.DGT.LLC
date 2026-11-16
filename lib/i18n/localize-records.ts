@@ -70,6 +70,12 @@ export function isApprovedStoredTranslation(row: Pick<DictRow, "source" | "trans
   return String(row.source || "").toLowerCase() === "imported" && String(row.translation_status || "").toLowerCase() === "complete";
 }
 
+/** Same saved text: surrounding and repeated whitespace ignored, otherwise exact (a name's letters and script are never re-spelled). */
+export function sameSavedText(a: string | null | undefined, b: string | null | undefined): boolean {
+  const norm = (value: string | null | undefined) => String(value ?? "").trim().replace(/\s+/g, " ");
+  return norm(a) === norm(b);
+}
+
 const UNRESOLVED_MACHINE_STATUSES = new Set(["needs_review", "pending", "rejected", "failed"]);
 const LEFTOVER_ENGLISH_RE = /\p{Lu}?[a-z]{2,}/u;
 
@@ -107,6 +113,9 @@ export function trustedStoredTranslation(
   const raw = String(rawValue ?? row?.original_text ?? "").trim();
   if (!row || !raw) return null;
   const legal = isLegalName(table, field);
+  // A legal name's stored variants belong to ONE saved spelling. A row written for another spelling of this field never applies to the
+  // current saved name (the saved name is always what a screen falls back to, so this can only hide a stale variant, never invent one).
+  if (legal && row.original_text && !sameSavedText(row.original_text, raw)) return null;
   const proper = isProperNounField(table, field);
   let usable = isApprovedStoredTranslation(row);
   if (!usable && !legal) usable = proper ? isTrustedPlaceTranslation(row) : usableMachineTranslation(row, raw, lang);
@@ -168,6 +177,14 @@ export function isLegalName(table: string, field: string): boolean {
     const fields = LEGAL_NAME_FIELDS[table];
     if (!fields || fields.has(field)) return true;
   }
+  const leaf = field.includes(".") ? field.slice(field.lastIndexOf(".") + 1) : field;
+  return PERSON_NAME_FIELD_RE.test(leaf);
+}
+
+/** A PERSON's or party's name (customer, employee, owner, company, truck owner …). Never resolved through the generic dictionary:
+ *  a dictionary term that happens to equal a person's name must not be shown as that person's name (owner rule: never invent a name). */
+export function isPersonNameField(table: string, field: string): boolean {
+  if (table === "customers" || table === "employees") return true;
   const leaf = field.includes(".") ? field.slice(field.lastIndexOf(".") + 1) : field;
   return PERSON_NAME_FIELD_RE.test(leaf);
 }
@@ -499,7 +516,8 @@ function resolveSavedValue(ctx: ResolveContext, field: string, rawValue: string,
     if (cName && cName !== rawValue) return cName;
   }
 
-  if (dict) {
+  // a person's name is never resolved through the generic dictionary (only its own authorized variant above, or the saved name)
+  if (dict && !isPersonNameField(table, field)) {
     const d = dict.get(rawValue.toLowerCase());
     if (d) {
       const dictVal = genuine(d[targetCol as keyof DictRow] as string, rawValue, (d.english_text || "").trim(), isEn);

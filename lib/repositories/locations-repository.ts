@@ -44,8 +44,9 @@ type CountrySummary = Pick<CountryRow, "id" | "name" | "iso2" | "iso3" | "curren
 type StateSummary = Pick<StateRow, "id" | "country_id" | "name" | "code" | "is_active"> & {
   total_cities: number; total_districts: number;
 };
+// total_cities = number of cities (public.cities) that belong to this district.
 type DistrictSummary = Pick<DistrictRow, "id" | "country_id" | "state_province_id" | "name" | "code" | "is_active"> & {
-  total_districts: number;
+  total_cities: number;
 };
 
 type CountryInput = {
@@ -1454,17 +1455,21 @@ export class LocationsRepository {
     if (dbUrl) {
       const sql = postgres(dbUrl, { max: 1, prepare: false });
       try {
-        const [countriesRes, statesRes, districtsRes, citiesRes] = await Promise.all([
-          sql`SELECT COUNT(*)::int AS count FROM public.countries WHERE deleted_at IS NULL`,
-          sql`SELECT COUNT(*)::int AS count FROM public.states_provinces WHERE deleted_at IS NULL`,
-          sql`SELECT COUNT(*)::int AS count FROM public.districts WHERE deleted_at IS NULL`,
-          sql`SELECT COUNT(*)::int AS count FROM public.cities WHERE deleted_at IS NULL`
-        ]);
+        // One statement. Four concurrent queries on this single max:1 connection never returned against the pooler
+        // (the state and tree summaries hung for minutes), so they are not run with Promise.all.
+        const [counts] = await sql<{ countries: number; states: number; districts: number; cities: number }[]>`
+          SELECT
+            (SELECT COUNT(*)::int FROM public.countries WHERE deleted_at IS NULL) AS countries,
+            (SELECT COUNT(*)::int FROM public.states_provinces WHERE deleted_at IS NULL) AS states,
+            (SELECT COUNT(*)::int FROM public.districts WHERE deleted_at IS NULL) AS districts,
+            (SELECT COUNT(*)::int FROM public.cities WHERE deleted_at IS NULL) AS cities
+        `;
+        // public.cities = "City" level, public.districts = "District" level (see lib/i18n "lochier.*").
         return {
-          totalCountries: countriesRes[0]?.count || 0,
-          totalStates: statesRes[0]?.count || 0,
-          totalCities: districtsRes[0]?.count || 0,
-          totalDistricts: citiesRes[0]?.count || 0
+          totalCountries: counts?.countries || 0,
+          totalStates: counts?.states || 0,
+          totalCities: counts?.cities || 0,
+          totalDistricts: counts?.districts || 0
         };
       } finally {
         await sql.end({ timeout: 5 });
@@ -1481,8 +1486,8 @@ export class LocationsRepository {
     return {
       totalCountries: c.count || 0,
       totalStates: s.count || 0,
-      totalCities: d.count || 0,
-      totalDistricts: ct.count || 0
+      totalCities: ct.count || 0,
+      totalDistricts: d.count || 0
     };
   }
 
@@ -1601,23 +1606,25 @@ export class LocationsRepository {
     if (dbUrl) {
       const sql = postgres(dbUrl, { max: 1, prepare: false });
       try {
+        // Aggregates are scoped to this country so they use the (country_id, state_province_id, ...) indexes.
+        // An unscoped GROUP BY over the 660k-row cities table made this request exceed 30 s.
         const rows = await sql<StateSummary[]>`
-          SELECT 
+          SELECT
             s.id,
             s.country_id,
             s.name,
             s.code,
             s.is_active,
-            COALESCE(d.total_cities, 0)::int AS total_cities,
-            COALESCE(ct.total_districts, 0)::int AS total_districts
+            COALESCE(ct.total_cities, 0)::int AS total_cities,
+            COALESCE(d.total_districts, 0)::int AS total_districts
           FROM public.states_provinces s
           LEFT JOIN (
-            SELECT state_province_id, COUNT(*)::int AS total_cities
-            FROM public.districts WHERE deleted_at IS NULL GROUP BY state_province_id
+            SELECT state_province_id, COUNT(*)::int AS total_districts
+            FROM public.districts WHERE deleted_at IS NULL AND country_id = ${countryId}::uuid GROUP BY state_province_id
           ) d ON d.state_province_id = s.id
           LEFT JOIN (
-            SELECT state_province_id, COUNT(*)::int AS total_districts
-            FROM public.cities WHERE deleted_at IS NULL GROUP BY state_province_id
+            SELECT state_province_id, COUNT(*)::int AS total_cities
+            FROM public.cities WHERE deleted_at IS NULL AND country_id = ${countryId}::uuid GROUP BY state_province_id
           ) ct ON ct.state_province_id = s.id
           WHERE s.country_id = ${countryId}::uuid AND s.deleted_at IS NULL
           ORDER BY s.name ASC
@@ -1641,19 +1648,26 @@ export class LocationsRepository {
     if (dbUrl) {
       const sql = postgres(dbUrl, { max: 1, prepare: false });
       try {
+        // Counts only the cities of this state's districts (not a full scan of public.cities).
         const rows = await sql<DistrictSummary[]>`
-          SELECT 
+          SELECT
             d.id,
             d.country_id,
             d.state_province_id,
             d.name,
             d.code,
             d.is_active,
-            COALESCE(ct.total_districts, 0)::int AS total_districts
+            COALESCE(ct.total_cities, 0)::int AS total_cities
           FROM public.districts d
           LEFT JOIN (
-            SELECT district_id, COUNT(*)::int AS total_districts
-            FROM public.cities WHERE deleted_at IS NULL GROUP BY district_id
+            SELECT c.district_id, COUNT(*)::int AS total_cities
+            FROM public.cities c
+            WHERE c.deleted_at IS NULL
+              AND c.district_id IN (
+                SELECT dd.id FROM public.districts dd
+                WHERE dd.state_province_id = ${stateId}::uuid AND dd.deleted_at IS NULL
+              )
+            GROUP BY c.district_id
           ) ct ON ct.district_id = d.id
           WHERE d.state_province_id = ${stateId}::uuid AND d.deleted_at IS NULL
           ORDER BY d.name ASC
@@ -1667,7 +1681,7 @@ export class LocationsRepository {
     const districts = await this.listDistricts({ stateProvinceId: stateId });
     return districts.map((d) => ({
       ...d,
-      total_districts: 0
+      total_cities: 0
     }));
   }
 
@@ -1676,15 +1690,31 @@ export class LocationsRepository {
     if (dbUrl) {
       const sql = postgres(dbUrl, { max: 1, prepare: false });
       try {
-        const [countries, states, districts, cities] = await Promise.all([
-          sql`SELECT id, name, iso2 AS code, is_active FROM public.countries WHERE deleted_at IS NULL ORDER BY name ASC`,
-          sql`SELECT id, country_id, name, code, is_active FROM public.states_provinces WHERE deleted_at IS NULL ORDER BY name ASC`,
-          sql`SELECT id, country_id, state_province_id, name, code, is_active FROM public.districts WHERE deleted_at IS NULL ORDER BY name ASC`,
-          sql`SELECT id, country_id, state_province_id, district_id, name, code, zip_code, is_active FROM public.cities WHERE deleted_at IS NULL ORDER BY name ASC`
-        ]);
+        // Sequential on purpose: concurrent queries on this max:1 connection do not return against the pooler.
+        const countries = await sql`SELECT id, name, iso2 AS code, is_active FROM public.countries WHERE deleted_at IS NULL ORDER BY name ASC`;
+        const states = await sql`SELECT id, country_id, name, code, is_active FROM public.states_provinces WHERE deleted_at IS NULL ORDER BY name ASC`;
+        const districts = await sql`SELECT id, country_id, state_province_id, name, code, is_active FROM public.districts WHERE deleted_at IS NULL ORDER BY name ASC`;
+        const cities = await sql`SELECT id, country_id, state_province_id, district_id, name, code, zip_code, is_active FROM public.cities WHERE deleted_at IS NULL ORDER BY name ASC`;
 
+        // Group children by parent once (O(n)); filtering the 660k-row city list per district was O(districts x cities).
+        const groupBy = (rows: any[], key: string) => {
+          const map = new Map<string, any[]>();
+          for (const row of rows) {
+            const k = row[key];
+            if (!k) continue;
+            const list = map.get(k);
+            if (list) list.push(row);
+            else map.set(k, [row]);
+          }
+          return map;
+        };
+        const statesByCountry = groupBy(states, "country_id");
+        const districtsByState = groupBy(districts, "state_province_id");
+        const citiesByDistrict = groupBy(cities, "district_id");
+
+        // Node types keep the wizard's tab keys: "city" = public.districts rows, "district" = public.cities rows.
         const tree = countries.map((c: any) => {
-          const cStates = states.filter((s: any) => s.country_id === c.id);
+          const cStates = statesByCountry.get(c.id) ?? [];
           return {
             id: c.id,
             name: c.name,
@@ -1693,7 +1723,7 @@ export class LocationsRepository {
             isActive: c.is_active,
             item: c,
             children: cStates.map((s: any) => {
-              const sCities = districts.filter((d: any) => d.state_province_id === s.id);
+              const sCities = districtsByState.get(s.id) ?? [];
               return {
                 id: s.id,
                 name: s.name,
@@ -1702,7 +1732,7 @@ export class LocationsRepository {
                 isActive: s.is_active,
                 item: s,
                 children: sCities.map((d: any) => {
-                  const dTehsils = cities.filter((ct: any) => ct.district_id === d.id);
+                  const dTehsils = citiesByDistrict.get(d.id) ?? [];
                   return {
                     id: d.id,
                     name: d.name,

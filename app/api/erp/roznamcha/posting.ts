@@ -83,6 +83,47 @@ async function nextTransactionSerial(admin: any, scopeType: "global" | "country"
   }
 }
 
+/**
+ * Decides the USD equivalent (usd_rate / usd_amount) of one posted line. Priority:
+ *  1. an APPROVED Daily Exchange Rate for the posting date (authoritative);
+ *  2. the rate typed inline for a USD entry with no approved rate (AED per USD, stored as manual);
+ *  3. base-currency lines, and lines the user rated manually, post WITHOUT any exchange rate.
+ *     usd_rate / usd_amount are NOT NULL columns, so 0 marks "no USD equivalent recorded".
+ * Only a foreign line with no approved rate and no rate supplied is refused.
+ */
+export function resolveUsdConversion(input: {
+  amount: number;
+  lineCurrency: string;
+  countryCurrency: string | null;
+  approvedRate: number | null;
+  rateSource?: string | null;
+  entryCurrency?: string | null;
+  transactionRate?: number | null;
+  entryDate: string;
+}): { usdRate: number; usdAmount: number } {
+  const amount = toNumber(input.amount);
+  const usdAmountAt = (rate: number) => Math.round((amount / rate) * 10000) / 10000;
+  const lineCurrency = String(input.lineCurrency || "").toUpperCase();
+  const countryCurrency = input.countryCurrency ? String(input.countryCurrency).toUpperCase() : null;
+
+  if (input.approvedRate && input.approvedRate > 0) {
+    return { usdRate: input.approvedRate, usdAmount: usdAmountAt(input.approvedRate) };
+  }
+
+  const typedRate = toNumber(input.transactionRate);
+  if (input.rateSource === "manual" && String(input.entryCurrency || "").toUpperCase() === "USD" && typedRate > 0) {
+    return { usdRate: typedRate, usdAmount: usdAmountAt(typedRate) };
+  }
+
+  if ((countryCurrency && lineCurrency === countryCurrency) || input.rateSource === "base" || input.rateSource === "manual") {
+    return { usdRate: 0, usdAmount: 0 };
+  }
+
+  throw new Error(
+    "TODAY'S EXCHANGE RATE PENDING / MISSING: No approved exchange rate found for " + (countryCurrency || "local currency") + " on " + input.entryDate + ". Enter the rate for this entry or ask the Country Admin to approve today's rate in Daily Exchange Rate."
+  );
+}
+
 async function resolveUsdAmount(admin: any, input: {
   countryId: string | null | undefined;
   countryBranchId?: string | null | undefined;
@@ -91,6 +132,8 @@ async function resolveUsdAmount(admin: any, input: {
   rate: number;
   entryDate: string;
   isDebit: boolean;
+  rateSource?: string | null;
+  entryCurrency?: string | null;
 }) {
   const amount = toNumber(input.amount);
   if (!amount) return { usdRate: 1, usdAmount: 0 };
@@ -99,57 +142,42 @@ async function resolveUsdAmount(admin: any, input: {
   if (String(input.currency || "").toUpperCase() === "USD") {
     return { usdRate: 1, usdAmount: Math.round(amount * 10000) / 10000 };
   }
+  if (!input.countryId) return { usdRate: 1, usdAmount: Math.round(amount * 10000) / 10000 };
 
-  let countryCurrency: string | null = null;
-  if (input.countryId) {
-    const { data: country, error } = await admin
-      .from("countries")
-      .select("currency_code")
-      .eq("id", input.countryId)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    countryCurrency = country?.currency_code ? String(country.currency_code).toUpperCase() : null;
+  const { data: country, error } = await admin
+    .from("countries")
+    .select("currency_code")
+    .eq("id", input.countryId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  const countryCurrency = country?.currency_code ? String(country.currency_code).toUpperCase() : null;
+  if (countryCurrency === "USD") return { usdRate: 1, usdAmount: Math.round(amount * 10000) / 10000 };
+
+  // Approved rate effective at the posting date (same rule as resolveUsdAmountPg).
+  const { data, error: rpcError } = await admin.rpc("get_daily_rate", {
+    p_country_id: input.countryId,
+    p_country_branch_id: input.countryBranchId || null,
+    p_date: input.entryDate,
+  });
+  if (rpcError) console.warn("[posting] get_daily_rate failed for " + input.entryDate + ": " + rpcError.message);
+  const row = Array.isArray(data) ? data[0] : data;
+  let approvedRate: number | null = null;
+  if (!rpcError && row && (row.credit_rate || row.selling_rate || row.debit_rate || row.buying_rate)) {
+    approvedRate = input.isDebit
+      ? toNumber(row.debit_rate || row.buying_rate || row.selling_rate || 1)
+      : toNumber(row.credit_rate || row.selling_rate || row.buying_rate || 1);
   }
 
-  // If the country native currency is USD itself, the rate to USD is 1
-  if (countryCurrency === "USD") {
-    return { usdRate: 1, usdAmount: Math.round(amount * 10000) / 10000 };
-  }
-
-  // Resolve the applicable Daily Exchange Rate. daily_usd_rates stores "units of local
-  // currency (PKR, AED, …) = 1 USD"; debit_rate applies to debit lines, credit_rate to
-  // credit lines. get_daily_rate() picks the rate EFFECTIVE at the transaction instant:
-  // for today's postings that is now() (so an intraday rate change is picked up); for a
-  // back-dated entry it is the end of that day. It also does the "latest rate on or
-  // before" fallback, and prefers a branch-specific rate over the country-level one.
-  // The resolved rate is then frozen onto the roznamcha line and never recomputed.
-  let usdRate = 1;
-  if (input.countryId) {
-    const { data, error } = await admin.rpc("get_daily_rate", {
-      p_country_id: input.countryId,
-      p_country_branch_id: input.countryBranchId || null,
-      p_date: input.entryDate,
-    });
-    const row = Array.isArray(data) ? data[0] : data;
-    if (!error && row && (row.credit_rate || row.selling_rate || row.debit_rate || row.buying_rate)) {
-      usdRate = input.isDebit
-        ? toNumber(row.debit_rate || row.buying_rate || row.selling_rate || 1)
-        : toNumber(row.credit_rate || row.selling_rate || row.buying_rate || 1);
-    } else {
-      throw new Error(
-        `TODAY'S EXCHANGE RATE PENDING / MISSING: No approved exchange rate found for ${countryCurrency || "local currency"} on ${input.entryDate}. Financial posting is blocked until the Country Admin enters the daily exchange rate.`
-      );
-    }
-  }
-
-  if (usdRate <= 0) usdRate = 1;
-
-  // Since all line debits/credits are stored in the country's local currency,
-  // we convert the local currency amount to USD by dividing by the active daily USD rate.
-  return {
-    usdRate,
-    usdAmount: Math.round((amount / usdRate) * 10000) / 10000
-  };
+  return resolveUsdConversion({
+    amount,
+    lineCurrency: input.currency,
+    countryCurrency,
+    approvedRate,
+    rateSource: input.rateSource,
+    entryCurrency: input.entryCurrency,
+    transactionRate: input.rate,
+    entryDate: input.entryDate,
+  });
 }
 
 async function nextEntitySerial(
@@ -437,6 +465,8 @@ async function resolveUsdAmountPg(sql: any, input: {
   rate: number;
   entryDate: string;
   isDebit: boolean;
+  rateSource?: string | null;
+  entryCurrency?: string | null;
 }) {
   const amount = toNumber(input.amount);
   if (!amount) return { usdRate: 1, usdAmount: 0 };
@@ -446,42 +476,36 @@ async function resolveUsdAmountPg(sql: any, input: {
   if (String(input.currency || "").toUpperCase() === "USD") {
     return { usdRate: 1, usdAmount: Math.round(amount * 10000) / 10000 };
   }
+  if (!input.countryId) return { usdRate: 1, usdAmount: Math.round(amount * 10000) / 10000 };
 
-  let countryCurrency: string | null = null;
-  if (input.countryId) {
-    const rows = await sql`select currency_code from public.countries where id = ${input.countryId} limit 1`;
-    countryCurrency = rows[0]?.currency_code ? String(rows[0].currency_code).toUpperCase() : null;
+  const countryRows = await sql`select currency_code from public.countries where id = ${input.countryId} limit 1`;
+  const countryCurrency = countryRows[0]?.currency_code ? String(countryRows[0].currency_code).toUpperCase() : null;
+  if (countryCurrency === "USD") return { usdRate: 1, usdAmount: Math.round(amount * 10000) / 10000 };
+
+  // Approved rate effective AT the transaction instant (intraday-aware). A base-currency line
+  // with no approved rate on the date still posts (see resolveUsdConversion).
+  const rows = await sql`
+    select buying_rate, selling_rate, credit_rate, debit_rate
+    from get_daily_rate(${input.countryId}::uuid, ${input.countryBranchId || null}::uuid, ${input.entryDate}::text)
+  `;
+  const row = rows[0];
+  let approvedRate: number | null = null;
+  if (row && (row.credit_rate || row.selling_rate || row.debit_rate || row.buying_rate)) {
+    approvedRate = input.isDebit
+      ? toNumber(row.debit_rate || row.buying_rate || row.selling_rate || 1)
+      : toNumber(row.credit_rate || row.selling_rate || row.buying_rate || 1);
   }
 
-  if (countryCurrency === "USD") {
-    return { usdRate: 1, usdAmount: Math.round(amount * 10000) / 10000 };
-  }
-
-  // Rate effective AT the transaction instant (intraday-aware) — see resolveUsdAmount().
-  let usdRate = 1;
-  if (input.countryId) {
-    const rows = await sql`
-      select buying_rate, selling_rate, credit_rate, debit_rate
-      from get_daily_rate(${input.countryId}::uuid, ${input.countryBranchId || null}::uuid, ${input.entryDate}::text)
-    `;
-    const row = rows[0];
-    if (row && (row.credit_rate || row.selling_rate || row.debit_rate || row.buying_rate)) {
-      usdRate = input.isDebit
-        ? toNumber(row.debit_rate || row.buying_rate || row.selling_rate || 1)
-        : toNumber(row.credit_rate || row.selling_rate || row.buying_rate || 1);
-    } else {
-      throw new Error(
-        `TODAY'S EXCHANGE RATE PENDING / MISSING: No approved exchange rate found for ${countryCurrency || "local currency"} on ${input.entryDate}. Financial posting is blocked until the Country Admin enters the daily exchange rate.`
-      );
-    }
-  }
-
-  if (usdRate <= 0) usdRate = 1;
-
-  return {
-    usdRate,
-    usdAmount: Math.round((amount / usdRate) * 10000) / 10000
-  };
+  return resolveUsdConversion({
+    amount,
+    lineCurrency: input.currency,
+    countryCurrency,
+    approvedRate,
+    rateSource: input.rateSource,
+    entryCurrency: input.entryCurrency,
+    transactionRate: input.rate,
+    entryDate: input.entryDate,
+  });
 }
 
 /**
@@ -777,7 +801,9 @@ async function postRoznamchaEntryAtomically(sql: any, ctx: {
       amount: debit + credit,
       rate: toNumber(line.exchangeRate) || 1,
       entryDate: body.entryDate,
-      isDebit: debit > 0
+      isDebit: debit > 0,
+      rateSource: (line as any).rateSource ?? null,
+      entryCurrency: (line as any).entryCurrency ?? null
     });
 
     const lineEntrySerial = debit > 0 ? (transactionSerials.debitSerialNumber || transactionSerials.entrySerialNumber) : (transactionSerials.creditSerialNumber || transactionSerials.entrySerialNumber);
@@ -1115,7 +1141,9 @@ async function postRoznamchaWithErpSessionSupabase(input: {
       amount: debit + credit,
       rate: usdRate,
       entryDate: body.entryDate,
-      isDebit: debit > 0
+      isDebit: debit > 0,
+      rateSource: (line as any).rateSource ?? null,
+      entryCurrency: (line as any).entryCurrency ?? null
     });
 
     const { error: lineError } = await admin.from("roznamcha_lines").insert({

@@ -10,6 +10,7 @@ import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { parseJsonArray } from "@/lib/utils/parse-json-array";
 import { locationsRepository } from "@/lib/repositories/locations-repository";
 
 function formatError(message: string, _isSuperAdmin?: boolean) {
@@ -31,10 +32,14 @@ function isMissingOptionalColumn(message: string) {
 }
 
 function normalizeCountryBranchRows(rows: any[] | null | undefined) {
+  // The normalised fields must come AFTER the spread: a raw row would otherwise overwrite
+  // them, leaving double-encoded (string) jsonb values for the client to crash on.
   return (rows ?? []).map((row) => ({
     permission_template: row.permission_template ?? "country-standard",
-    permission_grants: Array.isArray(row.permission_grants) ? row.permission_grants : [],
-    ...row
+    ...row,
+    permission_grants: parseJsonArray(row.permission_grants),
+    contacts: parseJsonArray(row.contacts),
+    documents: parseJsonArray(row.documents),
   }));
 }
 
@@ -268,10 +273,10 @@ export async function POST(request: Request) {
           ${payload.owner_name},
           ${payload.owner_customer_id ? payload.owner_customer_id : null}::uuid,
           ${payload.owner_profile_id ? payload.owner_profile_id : null}::uuid,
-          ${JSON.stringify(payload.contacts)}::jsonb,
-          ${JSON.stringify(payload.documents)}::jsonb,
+          ${sql.json((payload.contacts ?? []) as any)},
+          ${sql.json((payload.documents ?? []) as any)},
           ${payload.permission_template},
-          ${JSON.stringify(payload.permission_grants)}::jsonb,
+          ${sql.json((payload.permission_grants ?? []) as any)},
           ${payload.created_by ? payload.created_by : null}::uuid,
           ${payload.created_at},
           ${payload.updated_at}
@@ -435,10 +440,10 @@ export async function PUT(request: Request) {
           owner_name = ${payload.owner_name},
           owner_customer_id = ${payload.owner_customer_id ? payload.owner_customer_id : null}::uuid,
           owner_profile_id = ${payload.owner_profile_id ? payload.owner_profile_id : null}::uuid,
-          contacts = ${JSON.stringify(payload.contacts)}::jsonb,
-          documents = ${JSON.stringify(payload.documents)}::jsonb,
+          contacts = ${sql.json((payload.contacts ?? []) as any)},
+          documents = ${sql.json((payload.documents ?? []) as any)},
           permission_template = ${payload.permission_template},
-          permission_grants = ${JSON.stringify(payload.permission_grants)}::jsonb,
+          permission_grants = ${sql.json((payload.permission_grants ?? []) as any)},
           updated_at = ${payload.updated_at}
         where id = ${id}::uuid and deleted_at is null
         returning id

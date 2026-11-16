@@ -12,7 +12,7 @@ const state = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/auth/session", () => ({ requireErpSession: async () => state.session }));
 vi.mock("@/lib/api/supabase", () => ({ createApiSupabaseClient: async () => {
-  const q: any = { select: () => q, eq: () => q, is: () => q, lte: () => q, or: () => q, order: () => q, limit: async () => ({ data: [], error: null }) };
+  const q: any = { select: () => q, eq: () => q, is: () => q, lte: () => q, or: () => q, order: () => q, limit: async () => ({ data: [], error: null }), maybeSingle: async () => ({ data: null, error: null }) };
   return { rpc: state.rpc, from: () => q };
 } }));
 vi.mock("@/lib/supabase/admin", () => ({ createSupabaseAdminClient: state.admin }));
