@@ -10,9 +10,7 @@ export default async function CashEntryPage() {
   const lang = await getRequestLanguage();
 
   return (
-    <CashEntryStyleScope lang={lang}>
-      {/* Scan / Upload a receipt, cheque or transfer advice → reviewed draft → this form pre-filled. */}
-      <IntakeDraftPickerBar targetModule="roznamcha_entries" lang={lang} />
+    <CashEntryStyleScope lang={lang} hideBar>
       <CashEntryForm
         lang={lang}
         pageTitle={t(lang, "nav.cash_entry", "Cash & Journal Entry (Roznamcha Bill)")}

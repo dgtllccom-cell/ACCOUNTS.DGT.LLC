@@ -363,8 +363,8 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
 
       <div className="flex flex-wrap items-center gap-1.5">
         <div id="erp-page-actions-slot" className="flex flex-wrap items-center gap-1.5 empty:hidden" />
-        <ViewModeToggle />
-        {!pathname?.startsWith("/dashboard/purchase/new-purchase-booking-order") && !pathname?.startsWith("/dashboard/purchase/purchase-order") && (
+        {!pathname?.startsWith("/dashboard/roznamcha/cash-entry") && <ViewModeToggle />}
+        {!pathname?.startsWith("/dashboard/purchase/new-purchase-booking-order") && !pathname?.startsWith("/dashboard/purchase/purchase-order") && !pathname?.startsWith("/dashboard/roznamcha/cash-entry") && (
           <div ref={menuRef} className="relative">
             <Button
               type="button"

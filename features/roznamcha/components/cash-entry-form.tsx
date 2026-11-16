@@ -316,6 +316,160 @@ function writeLocalBankList(key: string, values: SavedBankItem[]) {
   }
 }
 
+function RoznamchaSerialCell({
+  entrySerial,
+  superAdminSerial,
+  countrySerial,
+  branchSerial,
+  tr,
+}: {
+  entrySerial: string;
+  superAdminSerial: string;
+  countrySerial: string;
+  branchSerial: string;
+  tr: (key: string, def: string) => string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div
+      className="relative inline-block"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className="font-mono font-bold text-slate-800 dark:text-slate-200 hover:text-blue-600 hover:underline cursor-pointer flex items-center gap-1"
+        dir="ltr"
+        title={tr("cj.viewSerials", "View Serials")}
+      >
+        <span>{entrySerial}</span>
+      </button>
+
+      {open && (
+        <div
+          role="tooltip"
+          className="absolute start-0 top-full z-50 mt-1 min-w-[220px] rounded-xl border border-slate-200 bg-white p-2.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 pointer-events-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="font-bold text-[11px] text-slate-500 dark:text-slate-400 pb-1.5 mb-1.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <span>{tr("cj.viewSerials", "View Serials")}</span>
+            <span className="font-mono text-[10px] text-blue-600 font-bold">{entrySerial}</span>
+          </div>
+          <div className="space-y-1.5 text-[11px]">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-slate-500 font-semibold">{tr("cj.superAdminSerialLabel", "Super Admin")}:</span>
+              <span className="font-mono font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-800 text-[10px]" dir="ltr">
+                {superAdminSerial}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-slate-500 font-semibold">{tr("cj.countrySerialLabel", "Country")}:</span>
+              <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 text-[10px]" dir="ltr">
+                {countrySerial}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-slate-500 font-semibold">{tr("cj.branchSerialLabel", "Branch")}:</span>
+              <span className="font-mono font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 text-[10px]" dir="ltr">
+                {branchSerial}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+              <span className="text-slate-700 dark:text-slate-200 font-bold">{tr("cj.currentBranchEntrySerial", "Entry Serial")}:</span>
+              <span className="font-mono font-black text-orange-950 dark:text-orange-100 bg-orange-100 dark:bg-orange-900/60 px-1.5 py-0.5 rounded border border-orange-300 dark:border-orange-700 text-[10px]" dir="ltr">
+                {entrySerial}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RoznamchaAccountCell({
+  name,
+  code,
+  country,
+  branch,
+  currency,
+  accountKind,
+}: {
+  name: string;
+  code: string;
+  country?: string;
+  branch?: string;
+  currency?: string;
+  accountKind?: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div
+      className="relative inline-block max-w-[220px]"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <div className="flex flex-col min-w-0 leading-tight cursor-pointer" onClick={() => setOpen((prev) => !prev)}>
+        <span className="font-bold text-slate-800 dark:text-slate-200 truncate hover:text-blue-600" title={name}>
+          {name}
+        </span>
+        {code && (
+          <span className="font-mono text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 truncate" dir="ltr">
+            {code}
+          </span>
+        )}
+      </div>
+
+      {open && (
+        <div
+          role="tooltip"
+          className="absolute start-0 top-full z-50 mt-1 min-w-[240px] rounded-xl border border-slate-200 bg-white p-2.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 pointer-events-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="font-bold text-[11.5px] text-blue-700 dark:text-blue-300 pb-1.5 mb-1.5 border-b border-slate-100 dark:border-slate-800">
+            {name}
+          </div>
+          <div className="space-y-1 text-[11px]">
+            {code && (
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 font-medium">Code:</span>
+                <span className="font-mono font-bold text-slate-700 dark:text-slate-300" dir="ltr">{code}</span>
+              </div>
+            )}
+            {branch && (
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 font-medium">Branch:</span>
+                <span className="font-semibold text-slate-700 dark:text-slate-300">{branch}</span>
+              </div>
+            )}
+            {country && (
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 font-medium">Country:</span>
+                <span className="font-semibold text-slate-700 dark:text-slate-300">{country}</span>
+              </div>
+            )}
+            {currency && (
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 font-medium">Currency:</span>
+                <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{currency}</span>
+              </div>
+            )}
+            {accountKind && (
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 font-medium">Kind / Type:</span>
+                <span className="font-semibold text-slate-700 dark:text-slate-300">{accountKind}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function CashEntryForm({
   lang,
   pageTitle,
@@ -2610,6 +2764,98 @@ export function CashEntryForm({
     });
   };
 
+  const handleExportCsv = () => {
+    try {
+      const headers = [
+        "Entry Serial",
+        "Super Admin Serial",
+        "Country Serial",
+        "Branch Serial",
+        "Date & Time",
+        "Branch",
+        "Country",
+        "Account Code",
+        "Account Name",
+        "Roznamcha",
+        "Details",
+        "Currency",
+        "Exchange Rate",
+        "Credit (Local)",
+        "Credit (USD)",
+        "Debit (Local)",
+        "Debit (USD)",
+        "Balance (USD)"
+      ];
+      const csvRows = [headers.join(",")];
+      filteredRecentEntries.forEach((row) => {
+        const lines = getDisplayLinesForEntry(row);
+        lines.forEach((line) => {
+          const isDebit = Number(line.debit || 0) > 0;
+          const isCredit = Number(line.credit || 0) > 0;
+          const creditLocal = isCredit ? Number(line.credit || 0) : 0;
+          const debitLocal = isDebit ? Number(line.debit || 0) : 0;
+          const amountVal = isDebit ? debitLocal : creditLocal;
+          const lineCurr = String(line.currency || row.countries?.currency_code || branchCurrency || "AED").toUpperCase();
+          const rawRate = line.exchange_rate ?? line.usd_rate ?? row.exchange_rate ?? currencyRateLookup[lineCurr] ?? (lineCurr === "USD" ? 1 : null);
+          const rateNum = rawRate != null && Number(rawRate) > 0 ? Number(rawRate) : null;
+          const lineUsdVal = line.usd_amount != null && Number(line.usd_amount) > 0
+            ? Number(line.usd_amount)
+            : lineCurr === "USD"
+            ? amountVal
+            : rateNum
+            ? amountVal / rateNum
+            : 0;
+          const creditUsdVal = isCredit ? lineUsdVal : 0;
+          const debitUsdVal = isDebit ? lineUsdVal : 0;
+          const balanceUsdVal = creditUsdVal - debitUsdVal;
+
+          const matchedLedger = line.ledger_id ? ledgers.find((l) => l.ledgerId === line.ledger_id || (l as any).id === line.ledger_id) : null;
+          const accName = (line.accounts?.name || matchedLedger?.accountName || matchedLedger?.ledgerName || line.ledgers?.name || line.description || "").replace(/"/g, '""');
+          const accCode = (line.accounts?.code || matchedLedger?.accountCode || matchedLedger?.ledgerCode || line.ledgers?.code || line.account_number || matchedLedger?.manualReferenceNumber || "").replace(/"/g, '""');
+          const ctry = (row.countries?.name || selectedCountry?.name || "UAE").replace(/"/g, '""');
+          const br = (row.city_branches?.name || row.country_branches?.name || "Main Branch").replace(/"/g, '""');
+          const narration = (line.description || row.narration || "").replace(/"/g, '""');
+
+          const dateStr = row.entry_date ? formatDisplayDateShort(String(row.entry_date).slice(0, 10)) : "";
+          const timeStr = row.created_at ? new Date(row.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }) : "";
+
+          const rowVals = [
+            `"${line.entry_serial_number || row.entry_serial_number || ""}"`,
+            `"${row.super_admin_serial_number || ""}"`,
+            `"${row.country_transaction_serial_number || ""}"`,
+            `"${row.branch_transaction_serial_number || row.main_branch_transaction_serial || row.city_branch_transaction_serial || ""}"`,
+            `"${dateStr} ${timeStr}"`,
+            `"${br}"`,
+            `"${ctry}"`,
+            `"${accCode}"`,
+            `"${accName}"`,
+            `"${getRoznamchaCategoryLabel(row)} ${row.reference_no || row.journal_no || row.voucher_no || ""}"`,
+            `"${narration}"`,
+            `"${lineCurr}"`,
+            `"${rateNum ? rateNum.toFixed(4) : "—"}"`,
+            `"${creditLocal}"`,
+            `"${creditUsdVal}"`,
+            `"${debitLocal}"`,
+            `"${debitUsdVal}"`,
+            `"${balanceUsdVal}"`
+          ];
+          csvRows.push(rowVals.join(","));
+        });
+      });
+      const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `cash_roznamcha_entries_${todayIso()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Export CSV error", e);
+    }
+  };
+
   const handleEditEntry = (row: any) => {
     const h = row.header || row;
     const lines = row.roznamcha_lines || row.lines || [];
@@ -3006,9 +3252,189 @@ export function CashEntryForm({
   //  component near the top; the duplicate re-declarations that were here caused a build failure.)
 
   const actionButtons = (
-    <div id="erp-page-actions-portal-content" className="flex flex-wrap items-center gap-2">
+    <div id="erp-page-actions-portal-content" className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+      {/* 1. General Roznamcha Reports */}
       <RoznamchaReportsDropdown lang={lang} />
+
+      {/* 2. Date Picker */}
+      <label className="relative inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50/80 px-2.5 text-xs font-bold text-slate-800 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer transition shadow-2xs">
+        <Calendar className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+        <span className="whitespace-nowrap">{formatDisplayDateWithDay(tableDateMode === "day" ? (tableDate || entryDate) : entryDate)}</span>
+        <ChevronDown className="h-3 w-3 text-slate-400 shrink-0" />
+        <input
+          type="date"
+          value={tableDateMode === "day" ? (tableDate || entryDate) : entryDate}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val) {
+              setTableDateMode("day");
+              setTableDate(val);
+              setEntryDate(val);
+            }
+          }}
+          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+          aria-label={t(lang, "common.date", "Date")}
+        />
+      </label>
+
+      {/* 3. Serial Info */}
+      <div className="relative inline-block">
+        <button
+          type="button"
+          onClick={() => setShowSerialsDropdown((prev) => !prev)}
+          className={cn(
+            "inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-bold transition cursor-pointer shadow-2xs",
+            showSerialsDropdown
+              ? "border-blue-400 bg-blue-100 text-blue-800 dark:border-blue-600 dark:bg-blue-900/60 dark:text-blue-200"
+              : "border-blue-200 bg-blue-50/80 text-blue-700 hover:bg-blue-100/80 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300"
+          )}
+          title={tr("cj.serialInfoBtn", "Serial Info")}
+        >
+          <Info className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+          <span className="whitespace-nowrap">{tr("cj.serialInfoBtn", "Serial Info")}</span>
+        </button>
+        {showSerialsDropdown && (
+          <div
+            className="absolute start-0 top-full z-50 mt-1.5 w-72 rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-800 dark:bg-slate-900 text-xs text-slate-900 dark:text-slate-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 mb-2 font-bold text-slate-800 dark:text-slate-200">
+              <span className="flex items-center gap-1.5">
+                <Info className="h-3.5 w-3.5 text-blue-600" />
+                <span>{tr("cj.currentRunningNumbers", "Current Running Numbers")}</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowSerialsDropdown(false)}
+                className="text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 font-semibold">{tr("cj.superAdminSerialLabel", "Super Admin Serial")}</span>
+                <span className="font-mono font-bold text-blue-700 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800 text-[11px]" dir="ltr">
+                  {savedSerials?.superAdmin || liveSerials.superAdmin || "—"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 font-semibold">{tr("cj.countrySerialLabel", "Country Serial")}</span>
+                <span className="font-mono font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 text-[11px]" dir="ltr">
+                  {savedSerials?.country || liveSerials.country || "—"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 font-semibold">{tr("cj.branchSerialLabel", "Branch Serial")}</span>
+                <span className="font-mono font-bold text-indigo-700 bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 text-[11px]" dir="ltr">
+                  {(savedSerials as any)?.cityBranch || savedSerials?.branch || liveSerials.cityBranch || liveSerials.branch || "—"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                <span className="text-slate-700 dark:text-slate-300 font-bold">{tr("cj.currentBranchEntrySerial", "Entry Serial")}</span>
+                <span className="font-mono font-black text-orange-950 dark:text-orange-100 bg-orange-100 dark:bg-orange-950/60 px-2 py-0.5 rounded border border-orange-300 dark:border-orange-700 text-[11px]" dir="ltr">
+                  {(savedSerials as any)?.entrySerial || liveSerials.entrySerial || "—"}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 4. All Countries */}
+      <div className="relative inline-flex h-8 items-center rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs">
+        <Globe className="h-3.5 w-3.5 text-slate-500 me-1.5 shrink-0" />
+        <select
+          value={isSuperAdmin ? topCountryFilter : countryId}
+          disabled={loadingCountries || (!isSuperAdmin && effectiveScopeMode !== "super_admin")}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (isSuperAdmin) {
+              setTopCountryFilter(val);
+              setTopBranchFilter("all");
+              if (val !== "all") {
+                setCountryId(val);
+                const cObj = countries.find((c) => c.id === val);
+                setCashPositionCountryFilter((cObj as any)?.iso2 || val);
+              } else {
+                setCashPositionCountryFilter("all");
+              }
+            } else {
+              setCountryId(val);
+            }
+          }}
+          className="bg-transparent pr-4 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none appearance-none cursor-pointer max-w-[130px] truncate"
+        >
+          {isSuperAdmin && (
+            <option value="all" className="text-slate-900">
+              {t(lang, "roz.all_countries", "All Countries")}
+            </option>
+          )}
+          {countries.map((c) => (
+            <option key={c.id} value={c.id} className="text-slate-900">
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-1.5 h-3 w-3 text-slate-400" />
+      </div>
+
+      {/* 5. All Branches */}
+      <div className="relative inline-flex h-8 items-center rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs">
+        <Building2 className="h-3.5 w-3.5 text-slate-500 me-1.5 shrink-0" />
+        <select
+          value={(isSuperAdmin || isCountryAdmin) ? topBranchFilter : cityBranchId}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (isSuperAdmin || isCountryAdmin) {
+              setTopBranchFilter(val);
+              if (val !== "all") {
+                const matched = allFilterBranches.find((b) => b.id === val);
+                if (matched?.countryId && matched.countryId !== countryId) {
+                  setCountryId(matched.countryId);
+                }
+                setCityBranchId(val);
+              }
+            } else {
+              setCityBranchId(val);
+            }
+          }}
+          className="bg-transparent pr-4 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none appearance-none cursor-pointer max-w-[140px] truncate"
+        >
+          {(isSuperAdmin || isCountryAdmin) && (
+            <option value="all" className="text-slate-900">
+              {tr("cj.fAllBranches", "All Branches")}
+            </option>
+          )}
+          {allFilterBranches.map((b) => (
+            <option key={b.id} value={b.id} className="text-slate-900">
+              {b.name} {b.code ? `(${b.code})` : ""}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-1.5 h-3 w-3 text-slate-400" />
+      </div>
+
+      {/* 6. Refresh */}
+      <button
+        type="button"
+        onClick={() => {
+          fetchRecentEntries();
+          fetchCashSummary();
+          fetchSummaryOverview();
+          fetchDailyRate();
+          fetchAllDailyExchangeRates();
+        }}
+        title={t(lang, "common.refresh", "Refresh")}
+        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition cursor-pointer shadow-2xs"
+      >
+        <RefreshCw className={cn("h-3.5 w-3.5", (loadingEntries || loadingOverview || loadingExchangeModule) ? "animate-spin text-blue-600" : "")} />
+      </button>
+
+      {/* 7. Filters */}
       <CjFiltersButton lang={lang} count={cjActiveFilterCount(journalFilters)} onClick={() => setShowJournalFilters(true)} />
+
+      {/* 8. Search */}
       <div className="relative">
         <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
         <input
@@ -3016,31 +3442,15 @@ export function CashEntryForm({
           onChange={(e) => setTableSearchQuery(e.target.value)}
           placeholder={t(lang, "roz.search_entries_placeholder", "Search entries...")}
           aria-label={t(lang, "roz.search_entries_placeholder", "Search entries...")}
-          className="h-8 w-[170px] rounded-lg border border-slate-200 bg-white ps-8 pe-2.5 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 shadow-sm"
+          className="h-8 w-[150px] sm:w-[170px] rounded-lg border border-slate-200 bg-white ps-8 pe-2.5 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 shadow-2xs"
         />
       </div>
+
+      {/* 9. New Entry */}
       <Button
         type="button"
         size="sm"
-        variant="outline"
-        className="h-8 gap-1.5 rounded-lg px-3 text-xs font-semibold border-slate-250 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 shadow-sm"
-        onClick={() => handlePrintRegister(true)}
-        data-testid="print-action"
-      >
-        <Printer className="h-3.5 w-3.5" />
-        {t(lang, "common.print", "Print")}
-      </Button>
-      <CjActionsMenu
-        lang={lang}
-        items={[
-          { key: "pdf", label: t(lang, "urs.a_download_pdf", "Download PDF"), icon: <Download />, onClick: () => handlePrintRegister(false) },
-          { key: "refresh", label: t(lang, "common.refresh", "Refresh"), icon: <RefreshCw className={cn(loadingEntries ? "animate-spin" : "")} />, disabled: loadingEntries, onClick: () => { fetchRecentEntries(); fetchCashSummary(); } }
-        ]}
-      />
-      <Button
-        type="button"
-        size="sm"
-        className="h-8 gap-1.5 rounded-lg px-3.5 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all"
+        className="h-8 gap-1.5 rounded-lg px-3.5 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-2xs transition-all"
         onClick={() => {
           resetPaymentDraft();
           setEditEntryId(null);
@@ -3050,6 +3460,31 @@ export function CashEntryForm({
         <Plus className="h-4 w-4" />
         {t(lang, "roz.new_entry", "New Entry")}
       </Button>
+
+      {/* 10. Actions (⋮) */}
+      <CjActionsMenu
+        lang={lang}
+        items={[
+          {
+            key: "print",
+            label: t(lang, "common.print", "Print"),
+            icon: <Printer className="h-4 w-4" />,
+            onClick: () => handlePrintRegister(true)
+          },
+          {
+            key: "pdf",
+            label: t(lang, "urs.a_download_pdf", "Download PDF"),
+            icon: <Download className="h-4 w-4" />,
+            onClick: () => handlePrintRegister(false)
+          },
+          {
+            key: "export",
+            label: t(lang, "common.export", "Export CSV"),
+            icon: <Download className="h-4 w-4" />,
+            onClick: () => handleExportCsv()
+          }
+        ]}
+      />
     </div>
   );
 
@@ -3306,169 +3741,6 @@ export function CashEntryForm({
 
 
       {/* ============================================================
-          APPROVED ROZNAMCHA HEADER BAR & 4 SUMMARY CARDS
-      ============================================================ */}
-      <div className="mx-4 mt-2 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white px-4 py-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-        {/* Left: Brand Icon + Title & Subtitle */}
-        <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm shrink-0">
-            <BookOpen className="h-5 w-5" />
-          </span>
-          <div>
-            <h1 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-              {tr("cj.roznamchaHeading", "Roznamcha")}
-            </h1>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              {tr("cj.dailyFinancialRecords", "Daily Financial Records")}
-            </p>
-          </div>
-        </div>
-
-        {/* Right: Date Selector, Serial Info, Country Filter, Branch Filter, Refresh, + New Entry */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* 1. Date Picker Box */}
-          <label className="relative inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/70 px-3 text-xs font-bold text-slate-800 hover:bg-slate-100/80 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer transition">
-            <Calendar className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-            <span>{formatDisplayDateWithDay(tableDateMode === "day" ? (tableDate || entryDate) : entryDate)}</span>
-            <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-            <input
-              type="date"
-              value={tableDateMode === "day" ? (tableDate || entryDate) : entryDate}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val) {
-                  setTableDateMode("day");
-                  setTableDate(val);
-                  setEntryDate(val);
-                }
-              }}
-              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              aria-label={t(lang, "common.date", "Date")}
-            />
-          </label>
-
-          {/* 2. Serial Info Button */}
-          <button
-            type="button"
-            onClick={() => setShowSerialsDropdown((prev) => !prev)}
-            className={cn(
-              "inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition cursor-pointer",
-              showSerialsDropdown
-                ? "border-blue-400 bg-blue-100 text-blue-800 dark:border-blue-600 dark:bg-blue-900/60 dark:text-blue-200"
-                : "border-blue-200 bg-blue-50/80 text-blue-700 hover:bg-blue-100/80 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300"
-            )}
-          >
-            <Info className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-            <span>{tr("cj.serialInfoBtn", "Serial Info")}</span>
-          </button>
-
-          {/* 3. Country Filter Dropdown */}
-          <div className="relative inline-flex h-9 items-center rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
-            <Globe className="h-3.5 w-3.5 text-slate-500 me-1.5 shrink-0" />
-            <select
-              value={isSuperAdmin ? topCountryFilter : countryId}
-              disabled={loadingCountries || (!isSuperAdmin && effectiveScopeMode !== "super_admin")}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (isSuperAdmin) {
-                  setTopCountryFilter(val);
-                  setTopBranchFilter("all");
-                  if (val !== "all") {
-                    setCountryId(val);
-                    const cObj = countries.find((c) => c.id === val);
-                    setCashPositionCountryFilter((cObj as any)?.iso2 || val);
-                  } else {
-                    setCashPositionCountryFilter("all");
-                  }
-                } else {
-                  setCountryId(val);
-                }
-              }}
-              className="bg-transparent pr-5 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none appearance-none cursor-pointer"
-            >
-              {isSuperAdmin && (
-                <option value="all" className="text-slate-900">
-                  {t(lang, "roz.all_countries", "All Countries")}
-                </option>
-              )}
-              {countries.map((c) => (
-                <option key={c.id} value={c.id} className="text-slate-900">
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-2.5 h-3.5 w-3.5 text-slate-400" />
-          </div>
-
-          {/* 4. Branch Filter Dropdown */}
-          <div className="relative inline-flex h-9 items-center rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
-            <Building2 className="h-3.5 w-3.5 text-slate-500 me-1.5 shrink-0" />
-            <select
-              value={(isSuperAdmin || isCountryAdmin) ? topBranchFilter : cityBranchId}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (isSuperAdmin || isCountryAdmin) {
-                  setTopBranchFilter(val);
-                  if (val !== "all") {
-                    const matched = allFilterBranches.find((b) => b.id === val);
-                    if (matched?.countryId && matched.countryId !== countryId) {
-                      setCountryId(matched.countryId);
-                    }
-                    setCityBranchId(val);
-                  }
-                } else {
-                  setCityBranchId(val);
-                }
-              }}
-              className="bg-transparent pr-5 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none appearance-none cursor-pointer max-w-[170px] truncate"
-            >
-              {(isSuperAdmin || isCountryAdmin) && (
-                <option value="all" className="text-slate-900">
-                  {tr("cj.fAllBranches", "All Branches")}
-                </option>
-              )}
-              {allFilterBranches.map((b) => (
-                <option key={b.id} value={b.id} className="text-slate-900">
-                  {b.name} {b.code ? `(${b.code})` : ""}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-2.5 h-3.5 w-3.5 text-slate-400" />
-          </div>
-
-          {/* 5. Refresh Button */}
-          <button
-            type="button"
-            onClick={() => {
-              fetchRecentEntries();
-              fetchCashSummary();
-              fetchSummaryOverview();
-              fetchDailyRate();
-              fetchAllDailyExchangeRates();
-            }}
-            title={t(lang, "common.refresh", "Refresh")}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition cursor-pointer"
-          >
-            <RefreshCw className={cn("h-4 w-4", (loadingEntries || loadingOverview || loadingExchangeModule) ? "animate-spin text-blue-600" : "")} />
-          </button>
-
-          {/* 6. + New Entry Button */}
-          <Button
-            type="button"
-            onClick={() => {
-              resetPaymentDraft();
-              setEditEntryId(null);
-              setShowPaymentWorkReport(true);
-            }}
-            className="h-9 gap-1.5 rounded-xl bg-blue-600 px-4 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition cursor-pointer"
-          >
-            <Plus className="h-4 w-4" />
-            <span>{t(lang, "roz.new_entry", "New Entry")}</span>
-          </Button>
-        </div>
-      </div>
-
-      {/* ============================================================
           4 TOP SUMMARY CARDS (APPROVED DESIGN)
           1. Super Admin – USD Position (Total Credit, Debit, Balance in one USD card)
           2. Country Position (Own Currency) (Per-country figures without extra combined total)
@@ -3476,7 +3748,7 @@ export function CashEntryForm({
           4. Exchange Rate (USD Base) (Connected to Daily Exchange Rate module)
       ============================================================ */}
       {showFormSection && (
-        <div className="mx-4 mb-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-stretch">
+        <div className="mx-4 mt-2.5 mb-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-stretch">
 
           {/* ════════ CARD 1: SUPER ADMIN – USD POSITION ════════ */}
           <div className="flex flex-col justify-between rounded-2xl border border-blue-100 bg-gradient-to-b from-blue-50/40 via-white to-white p-4 shadow-xs dark:border-slate-800 dark:from-slate-900 dark:to-slate-900">
@@ -5284,66 +5556,25 @@ export function CashEntryForm({
           )}
         </div>
 
-        {/* Right Controls: Search... | Filter | Export | ... */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            <input
-              value={tableSearchQuery}
-              onChange={(e) => setTableSearchQuery(e.target.value)}
-              placeholder={t(lang, "common.search_placeholder", "Search...")}
-              aria-label={t(lang, "common.search_placeholder", "Search...")}
-              className="h-8.5 w-[190px] sm:w-[220px] rounded-xl border border-slate-200 bg-slate-50/60 pl-8.5 pr-3 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 transition"
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setShowJournalFilters(true)}
-            className="inline-flex h-8.5 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition cursor-pointer"
-          >
-            <Filter className="h-3.5 w-3.5 text-slate-500" />
-            <span>{tr("cj.filterBtn", "Filter")}</span>
-            {cjActiveFilterCount(journalFilters) > 0 && (
-              <span className="ml-0.5 rounded-full bg-blue-600 px-1.5 py-0.2 text-[10px] font-black text-white">
-                {cjActiveFilterCount(journalFilters)}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handlePrintRegister(false)}
-            className="inline-flex h-8.5 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition cursor-pointer"
-          >
-            <Download className="h-3.5 w-3.5 text-slate-500" />
-            <span>{t(lang, "common.export", "Export")}</span>
-          </button>
-
-          <CjActionsMenu
-            lang={lang}
-            items={[
-              { key: "print", label: t(lang, "common.print", "Print A4 Register"), icon: <Printer />, onClick: () => handlePrintRegister(true) },
-              { key: "pdf", label: t(lang, "urs.a_download_pdf", "Download PDF"), icon: <Download />, onClick: () => handlePrintRegister(false) },
-              { key: "today", label: t(lang, "roz.today", "Show Today"), icon: <Calendar />, onClick: () => { setTableDateMode("day"); setTableDate(todayIso()); setEntryDate(todayIso()); } },
-              { key: "range", label: t(lang, "roz.filter_date_range", "Filter by Date Range"), icon: <CalendarDays />, onClick: () => setTableDateMode("range") },
-              { key: "all_dates", label: t(lang, "roz.filter_all_dates", "Show All Historical Dates"), icon: <Globe />, onClick: () => setTableDateMode("all") },
-              { key: "refresh", label: t(lang, "common.refresh", "Refresh"), icon: <RefreshCw className={cn(loadingEntries ? "animate-spin" : "")} />, disabled: loadingEntries, onClick: () => { fetchRecentEntries(); fetchCashSummary(); fetchSummaryOverview(); fetchAllDailyExchangeRates(); } }
-            ]}
-          />
+        {/* Table Header Bar: Clean title & entry count */}
+        <div className="flex items-center gap-2.5">
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            {filteredRecentEntries.length} {filteredRecentEntries.length === 1 ? "entry" : "entries"}
+          </span>
         </div>
       </div>
 
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1180px] border-collapse text-xs">
+          <table className="w-full min-w-[1240px] border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200/80 bg-slate-50/90 text-left text-[11px] font-bold text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
-                <Th className="py-2.5 px-3 font-bold whitespace-nowrap w-10">#</Th>
-                <Th className="py-2.5 px-3 font-bold whitespace-nowrap">Date &amp; Time</Th>
+                <Th className="py-2.5 px-3 font-bold whitespace-nowrap min-w-[110px]">Entry Serial Number</Th>
+                <Th className="py-2.5 px-3 font-bold whitespace-nowrap">Entry Date &amp; Time</Th>
                 <Th className="py-2.5 px-3 font-bold whitespace-nowrap">Branch</Th>
                 <Th className="py-2.5 px-3 font-bold whitespace-nowrap">Country</Th>
-                <Th className="py-2.5 px-3 font-bold whitespace-nowrap">Roznamcha Type</Th>
+                <Th className="py-2.5 px-3 font-bold whitespace-nowrap min-w-[160px]">Account</Th>
+                <Th className="py-2.5 px-3 font-bold whitespace-nowrap min-w-[130px]">Roznamcha</Th>
                 <Th className="py-2.5 px-3 font-bold min-w-[180px]">Details</Th>
                 <Th className="py-2.5 px-2.5 font-bold text-center whitespace-nowrap">Currency</Th>
                 {canViewUsd && (
@@ -5360,19 +5591,19 @@ export function CashEntryForm({
                     <Th className="py-2.5 px-3 font-bold text-right whitespace-nowrap">Balance (USD)</Th>
                   </>
                 )}
-                <Th className="py-2.5 px-3 font-bold text-center whitespace-nowrap">Action</Th>
+                <Th className="py-2.5 px-3 font-bold text-center whitespace-nowrap">Actions</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
               {loadingEntries ? (
                 <tr>
-                  <td colSpan={canViewUsd ? 14 : 10} className="p-8 text-center text-slate-400 font-medium italic">
+                  <td colSpan={canViewUsd ? 15 : 11} className="p-8 text-center text-slate-400 font-medium italic">
                     {t(lang, "roz.loading_entries", "Loading entries...")}
                   </td>
                 </tr>
               ) : filteredRecentEntries.length === 0 ? (
                 <tr>
-                  <td colSpan={canViewUsd ? 14 : 10} className="p-12 text-center text-slate-400 font-medium">
+                  <td colSpan={canViewUsd ? 15 : 11} className="p-12 text-center text-slate-400 font-medium">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <FileText className="h-8 w-8 text-slate-300 dark:text-slate-600" />
                       <span>{t(lang, "roz.no_entries_found", "No Roznamcha journal entries found for the selected filter / date.")}</span>
@@ -5381,11 +5612,9 @@ export function CashEntryForm({
                 </tr>
               ) : (
                 (() => {
-                  let rowCounter = (journalPageSafe - 1) * journalPageSize;
                   return pagedRecentEntries.flatMap((row) => {
                     const displayLines = getDisplayLinesForEntry(row);
                     return displayLines.map((line: any, idx: number) => {
-                      rowCounter += 1;
                       const isDebit = Number(line.debit || 0) > 0;
                       const isCredit = Number(line.credit || 0) > 0;
                       const creditLocal = isCredit ? Number(line.credit || 0) : 0;
@@ -5410,6 +5639,8 @@ export function CashEntryForm({
 
                       const categoryLabel = getRoznamchaCategoryLabel(row);
                       const isBankType = categoryLabel.toLowerCase().includes("bank");
+                      const roznamchaName = isBankType ? tr("cj.mBank", "Bank") : categoryLabel;
+                      const roznamchaRef = row.reference_no || row.journal_no || row.voucher_no || row.journal_number || "";
 
                       const dateStr = row.entry_date ? formatDisplayDateShort(String(row.entry_date).slice(0, 10)) : new Date(row.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
                       const timeStr = row.created_at ? new Date(row.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }) : "";
@@ -5421,24 +5652,45 @@ export function CashEntryForm({
                       const rawNarration = resolveVerifiedTranslation(row.translations?.[`lines.${idx}.description`] || row.translations?.narration, lang) || translateNarrationBlock(line.description || row.narration, lang) || line.ledgers?.name || "-";
                       const cleanNarration = String(rawNarration).split("\n").filter((l) => !l.trim().startsWith("[Audit Trail")).join(" · ").trim() || line.ledgers?.name || "-";
 
+                      // Sourced from actual saved transaction / ledger lookup
+                      const matchedLedger = line.ledger_id ? ledgers.find((l) => l.ledgerId === line.ledger_id || (l as any).id === line.ledger_id) : null;
+                      const accountName = line.accounts?.name || matchedLedger?.accountName || matchedLedger?.ledgerName || line.ledgers?.name || line.description || "—";
+                      const accountCode = line.accounts?.code || matchedLedger?.accountCode || matchedLedger?.ledgerCode || line.ledgers?.code || line.account_number || matchedLedger?.manualReferenceNumber || "";
+                      const accountBranch = matchedLedger?.cityBranchName || matchedLedger?.countryBranchName || line.ledgers?.city_branches?.name || line.ledgers?.country_branches?.name || branchDisplay;
+                      const accountCountry = matchedLedger?.countryName || countryDisplay;
+                      const accountCurrency = matchedLedger?.ledgerCurrency || lineCurr;
+                      const accountKind = matchedLedger?.accountKind || (matchedLedger as any)?.accountCategory || "";
+
+                      // Original saved serial numbers
+                      const entrySerial = line.entry_serial_number || row.entry_serial_number || (row.voucher_no ? String(row.voucher_no) : "—");
+                      const superAdminSerial = row.super_admin_serial_number || line.super_admin_serial_number || "—";
+                      const countrySerial = row.country_transaction_serial_number || line.country_transaction_serial_number || line.country_serial_number || "—";
+                      const branchSerial = row.branch_transaction_serial_number || row.main_branch_transaction_serial || row.city_branch_transaction_serial || line.branch_transaction_serial_number || line.branch_serial_number || "—";
+
                       return (
                         <tr key={`${row.id}-${line.id || idx}`} className="hover:bg-slate-50/70 dark:hover:bg-slate-900/50 transition-colors">
-                          {/* 1. # */}
-                          <td className="py-2.5 px-3 font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                            {rowCounter}
+                          {/* Column 1 – Entry Serial Number */}
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            <RoznamchaSerialCell
+                              entrySerial={entrySerial}
+                              superAdminSerial={superAdminSerial}
+                              countrySerial={countrySerial}
+                              branchSerial={branchSerial}
+                              tr={tr}
+                            />
                           </td>
 
-                          {/* 2. Date & Time */}
+                          {/* Column 2 – Entry Date & Time */}
                           <td className="py-2.5 px-3 font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap" dir="ltr">
                             {dateStr} {timeStr}
                           </td>
 
-                          {/* 3. Branch */}
+                          {/* Column 3 – Branch */}
                           <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
                             {branchDisplay}
                           </td>
 
-                          {/* 4. Country */}
+                          {/* Column 4 – Country */}
                           <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
                             <span className="inline-flex items-center gap-1.5">
                               <span>{getCountryFlag(countryNameRaw)}</span>
@@ -5446,40 +5698,57 @@ export function CashEntryForm({
                             </span>
                           </td>
 
-                          {/* 5. Roznamcha Type */}
+                          {/* Column 5 – Account */}
                           <td className="py-2.5 px-3 whitespace-nowrap">
-                            <span className="inline-flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-200">
+                            <RoznamchaAccountCell
+                              name={accountName}
+                              code={accountCode}
+                              branch={accountBranch}
+                              country={accountCountry}
+                              currency={accountCurrency}
+                              accountKind={accountKind}
+                            />
+                          </td>
+
+                          {/* Column 6 – Roznamcha */}
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            <div className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-200">
                               {isBankType ? (
-                                <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-blue-600 text-white text-[10px]">
+                                <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-blue-600 text-white text-[10px] shrink-0">
                                   <Building2 className="h-3 w-3" />
                                 </span>
                               ) : (
-                                <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-emerald-600 text-white text-[10px]">
+                                <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-emerald-600 text-white text-[10px] shrink-0">
                                   <Banknote className="h-3 w-3" />
                                 </span>
                               )}
-                              <span>{isBankType ? tr("cj.mBank", "Bank") : categoryLabel}</span>
-                            </span>
+                              <span className="font-bold">{roznamchaName}</span>
+                              {roznamchaRef && (
+                                <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700" dir="ltr">
+                                  {roznamchaRef}
+                                </span>
+                              )}
+                            </div>
                           </td>
 
-                          {/* 6. Details */}
+                          {/* Remaining: Details */}
                           <td className="py-2.5 px-3 text-slate-700 dark:text-slate-300 font-medium max-w-[260px] truncate" title={cleanNarration}>
                             {cleanNarration}
                           </td>
 
-                          {/* 7. Currency */}
+                          {/* Remaining: Currency */}
                           <td className="py-2.5 px-2.5 text-center font-mono font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">
                             {lineCurr}
                           </td>
 
-                          {/* 8. Exchange Rate */}
+                          {/* Remaining: Exchange Rate */}
                           {canViewUsd && (
                             <td className="py-2.5 px-2.5 text-right font-mono font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap" dir="ltr">
                               {rateNum ? rateNum.toFixed(4) : "—"}
                             </td>
                           )}
 
-                          {/* 9. Credit (Local) */}
+                          {/* Remaining: Credit (Local) */}
                           <td className={cn(
                             "py-2.5 px-3 text-right font-mono whitespace-nowrap",
                             creditLocal > 0 ? "font-bold text-emerald-600 dark:text-emerald-400" : "font-medium text-slate-400 dark:text-slate-600"
@@ -5487,7 +5756,7 @@ export function CashEntryForm({
                             {fmtAmount(creditLocal)}
                           </td>
 
-                          {/* 10. Credit (USD) */}
+                          {/* Remaining: Credit (USD) */}
                           {canViewUsd && (
                             <td className={cn(
                               "py-2.5 px-3 text-right font-mono whitespace-nowrap",
@@ -5497,7 +5766,7 @@ export function CashEntryForm({
                             </td>
                           )}
 
-                          {/* 11. Debit (Local) */}
+                          {/* Remaining: Debit (Local) */}
                           <td className={cn(
                             "py-2.5 px-3 text-right font-mono whitespace-nowrap",
                             debitLocal > 0 ? "font-bold text-rose-600 dark:text-rose-400" : "font-medium text-slate-400 dark:text-slate-600"
@@ -5505,7 +5774,7 @@ export function CashEntryForm({
                             {fmtAmount(debitLocal)}
                           </td>
 
-                          {/* 12. Debit (USD) & 13. Balance (USD) */}
+                          {/* Remaining: Debit (USD) & Balance (USD) */}
                           {canViewUsd && (
                             <>
                               <td className={cn(
@@ -5528,7 +5797,7 @@ export function CashEntryForm({
                             </>
                           )}
 
-                          {/* 14. Action */}
+                          {/* Remaining: Actions */}
                           <td className="py-2.5 px-3 text-center whitespace-nowrap">
                             {idx === 0 ? (
                               <div className="relative inline-block">

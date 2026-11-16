@@ -13,7 +13,15 @@ export type CashEntryStyle = "standard" | "titanium" | "swiss" | "executive";
 const STYLES: CashEntryStyle[] = ["standard", "titanium", "swiss", "executive"];
 const STORAGE_KEY = "erp_cash_style";
 
-export function CashEntryStyleScope({ lang, children }: { lang?: string | null; children: ReactNode }) {
+export function CashEntryStyleScope({
+  lang,
+  hideBar = false,
+  children
+}: {
+  lang?: string | null;
+  hideBar?: boolean;
+  children: ReactNode;
+}) {
   const s = useErpScreen("cashstyle", lang);
   // "standard" on the server and on first paint (no hydration mismatch), then the saved choice
   const [style, setStyle] = useState<CashEntryStyle>("standard");
@@ -35,27 +43,29 @@ export function CashEntryStyleScope({ lang, children }: { lang?: string | null; 
   };
   return (
     <div className="space-y-2" data-cash-style={style} dir={s.dir}>
-      <div className="no-print flex flex-wrap items-center justify-end gap-2" data-cash-style-bar>
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
-          <Palette className="h-3.5 w-3.5" aria-hidden />
-          {s.t("label", "Visual style")}
-        </span>
-        <div role="radiogroup" aria-label={s.t("label", "Visual style")} className="inline-flex flex-wrap items-center gap-1 rounded-xl border bg-card p-1 shadow-sm">
-          {STYLES.map((id) => (
-            <button
-              key={id}
-              type="button"
-              role="radio"
-              aria-checked={style === id}
-              onClick={() => choose(id)}
-              className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition ${style === id ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
-            >
-              {labels[id]}
-            </button>
-          ))}
+      {!hideBar && (
+        <div className="no-print flex flex-wrap items-center justify-end gap-2" data-cash-style-bar>
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+            <Palette className="h-3.5 w-3.5" aria-hidden />
+            {s.t("label", "Visual style")}
+          </span>
+          <div role="radiogroup" aria-label={s.t("label", "Visual style")} className="inline-flex flex-wrap items-center gap-1 rounded-xl border bg-card p-1 shadow-sm">
+            {STYLES.map((id) => (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={style === id}
+                onClick={() => choose(id)}
+                className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition ${style === id ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+              >
+                {labels[id]}
+              </button>
+            ))}
+          </div>
+          <span className="text-[11px] text-muted-foreground">{s.t("hint", "Appearance only — your entries and data are not affected.")}</span>
         </div>
-        <span className="text-[11px] text-muted-foreground">{s.t("hint", "Appearance only — your entries and data are not affected.")}</span>
-      </div>
+      )}
       {children}
     </div>
   );
