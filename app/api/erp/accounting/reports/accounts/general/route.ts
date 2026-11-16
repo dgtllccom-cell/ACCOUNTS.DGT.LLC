@@ -17,19 +17,36 @@ type SerialLevelKey = "account" | "branch" | "country" | "super_admin";
 type SerialLevel = { level: 1 | 2 | 3 | 4; key: SerialLevelKey; value: string };
 
 /**
- * Which account-number levels a viewer may see. Levels are numbered outward from the account:
+ * Account-number levels each role may see. Levels are numbered outward from the account:
  * 1 = account number, 2 = branch, 3 = country, 4 = super admin.
- * General users see 1; branch admins see 2; country admins see 2 and 3; super admins see all four.
+ * Exact role names only: a country_user or any other general user must not match a country admin.
+ * Operations-profile roles are the same level as their admin counterpart (see deriveEffectiveRole).
+ */
+const SERIAL_LEVELS_BY_ROLE: Readonly<Record<string, readonly number[]>> = {
+  super_admin: [1, 2, 3, 4],
+  business_super_admin: [1, 2, 3, 4],
+  shipping_super_admin: [1, 2, 3, 4],
+  country_admin: [2, 3],
+  country_operations_admin: [2, 3],
+  main_branch_admin: [2],
+  city_branch_admin: [2],
+  city_operations_admin: [2],
+};
+
+/**
+ * Which account-number levels a viewer may see: the union over their roles
+ * (branch admins see 2; country admins see 2 and 3; super admins see all four).
+ * A viewer with no admin role is a general user and sees only level 1.
  * Decided on the server so levels a viewer may not see are never sent to the browser.
  */
 function visibleSerialLevelsFor(session: { isSuperAdmin?: boolean; roles?: string[] }): Set<number> {
-  const roles = session.roles ?? [];
-  const isSuper =
-    Boolean(session.isSuperAdmin) || roles.some((r) => (DOMAIN_SUPER_ADMIN_ROLES as readonly string[]).includes(r));
-  if (isSuper) return new Set([1, 2, 3, 4]);
-  if (roles.some((r) => r.includes("country"))) return new Set([2, 3]);
-  if (roles.some((r) => r.includes("branch"))) return new Set([2]);
-  return new Set([1]);
+  if (session.isSuperAdmin) return new Set([1, 2, 3, 4]);
+  const visible = new Set<number>();
+  for (const role of session.roles ?? []) {
+    for (const level of SERIAL_LEVELS_BY_ROLE[role] ?? []) visible.add(level);
+  }
+  if (visible.size === 0) visible.add(1);
+  return visible;
 }
 
 function buildSerialLevels(

@@ -564,6 +564,17 @@ export function AccountGeneralReportView({
 }) {
   const lang = useActiveLanguage() || initialLang;
   const tr = (label: string) => translateHeader(lang, label);
+
+  // An open account-number levels popover closes when the user clicks anywhere outside it.
+  useEffect(() => {
+    function closeOutside(event: MouseEvent) {
+      document.querySelectorAll<HTMLDetailsElement>("details[data-serial-popover][open]").forEach((d) => {
+        if (!d.contains(event.target as Node)) d.open = false;
+      });
+    }
+    document.addEventListener("mousedown", closeOutside);
+    return () => document.removeEventListener("mousedown", closeOutside);
+  }, []);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [loadingDeleting, setLoadingDeleting] = useState(false);
@@ -2207,13 +2218,13 @@ export function AccountGeneralReportView({
                         >
                           {/* 1. Account No. */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
-                            <details className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+                            <details className="relative inline-block" data-serial-popover onClick={(e) => e.stopPropagation()}>
                               <summary className="list-none cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-mono font-black text-[11px] shadow-2xs group-hover:border-blue-400 dark:group-hover:border-blue-600 transition-colors whitespace-nowrap [&::-webkit-details-marker]:hidden">
                                 <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
                                 <span>{row.accountCode}</span>
                               </summary>
                               {row.serialLevels && row.serialLevels.length > 0 ? (
-                                <div className="absolute start-1/2 -translate-x-1/2 z-30 mt-1 min-w-[15rem] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 shadow-xl text-start font-mono text-[11px] text-slate-700 dark:text-slate-200">
+                                <div className="absolute start-0 z-30 mt-1 min-w-[15rem] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 shadow-xl text-start font-mono text-[11px] text-slate-700 dark:text-slate-200">
                                   <div className="mb-1.5 font-sans font-black uppercase tracking-wider text-slate-500">{t(lang, "acct.serial_breakdown_title", "Account number levels")}</div>
                                   {row.serialLevels.map((item) => (
                                     <div key={item.key} className="flex items-center justify-between gap-4 py-0.5">
