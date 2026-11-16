@@ -32,6 +32,7 @@ function mapRow(row: any) {
     country_branch_id: row.country_branch_id ?? null,
     rate_date: row.rate_date,
     rate_time: row.rate_time ?? null,
+    carried_forward_from: row.carried_forward_from ?? null,
     effective_from: row.effective_from ?? null,
     superseded_at: row.superseded_at ?? null,
     currency_code: row.currency_code ?? row.countries?.currency_code ?? null,
@@ -234,6 +235,7 @@ export async function POST(req: NextRequest) {
       reason,
       action, // 'create' | 'correct'
       timeZoneOffsetMinutes,
+      carriedForwardFrom, // YYYY-MM-DD of the approved rate this row copies (carry-forward only)
     } = body;
 
     if (!countryId) {
@@ -321,6 +323,9 @@ export async function POST(req: NextRequest) {
       entered_by: validUserId,
       user_name: operatorName,
       branch_name: "Country-wide (All Branches)",
+      carried_forward_from: /^\d{4}-\d{2}-\d{2}$/.test(String(carriedForwardFrom || "")) && carriedForwardFrom !== targetDate
+        ? String(carriedForwardFrom)
+        : null,
     });
 
     // Case 1: Rate ALREADY exists for this date -> controlled, append-only correction

@@ -368,19 +368,26 @@ export function DailyExchangeRateManager() {
     }
   }
 
-  // Carry-forward: copy the latest APPROVED rate to today as a new row. Runs only after the operator confirms.
-  // The source date is kept in the audit reason so the history shows where the rate came from.
+  // Carry-forward: copy the latest APPROVED rate to the date selected in the form (today by default) as a new row.
+  // Runs only after the operator confirms. The row keeps its source date in carried_forward_from, and the audit reason says so.
+  // No rate is invented: if there is no approved source, the button is not offered.
   async function handleCarryForward(c: CountryOption, src: LatestApproved) {
-    const today = isoToday();
+    const target = rateDate || isoToday();
+    if (target <= src.rateDate) {
+      setCarryTarget(null);
+      setMessage({ type: "error", text: t(lang, "fx.carry_target_after_source", "Choose a date after the approved rate date ({source}).").replace("{source}", src.rateDate) });
+      return;
+    }
     setSaving(true);
     setMessage(null);
     try {
       await apiPost("/api/erp/currency/daily-rates", {
         countryId: c.id,
-        rateDate: today,
+        rateDate: target,
         rateTime: currentTimeString(),
-        timeZoneOffsetMinutes: new Date(`${today}T12:00:00`).getTimezoneOffset(),
+        timeZoneOffsetMinutes: new Date(`${target}T12:00:00`).getTimezoneOffset(),
         action: "create",
+        carriedForwardFrom: src.rateDate,
         reason: `Carried forward from ${src.rateDate} (latest approved rate)`,
         buyingRate: src.debitRate,
         sellingRate: src.creditRate,
@@ -393,7 +400,7 @@ export function DailyExchangeRateManager() {
         branchName: operatorBranch || sessionInfo?.scopes?.summary?.branchDisplayName || "",
       });
       setCarryTarget(null);
-      setMessage({ type: "success", text: t(lang, "fx.carry_forward_done", "Rate carried forward to {date} for {country}.").replace("{date}", today).replace("{country}", c.name) });
+      setMessage({ type: "success", text: t(lang, "fx.carry_forward_done", "Rate carried forward to {date} for {country}.").replace("{date}", target).replace("{country}", c.name) });
       await loadData();
     } catch (err: any) {
       setCarryTarget(null);

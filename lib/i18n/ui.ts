@@ -7958,6 +7958,7 @@ export type UiKey =
   | "fx.confirm_carry_forward"
   | "fx.enter_today_rate"
   | "fx.carry_forward_done"
+  | "fx.carry_target_after_source"
   | "fx.correction_needed"
   | "fx.status_superseded"
   | "fx.status_active"
@@ -38676,6 +38677,7 @@ const en: Dict = {
   "fx.confirm_carry_forward": "Confirm carry-forward",
   "fx.enter_today_rate": "Enter today's rate",
   "fx.carry_forward_done": "Rate carried forward to {date} for {country}.",
+  "fx.carry_target_after_source": "Choose a date after the approved rate date ({source}).",
   "fx.correction_needed": "A rate already exists for this date. Enter a reason and save again to supersede it.",
   "fx.status_superseded": "Superseded",
   "fx.status_active": "Active",
@@ -65155,6 +65157,7 @@ const ur: Dict = {
   "fx.confirm_carry_forward": "آگے بڑھانے کی تصدیق کریں",
   "fx.enter_today_rate": "آج کی شرح درج کریں",
   "fx.carry_forward_done": "{country} کی شرح {date} کے لیے آگے بڑھا دی گئی۔",
+  "fx.carry_target_after_source": "منظور شدہ شرح کی تاریخ ({source}) کے بعد کی تاریخ منتخب کریں۔",
   "fx.correction_needed": "اس تاریخ کی شرح پہلے سے موجود ہے۔ وجہ لکھ کر دوبارہ محفوظ کریں تاکہ پرانی شرح منسوخ ہو جائے۔",
   "fx.status_superseded": "منسوخ شدہ",
   "fx.status_active": "فعال",
@@ -91635,6 +91638,7 @@ const ar: Dict = {
   "fx.confirm_carry_forward": "تأكيد الترحيل",
   "fx.enter_today_rate": "أدخل سعر اليوم",
   "fx.carry_forward_done": "تم ترحيل السعر إلى {date} لـ {country}.",
+  "fx.carry_target_after_source": "اختر تاريخاً بعد تاريخ السعر المعتمد ({source}).",
   "fx.correction_needed": "يوجد سعر مسجل لهذا التاريخ. أدخل السبب واحفظ مجدداً لاستبداله.",
   "fx.status_superseded": "مستبدل",
   "fx.status_active": "نشط",
@@ -118114,6 +118118,7 @@ const fa: Dict = {
   "fx.confirm_carry_forward": "تأیید انتقال",
   "fx.enter_today_rate": "ثبت نرخ امروز",
   "fx.carry_forward_done": "نرخ {country} با تاریخ {date} منتقل شد.",
+  "fx.carry_target_after_source": "تاریخی بعد از تاریخ نرخ تأییدشده ({source}) انتخاب کنید.",
   "fx.correction_needed": "برای این تاریخ نرخی ثبت شده است. دلیل را وارد و دوباره ذخیره کنید تا جایگزین شود.",
   "fx.status_superseded": "جایگزین‌شده",
   "fx.status_active": "فعال",
@@ -144600,6 +144605,7 @@ const ps: Dict = {
   "fx.confirm_carry_forward": "د لیږد تایید",
   "fx.enter_today_rate": "د نن نرخ ولیکئ",
   "fx.carry_forward_done": "د {country} نرخ د {date} لپاره ولیږدول شو.",
+  "fx.carry_target_after_source": "د تصویب شوي نرخ له نیټې ({source}) وروسته نیټه وټاکئ.",
   "fx.correction_needed": "د دې نیټې لپاره نرخ مخکې ثبت دی. علت ولیکئ او بیا وساتئ ترڅو بدل شي.",
   "fx.status_superseded": "بدل شوی",
   "fx.status_active": "فعال",
