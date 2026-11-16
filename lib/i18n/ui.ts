@@ -6414,7 +6414,7 @@ export type UiKey =
   | "cbs.editing_existing_branch" | "cbs.branch_not_found" | "cbs.failed_load_branch" | "cbs.select_valid_country_branch"
   | "cbs.select_state_city_msg" | "cbs.branch_code_exists_title" | "cbs.branch_code_in_use_msg" | "cbs.branch_name_exists_title"
   | "cbs.branch_name_in_use_msg" | "cbs.branch_name_required" | "cbs.branch_code_required" | "cbs.select_template_permission_msg"
-  | "cbs.permissions_scope_msg" | "cbs.updated_status_word" | "cbs.saved_status_word" | "cbs.failed_save_branch" | "cbs.account_create_failed"
+  | "cbs.permissions_scope_msg" | "cbs.updated_status_word" | "cbs.saved_status_word" | "cbs.failed_save_branch" | "cbs.account_create_failed" | "acct.serial_breakdown_title" | "acct.serial_level_account" | "acct.serial_level_branch" | "acct.serial_level_country" | "acct.serial_level_super_admin"
   | "cbs.duplicate_code_name_detected" | "cbs.already_in_use_short" | "cbs.already_exists_in_city" | "cbs.this_city_word"
   | "cbs.auto_fix_code" | "cbs.edit_existing_btn"
   | "cbs.search_branches_ph" | "cbs.city_branch_details_title" | "cbs.verification_cert_subtitle" | "cbs.saved_city_branch_title"
@@ -16529,6 +16529,11 @@ const en: Dict = {
   "cbs.saved_status_word": "Saved",
   "cbs.failed_save_branch": "Failed to save city branch.",
   "cbs.account_create_failed": "Account creation failed.",
+  "acct.serial_breakdown_title": "Account number levels",
+  "acct.serial_level_account": "Account number",
+  "acct.serial_level_branch": "Branch",
+  "acct.serial_level_country": "Country",
+  "acct.serial_level_super_admin": "Super admin",
   "cbs.duplicate_code_name_detected": "Duplicate Code or Name Detected",
   "cbs.already_in_use_short": "is already in use. Please enter a unique code.",
   "cbs.already_exists_in_city": "already exists in {0}. Please choose a distinct name.",
@@ -44367,6 +44372,11 @@ const ur: Dict = {
   "cbs.saved_status_word": "محفوظ ہو گیا",
   "cbs.failed_save_branch": "سٹی برانچ محفوظ کرنے میں ناکامی۔",
   "cbs.account_create_failed": "اکاؤنٹ بنانے میں ناکامی۔",
+  "acct.serial_breakdown_title": "اکاؤنٹ نمبر کے درجے",
+  "acct.serial_level_account": "اکاؤنٹ نمبر",
+  "acct.serial_level_branch": "برانچ",
+  "acct.serial_level_country": "ملک",
+  "acct.serial_level_super_admin": "سپر ایڈمن",
   "cbs.duplicate_code_name_detected": "ڈپلیکیٹ کوڈ یا نام پایا گیا",
   "cbs.already_in_use_short": "پہلے سے استعمال میں ہے۔ براہ کرم منفرد کوڈ درج کریں۔",
   "cbs.already_exists_in_city": "{0} میں پہلے سے موجود ہے۔ براہ کرم ایک الگ نام منتخب کریں۔",
@@ -70801,6 +70811,11 @@ const ar: Dict = {
   "cbs.saved_status_word": "تم الحفظ",
   "cbs.failed_save_branch": "فشل حفظ فرع المدينة.",
   "cbs.account_create_failed": "فشل إنشاء الحساب.",
+  "acct.serial_breakdown_title": "مستويات رقم الحساب",
+  "acct.serial_level_account": "رقم الحساب",
+  "acct.serial_level_branch": "الفرع",
+  "acct.serial_level_country": "الدولة",
+  "acct.serial_level_super_admin": "المشرف العام",
   "cbs.duplicate_code_name_detected": "تم اكتشاف رمز أو اسم مكرر",
   "cbs.already_in_use_short": "مستخدم بالفعل. يرجى إدخال رمز فريد.",
   "cbs.already_exists_in_city": "موجود بالفعل في {0}. يرجى اختيار اسم مختلف.",
@@ -97282,6 +97297,11 @@ const fa: Dict = {
   "cbs.saved_status_word": "ذخیره شد",
   "cbs.failed_save_branch": "ذخیره شعبه شهر ناموفق بود.",
   "cbs.account_create_failed": "ایجاد حساب ناموفق بود.",
+  "acct.serial_breakdown_title": "سطوح شماره حساب",
+  "acct.serial_level_account": "شماره حساب",
+  "acct.serial_level_branch": "شعبه",
+  "acct.serial_level_country": "کشور",
+  "acct.serial_level_super_admin": "مدیر کل",
   "cbs.duplicate_code_name_detected": "کد یا نام تکراری شناسایی شد",
   "cbs.already_in_use_short": "قبلاً استفاده شده است. لطفاً یک کد یکتا وارد کنید.",
   "cbs.already_exists_in_city": "قبلاً در {0} وجود دارد. لطفاً نام متفاوتی انتخاب کنید.",
@@ -123757,6 +123777,11 @@ const ps: Dict = {
   "cbs.saved_status_word": "خوندي شو",
   "cbs.failed_save_branch": "د ښار برانچ خوندي کول ناکام شول.",
   "cbs.account_create_failed": "د حساب جوړول ناکام شول.",
+  "acct.serial_breakdown_title": "د حساب شمیرې کچې",
+  "acct.serial_level_account": "د حساب شمیره",
+  "acct.serial_level_branch": "څانګه",
+  "acct.serial_level_country": "هیواد",
+  "acct.serial_level_super_admin": "سپر اډمین",
   "cbs.duplicate_code_name_detected": "دوه ځله کوډ یا نوم وموندل شو",
   "cbs.already_in_use_short": "لا دمخه کارول کیږي. مهرباني وکړئ یو ځانګړی کوډ ولیکئ.",
   "cbs.already_exists_in_city": "لا دمخه په {0} کې شتون لري. مهرباني وکړئ یو بېل نوم وټاکئ.",

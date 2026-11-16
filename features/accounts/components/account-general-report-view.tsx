@@ -104,6 +104,7 @@ type AccountGeneralReportRow = {
   recentActivityLabel: string | null;
   recentActivityAt: string | null;
   accountSerialNumber?: number;
+  serialLevels?: Array<{ level: number; key: "account" | "branch" | "country" | "super_admin"; value: string }>;
   branchAccountSequence?: number;
   recentMovements: Array<{
     source: "ledger" | "roznamcha";
@@ -276,6 +277,13 @@ function downloadTextFile(filename: string, contents: string, mime = "text/plain
   a.click();
   URL.revokeObjectURL(url);
 }
+
+const SERIAL_LEVEL_LABEL_KEYS = {
+  account: "acct.serial_level_account",
+  branch: "acct.serial_level_branch",
+  country: "acct.serial_level_country",
+  super_admin: "acct.serial_level_super_admin",
+} as const;
 
 function buildAccountOption(row: AccountGeneralReportRow): SearchSelectOption {
   return {
@@ -556,6 +564,17 @@ export function AccountGeneralReportView({
 }) {
   const lang = useActiveLanguage() || initialLang;
   const tr = (label: string) => translateHeader(lang, label);
+
+  // An open account-number levels popover closes when the user clicks anywhere outside it.
+  useEffect(() => {
+    function closeOutside(event: MouseEvent) {
+      document.querySelectorAll<HTMLDetailsElement>("details[data-serial-popover][open]").forEach((d) => {
+        if (!d.contains(event.target as Node)) d.open = false;
+      });
+    }
+    document.addEventListener("mousedown", closeOutside);
+    return () => document.removeEventListener("mousedown", closeOutside);
+  }, []);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [loadingDeleting, setLoadingDeleting] = useState(false);
@@ -2199,10 +2218,23 @@ export function AccountGeneralReportView({
                         >
                           {/* 1. Account No. */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-mono font-black text-[11px] shadow-2xs group-hover:border-blue-400 dark:group-hover:border-blue-600 transition-colors whitespace-nowrap">
-                              <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
-                              <span>{row.accountCode}</span>
-                            </div>
+                            <details className="relative inline-block" data-serial-popover onClick={(e) => e.stopPropagation()}>
+                              <summary className="list-none cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-mono font-black text-[11px] shadow-2xs group-hover:border-blue-400 dark:group-hover:border-blue-600 transition-colors whitespace-nowrap [&::-webkit-details-marker]:hidden">
+                                <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
+                                <span>{row.accountCode}</span>
+                              </summary>
+                              {row.serialLevels && row.serialLevels.length > 0 ? (
+                                <div className="absolute start-0 z-30 mt-1 min-w-[15rem] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 shadow-xl text-start font-mono text-[11px] text-slate-700 dark:text-slate-200">
+                                  <div className="mb-1.5 font-sans font-black uppercase tracking-wider text-slate-500">{t(lang, "acct.serial_breakdown_title", "Account number levels")}</div>
+                                  {row.serialLevels.map((item) => (
+                                    <div key={item.key} className="flex items-center justify-between gap-4 py-0.5">
+                                      <span className="font-sans text-slate-500">{item.level}. {t(lang, SERIAL_LEVEL_LABEL_KEYS[item.key], item.key)}</span>
+                                      <span className="font-black break-all">{item.value}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : null}
+                            </details>
                             {row.manualReferenceNumber ? (
                               <div className="mt-0.5 font-mono text-[11px] font-medium text-slate-400 dark:text-slate-500">{row.manualReferenceNumber}</div>
                             ) : null}
