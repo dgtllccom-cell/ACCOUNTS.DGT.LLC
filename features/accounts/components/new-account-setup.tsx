@@ -2,6 +2,7 @@
 
 import { accountSectionsFor, isPersonalSubType } from "@/lib/accounts/account-type-sections";
 import { useEffect, useMemo, useState, useRef } from "react";
+import { AccountCategoryPicker } from "./account-category-picker";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -23,7 +24,6 @@ import {
   Phone,
   X,
   Plus,
-  Pencil,
   Globe2,
   Ship,
   UserCheck,
@@ -1329,8 +1329,8 @@ export function NewAccountSetup({
     setShowCategoryModal(true);
   }
 
-  function handleOpenEditCategory() {
-    const item = dbCategories.find((c) => c.code === category || c.id === selectedCategoryId);
+  function handleOpenEditCategory(target?: { id: string; name: string; code: string; description?: string | null }) {
+    const item = target ?? dbCategories.find((c) => c.code === category || c.id === selectedCategoryId);
     if (!item) return;
     setCategoryModalMode("edit");
     setEditingCategoryId(item.id);
@@ -2691,17 +2691,6 @@ export function NewAccountSetup({
                   <div className="flex items-center justify-between">
                     <Label htmlFor="category">{getLabel("category", lang)} *</Label>
                     <div className="flex items-center gap-2">
-                      {/* Editing a category is limited to super admins (the PATCH route enforces the same rule). */}
-                      {erpScope.isSuperAdmin && category && dbCategories.some((c) => c.code === category || c.id === selectedCategoryId) && (
-                        <button
-                          type="button"
-                          onClick={handleOpenEditCategory}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-                        >
-                          <Pencil className="h-2.5 w-2.5" />
-                          {getLabel("editCategory", lang)}
-                        </button>
-                      )}
                       <button
                         type="button"
                         onClick={handleOpenAddCategory}
@@ -2712,41 +2701,29 @@ export function NewAccountSetup({
                       </button>
                     </div>
                   </div>
-                  <select
+                  <AccountCategoryPicker
                     id="category"
                     value={category}
-                    onChange={(event) => {
-                      const val = event.target.value;
-                      if (val === "__ADD_NEW_CATEGORY__") {
-                        handleOpenAddCategory();
-                      } else {
-                        setCategory(val);
-                        const matched = dbCategories.find((c) => c.code === val || c.id === val);
-                        if (matched) {
-                          setSelectedCategoryId(matched.id);
-                        } else {
-                          setSelectedCategoryId("");
-                        }
-                      }
+                    placeholder={getLabel("selectCategory", lang)}
+                    addNewLabel={t(lang, "acct.add_new_category_ellipsis", "Add New Category...")}
+                    editLabel={getLabel("editCategory", lang)}
+                    canEdit={erpScope.isSuperAdmin}
+                    items={
+                      dbCategories.length > 0
+                        ? dbCategories.map((item) => ({ id: item.id, code: item.code, name: item.name }))
+                        : categories.map((item) => ({ id: item, code: item, name: localizedOption(item, lang) }))
+                    }
+                    onSelect={(item) => {
+                      setCategory(item.code);
+                      const matched = dbCategories.find((c) => c.id === item.id);
+                      setSelectedCategoryId(matched ? matched.id : "");
                     }}
-                    className={selectClass()}
-                  >
-                    <option value="">{getLabel("selectCategory", lang)}</option>
-                    {dbCategories.length > 0
-                      ? dbCategories.map((item) => (
-                          <option key={item.id} value={item.code}>
-                            {item.name} ({item.code})
-                          </option>
-                        ))
-                      : categories.map((item) => (
-                          <option key={item} value={item}>
-                            {localizedOption(item, lang)}
-                          </option>
-                        ))}
-                    <option value="__ADD_NEW_CATEGORY__">
-                      + {t(lang, "acct.add_new_category_ellipsis", "Add New Category...")}
-                    </option>
-                  </select>
+                    onAddNew={handleOpenAddCategory}
+                    onEdit={(item) => {
+                      const full = dbCategories.find((c) => c.id === item.id);
+                      if (full) handleOpenEditCategory(full);
+                    }}
+                  />
                 </div>
               </div>
 
