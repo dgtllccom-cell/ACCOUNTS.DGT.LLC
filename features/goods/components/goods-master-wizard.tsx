@@ -19,12 +19,17 @@ export function GoodsMasterWizard({
   const [error, setError] = useState("");
 
   const handleSave = async () => {
+    setError("");
     if (!form.goodsName.trim() || !form.chsCode.trim()) {
       setError(tr("goods_wizard.required_error", "Goods Name and HS Code are required."));
       return;
     }
+    if (form.goodsName.trim().length < 2) {
+      setError(tr("goods_wizard.err_name_short", "Goods Name must be at least 2 characters."));
+      return;
+    }
+    const failedText = tr("goods_wizard.err_failed", "Could not save goods. Please try again.");
     setLoading(true);
-    setError("");
 
     try {
       const response = await fetch("/api/erp/goods", {
@@ -38,13 +43,22 @@ export function GoodsMasterWizard({
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
-        throw new Error(payload?.error?.message || payload?.error || "Failed to create good.");
+        // Map the server's machine code to a localized message; never show the server's English text.
+        const code = payload?.error?.code;
+        if (code === "GOODS_CHS_DUPLICATE") {
+          setError(tr("goods_wizard.err_dup_hs", "HS Code {code} is already in use. Use a different code.").replace("{code}", form.chsCode.trim()));
+        } else if (code === "VALIDATION_ERROR") {
+          setError(tr("goods_wizard.err_invalid", "Please check the goods details and try again."));
+        } else {
+          setError(failedText);
+        }
+        return;
       }
 
       onSaved?.(payload.data?.goodsId || payload.goodsId);
       onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save Goods Master.");
+    } catch {
+      setError(failedText);
     } finally {
       setLoading(false);
     }
@@ -68,11 +82,6 @@ export function GoodsMasterWizard({
         </div>
 
         <div className="p-5 space-y-4">
-          {error && (
-            <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[11px] rounded px-3 py-2">
-              {error}
-            </div>
-          )}
           <VoiceFormFill
             context="goods"
             lang={lang}
@@ -107,22 +116,29 @@ export function GoodsMasterWizard({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 px-5 pb-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold rounded border border-input text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            {tr("common.cancel", "Cancel")}
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={loading}
-            className="px-4 py-2 text-xs rounded bg-blue-600 text-white font-bold shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-60"
-          >
-            {loading ? tr("goods_wizard.saving", "Saving...") : tr("goods_wizard.save", "Save Goods Master")}
-          </button>
+        <div className="px-5 pb-4 space-y-2">
+          {error && (
+            <p role="alert" className="bg-destructive/10 border border-destructive/30 text-destructive text-[11px] rounded px-3 py-2">
+              {error}
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-xs font-semibold rounded border border-input text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              {tr("common.cancel", "Cancel")}
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={loading}
+              className="px-4 py-2 text-xs rounded bg-blue-600 text-white font-bold shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-60"
+            >
+              {loading ? tr("goods_wizard.saving", "Saving...") : tr("goods_wizard.save", "Save Goods Master")}
+            </button>
+          </div>
         </div>
       </div>
     </div>

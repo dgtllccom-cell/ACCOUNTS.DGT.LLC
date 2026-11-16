@@ -1104,6 +1104,10 @@ export type UiKey =
   | "goods.gmp_goods_masters" | "goods.gmp_loading_goods" | "goods.gmp_no_goods_found" | "goods.gmp_hs_code_colon" | "goods.gmp_no_goods_master_selected" | "goods.gmp_select_goods_master_msg"
   | "goods.gvg_loading_variations" | "goods.gvg_failed_load_goods_data" | "goods.gvg_add_variation" | "goods.gvg_new_variation" | "goods.gvg_select_origin_ph" | "goods.gvg_size_required" | "goods.gvg_brand_required" | "goods.gvg_no_variations_found" | "goods.gvg_size_placeholder_example" | "goods.gvg_brand_placeholder_example"
   | "goods.gvg_size_brand_required_msg" | "goods.gvg_failed_create_variation" | "goods.gvg_failed_add_variation" | "goods.gvg_hs_colon" | "goods.gvg_total_variations_colon" | "goods.gvg_click_add_variation_msg"
+  | "goods.gvg_col_goods_name"
+  | "goods.gvg_col_origin"
+  | "goods.gvg_col_size"
+  | "goods.gvg_col_brand"
   | "bankreg.bankreg_new_bank" | "bankreg.bankreg_showing_word" | "bankreg.bankreg_loading_banks" | "bankreg.bankreg_no_banks_found" | "bankreg.bankreg_create_first_bank" | "bankreg.bankreg_search_placeholder" | "bankreg.bankreg_report_title" | "bankreg.bankreg_report_subtitle"
   | "bankreg.bankreg_status_filter" | "bankreg.bankreg_search_query"
   | "bankreg.bp_search_bank_placeholder" | "bankreg.bp_view_bank_details" | "bankreg.bp_edit_bank_master" | "bankreg.bp_account_title_colon" | "bankreg.bp_active_bank" | "bankreg.bp_branch_name_code" | "bankreg.bp_short_name" | "bankreg.bp_iban_number" | "bankreg.bp_swift_bic_code" | "bankreg.bp_opening_net_balance" | "bankreg.bp_select_this_bank" | "bankreg.bp_edit_bank_dash_master_form" | "bankreg.bp_new_bank_dash_master_form" | "bankreg.bp_bank_details_dash"
@@ -6038,6 +6042,11 @@ export type UiKey =
   | "goods_wizard.hs_code"
   | "goods_wizard.hs_code_placeholder"
   | "goods_wizard.required_error"
+  | "goods_wizard.err_dup_hs"
+  | "goods_wizard.err_invalid"
+  | "goods_wizard.err_failed"
+  | "goods_wizard.err_name_short"
+  | "goods_wizard.saved"
   | "goods_wizard.save"
   | "goods_wizard.saving"
   | "bank.settings_master_forms"
@@ -14237,6 +14246,10 @@ const en: Dict = {
   "goods.gvg_size_placeholder_example": "e.g. W320",
   "goods.gvg_brand_placeholder_example": "e.g. DGT",
   "goods.gvg_size_brand_required_msg": "Size and Brand are required.",
+  "goods.gvg_col_goods_name": "Goods Name",
+  "goods.gvg_col_origin": "Origin",
+  "goods.gvg_col_size": "Size",
+  "goods.gvg_col_brand": "Brand",
   "goods.gvg_failed_create_variation": "Failed to create variation",
   "goods.gvg_failed_add_variation": "Failed to add variation",
   "goods.gvg_hs_colon": "HS:",
@@ -15918,6 +15931,11 @@ const en: Dict = {
   "goods_wizard.hs_code": "HS Code",
   "goods_wizard.hs_code_placeholder": "0802.32",
   "goods_wizard.required_error": "Goods Name and HS Code are required.",
+  "goods_wizard.err_dup_hs": "HS Code {code} is already in use. Use a different code.",
+  "goods_wizard.err_invalid": "Please check the goods details and try again.",
+  "goods_wizard.err_failed": "Could not save goods. Please try again.",
+  "goods_wizard.err_name_short": "Goods Name must be at least 2 characters.",
+  "goods_wizard.saved": "Goods Master saved.",
   "goods_wizard.save": "Save Goods Master",
   "goods_wizard.saving": "Saving...",
   "bank.settings_master_forms": "Settings / Master Forms",
@@ -26074,6 +26092,10 @@ const en: Dict = {
   "recept.closing": "Thank you for calling. Goodbye.",
   "goodsm.crumb": "Settings / Management",
   "goodsm.title": "Goods Master",
+  "goodsm.err_dup_chs": "CHS Code {code} is already in use. Use a different code.",
+  "goodsm.err_validation": "Please check the goods details and try again.",
+  "goodsm.err_save_generic": "Could not save goods. Please try again.",
+  "goodsm.err_name_short": "Goods Name must be at least 2 characters.",
   "goodsm.subtitle": "Centralized goods registry used across Purchase, Sales and Inventory.",
   "goodsm.master_data": "Master Data",
   "goodsm.close": "Close",
@@ -40698,6 +40720,10 @@ const ur: Dict = {
   "goods.gvg_size_placeholder_example": "مثال کے طور پر W320",
   "goods.gvg_brand_placeholder_example": "مثال کے طور پر DGT",
   "goods.gvg_size_brand_required_msg": "سائز اور برانڈ درکار ہیں۔",
+  "goods.gvg_col_goods_name": "سامان کا نام",
+  "goods.gvg_col_origin": "اصل ملک",
+  "goods.gvg_col_size": "سائز",
+  "goods.gvg_col_brand": "برانڈ",
   "goods.gvg_failed_create_variation": "ویریئشن بنانے میں ناکامی",
   "goods.gvg_failed_add_variation": "ویریئشن شامل کرنے میں ناکامی",
   "goods.gvg_hs_colon": "HS:",
@@ -43838,6 +43864,11 @@ const ur: Dict = {
   "goods_wizard.hs_code": "ایچ ایس کوڈ",
   "goods_wizard.hs_code_placeholder": "0802.32",
   "goods_wizard.required_error": "مال کا نام اور ایچ ایس کوڈ درکار ہیں۔",
+  "goods_wizard.err_dup_hs": "HS کوڈ {code} پہلے سے استعمال میں ہے۔ مختلف کوڈ استعمال کریں۔",
+  "goods_wizard.err_invalid": "سامان کی تفصیلات چیک کریں اور دوبارہ کوشش کریں۔",
+  "goods_wizard.err_failed": "سامان محفوظ نہیں ہو سکا۔ دوبارہ کوشش کریں۔",
+  "goods_wizard.err_name_short": "سامان کا نام کم از کم 2 حروف کا ہونا چاہیے۔",
+  "goods_wizard.saved": "سامان کا ماسٹر محفوظ ہو گیا۔",
   "goods_wizard.save": "مال ماسٹر محفوظ کریں",
   "goods_wizard.saving": "محفوظ ہو رہا ہے...",
   "bank.settings_master_forms": "ترتیبات / ماسٹر فارمز",
@@ -52783,6 +52814,10 @@ const ur: Dict = {
   "recept.closing": "کال کرنے کا شکریہ۔ خدا حافظ۔",
   "goodsm.crumb": "ترتیبات / انتظام",
   "goodsm.title": "گڈز ماسٹر",
+  "goodsm.err_dup_chs": "CHS کوڈ {code} پہلے سے استعمال میں ہے۔ مختلف کوڈ استعمال کریں۔",
+  "goodsm.err_validation": "سامان کی تفصیلات چیک کریں اور دوبارہ کوشش کریں۔",
+  "goodsm.err_save_generic": "سامان محفوظ نہیں ہو سکا۔ دوبارہ کوشش کریں۔",
+  "goodsm.err_name_short": "سامان کا نام کم از کم 2 حروف کا ہونا چاہیے۔",
   "goodsm.subtitle": "مرکزی گڈز رجسٹری جو خرید، فروخت اور انوینٹری میں استعمال ہوتی ہے۔",
   "goodsm.master_data": "ماسٹر ڈیٹا",
   "goodsm.close": "بند کریں",
@@ -67191,6 +67226,10 @@ const ar: Dict = {
   "goods.gvg_size_placeholder_example": "مثال: W320",
   "goods.gvg_brand_placeholder_example": "مثال: DGT",
   "goods.gvg_size_brand_required_msg": "الحجم والعلامة التجارية مطلوبان.",
+  "goods.gvg_col_goods_name": "اسم البضاعة",
+  "goods.gvg_col_origin": "بلد المنشأ",
+  "goods.gvg_col_size": "الحجم",
+  "goods.gvg_col_brand": "العلامة التجارية",
   "goods.gvg_failed_create_variation": "فشل إنشاء النوع",
   "goods.gvg_failed_add_variation": "فشل إضافة النوع",
   "goods.gvg_hs_colon": "HS:",
@@ -70336,6 +70375,11 @@ const ar: Dict = {
   "goods_wizard.hs_code": "رمز التعرفة الجمركية",
   "goods_wizard.hs_code_placeholder": "0802.32",
   "goods_wizard.required_error": "اسم السلعة ورمز التعرفة الجمركية مطلوبان.",
+  "goods_wizard.err_dup_hs": "رمز HS {code} مستخدم بالفعل. استخدم رمزاً مختلفاً.",
+  "goods_wizard.err_invalid": "تحقق من بيانات البضاعة وأعد المحاولة.",
+  "goods_wizard.err_failed": "تعذر حفظ البضاعة. أعد المحاولة.",
+  "goods_wizard.err_name_short": "يجب أن يتكون اسم البضاعة من حرفين على الأقل.",
+  "goods_wizard.saved": "تم حفظ سجل البضاعة.",
   "goods_wizard.save": "حفظ السلعة الرئيسية",
   "goods_wizard.saving": "جارٍ الحفظ...",
   "bank.settings_master_forms": "الإعدادات / النماذج الرئيسية",
@@ -79277,6 +79321,10 @@ const ar: Dict = {
   "recept.closing": "شكرًا لاتصالك. مع السلامة.",
   "goodsm.crumb": "الإعدادات / الإدارة",
   "goodsm.title": "سجل البضائع",
+  "goodsm.err_dup_chs": "رمز CHS {code} مستخدم بالفعل. استخدم رمزاً مختلفاً.",
+  "goodsm.err_validation": "تحقق من بيانات البضاعة وأعد المحاولة.",
+  "goodsm.err_save_generic": "تعذر حفظ البضاعة. أعد المحاولة.",
+  "goodsm.err_name_short": "يجب أن يتكون اسم البضاعة من حرفين على الأقل.",
   "goodsm.subtitle": "سجل بضائع مركزي يُستخدم في الشراء والبيع والمخزون.",
   "goodsm.master_data": "البيانات الرئيسية",
   "goodsm.close": "إغلاق",
@@ -93736,6 +93784,10 @@ const fa: Dict = {
   "goods.gvg_size_placeholder_example": "مثال: W320",
   "goods.gvg_brand_placeholder_example": "مثال: DGT",
   "goods.gvg_size_brand_required_msg": "اندازه و برند الزامی است.",
+  "goods.gvg_col_goods_name": "نام کالا",
+  "goods.gvg_col_origin": "کشور مبدأ",
+  "goods.gvg_col_size": "اندازه",
+  "goods.gvg_col_brand": "برند",
   "goods.gvg_failed_create_variation": "ایجاد نوع ناموفق بود",
   "goods.gvg_failed_add_variation": "افزودن نوع ناموفق بود",
   "goods.gvg_hs_colon": "HS:",
@@ -96881,6 +96933,11 @@ const fa: Dict = {
   "goods_wizard.hs_code": "کد HS",
   "goods_wizard.hs_code_placeholder": "0802.32",
   "goods_wizard.required_error": "نام کالا و کد HS الزامی است.",
+  "goods_wizard.err_dup_hs": "کد HS {code} قبلاً استفاده شده است. کد دیگری وارد کنید.",
+  "goods_wizard.err_invalid": "اطلاعات کالا را بررسی کرده و دوباره تلاش کنید.",
+  "goods_wizard.err_failed": "ذخیره کالا انجام نشد. دوباره تلاش کنید.",
+  "goods_wizard.err_name_short": "نام کالا باید حداقل ۲ حرف باشد.",
+  "goods_wizard.saved": "سجل کالا ذخیره شد.",
   "goods_wizard.save": "ذخیره کالای اصلی",
   "goods_wizard.saving": "در حال ذخیره...",
   "bank.settings_master_forms": "تنظیمات / فرم‌های اصلی",
@@ -105821,6 +105878,10 @@ const fa: Dict = {
   "recept.closing": "از تماس شما سپاسگزاریم. خدانگهدار.",
   "goodsm.crumb": "تنظیمات / مدیریت",
   "goodsm.title": "فهرست کالا",
+  "goodsm.err_dup_chs": "کد CHS {code} قبلاً استفاده شده است. کد دیگری وارد کنید.",
+  "goodsm.err_validation": "اطلاعات کالا را بررسی کرده و دوباره تلاش کنید.",
+  "goodsm.err_save_generic": "ذخیره کالا انجام نشد. دوباره تلاش کنید.",
+  "goodsm.err_name_short": "نام کالا باید حداقل ۲ حرف باشد.",
   "goodsm.subtitle": "دفتر مرکزی کالا که در خرید، فروش و موجودی استفاده می‌شود.",
   "goodsm.master_data": "داده‌های اصلی",
   "goodsm.close": "بستن",
@@ -120280,6 +120341,10 @@ const ps: Dict = {
   "goods.gvg_size_placeholder_example": "بیلګه: W320",
   "goods.gvg_brand_placeholder_example": "بیلګه: DGT",
   "goods.gvg_size_brand_required_msg": "اندازه او نښه اړین دي.",
+  "goods.gvg_col_goods_name": "د توکي نوم",
+  "goods.gvg_col_origin": "د منشا هېواد",
+  "goods.gvg_col_size": "اندازه",
+  "goods.gvg_col_brand": "برانډ",
   "goods.gvg_failed_create_variation": "د ډول جوړول ناکام شول",
   "goods.gvg_failed_add_variation": "د ډول زیاتول ناکام شول",
   "goods.gvg_hs_colon": "HS:",
@@ -123420,6 +123485,11 @@ const ps: Dict = {
   "goods_wizard.hs_code": "د HS کوډ",
   "goods_wizard.hs_code_placeholder": "0802.32",
   "goods_wizard.required_error": "د توکي نوم او د HS کوډ اړین دي.",
+  "goods_wizard.err_dup_hs": "د HS کوډ {code} دمخه کارول شوی. بل کوډ وکاروئ.",
+  "goods_wizard.err_invalid": "د توکي معلومات وګورئ او بیا هڅه وکړئ.",
+  "goods_wizard.err_failed": "توکی خوندي نه شو. بیا هڅه وکړئ.",
+  "goods_wizard.err_name_short": "د توکي نوم باید لږ تر لږه ۲ توري ولري.",
+  "goods_wizard.saved": "د توکي ماسټر خوندي شو.",
   "goods_wizard.save": "د توکو اصلي خوندي کړئ",
   "goods_wizard.saving": "خوندي کیږي...",
   "bank.settings_master_forms": "تنظیمات / اصلي فورمې",
@@ -132363,6 +132433,10 @@ const ps: Dict = {
   "recept.closing": "د کال کولو مننه. په امان د خدای.",
   "goodsm.crumb": "تنظیمات / مدیریت",
   "goodsm.title": "د توکو اصلي معلومات",
+  "goodsm.err_dup_chs": "د CHS کوډ {code} دمخه کارول شوی. بل کوډ وکاروئ.",
+  "goodsm.err_validation": "د توکي معلومات وګورئ او بیا هڅه وکړئ.",
+  "goodsm.err_save_generic": "توکی خوندي نه شو. بیا هڅه وکړئ.",
+  "goodsm.err_name_short": "د توکي نوم باید لږ تر لږه ۲ توري ولري.",
   "goodsm.subtitle": "مرکزي د توکو ثبت چې د پیرود، پلور او انوینټري کې کارول کیږي.",
   "goodsm.master_data": "اصلي معلومات",
   "goodsm.close": "بندول",

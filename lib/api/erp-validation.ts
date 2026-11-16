@@ -550,7 +550,10 @@ export const goodsCreateSchema = z.object({
   barcodeType: z.enum(["CODE128", "EAN13", "UPC", "QR"]).optional(),
   initialVariation: z.object({
     size: z.string().trim().min(1).max(100),
-    brand: z.string().trim().min(1).max(100)
+    brand: z.string().trim().min(1).max(100),
+    // Kept (not stripped): the Goods Management form sends these for the first variation.
+    variety: z.string().trim().max(150).nullable().optional(),
+    extraDetails: z.string().trim().max(2000).nullable().optional()
   }).optional().nullable()
 });
 
