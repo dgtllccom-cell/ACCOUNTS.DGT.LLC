@@ -6259,6 +6259,7 @@ export type UiKey =
   | "cnbs.step7_section_title"
   | "cnbs.main_branch_exists"
   | "cnbs.saved_branches"
+  | "cnbs.saved_values_reloaded" | "cnbs.saved_values_not_reloaded"
   | "cnbs.select_country_load"
   | "cnbs.no_saved_branches"
   | "cnbs.loading_wizard"
@@ -16177,6 +16178,8 @@ const en: Dict = {
   "cnbs.step7_section_title": "Step 7 - Roles & Permissions",
   "cnbs.main_branch_exists": "A main branch already exists for this country:",
   "cnbs.saved_branches": "Saved Country Main Branches",
+  "cnbs.saved_values_reloaded": "Saved values reloaded from the server.",
+  "cnbs.saved_values_not_reloaded": "Saved, but the saved values could not be reloaded. Refresh the page to confirm.",
   "cnbs.select_country_load": "Select a country to load saved branches.",
   "cnbs.no_saved_branches": "No saved branches for this country yet.",
   "cnbs.loading_wizard": "Loading Country Branch Setup...",
@@ -43990,6 +43993,8 @@ const ur: Dict = {
   "cnbs.step7_section_title": "مرحلہ 7 - کردار اور اجازتیں",
   "cnbs.main_branch_exists": "اس ملک کے لیے مین برانچ پہلے سے موجود ہے:",
   "cnbs.saved_branches": "محفوظ کردہ کنٹری مین برانچز",
+  "cnbs.saved_values_reloaded": "محفوظ شدہ اقدار سرور سے دوبارہ لوڈ ہو گئیں۔",
+  "cnbs.saved_values_not_reloaded": "محفوظ ہو گیا، لیکن محفوظ شدہ اقدار دوبارہ لوڈ نہیں ہو سکیں۔ تصدیق کے لیے صفحہ ریفریش کریں۔",
   "cnbs.select_country_load": "محفوظ شدہ برانچز لوڈ کرنے کے لیے ملک منتخب کریں۔",
   "cnbs.no_saved_branches": "اس ملک کے لیے ابھی تک کوئی محفوظ برانچ نہیں۔",
   "cnbs.loading_wizard": "کنٹری برانچ سیٹ اپ لوڈ ہو رہا ہے...",
@@ -70399,6 +70404,8 @@ const ar: Dict = {
   "cnbs.step7_section_title": "الخطوة 7 - الأدوار والصلاحيات",
   "cnbs.main_branch_exists": "يوجد بالفعل فرع رئيسي لهذه الدولة:",
   "cnbs.saved_branches": "فروع الدولة الرئيسية المحفوظة",
+  "cnbs.saved_values_reloaded": "تمت إعادة تحميل القيم المحفوظة من الخادم.",
+  "cnbs.saved_values_not_reloaded": "تم الحفظ، لكن تعذّر إعادة تحميل القيم المحفوظة. حدّث الصفحة للتأكد.",
   "cnbs.select_country_load": "اختر دولة لتحميل الفروع المحفوظة.",
   "cnbs.no_saved_branches": "لا توجد فروع محفوظة لهذه الدولة بعد.",
   "cnbs.loading_wizard": "جارٍ تحميل إعداد فرع الدولة...",
@@ -96855,6 +96862,8 @@ const fa: Dict = {
   "cnbs.step7_section_title": "مرحله 7 - نقش‌ها و مجوزها",
   "cnbs.main_branch_exists": "یک شعبه اصلی از قبل برای این کشور وجود دارد:",
   "cnbs.saved_branches": "شعب اصلی ذخیره‌شده کشور",
+  "cnbs.saved_values_reloaded": "مقادیر ذخیره‌شده دوباره از سرور بارگذاری شد.",
+  "cnbs.saved_values_not_reloaded": "ذخیره شد، اما مقادیر ذخیره‌شده دوباره بارگذاری نشد. برای تأیید، صفحه را تازه‌سازی کنید.",
   "cnbs.select_country_load": "برای بارگذاری شعب ذخیره‌شده، کشور را انتخاب کنید.",
   "cnbs.no_saved_branches": "هنوز شعبه ذخیره‌شده‌ای برای این کشور وجود ندارد.",
   "cnbs.loading_wizard": "در حال بارگذاری راه‌اندازی شعبه کشور...",
@@ -123305,6 +123314,8 @@ const ps: Dict = {
   "cnbs.step7_section_title": "پړاو 7 - رولونه او اجازې",
   "cnbs.main_branch_exists": "د دې هېواد لپاره اصلي برانچ دمخه شتون لري:",
   "cnbs.saved_branches": "خوندي شوې د هېواد اصلي برانچونه",
+  "cnbs.saved_values_reloaded": "خوندي شوي ارزښتونه له سرور نه بېرته پورته شول.",
+  "cnbs.saved_values_not_reloaded": "خوندي شو، خو خوندي شوي ارزښتونه بېرته پورته نشول. د تایید لپاره پاڼه بیا پورته کړئ.",
   "cnbs.select_country_load": "د خوندي شویو برانچونو د بارولو لپاره هېواد وټاکئ.",
   "cnbs.no_saved_branches": "د دې هېواد لپاره تر اوسه هیڅ خوندي شوې برانچ نشته.",
   "cnbs.loading_wizard": "د هېواد برانچ تنظیم بارېږي...",
