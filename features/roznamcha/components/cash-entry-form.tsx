@@ -4859,11 +4859,11 @@ export function CashEntryForm({
                         <textarea
                           rows={6}
                           maxLength={1000}
-                          style={{ minHeight: "8rem" }}
+                          style={{ height: "120px", minHeight: "120px" }}
                           value={remarks}
                           onChange={(e) => setRemarks(e.target.value)}
                           placeholder={tr("cj.mRemarksPh", "Enter transaction details...")}
-                          className="w-full min-h-[8rem] p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                          className="w-full h-[120px] min-h-[120px] p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500 resize-y"
                         />
                         <div className="text-right text-[10px] font-mono text-slate-400">
                           {remarks.length}/1000
