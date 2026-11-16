@@ -3791,7 +3791,7 @@ export function CashEntryForm({
               type="button"
               onClick={() => setShowNewRoznamchaEntryCard(false)}
               className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors shrink-0"
-              title={tr("common.close", "Close")}
+              title={tr("utask.close", "Close")}
             >
               <X className="h-5 w-5 stroke-[2.5]" />
             </button>
@@ -3946,9 +3946,9 @@ export function CashEntryForm({
                         onChange={(e) => setRegisterType(e.target.value)}
                         className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-8 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                       >
-                        <option value="Cash Register">{tr("roz.cash_register", "Cash Register")}</option>
-                        <option value="Bank Register">{tr("roz.bank_register", "Bank Register")}</option>
-                        <option value="General Register">{tr("roz.general_register", "General Register")}</option>
+                        <option value="Cash Register">Cash Register</option>
+                        <option value="Bank Register">Bank Register</option>
+                        <option value="General Register">General Register</option>
                       </select>
                       <Layers className="pointer-events-none absolute left-2.5 top-3 h-4 w-4 text-blue-600" />
                       <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
@@ -3997,10 +3997,10 @@ export function CashEntryForm({
                     {entryTypeDropdownOpen && (
                       <div className="absolute z-30 left-0 right-0 mt-1 rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900 animate-in fade-in-50 zoom-in-95">
                         {[
-                          { label: "Cash", display: tr("common.cash", "Cash"), icon: Banknote, color: "text-emerald-600", mode: "cash" },
-                          { label: "Cheque", display: tr("common.cheque", "Cheque"), icon: CreditCard, color: "text-emerald-600", mode: "bank" },
-                          { label: "Invoice", display: tr("common.invoice", "Invoice"), icon: FileText, color: "text-blue-600", mode: "invoice" },
-                          { label: "Transfer", display: tr("common.transfer", "Transfer"), icon: ArrowLeftRight, color: "text-blue-600", mode: "transfer" },
+                          { label: "Cash", icon: Banknote, color: "text-emerald-600", mode: "cash" },
+                          { label: "Cheque", icon: CreditCard, color: "text-emerald-600", mode: "bank" },
+                          { label: "Invoice", icon: FileText, color: "text-blue-600", mode: "invoice" },
+                          { label: "Transfer", icon: ArrowLeftRight, color: "text-blue-600", mode: "transfer" },
                         ].map((item) => (
                           <button
                             key={item.label}
@@ -4018,7 +4018,7 @@ export function CashEntryForm({
                           >
                             <div className="flex items-center gap-2.5">
                               <item.icon className={`h-4 w-4 ${entryTypeSelection === item.label ? "text-white" : item.color}`} />
-                              <span>{item.display}</span>
+                              <span>{item.label}</span>
                             </div>
                             {entryTypeSelection === item.label && <Check className="h-4 w-4 text-white" />}
                           </button>
@@ -4150,9 +4150,9 @@ export function CashEntryForm({
                         onChange={(e) => setCategoryType(e.target.value)}
                         className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-8 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                       >
-                        <option value="Cash Roznamcha">{tr("roz.cash_roznamcha", "Cash Roznamcha")}</option>
-                        <option value="Bank Roznamcha">{tr("roz.bank_roznamcha", "Bank Roznamcha")}</option>
-                        <option value="General Journal">{tr("roz.general_journal", "General Journal")}</option>
+                        <option value="Cash Roznamcha">Cash Roznamcha</option>
+                        <option value="Bank Roznamcha">Bank Roznamcha</option>
+                        <option value="General Journal">General Journal</option>
                       </select>
                       <Layers className="pointer-events-none absolute left-2.5 top-3 h-4 w-4 text-blue-600" />
                       <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
@@ -4207,7 +4207,7 @@ export function CashEntryForm({
                             receiverSenderName: e.target.value,
                           }))
                         }
-                        placeholder={tr("roz.enter_name_placeholder", "Enter name")}
+                        placeholder="Enter name"
                         className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                       />
                     </div>
@@ -4249,7 +4249,7 @@ export function CashEntryForm({
                         onChange={(e) =>
                           setTypeDetails((prev) => ({ ...prev, downloadId: e.target.value }))
                         }
-                        placeholder={tr("roz.enter_id_placeholder", "Enter ID (Optional)")}
+                        placeholder="Enter ID (Optional)"
                         className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                       />
                     </div>
@@ -4355,7 +4355,7 @@ export function CashEntryForm({
                     maxLength={500}
                     value={remarks}
                     onChange={(e) => setRemarks(e.target.value)}
-                    placeholder={tr("roz.enter_remarks_placeholder", "Enter remarks / details (optional)")}
+                    placeholder="Enter remarks / details (optional)"
                     className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-16 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 resize-none"
                   />
                   <div className="absolute right-3 bottom-2 text-[10px] font-medium text-slate-400">
