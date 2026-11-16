@@ -21,6 +21,7 @@ export type UiKey =
   | "acctprof.approved"
   | "acctprof.signature"
   | "acctprof.holder_id"
+  | "acctprof.qr_caption"
   | "acctprof.f_account_no"
   | "acctprof.f_account_rule"
   | "acctprof.f_country_rule"
@@ -25054,6 +25055,7 @@ const en: Dict = {
   "acctprof.approved": "Approved By",
   "acctprof.signature": "(Signature)",
   "acctprof.holder_id": "Customer ID",
+  "acctprof.qr_caption": "Scan to Verify Account Profile",
   "acctprof.f_account_no": "Account No.",
   "acctprof.f_account_rule": "Account Rule",
   "acctprof.f_country_rule": "Country Account Rule",
@@ -51762,6 +51764,7 @@ const ur: Dict = {
   "acctprof.approved": "منظور کنندہ",
   "acctprof.signature": "(دستخط)",
   "acctprof.holder_id": "کسٹمر آئی ڈی",
+  "acctprof.qr_caption": "پروفائل کی تصدیق کے لیے اسکین کریں",
   "acctprof.f_account_no": "اکاؤنٹ نمبر",
   "acctprof.f_account_rule": "اکاؤنٹ کا اصول",
   "acctprof.f_country_rule": "ملک کے اکاؤنٹ کا اصول",
@@ -78255,6 +78258,7 @@ const ar: Dict = {
   "acctprof.approved": "اعتمده",
   "acctprof.signature": "(التوقيع)",
   "acctprof.holder_id": "رقم العميل",
+  "acctprof.qr_caption": "امسح للتحقق من ملف الحساب",
   "acctprof.f_account_no": "رقم الحساب",
   "acctprof.f_account_rule": "قاعدة الحساب",
   "acctprof.f_country_rule": "قاعدة حساب الدولة",
@@ -104798,6 +104802,7 @@ const fa: Dict = {
   "acctprof.approved": "تأییدکننده نهایی",
   "acctprof.signature": "(امضا)",
   "acctprof.holder_id": "شناسه مشتری",
+  "acctprof.qr_caption": "برای تأیید پروفایل حساب اسکن کنید",
   "acctprof.f_account_no": "شماره حساب",
   "acctprof.f_account_rule": "قاعده حساب",
   "acctprof.f_country_rule": "قاعده حساب کشور",
@@ -131339,6 +131344,7 @@ const ps: Dict = {
   "acctprof.approved": "منظوروونکی",
   "acctprof.signature": "(لاسلیک)",
   "acctprof.holder_id": "د پیرودونکي ID",
+  "acctprof.qr_caption": "د حساب پروفایل تاییدولو لپاره سکین کړئ",
   "acctprof.f_account_no": "د حساب شمیره",
   "acctprof.f_account_rule": "د حساب قاعده",
   "acctprof.f_country_rule": "د هېواد د حساب قاعده",

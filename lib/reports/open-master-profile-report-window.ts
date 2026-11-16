@@ -2,6 +2,7 @@ import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { printStore } from "@/lib/store/print-store";
 import type { PermissionPrintSummary } from "@/lib/reports/permission-print-summary";
+import { qrCodeSvgMarkup } from "@/lib/qr/qr-core";
 
 /**
  * Canonical, reusable A4 "master profile" print/PDF engine for the whole ERP.
@@ -83,6 +84,10 @@ export type ProfileCardConfig = {
   holderName: string;
   holderIdLabel: string;
   holderId: string | null;
+  /** Text encoded in the QR under the photo (account identifiers only). Null = no QR. */
+  qrValue?: string | null;
+  /** Caption under the QR, already translated. */
+  qrCaption?: string;
   account: ProfileCardField[];
   branch: ProfileCardField[];
   branchStatus: { label: string; value: string | null; active: boolean };
@@ -517,6 +522,7 @@ function buildProfileCardHtml(config: MasterProfileConfig, pc: ProfileCardConfig
   const safeImg = (u: string) => (/^https?:\/\//i.test(u) || u.startsWith("data:") || u.startsWith("/") ? escapeHtml(u) : "");
   const logo = (pc.logoUrl || "").toString().trim();
   const photo = (pc.photoUrl || "").toString().trim();
+  const qrSvg = pc.qrValue ? qrCodeSvgMarkup(pc.qrValue, { size: 120, quietZone: 2 }) : "";
   const holder = (pc.holderName || "").trim();
   const initials = holder && holder !== DASH
     ? holder.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => Array.from(w)[0]).join("").toUpperCase()
@@ -617,6 +623,9 @@ function buildProfileCardHtml(config: MasterProfileConfig, pc: ProfileCardConfig
       .pc-initials { font-size: 30px; font-weight: 900; color: #0b2d5b; }
       .pc-holder-name { font-size: 11px; font-weight: 900; margin-top: 7px; text-transform: uppercase; word-break: break-word; }
       .pc-holder-id { font-size: 8px; margin-top: 4px; color: #cfe3ff; font-weight: 600; word-break: break-word; }
+      .pc-qr { margin: 8px auto 0; width: 84px; background: #fff; border-radius: 4px; padding: 3px; }
+      .pc-qr svg { display: block; width: 100%; height: auto; max-width: 100%; }
+      .pc-qr-cap { font-size: 6.5px; margin-top: 4px; color: #cfe3ff; font-weight: 700; text-align: center; line-height: 1.3; }
       .pc-card { background: #fff; border: 1px solid #cfd9e6; border-radius: 7px; overflow: hidden; }
       .pc-card-h { background: #0b2d5b; color: #fff; padding: 6px 9px; font-size: 9.5px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.4px; }
       .pc-kv, .pc-table-branch { width: 100%; border-collapse: collapse; }
@@ -678,6 +687,7 @@ function buildProfileCardHtml(config: MasterProfileConfig, pc: ProfileCardConfig
           <div class="pc-photo">${photo ? `<img src="${safeImg(photo)}" alt="" />` : `<span class="pc-initials">${escapeHtml(initials || DASH)}</span>`}</div>
           <div class="pc-holder-name">${v(pc.holderName)}</div>
           <div class="pc-holder-id">${escapeHtml(pc.holderIdLabel)}: ${v(pc.holderId)}</div>
+          ${qrSvg ? `<div class="pc-qr">${qrSvg}</div><div class="pc-qr-cap">${escapeHtml(pc.qrCaption || "")}</div>` : ""}
         </div>
         <div class="pc-card">
           <div class="pc-card-h">${escapeHtml(pc.sectionTitles.account)}</div>

@@ -79,7 +79,8 @@ export function buildAccountProfileCardConfig(
     trust: tt("acctprof.trust", "Trust • Quality • Growth"),
     footerReport: tt("acctprof.footer_report", "Customer Account Profile Report"),
     companyLines: [branding.address, branding.phone, branding.email, branding.website],
-    logoUrl: branding.logoUrl || null,
+    // no logo configured for the entity → the DAMAAN logo (public/images/damaan-logo.png), never an empty header
+    logoUrl: branding.logoUrl || "/images/damaan-logo.png",
     // the company's own name only — the branding resolver falls back to the COUNTRY name when no company name is configured,
     // which must never be printed as the company (shows "-" until the entity's branding is set)
     brandEntityName: branding.legalName || (branding.entityName && branding.entityName !== branding.countryName ? branding.entityName : null),
@@ -87,6 +88,19 @@ export function buildAccountProfileCardConfig(
     holderName: dash(r.customerName) || dash(r.accountName) || "-",
     holderIdLabel: tt("acctprof.holder_id", "Customer ID"),
     holderId: dash(r.customerNumber),
+    // QR = the account's own identifiers as plain text (no verification page exists yet, so no link is encoded)
+    qrValue: r.accountCode
+      ? [
+          `DAMAAN ACCOUNT PROFILE`,
+          `Account No: ${r.accountCode}`,
+          r.customerNumber ? `Customer ID: ${r.customerNumber}` : null,
+          r.companyCode ? `Company Code: ${r.companyCode}` : null,
+          r.branchCode ? `Branch Code: ${r.branchCode}` : null,
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : null,
+    qrCaption: tt("acctprof.qr_caption", "Scan to Verify Account Profile"),
     account: [
       field(tt("acctprof.f_account_no", "Account No."), r.accountCode),
       field(tt("acctprof.f_account_rule", "Account Rule"), r.accountCategory),

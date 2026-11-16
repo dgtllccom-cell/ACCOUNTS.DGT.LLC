@@ -73,7 +73,7 @@ import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { localizeTerm, localizeName } from "@/lib/i18n/transliteration";
 import { getLabel } from "./translations";
 import { AccountLiveReportPanel } from "./account-live-report-panel";
-import { openAccountA4ReportWindow } from "@/lib/reports/open-account-a4-report-window";
+import { openMasterProfile } from "@/lib/reports/master-profiles";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { LoginScopeBanner } from "@/components/layout/login-scope-banner";
 import { fetchBranding } from "@/lib/branding/client";
@@ -1706,36 +1706,60 @@ export function NewAccountSetup({
     }
   }
 
+  // New Account View / Print = the owner's Customer Account Profile card (same layout as the Account View).
+  // Values come from the form as it stands; anything not held is printed as "-" (no sample values, no invented AED fallback).
   function openReport(autoPrint: boolean) {
-    openAccountA4ReportWindow({
-      title: t(lang, "acct.report_title", "Account Profile Report"),
-      subtitle: t(lang, "acct.report_subtitle", "Account Profile Summary"),
-      autoPrint,
+    const cust = customerDetail ?? null;
+    const comp = companyDetail ?? null;
+    const bank = bankDetail ?? null;
+    const isMain = branchType === "Main";
+    void openMasterProfile({
+      entity: "account",
+      layout: "profile_card",
       lang,
-      accountData: {
+      autoPrint,
+      scope: { countryId: selectedCountry?.id, countryName: selectedCountry?.name, branchName: isMain ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch) },
+      record: {
+        accountId: "",
+        accountCode: accountCode || "",
         accountName,
-        accountCode: accountPreview,
-        accountTitle,
-        subType,
-        category,
-        manualReferenceNumber,
-        currency: branchInfo?.currency || selectedCountry?.currency_code || "AED",
+        globalAccountNumber: null,
+        accountType: cust ? "Customer" : comp ? "Company" : bank ? "Bank" : "Personal",
+        accountCategory: category || null,
         status: saved ? "Active" : "In Progress",
-        customerDetail,
-        companyDetail,
-        bankDetail,
-        warehouseDetail,
-        companyRequired,
-        bankRequired,
-        warehouseRequired,
-        shippingLineName: shippingLineDetail?.name || linkedShippingLineName || undefined,
-        linkedCountriesNames: linkedCountries.map((id) => countries.find((c) => c.id === id)?.name || id),
-        selectedCountryName: selectedCountry?.name,
-        selectedCountryCode: (selectedCountry?.iso2 || selectedCountry?.iso3 || undefined),
-        selectedBranchName: branchType === "Main" ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch),
-        selectedBranchCode: branchInfo?.code,
-        createdBy: ""
-      }
+        currency: branchInfo?.currency || selectedCountry?.currency_code || null,
+        countryName: selectedCountry?.name ?? null,
+        mainBranchName: isMain ? selectedBranchName(mainBranches, branch) : null,
+        mainBranchCode: isMain ? branchInfo?.code ?? null : null,
+        branchName: isMain ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch),
+        branchCode: branchInfo?.code ?? null,
+        cityBranchName: isMain ? null : selectedCityBranchName(cityBranches, branch),
+        companyName: comp?.name ?? null,
+        companyCode: comp?.code ?? null,
+        createdByName: null,
+        customerId: cust?.id ?? null,
+        customerNumber: cust?.customer_number ?? cust?.customer_code ?? null,
+        customerName: cust?.customer_name ?? null,
+        customerFatherName: cust?.father_name ?? null,
+        customerPhotoUrl: cust?.photo_url ?? null,
+        customerMobile: cust?.mobile_number || cust?.phone_number || null,
+        customerEmail: cust?.email_address || null,
+        customerAddress: cust?.address || null,
+        banks: bank
+          ? [
+              {
+                name: bank.bank_name ?? bank.name ?? null,
+                accountNumber: bank.account_number ?? null,
+                ibanNumber: bank.iban_number ?? null,
+                branchName: bank.branch_name ?? null,
+                currency: bank.currency_code ?? bank.currency ?? null,
+                status: null,
+              },
+            ]
+          : [],
+        remarks: [],
+        activities: [],
+      },
     });
   }
 
