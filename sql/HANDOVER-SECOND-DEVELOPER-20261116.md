@@ -10,7 +10,7 @@ Nothing from the 15–17 Nov work is live on Production yet. The live VPS runs G
 
 | Branch | HEAD | Purpose |
 |---|---|---|
-| `integration/release-20261116` | **`c99acf0`** (ops files), code merge **`5cdbf35`** | **Deploy this.** = live `main` + release work. `npm run build` passed (`BUILD_EXIT=0`) on `5cdbf35`. |
+| `integration/release-20261116` | **`b719965`** (ops files), code merge **`5cdbf35`** | **Deploy this.** = live `main` + release work. `npm run build` passed (`BUILD_EXIT=0`) on `5cdbf35`. |
 | `release/consolidated-20261116` | `eb1a6cd` | All our work before the merge with live `main`. Does not contain Asmatullah's changes. |
 | `fix/cash-entry-credit-usd-order` | `29f3534` | Cash Roznamcha manual DR/CR fix (already in `eb1a6cd`). |
 | `fix/location-management-branch-workflows` | `8d1a991` | Location, Country Branch, City Branch fixes (in `eb1a6cd`). |
@@ -18,7 +18,7 @@ Nothing from the 15–17 Nov work is live on Production yet. The live VPS runs G
 | `main` (live) | `8621c0c` | Asmatullah: Roznamcha table reorganize (`8621c0c`), categories RLS + FX carry-forward + local purchase (`119e54f`), PR #144 language refresh (`608621e`, `7a42b4d`). |
 | `production` (gate source) | `c0856c0` | Last gate deploy, 15 Nov 18:17 UTC. `5cdbf35` fast-forwards from it. |
 
-`c99acf0` adds `sql/` (migrations, cleanup, handover). It does not change the app build.
+`b719965` adds `sql/` (migrations, cleanup, handover). It does not change the app build.
 
 ## 3. Work completed (verified as stated)
 
@@ -45,13 +45,13 @@ I resolved the five conflicts between `eb1a6cd` and live `main` `8621c0c`:
 
 ## 5. SQL, cleanup and backup files
 
-In the repo, in `sql/` on `integration/release-20261116` (commit `c99acf0`):
+In the repo, in `sql/` on `integration/release-20261116` (commit `b719965`):
 
 - `production-release-20261116.sql`: release SQL. Preconditions abort if production differs. Adds `carried_forward_from`; replaces category policies (see section 4); renames S to "Sales"; deactivates 15 extra business categories (never deletes); adds five-language names and descriptions for the 13 approved categories.
 - `production-release-20261116-rollback.sql`: restores the snapshot tables `bkp_20261116_*`. Those tables do not exist yet, because the release SQL creates them.
 - `production-cleanup-roznamcha-test-20261116.sql`: soft-deletes the five test entries, writes one `record_change_history` row each, sets the seven Roznamcha counters to 1 (next serial 001). Keeps 10 lines and 2 reversal links. Preconditions abort if anything differs.
 - `prod-permission-fix-20261116.sql`: already applied; rollback included.
-- `owner-session-deploy-eb1a6cd.sh`: old runbook. Update the SHA to `c99acf0` before use.
+- `owner-session-deploy-eb1a6cd.sh`: old runbook. Update the SHA to `b719965` before use.
 - `HANDOVER-20261116.md`: earlier handover (superseded by this file).
 
 **Five test entries** (cleanup SQL, production, 16 Nov 2026):
@@ -104,8 +104,8 @@ Take a fresh full backup right before the SQL step (command in section 7).
    ```
 7. **Gate dry run, then deploy** (`--migrations` is required: the commit adds three migration files):
    ```bash
-   scripts/production/deploy-via-gate.sh c99acf0 --migrations --dry-run
-   scripts/production/deploy-via-gate.sh c99acf0 --migrations
+   scripts/production/deploy-via-gate.sh b719965 --migrations --dry-run
+   scripts/production/deploy-via-gate.sh b719965 --migrations
    ```
    If the code changes after step 2, use the new SHA in both commands.
 8. **Live verification** (section 9).
