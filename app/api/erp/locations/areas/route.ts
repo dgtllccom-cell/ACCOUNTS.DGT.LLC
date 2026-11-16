@@ -42,11 +42,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    let session = null;
-    try {
-      session = await requireErpSession();
-    } catch {
-      // Unauthenticated / Quick Create fallback
+    // Writes need a signed-in ERP session (the old "Quick Create fallback" let anonymous callers create areas).
+    const session = await requireErpSession();
+    if (!session.isSuperAdmin && !session.countryIds?.length) {
+      throw new Error("Location write is not allowed.");
     }
 
     const body = (await request.json()) as {

@@ -957,16 +957,16 @@ function SuperAdminBranchSetupContent() {
           mainBranchName="Head Office (DXB-001)"
           isEditing={Boolean(editingBranchId)}
           checklistStatus={{
-            countrySelected: true,
+            countrySelected: Boolean(location.countryId),
             mainBranchSelected: true,
             branchNameCodeGenerated: true,
             branchCategoryType: true,
             ownerResponsiblePerson: true,
             companyLinked: true,
             businessShippingDomain: true,
-            fullAddressLocation: true,
+            fullAddressLocation: Boolean(address.trim()),
             mobileEmail: true,
-            currencySelected: true,
+            currencySelected: Boolean(currency),
             bankAccountSetup: true,
             userAdminAssigned: true,
             rolePermissions: true,
@@ -978,6 +978,8 @@ function SuperAdminBranchSetupContent() {
             operationsAdminAssigned: true,
             ledgerScopeConfirmed: true
           }}
+          showSavedNotice={false}
+          feedback={message ? <p role="status" className="text-sm font-semibold text-slate-800 dark:text-slate-200">{message}</p> : null}
           onBack={() => setIsReviewMode(false)}
           onGoToStep={() => setIsReviewMode(false)}
           onEditSection={() => setIsReviewMode(false)}

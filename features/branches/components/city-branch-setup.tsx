@@ -257,6 +257,8 @@ function CityBranchSetupContent() {
   const [mainBranches, setMainBranches] = useState<CountryBranchRow[]>([]);
 
   const [existingCityBranches, setExistingCityBranches] = useState<CityBranchRow[]>([]);
+  // The mailbox the branch's saved row holds. An edit save keeps it unless the form sets another email.
+  const [savedCityMailbox, setSavedCityMailbox] = useState("");
   const [existingCitySearch, setExistingCitySearch] = useState("");
   const [editingCityBranchId, setEditingCityBranchId] = useState("");
 
@@ -864,6 +866,7 @@ function CityBranchSetupContent() {
   // Fills the form from a saved row. Also used to reload the saved values after an update.
   function applyCityBranchRow(row: CityBranchRow) {
     setEditingCityBranchId(row.id);
+    setSavedCityMailbox(row.email ?? "");
     setCountryBranchId(row.country_branch_id);
     const domain = (row.operational_domain === "shipping" ? "shipping" : "business") as "business" | "shipping";
     setOperationalDomain(domain);
@@ -1458,7 +1461,11 @@ function CityBranchSetupContent() {
         .filter((row) => row.type && row.value);
 
       const emailContact = contactsPayload.find((row) => row.type.toLowerCase().includes("email"))?.value;
-      const email = emailContact && emailContact.includes("@") ? emailContact : `${branchCode.trim().toLowerCase()}@dgt.llc`;
+      // Editing keeps the mailbox the branch already has; only a new branch gets the generated <code>@dgt.llc address.
+      const savedMailbox = editingCityBranchId ? savedCityMailbox : "";
+      const email = emailContact && emailContact.includes("@")
+        ? emailContact
+        : savedMailbox.includes("@") ? savedMailbox : `${branchCode.trim().toLowerCase()}@dgt.llc`;
       const phone = contactsPayload.find((row) => row.type.toLowerCase().includes("phone") || row.type.toLowerCase().includes("mobile"))?.value;
       const whatsappNumber = contactsPayload.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value;
 
@@ -1540,10 +1547,23 @@ function CityBranchSetupContent() {
         const reloaded = await refreshSavedCityBranch(savedId);
         setBanner({
           type: "success",
-          message: `${t(lang, "cbs.updated_status_word")}: ${finalBranchName} (${branchCode})\n${reloaded ? "Saved values reloaded from the server." : "Saved, but the saved values could not be reloaded. Refresh the page to confirm."}`
+          message: `${t(lang, "cbs.updated_status_word")}: ${finalBranchName} (${branchCode})\n${reloaded ? t(lang, "cnbs.saved_values_reloaded", "Saved values reloaded from the server.") : t(lang, "cnbs.saved_values_not_reloaded", "Saved, but the saved values could not be reloaded. Refresh the page to confirm.")}`
         });
       } else {
-        setBanner({ type: "success", message: `${t(lang, "cbs.saved_status_word")}: ${finalBranchName} (${branchCode})` });
+        // The POST response carries the automatic New Account outcome (app/api/branch-management/city-branches).
+        const account = (json as { account?: { created?: boolean; existed?: boolean; accountCode?: string; reason?: string } | null })?.account ?? null;
+        let accountNote = "";
+        let accountFailed = false;
+        if (account && account.created === false) {
+          accountFailed = true;
+          accountNote = t(lang, "lfix.account_failed", "The branch is saved, but its New Account was not created: {0}").split("{0}").join(String(account.reason ?? ""));
+        } else if (account && account.created === true) {
+          accountNote = account.existed
+            ? t(lang, "lfix.account_existing", "New Account {0} is already linked to this branch.").split("{0}").join(String(account.accountCode ?? ""))
+            : t(lang, "lfix.account_created", "New Account {0} was created automatically.").split("{0}").join(String(account.accountCode ?? ""));
+        }
+        const savedLine = `${t(lang, "cbs.saved_status_word")}: ${finalBranchName} (${branchCode})`;
+        setBanner({ type: accountFailed ? "error" : "success", message: accountNote ? `${savedLine}\n${accountNote}` : savedLine });
       }
       if (!savedId) {
         setBranchCode(suggestBranchCode(locationMeta, list, operationalDomain));
@@ -1835,6 +1855,7 @@ function CityBranchSetupContent() {
                   <LocationHierarchySelect
                     value={location}
                     showState={false}
+                    showDistrict={false}
                     showCity={false}
                     showArea={false}
                     onChange={onCountrySelected}
