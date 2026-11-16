@@ -677,7 +677,7 @@ export function AccountGeneralReportView({
     return () => {
       cancelled = true;
     };
-  }, [initialAccountId]);
+  }, [initialAccountId, lang]);
 
   const rows = useMemo(() => data?.rows ?? [], [data]);
   const userScope = data?.userScope;
