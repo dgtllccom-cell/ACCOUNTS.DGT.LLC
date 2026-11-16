@@ -222,11 +222,15 @@ export async function POST(request: NextRequest) {
         goodsName: body.name,
         originCountryId,
         originalLanguage: lang as never,
+        // Create a first variation only when BOTH size and brand were entered. Never invent
+        // "Standard" / "Default" placeholder rows for a goods record saved from Section 1.
         initialVariation:
-          body.brand || body.sizes || body.variety || body.extraDetails
+          body.brand && body.sizes
             ? {
-                size: body.sizes || "Standard",
-                brand: body.brand || "Default",
+                size: body.sizes,
+                brand: body.brand,
+                variety: body.variety ?? null,
+                extraDetails: body.extraDetails ?? null,
               }
             : null,
       },

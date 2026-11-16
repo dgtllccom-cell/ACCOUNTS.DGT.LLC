@@ -76,6 +76,10 @@ export default function GoodsManagementClient({ session }: { session: { preferre
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
   const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  // Save feedback is shown next to the button that triggered it (create form, edit modal, variation modal).
+  const [createFeedback, setCreateFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [varError, setVarError] = useState<string | null>(null);
 
   const [viewRow, setViewRow] = useState<GoodsRecord | null>(null);
   const [editRow, setEditRow] = useState<GoodsRecord | null>(null);
@@ -84,6 +88,17 @@ export default function GoodsManagementClient({ session }: { session: { preferre
   const [editVarRow, setEditVarRow] = useState<{ goodsId: string; variation: GoodsVariation } | null>(null);
 
   const [form, setForm] = useState({ ...EMPTY_FORM });
+
+  // Map a failed save to a localized message. Server English text is never shown raw.
+  function saveErrorText(e: unknown, chsCode: string): string {
+    const rawCode = (e as { code?: unknown } | null)?.code;
+    const code = typeof rawCode === "string" ? rawCode : null;
+    if (code === "GOODS_CHS_DUPLICATE") {
+      return s.t("err_dup_chs", "CHS Code {code} is already in use. Use a different code.").replace("{code}", chsCode.trim());
+    }
+    if (code === "VALIDATION_ERROR") return s.t("err_validation", "Please check the goods details and try again.");
+    return s.t("err_save_generic", "Could not save goods. Please try again.");
+  }
 
   useEffect(() => {
     listCountries()
@@ -112,29 +127,34 @@ export default function GoodsManagementClient({ session }: { session: { preferre
   }, [q]);
 
   async function createGoods() {
+    setCreateFeedback(null);
     if (!form.goodsName.trim() || !form.chsCode.trim()) {
-      setBanner({ type: "error", text: s.t("err_name_code", "Goods Name and CHS Code are required.") });
+      setCreateFeedback({ type: "error", text: s.t("err_name_code", "Goods Name and CHS Code are required.") });
       return;
     }
-    const hasVariation = form.size.trim() || form.brand.trim() || form.variety.trim() || form.extraDetails.trim() || form.originCountryId;
+    if (form.goodsName.trim().length < 2) {
+      setCreateFeedback({ type: "error", text: s.t("err_name_short", "Goods Name must be at least 2 characters.") });
+      return;
+    }
+    const hasVariation = form.size.trim() || form.brand.trim() || form.variety.trim() || form.extraDetails.trim();
     if (hasVariation && (!form.size.trim() || !form.brand.trim())) {
-      setBanner({ type: "error", text: s.t("err_size_brand", "To add a variation, both Size and Brand are required.") });
+      setCreateFeedback({ type: "error", text: s.t("err_size_brand", "To add a variation, both Size and Brand are required.") });
       return;
     }
     setBusy(true);
-    setBanner(null);
     try {
       await apiPost("/api/erp/goods", {
         chsCode: form.chsCode,
         goodsName: form.goodsName,
         originalLanguage: "en",
+        // Origin belongs to the goods record (goods.origin_country_id); variations have no origin column.
+        originCountryId: form.originCountryId || null,
         minStockLevel: form.minStockLevel.trim() === "" ? null : Number(form.minStockLevel),
         reorderLevel: form.reorderLevel.trim() === "" ? null : Number(form.reorderLevel),
         barcode: form.barcode.trim() || null,
         barcodeType: form.barcodeType || "CODE128",
         initialVariation: hasVariation
           ? {
-              originCountryId: form.originCountryId || null,
               size: form.size.trim(),
               brand: form.brand.trim(),
               variety: form.variety.trim() || null,
@@ -144,9 +164,9 @@ export default function GoodsManagementClient({ session }: { session: { preferre
       });
       setForm({ ...EMPTY_FORM });
       await refresh({ q });
-      setBanner({ type: "success", text: s.t("ok_saved", "Goods Master record and initial variation saved successfully.") });
-    } catch (e: any) {
-      setBanner({ type: "error", text: e?.message ?? s.t("err_save", "Failed to save goods.") });
+      setCreateFeedback({ type: "success", text: s.t("ok_saved", "Goods Master record and initial variation saved successfully.") });
+    } catch (e: unknown) {
+      setCreateFeedback({ type: "error", text: saveErrorText(e, form.chsCode) });
     } finally {
       setBusy(false);
     }
@@ -162,27 +182,34 @@ export default function GoodsManagementClient({ session }: { session: { preferre
     barcodeType: string;
   }) {
     if (!editRow) return;
+    setEditError(null);
     if (!next.goodsName.trim() || !next.chsCode.trim()) {
-      setBanner({ type: "error", text: s.t("err_name_code", "Goods Name and CHS Code are required.") });
+      setEditError(s.t("err_name_code", "Goods Name and CHS Code are required."));
+      return;
+    }
+    if (next.goodsName.trim().length < 2) {
+      setEditError(s.t("err_name_short", "Goods Name must be at least 2 characters."));
       return;
     }
     setBusy(true);
-    setBanner(null);
     try {
       await apiPatch(`/api/erp/goods/${editRow.id}`, {
         chsCode: next.chsCode,
         goodsName: next.goodsName,
         originalLanguage: "en",
+        // Was silently dropped before: the edit modal's origin selection never reached the server.
+        originCountryId: next.originCountryId || null,
         minStockLevel: next.minStockLevel.trim() === "" ? null : Number(next.minStockLevel),
         reorderLevel: next.reorderLevel.trim() === "" ? null : Number(next.reorderLevel),
         barcode: next.barcode.trim() || null,
         barcodeType: next.barcodeType || "CODE128",
       });
       setEditRow(null);
+      setEditError(null);
       await refresh({ q });
       setBanner({ type: "success", text: s.t("ok_updated", "Goods Master record updated successfully.") });
-    } catch (e: any) {
-      setBanner({ type: "error", text: e?.message ?? s.t("err_update", "Failed to update goods.") });
+    } catch (e: unknown) {
+      setEditError(saveErrorText(e, next.chsCode));
     } finally {
       setBusy(false);
     }
@@ -206,8 +233,9 @@ export default function GoodsManagementClient({ session }: { session: { preferre
 
   async function handleAddVariation(next: { size: string; brand: string; variety?: string; extraDetails?: string }) {
     if (!addVarGoods) return;
+    setVarError(null);
     if (!next.size.trim() || !next.brand.trim()) {
-      setBanner({ type: "error", text: s.t("err_size_brand_v", "Size and Brand are required fields.") });
+      setVarError(s.t("err_size_brand_v", "Size and Brand are required fields."));
       return;
     }
     setBusy(true);
@@ -220,10 +248,11 @@ export default function GoodsManagementClient({ session }: { session: { preferre
         extraDetails: next.extraDetails,
       });
       setAddVarGoods(null);
+      setVarError(null);
       await refresh({ q });
       setBanner({ type: "success", text: s.t("ok_var_added", "Variation added successfully.") });
-    } catch (e: any) {
-      setBanner({ type: "error", text: e?.message ?? s.t("err_var_add", "Failed to add variation.") });
+    } catch {
+      setVarError(s.t("err_var_add", "Failed to add variation."));
     } finally {
       setBusy(false);
     }
@@ -231,8 +260,9 @@ export default function GoodsManagementClient({ session }: { session: { preferre
 
   async function handleEditVariation(next: { size: string; brand: string; variety?: string; extraDetails?: string }) {
     if (!editVarRow) return;
+    setVarError(null);
     if (!next.size.trim() || !next.brand.trim()) {
-      setBanner({ type: "error", text: s.t("err_size_brand_v", "Size and Brand are required fields.") });
+      setVarError(s.t("err_size_brand_v", "Size and Brand are required fields."));
       return;
     }
     setBusy(true);
@@ -245,10 +275,11 @@ export default function GoodsManagementClient({ session }: { session: { preferre
         extraDetails: next.extraDetails,
       });
       setEditVarRow(null);
+      setVarError(null);
       await refresh({ q });
       setBanner({ type: "success", text: s.t("ok_var_updated", "Variation updated successfully.") });
-    } catch (e: any) {
-      setBanner({ type: "error", text: e?.message ?? s.t("err_var_update", "Failed to update variation.") });
+    } catch {
+      setVarError(s.t("err_var_update", "Failed to update variation."));
     } finally {
       setBusy(false);
     }
@@ -389,16 +420,26 @@ export default function GoodsManagementClient({ session }: { session: { preferre
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-2">
             <div className="text-[11px] text-muted-foreground">{s.t("hint_unique", "Goods records require a unique CHS Code and a Name. Variations are added below.")}</div>
-            <Button type="button" className="h-8 rounded-md bg-blue-600 px-4 text-xs font-bold text-white shadow-sm hover:bg-blue-700" onClick={createGoods} disabled={busy}>
-              {busy ? (
-                s.t("saving", "Saving…")
-              ) : (
-                <span className="inline-flex items-center gap-1.5">
-                  <Save className="h-3.5 w-3.5" />
-                  {s.t("save", "Save Goods Master")}
-                </span>
-              )}
-            </Button>
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              {createFeedback ? (
+                <p
+                  role={createFeedback.type === "error" ? "alert" : "status"}
+                  className={`text-xs font-semibold ${createFeedback.type === "error" ? "text-rose-600" : "text-emerald-600"}`}
+                >
+                  {createFeedback.text}
+                </p>
+              ) : null}
+              <Button type="button" className="h-8 rounded-md bg-blue-600 px-4 text-xs font-bold text-white shadow-sm hover:bg-blue-700" onClick={createGoods} disabled={busy}>
+                {busy ? (
+                  s.t("saving", "Saving…")
+                ) : (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Save className="h-3.5 w-3.5" />
+                    {s.t("save", "Save Goods Master")}
+                  </span>
+                )}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -480,7 +521,7 @@ export default function GoodsManagementClient({ session }: { session: { preferre
                               <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => setViewRow(r)} aria-label={s.t("view", "View")}>
                                 <Eye className="h-4 w-4" />
                               </Button>
-                              <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => setEditRow(r)} aria-label={s.t("edit", "Edit")}>
+                              <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => { setEditError(null); setEditRow(r); }} aria-label={s.t("edit", "Edit")}>
                                 <Pencil className="h-4 w-4" />
                               </Button>
                               <Button type="button" variant="outline" size="icon" className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50" onClick={() => void deleteRow(r)} disabled={busy} aria-label={s.t("delete", "Delete")}>
@@ -496,7 +537,7 @@ export default function GoodsManagementClient({ session }: { session: { preferre
                               <div className="rounded-lg border border-border/80 bg-background p-3 shadow-inner">
                                 <div className="flex items-center justify-between border-b pb-2 mb-2">
                                   <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{s.t("variations_list", "Variations List")}</span>
-                                  <Button variant="outline" size="sm" onClick={() => setAddVarGoods(r)} className="h-7 rounded-md text-xs font-bold border-dashed flex gap-1 border-primary text-primary hover:bg-primary/5">
+                                  <Button variant="outline" size="sm" onClick={() => { setVarError(null); setAddVarGoods(r); }} className="h-7 rounded-md text-xs font-bold border-dashed flex gap-1 border-primary text-primary hover:bg-primary/5">
                                     <Plus className="h-3.5 w-3.5" />
                                     {s.t("add_variation", "Add Variation")}
                                   </Button>
@@ -524,7 +565,7 @@ export default function GoodsManagementClient({ session }: { session: { preferre
                                           </td>
                                           <td className={`py-2 ${s.textEnd}`}>
                                             <div className="flex justify-end gap-1">
-                                              <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={() => setEditVarRow({ goodsId: r.id, variation: v })} aria-label={s.t("edit", "Edit")}>
+                                              <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={() => { setVarError(null); setEditVarRow({ goodsId: r.id, variation: v }); }} aria-label={s.t("edit", "Edit")}>
                                                 <Pencil className="h-3 w-3" />
                                               </Button>
                                               <Button variant="ghost" size="icon" className="h-6 w-6 text-rose-500 hover:bg-rose-50" onClick={() => void handleDeleteVariation(v.id)} aria-label={s.t("delete", "Delete")}>
@@ -597,10 +638,10 @@ export default function GoodsManagementClient({ session }: { session: { preferre
         </SimpleModal>
       ) : null}
 
-      {editRow ? <EditMasterModal s={s} row={editRow} countries={countries} onClose={() => setEditRow(null)} onSave={saveEditMaster} busy={busy} /> : null}
+      {editRow ? <EditMasterModal s={s} row={editRow} countries={countries} onClose={() => setEditRow(null)} onSave={saveEditMaster} busy={busy} error={editError} /> : null}
 
       {addVarGoods ? (
-        <VariationModal s={s} title={s.t("add_variation_for", "Add Variation for {name}").replace("{name}", addVarGoods.goods_name)} onClose={() => setAddVarGoods(null)} onSave={handleAddVariation} busy={busy} />
+        <VariationModal s={s} title={s.t("add_variation_for", "Add Variation for {name}").replace("{name}", addVarGoods.goods_name)} onClose={() => setAddVarGoods(null)} onSave={handleAddVariation} busy={busy} error={varError} />
       ) : null}
 
       {editVarRow ? (
@@ -616,6 +657,7 @@ export default function GoodsManagementClient({ session }: { session: { preferre
           onClose={() => setEditVarRow(null)}
           onSave={handleEditVariation}
           busy={busy}
+          error={varError}
         />
       ) : null}
     </div>
@@ -629,6 +671,7 @@ function EditMasterModal({
   onSave,
   busy,
   countries,
+  error,
 }: {
   s: S;
   row: GoodsRecord;
@@ -636,6 +679,7 @@ function EditMasterModal({
   onSave: (next: { goodsName: string; chsCode: string; originCountryId: string; minStockLevel: string; reorderLevel: string; barcode: string; barcodeType: string }) => void;
   busy: boolean;
   countries: Array<{ id: string; name: string }>;
+  error?: string | null;
 }) {
   const inp = "h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none transition focus:border-primary";
   const [draft, setDraft] = useState({
@@ -698,6 +742,11 @@ function EditMasterModal({
         {draft.barcode.trim() ? <BarcodePreview s={s} value={draft.barcode} type={draft.barcodeType} /> : null}
       </div>
 
+      {error ? (
+        <p role="alert" className="mb-3 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-sm font-semibold text-rose-600">
+          {error}
+        </p>
+      ) : null}
       <div className="flex justify-end gap-2 border-t pt-3">
         <Button type="button" variant="outline" className="h-9 rounded-lg" onClick={onClose}>
           {s.t("cancel", "Cancel")}
@@ -718,6 +767,7 @@ function VariationModal({
   onClose,
   onSave,
   busy,
+  error,
 }: {
   s: S;
   title: string;
@@ -725,6 +775,7 @@ function VariationModal({
   onClose: () => void;
   onSave: (next: { size: string; brand: string; variety?: string; extraDetails?: string }) => void;
   busy: boolean;
+  error?: string | null;
 }) {
   const inp = "h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none transition focus:border-primary";
   const [draft, setDraft] = useState({
@@ -759,6 +810,11 @@ function VariationModal({
         </div>
       </div>
 
+      {error ? (
+        <p role="alert" className="mb-3 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-sm font-semibold text-rose-600">
+          {error}
+        </p>
+      ) : null}
       <div className="flex justify-end gap-2 border-t pt-3">
         <Button type="button" variant="outline" className="h-9 rounded-lg" onClick={onClose}>
           {s.t("cancel", "Cancel")}
