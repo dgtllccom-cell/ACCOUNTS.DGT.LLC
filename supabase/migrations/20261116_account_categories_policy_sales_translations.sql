@@ -1,6 +1,6 @@
 -- 20261116: account categories
 --  1. Replace the open policy (FOR ALL USING true to public) with role-based access.
---  2. Category S becomes "Sales" (the S side of the P/S split). Codes never change.
+--  2. Category S keeps its name (the owner corrects it in Settings). Codes never change.
 --  3. Five-language names (en, ur, ar, fa, ps) for the 13 business categories.
 -- Rows are matched by code + domain, so ids differ per environment and nothing is deleted.
 -- Historical accounts keep their stored codes (enterprise_accounts.category).
@@ -20,12 +20,6 @@ CREATE POLICY account_categories_write_super_admin ON public.account_categories
   USING (is_super_admin())
   WITH CHECK (is_super_admin());
 
-UPDATE public.account_categories
-SET name = 'Sales',
-    account_type = 'Customer',
-    description = 'Sales and customer invoicing accounts (the S side of the P/S split)',
-    updated_at = now()
-WHERE code = 'S' AND operational_domain = 'business' AND deleted_at IS NULL;
 
 CREATE TEMP TABLE tmp_cat_names (
   code text PRIMARY KEY,
@@ -39,7 +33,6 @@ CREATE TEMP TABLE tmp_cat_names (
 INSERT INTO tmp_cat_names (code, en, ur, ar, fa, ps) VALUES
   ('P',             'Purchases',                       'خریداری',                          'المشتريات',                          'خرید',                             'پېرود'),
   ('P/S',           'Purchases & Sales / Trading',     'خریداری اور فروخت / تجارت',        'المشتريات والمبيعات / التجارة',       'خرید و فروش / تجارت',              'پېرود او پلورنه / سوداګري'),
-  ('S',             'Sales',                           'فروخت',                            'المبيعات',                           'فروش',                             'پلورنه'),
   ('B',             'Bank',                            'بینک',                             'البنك',                              'بانک',                             'بانک'),
   ('C',             'Cash',                            'نقد',                              'النقد',                              'نقد',                              'نغدي'),
   ('B/C',           'Bank & Cash Accounts',            'بینک اور نقد اکاؤنٹس',             'حسابات البنك والنقد',                'حساب‌های بانک و نقد',              'د بانک او نغدو حسابونه'),

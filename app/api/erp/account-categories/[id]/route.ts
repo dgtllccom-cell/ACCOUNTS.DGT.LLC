@@ -57,6 +57,23 @@ export async function PATCH(
         }
       }
 
+      // A code change would orphan accounts that store the old code (enterprise_accounts.category).
+      // Name and description stay editable; the code can change only while no live account uses it.
+      const newCode = parsed.code ? String(parsed.code).trim().toUpperCase() : null;
+      if (newCode && newCode !== String(existing[0].code ?? "").toUpperCase()) {
+        const used = await sql`
+          select count(*)::int as n
+          from public.enterprise_accounts
+          where category = ${existing[0].code} and deleted_at is null
+        `;
+        if (Number(used[0]?.n ?? 0) > 0) {
+          throw new ApiClientError(
+            `Code ${existing[0].code} is used by ${used[0].n} account(s). Change the name or description; the code cannot change while accounts use it.`,
+            { status: 409, code: "CODE_IN_USE" }
+          );
+        }
+      }
+
       const rows = await sql`
         update public.account_categories
         set

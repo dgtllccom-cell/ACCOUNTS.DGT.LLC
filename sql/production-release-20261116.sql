@@ -6,7 +6,7 @@
 -- DO NOT RUN until ALL of these hold:
 --   1. A verified backup exists: /root/backups/prod-manual-before-release-20261116-080123.dump
 --      (sha256 e5d9c40ae3b7bd88bbd8b7254652442159bc14d72a41139b63a0e8e9b2b9fd14).
---   2. The owner gave the final approval for THIS SQL, including the S = "Sales" rename.
+--   2. The owner gave the final approval for THIS SQL, S keeps its current name (the owner corrects it in Settings).
 --   3. Deploy order: this SQL first (it adds carried_forward_from, which the new
 --      FX route writes), then scripts/production/deploy-via-gate.sh <sha>.
 --
@@ -19,7 +19,7 @@
 --   - 10 of the 13 approved codes already exist (S, P/S, B/C, B/P, EX, OFFICE_EXP,
 --     TRAVEL_EXP, UTILITY_EXP, INTER_TRADE, INTER_TRANSFER). P, B and C do not exist.
 --   - S is currently "Staff & Payroll Expenses". 2 enterprise_accounts use category S.
---     Renaming S to "Sales" changes how those 2 accounts READ. Their stored code stays S.
+--     S is not renamed by this script; its stored code stays S.
 --   - daily_usd_rates.carried_forward_from does not exist yet.
 --   - account_categories has 2 policies: account_categories_all_policy and
 --     account_categories_read_policy (both replaced here).
@@ -49,9 +49,9 @@ BEGIN
   END IF;
 
   SELECT count(*) INTO n FROM public.account_categories
-   WHERE deleted_at IS NULL AND operational_domain = 'business' AND code = 'S' AND name = 'Staff & Payroll Expenses';
+   WHERE deleted_at IS NULL AND operational_domain = 'business' AND code = 'S';
   IF n <> 1 THEN
-    RAISE EXCEPTION 'precondition failed: expected the S row to be "Staff & Payroll Expenses", found % matching rows', n;
+    RAISE EXCEPTION 'precondition failed: expected exactly one S row, found %', n;
   END IF;
 
   SELECT count(*) INTO n FROM pg_proc p JOIN pg_namespace ns ON ns.oid = p.pronamespace
@@ -170,15 +170,7 @@ CREATE POLICY account_categories_write_policy ON public.account_categories
   );
 
 -- ----------------------------------------------------------------------------
--- 6. S becomes "Sales" (the S side of the P/S split). Code stays S.
---    OWNER DECISION REQUIRED: this changes the name of the 2 accounts with category S.
--- ----------------------------------------------------------------------------
-UPDATE public.account_categories
-SET name = 'Sales',
-    account_type = 'Customer',
-    description = 'Sales and customer invoicing accounts (the S side of the P/S split)',
-    updated_at = now()
-WHERE code = 'S' AND operational_domain = 'business' AND deleted_at IS NULL;
+-- 6. S keeps its current name. The owner corrects the S name in Settings (red row).
 
 -- ----------------------------------------------------------------------------
 -- 7. Five-language names for the 13 approved business categories (from 0acf63a).
@@ -196,7 +188,6 @@ CREATE TEMP TABLE tmp_cat_names (
 INSERT INTO tmp_cat_names (code, en, ur, ar, fa, ps) VALUES
   ('P',             'Purchases',                       'خریداری',                          'المشتريات',                          'خرید',                             'پېرود'),
   ('P/S',           'Purchases & Sales / Trading',     'خریداری اور فروخت / تجارت',        'المشتريات والمبيعات / التجارة',       'خرید و فروش / تجارت',              'پېرود او پلورنه / سوداګري'),
-  ('S',             'Sales',                           'فروخت',                            'المبيعات',                           'فروش',                             'پلورنه'),
   ('B',             'Bank',                            'بینک',                             'البنك',                              'بانک',                             'بانک'),
   ('C',             'Cash',                            'نقد',                              'النقد',                              'نقد',                              'نغدي'),
   ('B/C',           'Bank & Cash Accounts',            'بینک اور نقد اکاؤنٹس',             'حسابات البنك والنقد',                'حساب‌های بانک و نقد',              'د بانک او نغدو حسابونه'),
@@ -272,11 +263,6 @@ INSERT INTO tmp_cat_desc (code, en, ur, ar, fa, ps) VALUES
                     'حسابات التجارة الأساسية وفواتير العملاء ومشتريات الموردين',
                     'حساب‌های تجارت اصلی، صورتحساب مشتری و خرید از تأمین‌کننده',
                     'د اصلي سوداګرۍ، د پیرودونکو د بلونو او د وړاندیز کونکو د پېرود حسابونه'),
-  ('S',             'Sales and customer invoicing accounts (the S side of the P/S split)',
-                    'فروخت اور کسٹمر انوائسنگ کے کھاتے (P/S کی تقسیم کا S حصہ)',
-                    'حسابات المبيعات وفواتير العملاء (جانب S من تقسيم P/S)',
-                    'حساب‌های فروش و صورتحساب مشتری (بخش S تقسیم P/S)',
-                    'د پلورنې او د پیرودونکو د بلونو حسابونه (د P/S ویش S اړخ)'),
   ('B',             'Bank accounts, separate from the combined B/C category',
                     'بینک کے کھاتے، جو مشترکہ B/C کیٹگری سے الگ ہیں',
                     'حسابات البنوك، منفصلة عن فئة B/C المشتركة',
@@ -391,13 +377,13 @@ BEGIN
   END IF;
 
   SELECT count(*) INTO n FROM public.account_categories
-   WHERE code = 'S' AND operational_domain = 'business' AND name = 'Sales' AND deleted_at IS NULL;
+   WHERE code = 'S' AND operational_domain = 'business' AND deleted_at IS NULL AND is_active;
   IF n <> 1 THEN
-    RAISE EXCEPTION 'verify failed: S is not "Sales"';
+    RAISE EXCEPTION 'verify failed: S category missing or inactive';
   END IF;
 
   SELECT count(*) INTO n FROM public.account_categories ac
-   WHERE ac.operational_domain = 'business' AND ac.deleted_at IS NULL AND ac.is_active
+   WHERE ac.operational_domain = 'business' AND ac.deleted_at IS NULL AND ac.is_active AND ac.code <> 'S'
      AND NOT EXISTS (SELECT 1 FROM public.record_translations rt
                      WHERE rt.record_table = 'account_categories' AND rt.record_id = ac.id
                        AND rt.field_name = 'name' AND rt.deleted_at IS NULL
