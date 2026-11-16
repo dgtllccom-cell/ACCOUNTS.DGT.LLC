@@ -66,8 +66,26 @@ export async function GET(request: NextRequest) {
           and (${allowedCountryIds ? sql`country_id = any(${allowedCountryIds})` : sql`true`})
         order by created_at desc
       `;
-      return { countries, cityBranches, currencyRates };
+      const operatingRows = await sql`
+        select distinct country_id from public.city_branches where deleted_at is null and country_id is not null
+        union
+        select distinct country_id from public.country_branches where deleted_at is null and country_id is not null
+      `;
+      return { countries, cityBranches, currencyRates, operatingIds: operatingRows.map((r: any) => String(r.country_id)) };
     });
+
+    // Only countries where the company has a live branch (country or city branch): today United Arab Emirates and Pakistan.
+    // Other countries remain in the master list for goods, customers and accounts.
+    const operatingIds: string[] = viaPg
+      ? viaPg.operatingIds
+      : await (async () => {
+          const [cityRows, countryRows] = await Promise.all([
+            supabase.from("city_branches").select("country_id").is("deleted_at", null),
+            supabase.from("country_branches").select("country_id").is("deleted_at", null),
+          ]);
+          return [...(cityRows.data || []), ...(countryRows.data || [])].map((r: any) => String(r.country_id));
+        })();
+    const operatingSet = new Set(operatingIds);
 
     // 1. Fetch Countries
     const { data: countriesData } = viaPg
@@ -274,7 +292,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Build final formatted country summary list
-    const countriesList = (countriesData || []).map((country: any) => {
+    const countriesList = (countriesData || []).filter((country: any) => operatingSet.has(String(country.id))).map((country: any) => {
       const cId = country.id;
       const stats = countryStats[cId] || { totalDebit: 0, totalCredit: 0, entryCount: 0, branches: {} };
       const rawRates = countryRatesMap[cId] || countryRatesMap["GLOBAL"] || { buyingRate: null, sellingRate: null, creditRate: null, debitRate: null };
