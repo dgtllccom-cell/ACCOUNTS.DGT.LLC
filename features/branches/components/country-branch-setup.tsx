@@ -439,7 +439,7 @@ function CountryBranchSetupContent() {
           { label: tt("cnbs.contacts", "Contacts"), value: contactItems.length ? contactItems.join(", ") : "" },
           { label: tt("cnbs.phone", "Phone"), value: contacts.find((row) => row.type.toLowerCase().includes("phone"))?.value },
           { label: tt("cnbs.whatsapp", "WhatsApp"), value: contacts.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value },
-          { label: tt("cnbs.email", "Email"), value: contacts.find((row) => row.type.toLowerCase().includes("email"))?.value }
+          { label: tt("cnbs.email", "Email"), value: branchEmail || contacts.find((row) => row.type.toLowerCase().includes("email"))?.value }
         ]
       },
       {
@@ -453,6 +453,7 @@ function CountryBranchSetupContent() {
     [
       tt,
       branchCode,
+      branchEmail,
       branchType,
       company,
       contactItems,
@@ -474,7 +475,7 @@ function CountryBranchSetupContent() {
   const liveBranchData = useMemo(() => {
     const active = existingMainBranch;
     const phoneVal = contacts.find((row) => row.type.toLowerCase().includes("phone"))?.value || "";
-    const emailVal = contacts.find((row) => row.type.toLowerCase().includes("email"))?.value || "";
+    const emailVal = branchEmail.trim() || contacts.find((row) => row.type.toLowerCase().includes("email"))?.value || "";
     const whatsappVal = contacts.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value || "";
 
     return {
@@ -546,6 +547,7 @@ function CountryBranchSetupContent() {
     existingMainBranch,
     contacts,
     branchCode,
+    branchEmail,
     previewCountry,
     currency,
     locationMeta,
@@ -730,7 +732,7 @@ function CountryBranchSetupContent() {
 
   function viewSavedBranch(row: CountryBranchRow) {
     const phoneVal = normalizeContacts(row.contacts).find((c) => c.type.toLowerCase().includes("phone") || c.type.toLowerCase().includes("mobile"))?.value || "";
-    const emailVal = normalizeContacts(row.contacts).find((c) => c.type.toLowerCase().includes("email"))?.value || "";
+    const emailVal = row.email || normalizeContacts(row.contacts).find((c) => c.type.toLowerCase().includes("email"))?.value || "";
     const whatsappVal = normalizeContacts(row.contacts).find((c) => c.type.toLowerCase().includes("whatsapp"))?.value || "";
 
     const payload = {
@@ -1009,7 +1011,7 @@ function CountryBranchSetupContent() {
     }
 
     if (!branchEmail || !branchEmail.includes("@")) {
-      setBanner({ type: "error", message: "Branch Email (Hostinger Titan Mailbox) is required." });
+      setBanner({ type: "error", message: t(lang, "lfix.cb_mailbox_required", "Branch Email (Hostinger Titan Mailbox) is required.") });
       return;
     }
 
@@ -1371,6 +1373,9 @@ function CountryBranchSetupContent() {
                     allowManageLink={true}
                     onChange={onLocationChange}
                   />
+                  {location.areaId ? (
+                    <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">{t(lang, "lfix.cb_area_not_saved", "Area is shown for reference only. A country branch does not store an area yet.")}</p>
+                  ) : null}
 
                   {/* Branch Business Nature / Type Selector */}
                   <div className="space-y-2 p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 font-sans">

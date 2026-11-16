@@ -652,12 +652,12 @@ export function LocationQuickCreateModal({
   // Required-field message shown next to the Save button (not disabled silently).
   const requiredMessage = useMemo(() => {
     if (!name.trim()) {
-      if (type === "area") return "Area name is required.";
-      return `${typeLabel} name is required.`;
+      if (type === "area") return t(lang, "lfix.err_area_name_required", "Area name is required.");
+      return t(lang, "lfix.err_name_required", "{0} name is required.").split("{0}").join(typeLabel);
     }
-    if (type === "country" && !iso2.trim()) return "ISO2 country code is required.";
+    if (type === "country" && !iso2.trim()) return t(lang, "lfix.err_iso2_required", "ISO2 country code is required.");
     return null;
-  }, [type, name, iso2, typeLabel]);
+  }, [type, name, iso2, typeLabel, lang]);
 
   async function handleSave() {
     if (!type) return;
@@ -713,7 +713,7 @@ export function LocationQuickCreateModal({
         onCreated(res.area.id, res.area);
       }
     } catch (err: any) {
-      setError(err?.message || "An error occurred while saving.");
+      setError(err?.message || t(lang, "lfix.err_save_generic", "An error occurred while saving."));
     } finally {
       setSaving(false);
     }
@@ -784,7 +784,7 @@ export function LocationQuickCreateModal({
 
         {(type === "state" || type === "district" || type === "city" || type === "area") && (
           <div className="space-y-2">
-            <Label>{type === "area" ? t(lang, "lqm.area_code_label") : `${typeLabel} Code`}</Label>
+            <Label>{type === "area" ? t(lang, "lqm.area_code_label") : `${typeLabel} ${t(lang, "lfix.label_code", "Code")}`}</Label>
             <Input
               value={code}
               onChange={(e) => setCode(e.target.value)}
@@ -803,7 +803,7 @@ export function LocationQuickCreateModal({
             />
             {type === "area" && (
               <p className="text-[11px] text-slate-500 leading-tight">
-                This postal code will be linked to the new area and available for future use with this City + State.
+                {t(lang, "lfix.zip_area_note", "This postal code will be linked to the new area and available for future use with this City + State.")}
               </p>
             )}
           </div>
