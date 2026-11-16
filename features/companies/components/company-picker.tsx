@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { apiGet } from "@/lib/api/client";
@@ -86,23 +86,27 @@ export function CompanyPicker({
   const [loading, setLoading] = useState(false);
   const [companies, setCompanies] = useState<CompanyRow[]>([]);
   const [openCreate, setOpenCreate] = useState(false);
+  const listRequest = useRef(0);
 
   async function loadList() {
+    const request = ++listRequest.current;
     setLoading(true);
     try {
       const qp = new URLSearchParams();
       qp.set("limit", "500");
+      qp.set("language", lang);
       const res = await apiGet<{ companies: CompanyRow[] }>(`/api/erp/companies?${qp.toString()}`);
-      setCompanies(res.companies ?? []);
+      if (request === listRequest.current) setCompanies(res.companies ?? []);
     } finally {
-      setLoading(false);
+      if (request === listRequest.current) setLoading(false);
     }
   }
 
   useEffect(() => {
     loadList().catch(() => null);
+    return () => { listRequest.current++; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [lang]);
 
   useEffect(() => {
     if (!value) return;
@@ -127,7 +131,7 @@ export function CompanyPicker({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }, [value, lang, companies]);
 
   const options: SearchSelectOption[] = useMemo(() => companies.map((c) => toOption(c, lang)), [companies, lang]);
   const [viewCompany, setViewCompany] = useState<CompanyRow | null>(null);

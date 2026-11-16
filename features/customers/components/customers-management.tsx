@@ -98,7 +98,7 @@ export function CustomersManagement() {
     return () => {
       cancelled = true;
     };
-  }, [search, location.countryId]);
+  }, [search, location.countryId, lang]);
 
   async function onSave() {
     setBanner(null);

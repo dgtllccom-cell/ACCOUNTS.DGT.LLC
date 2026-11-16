@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import type { SupportedLanguage } from "./languages";
+import { readBrowserLanguage } from "./browser-language";
 
 /**
  * Single source of truth for "what language is active right now", shared by every
@@ -23,10 +24,7 @@ let isEmitting = false;
 const listeners = new Set<() => void>();
 
 function readLang(): SupportedLanguage {
-  if (typeof document === "undefined") return "en";
-  const raw = (localStorage.getItem("erp_lang") || document.documentElement.lang || "en").trim();
-  const base = raw.split("-")[0].toLowerCase();
-  return (LANGS as readonly string[]).includes(base) ? (base as SupportedLanguage) : "en";
+  return readBrowserLanguage() ?? "en";
 }
 
 function applyHtmlAttributes(lang: SupportedLanguage) {

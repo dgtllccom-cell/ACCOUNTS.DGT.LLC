@@ -77,7 +77,7 @@ export function EmployeeProfileDrawer({
     return () => {
       active = false;
     };
-  }, [isOpen, employeeId]);
+  }, [isOpen, employeeId, lang]);
 
   if (!isOpen) return null;
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supportedLanguages, type SupportedLanguage, rtlLanguages, getHtmlLanguage } from "@/lib/i18n/languages";
+import { readBrowserLanguage } from "@/lib/i18n/browser-language";
 import { getLanguageKeyboardMap } from "@/lib/i18n/keyboard-layouts";
 import { useRouter } from "next/navigation";
 import { t } from "@/lib/i18n/ui";
@@ -17,10 +18,7 @@ function getInitialThemeMode(): ThemeMode {
 }
 
 function getInitialLanguage(): SupportedLanguage {
-  if (typeof document === "undefined") return "en";
-  const htmlLang = document.documentElement.lang || "en";
-  const lang = htmlLang.split("-")[0] as SupportedLanguage;
-  return supportedLanguages.some((l) => l.code === lang) ? lang : "en";
+  return readBrowserLanguage() ?? "en";
 }
 
 

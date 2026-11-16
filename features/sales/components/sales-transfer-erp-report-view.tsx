@@ -164,7 +164,7 @@ function SalesTransferErpReportViewContent({
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/erp/sales/booking-journal-report?id=${encodeURIComponent(idParam)}`, { cache: "no-store" });
+        const res = await fetch(`/api/erp/sales/booking-journal-report?id=${encodeURIComponent(idParam)}&language=${lang}`, { cache: "no-store" });
         const json = await res.json();
         if (cancelled) return;
         const row = json?.data?.reports?.[0] || json?.data?.selected || json?.reports?.[0] || json;
@@ -176,7 +176,7 @@ function SalesTransferErpReportViewContent({
       }
     })();
     return () => { cancelled = true; };
-  }, [idParam, initialData]);
+  }, [idParam, initialData, lang]);
 
   /* ── Derived values ────────────────────────────────────────── */
 
