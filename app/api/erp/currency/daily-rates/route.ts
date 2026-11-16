@@ -106,9 +106,16 @@ export async function GET(req: NextRequest) {
       .is("deleted_at", null)
       .order("name", { ascending: true });
 
+    // Only countries where the company has a live branch (country or city branch). Other countries stay in the
+    // master list (goods origin, customers, accounts); they are simply not offered on the daily-rate board.
+    const { data: operatingBranchRows } = await supabase.from("country_branches").select("country_id").is("deleted_at", null);
+    const { data: operatingCityRows } = await supabase.from("city_branches").select("country_id").is("deleted_at", null);
+    const operatingCountryIds = new Set([...(operatingBranchRows || []), ...(operatingCityRows || [])].map((r: any) => r.country_id));
+
     const cleanCountries = (countriesMaster || []).filter((c: any) => {
       const n = (c.name || "").toUpperCase();
-      return !n.startsWith("QA ") && !n.includes("QA COUNTRY") && !n.startsWith("DEVTEST") && !n.startsWith("DEV-DEMO");
+      return !n.startsWith("QA ") && !n.includes("QA COUNTRY") && !n.startsWith("DEVTEST") && !n.startsWith("DEV-DEMO")
+        && operatingCountryIds.has(c.id);
     });
 
     const scopedCountries = session.isSuperAdmin
@@ -283,7 +290,9 @@ export async function POST(req: NextRequest) {
     }
 
     const targetDate = rateDate || isoToday();
-    const effectiveFrom = dailyRateEffectiveFrom(targetDate, rateTime, timeZoneOffsetMinutes);
+    // A rate applies from the START of its rate date (operator's local midnight), so a rate entered for today is
+    // active today. The entry time is kept for display only (rate_time); it no longer moves the start.
+    const effectiveFrom = dailyRateEffectiveFrom(targetDate, "00:00", timeZoneOffsetMinutes);
     const operatorName = session.fullName || session.email || "Country Admin";
     const cleanReason = String(reason || "").trim();
 

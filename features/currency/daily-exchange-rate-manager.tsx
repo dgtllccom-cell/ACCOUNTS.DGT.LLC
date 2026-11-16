@@ -231,7 +231,10 @@ export function DailyExchangeRateManager() {
               iso2: null
             }]
           : [];
-      const visibleCountries = cleanCountries.length > 0 ? cleanCountries : fallbackCountry;
+      const baseCountries = cleanCountries.length > 0 ? cleanCountries : fallbackCountry;
+      // Only the countries the server reports for the rate board (countries with a live company branch).
+      const operatingIds = new Set((Array.isArray(ratesRes?.countriesStatus) ? ratesRes.countriesStatus : []).map((s: any) => s.countryId));
+      const visibleCountries = operatingIds.size > 0 ? baseCountries.filter((country) => operatingIds.has(country.id)) : baseCountries;
       const allowedCountries = sessionRes?.scopes?.countryIds ?? [];
       setCountries(sessionRes?.scopes?.isSuperAdmin ? visibleCountries : visibleCountries.filter((country) => allowedCountries.includes(country.id)));
       setSessionInfo(sessionRes);
