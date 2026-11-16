@@ -754,7 +754,7 @@ export function GoodsMasterRegistry() {
             <div className="flex items-center gap-2.5 shrink-0">
               <div className="bg-blue-50/80 dark:bg-blue-950/40 border border-blue-150 dark:border-blue-900/60 px-4 py-2 rounded-lg min-w-[90px]">
                 <div className="text-[11px] font-bold text-blue-600 dark:text-blue-400 tracking-wider">
-                  TOTAL
+                  {translateHeader(lang, "TOTAL")}
                 </div>
                 <div className="text-xl font-bold text-blue-950 dark:text-blue-200 leading-tight">
                   {summary.total}
@@ -763,7 +763,7 @@ export function GoodsMasterRegistry() {
 
               <div className="bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-150 dark:border-emerald-900/60 px-4 py-2 rounded-lg min-w-[90px]">
                 <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">
-                  ACTIVE
+                  {translateHeader(lang, "ACTIVE")}
                 </div>
                 <div className="text-xl font-bold text-emerald-950 dark:text-emerald-200 leading-tight">
                   {summary.active}
@@ -772,7 +772,7 @@ export function GoodsMasterRegistry() {
 
               <div className="bg-rose-50/80 dark:bg-rose-950/40 border border-rose-150 dark:border-rose-900/60 px-4 py-2 rounded-lg min-w-[90px]">
                 <div className="text-[11px] font-bold text-rose-600 dark:text-rose-400 tracking-wider">
-                  INACTIVE
+                  {translateHeader(lang, "INACTIVE")}
                 </div>
                 <div className="text-xl font-bold text-rose-950 dark:text-rose-200 leading-tight">
                   {summary.inactive}
@@ -962,7 +962,7 @@ export function GoodsMasterRegistry() {
                                     : "bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300"
                                 )}
                               >
-                                {g.is_active ? "ACTIVE" : "INACTIVE"}
+                                {g.is_active ? translateHeader(lang, "ACTIVE") : translateHeader(lang, "INACTIVE")}
                               </span>
                             </td>
 
@@ -2157,7 +2157,7 @@ export function GoodsMasterRegistry() {
                           : "bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300"
                       )}
                     >
-                      {viewingGoods.is_active ? "ACTIVE" : "INACTIVE"}
+                      {viewingGoods.is_active ? translateHeader(lang, "ACTIVE") : translateHeader(lang, "INACTIVE")}
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
