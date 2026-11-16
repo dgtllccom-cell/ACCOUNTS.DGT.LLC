@@ -15,6 +15,7 @@
  *     (which offers quantity_available) can never sell the same stock twice;
  *   - physical stock leaves ONLY on an explicit Goods Issue / Dispatch / Delivery (issue) — once; negative stock is refused.
  */
+import { localPurchaseBillNo, localPurchaseContractRef } from "@/lib/purchases/local-purchase-number";
 import type { ErpSession } from "@/lib/auth/session";
 import { ApiClientError } from "@/lib/api/response";
 import { ErpPermissionError, hasRolePermission, isGlobalSession } from "@/lib/permissions/middleware";
@@ -446,7 +447,7 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
 
     const lps = await sql`
       select lp.id, lp.goods_id, lp.goods_name, lp.supplier_name, lp.quantity_name, lp.quantity_kgs, lp.numbers, lp.purchase_currency, lp.final_cost,
-             lp.status, lp.manual_bill_no, lp.contract_no, lp.brand, lp.size, lp.country_id, lp.country_branch_id, lp.city_branch_id,
+             lp.status, lp.manual_bill_no, lp.journal_serial_no, lp.contract_no, lp.brand, lp.size, lp.country_id, lp.country_branch_id, lp.city_branch_id,
              lp.created_at, lp.line_items, lp.truck_no, lp.warehouse_id,
              c.name as country_name, c.iso2 as country_code, cb.name as country_branch_name, cib.city_name as city_branch_name,
              coalesce((select sum(pay.amount) from public.purchase_order_payments pay where pay.local_purchase_id = lp.id and pay.deleted_at is null and coalesce(pay.status::text,'') not in ('cancelled','reversed','void','draft')), 0) as paid
@@ -697,8 +698,8 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
   for (const lp of data.lps) {
     const status = String(lp.status || "").toLowerCase();
     if (status === "cancelled" || status === "deleted") continue;
-    const contractNo = lp.contract_no ? String(lp.contract_no) : "";
-    const systemNo = contractNo ? `LP-${contractNo}` : lp.manual_bill_no || `LP-${String(lp.id).slice(0, 8)}`;
+    const contractNo = localPurchaseContractRef(lp);
+    const systemNo = localPurchaseBillNo(lp);
     const posted = ["posted", "transferred", "in_transit", "sold", "accepted"].includes(status);
     const paid = num(lp.paid);
     const cost = num(lp.final_cost);
@@ -1250,7 +1251,7 @@ export async function getStockHistory(session: ErpSession, q: { sourceType: "pur
       const lp = (await sql`select lp.*, c.name as country_name from public.local_purchases lp left join public.countries c on c.id = lp.country_id where lp.id = ${q.sourceId}::uuid and lp.deleted_at is null`)[0];
       if (!lp) throw new ApiClientError("Local purchase not found.", { status: 404, code: "NOT_FOUND" });
       assertRecordAccess(session, "read", lp);
-      head = { billNo: lp.contract_no ? `LP-${lp.contract_no}` : lp.manual_bill_no, supplier: lp.supplier_name, country: lp.country_name, goods: [{ name: lp.goods_name, unit: lp.quantity_name, booked: num(lp.numbers) || num(lp.quantity_kgs) }], status: lp.status };
+      head = { billNo: localPurchaseBillNo(lp), supplier: lp.supplier_name, country: lp.country_name, goods: [{ name: lp.goods_name, unit: lp.quantity_name, booked: num(lp.numbers) || num(lp.quantity_kgs) }], status: lp.status };
       events.push({ at: iso(lp.created_at)!, type: "booking", title: "booking_created", reference: lp.manual_bill_no || lp.contract_no, quantity: num(lp.numbers) || num(lp.quantity_kgs), unit: lp.quantity_name });
       const lotMoves = await sql`
         select m.*, l.lot_ref, wf.warehouse_name as from_wh, wt.warehouse_name as to_wh, p.full_name as actor

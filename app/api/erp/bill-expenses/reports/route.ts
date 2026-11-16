@@ -250,8 +250,8 @@ export async function GET(request: NextRequest) {
         } else if (b.source_table === "sales_orders") {
           const so = salesBySrcId.get(b.source_id);
           if (so) {
-            const rate = n(so.exchange_rate) || 1;
-            revenue = round2(n(so.base_currency_amount) || n(so.order_total) * rate);
+            // sales_orders.order_total is saved already in the final currency (app/api/erp/sales/orders/route.ts): never multiply it by the rate again
+            revenue = round2(n(so.base_currency_amount) || n(so.order_total));
             soldQty = n(so.quantity);
             let linkedCost = 0;
             if (so.purchase_order_id) {
