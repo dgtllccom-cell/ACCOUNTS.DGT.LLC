@@ -139,35 +139,14 @@ DROP POLICY IF EXISTS account_categories_read_authenticated ON public.account_ca
 DROP POLICY IF EXISTS account_categories_write_super_admin ON public.account_categories;
 DROP POLICY IF EXISTS account_categories_write_policy ON public.account_categories;
 
-CREATE POLICY account_categories_read_policy ON public.account_categories
-  FOR SELECT
-  USING (deleted_at IS NULL);
+CREATE POLICY account_categories_read_authenticated ON public.account_categories
+  FOR SELECT TO authenticated
+  USING (deleted_at IS NULL OR is_super_admin());
 
-CREATE POLICY account_categories_write_policy ON public.account_categories
-  FOR ALL
-  TO authenticated
-  USING (
-    deleted_at IS NULL AND (
-      EXISTS (
-        SELECT 1 FROM public.user_role_assignments ura
-        JOIN public.roles r ON r.id = ura.role_id
-        WHERE ura.user_id = auth.uid()
-          AND r.name IN ('super_admin', 'country_admin', 'admin', 'accountant', 'finance_manager')
-      )
-      OR auth.jwt() ->> 'role' = 'service_role'
-    )
-  )
-  WITH CHECK (
-    deleted_at IS NULL AND (
-      EXISTS (
-        SELECT 1 FROM public.user_role_assignments ura
-        JOIN public.roles r ON r.id = ura.role_id
-        WHERE ura.user_id = auth.uid()
-          AND r.name IN ('super_admin', 'country_admin', 'admin', 'accountant', 'finance_manager')
-      )
-      OR auth.jwt() ->> 'role' = 'service_role'
-    )
-  );
+CREATE POLICY account_categories_write_super_admin ON public.account_categories
+  FOR ALL TO authenticated
+  USING (is_super_admin())
+  WITH CHECK (is_super_admin());
 
 -- ----------------------------------------------------------------------------
 -- 6. S keeps its current name. The owner corrects the S name in Settings (red row).
@@ -408,9 +387,9 @@ BEGIN
 
   SELECT count(*) INTO n FROM pg_policies
    WHERE schemaname = 'public' AND tablename = 'account_categories'
-     AND policyname IN ('account_categories_read_policy','account_categories_write_policy');
+     AND policyname IN ('account_categories_read_authenticated','account_categories_write_super_admin');
   IF n <> 2 THEN
-    RAISE EXCEPTION 'verify failed: expected the 2 account_categories policies (read and write), found %', n;
+    RAISE EXCEPTION 'verify failed: expected the 2 new account_categories policies, found %', n;
   END IF;
 
   SELECT count(*) INTO n FROM information_schema.columns

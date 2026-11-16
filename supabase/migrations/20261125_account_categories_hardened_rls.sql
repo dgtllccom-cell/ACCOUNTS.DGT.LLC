@@ -18,41 +18,23 @@ BEGIN
 
     DROP POLICY IF EXISTS account_categories_all_policy ON public.account_categories;
     DROP POLICY IF EXISTS account_categories_read_policy ON public.account_categories;
+    DROP POLICY IF EXISTS account_categories_read_authenticated ON public.account_categories;
+    DROP POLICY IF EXISTS account_categories_write_super_admin ON public.account_categories;
+    DROP POLICY IF EXISTS account_categories_write_policy ON public.account_categories;
     DROP POLICY IF EXISTS account_categories_insert_policy ON public.account_categories;
     DROP POLICY IF EXISTS account_categories_update_policy ON public.account_categories;
     DROP POLICY IF EXISTS account_categories_delete_policy ON public.account_categories;
 
     -- Permissive read for non-deleted active categories
-    CREATE POLICY account_categories_read_policy ON public.account_categories
-      FOR SELECT
-      USING (deleted_at IS NULL);
+    CREATE POLICY account_categories_read_authenticated ON public.account_categories
+      FOR SELECT TO authenticated
+      USING (deleted_at IS NULL OR is_super_admin());
 
-    -- Admin/staff write policy
-    CREATE POLICY account_categories_write_policy ON public.account_categories
-      FOR ALL
-      TO authenticated
-      USING (
-        deleted_at IS NULL AND (
-          EXISTS (
-            SELECT 1 FROM public.user_role_assignments ura
-            JOIN public.roles r ON r.id = ura.role_id
-            WHERE ura.user_id = auth.uid()
-              AND r.name IN ('super_admin', 'country_admin', 'admin', 'accountant', 'finance_manager')
-          )
-          OR auth.jwt() ->> 'role' = 'service_role'
-        )
-      )
-      WITH CHECK (
-        deleted_at IS NULL AND (
-          EXISTS (
-            SELECT 1 FROM public.user_role_assignments ura
-            JOIN public.roles r ON r.id = ura.role_id
-            WHERE ura.user_id = auth.uid()
-              AND r.name IN ('super_admin', 'country_admin', 'admin', 'accountant', 'finance_manager')
-          )
-          OR auth.jwt() ->> 'role' = 'service_role'
-        )
-      );
+    -- Admin write policy (super admin or service role)
+    CREATE POLICY account_categories_write_super_admin ON public.account_categories
+      FOR ALL TO authenticated
+      USING (is_super_admin())
+      WITH CHECK (is_super_admin());
 
     -- 2. Safely deactivate accidental test/junk categories without dropping records
     UPDATE public.account_categories
