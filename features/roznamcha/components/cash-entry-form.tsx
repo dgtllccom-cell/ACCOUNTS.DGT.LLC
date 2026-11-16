@@ -57,7 +57,15 @@ import {
   ChevronRight,
   Filter,
   MoreHorizontal,
-  Table2
+  Table2,
+  Calculator,
+  Target,
+  Layers,
+  Coins,
+  RotateCcw,
+  Check,
+  Phone,
+  CreditCard
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -955,6 +963,15 @@ export function CashEntryForm({
   const [activeRowMenuId, setActiveRowMenuId] = useState<string | null>(null);
   const [ledgerRefreshCount, setLedgerRefreshCount] = useState(0);
   const [showPaymentWorkReport, setShowPaymentWorkReport] = useState(false);
+  const [showNewRoznamchaEntryCard, setShowNewRoznamchaEntryCard] = useState(true);
+  const [registerType, setRegisterType] = useState("Cash Register");
+  const [registerNumber, setRegisterNumber] = useState("000134");
+  const [entryTypeSelection, setEntryTypeSelection] = useState("Cash");
+  const [entryTypeDropdownOpen, setEntryTypeDropdownOpen] = useState(false);
+  const [categoryType, setCategoryType] = useState("Cash Roznamcha");
+  const [partyDialCode, setPartyDialCode] = useState("+971");
+  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+  const [accountSearchQuery, setAccountSearchQuery] = useState("");
 
 
 
@@ -3454,7 +3471,10 @@ export function CashEntryForm({
         onClick={() => {
           resetPaymentDraft();
           setEditEntryId(null);
-          setShowPaymentWorkReport(true);
+          setShowNewRoznamchaEntryCard(true);
+          setShowPaymentWorkReport(false);
+          const el = document.getElementById("new-roznamcha-entry-card");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
         }}
       >
         <Plus className="h-4 w-4" />
@@ -3739,6 +3759,782 @@ export function CashEntryForm({
           get_branch_cash_summary DB function; auto-refreshes after each save.
       ============================================================ */}
 
+
+      {/* ============================================================
+          NEW ROZNAMCHA ENTRY INTERFACE (MATCHING EXACT REFERENCE IMAGE)
+          1. Header: Green calculator icon + Title + Subtitle + Close button
+          2. Entry Scope & Branch: Country, Branch, City/Location, Entry Date
+          3. Two-Column Layout:
+             - Left (Steps 1 to 6): Register Setup, Account Selection,
+               Category & Reference, Party Details, Amount & Posting, Remarks
+             - Right: Selected Account Details, Location Details, Financial Snapshot
+          4. Action Bar: Clear, Cancel, Save & New, Save Entry
+      ============================================================ */}
+      {showNewRoznamchaEntryCard && (
+        <div id="new-roznamcha-entry-card" className="mx-4 my-4 rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-7 shadow-lg shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none transition-all">
+          {/* ── CARD HEADER ── */}
+          <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-sm shadow-emerald-500/30 shrink-0">
+                <Calculator className="h-6 w-6 stroke-[2.2]" />
+              </div>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                  New Roznamcha Entry
+                </h2>
+                <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                  Record Cash/Bank/Business transaction in Roznamcha
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowNewRoznamchaEntryCard(false)}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors shrink-0"
+              title={tr("common.close", "Close")}
+            >
+              <X className="h-5 w-5 stroke-[2.5]" />
+            </button>
+          </div>
+
+          {/* Validation or Result Notice */}
+          {message && (
+            <div
+              className={`mt-4 rounded-xl border px-4 py-2.5 text-xs font-semibold flex items-center gap-2 ${
+                messageIsError
+                  ? "border-rose-200 bg-rose-50 text-rose-900 dark:bg-rose-950/20 dark:border-rose-800 dark:text-rose-400"
+                  : "border-emerald-200 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400"
+              }`}
+            >
+              <CheckCircle className={`h-4 w-4 ${messageIsError ? "text-rose-600" : "text-emerald-600"}`} />
+              <span>{message}</span>
+            </div>
+          )}
+
+          {/* ── TOP SECTION: ENTRY SCOPE & BRANCH ── */}
+          <div className="mt-5 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-800/40">
+            <div className="flex items-center gap-2 mb-3">
+              <Target className="h-4 w-4 text-blue-600 dark:text-blue-400 stroke-[2.5]" />
+              <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                Entry Scope & Branch
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+              {/* Country */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Country <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={countryId}
+                    onChange={(e) => setCountryId(e.target.value)}
+                    disabled={!isSuperAdmin && !isCountryAdmin}
+                    className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 disabled:opacity-80 pr-8"
+                  >
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.iso2 === "AE" ? "🇦🇪 " : c.iso2 === "PK" ? "🇵🇰 " : c.iso2 === "US" ? "🇺🇸 " : "🌐 "}
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
+                </div>
+              </div>
+
+              {/* Branch */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Branch <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={cityBranchId || countryBranchId || ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const cityMatch = cityBranches.find((b) => b.id === val);
+                      if (cityMatch) {
+                        setCityBranchId(val);
+                      } else {
+                        setCountryBranchId(val);
+                      }
+                    }}
+                    disabled={!isSuperAdmin && !isCountryAdmin}
+                    className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 disabled:opacity-80 pr-8"
+                  >
+                    {cityBranches.length > 0
+                      ? cityBranches.map((b) => (
+                          <option key={b.id} value={b.id}>
+                            🏛️ {b.name || "Branch"}
+                          </option>
+                        ))
+                      : mainBranches.map((b) => (
+                          <option key={b.id} value={b.id}>
+                            🏛️ {b.name || "Main Branch"}
+                          </option>
+                        ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
+                </div>
+              </div>
+
+              {/* City / Location */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  City / Location
+                </label>
+                <div className="relative">
+                  <select
+                    value={cityBranchId || ""}
+                    onChange={(e) => setCityBranchId(e.target.value)}
+                    className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 pr-8"
+                  >
+                    {cityBranches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        📍 {b.city_name || b.name || "Location"}
+                      </option>
+                    ))}
+                    {cityBranches.length === 0 && (
+                      <option value="">📍 Dubai</option>
+                    )}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
+                </div>
+              </div>
+
+              {/* Entry Date */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Entry Date <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={entryDate}
+                    onChange={(e) => setEntryDate(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── TWO-COLUMN MAIN BODY ── */}
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* ══ LEFT COLUMN: STEPS 1 TO 6 (8 cols) ══ */}
+            <div className="lg:col-span-8 space-y-5">
+              {/* STEP 1: REGISTER & ENTRY SETUP */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
+                    1
+                  </span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Register & Entry Setup
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                  {/* Register Type */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Register Type <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={registerType}
+                        onChange={(e) => setRegisterType(e.target.value)}
+                        className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-8 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      >
+                        <option value="Cash Register">{tr("roz.cash_register", "Cash Register")}</option>
+                        <option value="Bank Register">{tr("roz.bank_register", "Bank Register")}</option>
+                        <option value="General Register">{tr("roz.general_register", "General Register")}</option>
+                      </select>
+                      <Layers className="pointer-events-none absolute left-2.5 top-3 h-4 w-4 text-blue-600" />
+                      <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
+                    </div>
+                  </div>
+
+                  {/* Register No. */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Register No. <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="flex items-center rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden dark:border-slate-700 dark:bg-slate-900">
+                      <span className="bg-slate-100 px-2.5 py-2.5 text-xs font-bold text-slate-500 border-r border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
+                        RZ-
+                      </span>
+                      <input
+                        type="text"
+                        value={registerNumber}
+                        onChange={(e) => setRegisterNumber(e.target.value)}
+                        className="w-full px-3 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none bg-transparent dark:text-slate-100"
+                        placeholder="000134"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Entry Type with openable dropdown */}
+                  <div className="relative">
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Entry Type <span className="text-rose-500">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setEntryTypeDropdownOpen((v) => !v)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-800 shadow-xs flex items-center justify-between hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                    >
+                      <div className="flex items-center gap-2">
+                        {entryTypeSelection === "Cash" && <Banknote className="h-4 w-4 text-emerald-600" />}
+                        {entryTypeSelection === "Cheque" && <CreditCard className="h-4 w-4 text-emerald-600" />}
+                        {entryTypeSelection === "Invoice" && <FileText className="h-4 w-4 text-blue-600" />}
+                        {entryTypeSelection === "Transfer" && <ArrowLeftRight className="h-4 w-4 text-blue-600" />}
+                        <span>{entryTypeSelection}</span>
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-slate-400" />
+                    </button>
+
+                    {entryTypeDropdownOpen && (
+                      <div className="absolute z-30 left-0 right-0 mt-1 rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900 animate-in fade-in-50 zoom-in-95">
+                        {[
+                          { label: "Cash", display: tr("common.cash", "Cash"), icon: Banknote, color: "text-emerald-600", mode: "cash" },
+                          { label: "Cheque", display: tr("common.cheque", "Cheque"), icon: CreditCard, color: "text-emerald-600", mode: "bank" },
+                          { label: "Invoice", display: tr("common.invoice", "Invoice"), icon: FileText, color: "text-blue-600", mode: "invoice" },
+                          { label: "Transfer", display: tr("common.transfer", "Transfer"), icon: ArrowLeftRight, color: "text-blue-600", mode: "transfer" },
+                        ].map((item) => (
+                          <button
+                            key={item.label}
+                            type="button"
+                            onClick={() => {
+                              setEntryTypeSelection(item.label);
+                              setPaymentType(item.mode as any);
+                              setEntryTypeDropdownOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-left transition-colors ${
+                              entryTypeSelection === item.label
+                                ? "bg-blue-600 text-white"
+                                : "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <item.icon className={`h-4 w-4 ${entryTypeSelection === item.label ? "text-white" : item.color}`} />
+                              <span>{item.display}</span>
+                            </div>
+                            {entryTypeSelection === item.label && <Check className="h-4 w-4 text-white" />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Currency */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Currency <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={currency || branchCurrency}
+                        onChange={(e) => setCurrency(e.target.value)}
+                        className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-8 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      >
+                        <option value="AED">AED</option>
+                        <option value="USD">USD</option>
+                        <option value="PKR">PKR</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                        <option value="SAR">SAR</option>
+                        <option value="OMR">OMR</option>
+                      </select>
+                      <Coins className="pointer-events-none absolute left-2.5 top-3 h-4 w-4 text-slate-500" />
+                      <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* STEP 2: ACCOUNT SELECTION */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
+                    2
+                  </span>
+                  <User className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Account Selection
+                  </span>
+                </div>
+                <div className="relative">
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Account (Search by Name / No.) <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={accountSearchQuery || (selectedCounterLedger ? `${selectedCounterLedger.accountName} (${selectedCounterLedger.accountCode || selectedCounterLedger.rawAccountCode || ""})` : "")}
+                      onChange={(e) => {
+                        setAccountSearchQuery(e.target.value);
+                        setAccountDropdownOpen(true);
+                      }}
+                      onFocus={() => setAccountDropdownOpen(true)}
+                      placeholder={tr("roz.search_account_placeholder", "Search account by name or number...")}
+                      className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-9 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                    />
+                    <ChevronDown
+                      onClick={() => setAccountDropdownOpen((v) => !v)}
+                      className="cursor-pointer absolute right-3 top-3 h-4 w-4 text-slate-400 hover:text-slate-600"
+                    />
+                  </div>
+
+                  {accountDropdownOpen && (
+                    <div className="absolute z-30 left-0 right-0 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                      {ledgerRowsWithAccount
+                        .filter((acc) => {
+                          if (!accountSearchQuery.trim()) return true;
+                          const q = accountSearchQuery.toLowerCase();
+                          return (
+                            acc.accountName?.toLowerCase().includes(q) ||
+                            acc.accountCode?.toLowerCase().includes(q) ||
+                            acc.rawAccountCode?.toLowerCase().includes(q)
+                          );
+                        })
+                        .slice(0, 30)
+                        .map((acc) => (
+                          <button
+                            key={acc.ledgerId}
+                            type="button"
+                            onClick={() => {
+                              applyPostingLedger(acc);
+                              setAccountSearchQuery(`${acc.accountName} (${acc.accountCode || acc.rawAccountCode || ""})`);
+                              setAccountDropdownOpen(false);
+                            }}
+                            className="w-full flex items-center justify-between px-3.5 py-2 text-xs font-medium text-left hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-50 last:border-0"
+                          >
+                            <div>
+                              <div className="font-bold text-slate-900 dark:text-white">{acc.accountName}</div>
+                              <div className="text-[10px] text-slate-400 font-mono">
+                                {acc.accountCode || acc.rawAccountCode || "—"} | {acc.accountKind || "Account"}
+                              </div>
+                            </div>
+                            <div className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                              {acc.ledgerCurrency || branchCurrency}
+                            </div>
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* STEP 3: CATEGORY & REFERENCE */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
+                    3
+                  </span>
+                  <Layers className="h-4 w-4 text-blue-600" />
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Category & Reference
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {/* Category */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Category <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={categoryType}
+                        onChange={(e) => setCategoryType(e.target.value)}
+                        className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-8 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      >
+                        <option value="Cash Roznamcha">{tr("roz.cash_roznamcha", "Cash Roznamcha")}</option>
+                        <option value="Bank Roznamcha">{tr("roz.bank_roznamcha", "Bank Roznamcha")}</option>
+                        <option value="General Journal">{tr("roz.general_journal", "General Journal")}</option>
+                      </select>
+                      <Layers className="pointer-events-none absolute left-2.5 top-3 h-4 w-4 text-blue-600" />
+                      <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
+                    </div>
+                  </div>
+
+                  {/* Reference / Voucher No. */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Reference / Voucher No.
+                    </label>
+                    <div className="relative">
+                      <FileText className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        value={referenceNo}
+                        onChange={(e) => setReferenceNo(e.target.value)}
+                        placeholder="e.g. INV-001 / PAY-001"
+                        className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* STEP 4: PARTY DETAILS */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
+                    4
+                  </span>
+                  <Users className="h-4 w-4 text-blue-600" />
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Party Details
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* Party Name */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Party Name <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <User className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        value={typeDetails.partyName || typeDetails.receiverSenderName || ""}
+                        onChange={(e) =>
+                          setTypeDetails((prev) => ({
+                            ...prev,
+                            partyName: e.target.value,
+                            receiverSenderName: e.target.value,
+                          }))
+                        }
+                        placeholder={tr("roz.enter_name_placeholder", "Enter name")}
+                        className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Mobile No. */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Mobile No. <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="flex items-center rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden dark:border-slate-700 dark:bg-slate-900">
+                      <div className="flex items-center gap-1 bg-slate-50 px-2.5 py-2.5 text-xs font-bold text-slate-700 border-r border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                        <Phone className="h-3.5 w-3.5 text-emerald-600" />
+                        <span>{partyDialCode}</span>
+                        <ChevronDown className="h-3 w-3 text-slate-400" />
+                      </div>
+                      <input
+                        type="text"
+                        value={typeDetails.mobileNo || ""}
+                        onChange={(e) =>
+                          setTypeDetails((prev) => ({ ...prev, mobileNo: e.target.value }))
+                        }
+                        placeholder="50 123 4567"
+                        className="w-full px-3 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none bg-transparent dark:text-slate-100"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Download ID */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Download ID
+                    </label>
+                    <div className="relative">
+                      <CreditCard className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        value={typeDetails.downloadId || ""}
+                        onChange={(e) =>
+                          setTypeDetails((prev) => ({ ...prev, downloadId: e.target.value }))
+                        }
+                        placeholder={tr("roz.enter_id_placeholder", "Enter ID (Optional)")}
+                        className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* STEP 5: AMOUNT & POSTING */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
+                    5
+                  </span>
+                  <Coins className="h-4 w-4 text-blue-600" />
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Amount & Posting
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-stretch">
+                  {/* Amount */}
+                  <div className="md:col-span-4">
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Amount <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Coins className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <input
+                        type="number"
+                        step="any"
+                        value={finalPayment}
+                        onChange={(e) => setFinalPayment(e.target.value)}
+                        placeholder="0.00"
+                        className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Posting Side Radio Pills */}
+                  <div className="md:col-span-4">
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Posting Side <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="flex items-center gap-2 pt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMode("DEBIT")}
+                        className={`flex-1 flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${
+                          paymentMode === "DEBIT"
+                            ? "border-blue-500 bg-blue-50/80 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
+                        }`}
+                      >
+                        <span className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${paymentMode === "DEBIT" ? "border-blue-600 bg-white" : "border-slate-400"}`}>
+                          {paymentMode === "DEBIT" && <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />}
+                        </span>
+                        <span>Debit (DR)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMode("CREDIT")}
+                        className={`flex-1 flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${
+                          paymentMode === "CREDIT"
+                            ? "border-blue-500 bg-blue-50/80 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
+                        }`}
+                      >
+                        <span className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${paymentMode === "CREDIT" ? "border-blue-600 bg-white" : "border-slate-400"}`}>
+                          {paymentMode === "CREDIT" && <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />}
+                        </span>
+                        <span>Credit (CR)</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Final Amount Display Card */}
+                  <div className="md:col-span-4 rounded-2xl border border-emerald-200/80 bg-emerald-50/60 p-3 sm:p-4 text-right flex flex-col justify-center dark:border-emerald-900/60 dark:bg-emerald-950/30">
+                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                      Final Amount
+                    </span>
+                    <span className="font-mono text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight" dir="ltr">
+                      {currency || branchCurrency || "AED"} {fmtAmount(Number(finalPayment || 0))}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* STEP 6: REMARKS */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
+                    6
+                  </span>
+                  <Pencil className="h-4 w-4 text-blue-600" />
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Remarks
+                  </span>
+                </div>
+                <div className="relative">
+                  <Pencil className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <textarea
+                    rows={2}
+                    maxLength={500}
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    placeholder={tr("roz.enter_remarks_placeholder", "Enter remarks / details (optional)")}
+                    className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-16 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 resize-none"
+                  />
+                  <div className="absolute right-3 bottom-2 text-[10px] font-medium text-slate-400">
+                    {remarks.length} / 500
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ══ RIGHT COLUMN: 3 SUMMARY CARDS (4 cols) ══ */}
+            <div className="lg:col-span-4 space-y-4">
+              {/* Card 1: Selected Account Details */}
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+                <div className="flex items-center gap-2 mb-3">
+                  <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Selected Account Details
+                  </span>
+                </div>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-slate-500 font-medium">Account Name</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 text-right truncate max-w-[170px]">
+                      {selectedCounterLedger?.accountName || "—"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-slate-500 font-medium">Account No.</span>
+                    <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">
+                      {selectedCounterLedger?.accountCode || selectedCounterLedger?.rawAccountCode || "—"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-slate-500 font-medium">Parent Account</span>
+                    <span className="font-medium text-slate-700 dark:text-slate-300">
+                      {(selectedCounterLedger as any)?.parentAccountName || "—"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-500 font-medium">Account Type</span>
+                    <span className="font-medium text-slate-700 dark:text-slate-300 capitalize">
+                      {selectedCounterLedger?.accountKind || "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2: Location Details */}
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+                <div className="flex items-center gap-2 mb-3">
+                  <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Location Details
+                  </span>
+                </div>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-slate-500 font-medium">Country</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 text-right">
+                      {selectedCountry?.name || "UAE - United Arab Emirates"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-slate-500 font-medium">Branch</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 text-right">
+                      {(selectedCityBranch as any)?.branch_name || (selectedCityBranch as any)?.name || (selectedMainBranch as any)?.name || "Dubai City Branch"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-slate-500 font-medium">City</span>
+                    <span className="font-medium text-slate-700 dark:text-slate-300">
+                      {(selectedCityBranch as any)?.city_name || (selectedCityBranch as any)?.name || "Dubai"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-500 font-medium">Address</span>
+                    <span className="font-medium text-slate-700 dark:text-slate-300">
+                      {(selectedCityBranch as any)?.address || "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3: Financial Snapshot */}
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+                <div className="flex items-center gap-2 mb-3">
+                  <BarChart3 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Financial Snapshot
+                  </span>
+                </div>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-slate-500 font-medium">Opening Balance</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">
+                      {branchCurrency || "AED"} {fmtAmount(accountSnapshot.oldBalance)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-slate-500 font-medium">Total Debit</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">
+                      {branchCurrency || "AED"} {fmtAmount(accountSnapshot.totalDebit)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-slate-500 font-medium">Total Credit</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">
+                      {branchCurrency || "AED"} {fmtAmount(accountSnapshot.totalCredit)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-900 dark:text-white font-extrabold">Current Balance</span>
+                    <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm" dir="ltr">
+                      {branchCurrency || "AED"} {fmtAmount(accountSnapshot.currentBalance)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── BOTTOM ACTION BAR ── */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-5 border-t border-slate-100 dark:border-slate-800 mt-6">
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={resetPaymentDraft}
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowNewRoznamchaEntryCard(false);
+                  setEditEntryId(null);
+                }}
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
+              >
+                <X className="h-3.5 w-3.5" />
+                Cancel
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={async () => {
+                  const id = await save();
+                  if (id) {
+                    resetPaymentDraft();
+                    setShowNewRoznamchaEntryCard(true);
+                  }
+                }}
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-white px-5 py-2.5 text-xs font-bold text-blue-600 shadow-xs hover:bg-blue-50/50 dark:border-blue-900 dark:bg-slate-900 dark:text-blue-400 dark:hover:bg-blue-950/30 transition-colors"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Save & New
+              </button>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={async () => {
+                  const id = await save();
+                  if (id) {
+                    setShowNewRoznamchaEntryCard(false);
+                  }
+                }}
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-500/20 hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                <Save className="h-3.5 w-3.5" />
+                Save Entry
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ============================================================
           4 TOP SUMMARY CARDS (APPROVED DESIGN)
