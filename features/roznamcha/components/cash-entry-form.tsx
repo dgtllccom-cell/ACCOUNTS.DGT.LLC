@@ -1,6 +1,6 @@
 "use client";
 
-import { cashDirectionRate, cashUsdEquivalent } from "@/lib/currency/exact-daily-rate";
+import { cashDirectionRate } from "@/lib/currency/exact-daily-rate";
 import { pl } from "@/lib/reports/print-label";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
@@ -1373,7 +1373,7 @@ export function CashEntryForm({
     try {
       setLoadingDailyRate(true);
       setDailyRate(null); setDailyUsdRates(null); setDailyRateError("");
-      setExchangeRate(currency.trim().toUpperCase() === "USD" ? "1" : "");
+      // The entry rate is applied by the currency rate effect below (isLocalCurrency block).
       const params = new URLSearchParams({ countryId, currency: currency.trim().toUpperCase() });
       if (cityBranchId) params.set("cityBranchId", cityBranchId);
       if (countryBranchId) params.set("countryBranchId", countryBranchId);
@@ -1418,22 +1418,7 @@ export function CashEntryForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [countryId, countryBranchId, cityBranchId, entryDate, currency]);
 
-  useEffect(() => {
-    if (normalizedCurrency === "USD") {
-      setExchangeRate("1");
-      return;
-    }
-    if (dailyRate && dailyRate.found) {
-      const activeRate = cashDirectionRate(dailyRate, paymentMode);
-      if (activeRate && activeRate > 0) {
-        setExchangeRate(String(activeRate));
-      } else {
-        setExchangeRate("");
-      }
-    } else {
-      setExchangeRate("");
-    }
-  }, [dailyRate, paymentMode, normalizedCurrency]);
+  // Entry rate: see the isLocalCurrency block below.
 
   useEffect(() => {
     fetchRecentEntries();
@@ -1523,7 +1508,7 @@ export function CashEntryForm({
     const list = [
       branchCurrency,
       targetAccountCurrency,
-      ...(canViewUsd ? ["USD"] : []),
+      "USD",
       "AED", "PKR", "AFN", "INR", "IRR"
     ]
       .map((v) => (v ?? "").toString().trim().toUpperCase())
@@ -1533,6 +1518,59 @@ export function CashEntryForm({
 
   const isLocalCurrency = normalizedCurrency === targetAccountCurrency.toUpperCase();
 
+  // A base-currency entry needs no exchange rate at all. USD is converted with the country's approved daily
+  // rate (units of the local currency per 1 USD, DR or CR side as the entry is). Any other foreign currency has
+  // no approved rate in the Daily Exchange Rate module, so its rate is typed inline for this entry (manual).
+  const approvedRateForEntry = !isLocalCurrency && normalizedCurrency === "USD" && Boolean(dailyRate?.found);
+  const approvedRateValue = dailyRate?.found ? cashDirectionRate(dailyRate, paymentMode) : null;
+  const lastRateCurrencyRef = useRef("");
+  useEffect(() => {
+    if (!normalizedCurrency) return;
+    // While the Daily Exchange Rate is being re-read, keep the current rate and source (no flip to "manual" mid-fetch).
+    if (!isLocalCurrency && loadingDailyRate) return;
+    const currencyChanged = lastRateCurrencyRef.current !== normalizedCurrency;
+    lastRateCurrencyRef.current = normalizedCurrency;
+    if (isLocalCurrency) {
+      setExchangeRate("1");
+      setExchangeRateSource("base");
+      setExchangeRateEffectiveAt(null);
+      return;
+    }
+    if (normalizedCurrency === "USD" && dailyRate?.found) {
+      setExchangeRate(approvedRateValue ? String(approvedRateValue) : "");
+      setExchangeRateSource("approved");
+      setExchangeRateEffectiveAt(dailyRate.rateDate ?? null);
+      return;
+    }
+    // No approved rate for this currency on the entry date: keep the rate typed for this entry.
+    if (currencyChanged) setExchangeRate("");
+    setExchangeRateSource("manual");
+    setExchangeRateEffectiveAt(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [normalizedCurrency, isLocalCurrency, loadingDailyRate, paymentMode, dailyRate?.found, dailyRate?.debitRate, dailyRate?.creditRate, dailyRate?.rateDate]);
+
+  // Switching the entry currency keeps the same money: the account-currency amount is re-expressed as the
+  // quantity of the new currency at the approved USD rate (or kept as the local amount when switching back).
+  function changeEntryCurrency(nextRaw: string) {
+    const nextCurrency = String(nextRaw || "").trim().toUpperCase();
+    const localAmountNow = calcFinal;
+    const nextIsLocal = nextCurrency === targetAccountCurrency.trim().toUpperCase();
+    setCurrency(nextCurrency);
+    if (localAmountNow === null || !(localAmountNow > 0)) return;
+    if (nextIsLocal) {
+      setCalcAmount(String(Math.round(localAmountNow * 100) / 100));
+      setCalcOp("mul");
+      return;
+    }
+    if (nextCurrency === "USD" && approvedRateValue && approvedRateValue > 0) {
+      setCalcAmount(String(Math.round((localAmountNow / approvedRateValue) * 10000) / 10000));
+      setCalcOp("mul");
+      return;
+    }
+    setCalcAmount("");
+    setCalcOp("mul");
+  }
+
   const showCalcPanel =
     Boolean(currency) &&
     ["USD", "AED", "AFN", "INR", "IRR", "PKR"].includes(currency.toUpperCase());
@@ -1541,23 +1579,24 @@ export function CashEntryForm({
     const cleanAmt = String(calcAmount || "").replace(/,/g, "").trim();
     const a = Number(cleanAmt);
     if (!Number.isFinite(a) || a <= 0) return null;
+    if (isLocalCurrency) return a;
 
+    // A foreign entry is never converted at a guessed rate: no rate (approved or typed) means no converted amount.
     const cleanRate = String(exchangeRate || "").replace(/,/g, "").trim();
     const p = Number(cleanRate);
-    const rate = Number.isFinite(p) && p > 0 ? p : 1;
-
-    if (calcOp === "div" && rate === 0) return null;
-    const v = calcOp === "mul" ? a * rate : a / rate;
-    return Number.isFinite(v) ? v : null;
-  }, [calcAmount, calcOp, exchangeRate]);
+    if (!Number.isFinite(p) || p <= 0) return null;
+    const v = calcOp === "mul" ? a * p : a / p;
+    return Number.isFinite(v) ? Math.round(v * 100) / 100 : null;
+  }, [calcAmount, calcOp, exchangeRate, isLocalCurrency]);
 
   const amount = useMemo(() => {
+    if (!isLocalCurrency && calcFinal === null) return 0;
     if (calcFinal !== null) return calcFinal;
     const cleanAmt = String(calcAmount || "").replace(/,/g, "").trim();
     const a = Number(cleanAmt);
     if (Number.isFinite(a) && a > 0) return a;
     return Number(finalPayment || 0);
-  }, [calcFinal, calcAmount, finalPayment]);
+  }, [calcFinal, calcAmount, finalPayment, isLocalCurrency]);
 
   const txAmount = useMemo(() => {
     if (calcAmount) {
@@ -1706,26 +1745,8 @@ export function CashEntryForm({
     attachmentFile
   ]);
 
-  // Sync calculation details directly to remarks textarea dynamically
-  useEffect(() => {
-    if (showCalcPanel && calcAmount && exchangeRate && calcFinal !== null) {
-      setRemarks((prev) => {
-        const opSymbol = calcOp === "mul" ? "×" : "÷";
-        const newCalcLine = `Calculation: ${Number(calcAmount).toLocaleString()} ${currency.toUpperCase()} ${opSymbol} ${Number(exchangeRate).toLocaleString()} = ${calcFinal.toFixed(2)} ${targetAccountCurrency}`;
-        
-        // Remove any existing lines starting with "Calculation:"
-        const lines = prev.split("\n").map((l) => l.trim()).filter((l) => !l.startsWith("Calculation:"));
-        lines.push(newCalcLine);
-        return lines.filter(Boolean).join("\n");
-      });
-    } else {
-      // If the calculation is no longer active/valid, remove any stale calculation lines
-      setRemarks((prev) => {
-        const lines = prev.split("\n").map((l) => l.trim()).filter((l) => !l.startsWith("Calculation:"));
-        return lines.filter(Boolean).join("\n");
-      });
-    }
-  }, [showCalcPanel, calcAmount, exchangeRate, calcOp, currency, calcFinal, targetAccountCurrency]);
+  // The calculation (quantity, rate, operation, converted amount, rate source) is recorded in the posted audit
+  // trail (see save()). Remarks / Notes stay exactly what the user typed, so the 1000-character limit is theirs.
 
   const detailsString = useMemo(() => {
     if (!paymentType) return "";
@@ -2103,7 +2124,8 @@ export function CashEntryForm({
     }
   }, [countryId, countryBranchId, cityBranchId, branchCurrency]);
 
-  const isRatePending = loadingDailyRate || !dailyRate || !dailyRate.found || Number(exchangeRate) <= 0;
+  // Pending = a foreign entry with no approved rate for the date (USD) or any non-USD foreign entry; the user types its rate inline.
+  const isRatePending = !isLocalCurrency && !approvedRateForEntry && !loadingDailyRate;
 
   const canSave =
     Boolean(countryId && (countryBranchId || cityBranchId)) &&
@@ -2112,9 +2134,30 @@ export function CashEntryForm({
     Boolean(paymentType) &&
     Boolean(amount && amount > 0) &&
     currency.trim().length === 3 &&
-    !isRatePending &&
     Number(exchangeRate) > 0 &&
     !saving;
+
+  // Why the entry cannot be posted yet. Shown next to the Post button, on phones too.
+  const postBlockReason: string | null = saving ? null
+    : !(countryId && (countryBranchId || cityBranchId)) ? tr("cef.msg_need_country_branch", "Please select a Country and Branch before posting.")
+    : !(counterLedgerId || selectedCrossBranchAccount) ? tr("cef.msg_need_account", "Please select an Account (Step 2).")
+    : !paymentType ? tr("cj.mNeedCategory", "Choose a Roznamcha Category (Cash, Bank, Business, Invoice or Transfer) in Roznamcha Details.")
+    : !paymentMode ? tr("cef.msg_need_payment_mode", "Please select Payment Mode (Debit or Credit).")
+    : (!isLocalCurrency && Boolean(calcAmount) && !(Number(exchangeRate) > 0))
+      ? tr("cj.mRateNeededBlock", "Enter the {cur} rate for this entry to post (no approved rate on {date}).").replace("{cur}", normalizedCurrency).replace("{date}", String(entryDate))
+    : !(amount > 0) ? tr("cef.msg_need_amount", "Please enter a valid Amount greater than 0.")
+    : currency.trim().length !== 3 ? tr("cef.msg_need_currency", "Please select a valid 3-letter currency.")
+    : null;
+
+  // Line currency (account currency) and the USD equivalent shown on the rate line: the approved USD rate for
+  // the entry direction, or the typed USD rate for a USD entry without one.
+  const lineCurrencyCode = (targetAccountCurrency || branchCurrency || "AED").toUpperCase();
+  const usdRateForDisplay = dailyRate?.found
+    ? cashDirectionRate(dailyRate, paymentMode)
+    : (normalizedCurrency === "USD" && Number(exchangeRate) > 0 ? Number(exchangeRate) : null);
+  const usdEquivalentDisplay = lineCurrencyCode === "USD"
+    ? amount
+    : (usdRateForDisplay && usdRateForDisplay > 0 ? amount / usdRateForDisplay : null);
 
   useEffect(() => {
     console.log("canSave check details:", {
@@ -2195,8 +2238,10 @@ export function CashEntryForm({
     setCrossBranchDropdownOpen(false);
     setAccountNoInput("");
     setAccountLookupError(null);
-    setPaymentType("");
-    setPaymentMode("");
+    // Roznamcha Category defaults to Cash and the mode to Debit (the page's own defaults), so an account pick never
+    // leaves the required category empty.
+    setPaymentType("cash");
+    setPaymentMode("DEBIT");
     setFinalPayment("");
     setTypeDetails({});
     setCurrency("");
@@ -2213,7 +2258,7 @@ export function CashEntryForm({
 
   function resetPaymentDraft() {
     clearSelectedAccount();
-    setRoznamchaBookType("");
+    setRoznamchaBookType("branch_payment_voucher");
     setRoznamchaType("Cash Book No.");
     setRoznamchaNumber("");
     setEntryDate(todayIso());
@@ -2745,6 +2790,7 @@ export function CashEntryForm({
       setMessage(tr("cef.msg_delete_failed", "Failed to delete entry: {error}").replace("{error}", error?.message || tr("cef.msg_unknown_error", "Unknown error")), true);
     }
   };
+  // Switching the entry currency keeps the same money (see changeEntryCurrency above).
   async function save() {
     if (savingRef.current) return null;
     savingRef.current = true;
@@ -2752,23 +2798,9 @@ export function CashEntryForm({
     setLastEntryId(null);
 
     if (!canSave) {
-      if (!countryId || (!countryBranchId && !cityBranchId)) {
-        setMessage(tr("cef.msg_need_country_branch", "Please select a Country and Branch before posting."), true);
-      } else if (!counterLedgerId && !selectedCrossBranchAccount) {
-        setMessage(tr("cef.msg_need_account", "Please select an Account (Step 2)."), true);
-      } else if (!paymentType) {
-        setMessage(tr("cef.msg_need_txn_type", "Please select a Transaction Type (Customer, Supplier, etc.)."), true);
-      } else if (!paymentMode) {
-        setMessage(tr("cef.msg_need_payment_mode", "Please select Payment Mode (Debit or Credit)."), true);
-      } else if (!amount || amount <= 0) {
-        setMessage(tr("cef.msg_need_amount", "Please enter a valid Amount greater than 0."), true);
-      } else if ((currency || "").trim().length !== 3) {
-        setMessage(tr("cef.msg_need_currency", "Please select a valid 3-letter currency."), true);
-      } else if (isRatePending) {
-        setMessage(tr("cj.mRatePendingBody", "No approved exchange rate for {cur} on {date}. Country Admin must enter today's rate in Daily Exchange Rate module before financial postings can be saved.").replace("{cur}", String(currency || branchCurrency)).replace("{date}", String(entryDate)), true);
-      } else {
-        setMessage(tr("cef.msg_need_all", "Please select account, Debit/Credit transaction type, currency, and amount."), true);
-      }
+      // Bring the field the reason names onto the screen (it sits in Roznamcha Details, above the footer on phones).
+      if (!paymentType) document.getElementById("cash-entry-roz-category")?.scrollIntoView({ block: "center" });
+      setMessage(postBlockReason ?? tr("cef.msg_need_all", "Please select account, Debit/Credit transaction type, currency, and amount."), true);
       savingRef.current = false;
       return null;
     }
@@ -2795,11 +2827,13 @@ export function CashEntryForm({
     setSaving(true);
     try {
       let auditTrail = "";
-      if (showCalcPanel && calcFinal !== null) {
+      const auditCurrency = (targetAccountCurrency || branchCurrency || "").toUpperCase();
+      if (!isLocalCurrency && calcFinal !== null) {
         const opSymbol = calcOp === "mul" ? "×" : "÷";
-        auditTrail = `[Audit Trail - Qty: ${calcAmount} | Currency: ${currency.toUpperCase()} | Rate: ${exchangeRate} | Op: ${opSymbol} | Converted: ${amount.toFixed(2)} ${branchCurrency}]`;
+        const rateSourceLabel = exchangeRateSource === "approved" ? "Approved daily rate" : "Manual rate (no approved rate for this date)";
+        auditTrail = `[Audit Trail - Qty: ${calcAmount} | Currency: ${currency.toUpperCase()} | Rate: ${exchangeRate} | Op: ${opSymbol} | Converted: ${amount.toFixed(2)} ${auditCurrency} | Rate Source: ${rateSourceLabel}${exchangeRateEffectiveAt ? ` ${exchangeRateEffectiveAt}` : ""}]`;
       } else {
-        auditTrail = `[Audit Trail - Final Amount: ${amount.toFixed(2)} ${branchCurrency} (Local Currency Entry)]`;
+        auditTrail = `[Audit Trail - Final Amount: ${amount.toFixed(2)} ${auditCurrency} (Local Currency Entry)]`;
       }
       const combinedNarration = remarks.trim();
       const finalNarration = `${combinedNarration.trim()}\n${auditTrail}`;
@@ -2823,6 +2857,7 @@ export function CashEntryForm({
       const effectiveCountryBranchId = countryBranchId || null;
       const effectiveCityBranchId = cityBranchId || null;
 
+      const lineRateSource = isLocalCurrency ? "base" : (exchangeRateSource === "approved" ? "approved" : "manual");
       const postingLines: any[] = [
         {
           paymentEntryType: roznamchaBookType === "bank" ? (paymentMode === "DEBIT" ? "bank_cheque" : "bank_deposit") : (paymentMode === "DEBIT" ? "cash_payment" : "cash_receipt"),
@@ -2833,6 +2868,8 @@ export function CashEntryForm({
           credit: paymentMode === "CREDIT" ? amount : 0,
           currency: targetAccountCurrency.trim().toUpperCase(),
           exchangeRate: Number(exchangeRate),
+          rateSource: lineRateSource,
+          entryCurrency: normalizedCurrency || null,
           accountNumber: selectedCrossBranchAccount?.accountNumber || selectedCrossBranchAccount?.code || selectedCounterLedger?.accountCode || selectedCounterLedger?.rawAccountCode || null,
           manualReferenceNumber: selectedCounterLedger?.manualReferenceNumber || null,
           customerNumber: selectedCrossBranchAccount?.accountNumber || selectedCounterLedger?.customerNumber || null,
@@ -2853,6 +2890,8 @@ export function CashEntryForm({
           credit: paymentMode === "DEBIT" ? amount : 0,
           currency: sourceCurrency,
           exchangeRate: Number(exchangeRate),
+          rateSource: lineRateSource,
+          entryCurrency: normalizedCurrency || null,
           accountNumber: selectedCashLedger.accountCode || selectedCashLedger.rawAccountCode || null,
           manualReferenceNumber: selectedCashLedger.manualReferenceNumber || null,
           customerNumber: selectedCashLedger.customerNumber || null,
@@ -4467,6 +4506,7 @@ export function CashEntryForm({
                             {tr("cj.mRozCategory", "Roznamcha Category")} <span className="text-red-500">*</span>
                           </Label>
                           <select
+                            id="cash-entry-roz-category"
                             value={paymentType}
                             onChange={(e) => {
                               const val = e.target.value as any;
@@ -4489,10 +4529,10 @@ export function CashEntryForm({
                           </Label>
                           <select
                             value={currency || branchCurrency}
-                            onChange={(e) => setCurrency(e.target.value)}
+                            onChange={(e) => changeEntryCurrency(e.target.value)}
                             className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
                           >
-                            {canViewUsd && <option value="USD">USD</option>}
+                            <option value="USD">USD</option>
                             <option value="PKR">PKR</option>
                             <option value="AED">AED</option>
                             <option value="INR">INR</option>
@@ -4698,7 +4738,9 @@ export function CashEntryForm({
                               </Label>
                               <Input
                                 value={exchangeRate}
-                                onChange={(e) => setExchangeRate(e.target.value)}
+                                onChange={(e) => { setExchangeRate(e.target.value); setExchangeRateSource("manual"); }}
+                                readOnly={approvedRateForEntry}
+                                inputMode="decimal"
                                 placeholder="0.0000"
                                 className="h-9 text-xs font-mono font-bold bg-white dark:bg-slate-950"
                               />
@@ -4767,14 +4809,6 @@ export function CashEntryForm({
                             onClick={() => {
                               setPaymentMode("DEBIT");
                               setRoznamchaBookType("branch_payment_voucher");
-                              if (normalizedCurrency !== "USD") {
-                                const targetRate = dailyRate?.debitRate ?? dailyRate?.buyingRate;
-                                if (targetRate && Number(targetRate) > 0) {
-                                  setExchangeRate(String(targetRate));
-                                } else {
-                                  setExchangeRate("");
-                                }
-                              }
                             }}
                             className={cn(
                               "flex-1 flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer",
@@ -4792,14 +4826,6 @@ export function CashEntryForm({
                             onClick={() => {
                               setPaymentMode("CREDIT");
                               setRoznamchaBookType("branch_payment_voucher");
-                              if (normalizedCurrency !== "USD") {
-                                const targetRate = dailyRate?.creditRate ?? dailyRate?.sellingRate;
-                                if (targetRate && Number(targetRate) > 0) {
-                                  setExchangeRate(String(targetRate));
-                                } else {
-                                  setExchangeRate("");
-                                }
-                              }
                             }}
                             className={cn(
                               "flex-1 flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-xs font-bold transition cursor-pointer",
@@ -4822,46 +4848,58 @@ export function CashEntryForm({
                       </div>
 
                       <div className="flex flex-wrap justify-between gap-2 text-[11px] font-mono">
-                        <span>{tr("cj.drRate", "DR Rate (Buying)")}: {dailyRate?.debitRate ?? "—"}</span>
-                        <span>{tr("cj.crRate", "CR Rate (Selling)")}: {dailyRate?.creditRate ?? "—"}</span>
-                        <span>{normalizedCurrency} {fmtAmount(Number(amount) || 0)} · USD {cashUsdEquivalent(Number(amount) || 0, normalizedCurrency, Number(exchangeRate)) == null ? "—" : fmtAmount(cashUsdEquivalent(Number(amount) || 0, normalizedCurrency, Number(exchangeRate))!)}</span>
+                        <span>{tr("cj.drRate", "DR Rate (Buying)")}: {dailyRate?.found && dailyRate.debitRate ? Number(dailyRate.debitRate).toFixed(4) : "—"}</span>
+                        <span>{tr("cj.crRate", "CR Rate (Selling)")}: {dailyRate?.found && dailyRate.creditRate ? Number(dailyRate.creditRate).toFixed(4) : "—"}{dailyRate?.found && dailyRate.rateDate ? ` · ${dailyRate.rateDate}` : ""}</span>
+                        <span>{lineCurrencyCode} {fmtAmount(Number(amount) || 0)} · USD {usdEquivalentDisplay == null ? "—" : fmtAmount(usdEquivalentDisplay)}</span>
                         {dailyRateError && <span className="text-red-600">{dailyRateError}</span>}
                       </div>
                       {/* Remarks / Notes Textarea */}
                       <div className="space-y-1">
                         <Label className="text-[10px] font-bold text-slate-500 uppercase">{tr("cj.mRemarks", "Remarks / Notes")}</Label>
                         <textarea
-                          rows={2}
+                          rows={6}
+                          maxLength={1000}
+                          style={{ minHeight: "8rem" }}
                           value={remarks}
                           onChange={(e) => setRemarks(e.target.value)}
                           placeholder={tr("cj.mRemarksPh", "Enter transaction details...")}
-                          className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full min-h-[8rem] p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500 resize-y"
                         />
                         <div className="text-right text-[10px] font-mono text-slate-400">
-                          {remarks.length}/500
+                          {remarks.length}/1000
                         </div>
                       </div>
 
-                      {/* Rate Pending Warning Banner */}
+                      {/* Inline rate for a foreign entry that has no approved rate on the entry date */}
                       {isRatePending && (
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs">
+                        <div className="flex flex-col gap-3 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs">
                           <div className="flex items-start gap-2">
                             <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
                             <div>
-                              <span className="font-bold">{tr("cj.mRatePendingTitle", "TODAY'S EXCHANGE RATE PENDING / MISSING:")}</span>{" "}
-                              {tr("cj.mRatePendingBody", "No approved exchange rate for {cur} on {date}. Country Admin must enter today's rate in Daily Exchange Rate module before financial postings can be saved.").replace("{cur}", String(currency || branchCurrency)).replace("{date}", String(entryDate))}
+                              <span className="font-bold">{tr("cj.mNeedRateTitle", "No approved exchange rate for {cur} on {date}.").replace("{cur}", normalizedCurrency).replace("{date}", String(entryDate))}</span>{" "}
+                              {tr("cj.mNeedRateBody", "Enter the rate for this entry below. It is saved on this entry as a manual rate. The Country Admin can approve the daily rate in Daily Exchange Rate.")}
                             </div>
                           </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => router.push("/dashboard/reports/exchange-rate")}
-                            className="shrink-0 h-8 px-3 rounded-lg text-xs font-bold gap-1.5 border-amber-300 dark:border-amber-700 bg-white/80 dark:bg-slate-900 hover:bg-amber-100/50 text-amber-900 dark:text-amber-100 cursor-pointer"
-                          >
-                            <ExternalLink className="h-3.5 w-3.5" />
-                            <span>{t(lang, "nav.super_admin_exchange_rate", "Daily Exchange Rate")}</span>
-                          </Button>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span className="font-bold">{tr("cj.mNeedRateInput", "1 {cur} = ? {local}").replace("{cur}", normalizedCurrency).replace("{local}", lineCurrencyCode)}</span>
+                            <Input
+                              value={exchangeRate}
+                              onChange={(e) => { setExchangeRate(e.target.value); setExchangeRateSource("manual"); }}
+                              inputMode="decimal"
+                              placeholder="0.0000"
+                              className="h-9 w-40 text-xs font-mono font-bold bg-white dark:bg-slate-950"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => router.push("/dashboard/reports/exchange-rate")}
+                              className="shrink-0 h-8 px-3 rounded-lg text-xs font-bold gap-1.5 border-amber-300 dark:border-amber-700 bg-white/80 dark:bg-slate-900 hover:bg-amber-100/50 text-amber-900 dark:text-amber-100 cursor-pointer"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                              <span>{t(lang, "nav.super_admin_exchange_rate", "Daily Exchange Rate")}</span>
+                            </Button>
+                          </div>
                         </div>
                       )}
 
@@ -4880,10 +4918,10 @@ export function CashEntryForm({
                           <span>{t(lang, "common.reset", "Reset")}</span>
                         </Button>
 
-                        <div className="flex items-center gap-3">
-                          {isRatePending && (
-                            <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 hidden sm:inline-block">
-                              {tr("cj.mRatePendingBtn", "Today's Exchange Rate Pending / Missing")}
+                        <div className="flex flex-wrap items-center justify-end gap-3">
+                          {postBlockReason && (
+                            <span role="status" className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 text-right max-w-[22rem]">
+                              {postBlockReason}
                             </span>
                           )}
                           <Button
