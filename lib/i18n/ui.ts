@@ -12446,6 +12446,9 @@ export type UiKey =
   | "cef.msg_need_currency"
   | "cef.msg_need_all"
   | "cef.msg_reverse_failed"
+  | "cef.confirm_correct_entry"
+  | "cef.msg_reverse_pending"
+  | "cef.divide_entry"
   | "cef.msg_saved_serials"
   | "cef.msg_save_failed"
   | "cef.auto_approved"
@@ -38963,6 +38966,9 @@ const en: Dict = {
   "cef.msg_need_currency": "Please select a valid 3-letter currency.",
   "cef.msg_need_all": "Please select account, Debit/Credit transaction type, currency, and amount.",
   "cef.msg_reverse_failed": "Failed to reverse the old entry: {error}",
+  "cef.confirm_correct_entry": "Save this correction? The saved entry will be reversed (kept in the ledger and audit trail) and this corrected entry will replace it in the list. Cancel keeps the saved entry unchanged.",
+  "cef.msg_reverse_pending": "Corrected entry saved, but the old entry could not be reversed: {error}. Reverse the old entry from the list.",
+  "cef.divide_entry": "Divide this entry",
   "cef.msg_saved_serials": "Saved successfully. Serials: {serials}",
   "cef.msg_save_failed": "Save failed",
   "cef.auto_approved": "System / Auto Approved",
@@ -65548,6 +65554,9 @@ const ur: Dict = {
   "cef.msg_need_currency": "براہِ کرم تین حرفی درست کرنسی منتخب کریں۔",
   "cef.msg_need_all": "براہِ کرم اکاؤنٹ، ڈیبٹ/کریڈٹ لین دین کی قسم، کرنسی اور رقم منتخب کریں۔",
   "cef.msg_reverse_failed": "پرانا اندراج واپس نہیں ہو سکا: {error}",
+  "cef.confirm_correct_entry": "کیا یہ درستی محفوظ کریں؟ محفوظ شدہ اندراج ریورس ہو جائے گا (لیجر اور آڈٹ ٹریل میں موجود رہے گا) اور یہ درست شدہ اندراج فہرست میں اس کی جگہ لے گا۔ منسوخ کرنے سے محفوظ شدہ اندراج جوں کا توں رہے گا۔",
+  "cef.msg_reverse_pending": "درست شدہ اندراج محفوظ ہو گیا، مگر پرانا اندراج ریورس نہیں ہو سکا: {error}۔ فہرست سے پرانا اندراج ریورس کریں۔",
+  "cef.divide_entry": "اس اندراج کو تقسیم کریں",
   "cef.msg_saved_serials": "کامیابی سے محفوظ ہو گیا۔ سیریل: {serials}",
   "cef.msg_save_failed": "محفوظ نہیں ہو سکا",
   "cef.auto_approved": "سسٹم / خودکار منظور",
@@ -92134,6 +92143,9 @@ const ar: Dict = {
   "cef.msg_need_currency": "يرجى اختيار عملة صحيحة من 3 أحرف.",
   "cef.msg_need_all": "يرجى اختيار الحساب ونوع المعاملة (مدين/دائن) والعملة والمبلغ.",
   "cef.msg_reverse_failed": "تعذّر عكس القيد القديم: {error}",
+  "cef.confirm_correct_entry": "هل تريد حفظ هذا التصحيح؟ سيُعكس القيد المحفوظ (ويبقى في الدفتر وسجل التدقيق) وسيحل هذا القيد المصحَّح محله في القائمة. الإلغاء يُبقي القيد المحفوظ دون تغيير.",
+  "cef.msg_reverse_pending": "تم حفظ القيد المصحَّح، لكن تعذّر عكس القيد القديم: {error}. يرجى عكس القيد القديم من القائمة.",
+  "cef.divide_entry": "قسمة هذا القيد",
   "cef.msg_saved_serials": "تم الحفظ بنجاح. الأرقام التسلسلية: {serials}",
   "cef.msg_save_failed": "فشل الحفظ",
   "cef.auto_approved": "النظام / معتمد تلقائياً",
@@ -118719,6 +118731,9 @@ const fa: Dict = {
   "cef.msg_need_currency": "لطفاً یک ارز معتبر سه‌حرفی انتخاب کنید.",
   "cef.msg_need_all": "لطفاً حساب، نوع تراکنش بدهکار/بستانکار، ارز و مبلغ را انتخاب کنید.",
   "cef.msg_reverse_failed": "برگشت ثبت قبلی ناموفق بود: {error}",
+  "cef.confirm_correct_entry": "این اصلاح ذخیره شود؟ ثبت ذخیره‌شده برگشت داده می‌شود (در دفتر کل و سوابق حسابرسی می‌ماند) و این ثبت اصلاح‌شده جای آن را در فهرست می‌گیرد. با لغو، ثبت ذخیره‌شده بدون تغییر می‌ماند.",
+  "cef.msg_reverse_pending": "ثبت اصلاح‌شده ذخیره شد، اما ثبت قبلی برگشت داده نشد: {error}. ثبت قبلی را از فهرست برگردانید.",
+  "cef.divide_entry": "تقسیم این ثبت",
   "cef.msg_saved_serials": "با موفقیت ذخیره شد. شماره‌های سریال: {serials}",
   "cef.msg_save_failed": "ذخیره ناموفق بود",
   "cef.auto_approved": "سیستم / تأیید خودکار",
@@ -145311,6 +145326,9 @@ const ps: Dict = {
   "cef.msg_need_currency": "مهرباني وکړئ د درېیو تورو سمه اسعار وټاکئ.",
   "cef.msg_need_all": "مهرباني وکړئ حساب، د ډیبټ/کرېډیټ راکړې ورکړې ډول، اسعار او مقدار وټاکئ.",
   "cef.msg_reverse_failed": "زوړ ثبت بېرته نه شو اړول: {error}",
+  "cef.confirm_correct_entry": "دا سمون ساتل شي؟ ساتل شوی ثبت به واپس اړول کېږي (په لیجر او د پلټنې ریکارډ کې پاتې کېږي) او دا سم شوی ثبت به یې په لیست کې ځای ونیسي. لغوه کول ساتل شوی ثبت نه بدلوي.",
+  "cef.msg_reverse_pending": "سم شوی ثبت وساتل شو، خو زوړ ثبت واپس نه شو اړولی: {error}. زوړ ثبت له لیست څخه واپس واخلئ.",
+  "cef.divide_entry": "دا ثبت وویشئ",
   "cef.msg_saved_serials": "په بریالیتوب سره خوندي شو. سریال شمېرې: {serials}",
   "cef.msg_save_failed": "خوندي نه شو",
   "cef.auto_approved": "سیستم / په اتوماتيک ډول تصویب شوی",
