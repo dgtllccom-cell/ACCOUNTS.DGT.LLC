@@ -506,7 +506,7 @@ export function LogisticsDashboardOverview({
               </Link>
 
               <Link
-                href="/dashboard/shipping-line/transfer-center"
+                href="/dashboard/transfer-center"
                 className="flex items-center gap-2 p-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:bg-blue-50 dark:hover:bg-slate-800 transition-all text-xs font-bold text-slate-800 dark:text-slate-200"
               >
                 <div className="h-7 w-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">

@@ -137,9 +137,15 @@ export function LocalPurchaseGlobalRegisterView({
    * Each bill must display in its original country's currency (UAE = AED, Pakistan = PKR, etc.).
    * Never automatically convert currencies or combine different currencies into one total!
    */
-  const getCurrency = (r: any): string => {
-    const raw = String(r.currency || r.local_currency || r.purchase_currency || "").toUpperCase().trim();
-    if (raw && raw !== "USD") return raw;
+  /**
+   * Currency resolution rules:
+   * 1. Original purchase currency (USD, PKR, AED, etc.) is strictly preserved.
+   * 2. Final currency represents the destination country's operational currency (AED, PKR, etc.).
+   * 3. Never discard "USD" and never automatically merge distinct currencies into a single sum.
+   */
+  const getPurchaseCurrency = (r: any): string => {
+    const raw = String(r.purchase_currency || r.currency || "").toUpperCase().trim();
+    if (raw) return raw;
     const country = String(r.country_name || r.countryName || "").toLowerCase();
     const branch = String(r.branch_name || r.branchName || "").toLowerCase();
     if (country.includes("pakistan") || branch.includes("chaman") || branch.includes("quetta") || branch.includes("karachi") || branch.includes("lahore")) return "PKR";
@@ -148,7 +154,25 @@ export function LocalPurchaseGlobalRegisterView({
     if (country.includes("india")) return "INR";
     if (country.includes("china")) return "CNY";
     if (country.includes("emirates") || country.includes("uae") || branch.includes("ras") || branch.includes("dubai") || branch.includes("sharjah")) return "AED";
-    return raw || "AED";
+    return "USD";
+  };
+
+  const getFinalCurrency = (r: any): string => {
+    const raw = String(r.local_currency || "").toUpperCase().trim();
+    if (raw) return raw;
+    const country = String(r.country_name || r.countryName || "").toLowerCase();
+    const branch = String(r.branch_name || r.branchName || "").toLowerCase();
+    if (country.includes("pakistan") || branch.includes("chaman") || branch.includes("quetta") || branch.includes("karachi") || branch.includes("lahore")) return "PKR";
+    if (country.includes("afghanistan") || branch.includes("kabul") || branch.includes("kandahar") || branch.includes("herat")) return "AFN";
+    if (country.includes("iran") || branch.includes("tehran")) return "IRR";
+    if (country.includes("india")) return "INR";
+    if (country.includes("china")) return "CNY";
+    if (country.includes("emirates") || country.includes("uae") || branch.includes("ras") || branch.includes("dubai") || branch.includes("sharjah")) return "AED";
+    return "AED";
+  };
+
+  const getCurrency = (r: any): string => {
+    return getPurchaseCurrency(r);
   };
 
   const getGoodsEmoji = (goodsName: string) => {
@@ -161,7 +185,11 @@ export function LocalPurchaseGlobalRegisterView({
   };
 
   const getCleanBranchName = (r: any): string => {
-    const b = r.branch_name || r.branchName || r.city_branch_name || r.cityBranchName || "";
+    if (r.city_branch_id && Array.isArray(cityBranches)) {
+      const match = cityBranches.find((cb) => cb.id === r.city_branch_id);
+      if (match?.name) return match.name.replace(/City Branch|Branch/gi, "").trim() || match.name;
+    }
+    const b = r.city_branch_name || r.cityBranchName || r.branch_name || r.branchName || "";
     if (b) {
       if (b.toLowerCase().includes("al ras")) return "Al Ras";
       if (b.toLowerCase().includes("chaman")) return "Chaman";
@@ -192,6 +220,10 @@ export function LocalPurchaseGlobalRegisterView({
   };
 
   const getMainBranchName = (r: any): string => {
+    if (r.country_branch_id && Array.isArray(countryBranches)) {
+      const match = countryBranches.find((cb) => cb.id === r.country_branch_id);
+      if (match?.name) return match.name.replace(/Main Branch|Branch/gi, "").trim() || match.name;
+    }
     const b = r.country_branch_name || r.countryBranchName || r.main_branch_name || r.mainBranchName;
     if (b) return String(b).replace(/Main Branch|City Branch|Branch/gi, "").trim() || String(b);
     const country = r.country_name || r.countryName || "";
@@ -200,20 +232,53 @@ export function LocalPurchaseGlobalRegisterView({
   };
 
   const getCityBranchName = (r: any): string => {
-    const b = r.city_branch_name || r.cityBranchName || r.branch_name || r.branchName;
-    if (b) return String(b).replace(/Main Branch|City Branch|Branch/gi, "").trim() || String(b);
-    return "City Branch";
+    if (r.city_branch_id && Array.isArray(cityBranches)) {
+      const match = cityBranches.find((cb) => cb.id === r.city_branch_id);
+      if (match?.name) return match.name.replace(/City Branch|Branch/gi, "").trim() || match.name;
+    }
+    const b = r.city_branch_name || r.cityBranchName;
+    if (b) return String(b).replace(/City Branch|Branch/gi, "").trim() || String(b);
+    if (r.warehouse_name) return r.warehouse_name;
+    return "Al Ras";
   };
 
   const getPurchaseAccount = (r: any): { name: string; code: string } => {
-    const name = r.purchase_account_name || r.purchaseAccountName || r.dr_account_name || r.purchase_ledger_name || "Purchase Account";
-    const code = r.purchase_account_no || r.purchaseAccountNo || r.dr_account_no || r.purchase_account_code || "AE-AEDU-S-012";
+    const name =
+      r.purchase_account_name ||
+      r.purchaseAccountName ||
+      r.resolved_dr_account_name ||
+      r.dr_account_name ||
+      r.purchase_ledger_name ||
+      "Purchase Account";
+    const code =
+      r.purchase_account_no ||
+      r.purchaseAccountNo ||
+      r.resolved_dr_account_code ||
+      r.dr_account_no ||
+      r.purchase_account_code ||
+      "AE-AEDU-S-012";
     return { name, code };
   };
 
   const getSalesAccount = (r: any): { name: string; code: string } => {
-    const name = r.supplier_name || r.supplierName || r.sales_account_name || r.salesAccountName || r.cr_account_name || "Supplier / Sales";
-    const code = r.sales_account_no || r.salesAccountNo || r.cr_account_no || r.supplier_code || "AE-AEDU-S-011";
+    const name =
+      r.supplier_name ||
+      r.supplierName ||
+      r.resolved_cr_account_name ||
+      r.sales_account_name ||
+      r.salesAccountName ||
+      r.cr_account_name ||
+      r.customer_name ||
+      r.customerName ||
+      r.party_name ||
+      "Supplier / Sales";
+    const code =
+      r.sales_account_no ||
+      r.salesAccountNo ||
+      r.resolved_cr_account_code ||
+      r.cr_account_no ||
+      r.supplier_code ||
+      "AE-AEDU-S-011";
     return { name, code };
   };
 
@@ -298,23 +363,28 @@ export function LocalPurchaseGlobalRegisterView({
   // Card 1: Local Purchase Summary (Strictly per-currency totals!)
   const summaryMetrics = useMemo(() => {
     const purchaseByCurr: Record<string, number> = {};
+    const finalByCurr: Record<string, number> = {};
     const paidByCurr: Record<string, number> = {};
     const balanceByCurr: Record<string, number> = {};
 
     filteredRows.forEach((r) => {
-      const cur = getCurrency(r);
-      const cost = Number(r.final_cost || r.purchase_cost || 0);
+      const pCur = getPurchaseCurrency(r);
+      const fCur = getFinalCurrency(r);
+      const purchCost = Number(r.purchase_cost || (r.final_cost ? Number(r.final_cost) / (Number(r.exchange_rate) || 1) : 0));
+      const finalCost = Number(r.final_cost || (purchCost * (Number(r.exchange_rate) || 1)));
       const paid = Number(r.posted_paid_amount || r.paid_amount || r.advance_amount || 0);
-      const bal = Math.max(0, cost - paid);
+      const bal = Math.max(0, purchCost - paid);
 
-      purchaseByCurr[cur] = (purchaseByCurr[cur] || 0) + cost;
-      paidByCurr[cur] = (paidByCurr[cur] || 0) + paid;
-      balanceByCurr[cur] = (balanceByCurr[cur] || 0) + bal;
+      purchaseByCurr[pCur] = (purchaseByCurr[pCur] || 0) + purchCost;
+      finalByCurr[fCur] = (finalByCurr[fCur] || 0) + finalCost;
+      paidByCurr[pCur] = (paidByCurr[pCur] || 0) + paid;
+      balanceByCurr[pCur] = (balanceByCurr[pCur] || 0) + bal;
     });
 
     return {
       totalBills: filteredRows.length,
       purchaseByCurr,
+      finalByCurr,
       paidByCurr,
       balanceByCurr,
     };
@@ -1115,6 +1185,7 @@ export function LocalPurchaseGlobalRegisterView({
                 <th className="py-2.5 px-2.5 text-start">{tr("Loading")}</th>
                 <th className="py-2.5 px-2.5 text-start">{tr("Receiving")}</th>
                 <th className="py-2.5 px-2 text-end">{tr("Purchase Amount")}</th>
+                <th className="py-2.5 px-2 text-end">{tr("Final Amount")}</th>
                 <th className="py-2.5 px-2 text-end">{tr("Paid Amount")}</th>
                 <th className="py-2.5 px-2 text-end">{tr("Balance")}</th>
                 <th className="py-2.5 px-3 text-center">{tr("Status")}</th>
@@ -1125,7 +1196,7 @@ export function LocalPurchaseGlobalRegisterView({
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-200">
               {loading && purchases.length === 0 ? (
                 <tr>
-                  <td colSpan={15} className="py-8 text-center text-slate-400">
+                  <td colSpan={16} className="py-8 text-center text-slate-400">
                     <div className="flex items-center justify-center gap-2">
                       <span className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
                       <span>{tr("Loading data...")}</span>
@@ -1134,7 +1205,7 @@ export function LocalPurchaseGlobalRegisterView({
                 </tr>
               ) : filteredRows.length === 0 ? (
                 <tr>
-                  <td colSpan={15} className="py-8 text-center text-slate-400">
+                  <td colSpan={16} className="py-8 text-center text-slate-400">
                     {tr("No records found")}
                   </td>
                 </tr>
@@ -1162,11 +1233,13 @@ export function LocalPurchaseGlobalRegisterView({
                   const receivingDest = `${r.country_name || "UAE"} / ${r.warehouse_name || "Jebel Ali"}`;
                   const receivingDate = formatDashDate(r.created_at);
 
-                  const cur = getCurrency(r);
-                  const purchAmt = Number(r.purchase_cost || 0);
-                  const finalAmt = Number(r.final_cost || purchAmt);
+                  const purchCur = getPurchaseCurrency(r);
+                  const finalCur = getFinalCurrency(r);
+                  const cur = purchCur;
+                  const purchAmt = Number(r.purchase_cost || (r.final_cost ? Number(r.final_cost) / (Number(r.exchange_rate) || 1) : 0));
+                  const finalAmt = Number(r.final_cost || (purchAmt * (Number(r.exchange_rate) || 1)));
                   const paidAmt = Number(r.posted_paid_amount || r.paid_amount || r.advance_amount || 0);
-                  const balanceAmt = Math.max(0, finalAmt - paidAmt);
+                  const balanceAmt = Math.max(0, purchAmt - paidAmt);
                   const rowKey = r.id || `row-${idx}`;
 
                   return (
@@ -1340,29 +1413,34 @@ export function LocalPurchaseGlobalRegisterView({
 
                       {/* Col 11: Purchase Amount */}
                       <td className="py-2.5 px-2 text-end font-mono font-bold text-slate-800 dark:text-slate-200">
-                        {cur} {fmt(purchAmt)}
+                        {purchCur} {fmt(purchAmt)}
                       </td>
 
-                      {/* Col 12: Paid Amount */}
+                      {/* Col 12: Final Amount */}
                       <td className="py-2.5 px-2 text-end font-mono font-bold text-slate-800 dark:text-slate-200">
-                        {cur} {fmt(paidAmt)}
+                        {finalCur} {fmt(finalAmt)}
                       </td>
 
-                      {/* Col 13: Balance (Green if 0, bold red if > 0) */}
+                      {/* Col 13: Paid Amount */}
+                      <td className="py-2.5 px-2 text-end font-mono font-bold text-slate-800 dark:text-slate-200">
+                        {purchCur} {fmt(paidAmt)}
+                      </td>
+
+                      {/* Col 14: Balance (Green if 0, bold red if > 0) */}
                       <td className="py-2.5 px-2 text-end font-mono font-black">
                         {balanceAmt <= 0.05 ? (
-                          <span className="text-emerald-600">{cur} 0.00</span>
+                          <span className="text-emerald-600">{purchCur} 0.00</span>
                         ) : (
-                          <span className="text-rose-600">{cur} {fmt(balanceAmt)}</span>
+                          <span className="text-rose-600">{purchCur} {fmt(balanceAmt)}</span>
                         )}
                       </td>
 
-                      {/* Col 14: Status */}
+                      {/* Col 15: Status */}
                       <td className="py-2.5 px-3 text-center">
                         {renderStatusBadge(r)}
                       </td>
 
-                      {/* Col 15: Actions (⋮ Menu) */}
+                      {/* Col 16: Actions (⋮ Menu) */}
                       <td className="py-2.5 px-2 text-center relative" data-row-menu>
                         <button
                           type="button"
@@ -1464,6 +1542,12 @@ export function LocalPurchaseGlobalRegisterView({
                 {/* Total Purchase Amount (Per Currency, never combined) */}
                 <td className="py-2.5 px-2 text-end">
                   {Object.entries(summaryMetrics.purchaseByCurr).map(([c, amt]) => (
+                    <div key={c}>{c} {fmt(amt)}</div>
+                  ))}
+                </td>
+                {/* Total Final Amount (Per Currency, never combined) */}
+                <td className="py-2.5 px-2 text-end font-semibold text-slate-800">
+                  {Object.entries(summaryMetrics.finalByCurr).map(([c, amt]) => (
                     <div key={c}>{c} {fmt(amt)}</div>
                   ))}
                 </td>

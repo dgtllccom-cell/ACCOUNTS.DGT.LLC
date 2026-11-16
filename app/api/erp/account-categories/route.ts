@@ -20,8 +20,9 @@ const createCategorySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    const domain = request.nextUrl.searchParams.get("operationalDomain");
+    const domain = request.nextUrl.searchParams.get("operationalDomain") || request.nextUrl.searchParams.get("domain");
     const requestedLang = request.nextUrl.searchParams.get("language") || request.nextUrl.searchParams.get("lang");
+    const includeInactive = request.nextUrl.searchParams.get("includeInactive") === "true";
     const lang = await getRequestLanguage(requestedLang);
 
     const rows = await withLocalPg(async (sql) => {
@@ -30,6 +31,7 @@ export async function GET(request: NextRequest) {
           select id, code, name, operational_domain, description, is_system, is_active, sort_order, created_at, updated_at
           from public.account_categories
           where deleted_at is null
+            and (${includeInactive} = true or is_active = true)
             and operational_domain = ${domain}
           order by sort_order asc, name asc
         `;
@@ -38,6 +40,7 @@ export async function GET(request: NextRequest) {
         select id, code, name, operational_domain, description, is_system, is_active, sort_order, created_at, updated_at
         from public.account_categories
         where deleted_at is null
+          and (${includeInactive} = true or is_active = true)
         order by sort_order asc, name asc
       `;
     });
@@ -49,8 +52,12 @@ export async function GET(request: NextRequest) {
       localized = (rows ?? []) as any[];
     }
 
-    return apiOk({
-      categories: localized
+    return NextResponse.json({
+      ok: true,
+      categories: localized,
+      data: {
+        categories: localized
+      }
     });
   } catch (error) {
     return handleApiError(error);

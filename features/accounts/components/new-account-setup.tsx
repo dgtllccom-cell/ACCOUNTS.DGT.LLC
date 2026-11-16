@@ -1304,9 +1304,10 @@ export function NewAccountSetup({
   // Load Categories from database
   async function loadCategories(domain = operationalDomain) {
     try {
-      const res = await fetch(`/api/erp/account-categories?domain=${domain}&language=${encodeURIComponent(lang)}`).then((r) => r.json());
-      if (res && res.ok && Array.isArray(res.categories)) {
-        setDbCategories(res.categories);
+      const res = await fetch(`/api/erp/account-categories?operationalDomain=${encodeURIComponent(domain)}&domain=${encodeURIComponent(domain)}&language=${encodeURIComponent(lang)}`).then((r) => r.json());
+      const list = res?.categories || res?.data?.categories;
+      if (Array.isArray(list)) {
+        setDbCategories(list);
       }
     } catch (err) {
       console.error("Failed to load account categories:", err);
