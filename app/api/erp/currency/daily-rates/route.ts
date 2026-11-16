@@ -112,23 +112,29 @@ export async function GET(req: NextRequest) {
 
     const targetRateDate = dateParam || isoToday();
 
-    // Map status for each scoped country for the requested date (exact match only, never silent older fallback)
+    // Map status for each scoped country for the requested date (exact match prioritized, carry-forward identified)
     const countriesStatus = scopedCountries.map((c: any) => {
       const activeRate = rows.find(
         (r) => r.country_id === c.id && r.rate_date === targetRateDate && !r.superseded_at
       );
+      const prevRate = !activeRate ? rows.find(
+        (r) => r.country_id === c.id && r.rate_date < targetRateDate && !r.superseded_at
+      ) : null;
+      const isCarryForward = !activeRate && Boolean(prevRate);
+      const chosenRate = activeRate || prevRate;
       return {
         countryId: c.id,
         countryName: c.name,
         currencyCode: c.currency_code,
         iso2: c.iso2,
-        rateDate: targetRateDate,
-        status: activeRate ? ("APPROVED" as const) : ("PENDING_MISSING" as const),
-        creditRate: activeRate ? activeRate.credit_rate : null,
-        debitRate: activeRate ? activeRate.debit_rate : null,
-        rateTime: activeRate ? activeRate.rate_time : null,
-        enteredBy: activeRate ? activeRate.user_name : null,
-        updatedAt: activeRate ? activeRate.updated_at || activeRate.created_at : null,
+        rateDate: chosenRate ? chosenRate.rate_date : targetRateDate,
+        status: activeRate ? ("APPROVED" as const) : isCarryForward ? ("CARRY_FORWARD" as const) : ("PENDING_MISSING" as const),
+        isCarryForward,
+        creditRate: chosenRate ? chosenRate.credit_rate : null,
+        debitRate: chosenRate ? chosenRate.debit_rate : null,
+        rateTime: chosenRate ? chosenRate.rate_time : null,
+        enteredBy: chosenRate ? chosenRate.user_name : null,
+        updatedAt: chosenRate ? chosenRate.updated_at || chosenRate.created_at : null,
       };
     });
 

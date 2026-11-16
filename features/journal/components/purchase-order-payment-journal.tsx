@@ -3092,19 +3092,19 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     setRegistryDueReady(false);
     fetch(`/api/erp/purchases/remaining-due?includeSettled=1&lang=${currentLanguage}`, { credentials: "include", cache: "no-store" })
       .then(async response => {
-        const body = await response.json();
-        if (!response.ok || !body?.ok || !Array.isArray(body.data?.bills)) throw new Error(body?.error?.message || tGlobal(currentLanguage, "purchase.pmw_err_load_failed", "Purchase records could not be loaded."));
+        const body = await response.json().catch(() => null);
+        if (!response.ok || !body?.ok || !Array.isArray(body?.data?.bills)) return;
         if (!cancelled) setRegistryDueBills(body.data.bills);
       })
-      .catch(err => { if (!cancelled) setError(err instanceof Error ? err.message : String(err)); })
+      .catch(err => { if (!cancelled) console.warn("[RemainingDue] background fetch failed:", err); })
       .finally(() => { if (!cancelled) setRegistryDueReady(true); });
     fetch(`/api/erp/purchases/loading-records?limit=10000&lang=${currentLanguage}`, { credentials: "include", cache: "no-store" })
       .then(async response => {
-        const body = await response.json();
-        if (!response.ok || !body?.ok || !Array.isArray(body.data?.records)) throw new Error(body?.error?.message || tGlobal(currentLanguage, "purchase.pmw_err_load_failed", "Purchase records could not be loaded."));
+        const body = await response.json().catch(() => null);
+        if (!response.ok || !body?.ok || !Array.isArray(body?.data?.records)) return;
         if (!cancelled) setRegistryLoadingRecords(body.data.records);
       })
-      .catch(err => { if (!cancelled) setError(err instanceof Error ? err.message : String(err)); });
+      .catch(err => { if (!cancelled) console.warn("[LoadingRecords] background fetch failed:", err); });
     return () => { cancelled = true; };
   }, [paymentPage, activeMode, currentLanguage, paymentsTick]);
   const [loadingRemainingLoadingRecords, setLoadingRemainingLoadingRecords] = useState(false);

@@ -1751,37 +1751,34 @@ export function LocalPurchaseTransferPaymentView({
           />
         </div>
 
-        {/* 17-Column Register Table */}
+        {/* 14-Column Register Table */}
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[11.5px]">
             <thead>
               <tr className="bg-slate-50/90 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-[10.5px] font-bold text-slate-600 dark:text-slate-300">
-                <th className="py-2.5 px-2 text-left whitespace-nowrap">{tr("Bill / Entry No.")}</th>
-                <th className="py-2.5 px-1.5 text-left whitespace-nowrap">{tr("Country")}</th>
-                <th className="py-2.5 px-1.5 text-left whitespace-nowrap">{tr("Branch")}</th>
-                <th className="py-2.5 px-2 text-left whitespace-nowrap">{tr("Date")}</th>
-                <th className="py-2.5 px-2 text-left whitespace-nowrap">
+                <th className="py-2.5 px-2.5 text-left whitespace-nowrap">{tr("Bill / Entry No.")}</th>
+                <th className="py-2.5 px-1.5 text-center whitespace-nowrap">{tr("Country")}</th>
+                <th className="py-2.5 px-2 text-left whitespace-nowrap">{tr("Branch")}</th>
+                <th className="py-2.5 px-2.5 text-left whitespace-nowrap">
                   {tr("Purchase Account (DR / Debit)")}
                 </th>
-                <th className="py-2.5 px-2 text-left whitespace-nowrap">
+                <th className="py-2.5 px-2.5 text-left whitespace-nowrap">
                   {tr("Supplier Account (CR / Credit)")}
                 </th>
-                <th className="py-2.5 px-2 text-left whitespace-nowrap">{tr("Goods")}</th>
-                <th className="py-2.5 px-1.5 text-right whitespace-nowrap">{tr("Qty")}</th>
-                <th className="py-2.5 px-1.5 text-left whitespace-nowrap">{tr("Unit")}</th>
-                <th className="py-2.5 px-1.5 text-right whitespace-nowrap">{tr("Gross kg")}</th>
-                <th className="py-2.5 px-1.5 text-right whitespace-nowrap">{tr("Net kg")}</th>
-                <th className="py-2.5 px-2 text-right whitespace-nowrap">{tr("Final Amount")}</th>
+                <th className="py-2.5 px-2.5 text-left whitespace-nowrap">{tr("Goods")}</th>
+                <th className="py-2.5 px-2 text-center whitespace-nowrap">{tr("Qty (Unit)")}</th>
+                <th className="py-2.5 px-2 text-end whitespace-nowrap">{tr("GROSS / NET (KG)")}</th>
+                <th className="py-2.5 px-2 text-end whitespace-nowrap">{tr("Final Amount")}</th>
                 <th className="py-2.5 px-2 text-center whitespace-nowrap uppercase tracking-wider">
                   {tr("Payment Option")}
                 </th>
-                <th className="py-2.5 px-2 text-right whitespace-nowrap uppercase tracking-wider bg-blue-50/80 dark:bg-blue-950/30 text-blue-800 dark:text-blue-300">
+                <th className="py-2.5 px-2 text-end whitespace-nowrap uppercase tracking-wider bg-blue-50/80 dark:bg-blue-950/30 text-blue-800 dark:text-blue-300">
                   {tr("Total Payment")}
                 </th>
-                <th className="py-2.5 px-2 text-right whitespace-nowrap uppercase tracking-wider bg-emerald-50/80 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300">
+                <th className="py-2.5 px-2 text-end whitespace-nowrap uppercase tracking-wider bg-emerald-50/80 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300">
                   {tr("Paid")}
                 </th>
-                <th className="py-2.5 px-2 text-right whitespace-nowrap uppercase tracking-wider bg-rose-50/80 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300">
+                <th className="py-2.5 px-2 text-end whitespace-nowrap uppercase tracking-wider bg-rose-50/80 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300">
                   {tr("Balance")}
                 </th>
                 <th className="py-2.5 px-1.5 text-center whitespace-nowrap print:hidden">
@@ -1792,19 +1789,19 @@ export function LocalPurchaseTransferPaymentView({
             <tbody className="divide-y divide-slate-200/70 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={17} className="py-12 text-center text-slate-400 font-medium">
+                  <td colSpan={14} className="py-12 text-center text-slate-400 font-medium">
                     {tr("Loading Local Purchase Transfer Payment Register...")}
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan={17} className="py-12 text-center text-rose-600 font-semibold">
+                  <td colSpan={14} className="py-12 text-center text-rose-600 font-semibold">
                     {error}
                   </td>
                 </tr>
               ) : paginatedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={17} className="py-12 text-center text-slate-400 font-medium">
+                  <td colSpan={14} className="py-12 text-center text-slate-400 font-medium">
                     {tr("No transferred purchase bills match the current filters.")}
                   </td>
                 </tr>
@@ -1821,84 +1818,96 @@ export function LocalPurchaseTransferPaymentView({
                         isHighlighted && "bg-blue-50/70 dark:bg-blue-950/40 ring-1 ring-blue-300"
                       )}
                     >
-                      {/* 1. Bill / Entry No. */}
-                      <td className="py-3 px-2 font-mono font-black text-blue-700 dark:text-blue-400 whitespace-nowrap">
-                        {row._billNo}
-                        <div className="mt-1 text-[10px] font-semibold text-slate-500">
-                          {row.status === "accepted" ? tGlobal("lp.queue_pending", "Awaiting Review") : tr("Posted")}
+                      {/* 1. Bill / Entry No. & Date combined */}
+                      <td className="py-2.5 px-2.5 font-mono whitespace-nowrap">
+                        <div className="font-black text-blue-700 dark:text-blue-400 text-xs">
+                          {row._billNo}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium mt-0.5">
+                          <span>{formatDisplayDate(row.transfer_date || row.created_at)}</span>
+                          {row.entry_serial && (
+                            <>
+                              <span>•</span>
+                              <span className="text-slate-600 dark:text-slate-400">{row.entry_serial}</span>
+                            </>
+                          )}
                         </div>
                       </td>
 
-                      {/* 2. Country (compact code) */}
-                      <td className="py-3 px-1.5 font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                        {row._countryCode}
+                      {/* 2. Country (compact short code) */}
+                      <td className="py-2.5 px-1.5 text-center whitespace-nowrap">
+                        <span className="inline-block px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 font-mono font-black text-[10.5px]">
+                          {row._countryCode}
+                        </span>
                       </td>
 
-                      {/* 3. Branch (compact code) */}
-                      <td className="py-3 px-1.5 font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                        {row._branchCode}
+                      {/* 3. Branch (Main Branch above, City Branch below) */}
+                      <td className="py-2.5 px-2 whitespace-nowrap">
+                        <div className="font-bold text-slate-800 dark:text-slate-100 text-xs truncate max-w-[130px]" title={row.country_branch_name || row.branch_name}>
+                          {row.country_branch_name || row.branch_name || row._branchCode}
+                        </div>
+                        <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 mt-0.5">
+                          {row.city_branch_name || row._branchCode}
+                        </div>
                       </td>
 
-                      {/* 4. Date */}
-                      <td className="py-3 px-2 text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                        {formatDisplayDate(row.transfer_date || row.created_at)}
-                      </td>
-
-                      {/* 5. Purchase Account (DR / Debit): Account Name on top, Code below */}
-                      <td className="py-3 px-2 whitespace-nowrap">
-                        <div className="font-bold text-slate-900 dark:text-white leading-tight">
+                      {/* 4. Purchase Account (DR / Debit) */}
+                      <td className="py-2.5 px-2.5 whitespace-nowrap">
+                        <div className="font-bold text-slate-900 dark:text-white text-xs leading-tight truncate max-w-[140px]" title={row._drName}>
                           {row._drName}
                         </div>
-                        <div className="text-[10.5px] font-mono text-slate-500 dark:text-slate-400 mt-0.5">
+                        <div className="text-[10px] font-mono text-blue-600 dark:text-blue-400 mt-0.5 font-bold">
                           {row._drCode}
                         </div>
                       </td>
 
-                      {/* 6. Supplier Account (CR / Credit): Account Name on top, Code below */}
-                      <td className="py-3 px-2 whitespace-nowrap">
-                        <div className="font-bold text-slate-900 dark:text-white leading-tight">
+                      {/* 5. Supplier Account (CR / Credit) */}
+                      <td className="py-2.5 px-2.5 whitespace-nowrap">
+                        <div className="font-bold text-slate-900 dark:text-white text-xs leading-tight truncate max-w-[140px]" title={row._crName}>
                           {row._crName}
                         </div>
-                        <div className="text-[10.5px] font-mono text-slate-500 dark:text-slate-400 mt-0.5">
+                        <div className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 font-bold">
                           {row._crCode}
                         </div>
                       </td>
 
-                      {/* 7. Goods */}
-                      <td className="py-3 px-2 font-medium text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                        {row.goods_name || "—"}
+                      {/* 6. Goods, Brand & Size */}
+                      <td className="py-2.5 px-2.5 whitespace-nowrap">
+                        <div className="font-bold text-slate-800 dark:text-slate-200 text-xs">
+                          {row.goods_name || "—"}
+                        </div>
+                        {(row.brand || row.size) && (
+                          <div className="text-[10px] text-slate-500 font-medium mt-0.5">
+                            {row.brand ? `Brand: ${row.brand}` : ""}{row.brand && row.size ? " | " : ""}{row.size ? `Size: ${row.size}` : ""}
+                          </div>
+                        )}
                       </td>
 
-                      {/* 8. Qty */}
-                      <td className="py-3 px-1.5 text-right font-mono text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                        {row._qty.toLocaleString("en-US")}
+                      {/* 7. Qty (Unit) combined */}
+                      <td className="py-2.5 px-2 text-center font-mono font-bold text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap">
+                        {row._qty.toLocaleString("en-US")} {row._unit}
                       </td>
 
-                      {/* 9. Unit */}
-                      <td className="py-3 px-1.5 text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                        {row._unit}
+                      {/* 8. Gross / Net Weight (kg) combined */}
+                      <td className="py-2.5 px-2 text-end font-mono whitespace-nowrap">
+                        <div className="font-bold text-slate-800 dark:text-slate-200 text-xs">
+                          G.W. {row._grossKg.toLocaleString("en-US")} kg
+                        </div>
+                        <div className="text-[10px] text-slate-500 font-semibold mt-0.5">
+                          N.W. {row._netKg.toLocaleString("en-US")} kg
+                        </div>
                       </td>
 
-                      {/* 10. Gross kg */}
-                      <td className="py-3 px-1.5 text-right font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                        {row._grossKg.toLocaleString("en-US")}
-                      </td>
-
-                      {/* 11. Net kg */}
-                      <td className="py-3 px-1.5 text-right font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                        {row._netKg.toLocaleString("en-US")}
-                      </td>
-
-                      {/* 12. Final Amount */}
+                      {/* 9. Final Amount */}
                       <td
-                        className="py-3 px-2 text-right font-mono font-black text-slate-900 dark:text-white whitespace-nowrap"
+                        className="py-2.5 px-2 text-end font-mono font-black text-slate-900 dark:text-white text-xs whitespace-nowrap"
                         dir="ltr"
                       >
                         {formatMoneyAmount(row._currency, row._paymentMeta.totalPayment)}
                       </td>
 
-                      {/* 13. Payment Option + Destination below */}
-                      <td className="py-2.5 px-2 text-center whitespace-nowrap">
+                      {/* 10. Payment Option + Destination */}
+                      <td className="py-2 px-2 text-center whitespace-nowrap">
                         <div className="inline-flex flex-col items-center">
                           <span
                             className={cn(
@@ -1908,7 +1917,7 @@ export function LocalPurchaseTransferPaymentView({
                           >
                             {tr(row._paymentMeta.optionLabel)}
                           </span>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                          <span className="text-[9.5px] text-slate-500 dark:text-slate-400 mt-0.5">
                             {tr("Destination")}:{" "}
                             <strong className="text-slate-700 dark:text-slate-200">
                               {tr(row._paymentMeta.destinationLabel)}
@@ -1917,33 +1926,45 @@ export function LocalPurchaseTransferPaymentView({
                         </div>
                       </td>
 
-                      {/* 14. Total Payment (Blue column) */}
+                      {/* 11. Total Payment */}
                       <td
-                        className="py-3 px-2 text-right font-mono font-black bg-blue-50/55 dark:bg-blue-950/20 text-slate-900 dark:text-blue-200 whitespace-nowrap"
+                        className="py-2.5 px-2 text-end font-mono font-black bg-blue-50/55 dark:bg-blue-950/20 text-slate-900 dark:text-blue-200 text-xs whitespace-nowrap"
                         dir="ltr"
                       >
                         {formatMoneyAmount(row._currency, row._paymentMeta.totalPayment)}
                       </td>
 
-                      {/* 15. Paid (Green column) */}
+                      {/* 12. Paid Amount */}
                       <td
-                        className="py-3 px-2 text-right font-mono font-black bg-emerald-50/55 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 whitespace-nowrap"
+                        className="py-2.5 px-2 text-end font-mono font-black bg-emerald-50/55 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-xs whitespace-nowrap"
                         dir="ltr"
                       >
-                        {formatMoneyAmount(row._currency, row._paymentMeta.actualPaid)}
+                        {row._paymentMeta.actualPaid > 0 ? (
+                          formatMoneyAmount(row._currency, row._paymentMeta.actualPaid)
+                        ) : (
+                          <span className="text-slate-400 font-normal">—</span>
+                        )}
                       </td>
 
-                      {/* 16. Balance (Red column) */}
+                      {/* 13. Balance (highlighted clearly) */}
                       <td
-                        className="py-3 px-2 text-right font-mono font-black bg-rose-50/55 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 whitespace-nowrap"
+                        className="py-2.5 px-2 text-end font-mono font-black bg-rose-50/55 dark:bg-rose-950/20 text-xs whitespace-nowrap"
                         dir="ltr"
                       >
-                        {formatMoneyAmount(row._currency, row._paymentMeta.balance)}
+                        {row._paymentMeta.balance > 0.05 ? (
+                          <span className="px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-black inline-block">
+                            {formatMoneyAmount(row._currency, row._paymentMeta.balance)}
+                          </span>
+                        ) : (
+                          <span className="text-emerald-600 dark:text-emerald-400">
+                            {row._currency} 0.00
+                          </span>
+                        )}
                       </td>
 
-                      {/* 17. Actions (Three-dot menu: View Bill, Edit Bill [Super/Country Admin only], Print A4) */}
+                      {/* 14. Actions (Three-dot menu) */}
                       <td
-                        className="py-3 px-1.5 text-center whitespace-nowrap relative print:hidden"
+                        className="py-2.5 px-1.5 text-center whitespace-nowrap relative print:hidden"
                         data-row-action-menu
                       >
                         <button

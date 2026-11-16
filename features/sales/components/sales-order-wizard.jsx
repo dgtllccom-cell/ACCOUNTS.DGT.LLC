@@ -3134,7 +3134,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
   }
 
   return (
-    <div id="wizard-root-print" className="space-y-2 text-foreground bg-background mt-[-10px] max-w-[1500px] mx-auto">
+    <div id="wizard-root-print" className="space-y-2 text-foreground bg-background mt-[-10px] w-full max-w-[1920px] mx-auto">
       {activeHandover && (
         <div className="rounded-xl border border-blue-200 bg-blue-50/80 p-4 shadow-sm dark:border-blue-900/60 dark:bg-blue-950/30 animate-in fade-in duration-200">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -3646,12 +3646,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           )}
 
           {true ? (
-            <div className="max-w-[1160px] mx-auto w-full mt-2 animate-in fade-in duration-200">
+            <div className="w-full max-w-[1800px] mx-auto mt-2 animate-in fade-in duration-200">
               {/* Top Dark Header Bar matching approved screenshots */}
-              <div className="bg-[#0b1329] text-white px-5 py-3 rounded-xl flex flex-wrap items-center justify-between gap-4 shadow-lg mb-4 border border-slate-800">
+              <div className="bg-[#0b1329] text-white px-4 sm:px-5 py-3 rounded-xl flex flex-wrap items-center justify-between gap-3 sm:gap-4 shadow-lg mb-4 border border-slate-800">
                 {/* Left: Step Title & Subtitle */}
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-slate-800/80 rounded-lg text-blue-400">
+                  <div className="p-2 bg-slate-800/80 rounded-lg text-blue-400 shrink-0">
                     <FileText className="h-5 w-5" />
                   </div>
                   <div>
@@ -3676,7 +3676,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 </div>
 
                 {/* Center: Step Navigation Pills */}
-                <div className="flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-full border border-slate-800">
+                <div className="flex flex-wrap items-center justify-center gap-1.5 bg-slate-900/90 p-1.5 rounded-2xl sm:rounded-full border border-slate-800 max-w-full">
                   <button
                     type="button"
                     onClick={() => setActiveTab("booking")}

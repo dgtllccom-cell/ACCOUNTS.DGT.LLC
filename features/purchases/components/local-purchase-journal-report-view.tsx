@@ -8,7 +8,7 @@ import {
   UserCheck, Search, Filter, RefreshCw, Layers,
   Globe, Coins, ChevronDown, ChevronRight, Eye, Edit3,
   Trash2, Package, Loader2, CheckCircle2, ShieldAlert,
-  Send, Printer, X, Scale, CreditCard, Truck
+  Send, Printer, X, Scale, CreditCard, Truck, MoreVertical
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -83,6 +83,8 @@ interface LocalPurchaseRecord {
   country_name?: string;
   countryBranchId?: string;
   country_branch_id?: string;
+  countryBranchName?: string;
+  country_branch_name?: string;
   branchName?: string;
   branch_name?: string;
   status?: string;
@@ -162,6 +164,30 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
   const [showCountryDetails, setShowCountryDetails] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [selectedRowForVoucher, setSelectedRowForVoucher] = useState<LocalPurchaseRecord | null>(null);
+  const [openRowMenuId, setOpenRowMenuId] = useState<string | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as HTMLElement | null;
+      if (!target?.closest("[data-row-menu]")) {
+        setOpenRowMenuId(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const deriveCountryShort = (name?: string | null): string => {
+    const s = String(name || "").toLowerCase();
+    if (s.includes("emirates") || s.includes("uae") || s.includes("dubai")) return "AE";
+    if (s.includes("pakistan")) return "PK";
+    if (s.includes("afghanistan")) return "AF";
+    if (s.includes("iran")) return "IR";
+    if (s.includes("india")) return "IN";
+    if (s.includes("china")) return "CN";
+    if (s.includes("oman")) return "OM";
+    return String(name || "AE").slice(0, 2).toUpperCase();
+  };
 
   const countries = useMemo(() => Array.from(new Set(purchases.map(p => p.countryName || p.country_name).filter(Boolean))) as string[], [purchases]);
   const branches = useMemo(() => Array.from(new Set(purchases.map(p => p.branchName || p.branch_name).filter(Boolean))) as string[], [purchases]);
@@ -486,40 +512,33 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
             <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
               <thead className="sticky top-0 z-10 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
                 <tr>
-                  <Th className="p-2.5 text-center border-r border-slate-200 dark:border-slate-700"></Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">{th("SUPER S/N")}</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">{th("CTY S/N")}</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">{th("BR S/N")}</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">{th("VOUCHER NO")}</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">{th("DATE")}</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">{th("BRANCH NAME")}</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">{th("COUNTRY")}</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">PURCHASE ACC (DR)</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">SALES ACC (CR)</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">{th("GOODS NAME")}</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">{th("BRAND")}</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">{th("ORIGIN")}</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">{th("QTY")}</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">{th("UNIT")}</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">{th("GROSS WT")}</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">{th("NET WT")}</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right">{th("PRICE")}</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-right font-black">{th("TOTAL COST")}</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-center">{th("PAY MODE")}</Th>
-                  <Th className="p-2.5 text-center">{th("ACTIONS")}</Th>
+                  <Th className="p-2 text-center border-r border-slate-200 dark:border-slate-700 w-8"></Th>
+                  <Th className="p-2 border-r border-slate-200 dark:border-slate-700">{th("BILL NO. / DATE")}</Th>
+                  <Th className="p-2 border-r border-slate-200 dark:border-slate-700 text-center">{th("COUNTRY")}</Th>
+                  <Th className="p-2 border-r border-slate-200 dark:border-slate-700">{th("BRANCH")}</Th>
+                  <Th className="p-2 border-r border-slate-200 dark:border-slate-700">{th("PURCHASE / SALES ACCOUNTS")}</Th>
+                  <Th className="p-2 border-r border-slate-200 dark:border-slate-700">{th("GOODS NAME")}</Th>
+                  <Th className="p-2 border-r border-slate-200 dark:border-slate-700">{th("ORIGIN")}</Th>
+                  <Th className="p-2 border-r border-slate-200 dark:border-slate-700 text-right">{th("QTY (UNIT)")}</Th>
+                  <Th className="p-2 border-r border-slate-200 dark:border-slate-700 text-right">{th("GROSS / NET WT (KG)")}</Th>
+                  <Th className="p-2 border-r border-slate-200 dark:border-slate-700 text-right">{th("PRICE")}</Th>
+                  <Th className="p-2 border-r border-slate-200 dark:border-slate-700 text-right font-black">{th("TOTAL COST")}</Th>
+                  <Th className="p-2 border-r border-slate-200 dark:border-slate-700 text-center">{th("PAY MODE")}</Th>
+                  <Th className="p-2 border-r border-slate-200 dark:border-slate-700 text-center">{th("STATUS")}</Th>
+                  <Th className="p-2 text-center w-10">{th("ACTIONS")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[11px]">
                 {loading ? (
                   <tr>
-                    <td colSpan={19} className="p-8 text-center text-slate-400 font-mono">
+                    <td colSpan={14} className="p-8 text-center text-slate-400 font-mono">
                       <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600 mb-2" />
                       {th("LOADING PURCHASE RECORDS")}
                     </td>
                   </tr>
                 ) : countryGroups.length === 0 ? (
                   <tr>
-                    <td colSpan={21} className="p-12 text-center text-slate-400 font-sans">
+                    <td colSpan={14} className="p-12 text-center text-slate-400 font-sans">
                       <Package className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-700 mb-3" />
                       <p className="font-bold text-slate-700 dark:text-slate-300">{tt("lpjr.no_transactions", "No local purchase transactions found")}</p>
                     </td>
@@ -529,7 +548,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                     <Fragment key={cg.countryName}>
                       {/* Country Group Divider Header Row */}
                       <tr className="bg-slate-100 dark:bg-slate-800/80 font-black text-slate-800 dark:text-slate-200 text-[11px]">
-                        <td colSpan={21} className="px-4 py-2 uppercase tracking-wider border-y border-slate-200 dark:border-slate-700">
+                        <td colSpan={14} className="px-4 py-2 uppercase tracking-wider border-y border-slate-200 dark:border-slate-700">
                           <div className="flex items-center justify-between">
                             <span>{cg.countryName} ({cg.records.length} RECORDS)</span>
                             <span className="font-mono text-emerald-600 dark:text-emerald-400">
@@ -557,11 +576,11 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                         return (
                           <Fragment key={row.id}>
                             <tr className="hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-colors">
-                            <td className="p-2 text-center border-r border-slate-150 dark:border-slate-800">
+                            <td className="p-1.5 text-center border-r border-slate-150 dark:border-slate-800">
                               <button
                                 type="button"
                                 onClick={() => setExpandedRows(prev => ({ ...prev, [row.id]: !prev[row.id] }))}
-                                className="p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition"
+                                className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition"
                               >
                                 {expandedRows[row.id] ? (
                                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600"><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -570,44 +589,137 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                                 )}
                               </button>
                             </td>
-                            <td className="p-2 font-mono text-center border-r border-slate-150 dark:border-slate-800 text-slate-600 dark:text-slate-400">{superSerial}</td>
-                            <td className="p-2 font-mono text-center border-r border-slate-150 dark:border-slate-800 text-slate-600 dark:text-slate-400">{countrySerial}</td>
-                            <td className="p-2 font-mono text-center border-r border-slate-150 dark:border-slate-800 text-slate-600 dark:text-slate-400">{branchSerial}</td>
-                            <td className="p-2 font-mono font-bold text-blue-600 dark:text-blue-400 border-r border-slate-150 dark:border-slate-800">{voucherCode}</td>
-                            <td className="p-2 font-mono text-slate-500 border-r border-slate-150 dark:border-slate-800">{new Date(row.createdAt || row.created_at || "").toLocaleDateString("en-GB")}</td>
-                            <td className="p-2 font-semibold border-r border-slate-150 dark:border-slate-800">{row.branchName || row.branch_name || "-"}</td>
-                            <td className="p-2 border-r border-slate-150 dark:border-slate-800">{row.countryName || row.country_name || "-"}</td>
-                            <td className="p-2 font-mono text-[11px] font-bold text-blue-600 dark:text-blue-400 border-r border-slate-150 dark:border-slate-800">
-                              {row.purchaseAccountNo || row.purchase_account_no || "—"}
+                            <td className="p-2 font-mono border-r border-slate-150 dark:border-slate-800">
+                              <div className="font-bold text-blue-600 dark:text-blue-400">{voucherCode}</div>
+                              <div className="text-[10px] text-slate-500">{new Date(row.createdAt || row.created_at || "").toLocaleDateString("en-GB")}</div>
                             </td>
-                            <td className="p-2 font-mono text-[11px] font-bold text-purple-600 dark:text-purple-400 border-r border-slate-150 dark:border-slate-800">
-                              {row.salesAccountNo || row.sales_account_no || row.brokerAccountNo || row.broker_account_no || "—"}
+                            <td className="p-2 text-center border-r border-slate-150 dark:border-slate-800">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                {deriveCountryShort(row.countryName || row.country_name || cg.countryName)}
+                              </span>
                             </td>
-                            <td className="p-2 font-bold text-slate-900 dark:text-slate-100 border-r border-slate-150 dark:border-slate-800">{row.goodsName || row.goods_name || "-"}</td>
-                            <td className="p-2 text-slate-600 dark:text-slate-400 border-r border-slate-150 dark:border-slate-800">{row.brand || "-"}</td>
-                            <td className="p-2 border-r border-slate-150 dark:border-slate-800">{row.originCountryName || row.origin_country_name || "Local"}</td>
-                            <td className="p-2 text-right font-mono font-bold border-r border-slate-150 dark:border-slate-800">{pkgCount.toLocaleString()}</td>
-                            <td className="p-2 border-r border-slate-150 dark:border-slate-800">{row.quantityName || row.quantity_name || "—"}</td>
-                            <td className="p-2 text-right font-mono border-r border-slate-150 dark:border-slate-800">{grossWt.toLocaleString()} kg</td>
-                            <td className="p-2 text-right font-mono font-bold text-blue-600 dark:text-blue-400 border-r border-slate-150 dark:border-slate-800">{netWt.toLocaleString()} kg</td>
-                            <td className="p-2 text-right font-mono border-r border-slate-150 dark:border-slate-800">{rate > 0 ? `${rate.toFixed(2)} ${curr}` : "-"}</td>
-                            <td className="p-2 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-slate-150 dark:border-slate-800">{curr} {totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                            <td className="p-2 text-center font-bold border-r border-slate-150 dark:border-slate-800">{row.paymentMode || row.payment_mode || "Cash"}</td>
-                            <td className="p-2 text-center">
-                               <Button
-                                 size="sm"
-                                 variant="outline"
-                                 onClick={() => setSelectedRowForVoucher(row)}
-                                 className="h-6 px-2 text-[11px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 rounded-md whitespace-nowrap"
-                               >
-                                 {th("View Voucher")}
-                               </Button>
-                             </td>
+                            <td className="p-2 border-r border-slate-150 dark:border-slate-800">
+                              <div className="font-semibold text-slate-900 dark:text-slate-100 truncate max-w-[130px]">{row.branchName || row.branch_name || "—"}</div>
+                              {row.countryBranchName && (
+                                <div className="text-[10px] text-slate-500 truncate max-w-[130px]">{row.countryBranchName}</div>
+                              )}
+                            </td>
+                            <td className="p-2 border-r border-slate-150 dark:border-slate-800">
+                              <div className="text-[11px] font-mono font-bold text-blue-600 dark:text-blue-400 truncate max-w-[140px] flex items-center gap-1">
+                                <span className="text-[9px] font-black px-1 py-0.2 rounded bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">DR</span>
+                                <span className="truncate">{row.purchaseAccountNo || row.purchase_account_no || "—"}</span>
+                              </div>
+                              <div className="text-[10px] font-mono font-bold text-purple-600 dark:text-purple-400 truncate max-w-[140px] flex items-center gap-1 mt-0.5">
+                                <span className="text-[9px] font-black px-1 py-0.2 rounded bg-purple-50 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">CR</span>
+                                <span className="truncate">{row.salesAccountNo || row.sales_account_no || row.brokerAccountNo || row.broker_account_no || "—"}</span>
+                              </div>
+                            </td>
+                            <td className="p-2 border-r border-slate-150 dark:border-slate-800">
+                              <div className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[140px]">{row.goodsName || row.goods_name || "—"}</div>
+                              {(row.brand || (row as any).size) && (
+                                <div className="text-[10px] text-slate-500 truncate max-w-[140px]">
+                                  {[row.brand, (row as any).size].filter(Boolean).join(" • ")}
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-2 border-r border-slate-150 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-medium">
+                              {row.originCountryName || row.origin_country_name || "Local"}
+                            </td>
+                            <td className="p-2 text-right border-r border-slate-150 dark:border-slate-800 font-mono">
+                              <span className="font-bold text-slate-900 dark:text-slate-100">{pkgCount.toLocaleString()}</span>{" "}
+                              <span className="text-[10px] text-slate-500 font-medium">{row.quantityName || row.quantity_name || ""}</span>
+                            </td>
+                            <td className="p-2 text-right font-mono border-r border-slate-150 dark:border-slate-800">
+                              <div className="text-[11px] text-slate-700 dark:text-slate-300">
+                                <span className="text-[9px] font-bold text-slate-400 mr-1">G.W.</span>
+                                {grossWt.toLocaleString()} kg
+                              </div>
+                              <div className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                                <span className="text-[9px] font-bold text-blue-400 mr-1">N.W.</span>
+                                {netWt.toLocaleString()} kg
+                              </div>
+                            </td>
+                            <td className="p-2 text-right font-mono border-r border-slate-150 dark:border-slate-800 text-slate-700 dark:text-slate-300">
+                              {rate > 0 ? `${rate.toFixed(2)} ${curr}` : "—"}
+                            </td>
+                            <td className="p-2 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-slate-150 dark:border-slate-800">
+                              {curr} {totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </td>
+                            <td className="p-2 text-center border-r border-slate-150 dark:border-slate-800">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                {row.paymentMode || row.payment_mode || "Cash"}
+                              </span>
+                            </td>
+                            <td className="p-2 text-center border-r border-slate-150 dark:border-slate-800">
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black uppercase ${
+                                row.status === "posted"
+                                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                                  : row.status === "accepted"
+                                  ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                                  : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                              }`}>
+                                {row.status === "posted" ? "Posted" : row.status === "accepted" ? "Accepted" : "Draft"}
+                              </span>
+                            </td>
+                            <td className="p-1.5 text-center relative" data-row-menu>
+                              <button
+                                type="button"
+                                onClick={() => setOpenRowMenuId(openRowMenuId === row.id ? null : row.id)}
+                                className="h-6 w-6 inline-flex items-center justify-center rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition"
+                                title={th("ACTIONS")}
+                              >
+                                <MoreVertical className="h-3.5 w-3.5" />
+                              </button>
+                              {openRowMenuId === row.id && (
+                                <div className={`absolute z-30 ${isRtl ? "left-0" : "right-0"} mt-1 w-36 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 py-1 text-left text-xs divide-y divide-slate-100 dark:divide-slate-700 animate-in fade-in`}>
+                                  <div className="py-0.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedRowForVoucher(row);
+                                        setOpenRowMenuId(null);
+                                      }}
+                                      className="w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 font-bold text-blue-600 dark:text-blue-400"
+                                    >
+                                      <FileText className="h-3.5 w-3.5" />
+                                      {th("View Voucher")}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedRowForVoucher(row);
+                                        setOpenRowMenuId(null);
+                                        setTimeout(() => printDomFragmentViaModal("printable-modal-voucher", "Voucher"), 250);
+                                      }}
+                                      className="w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 font-medium text-slate-700 dark:text-slate-200"
+                                    >
+                                      <Printer className="h-3.5 w-3.5" />
+                                      {th("Print")}
+                                    </button>
+                                  </div>
+                                  {row.status === "accepted" && (
+                                    <div className="py-0.5">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenRowMenuId(null);
+                                          router.push(`/dashboard/purchase/local-purchase-transfer-payment?billId=${row.id}`);
+                                        }}
+                                        className="w-full text-left px-3 py-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400"
+                                      >
+                                        <Send className="h-3.5 w-3.5" />
+                                        {tt("lp.review_transfer", "Review Transfer")}
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </td>
                           </tr>
                           {expandedRows[row.id] && (
                             <tr className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
-                              <td colSpan={21} className="p-3 text-[11px]">
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                              <td colSpan={14} className="p-3 text-[11px]">
+                                <div className="grid grid-cols-1 md:grid-cols-5 gap-3 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
                                   {/* 1. Account & Posting Status */}
                                   <div className="space-y-1">
                                     <div className="text-[11px] font-black uppercase tracking-wider text-slate-500">
@@ -629,7 +741,26 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                                     </div>
                                   </div>
 
-                                  {/* 2. Payment Condition & Balances */}
+                                  {/* 2. Serial Numbers (Preserved from main table) */}
+                                  <div className="space-y-1">
+                                    <div className="text-[11px] font-black uppercase tracking-wider text-slate-500">
+                                      SERIAL NUMBERS
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Super Admin S/N:</span>
+                                      <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{superSerial}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Country S/N:</span>
+                                      <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{countrySerial}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Branch S/N:</span>
+                                      <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{branchSerial}</span>
+                                    </div>
+                                  </div>
+
+                                  {/* 3. Payment Condition & Balances */}
                                   <div className="space-y-1">
                                     <div className="text-[11px] font-black uppercase tracking-wider text-slate-500">
                                       {th("PAYMENT & BALANCES")}
@@ -648,7 +779,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                                     </div>
                                   </div>
 
-                                  {/* 3. Transfer & Goods Location */}
+                                  {/* 4. Transfer & Goods Location */}
                                   <div className="space-y-1">
                                     <div className="text-[11px] font-black uppercase tracking-wider text-slate-500">
                                       {th("TRANSFER & LOCATION")}
@@ -667,7 +798,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                                     </div>
                                   </div>
 
-                                  {/* 4. Loading & Receiving Confirmation */}
+                                  {/* 5. Loading & Receiving Confirmation */}
                                   <div className="space-y-1">
                                     <div className="text-[11px] font-black uppercase tracking-wider text-slate-500">
                                       {th("LOADING & CONFIRMATION")}

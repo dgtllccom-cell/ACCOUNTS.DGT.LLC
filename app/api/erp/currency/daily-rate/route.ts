@@ -51,20 +51,50 @@ export async function GET(request: NextRequest) {
     const supabase = await createApiSupabaseClient();
     const targetDate = date || new Date().toISOString().slice(0, 10);
     if (!Number.isFinite(Date.parse(`${targetDate}T00:00:00Z`)) || new Date(`${targetDate}T00:00:00Z`).toISOString().slice(0, 10) !== targetDate) throw new ApiClientError("Invalid transaction date.");
-    let row;
+    let row: any = null;
+    let isCarryForward = false;
+    let carryForwardFromDate: string | null = null;
     try {
-      row = currency === "USD" ? { rate_date: targetDate, currency_code: "USD", credit_rate: 1, debit_rate: 1 } :
-        await loadExactDailyRate(supabase, { countryId, branchId: countryBranchId, date: targetDate, currency });
+      if (currency === "USD") {
+        row = { rate_date: targetDate, currency_code: "USD", credit_rate: 1, debit_rate: 1, buying_rate: 1, selling_rate: 1 };
+      } else {
+        row = await loadExactDailyRate(supabase, { countryId, branchId: countryBranchId, date: targetDate, currency });
+        // If not found for exact date, carry forward from the latest approved rate on or before targetDate
+        if (!row) {
+          let query = (supabase as any).from("daily_usd_rates")
+            .select("rate_date,buying_rate,selling_rate,credit_rate,debit_rate,country_branch_id,currency_code")
+            .eq("country_id", countryId)
+            .lte("rate_date", targetDate)
+            .is("deleted_at", null)
+            .is("superseded_at", null);
+          if (countryBranchId) {
+            query = query.or(`country_branch_id.eq.${countryBranchId},country_branch_id.is.null`);
+          } else {
+            query = query.is("country_branch_id", null);
+          }
+          if (currency) query = query.eq("currency_code", currency);
+          const { data: latestRates, error: cfErr } = await query.order("rate_date", { ascending: false }).limit(10);
+          if (!cfErr && latestRates && latestRates.length > 0) {
+            const best = latestRates.find((r: any) => countryBranchId && r.country_branch_id === countryBranchId) || latestRates[0];
+            if (best && (best.credit_rate || best.selling_rate || best.debit_rate || best.buying_rate)) {
+              row = best;
+              isCarryForward = true;
+              carryForwardFromDate = best.rate_date;
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error("[daily-rate] lookup unavailable", error);
       throw new ApiClientError(t(session.preferredLanguage, "common.error"), { status: 503, code: "FX_LOOKUP_UNAVAILABLE" });
     }
     const values = dailyRateValues(row);
     const found = Boolean(row && values.creditRate && values.debitRate);
+    const isExactDate = found && !isCarryForward && (row?.rate_date === targetDate);
 
     return apiOk({
       found,
-      status: found ? "APPROVED" : "PENDING_MISSING",
+      status: found ? (isCarryForward ? "CARRY_FORWARD" : "APPROVED") : "PENDING_MISSING",
       targetDate,
       rateDate: found ? row!.rate_date : null,
       buyingRate: found ? values.debitRate : null,
@@ -72,7 +102,9 @@ export async function GET(request: NextRequest) {
       creditRate: found ? values.creditRate : null,
       debitRate: found ? values.debitRate : null,
       currencyCode: found ? row!.currency_code : null,
-      isExactDate: found,
+      isExactDate,
+      isCarryForward,
+      carryForwardFromDate,
       isBranchSpecific: found && Boolean(row?.country_branch_id || row?.is_branch_specific)
     });
   } catch (error) {

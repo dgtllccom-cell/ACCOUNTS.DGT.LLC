@@ -71,8 +71,28 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
+        source: "/dashboard/daily-payment",
+        destination: "/dashboard/roznamcha/cash-entry",
+        permanent: false,
+      },
+      {
         source: "/dashboard/daily-payment-entry",
         destination: "/dashboard/roznamcha/cash-entry",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/settings/users",
+        destination: "/dashboard/users",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/inventory/warehouses",
+        destination: "/dashboard/settings/warehouse",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/shipping-line/transfer-center",
+        destination: "/dashboard/transfer-center",
         permanent: false,
       },
       {

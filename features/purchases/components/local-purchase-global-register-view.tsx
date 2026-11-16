@@ -79,6 +79,7 @@ export function LocalPurchaseGlobalRegisterView({
   const [filterModalOpen, setFilterModalOpen] = useState<boolean>(false);
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const [activeRowMenuId, setActiveRowMenuId] = useState<string | null>(null);
+  const [activeAccountPopupId, setActiveAccountPopupId] = useState<string | null>(null);
 
   // Filters
   const [filterBranch, setFilterBranch] = useState<string>("all");
@@ -108,6 +109,9 @@ export function LocalPurchaseGlobalRegisterView({
       if (!target?.closest("[data-row-menu]")) {
         setActiveRowMenuId(null);
       }
+      if (!target?.closest("[data-account-popup]")) {
+        setActiveAccountPopupId(null);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -133,9 +137,15 @@ export function LocalPurchaseGlobalRegisterView({
    * Each bill must display in its original country's currency (UAE = AED, Pakistan = PKR, etc.).
    * Never automatically convert currencies or combine different currencies into one total!
    */
-  const getCurrency = (r: any): string => {
-    const raw = String(r.currency || r.local_currency || r.purchase_currency || "").toUpperCase().trim();
-    if (raw && raw !== "USD") return raw;
+  /**
+   * Currency resolution rules:
+   * 1. Original purchase currency (USD, PKR, AED, etc.) is strictly preserved.
+   * 2. Final currency represents the destination country's operational currency (AED, PKR, etc.).
+   * 3. Never discard "USD" and never automatically merge distinct currencies into a single sum.
+   */
+  const getPurchaseCurrency = (r: any): string => {
+    const raw = String(r.purchase_currency || r.currency || "").toUpperCase().trim();
+    if (raw) return raw;
     const country = String(r.country_name || r.countryName || "").toLowerCase();
     const branch = String(r.branch_name || r.branchName || "").toLowerCase();
     if (country.includes("pakistan") || branch.includes("chaman") || branch.includes("quetta") || branch.includes("karachi") || branch.includes("lahore")) return "PKR";
@@ -144,7 +154,25 @@ export function LocalPurchaseGlobalRegisterView({
     if (country.includes("india")) return "INR";
     if (country.includes("china")) return "CNY";
     if (country.includes("emirates") || country.includes("uae") || branch.includes("ras") || branch.includes("dubai") || branch.includes("sharjah")) return "AED";
-    return raw || "AED";
+    return "USD";
+  };
+
+  const getFinalCurrency = (r: any): string => {
+    const raw = String(r.local_currency || "").toUpperCase().trim();
+    if (raw) return raw;
+    const country = String(r.country_name || r.countryName || "").toLowerCase();
+    const branch = String(r.branch_name || r.branchName || "").toLowerCase();
+    if (country.includes("pakistan") || branch.includes("chaman") || branch.includes("quetta") || branch.includes("karachi") || branch.includes("lahore")) return "PKR";
+    if (country.includes("afghanistan") || branch.includes("kabul") || branch.includes("kandahar") || branch.includes("herat")) return "AFN";
+    if (country.includes("iran") || branch.includes("tehran")) return "IRR";
+    if (country.includes("india")) return "INR";
+    if (country.includes("china")) return "CNY";
+    if (country.includes("emirates") || country.includes("uae") || branch.includes("ras") || branch.includes("dubai") || branch.includes("sharjah")) return "AED";
+    return "AED";
+  };
+
+  const getCurrency = (r: any): string => {
+    return getPurchaseCurrency(r);
   };
 
   const getGoodsEmoji = (goodsName: string) => {
@@ -157,7 +185,11 @@ export function LocalPurchaseGlobalRegisterView({
   };
 
   const getCleanBranchName = (r: any): string => {
-    const b = r.branch_name || r.branchName || r.city_branch_name || r.cityBranchName || "";
+    if (r.city_branch_id && Array.isArray(cityBranches)) {
+      const match = cityBranches.find((cb) => cb.id === r.city_branch_id);
+      if (match?.name) return match.name.replace(/City Branch|Branch/gi, "").trim() || match.name;
+    }
+    const b = r.city_branch_name || r.cityBranchName || r.branch_name || r.branchName || "";
     if (b) {
       if (b.toLowerCase().includes("al ras")) return "Al Ras";
       if (b.toLowerCase().includes("chaman")) return "Chaman";
@@ -170,6 +202,93 @@ export function LocalPurchaseGlobalRegisterView({
 
   const getBillNumber = (r: any): string => {
     return r.manual_bill_no || r.bill_no || r.journal_serial_no || r.serial_no || (r.id ? `LP-${String(r.id).slice(0, 6).toUpperCase()}` : "—");
+  };
+
+  const getCountryCode = (r: any): string => {
+    const raw = String(r.country_code || r.countryCode || "").trim().toUpperCase();
+    if (raw && raw.length <= 3) return raw;
+    const name = String(r.country_name || r.countryName || "").toLowerCase();
+    const branch = String(r.branch_name || r.branchName || "").toLowerCase();
+    if (name.includes("emirates") || name.includes("uae") || name.includes("dubai") || branch.includes("ras")) return "AE";
+    if (name.includes("pakistan") || branch.includes("chaman") || branch.includes("quetta") || branch.includes("karachi")) return "PK";
+    if (name.includes("afghanistan") || branch.includes("kabul") || branch.includes("kandahar")) return "AF";
+    if (name.includes("iran") || branch.includes("tehran")) return "IR";
+    if (name.includes("india")) return "IN";
+    if (name.includes("china")) return "CN";
+    if (name.includes("oman")) return "OM";
+    return "AE";
+  };
+
+  const getMainBranchName = (r: any): string => {
+    if (r.country_branch_id && Array.isArray(countryBranches)) {
+      const match = countryBranches.find((cb) => cb.id === r.country_branch_id);
+      if (match?.name) return match.name.replace(/Main Branch|Branch/gi, "").trim() || match.name;
+    }
+    const b = r.country_branch_name || r.countryBranchName || r.main_branch_name || r.mainBranchName;
+    if (b) return String(b).replace(/Main Branch|City Branch|Branch/gi, "").trim() || String(b);
+    const country = r.country_name || r.countryName || "";
+    if (country) return `${country} Main`;
+    return "Main Branch";
+  };
+
+  const getCityBranchName = (r: any): string => {
+    if (r.city_branch_id && Array.isArray(cityBranches)) {
+      const match = cityBranches.find((cb) => cb.id === r.city_branch_id);
+      if (match?.name) return match.name.replace(/City Branch|Branch/gi, "").trim() || match.name;
+    }
+    const b = r.city_branch_name || r.cityBranchName;
+    if (b) return String(b).replace(/City Branch|Branch/gi, "").trim() || String(b);
+    if (r.warehouse_name) return r.warehouse_name;
+    return "Al Ras";
+  };
+
+  const getPurchaseAccount = (r: any): { name: string; code: string } => {
+    const name =
+      r.purchase_account_name ||
+      r.purchaseAccountName ||
+      r.resolved_dr_account_name ||
+      r.dr_account_name ||
+      r.purchase_ledger_name ||
+      "Purchase Account";
+    const code =
+      r.purchase_account_no ||
+      r.purchaseAccountNo ||
+      r.resolved_dr_account_code ||
+      r.dr_account_no ||
+      r.purchase_account_code ||
+      "AE-AEDU-S-012";
+    return { name, code };
+  };
+
+  const getSalesAccount = (r: any): { name: string; code: string } => {
+    const name =
+      r.supplier_name ||
+      r.supplierName ||
+      r.resolved_cr_account_name ||
+      r.sales_account_name ||
+      r.salesAccountName ||
+      r.cr_account_name ||
+      r.customer_name ||
+      r.customerName ||
+      r.party_name ||
+      "Supplier / Sales";
+    const code =
+      r.sales_account_no ||
+      r.salesAccountNo ||
+      r.resolved_cr_account_code ||
+      r.cr_account_no ||
+      r.supplier_code ||
+      "AE-AEDU-S-011";
+    return { name, code };
+  };
+
+  const isMixDry = (r: any): boolean => {
+    if (Array.isArray(r.items) && r.items.length > 1) return true;
+    if (Array.isArray(r.line_items) && r.line_items.length > 1) return true;
+    if (Array.isArray(r.lineItems) && r.lineItems.length > 1) return true;
+    const gn = String(r.goods_name || r.goodsName || "");
+    if (gn.includes("+") || gn.includes("&") || gn.includes("·") || (gn.includes(",") && !gn.includes("2,000"))) return true;
+    return false;
   };
 
   // Distinct filter options
@@ -244,23 +363,28 @@ export function LocalPurchaseGlobalRegisterView({
   // Card 1: Local Purchase Summary (Strictly per-currency totals!)
   const summaryMetrics = useMemo(() => {
     const purchaseByCurr: Record<string, number> = {};
+    const finalByCurr: Record<string, number> = {};
     const paidByCurr: Record<string, number> = {};
     const balanceByCurr: Record<string, number> = {};
 
     filteredRows.forEach((r) => {
-      const cur = getCurrency(r);
-      const cost = Number(r.final_cost || r.purchase_cost || 0);
+      const pCur = getPurchaseCurrency(r);
+      const fCur = getFinalCurrency(r);
+      const purchCost = Number(r.purchase_cost || (r.final_cost ? Number(r.final_cost) / (Number(r.exchange_rate) || 1) : 0));
+      const finalCost = Number(r.final_cost || (purchCost * (Number(r.exchange_rate) || 1)));
       const paid = Number(r.posted_paid_amount || r.paid_amount || r.advance_amount || 0);
-      const bal = Math.max(0, cost - paid);
+      const bal = Math.max(0, purchCost - paid);
 
-      purchaseByCurr[cur] = (purchaseByCurr[cur] || 0) + cost;
-      paidByCurr[cur] = (paidByCurr[cur] || 0) + paid;
-      balanceByCurr[cur] = (balanceByCurr[cur] || 0) + bal;
+      purchaseByCurr[pCur] = (purchaseByCurr[pCur] || 0) + purchCost;
+      finalByCurr[fCur] = (finalByCurr[fCur] || 0) + finalCost;
+      paidByCurr[pCur] = (paidByCurr[pCur] || 0) + paid;
+      balanceByCurr[pCur] = (balanceByCurr[pCur] || 0) + bal;
     });
 
     return {
       totalBills: filteredRows.length,
       purchaseByCurr,
+      finalByCurr,
       paidByCurr,
       balanceByCurr,
     };
@@ -1052,13 +1176,14 @@ export function LocalPurchaseGlobalRegisterView({
               <tr>
                 <th className="py-2.5 px-2 text-center w-8">#</th>
                 <th className="py-2.5 px-3 text-start">{tr("BILL NO. / DATE")}</th>
-                <th className="py-2.5 px-3 text-start">{tr("Branch")}</th>
-                <th className="py-2.5 px-3 text-start">{tr("Supplier Name")}</th>
+                <th className="py-2.5 px-3 text-start">{tr("Country / Branch")}</th>
+                <th className="py-2.5 px-3 text-start">{tr("Purchase / Sales Accounts")}</th>
                 <th className="py-2.5 px-3 text-start">{tr("GOODS NAME (BRAND / SIZE)")}</th>
                 <th className="py-2.5 px-2 text-center">{tr("Qty (Unit)")}</th>
-                <th className="py-2.5 px-2 text-end">{tr("GROSS WT NET WT (KG)")}</th>
-                <th className="py-2.5 px-3 text-start">{tr("LOADING (FROM) COUNTRY / PORT / DATE")}</th>
-                <th className="py-2.5 px-3 text-start">{tr("RECEIVING (TO) COUNTRY / PORT / DATE")}</th>
+                <th className="py-2.5 px-2 text-end">{tr("GROSS / NET (KG)")}</th>
+                <th className="py-2.5 px-2.5 text-start">{tr("Origin")}</th>
+                <th className="py-2.5 px-2.5 text-start">{tr("Loading")}</th>
+                <th className="py-2.5 px-2.5 text-start">{tr("Receiving")}</th>
                 <th className="py-2.5 px-2 text-end">{tr("Purchase Amount")}</th>
                 <th className="py-2.5 px-2 text-end">{tr("Final Amount")}</th>
                 <th className="py-2.5 px-2 text-end">{tr("Paid Amount")}</th>
@@ -1071,7 +1196,7 @@ export function LocalPurchaseGlobalRegisterView({
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-200">
               {loading && purchases.length === 0 ? (
                 <tr>
-                  <td colSpan={15} className="py-8 text-center text-slate-400">
+                  <td colSpan={16} className="py-8 text-center text-slate-400">
                     <div className="flex items-center justify-center gap-2">
                       <span className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
                       <span>{tr("Loading data...")}</span>
@@ -1080,7 +1205,7 @@ export function LocalPurchaseGlobalRegisterView({
                 </tr>
               ) : filteredRows.length === 0 ? (
                 <tr>
-                  <td colSpan={15} className="py-8 text-center text-slate-400">
+                  <td colSpan={16} className="py-8 text-center text-slate-400">
                     {tr("No records found")}
                   </td>
                 </tr>
@@ -1088,8 +1213,13 @@ export function LocalPurchaseGlobalRegisterView({
                 filteredRows.map((r, idx) => {
                   const billNo = getBillNumber(r);
                   const billDate = formatDashDate(r.created_at || r.purchase_date);
-                  const branchName = getCleanBranchName(r);
-                  const supplierName = r.supplier_name || r.supplierName || "—";
+                  const countryCode = getCountryCode(r);
+                  const mainBranch = getMainBranchName(r);
+                  const cityBranch = getCityBranchName(r);
+                  const purchAcc = getPurchaseAccount(r);
+                  const salesAcc = getSalesAccount(r);
+
+                  const mixDry = isMixDry(r);
                   const goodsName = r.goods_name || r.goodsName || "Walnut Kernel";
                   const brand = r.brand || "DGT";
                   const size = r.size || "32/34";
@@ -1097,20 +1227,24 @@ export function LocalPurchaseGlobalRegisterView({
                   const unit = r.quantity_name || "MT";
                   const grossWt = Number(r.total_gross_weight || (qty > 0 ? qty * 1.02 : 0));
                   const netWt = Number(r.net_weight || qty);
+                  const origin = r.origin_country_name || r.originCountryName || "Local";
                   const loadingOrigin = `${r.origin_country_name || "USA"} / ${r.loading_port || "New York"}`;
                   const loadingDate = formatDashDate(r.loading_date || r.transfer_date || r.created_at);
                   const receivingDest = `${r.country_name || "UAE"} / ${r.warehouse_name || "Jebel Ali"}`;
                   const receivingDate = formatDashDate(r.created_at);
 
-                  const cur = getCurrency(r);
-                  const purchAmt = Number(r.purchase_cost || 0);
-                  const finalAmt = Number(r.final_cost || purchAmt);
+                  const purchCur = getPurchaseCurrency(r);
+                  const finalCur = getFinalCurrency(r);
+                  const cur = purchCur;
+                  const purchAmt = Number(r.purchase_cost || (r.final_cost ? Number(r.final_cost) / (Number(r.exchange_rate) || 1) : 0));
+                  const finalAmt = Number(r.final_cost || (purchAmt * (Number(r.exchange_rate) || 1)));
                   const paidAmt = Number(r.posted_paid_amount || r.paid_amount || r.advance_amount || 0);
-                  const balanceAmt = Math.max(0, finalAmt - paidAmt);
+                  const balanceAmt = Math.max(0, purchAmt - paidAmt);
+                  const rowKey = r.id || `row-${idx}`;
 
                   return (
                     <tr
-                      key={r.id || idx}
+                      key={rowKey}
                       className="hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors"
                     >
                       {/* Col 1: # */}
@@ -1136,25 +1270,113 @@ export function LocalPurchaseGlobalRegisterView({
                         </div>
                       </td>
 
-                      {/* Col 3: Branch */}
-                      <td className="py-2.5 px-3 text-start font-bold text-slate-800 dark:text-slate-200">
-                        {branchName}
-                      </td>
-
-                      {/* Col 4: Supplier Name */}
-                      <td className="py-2.5 px-3 text-start font-medium text-slate-700 dark:text-slate-300">
-                        {supplierName}
-                      </td>
-
-                      {/* Col 5: Goods Name (Brand / Size) */}
+                      {/* Col 3: Country / Branch */}
                       <td className="py-2 px-3 text-start">
-                        <div className="flex items-center gap-1.5">
-                          <span>{getGoodsEmoji(goodsName)}</span>
-                          <span className="font-bold text-slate-900 dark:text-slate-100">{goodsName}</span>
+                        <div className="flex items-center gap-1.5 leading-tight">
+                          <span className="inline-block px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 font-mono font-black text-[10px]">
+                            {countryCode}
+                          </span>
+                          <span className="font-bold text-slate-800 dark:text-slate-100 text-xs truncate max-w-[130px]" title={mainBranch}>
+                            {mainBranch}
+                          </span>
                         </div>
-                        <div className="text-[10px] text-slate-500 font-medium ps-5">
-                          Brand: {brand} | Size: {size}
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate max-w-[130px] ps-6 mt-0.5" title={cityBranch}>
+                          {cityBranch}
                         </div>
+                      </td>
+
+                      {/* Col 4: Purchase / Sales Accounts with interactive hover popup */}
+                      <td className="py-2 px-3 text-start relative group" data-account-popup="true">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveAccountPopupId((curr) => (curr === rowKey ? null : rowKey));
+                          }}
+                          className="text-start w-full cursor-pointer focus:outline-none block"
+                        >
+                          <div className="font-bold text-slate-900 dark:text-slate-100 leading-tight truncate max-w-[150px]" title={purchAcc.name}>
+                            {purchAcc.name}
+                          </div>
+                          <div className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 mt-0.5 leading-tight truncate max-w-[150px]" title={salesAcc.name}>
+                            {salesAcc.name}
+                          </div>
+                        </button>
+
+                        {/* Speech Bubble Popup on Hover / Tap */}
+                        <div
+                          className={cn(
+                            "absolute start-1/2 -translate-x-1/2 bottom-full mb-2 z-40 w-72 rounded-xl border border-slate-200 bg-white p-3 shadow-2xl dark:border-slate-700 dark:bg-slate-900 text-start text-xs transition-all duration-150 pointer-events-none",
+                            activeAccountPopupId === rowKey ? "opacity-100 pointer-events-auto block" : "opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto hidden sm:block"
+                          )}
+                        >
+                          <div className="absolute -bottom-1.5 start-1/2 -translate-x-1/2 w-3 h-3 bg-white dark:bg-slate-900 border-b border-r border-slate-200 dark:border-slate-700 rotate-45" />
+
+                          {/* Purchase Account Section */}
+                          <div className="space-y-1 pb-2 border-b border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center justify-between">
+                              <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                🏢 {tr("Purchase Account")}
+                              </span>
+                              <span className="text-[10px] font-mono text-slate-400">
+                                {purchAcc.code}
+                              </span>
+                            </div>
+                            <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                              {purchAcc.name}
+                            </div>
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                              {tr("Branch")}: {mainBranch}
+                            </div>
+                          </div>
+
+                          {/* Sales / Supplier Account Section */}
+                          <div className="space-y-1 pt-2">
+                            <div className="flex items-center justify-between">
+                              <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                                👥 {tr("Sales Account")}
+                              </span>
+                              <span className="text-[10px] font-mono text-slate-400">
+                                {salesAcc.code}
+                              </span>
+                            </div>
+                            <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                              {salesAcc.name}
+                            </div>
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                              {tr("Supplier")} / {tr("Customer")}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Col 5: Goods Name (Brand / Size) or MIX DRY */}
+                      <td className="py-2 px-3 text-start">
+                        {mixDry ? (
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="inline-flex items-center rounded-md bg-amber-500 px-2 py-0.5 text-[10px] font-black uppercase text-white shadow-2xs">
+                                MIX DRY
+                              </span>
+                              <span className="font-bold text-slate-900 dark:text-slate-100 text-xs truncate max-w-[130px]" title={goodsName}>
+                                {goodsName}
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-slate-500 font-medium mt-0.5">
+                              {tr("Multiple Goods recorded")}
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span>{getGoodsEmoji(goodsName)}</span>
+                              <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">{goodsName}</span>
+                            </div>
+                            <div className="text-[10px] text-slate-500 font-medium ps-5 mt-0.5">
+                              Brand: {brand} | Size: {size}
+                            </div>
+                          </div>
+                        )}
                       </td>
 
                       {/* Col 6: Qty (Unit) */}
@@ -1162,54 +1384,63 @@ export function LocalPurchaseGlobalRegisterView({
                         {fmtInt(qty)} {unit}
                       </td>
 
-                      {/* Col 7: Gross Wt Net Wt (Kg) */}
+                      {/* Col 7: Weight (G.W. / N.W. in KG) */}
                       <td className="py-2 px-2 text-end font-mono">
-                        <div className="font-bold text-slate-800 dark:text-slate-200">{fmt(grossWt)}</div>
-                        <div className="text-[10px] text-slate-500 font-semibold">{fmt(netWt)}</div>
+                        <div className="font-bold text-slate-800 dark:text-slate-200 text-xs">
+                          G.W. {fmt(grossWt)} KG
+                        </div>
+                        <div className="text-[10px] text-slate-500 font-semibold mt-0.5">
+                          N.W. {fmt(netWt)} KG
+                        </div>
                       </td>
 
-                      {/* Col 8: Loading (From) Country / Port / Date */}
-                      <td className="py-2 px-3 text-start text-xs">
-                        <div className="font-semibold text-slate-800 dark:text-slate-200">{loadingOrigin}</div>
-                        <div className="text-[10px] text-slate-500 font-medium">{loadingDate}</div>
+                      {/* Col 8: Origin */}
+                      <td className="py-2.5 px-2.5 text-start font-medium text-slate-700 dark:text-slate-300 text-xs">
+                        {origin}
                       </td>
 
-                      {/* Col 9: Receiving (To) Country / Port / Date */}
-                      <td className="py-2 px-3 text-start text-xs">
-                        <div className="font-semibold text-slate-800 dark:text-slate-200">{receivingDest}</div>
-                        <div className="text-[10px] text-slate-500 font-medium">{receivingDate}</div>
+                      {/* Col 9: Loading */}
+                      <td className="py-2 px-2.5 text-start text-xs">
+                        <div className="font-semibold text-slate-800 dark:text-slate-200 leading-tight">{loadingOrigin}</div>
+                        <div className="text-[10px] text-slate-500 font-medium mt-0.5">{loadingDate}</div>
                       </td>
 
-                      {/* Col 10: Purchase Amount (Native Currency) */}
+                      {/* Col 10: Receiving */}
+                      <td className="py-2 px-2.5 text-start text-xs">
+                        <div className="font-semibold text-slate-800 dark:text-slate-200 leading-tight">{receivingDest}</div>
+                        <div className="text-[10px] text-slate-500 font-medium mt-0.5">{receivingDate}</div>
+                      </td>
+
+                      {/* Col 11: Purchase Amount */}
                       <td className="py-2.5 px-2 text-end font-mono font-bold text-slate-800 dark:text-slate-200">
-                        {cur} {fmt(purchAmt)}
+                        {purchCur} {fmt(purchAmt)}
                       </td>
 
-                      {/* Col 11: Final Amount (Native Currency) */}
+                      {/* Col 12: Final Amount */}
                       <td className="py-2.5 px-2 text-end font-mono font-bold text-slate-800 dark:text-slate-200">
-                        {cur} {fmt(finalAmt)}
+                        {finalCur} {fmt(finalAmt)}
                       </td>
 
-                      {/* Col 12: Paid Amount (Native Currency) */}
+                      {/* Col 13: Paid Amount */}
                       <td className="py-2.5 px-2 text-end font-mono font-bold text-slate-800 dark:text-slate-200">
-                        {cur} {fmt(paidAmt)}
+                        {purchCur} {fmt(paidAmt)}
                       </td>
 
-                      {/* Col 13: Balance (Native Currency: green if 0, bold red if > 0) */}
+                      {/* Col 14: Balance (Green if 0, bold red if > 0) */}
                       <td className="py-2.5 px-2 text-end font-mono font-black">
                         {balanceAmt <= 0.05 ? (
-                          <span className="text-emerald-600">{cur} 0.00</span>
+                          <span className="text-emerald-600">{purchCur} 0.00</span>
                         ) : (
-                          <span className="text-rose-600">{cur} {fmt(balanceAmt)}</span>
+                          <span className="text-rose-600">{purchCur} {fmt(balanceAmt)}</span>
                         )}
                       </td>
 
-                      {/* Col 14: Status */}
+                      {/* Col 15: Status */}
                       <td className="py-2.5 px-3 text-center">
                         {renderStatusBadge(r)}
                       </td>
 
-                      {/* Col 15: Actions (⋮ Menu) */}
+                      {/* Col 16: Actions (⋮ Menu) */}
                       <td className="py-2.5 px-2 text-center relative" data-row-menu>
                         <button
                           type="button"
@@ -1225,11 +1456,24 @@ export function LocalPurchaseGlobalRegisterView({
                               type="button"
                               onClick={() => {
                                 setActiveRowMenuId(null);
-                                onViewVoucher(r);
+                                setFullBillRow(r);
+                                setSelectedRow(r);
                               }}
                               className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                             >
                               <Eye className="h-3.5 w-3.5 text-blue-600" />
+                              <span>{tr("View Full Bill")}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveRowMenuId(null);
+                                onViewVoucher(r);
+                              }}
+                              className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                            >
+                              <FileText className="h-3.5 w-3.5 text-indigo-600" />
                               <span>{tr("View Voucher")}</span>
                             </button>
 
@@ -1243,18 +1487,6 @@ export function LocalPurchaseGlobalRegisterView({
                             >
                               <Edit3 className="h-3.5 w-3.5 text-amber-600" />
                               <span>{tr("Edit Purchase")}</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActiveRowMenuId(null);
-                                onViewVoucher(r);
-                              }}
-                              className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-                            >
-                              <Printer className="h-3.5 w-3.5 text-slate-600" />
-                              <span>{tr("Print Voucher")}</span>
                             </button>
 
                             <button
@@ -1303,19 +1535,19 @@ export function LocalPurchaseGlobalRegisterView({
                   {fmtInt(filteredRows.reduce((acc, r) => acc + Number(r.quantity_kgs || r.numbers || 0), 0))} MT
                 </td>
                 <td className="py-2.5 px-2 text-end font-bold">
-                  <div>{fmt(filteredRows.reduce((acc, r) => acc + Number(r.total_gross_weight || 0), 0))}</div>
-                  <div className="text-[10px]">{fmt(filteredRows.reduce((acc, r) => acc + Number(r.net_weight || 0), 0))}</div>
+                  <div>G.W. {fmt(filteredRows.reduce((acc, r) => acc + Number(r.total_gross_weight || 0), 0))}</div>
+                  <div className="text-[10px]">N.W. {fmt(filteredRows.reduce((acc, r) => acc + Number(r.net_weight || 0), 0))}</div>
                 </td>
-                <td colSpan={2} />
+                <td colSpan={3} />
                 {/* Total Purchase Amount (Per Currency, never combined) */}
                 <td className="py-2.5 px-2 text-end">
                   {Object.entries(summaryMetrics.purchaseByCurr).map(([c, amt]) => (
                     <div key={c}>{c} {fmt(amt)}</div>
                   ))}
                 </td>
-                {/* Total Final Amount */}
-                <td className="py-2.5 px-2 text-end">
-                  {Object.entries(summaryMetrics.purchaseByCurr).map(([c, amt]) => (
+                {/* Total Final Amount (Per Currency, never combined) */}
+                <td className="py-2.5 px-2 text-end font-semibold text-slate-800">
+                  {Object.entries(summaryMetrics.finalByCurr).map(([c, amt]) => (
                     <div key={c}>{c} {fmt(amt)}</div>
                   ))}
                 </td>
