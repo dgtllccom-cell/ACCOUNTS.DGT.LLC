@@ -130,22 +130,44 @@ COMMENT ON COLUMN public.daily_usd_rates.carried_forward_from IS
   'Rate date of the approved rate this row was carried forward from. NULL when the rate was entered.';
 
 -- ----------------------------------------------------------------------------
--- 5. RLS: replace the open policies with role-based access (from 0acf63a).
+-- 5. RLS: establish hardened role-based policies (aligned with 20261125 migration).
 --    service_role (server routes) bypasses RLS as before.
 -- ----------------------------------------------------------------------------
 DROP POLICY IF EXISTS account_categories_all_policy ON public.account_categories;
 DROP POLICY IF EXISTS account_categories_read_policy ON public.account_categories;
-
 DROP POLICY IF EXISTS account_categories_read_authenticated ON public.account_categories;
-CREATE POLICY account_categories_read_authenticated ON public.account_categories
-  FOR SELECT TO authenticated
-  USING (deleted_at IS NULL OR is_super_admin());
-
 DROP POLICY IF EXISTS account_categories_write_super_admin ON public.account_categories;
-CREATE POLICY account_categories_write_super_admin ON public.account_categories
-  FOR ALL TO authenticated
-  USING (is_super_admin())
-  WITH CHECK (is_super_admin());
+DROP POLICY IF EXISTS account_categories_write_policy ON public.account_categories;
+
+CREATE POLICY account_categories_read_policy ON public.account_categories
+  FOR SELECT
+  USING (deleted_at IS NULL);
+
+CREATE POLICY account_categories_write_policy ON public.account_categories
+  FOR ALL
+  TO authenticated
+  USING (
+    deleted_at IS NULL AND (
+      EXISTS (
+        SELECT 1 FROM public.user_role_assignments ura
+        JOIN public.roles r ON r.id = ura.role_id
+        WHERE ura.user_id = auth.uid()
+          AND r.name IN ('super_admin', 'country_admin', 'admin', 'accountant', 'finance_manager')
+      )
+      OR auth.jwt() ->> 'role' = 'service_role'
+    )
+  )
+  WITH CHECK (
+    deleted_at IS NULL AND (
+      EXISTS (
+        SELECT 1 FROM public.user_role_assignments ura
+        JOIN public.roles r ON r.id = ura.role_id
+        WHERE ura.user_id = auth.uid()
+          AND r.name IN ('super_admin', 'country_admin', 'admin', 'accountant', 'finance_manager')
+      )
+      OR auth.jwt() ->> 'role' = 'service_role'
+    )
+  );
 
 -- ----------------------------------------------------------------------------
 -- 6. S becomes "Sales" (the S side of the P/S split). Code stays S.
@@ -400,9 +422,9 @@ BEGIN
 
   SELECT count(*) INTO n FROM pg_policies
    WHERE schemaname = 'public' AND tablename = 'account_categories'
-     AND policyname IN ('account_categories_read_authenticated','account_categories_write_super_admin');
+     AND policyname IN ('account_categories_read_policy','account_categories_write_policy');
   IF n <> 2 THEN
-    RAISE EXCEPTION 'verify failed: expected the 2 new account_categories policies, found %', n;
+    RAISE EXCEPTION 'verify failed: expected the 2 account_categories policies (read and write), found %', n;
   END IF;
 
   SELECT count(*) INTO n FROM information_schema.columns

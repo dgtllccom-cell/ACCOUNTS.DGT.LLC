@@ -56,6 +56,8 @@ WHERE record_table = 'account_categories'
 -- 4. Restore the original policies (open read and open all).
 DROP POLICY IF EXISTS account_categories_write_super_admin ON public.account_categories;
 DROP POLICY IF EXISTS account_categories_read_authenticated ON public.account_categories;
+DROP POLICY IF EXISTS account_categories_write_policy ON public.account_categories;
+DROP POLICY IF EXISTS account_categories_read_policy ON public.account_categories;
 
 CREATE POLICY account_categories_read_policy ON public.account_categories
   FOR SELECT USING (deleted_at IS NULL);
