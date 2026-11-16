@@ -543,7 +543,9 @@ export function CashEntryForm({
   // Currency calculation panel
   const [calcAmount, setCalcAmount] = useState("");
   const [calcPrice, setCalcPrice] = useState("");
-  const [calcOp, setCalcOp] = useState<"mul" | "div">("mul");
+  // The operation is derived from the entry currency (see derivedCalcOp below). The override is set only when a
+  // saved entry is loaded (its stored operation) or an admin uses "divide this entry"; a currency change clears it.
+  const [calcOpOverride, setCalcOpOverride] = useState<"mul" | "div" | null>(null);
 
   // Local cache for Bank/Method quick add (until centralized management tables are wired in).
   const [savedBanks, setSavedBanks] = useState<SavedBankItem[]>([]);
@@ -1518,6 +1520,16 @@ export function CashEntryForm({
 
   const isLocalCurrency = normalizedCurrency === targetAccountCurrency.toUpperCase();
 
+  // The entry currency decides the operation. A foreign quantity (USD) posted to a local-currency account is
+  // multiplied by the rate (USD x rate = local). A local quantity posted to a foreign-currency account is divided
+  // by the rate (local / rate = foreign). Same-currency entries carry no rate.
+  const derivedCalcOp: "mul" | "div" =
+    targetAccountCurrency.trim().toUpperCase() !== branchCurrency.trim().toUpperCase() &&
+    normalizedCurrency === branchCurrency.trim().toUpperCase()
+      ? "div"
+      : "mul";
+  const calcOp: "mul" | "div" = calcOpOverride ?? derivedCalcOp;
+
   // A base-currency entry needs no exchange rate at all. USD is converted with the country's approved daily
   // rate (units of the local currency per 1 USD, DR or CR side as the entry is). Any other foreign currency has
   // no approved rate in the Daily Exchange Rate module, so its rate is typed inline for this entry (manual).
@@ -1556,19 +1568,17 @@ export function CashEntryForm({
     const localAmountNow = calcFinal;
     const nextIsLocal = nextCurrency === targetAccountCurrency.trim().toUpperCase();
     setCurrency(nextCurrency);
+    setCalcOpOverride(null);
     if (localAmountNow === null || !(localAmountNow > 0)) return;
     if (nextIsLocal) {
       setCalcAmount(String(Math.round(localAmountNow * 100) / 100));
-      setCalcOp("mul");
       return;
     }
     if (nextCurrency === "USD" && approvedRateValue && approvedRateValue > 0) {
       setCalcAmount(String(Math.round((localAmountNow / approvedRateValue) * 10000) / 10000));
-      setCalcOp("mul");
       return;
     }
     setCalcAmount("");
-    setCalcOp("mul");
   }
 
   const showCalcPanel =
@@ -2248,7 +2258,7 @@ export function CashEntryForm({
     setCurrencyError(false);
     setCalcAmount("");
     setCalcPrice("");
-    setCalcOp("mul");
+    setCalcOpOverride(null);
     setExchangeRate("1");
     setAttachmentFile(null);
     setActiveCreator("");
@@ -2705,7 +2715,7 @@ export function CashEntryForm({
         setCurrency(audit.currency);
         setCalcAmount(audit.qty);
         setExchangeRate(audit.rate);
-        setCalcOp(audit.op);
+        setCalcOpOverride(audit.op);
         const amt = Number(firstLine.debit || firstLine.credit || 0);
         setFinalPayment(String(amt));
       } else {
@@ -2714,7 +2724,7 @@ export function CashEntryForm({
         setFinalPayment(String(amt));
         setCalcAmount("");
         setExchangeRate("1");
-        setCalcOp("mul");
+        setCalcOpOverride(null);
       }
     }
     
@@ -2736,6 +2746,19 @@ export function CashEntryForm({
     
     const formElement = document.querySelector("h3")?.closest(".Card") || document.querySelector(".Payment-Work-Entry-card");
     formElement?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  // Admin-only: "divide this entry" opens a saved entry for correction with the operation set to divide.
+  const canUseDivideEntry = useMemo(() => {
+    if (!session) return false;
+    if (session.scopes?.isSuperAdmin || (session as any).isSuperAdmin) return true;
+    return session.roles?.some((role) => role === "admin" || role.endsWith("_admin")) ?? false;
+  }, [session]);
+
+  const handleDivideEntry = (row: any) => {
+    if (!canUseDivideEntry) return;
+    handleEditEntry(row);
+    setCalcOpOverride("div");
   };
 
   const handleEditLastEntry = async () => {
@@ -2806,18 +2829,12 @@ export function CashEntryForm({
     }
 
 
-    if (editEntryId) {
-      try {
-        const delRes = await fetch(`/api/erp/roznamcha/${editEntryId}`, { method: "DELETE" });
-        if (!delRes.ok) {
-          const errText = await delRes.text();
-          setMessage(tr("cef.msg_reverse_failed", "Failed to reverse the old entry: {error}").replace("{error}", errText), true);
-          return null;
-        }
-      } catch (e: any) {
-        setMessage(tr("cef.msg_reverse_failed", "Failed to reverse the old entry: {error}").replace("{error}", String(e?.message || "")), true);
-        return null;
-      }
+    // A save reverses an existing entry only when the user is correcting it (edit mode) and confirms it.
+    // A plain save never reverses anything: it posts exactly one new entry.
+    const correctingEntryId = editEntryId;
+    if (correctingEntryId && !window.confirm(tr("cef.confirm_correct_entry", "Save this correction? The saved entry will be reversed (kept in the ledger and audit trail) and this corrected entry will replace it in the list. Cancel keeps the saved entry unchanged."))) {
+      savingRef.current = false;
+      return null;
     }
 
     // Voucher / Journal numbers are generated automatically; do not ask the user to enter them.
@@ -2878,27 +2895,9 @@ export function CashEntryForm({
         }
       ];
 
-      // If cross-branch payment, or if selectedCashLedger is chosen, include source bank/cash offset
-      if (selectedCashLedger?.ledgerId && (isCrossBranch || selectedCashLedger.ledgerId !== counterLedgerId)) {
-        const sourceCurrency = (selectedCashLedger.ledgerCurrency || branchCurrency).trim().toUpperCase();
-        postingLines.push({
-          paymentEntryType: roznamchaBookType === "bank" ? (paymentMode === "DEBIT" ? "bank_payment" : "bank_deposit") : (paymentMode === "DEBIT" ? "cash_payment" : "cash_receipt"),
-          enterpriseAccountId: selectedCashLedger.accountId || null,
-          ledgerId: selectedCashLedger.ledgerId,
-          description: `Offset - Source Cash/Bank (${selectedMainBranch?.name || "Branch A"})`,
-          debit: paymentMode === "CREDIT" ? amount : 0,
-          credit: paymentMode === "DEBIT" ? amount : 0,
-          currency: sourceCurrency,
-          exchangeRate: Number(exchangeRate),
-          rateSource: lineRateSource,
-          entryCurrency: normalizedCurrency || null,
-          accountNumber: selectedCashLedger.accountCode || selectedCashLedger.rawAccountCode || null,
-          manualReferenceNumber: selectedCashLedger.manualReferenceNumber || null,
-          customerNumber: selectedCashLedger.customerNumber || null,
-          countrySerialNumber: selectedCashLedger.countrySerialNumber || null,
-          branchSerialNumber: selectedCashLedger.branchSerialNumber || null
-        });
-      }
+      // Manual Cash Roznamcha entries post ONE visible line on the side the user selected (DR or CR). No
+      // automatic opposite-side offset line is added here; the other side is entered later as its own entry.
+      // Automatic transfers from other ERP modules post their own legs through their own routes.
 
       const payload = {
         mode: "post" as const,
@@ -2958,6 +2957,18 @@ export function CashEntryForm({
       };
 
       const res = await apiPost<RoznamchaPostResponse>("/api/erp/roznamcha", payload);
+      // The corrected entry is posted first, so a failed save never reverses the original. Only then is the
+      // confirmed correction's original reversed; the reversal stays in the ledger and audit trail and is hidden
+      // from the active list, so the corrected entry is the only active row.
+      let reverseError: string | null = null;
+      if (correctingEntryId) {
+        try {
+          const delRes = await fetch(`/api/erp/roznamcha/${correctingEntryId}`, { method: "DELETE" });
+          if (!delRes.ok) reverseError = await delRes.text();
+        } catch (e: any) {
+          reverseError = String(e?.message || "");
+        }
+      }
       setLastEntryId(res.entryId ?? null);
       setEditEntryId(null);
       const incrementSerial = (serial: string | null | undefined) => {
@@ -2987,7 +2998,11 @@ export function CashEntryForm({
       const serialText = [res.superAdminSerialNumber, res.countryTransactionSerialNumber, res.branchTransactionSerialNumber, (res as any).mainBranchTransactionSerialNumber, (res as any).cityBranchTransactionSerialNumber, (res as any).entrySerialNumber]
         .filter(Boolean)
         .join(" / ");
-      setMessage(tr("cef.msg_saved_serials", "Saved successfully. Serials: {serials}").replace("{serials}", serialText || res.entryId || "—"));
+      if (reverseError) {
+        setMessage(tr("cef.msg_reverse_pending", "Corrected entry saved, but the old entry could not be reversed: {error}. Reverse the old entry from the list.").replace("{error}", reverseError), true);
+      } else {
+        setMessage(tr("cef.msg_saved_serials", "Saved successfully. Serials: {serials}").replace("{serials}", serialText || res.entryId || "—"));
+      }
       window.dispatchEvent(
         new CustomEvent("erp:posting-saved", {
           detail: { source: "roznamcha", entryId: res.entryId ?? null }
@@ -4746,29 +4761,12 @@ export function CashEntryForm({
                               />
                             </div>
 
-                            <div className="sm:col-span-1 flex justify-center pb-0.5">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                onClick={() => setCalcOp(calcOp === "mul" ? "div" : "mul")}
-                                className="h-9 w-9 rounded-xl border-slate-200 dark:border-slate-700"
-                                title={t(lang, "cef.toggle_operation", "Toggle Operation")}
-                              >
-                                <ArrowLeftRight className="h-4 w-4 text-blue-600" />
-                              </Button>
-                            </div>
-
-                            <div className="sm:col-span-2 space-y-1">
+                            {/* The operation follows the entry currency (derivedCalcOp); it is shown, not chosen. */}
+                            <div className="sm:col-span-3 space-y-1">
                               <Label className="text-[10px] font-bold text-slate-500 uppercase">{tr("cj.mOperation", "Operation")}</Label>
-                              <select
-                                value={calcOp}
-                                onChange={(e) => setCalcOp(e.target.value as any)}
-                                className="h-9 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-xs font-bold outline-none"
-                              >
-                                <option value="mul">{tr("cj.mMultiply", "Multiply (x)")}</option>
-                                <option value="div">{tr("cj.mDivide", "Divide (/)")}</option>
-                              </select>
+                              <div className="h-9 flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">
+                                {calcOp === "mul" ? "× " : "÷ "}{calcOp === "mul" ? tr("cj.mMultiply", "Multiply (x)") : tr("cj.mDivide", "Divide (/)")}
+                              </div>
                             </div>
                           </>
                         )}
@@ -5384,10 +5382,10 @@ export function CashEntryForm({
                 <Th className="py-2.5 px-3 font-bold whitespace-nowrap">Roznamcha Type</Th>
                 <Th className="py-2.5 px-3 font-bold min-w-[180px]">Details</Th>
                 <Th className="py-2.5 px-2.5 font-bold text-center whitespace-nowrap">Currency</Th>
+                <Th className="py-2.5 px-3 font-bold text-right whitespace-nowrap">Credit (Local)</Th>
                 {canViewUsd && (
                   <Th className="py-2.5 px-2.5 font-bold text-right whitespace-nowrap">Exchange Rate</Th>
                 )}
-                <Th className="py-2.5 px-3 font-bold text-right whitespace-nowrap">Credit (Local)</Th>
                 {canViewUsd && (
                   <Th className="py-2.5 px-3 font-bold text-right whitespace-nowrap">Credit (USD)</Th>
                 )}
@@ -5510,20 +5508,20 @@ export function CashEntryForm({
                             {lineCurr}
                           </td>
 
-                          {/* 8. Exchange Rate */}
-                          {canViewUsd && (
-                            <td className="py-2.5 px-2.5 text-right font-mono font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap" dir="ltr">
-                              {rateNum ? rateNum.toFixed(4) : "—"}
-                            </td>
-                          )}
-
-                          {/* 9. Credit (Local) */}
+                          {/* 8. Credit (Local) */}
                           <td className={cn(
                             "py-2.5 px-3 text-right font-mono whitespace-nowrap",
                             creditLocal > 0 ? "font-bold text-emerald-600 dark:text-emerald-400" : "font-medium text-slate-400 dark:text-slate-600"
                           )} dir="ltr">
                             {fmtAmount(creditLocal)}
                           </td>
+
+                          {/* 9. Exchange Rate, shown with the operation that links the CR amount and the USD amount */}
+                          {canViewUsd && (
+                            <td className="py-2.5 px-2.5 text-right font-mono font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap" dir="ltr">
+                              {rateNum ? `${(parseAuditTrail(row.narration)?.op ?? "mul") === "div" ? "÷" : "×"} ${rateNum.toFixed(4)}` : "—"}
+                            </td>
+                          )}
 
                           {/* 10. Credit (USD) */}
                           {canViewUsd && (
@@ -5569,7 +5567,18 @@ export function CashEntryForm({
                           {/* 14. Action */}
                           <td className="py-2.5 px-3 text-center whitespace-nowrap">
                             {idx === 0 ? (
-                              <div className="relative inline-block">
+                              <div className="relative inline-flex items-center gap-1">
+                                {canUseDivideEntry && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDivideEntry(row)}
+                                    className="inline-flex h-6 w-7 items-center justify-center rounded-md border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300 cursor-pointer"
+                                    title={tr("cef.divide_entry", "Divide this entry")}
+                                    aria-label={tr("cef.divide_entry", "Divide this entry")}
+                                  >
+                                    <ArrowLeftRight className="h-3.5 w-3.5" />
+                                  </button>
+                                )}
                                 <button
                                   type="button"
                                   onClick={() => setActiveRowMenuId(activeRowMenuId === row.id ? null : row.id)}
