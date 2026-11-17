@@ -65,7 +65,8 @@ import {
   RotateCcw,
   Check,
   Phone,
-  CreditCard
+  CreditCard,
+  Landmark
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -974,6 +975,86 @@ export function CashEntryForm({
   const [partyDialCode, setPartyDialCode] = useState("+971");
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
   const [accountSearchQuery, setAccountSearchQuery] = useState("");
+  const [transferDestScope, setTransferDestScope] = useState<"same_branch" | "other_branch">("same_branch");
+  const [destCountryId, setDestCountryId] = useState<string>("");
+  const [destMainBranchId, setDestMainBranchId] = useState<string>("");
+  const [destCityBranchId, setDestCityBranchId] = useState<string>("");
+  const [destAccountId, setDestAccountId] = useState<string>("");
+
+  const [destMainBranches, setDestMainBranches] = useState<CountryBranchRow[]>([]);
+  const [destCityBranches, setDestCityBranches] = useState<CityBranchRow[]>([]);
+  const [destAccounts, setDestAccounts] = useState<any[]>([]);
+  const [loadingDestBranches, setLoadingDestBranches] = useState(false);
+  const [loadingDestAccounts, setLoadingDestAccounts] = useState(false);
+
+  useEffect(() => {
+    if (!destCountryId) {
+      setDestMainBranches([]);
+      setDestCityBranches([]);
+      setDestAccounts([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingDestBranches(true);
+    fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(destCountryId)}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (cancelled) return;
+        const list = Array.isArray(res?.countryBranches) ? res.countryBranches : [];
+        setDestMainBranches(list);
+        if (list.length > 0 && (!destMainBranchId || !list.some((b: any) => b.id === destMainBranchId))) {
+          setDestMainBranchId(list[0].id);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoadingDestBranches(false);
+      });
+    return () => { cancelled = true; };
+  }, [destCountryId]);
+
+  useEffect(() => {
+    if (!destCountryId || !destMainBranchId) {
+      setDestCityBranches([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/branch-management/city-branches?countryId=${encodeURIComponent(destCountryId)}&countryBranchId=${encodeURIComponent(destMainBranchId)}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (cancelled) return;
+        const list = Array.isArray(res?.cityBranches) ? res.cityBranches : [];
+        setDestCityBranches(list);
+        if (list.length > 0 && (!destCityBranchId || !list.some((b: any) => b.id === destCityBranchId))) {
+          setDestCityBranchId(list[0].id);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [destCountryId, destMainBranchId]);
+
+  useEffect(() => {
+    if (!destCountryId) return;
+    let cancelled = false;
+    setLoadingDestAccounts(true);
+    listLedgerReportLedgers({
+      reportScope: "branch",
+      countryId: destCountryId,
+      countryBranchId: destMainBranchId || null,
+      cityBranchId: destCityBranchId || null,
+      limit: 500,
+    })
+      .then((res) => {
+        if (cancelled) return;
+        const list = Array.isArray(res?.ledgers) ? res.ledgers : [];
+        setDestAccounts(list);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoadingDestAccounts(false);
+      });
+    return () => { cancelled = true; };
+  }, [destCountryId, destMainBranchId, destCityBranchId]);
 
 
 
@@ -1001,7 +1082,7 @@ export function CashEntryForm({
     selectedMainBranch?.local_currency ||
     selectedCountry?.currency_code ||
     assignedCountryCurrency ||
-    (isSuperAdmin ? "USD" : "PKR");
+    (selectedCountry?.iso2 === "PK" || (countries.find((c) => c.id === countryId)?.iso2 === "PK") ? "PKR" : "AED");
 
 
   const userRoleLevel: "operator" | "branch" | "country" | "super_admin" = useMemo(() => {
@@ -3815,17 +3896,22 @@ export function CashEntryForm({
 
 
       {/* ============================================================
-          NEW ROZNAMCHA ENTRY INTERFACE (MATCHING EXACT REFERENCE IMAGE)
-          1. Header: Green calculator icon + Title + Subtitle + Close button
-          2. Entry Scope & Branch: Country, Branch, City/Location, Entry Date
-          3. Two-Column Layout:
-             - Left (Steps 1 to 6): Register Setup, Account Selection,
-               Category & Reference, Party Details, Amount & Posting, Remarks
-             - Right: Selected Account Details, Location Details, Financial Snapshot
-          4. Action Bar: Clear, Cancel, Save & New, Save Entry
+          NEW ROZNAMCHA ENTRY MODAL (MATCHING EXACT REFERENCE IMAGE)
+          Centered modal dialog with backdrop blur, max-w-5xl, and tight layout
       ============================================================ */}
       {showNewRoznamchaEntryCard && (
-        <div id="new-roznamcha-entry-card" className="mx-4 my-4 rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-7 shadow-lg shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none transition-all">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-3 sm:p-5 md:p-6 overflow-y-auto animate-in fade-in duration-200"
+          onClick={() => {
+            setShowNewRoznamchaEntryCard(false);
+            setEditEntryId(null);
+          }}
+        >
+          <div 
+            id="new-roznamcha-entry-card" 
+            className="relative w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-7 shadow-2xl dark:border-slate-800 dark:bg-slate-900 transition-all my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
           {/* ── CARD HEADER ── */}
           <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-3.5">
@@ -4040,10 +4126,10 @@ export function CashEntryForm({
                     >
                       <div className="flex items-center gap-2">
                         {entryTypeSelection === "Cash" && <Banknote className="h-4 w-4 text-emerald-600" />}
-                        {entryTypeSelection === "Cheque" && <CreditCard className="h-4 w-4 text-emerald-600" />}
-                        {entryTypeSelection === "Invoice" && <FileText className="h-4 w-4 text-blue-600" />}
+                        {(entryTypeSelection === "Cheque" || entryTypeSelection === "Bank") && <CreditCard className="h-4 w-4 text-emerald-600" />}
+                        {(entryTypeSelection === "Invoice" || entryTypeSelection === "Business Roznamcha") && <FileText className="h-4 w-4 text-blue-600" />}
                         {entryTypeSelection === "Transfer" && <ArrowLeftRight className="h-4 w-4 text-blue-600" />}
-                        <span>{entryTypeSelection}</span>
+                        <span>{entryTypeSelection === "Bank" ? "Cheque" : entryTypeSelection === "Business Roznamcha" ? "Invoice" : entryTypeSelection}</span>
                       </div>
                       <ChevronDown className="h-4 w-4 text-slate-400" />
                     </button>
@@ -4051,10 +4137,10 @@ export function CashEntryForm({
                     {entryTypeDropdownOpen && (
                       <div className="absolute z-30 left-0 right-0 mt-1 rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900 animate-in fade-in-50 zoom-in-95">
                         {[
-                          { label: "Cash", icon: Banknote, color: "text-emerald-600", mode: "cash" },
-                          { label: "Cheque", icon: CreditCard, color: "text-emerald-600", mode: "bank" },
-                          { label: "Invoice", icon: FileText, color: "text-blue-600", mode: "invoice" },
-                          { label: "Transfer", icon: ArrowLeftRight, color: "text-blue-600", mode: "transfer" },
+                          { label: "Cash", display: tr("cef.opt_cash_roznamcha", "Cash"), icon: Banknote, color: "text-emerald-600", mode: "cash" },
+                          { label: "Cheque", display: tr("cef.opt_bank_roznamcha", "Cheque"), icon: CreditCard, color: "text-emerald-600", mode: "bank" },
+                          { label: "Invoice", display: tr("cef.opt_business_roznamcha", "Invoice"), icon: FileText, color: "text-blue-600", mode: "business" },
+                          { label: "Transfer", display: tr("cef.opt_transfer", "Transfer"), icon: ArrowLeftRight, color: "text-blue-600", mode: "transfer" },
                         ].map((item) => (
                           <button
                             key={item.label}
@@ -4065,16 +4151,16 @@ export function CashEntryForm({
                               setEntryTypeDropdownOpen(false);
                             }}
                             className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-left transition-colors ${
-                              entryTypeSelection === item.label
+                              entryTypeSelection === item.label || (item.label === "Cheque" && entryTypeSelection === "Bank") || (item.label === "Invoice" && entryTypeSelection === "Business Roznamcha")
                                 ? "bg-blue-600 text-white"
                                 : "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                             }`}
                           >
                             <div className="flex items-center gap-2.5">
-                              <item.icon className={`h-4 w-4 ${entryTypeSelection === item.label ? "text-white" : item.color}`} />
+                              <item.icon className={`h-4 w-4 ${entryTypeSelection === item.label || (item.label === "Cheque" && entryTypeSelection === "Bank") || (item.label === "Invoice" && entryTypeSelection === "Business Roznamcha") ? "text-white" : item.color}`} />
                               <span>{item.label}</span>
                             </div>
-                            {entryTypeSelection === item.label && <Check className="h-4 w-4 text-white" />}
+                            {(entryTypeSelection === item.label || (item.label === "Cheque" && entryTypeSelection === "Bank") || (item.label === "Invoice" && entryTypeSelection === "Business Roznamcha")) && <Check className="h-4 w-4 text-white" />}
                           </button>
                         ))}
                       </div>
@@ -4089,16 +4175,19 @@ export function CashEntryForm({
                     <div className="relative">
                       <select
                         value={currency || branchCurrency}
-                        onChange={(e) => setCurrency(e.target.value)}
+                        onChange={(e) => changeEntryCurrency(e.target.value)}
                         className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-8 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                       >
-                        <option value="AED">AED</option>
-                        <option value="USD">USD</option>
-                        <option value="PKR">PKR</option>
-                        <option value="EUR">EUR</option>
-                        <option value="GBP">GBP</option>
-                        <option value="SAR">SAR</option>
-                        <option value="OMR">OMR</option>
+                        <option value={branchCurrency}>
+                          {branchCurrency} ({branchCurrency === "AED" ? "UAE Base" : branchCurrency === "PKR" ? "PK Base" : "Branch Base"})
+                        </option>
+                        {["USD", "AED", "PKR", "AFN", "EUR", "GBP", "SAR", "OMR"]
+                          .filter((c) => c !== branchCurrency)
+                          .map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
                       </select>
                       <Coins className="pointer-events-none absolute left-2.5 top-3 h-4 w-4 text-slate-500" />
                       <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
@@ -4232,163 +4321,683 @@ export function CashEntryForm({
                 </div>
               </div>
 
-              {/* STEP 4: PARTY DETAILS */}
+              {/* STEP 4: DYNAMIC ENTRY TYPE DETAILS */}
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
-                    4
-                  </span>
-                  <Users className="h-4 w-4 text-blue-600" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Party Details
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {/* Party Name */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Party Name <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <User className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                      <input
-                        type="text"
-                        value={typeDetails.partyName || typeDetails.receiverSenderName || ""}
-                        onChange={(e) =>
-                          setTypeDetails((prev) => ({
-                            ...prev,
-                            partyName: e.target.value,
-                            receiverSenderName: e.target.value,
-                          }))
-                        }
-                        placeholder="Enter name"
-                        className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                      />
-                    </div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
+                      4
+                    </span>
+                    {paymentType === "bank" && <Landmark className="h-4 w-4 text-blue-600" />}
+                    {paymentType === "cash" && <Users className="h-4 w-4 text-emerald-600" />}
+                    {(paymentType === "business" || paymentType === "invoice") && <FileText className="h-4 w-4 text-indigo-600" />}
+                    {paymentType === "transfer" && <ArrowLeftRight className="h-4 w-4 text-purple-600" />}
+                    <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                      {paymentType === "bank"
+                        ? "Bank Details"
+                        : paymentType === "cash"
+                        ? "Party Details"
+                        : (paymentType === "business" || paymentType === "invoice")
+                        ? "Business Roznamcha Details"
+                        : "Transfer Destination & Details"}
+                    </span>
                   </div>
+                  {paymentType === "business" && (
+                    <div className="flex items-center gap-1.5 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>Connected: Purchase · Sales · Daily Payments</span>
+                    </div>
+                  )}
+                </div>
 
-                  {/* Mobile No. */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Mobile No. <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="flex items-center rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden dark:border-slate-700 dark:bg-slate-900">
-                      <div className="flex items-center gap-1 bg-slate-50 px-2.5 py-2.5 text-xs font-bold text-slate-700 border-r border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
-                        <Phone className="h-3.5 w-3.5 text-emerald-600" />
-                        <span>{partyDialCode}</span>
-                        <ChevronDown className="h-3 w-3 text-slate-400" />
+                {/* Bank: Bank Name (linked to Bank Master) -> Payment Type (Mobile/TT) -> Receipt Number -> Receipt Attachment */}
+                {paymentType === "bank" && (
+                  <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-2.5 dark:border-slate-800 dark:bg-slate-900/50">
+                    <TransferDetailsSection
+                      bankName={typeDetails.bankName || ""}
+                      onBankNameChange={(bankName) => setTypeDetails((p) => ({ ...p, bankName }))}
+                      onBankRecordChange={(bank) =>
+                        setTypeDetails((p) => ({
+                          ...p,
+                          bankId: bank?.id || "",
+                          bankName: bank?.bank_name || p.bankName,
+                          bankAccount: bank?.full_address || p.bankAccount,
+                        }))
+                      }
+                      transferMode={typeDetails.method || typeDetails.transferType || "TT"}
+                      onTransferModeChange={(method) => setTypeDetails((p) => ({ ...p, method, transferType: method }))}
+                      transactionReference={typeDetails.receiptNumber || typeDetails.transferReferenceNumber || typeDetails.refNo || ""}
+                      onTransactionReferenceChange={(receiptNumber) =>
+                        setTypeDetails((p) => ({
+                          ...p,
+                          receiptNumber,
+                          refNo: receiptNumber,
+                          transferReferenceNumber: receiptNumber,
+                        }))
+                      }
+                      attachmentFile={attachmentFile}
+                      onAttachmentChange={setAttachmentFile}
+                      countryId={countryId || selectedCountry?.id}
+                      countryIso={selectedCountry?.iso2 || undefined}
+                      showAttachment={true}
+                      lang={lang as SupportedLanguage}
+                    />
+                  </div>
+                )}
+
+                {/* Cash: Party Name -> Mobile No. -> Download ID (Exact Match to Screenshot 2) */}
+                {paymentType === "cash" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* Party Name */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Party Name <span className="text-rose-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <User className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                        <input
+                          type="text"
+                          value={typeDetails.partyName || typeDetails.receiverSenderName || ""}
+                          onChange={(e) =>
+                            setTypeDetails((prev) => ({
+                              ...prev,
+                              partyName: e.target.value,
+                              receiverSenderName: e.target.value,
+                            }))
+                          }
+                          placeholder={tr("lqm.enter_name_ph", "Enter name")}
+                          className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                        />
                       </div>
-                      <input
-                        type="text"
-                        value={typeDetails.mobileNo || ""}
-                        onChange={(e) =>
-                          setTypeDetails((prev) => ({ ...prev, mobileNo: e.target.value }))
-                        }
-                        placeholder="50 123 4567"
-                        className="w-full px-3 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none bg-transparent dark:text-slate-100"
-                      />
                     </div>
-                  </div>
 
-                  {/* Download ID */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Download ID
-                    </label>
-                    <div className="relative">
-                      <CreditCard className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                      <input
-                        type="text"
-                        value={typeDetails.downloadId || ""}
-                        onChange={(e) =>
-                          setTypeDetails((prev) => ({ ...prev, downloadId: e.target.value }))
-                        }
-                        placeholder="Enter ID (Optional)"
-                        className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                      />
+                    {/* Mobile No. */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Mobile No. <span className="text-rose-500">*</span>
+                      </label>
+                      <div className="flex items-center rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden dark:border-slate-700 dark:bg-slate-900">
+                        <div className="flex items-center gap-1 bg-slate-50 px-2.5 py-2.5 text-xs font-bold text-slate-700 border-r border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 shrink-0">
+                          <span>{selectedCountry?.iso2 === "PK" ? "🇵🇰" : "🇦🇪"}</span>
+                          <span>{partyDialCode || "+971"}</span>
+                          <ChevronDown className="h-3 w-3 text-slate-400" />
+                        </div>
+                        <input
+                          type="tel"
+                          value={typeDetails.mobileNo || typeDetails.mobileNumber || ""}
+                          onChange={(e) =>
+                            setTypeDetails((prev) => ({ ...prev, mobileNo: e.target.value, mobileNumber: e.target.value }))
+                          }
+                          placeholder="50 123 4567"
+                          className="w-full px-3 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none bg-transparent dark:text-slate-100"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Download ID */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                          Download ID
+                        </label>
+                        <label className="text-[10px] font-bold text-blue-600 dark:text-blue-400 cursor-pointer hover:underline flex items-center gap-1">
+                          <Paperclip className="h-3 w-3" />
+                          <span>{attachmentFile ? attachmentFile.name.slice(0, 10) + "..." : "Attach"}</span>
+                          <input
+                            type="file"
+                            className="hidden"
+                            onChange={(e) => setAttachmentFile(e.target.files?.[0] ?? null)}
+                          />
+                        </label>
+                      </div>
+                      <div className="relative">
+                        <CreditCard className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                        <input
+                          type="text"
+                          value={typeDetails.idCardCopyName || typeDetails.downloadId || ""}
+                          onChange={(e) =>
+                            setTypeDetails((prev) => ({
+                              ...prev,
+                              idCardCopyName: e.target.value,
+                              downloadId: e.target.value,
+                            }))
+                          }
+                          placeholder={`${tr("urf.user_id_placeholder", "ID")} (${tr("extform.optional", "Optional")})`}
+                          className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
+
+                {/* Business Roznamcha: Invoice Name -> Invoice Number -> View/Download Invoice */}
+                {(paymentType === "business" || paymentType === "invoice") && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    {/* Invoice Name */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Invoice / Party Name <span className="text-rose-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <FileText className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                        <input
+                          type="text"
+                          value={typeDetails.invoiceName || typeDetails.businessName || typeDetails.purchaseInfo || ""}
+                          onChange={(e) =>
+                            setTypeDetails((prev) => ({
+                              ...prev,
+                              invoiceName: e.target.value,
+                              businessName: e.target.value,
+                              purchaseInfo: e.target.value,
+                            }))
+                          }
+                          placeholder="e.g. Local Purchase / Sales Party"
+                          className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Invoice Number */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Invoice / Bill Number <span className="text-rose-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <FileText className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                        <input
+                          type="text"
+                          value={typeDetails.invoiceNumber || ""}
+                          onChange={(e) =>
+                            setTypeDetails((prev) => ({
+                              ...prev,
+                              invoiceNumber: e.target.value,
+                            }))
+                          }
+                          placeholder="e.g. INV-2026-0042"
+                          className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    {/* View / Download Invoice Attachment */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Invoice Document Copy
+                      </label>
+                      <label className="flex items-center justify-between h-[38px] px-3 rounded-xl border border-dashed border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100/60 text-xs font-semibold cursor-pointer transition shadow-xs">
+                        <div className="flex items-center gap-1.5 truncate">
+                          <Paperclip className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+                          <span className="truncate">{attachmentFile ? attachmentFile.name : "Attach Invoice Copy"}</span>
+                        </div>
+                        {attachmentFile ? (
+                          <span
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setAttachmentFile(null);
+                            }}
+                            className="text-[10px] text-rose-500 hover:text-rose-700 font-bold ml-1"
+                          >
+                            ✕
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-indigo-600 font-bold ml-1">Upload</span>
+                        )}
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] ?? null;
+                            setAttachmentFile(file);
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* Transfer: Same branch -> Destination Account | Other branch -> Country -> Main Branch -> City Branch -> Destination Account */}
+                {paymentType === "transfer" && (
+                  <div className="space-y-3 rounded-xl border border-purple-200/80 bg-purple-50/30 p-3 dark:border-purple-900/60 dark:bg-purple-950/20">
+                    {/* Transfer Scope Toggle */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        Transfer Scope:
+                      </span>
+                      <div className="flex rounded-lg border border-slate-200 bg-white p-0.5 shadow-2xs dark:border-slate-700 dark:bg-slate-900">
+                        <button
+                          type="button"
+                          onClick={() => setTransferDestScope("same_branch")}
+                          className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${
+                            transferDestScope === "same_branch"
+                              ? "bg-purple-600 text-white shadow-xs"
+                              : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                          }`}
+                        >
+                          Same Branch Transfer
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTransferDestScope("other_branch");
+                            if (!destCountryId && countries.length > 0) {
+                              setDestCountryId(countries[0].id);
+                            }
+                          }}
+                          className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${
+                            transferDestScope === "other_branch"
+                              ? "bg-purple-600 text-white shadow-xs"
+                              : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                          }`}
+                        >
+                          Other Branch Transfer
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Same Branch Transfer Fields */}
+                    {transferDestScope === "same_branch" ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Destination Account (Name / No.) <span className="text-rose-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <select
+                              value={destAccountId}
+                              onChange={(e) => {
+                                const accId = e.target.value;
+                                setDestAccountId(accId);
+                                const acc = ledgerRowsWithAccount.find((a) => a.ledgerId === accId);
+                                if (acc) {
+                                  setTypeDetails((prev) => ({
+                                    ...prev,
+                                    to: acc.accountName || "",
+                                    transferTo: `${acc.accountName || ""} (${acc.accountCode || acc.rawAccountCode || ""})`,
+                                    transferInfo: `Same branch transfer to ${acc.accountName || ""}`,
+                                  }));
+                                }
+                              }}
+                              className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-3.5 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-purple-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                            >
+                              <option value="">Select destination account...</option>
+                              {ledgerRowsWithAccount
+                                .filter((acc) => acc.ledgerId !== counterLedgerId)
+                                .slice(0, 50)
+                                .map((acc) => (
+                                  <option key={acc.ledgerId} value={acc.ledgerId}>
+                                    {acc.accountName} ({acc.accountCode || acc.rawAccountCode || "—"}) — {acc.ledgerCurrency || branchCurrency}
+                                  </option>
+                                ))}
+                            </select>
+                            <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Transfer Reference / Notes
+                          </label>
+                          <input
+                            type="text"
+                            value={typeDetails.transferReferenceNumber || typeDetails.refNo || ""}
+                            onChange={(e) =>
+                              setTypeDetails((prev) => ({
+                                ...prev,
+                                transferReferenceNumber: e.target.value,
+                                refNo: e.target.value,
+                              }))
+                            }
+                            placeholder="e.g. Internal Account Transfer / Ref #"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-purple-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      /* Other Branch Transfer: Country -> Main Branch -> City Branch -> Destination Account */
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+                        {/* Destination Country */}
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Destination Country <span className="text-rose-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <select
+                              value={destCountryId}
+                              onChange={(e) => {
+                                setDestCountryId(e.target.value);
+                                setDestMainBranchId("");
+                                setDestCityBranchId("");
+                                setDestAccountId("");
+                              }}
+                              className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-3.5 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-purple-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                            >
+                              <option value="">Select country...</option>
+                              {countries.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  {c.iso2 ? `${c.iso2} - ` : ""}{c.name}
+                                </option>
+                              ))}
+                            </select>
+                            <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
+                          </div>
+                        </div>
+
+                        {/* Destination Main Branch */}
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Destination Main Branch <span className="text-rose-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <select
+                              value={destMainBranchId}
+                              onChange={(e) => {
+                                setDestMainBranchId(e.target.value);
+                                setDestCityBranchId("");
+                                setDestAccountId("");
+                              }}
+                              disabled={!destCountryId}
+                              className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-3.5 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-purple-500 focus:outline-none disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800"
+                            >
+                              <option value="">Select main branch...</option>
+                              {destMainBranches.map((b) => (
+                                <option key={b.id} value={b.id}>
+                                  {b.name} ({b.code})
+                                </option>
+                              ))}
+                            </select>
+                            <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
+                          </div>
+                        </div>
+
+                        {/* Destination City Branch */}
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Destination City Branch <span className="text-rose-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <select
+                              value={destCityBranchId}
+                              onChange={(e) => {
+                                setDestCityBranchId(e.target.value);
+                                setDestAccountId("");
+                              }}
+                              disabled={!destMainBranchId}
+                              className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-3.5 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-purple-500 focus:outline-none disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800"
+                            >
+                              <option value="">Select city branch...</option>
+                              {destCityBranches.map((b) => (
+                                <option key={b.id} value={b.id}>
+                                  {b.city_name} - {b.name} ({b.code})
+                                </option>
+                              ))}
+                            </select>
+                            <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
+                          </div>
+                        </div>
+
+                        {/* Destination Account */}
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Destination Account <span className="text-rose-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <select
+                              value={destAccountId}
+                              onChange={(e) => {
+                                const accId = e.target.value;
+                                setDestAccountId(accId);
+                                const acc = destAccounts.find((a) => a.ledgerId === accId || a.id === accId);
+                                if (acc) {
+                                  const targetName = acc.accountName || acc.name || "";
+                                  const targetCode = acc.accountCode || acc.code || "";
+                                  setTypeDetails((prev) => ({
+                                    ...prev,
+                                    to: targetName,
+                                    transferTo: `${targetName} (${targetCode})`,
+                                    transferInfo: `Cross-branch transfer to ${targetName}`,
+                                  }));
+                                }
+                              }}
+                              disabled={!destCityBranchId && destAccounts.length === 0}
+                              className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-3.5 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-purple-500 focus:outline-none disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800"
+                            >
+                              <option value="">
+                                {loadingDestAccounts ? "Loading accounts..." : "Select destination account..."}
+                              </option>
+                              {destAccounts.slice(0, 50).map((acc) => (
+                                <option key={acc.ledgerId || acc.id} value={acc.ledgerId || acc.id}>
+                                  {acc.accountName || acc.name} ({acc.accountCode || acc.code || "—"})
+                                </option>
+                              ))}
+                            </select>
+                            <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* STEP 5: AMOUNT & POSTING */}
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
-                    5
-                  </span>
-                  <Coins className="h-4 w-4 text-blue-600" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Amount & Posting
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-stretch">
-                  {/* Amount */}
-                  <div className="md:col-span-4">
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Amount <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <Coins className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                      <input
-                        type="number"
-                        step="any"
-                        value={finalPayment}
-                        onChange={(e) => setFinalPayment(e.target.value)}
-                        placeholder="0.00"
-                        className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Posting Side Radio Pills */}
-                  <div className="md:col-span-4">
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Posting Side <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="flex items-center gap-2 pt-0.5">
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMode("DEBIT")}
-                        className={`flex-1 flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${
-                          paymentMode === "DEBIT"
-                            ? "border-blue-500 bg-blue-50/80 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
-                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
-                        }`}
-                      >
-                        <span className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${paymentMode === "DEBIT" ? "border-blue-600 bg-white" : "border-slate-400"}`}>
-                          {paymentMode === "DEBIT" && <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />}
-                        </span>
-                        <span>Debit (DR)</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMode("CREDIT")}
-                        className={`flex-1 flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${
-                          paymentMode === "CREDIT"
-                            ? "border-blue-500 bg-blue-50/80 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
-                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
-                        }`}
-                      >
-                        <span className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${paymentMode === "CREDIT" ? "border-blue-600 bg-white" : "border-slate-400"}`}>
-                          {paymentMode === "CREDIT" && <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />}
-                        </span>
-                        <span>Credit (CR)</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Final Amount Display Card */}
-                  <div className="md:col-span-4 rounded-2xl border border-emerald-200/80 bg-emerald-50/60 p-3 sm:p-4 text-right flex flex-col justify-center dark:border-emerald-900/60 dark:bg-emerald-950/30">
-                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                      Final Amount
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
+                      5
                     </span>
-                    <span className="font-mono text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight" dir="ltr">
-                      {currency || branchCurrency || "AED"} {fmtAmount(Number(finalPayment || 0))}
+                    <Coins className="h-4 w-4 text-blue-600" />
+                    <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                      Amount & Posting
                     </span>
                   </div>
+                  {!isLocalCurrency && (
+                    <div className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                      Foreign Currency Conversion ({currency} → {branchCurrency})
+                    </div>
+                  )}
                 </div>
+
+                {isLocalCurrency ? (
+                  /* Local currency: Direct amount, NO exchange rate */
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-stretch">
+                    <div className="md:col-span-4">
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Amount ({branchCurrency}) <span className="text-rose-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Coins className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                        <input
+                          type="number"
+                          step="any"
+                          value={calcAmount}
+                          onChange={(e) => {
+                            setCalcAmount(e.target.value);
+                            setFinalPayment(e.target.value);
+                          }}
+                          placeholder="0.00"
+                          className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-4">
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Posting Side <span className="text-rose-500">*</span>
+                      </label>
+                      <div className="flex items-center gap-2 pt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMode("DEBIT")}
+                          className={`flex-1 flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${
+                            paymentMode === "DEBIT"
+                              ? "border-blue-500 bg-blue-50/80 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
+                          }`}
+                        >
+                          <span className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${paymentMode === "DEBIT" ? "border-blue-600 bg-white" : "border-slate-400"}`}>
+                            {paymentMode === "DEBIT" && <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />}
+                          </span>
+                          <span>Debit (DR)</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMode("CREDIT")}
+                          className={`flex-1 flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${
+                            paymentMode === "CREDIT"
+                              ? "border-blue-500 bg-blue-50/80 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
+                          }`}
+                        >
+                          <span className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${paymentMode === "CREDIT" ? "border-blue-600 bg-white" : "border-slate-400"}`}>
+                            {paymentMode === "CREDIT" && <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />}
+                          </span>
+                          <span>Credit (CR)</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-4 rounded-2xl border border-emerald-200/80 bg-emerald-50/60 p-3 text-right flex flex-col justify-center dark:border-emerald-900/60 dark:bg-emerald-950/30">
+                      <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                        Final Amount ({branchCurrency})
+                      </span>
+                      <span className="font-mono text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight" dir="ltr">
+                        {branchCurrency} {fmtAmount(Number(calcAmount || finalPayment || 0))}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  /* Foreign currency: Foreign Amount/Qty x Exchange Rate = Final Amount */
+                  <div className="space-y-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-2.5 items-end">
+                      {/* Foreign Currency Amount / Quantity */}
+                      <div className="md:col-span-3">
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Foreign Amount ({currency}) <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <Coins className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                          <input
+                            type="number"
+                            step="any"
+                            value={calcAmount}
+                            onChange={(e) => {
+                              setCalcAmount(e.target.value);
+                              setFinalPayment(e.target.value);
+                            }}
+                            placeholder="0.00"
+                            className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 font-mono"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Exchange Rate */}
+                      <div className="md:col-span-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                            Exchange Rate ({currency} → {branchCurrency}) <span className="text-rose-500">*</span>
+                          </label>
+                          {approvedRateForEntry && (
+                            <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
+                              Daily Board
+                            </span>
+                          )}
+                        </div>
+                        <div className="relative">
+                          <ArrowLeftRight className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                          <input
+                            type="text"
+                            value={exchangeRate}
+                            onChange={(e) => {
+                              setExchangeRate(e.target.value);
+                              setExchangeRateSource("manual");
+                            }}
+                            readOnly={approvedRateForEntry}
+                            placeholder="0.0000"
+                            className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 font-mono"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Operation */}
+                      <div className="md:col-span-2">
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Operation
+                        </label>
+                        <div className="flex h-[38px] items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                          {calcOp === "mul" ? "× Multiply" : "÷ Divide"}
+                        </div>
+                      </div>
+
+                      {/* Posting Side Radio Pills */}
+                      <div className="md:col-span-4">
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Posting Side <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setPaymentMode("DEBIT")}
+                            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl border px-2 py-2 text-xs font-bold transition-colors ${
+                              paymentMode === "DEBIT"
+                                ? "border-blue-500 bg-blue-50/80 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+                                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
+                            }`}
+                          >
+                            <span className={`h-3 w-3 rounded-full border flex items-center justify-center ${paymentMode === "DEBIT" ? "border-blue-600 bg-white" : "border-slate-400"}`}>
+                              {paymentMode === "DEBIT" && <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />}
+                            </span>
+                            <span>DR</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setPaymentMode("CREDIT")}
+                            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl border px-2 py-2 text-xs font-bold transition-colors ${
+                              paymentMode === "CREDIT"
+                                ? "border-blue-500 bg-blue-50/80 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+                                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
+                            }`}
+                          >
+                            <span className={`h-3 w-3 rounded-full border flex items-center justify-center ${paymentMode === "CREDIT" ? "border-blue-600 bg-white" : "border-slate-400"}`}>
+                              {paymentMode === "CREDIT" && <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />}
+                            </span>
+                            <span>CR</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Live Formula Banner & Final Amount in Branch Currency */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-xl border border-emerald-200/80 bg-emerald-50/50 dark:border-emerald-900/60 dark:bg-emerald-950/20">
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <span className="text-slate-500 font-medium">Conversion Formula:</span>
+                        <span className="font-mono text-blue-600 dark:text-blue-400">
+                          {fmtAmount(Number(calcAmount || 0))} {currency}
+                        </span>
+                        <span>{calcOp === "mul" ? "×" : "÷"}</span>
+                        <span className="font-mono text-purple-600 dark:text-purple-400">
+                          {exchangeRate || "0"}
+                        </span>
+                        <span>=</span>
+                        <span className="font-mono text-emerald-600 dark:text-emerald-400 font-extrabold">
+                          {fmtAmount(calcFinal || 0)} {branchCurrency}
+                        </span>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                          Final Posted Amount ({branchCurrency})
+                        </span>
+                        <span className="font-mono text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400" dir="ltr">
+                          {branchCurrency} {fmtAmount(calcFinal || 0)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* STEP 6: REMARKS */}
@@ -4409,7 +5018,7 @@ export function CashEntryForm({
                     maxLength={500}
                     value={remarks}
                     onChange={(e) => setRemarks(e.target.value)}
-                    placeholder="Enter remarks / details (optional)"
+                    placeholder={tr("bankroz.optional_remarks_ph", "Enter remarks / details (optional)")}
                     className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-16 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 resize-none"
                   />
                   <div className="absolute right-3 bottom-2 text-[10px] font-medium text-slate-400">
@@ -4587,6 +5196,7 @@ export function CashEntryForm({
               </button>
             </div>
           </div>
+        </div>
         </div>
       )}
 
