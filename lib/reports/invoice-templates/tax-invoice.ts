@@ -46,7 +46,7 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
   const d = prepareInvoiceData(input, flags);
   const lang = (input.lang || "en") as SupportedLanguage;
   const orientation = input.orientation || "portrait";
-  const cur = d.currency || input.currency || "AED";
+  const cur = d.currency || input.currency || "";
   const goods: TradeLineItem[] = input.goods || [];
   const totals = input.totals || {};
   const bank = input.bank || null;
