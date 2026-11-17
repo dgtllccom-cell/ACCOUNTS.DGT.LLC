@@ -117,8 +117,8 @@ export async function POST(request: NextRequest) {
         if (stage === "loading") {
           const payAgg = await tx`
             select
-              coalesce(sum(amount) filter (where payment_status = 'posted'), 0)::numeric as posted_paid_amount,
-              count(*) filter (where payment_status = 'posted')::int as posted_payment_count
+              coalesce(sum(amount) filter (where status = 'posted'), 0)::numeric as posted_paid_amount,
+              count(*) filter (where status = 'posted')::int as posted_payment_count
             from public.purchase_order_payments
             where local_purchase_id = ${purchaseId}::uuid
               and deleted_at is null
