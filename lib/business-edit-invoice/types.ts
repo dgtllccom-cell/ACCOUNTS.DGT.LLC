@@ -3,7 +3,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 export const BEI_SOURCE_MODULES = ["purchase_booking", "sales_booking", "local_purchase", "local_sales"] as const;
 export type BeiSourceModule = (typeof BEI_SOURCE_MODULES)[number];
 
-export const BEI_DOC_TYPES = ["commercial_invoice", "proforma_invoice", "export_invoice", "packing_list"] as const;
+export const BEI_DOC_TYPES = ["commercial_invoice", "proforma_invoice", "export_invoice", "packing_list", "tax_invoice"] as const;
 export type BeiDocType = (typeof BEI_DOC_TYPES)[number];
 
 export type BeiStatus = "draft" | "finalized" | "void";

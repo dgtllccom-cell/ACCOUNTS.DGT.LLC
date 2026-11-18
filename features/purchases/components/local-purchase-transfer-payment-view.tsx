@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   FileText,
@@ -331,6 +333,7 @@ export function LocalPurchaseTransferPaymentView({
   const [viewingBill, setViewingBill] = useState<any | null>(null);
   const [editingBill, setEditingBill] = useState<any | null>(null);
   const [printingBill, setPrintingBill] = useState<any | null>(null);
+  const [documentBill, setDocumentBill] = useState<any | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [posting, setPosting] = useState(false);
@@ -961,12 +964,9 @@ export function LocalPurchaseTransferPaymentView({
     URL.revokeObjectURL(url);
   };
 
-  // Print A4 helper for a single bill without dashboard navigation
+  // A single bill prints through the Damaan invoice design (the same document centre as the other purchase screens).
   const handlePrintA4Bill = (bill: any) => {
-    setPrintingBill(bill);
-    setTimeout(() => {
-      window.print();
-    }, 120);
+    setDocumentBill(bill);
   };
 
   return (
@@ -975,28 +975,44 @@ export function LocalPurchaseTransferPaymentView({
       className="min-h-screen bg-[#f4f7fb] dark:bg-slate-950 p-3 sm:p-5 space-y-4 text-slate-900 dark:text-slate-100"
     >
       {/* ── Print-Only Compact A4 Bill Sheet (hides dashboard navigation when printing a bill) ── */}
+      {documentBill ? (<TradeDocumentCenter open onClose={() => setDocumentBill(null)} txnKind="purchase" source="local_purchase" record={documentBill} companyId={documentBill.company_id ?? null} scope={{ countryId: documentBill.country_id ?? null, countryBranchId: documentBill.country_branch_id ?? null, cityBranchId: documentBill.city_branch_id ?? null }} />) : null}
       {printingBill && (
         <style>{`
+          @page { size: A4; margin: 10mm; }
           @media print {
-            body * { visibility: hidden !important; }
+            body > *:not(#lp-transfer-a4-print-sheet) { display: none !important; }
             #lp-transfer-a4-print-sheet, #lp-transfer-a4-print-sheet * { visibility: visible !important; }
+            /* Flow on the page (not position:fixed, which repeats on every printed page and pushes content off the first page). */
             #lp-transfer-a4-print-sheet {
-              position: fixed !important;
-              inset: 0 !important;
-              width: 100% !important;
+              display: block !important;
+              position: absolute !important;
+              top: 0 !important;
+              left: 0 !important;
+              /* A4 content width (210mm minus 10mm margins each side), independent of the phone's viewport width. */
+              width: 190mm !important;
+              max-width: 190mm !important;
+              box-sizing: border-box !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              border: none !important;
+              border-radius: 0 !important;
               background: #ffffff !important;
               color: #0f172a !important;
-              padding: 18mm !important;
               z-index: 99999 !important;
             }
+            #lp-transfer-a4-print-sheet .lp-print-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+            #lp-transfer-a4-print-sheet .lp-print-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+            #lp-transfer-a4-print-sheet .lp-print-table { table-layout: fixed !important; width: 100% !important; font-size: 10px !important; }
+            #lp-transfer-a4-print-sheet td, #lp-transfer-a4-print-sheet th { overflow-wrap: anywhere !important; word-break: break-word !important; }
+            #lp-transfer-a4-print-sheet .lp-print-block { break-inside: avoid !important; page-break-inside: avoid !important; }
           }
         `}</style>
       )}
 
-      {printingBill && (
+      {printingBill && typeof document !== "undefined" && createPortal(
         <div
           id="lp-transfer-a4-print-sheet"
-          className="hidden print:block bg-white text-slate-900 p-6 border border-slate-300 rounded-xl"
+          className="hidden print:block bg-white text-slate-900 min-w-0"
         >
           <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4 mb-4">
             <div>
@@ -1015,7 +1031,7 @@ export function LocalPurchaseTransferPaymentView({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-4 text-xs">
+          <div className="lp-print-grid-2 grid grid-cols-2 gap-4 mb-4 text-xs min-w-0">
             <div className="border border-slate-200 rounded-lg p-3">
               <div className="font-bold text-slate-500 uppercase text-[10px] mb-1">
                 {tr("Purchase Account (DR / Debit)")}
@@ -1032,7 +1048,7 @@ export function LocalPurchaseTransferPaymentView({
             </div>
           </div>
 
-          <table className="w-full border-collapse border border-slate-300 text-xs mb-4">
+          <table className="lp-print-table w-full border-collapse border border-slate-300 text-xs mb-4">
             <thead>
               <tr className="bg-slate-100">
                 <th className="border border-slate-300 px-2.5 py-2 text-left">{tr("Goods")}</th>
@@ -1067,7 +1083,7 @@ export function LocalPurchaseTransferPaymentView({
             </tbody>
           </table>
 
-          <div className="grid grid-cols-4 gap-3 text-xs border-t border-slate-200 pt-3">
+          <div className="lp-print-grid-4 lp-print-block grid grid-cols-4 gap-3 text-xs border-t border-slate-200 pt-3 min-w-0">
             <div>
               <div className="text-slate-500 font-semibold">{tr("Payment Option")}</div>
               <div className="font-black">{printingBill._paymentMeta.optionLabel}</div>
@@ -1094,7 +1110,8 @@ export function LocalPurchaseTransferPaymentView({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── Top Page Header Bar ── */}
