@@ -35,4 +35,13 @@ describe("trade document amounts are in the document currency", () => {
     expect(input.totals?.grandTotal).toBe(55400);
     expect(input.exchangeRate).toBe(3.673);
   });
+
+  it("with no priced lines, the total is the document-currency amount, never the local order_total (SO-00000001)", () => {
+    const so = { id: "so-1", original_currency_code: "USD", currency_code: "AED", exchange_rate: 3.67, order_total: 10899.9, total_goods_original: 2970,
+      form_data: { goodsEntries: [{ goodsName: "Almond Kernel", qtyNo: 300, qtyName: "BAGS", netWeight: 2970 }] } };
+    expect(salesOrderToTradeInput(so, opts).currency).toBe("USD");
+    expect(salesOrderToTradeInput(so, opts).totals?.grandTotal).toBe(2970);
+    const noOriginal = { ...so, total_goods_original: null };
+    expect(salesOrderToTradeInput(noOriginal, opts).totals?.grandTotal).toBe(2970);
+  });
 });
