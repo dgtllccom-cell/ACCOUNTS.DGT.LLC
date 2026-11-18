@@ -177,8 +177,12 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
   // deep link (?job=<id>) opens an existing document straight into review
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const j = new URLSearchParams(window.location.search).get("job");
-    if (j) { setReviewModuleId(null); setReviewJobId(j); setTab("intake"); }
+    const q = new URLSearchParams(window.location.search);
+    const j = q.get("job");
+    if (j) { setReviewModuleId(null); setReviewJobId(j); setTab("intake"); return; }
+    // deep link (?module=<id> or ?target=<table>) from a form's "Scan / Upload Document" pre-selects that module
+    const linked = resolveModule(q.get("module"), q.get("target"));
+    if (linked) { setModuleId(linked.id); setTab("intake"); }
   }, []);
 
   const openExisting = (row: Row) => {
