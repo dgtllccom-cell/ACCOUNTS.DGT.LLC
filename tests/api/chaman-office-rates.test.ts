@@ -37,7 +37,7 @@ describe("authorized Shipping office daily rate management", () => {
   it("creates the assigned country's rate using the signed-in operator, never a supplied actor name", async () => {
     expect((await POST(request({ userName: "Spoofed Super Admin" }))).status).toBe(200);
     const rate = state.calls.find(([op, table]) => op === "insert" && table === "daily_usd_rates")[2];
-    expect(rate).toMatchObject({ country_id: "pk", country_branch_id: null, effective_from: "2026-11-06T07:10:00.000Z", user_name: "Authorized Office User" });
+    expect(rate).toMatchObject({ country_id: "pk", country_branch_id: null, effective_from: "2026-11-05T20:00:00.000Z" /* local midnight of 2026-11-06 at UTC+4: a rate applies from the start of its date (9c521fba) */, user_name: "Authorized Office User" });
     expect(state.calls.some(([op, table]) => op === "insert" && table === "exchange_rate_history")).toBe(true);
   });
   it("rejects another country without a write", async () => {

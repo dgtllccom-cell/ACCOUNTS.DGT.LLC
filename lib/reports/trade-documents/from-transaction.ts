@@ -10,6 +10,7 @@
  *    to confirm, not filled with placeholders.
  */
 
+import { localPurchaseBillNo } from "@/lib/purchases/local-purchase-number";
 import type { DocumentBranding } from "@/lib/reports/resolve-document-branding";
 import type {
   TradeDocumentInput, TradeDocType, TradeLineItem, TradeParty, TradeScope, BeneficiaryBank,
@@ -162,7 +163,12 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
   const subTotal = goods.reduce((s, g) => s + (Number(g.amount) || 0), 0);
   // The grand total is the sum of the lines in the document currency when the lines carry one; the stored
   // order_total can be in the local currency, so it is only used when there are no lines to add up.
-  const grand = goods.length && subTotal > 0 ? subTotal : (n(pick(rec, "order_total")) ?? n(pick(form, "orderTotal", "grandTotal")) ?? subTotal);
+  // With no priced lines, the document total is the stored document-currency amount (total_goods_original). order_total is the
+  // local-currency equivalent (original x rate), so it is converted back with the record's own rate, never printed as is.
+  const storedOriginal = n(pick(rec, "total_goods_original"));
+  const storedLocal = n(pick(rec, "order_total"));
+  const fromLocal = storedLocal !== undefined && exchangeRate && exchangeRate > 0 ? Number((storedLocal / exchangeRate).toFixed(2)) : storedLocal;
+  const grand = goods.length && subTotal > 0 ? subTotal : ((storedOriginal && storedOriginal > 0 ? storedOriginal : undefined) ?? fromLocal ?? n(pick(form, "orderTotal", "grandTotal")) ?? subTotal);
   const advance = n(pick(rec, "advance_paid")) ?? n(pick(form, "advanceAmount"));
 
   const transport = scope === "international" ? {
@@ -313,7 +319,8 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
     tradeScope: "local",
     lang: opts.lang,
     branding: opts.branding,
-    docNo: `${docNoPrefix(opts.docType)}-LP-${rec.id?.slice(0, 8) || "NEW"}`,
+    // the bill's own number, by the one Local Purchase numbering rule (system journal serial, never the typed contract ref)
+    docNo: `${docNoPrefix(opts.docType)}-${rec.id || rec.journal_serial_no || rec.manual_bill_no ? localPurchaseBillNo(rec) : "LP-NEW"}`,
     docDate: rec.created_at || new Date().toISOString(),
     // The ledger code (purchase_account_no, e.g. 1002) is not an invoice number. The bill number is manual_bill_no.
     referenceNos: { invoice: realText(rec.manual_bill_no), contract: rec.chassis_code },

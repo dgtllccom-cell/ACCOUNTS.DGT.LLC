@@ -133,14 +133,14 @@ describe("resolveInvoiceTemplateDefault", () => {
     apiGetMock.mockResolvedValueOnce({ default: { ...SAVED_PREMIUM, templateId: "retired-template" } } as never);
     const r = await resolveInvoiceTemplateDefault({ documentType: "commercial_invoice" });
     expect(r.loadFailed).toBe(true);
-    expect(r.templateId).toBe("classic");
+    expect(r.templateId).toBe("tax_invoice");
   });
 
-  it("flags a failed lookup instead of silently returning classic", async () => {
+  it("flags a failed lookup instead of silently returning the built-in default", async () => {
     apiGetMock.mockRejectedValueOnce(new Error("Not authorized for this country's template defaults"));
     const r = await resolveInvoiceTemplateDefault({ documentType: "commercial_invoice", countryId: "c-1" });
     expect(r.loadFailed).toBe(true);
-    expect(r.templateId).toBe("classic");
+    expect(r.templateId).toBe("tax_invoice");
   });
 });
 
@@ -191,7 +191,8 @@ describe("Commercial Document Center: preview and default behaviour", () => {
     vi.unstubAllGlobals();
   });
 
-  it("does not print before the saved default has loaded, then prints that template", async () => {
+  // Owner decision (ecd5fbf3): every purchase / sales document opens on the Damaan layout; a saved default does not replace it.
+  it("does not print before the saved default has loaded, then prints the Damaan layout", async () => {
     const lookup = deferred<unknown>();
     routeApi(() => lookup.promise);
     renderCenter();
@@ -200,7 +201,7 @@ describe("Commercial Document Center: preview and default behaviour", () => {
     await waitFor(() => expect(previewButton().disabled).toBe(false));
     fireEvent.click(previewButton());
     await waitFor(() => expect(openMock).toHaveBeenCalledTimes(1));
-    expect(openMock.mock.calls[0][1]).toBe("premium");
+    expect(openMock.mock.calls[0][1]).toBe("tax_invoice");
   });
 
   it("keeps a template the user picked while the saved default is still loading", async () => {
@@ -215,7 +216,7 @@ describe("Commercial Document Center: preview and default behaviour", () => {
     expect(openMock.mock.calls[0][1]).toBe("modern");
   });
 
-  it("says so when the saved default cannot be read, blocks Set Default, and prints the built-in template", async () => {
+  it("says so when the saved default cannot be read, blocks Set Default, and prints the built-in Damaan template", async () => {
     routeApi(async () => { throw new Error("network down"); });
     renderCenter();
     expect(await screen.findByText(/could not be loaded/)).toBeTruthy();
@@ -223,7 +224,7 @@ describe("Commercial Document Center: preview and default behaviour", () => {
     await waitFor(() => expect(previewButton().disabled).toBe(false));
     fireEvent.click(previewButton());
     await waitFor(() => expect(openMock).toHaveBeenCalledTimes(1));
-    expect(openMock.mock.calls[0][1]).toBe("classic");
+    expect(openMock.mock.calls[0][1]).toBe("tax_invoice");
   });
 
   it("does not offer Set Default for a document type the default API cannot store", async () => {

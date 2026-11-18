@@ -123,7 +123,7 @@ export function InstallAppBanner() {
     <>
       {/* ── Top Install Banner ── */}
       <div
-        className="bg-gradient-to-r from-blue-900 via-[#06122d] to-indigo-950 text-white px-4 pt-3.5 pb-3 shadow-md border-b border-blue-800/50 flex flex-wrap items-center justify-between gap-3 text-xs overflow-visible min-h-[52px]"
+        className="print:hidden bg-gradient-to-r from-blue-900 via-[#06122d] to-indigo-950 text-white px-4 pt-3.5 pb-3 shadow-md border-b border-blue-800/50 flex flex-wrap items-center justify-between gap-3 text-xs overflow-visible min-h-[52px]"
         style={{ backgroundColor: "#06122d", color: "#ffffff" }}
       >
         <div className="flex items-center gap-3">
