@@ -7,6 +7,8 @@ import { localizeRecordFields } from "@/lib/i18n/localize-records";
 import type { DocumentBranding } from "@/lib/reports/resolve-document-branding";
 import { resolveBrandingServer } from "@/lib/branding/server";
 import { buildTradeDocumentHtml } from "@/lib/reports/trade-documents/build-trade-document";
+import { renderTaxInvoice } from "@/lib/reports/invoice-templates/tax-invoice";
+import { DEFAULT_TEMPLATE_FLAGS } from "@/lib/reports/invoice-templates/types";
 import {
   purchaseOrderToTradeInput, salesOrderToTradeInput, localPurchaseToTradeInput,
 } from "@/lib/reports/trade-documents/from-transaction";
@@ -147,7 +149,14 @@ export async function createFromBill(session: ErpSession, input: CreateBeiInput)
   const originalTotal = Number(mapped.totals?.grandTotal ?? src.order_total ?? src.final_cost ?? 0) || null;
 
   const billNo = src.purchase_order_no || src.sales_order_no || src.manual_bill_no || null;
-  const billDate = (mapped.docDate ? String(mapped.docDate).slice(0, 10) : null) || (src.created_at ? String(src.created_at).slice(0, 10) : null);
+  // The driver returns timestamptz columns as Date objects; String(date).slice(0, 10) yields "Tue Nov 17" (no year),
+  // which Postgres reads as 2001-11-16. Take the calendar day from the date value itself.
+  const dayOf = (v: unknown): string | null => {
+    if (v === null || v === undefined || v === "") return null;
+    const d = v instanceof Date ? v : new Date(String(v));
+    return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+  };
+  const billDate = dayOf(mapped.docDate) || dayOf(src.created_at);
 
   const row = await withLocalPg(async (sql) => {
     const inserted = (await sql`
@@ -546,7 +555,8 @@ export async function renderDocumentHtml(session: ErpSession, id: string, lang: 
     orientation: "portrait",
   };
 
-  const html = buildTradeDocumentHtml(input);
+  // A saved Sales Tax Invoice uses the Damaan tax layout (same template as the print registry); other types keep the generic builder.
+  const html = inv.docType === "tax_invoice" ? renderTaxInvoice(input, DEFAULT_TEMPLATE_FLAGS) : buildTradeDocumentHtml(input);
   return { html, title: `${inv.invoiceNo}` };
 }
 
