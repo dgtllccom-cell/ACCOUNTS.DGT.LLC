@@ -385,7 +385,7 @@ export function TradeDocumentCenter(props: TradeDocumentCenterProps) {
                 <button
                   key={def.id}
                   type="button"
-                  onClick={() => { markTemplateChosen(); setTemplateId("tax_invoice"); }}
+                  onClick={() => { markTemplateChosen(); setTemplateId(def.id); }}
                   title={tt(def.descKey, def.descFallback)}
                   className={`relative flex flex-col items-center gap-1 rounded-lg border p-1.5 transition ${on ? "border-blue-500 ring-2 ring-blue-200 dark:ring-blue-900" : "border-slate-200 dark:border-slate-700 hover:border-slate-300"}`}
                 >
