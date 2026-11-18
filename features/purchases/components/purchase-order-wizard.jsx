@@ -3971,7 +3971,7 @@ export function PurchaseOrderWizard({ session }) {
                   type="button"
                   onClick={() => {
                     setEntryMethodModalOpen(false);
-                    router.push("/dashboard/smart-operations/intake?target=purchase_orders");
+                    router.push("/dashboard/document-intelligence?module=purchase_booking");
                   }}
                   className="group flex flex-col justify-between p-4 rounded-xl border border-border/80 hover:border-blue-500/70 hover:bg-blue-50/40 dark:hover:bg-blue-950/20 text-left transition-all shadow-xs"
                 >

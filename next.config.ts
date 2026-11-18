@@ -36,6 +36,12 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        // old "Scan / Upload Document" link (?target=purchase_orders is carried over): the intake page is Document Intelligence
+        source: "/dashboard/smart-operations/intake",
+        destination: "/dashboard/document-intelligence",
+        permanent: false,
+      },
+      {
         source: "/dashboard/super",
         destination: "/dashboard/super-admin",
         permanent: false,
