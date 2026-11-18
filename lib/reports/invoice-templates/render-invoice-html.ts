@@ -45,7 +45,32 @@ export function renderInvoiceHtml(
     input.layout === "uae_tax" && (input.docType === "sales_invoice" || input.docType === "tax_invoice")
       ? buildUaeTaxInvoiceHtml(input)
       : tpl.render(input, flags);
-  return withGroupWatermark(themeInvoiceHtml(html, colorId));
+  return withGroupWatermark(stretchGoodsTable(themeInvoiceHtml(html, colorId), input.orientation === "landscape"));
+}
+
+/**
+ * Every invoice template: the goods table grows down the page, so the totals and the bank block sit at the bottom
+ * of the A4 sheet instead of leaving a gap under a short table. The sales tax layout already does this and is skipped.
+ */
+export function stretchGoodsTable(html: string, landscape = false): string {
+  if (html.includes("grp-goods-fill") || html.includes("goods-wrap")) return html;
+  const start = html.search(/<table[^>]*class="goods"/i);
+  if (start < 0) return html;
+  const end = html.indexOf("</table>", start);
+  if (end < 0) return html;
+  const wrapped = html.slice(0, start) + `<div class="grp-goods-fill">` + html.slice(start, end + 8) + `</div>` + html.slice(end + 8);
+  // A fixed A4 sheet height (usable area) gives the goods area a definite height; content that is longer
+  // still shows (overflow is visible), so no line is ever cut off.
+  const sheet = landscape ? "190mm" : "277mm";
+  // The chain from the sheet down to the goods table is made a flex column, so the table can take the leftover height.
+  const css = `<style data-erp-invoice-fill>
+    .page { height: ${sheet}; display: flex; flex-direction: column; box-sizing: border-box; }
+    .page > *:has(.grp-goods-fill) { flex: 1 1 auto; min-height: 0; }
+    *:has(> .grp-goods-fill) { display: flex !important; flex-direction: column; min-height: 0; }
+    .grp-goods-fill { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+    .grp-goods-fill > table.goods { flex: 1 1 auto; height: 100%; }
+  </style>`;
+  return wrapped.includes("</head>") ? wrapped.replace("</head>", css + "</head>") : css + wrapped;
 }
 
 /**
