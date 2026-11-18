@@ -7,7 +7,7 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { TradeDocumentInput, TradeLineItem } from "@/lib/reports/trade-documents/types";
 import type { InvoiceTemplateFlags } from "./types";
-import { esc, prepareInvoiceData, documentShell, money, num, isReal } from "./shared";
+import { esc, prepareInvoiceData, documentShell, money, num, isReal, invoiceQrSvg } from "./shared";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 const dash = (v: unknown) => (isReal(v) ? esc(String(v)) : "—");
@@ -123,8 +123,10 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
     body { background: #fff; color: #000; font-family: 'Times New Roman', Georgia, serif; font-size: 9pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .page { width: ${pageW}; height: ${pageH}; margin: 0 auto; padding: 6mm 8mm; box-sizing: border-box; display: flex; flex-direction: column; }
     .companyhead { display: flex; align-items: flex-start; gap: 8px; min-height: 30mm; }
-    .logocell { width: 40%; min-height: 28mm; display: flex; align-items: center; justify-content: flex-start; }
-    .logo { max-height: 28mm; max-width: 100%; }
+    .logocell { width: 40%; min-height: 28mm; display: flex; align-items: center; justify-content: flex-start; gap: 8px; }
+    .logo { max-height: 28mm; max-width: 60%; }
+    .qr { text-align: center; font-family: Arial, Helvetica, sans-serif; font-size: 6.5pt; font-weight: 700; }
+    .qr svg { width: 24mm; height: 24mm; display: block; }
     .companydetails { width: 60%; text-align: right; font-size: 8.5pt; line-height: 1.35; }
     .companydetails .cname { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; font-weight: 700; }
     table.frame { width: 100%; border-collapse: collapse; }
@@ -159,7 +161,10 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
   const body = `
     <div class="page">
       <div class="companyhead">
-        <div class="logocell"><img class="logo" src="${esc(logo)}" alt="" /></div>
+        <div class="logocell">
+          <img class="logo" src="${esc(logo)}" alt="" />
+          ${isReal(input.publicUrl) ? `<div class="qr">${invoiceQrSvg(String(input.publicUrl), 90)}<div>SCAN TO VIEW</div></div>` : ""}
+        </div>
         <div class="companydetails">
           ${companyName ? `<div class="cname">${esc(String(companyName))}</div>` : ""}
           ${companyLines}

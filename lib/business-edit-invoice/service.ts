@@ -6,6 +6,7 @@ import { translateMasterRecord } from "@/lib/services/translation-trigger-servic
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
 import type { DocumentBranding } from "@/lib/reports/resolve-document-branding";
 import { resolveBrandingServer } from "@/lib/branding/server";
+import { randomBytes } from "node:crypto";
 import { renderTaxInvoice } from "@/lib/reports/invoice-templates/tax-invoice";
 import { DEFAULT_TEMPLATE_FLAGS } from "@/lib/reports/invoice-templates/types";
 import {
@@ -495,7 +496,7 @@ export async function auditTrail(session: ErpSession, id: string) {
 // same country_company_profiles source + per-branch overlay used everywhere.
 
 // ── render the document (uses the EDITED values + branch/company branding) ──
-export async function renderDocumentHtml(session: ErpSession, id: string, lang: SupportedLanguage): Promise<{ html: string; title: string }> {
+export async function renderDocumentHtml(session: ErpSession, id: string, lang: SupportedLanguage, publicOrigin?: string | null): Promise<{ html: string; title: string }> {
   const inv = await getInvoice(session, id, { original: true });
 
   const branding = await resolveBrandingServer({
@@ -557,10 +558,28 @@ export async function renderDocumentHtml(session: ErpSession, id: string, lang: 
     orientation: "portrait",
   };
 
-  // A saved Sales Tax Invoice uses the Damaan tax layout (same template as the print registry); other types keep the generic builder.
+  // The QR code opens a public read-only copy of this invoice (the same snapshot the print page stores).
+  const publicUrl = publicOrigin ? await createInvoicePublicLink(session, input, publicOrigin) : null;
   // Every saved invoice uses the Damaan layout (the sample's section order, bank block and full-page goods table).
-  const html = renderTaxInvoice(input, DEFAULT_TEMPLATE_FLAGS);
+  const html = renderTaxInvoice({ ...input, publicUrl }, DEFAULT_TEMPLATE_FLAGS);
   return { html, title: `${inv.invoiceNo}` };
+}
+
+/** Stores a snapshot of this invoice and returns its public link (random 192-bit token, no login to open). */
+async function createInvoicePublicLink(session: ErpSession, input: TradeDocumentInput, origin: string): Promise<string | null> {
+  const { publicUrl: _ignored, ...snapshot } = input;
+  const token = randomBytes(24).toString("base64url");
+  const saved = await withLocalPg(async (sql) => {
+    await sql`
+      insert into public.public_document_links
+        (token, document_type, doc_no, template_id, color_id, flags, snapshot, created_by)
+      values
+        (${token}, ${String(input.docType)}, ${String(input.docNo || "").slice(0, 120)}, 'tax_invoice', null,
+         ${JSON.stringify(DEFAULT_TEMPLATE_FLAGS)}::jsonb, ${JSON.stringify(snapshot)}::jsonb, ${session.userId ?? null})
+    `;
+    return true;
+  });
+  return saved ? `${origin}/i/${token}` : null;
 }
 
 export async function deleteInvoice(session: ErpSession, id: string) {
