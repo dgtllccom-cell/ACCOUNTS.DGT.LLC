@@ -70,8 +70,9 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
       <= Math.max(1, Math.abs(Number(pricedLine.amount)) * 0.005);
   const rateLabel = rateOnKg ? "KG" : unitLabel;
   // Sales and tax invoices carry the sample's headline; other document types keep their own title on the same layout.
+  // Sales and tax invoices are titled SALES TAX INVOICE; every other document type shows its own name, centred.
   const headline = input.docType === "tax_invoice" || input.docType === "sales_invoice"
-    ? "SALES INVOICE"
+    ? "SALES TAX INVOICE"
     : (d.docTitle || "INVOICE").toUpperCase();
   const netPerCarton = perPack(totals.totalNetWeight ?? goods.reduce((s, g) => s + (Number(g.netWeight) || 0), 0), totalPacks);
   const firstRate = goods.find((g) => g.unitPrice != null)?.unitPrice;
@@ -132,6 +133,7 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
     .centerlogo { width: 20%; text-align: center; }
     .logo { max-height: 12mm; max-width: 100%; }
     .rightblock { width: 20%; }
+    .corner { text-align: right; font-family: Arial, Helvetica, sans-serif; font-size: 12pt; font-weight: 700; letter-spacing: .3px; }
     table.frame { width: 100%; border-collapse: collapse; }
     table.frame td { border: 1px solid #000; padding: 4px 6px; vertical-align: top; }
     .title { font-family: Arial, Helvetica, sans-serif; font-size: 17pt; font-weight: 700; text-align: center; letter-spacing: .3px; }
@@ -181,12 +183,13 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
           </div>
         </div>
         <div class="centerlogo"><img class="logo" src="${esc(logo)}" alt="" /></div>
-        <div class="rightblock"></div>
+        <div class="rightblock"><div class="corner">TAX INVOICE</div></div>
       </div>
 
       <table class="frame" style="margin-top:4px">
         <tr>
-          <td colspan="2" style="width:74%"><div class="title">${esc(headline)}</div></td>
+          <td style="width:26%"></td>
+          <td style="width:48%;text-align:center"><div class="title">${esc(headline)}</div></td>
           <td style="width:26%"><div class="orig">ORIGINAL FOR<br/>RECIPIENT</div></td>
         </tr>
         <tr>
