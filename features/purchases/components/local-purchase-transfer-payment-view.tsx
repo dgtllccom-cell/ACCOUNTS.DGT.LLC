@@ -34,22 +34,6 @@ import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { cn } from "@/lib/utils";
 import { deriveLocalPurchasePostingState } from "@/lib/services/local-purchase-posting-state";
-import {
-  localPurchaseDestinationHref,
-  resolveLocalPurchaseDestination,
-  type LocalPurchaseDestinationStage,
-} from "@/lib/purchases/local-purchase-destination";
-
-const DESTINATION_ACTION_KEY: Record<LocalPurchaseDestinationStage, string> = {
-  loading: "lp.dest_send_loading",
-  warehouse_transfer: "lp.dest_send_warehouse",
-  export: "lp.dest_send_export",
-};
-const DESTINATION_ACTION_FALLBACK: Record<LocalPurchaseDestinationStage, string> = {
-  loading: "Transfer to Loading",
-  warehouse_transfer: "Transfer to Warehouse",
-  export: "Transfer to Export",
-};
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 
 export interface LocalPurchaseTransferPaymentViewProps {
@@ -2036,33 +2020,29 @@ export function LocalPurchaseTransferPaymentView({
                               <span>{tr("Print A4")}</span>
                             </button>
 
-                            {(() => {
-                              // Route to the queue the bill was booked for (shipping_mode); the other
-                              // queues never list it and the destination-stage API rejects it there.
-                              const stage = resolveLocalPurchaseDestination(row);
-                              if (!stage) {
-                                return (
-                                  <div className="w-full px-3 py-1.5 text-xs font-semibold text-slate-400 flex items-center gap-2">
-                                    <Truck className="h-3.5 w-3.5" />
-                                    <span>{tGlobal("lp.dest_none", "No destination selected on this bill")}</span>
-                                  </div>
-                                );
-                              }
-                              const Icon = stage === "warehouse_transfer" ? Warehouse : Truck;
-                              return (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setOpenRowMenuId(null);
-                                    router.push(localPurchaseDestinationHref(stage, String(row.id)));
-                                  }}
-                                  className="w-full px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
-                                >
-                                  <Icon className="h-3.5 w-3.5 text-emerald-600" />
-                                  <span>{tGlobal(DESTINATION_ACTION_KEY[stage], DESTINATION_ACTION_FALLBACK[stage])}</span>
-                                </button>
-                              );
-                            })()}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenRowMenuId(null);
+                                router.push(`/dashboard/purchase/local-purchase-loading?billId=${row.id}`);
+                              }}
+                              className="w-full px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
+                            >
+                              <Truck className="h-3.5 w-3.5 text-emerald-600" />
+                              <span>{tr("Transfer to Loading")}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenRowMenuId(null);
+                                router.push(`/dashboard/purchase/local-purchase-destination?stage=warehouse&billId=${row.id}`);
+                              }}
+                              className="w-full px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
+                            >
+                              <Warehouse className="h-3.5 w-3.5 text-indigo-600" />
+                              <span>{tr("Transfer to Warehouse")}</span>
+                            </button>
                           </div>
                         )}
                       </td>
@@ -2306,29 +2286,26 @@ export function LocalPurchaseTransferPaymentView({
 
                 {deriveLocalPurchasePostingState(viewingBill).isComplete && (
                   <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-                    {(() => {
-                      const stage = resolveLocalPurchaseDestination(viewingBill);
-                      if (!stage) {
-                        return (
-                          <span className="text-xs font-semibold text-slate-500">
-                            {tGlobal("lp.dest_none", "No destination selected on this bill")}
-                          </span>
-                        );
-                      }
-                      const Icon = stage === "warehouse_transfer" ? Warehouse : Truck;
-                      return (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            router.push(localPurchaseDestinationHref(stage, String(viewingBill.id)));
-                          }}
-                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs cursor-pointer"
-                        >
-                          <Icon className="h-3.5 w-3.5" />
-                          <span>{tGlobal(DESTINATION_ACTION_KEY[stage], DESTINATION_ACTION_FALLBACK[stage])}</span>
-                        </button>
-                      );
-                    })()}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        router.push(`/dashboard/purchase/local-purchase-loading?billId=${viewingBill.id}`);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs cursor-pointer"
+                    >
+                      <Truck className="h-3.5 w-3.5" />
+                      <span>{tr("Transfer to Loading")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        router.push(`/dashboard/purchase/local-purchase-destination?stage=warehouse&billId=${viewingBill.id}`);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs cursor-pointer"
+                    >
+                      <Warehouse className="h-3.5 w-3.5" />
+                      <span>{tr("Transfer to Warehouse")}</span>
+                    </button>
                     <button
                       type="button"
                       onClick={() => {

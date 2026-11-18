@@ -2,7 +2,7 @@
 
 import { pl } from "@/lib/reports/print-label";
 import React, { useMemo, useState, useEffect, Fragment } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   Layers,
   Globe,
@@ -32,11 +32,6 @@ import { translateHeader } from "@/lib/i18n/table-headers";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { UnifiedErpRegisterBar, type UnifiedRegisterKpiData } from "@/components/reports/unified-erp-register-bar";
 import { printDomFragmentViaModal } from "@/lib/reports/print-dom-fragment";
-import {
-  localPurchaseDestinationHref,
-  resolveLocalPurchaseDestination,
-  type LocalPurchaseDestinationStage,
-} from "@/lib/purchases/local-purchase-destination";
 
 type Stage = "warehouse_transfer" | "loading" | "export";
 
@@ -244,16 +239,6 @@ export function LocalPurchaseDestinationQueueView({
   const isBranchUser = !isSuperAdmin && !isCountryAdmin;
 
   const [purchases, setPurchases] = useState<LocalPurchaseDestinationRecord[]>([]);
-  // ?billId= deep link (from Transfer & Payment). If that bill belongs to another
-  // queue, or is not posted yet, say so instead of showing a silently empty list.
-  const searchParams = useSearchParams();
-  const linkedBillId = searchParams?.get("billId") || "";
-  const [linkedBillNotice, setLinkedBillNotice] = useState<
-    | null
-    | { kind: "other_queue"; serial: string; target: LocalPurchaseDestinationStage }
-    | { kind: "not_posted"; serial: string }
-    | { kind: "no_destination"; serial: string }
-  >(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCountry, setSelectedCountry] = useState<string>("");
@@ -430,19 +415,6 @@ export function LocalPurchaseDestinationQueueView({
       const payload = await res.json();
       if (payload.ok && payload.data?.purchases) {
         const raw = payload.data.purchases as LocalPurchaseDestinationRecord[];
-        let notice: typeof linkedBillNotice = null;
-        if (linkedBillId) {
-          const linked = raw.find((p) => String(p.id) === linkedBillId);
-          if (linked) {
-            const anyLinked = linked as any;
-            const serial = String(anyLinked.journal_serial_no || anyLinked.journalSerialNo || anyLinked.manual_bill_no || linkedBillId.slice(0, 8));
-            const target = resolveLocalPurchaseDestination(anyLinked);
-            if (String(linked.status || "").toLowerCase() !== "posted") notice = { kind: "not_posted", serial };
-            else if (!target) notice = { kind: "no_destination", serial };
-            else if (target !== stage) notice = { kind: "other_queue", serial, target };
-          }
-        }
-        setLinkedBillNotice(notice);
         const filtered = raw.filter((p) => {
           // Operational loading/warehouse/export queues must never expose review-only
           // purchases. The destination-stage API itself requires status = posted.
@@ -466,7 +438,7 @@ export function LocalPurchaseDestinationQueueView({
   useEffect(() => {
     void loadPurchases();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stage, selectedCountry, selectedBranch, linkedBillId]);
+  }, [stage, selectedCountry, selectedBranch]);
 
   // Filter purchases by search query and status
   const filteredPurchases = useMemo(() => {
@@ -748,42 +720,6 @@ export function LocalPurchaseDestinationQueueView({
       className="space-y-5 p-4 sm:p-6 text-slate-900 dark:text-slate-100 bg-slate-50/50 dark:bg-slate-950 min-h-screen"
       dir={isRtl ? "rtl" : "ltr"}
     >
-      {linkedBillNotice && (
-        <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
-          <span>
-            <span className="font-mono font-bold">{linkedBillNotice.serial}</span>{" "}
-            {linkedBillNotice.kind === "other_queue"
-              ? tt(
-                  `lp.dest_wrong_queue_${linkedBillNotice.target}`,
-                  linkedBillNotice.target === "warehouse_transfer"
-                    ? "was booked for Warehouse Transfer, so it is listed in the Warehouse Transfer queue, not here."
-                    : linkedBillNotice.target === "export"
-                      ? "was booked for Export Shipment, so it is listed in the Export queue, not here."
-                      : "was booked for Loading by Truck, so it is listed in the Loading queue, not here."
-                )
-              : linkedBillNotice.kind === "not_posted"
-                ? tt("lp.dest_not_posted", "is not posted yet. Transfer & Post it first; only posted bills enter a destination queue.")
-                : tt("lp.dest_no_destination", "has no destination (Shipment Type) saved, so it is not in any destination queue.")}
-          </span>
-          {linkedBillNotice.kind === "other_queue" && (
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => router.push(localPurchaseDestinationHref(linkedBillNotice.target, linkedBillId))}
-            >
-              {tt(
-                `lp.dest_open_${linkedBillNotice.target}`,
-                linkedBillNotice.target === "warehouse_transfer"
-                  ? "Open Warehouse Transfer queue"
-                  : linkedBillNotice.target === "export"
-                    ? "Open Export queue"
-                    : "Open Loading queue"
-              )}
-            </Button>
-          )}
-        </div>
-      )}
-
       {/* 5 KPI Summary Cards & Unified Filter Bar (matching Local Purchase Journal Report) */}
       <UnifiedErpRegisterBar
         title={pageTitle}
