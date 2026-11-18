@@ -230,6 +230,14 @@ export type JournalFilters = {
 };
 
 const emptyCard = (): CardTotals => ({ lines: 0, qty: 0, byUnit: {} });
+/** Weight of `qty` units of a lot whose recorded weight covers `purchased` units; null when the lot has no weight. */
+export function lotWeight(weight: unknown, qty: unknown, purchased: unknown): number | null {
+  const w = num(weight);
+  if (!(w > 0)) return null;
+  const p = num(purchased);
+  return p > 0 ? q4((w * num(qty)) / p) : w;
+}
+
 function addCard(card: CardTotals, row: StockJournalRow) {
   card.lines += 1;
   card.qty = q4(card.qty + row.quantity);
@@ -447,6 +455,7 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
 
     const lps = await sql`
       select lp.id, lp.goods_id, lp.goods_name, lp.supplier_name, lp.quantity_name, lp.quantity_kgs, lp.numbers, lp.purchase_currency, lp.final_cost,
+             lp.total_gross_weight, lp.net_weight,
              lp.status, lp.manual_bill_no, lp.journal_serial_no, lp.contract_no, lp.brand, lp.size, lp.country_id, lp.country_branch_id, lp.city_branch_id,
              lp.created_at, lp.line_items, lp.truck_no, lp.warehouse_id,
              c.name as country_name, c.iso2 as country_code, cb.name as country_branch_name, cib.city_name as city_branch_name,
@@ -460,7 +469,8 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
     const lpIds = lps.map((l: any) => l.id);
     const lots = lpIds.length
       ? await sql`
-          select l.id, l.lot_ref, l.local_purchase_id, l.goods_name, l.goods_id, l.unit_name, l.qty_purchased, l.brand, l.size, l.status
+          select l.id, l.lot_ref, l.local_purchase_id, l.goods_name, l.goods_id, l.unit_name, l.qty_purchased, l.brand, l.size, l.status,
+                 l.gross_weight_kg, l.net_weight_kg
           from public.purchase_lots l where l.local_purchase_id = any(${lpIds}::uuid[])`
       : [];
     const lotIds = lots.map((l: any) => l.id);
@@ -723,7 +733,10 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
       paymentStatus: (cost > 0 && paid + 0.005 >= cost ? "paid" : paid > 0 ? "partial" : "unpaid") as PaymentState,
       goodsTransferHref: `/dashboard/purchase/local-purchase/${lp.id}/goods-transfer`,
     };
-    const lpQty = num(lp.quantity_kgs || num(lp.numbers || 0) * 50);
+    // The bill's own recorded weights; the old fallback (quantity_kgs, or numbers × 50) showed the package COUNT as kg
+    // (LP-JRN-00000001: 2,100 "kg" for 2,100 boxes whose saved gross / net are 21,525 / 21,000 kg). No weight saved -> 0.
+    const lpGross = num(lp.total_gross_weight);
+    const lpNet = num(lp.net_weight) || lpGross;
     const lpBookingNo = contractNo ? `#PB-${contractNo}` : `#PB-${String(lp.id).slice(0, 6).toUpperCase()}`;
     const lpInvoiceNo = lp.manual_bill_no ? `#PI-${lp.manual_bill_no}` : `#PI-${String(lp.id).slice(0, 6).toUpperCase()}`;
     const mk = (over: Partial<StockJournalRow>): StockJournalRow => ({
@@ -731,8 +744,8 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
       unit: lp.quantity_name || "", quantity: 0, bookedQuantity: 0, loadedQuantity: 0, receivedQuantity: 0, damagedQuantity: 0,
       shortageQuantity: 0, outstandingQuantity: 0,
       origin: lp.country_name || "",
-      grossWeight: lpQty,
-      netWeight: lpQty,
+      grossWeight: lpGross,
+      netWeight: lpNet,
       bookingNo: lpBookingNo,
       invoiceNo: lpInvoiceNo,
       shipDetails: lp.truck_no ? `TRK: ${lp.truck_no}` : "—",
@@ -770,6 +783,9 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
             warehouseId: s.warehouse_id || null,
             warehouseName: s.warehouse_id ? whName.get(s.warehouse_id) ?? null : null,
             transferNo: lot.lot_ref || null,
+            // this lot's share of its own recorded weight (a part-sold lot shows only the part in this state)
+            grossWeight: lotWeight(lot.gross_weight_kg, s.qty, lot.qty_purchased) ?? lpGross,
+            netWeight: lotWeight(lot.net_weight_kg, s.qty, lot.qty_purchased) ?? lpNet,
           }),
         );
       }
