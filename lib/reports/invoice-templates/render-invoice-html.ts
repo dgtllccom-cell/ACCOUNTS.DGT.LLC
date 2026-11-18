@@ -45,5 +45,19 @@ export function renderInvoiceHtml(
     input.layout === "uae_tax" && (input.docType === "sales_invoice" || input.docType === "tax_invoice")
       ? buildUaeTaxInvoiceHtml(input)
       : tpl.render(input, flags);
-  return themeInvoiceHtml(html, colorId);
+  return withGroupWatermark(themeInvoiceHtml(html, colorId));
+}
+
+/**
+ * The Damaan group logo as a large, faded background in the centre of every invoice template (the same on
+ * every page, in every country). A template that already draws it (the Sales Tax Invoice) is left as it is.
+ */
+export function withGroupWatermark(html: string): string {
+  if (html.includes('class="watermark"') || html.includes("grp-watermark")) return html;
+  const css = `<style data-erp-invoice-watermark>
+    .grp-watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 120mm; max-width: 80vw; opacity: .08; pointer-events: none; z-index: 0; }
+  </style>`;
+  const img = `<img class="grp-watermark" src="/images/damaan-logo.png" alt="" aria-hidden="true" />`;
+  const withCss = html.includes("</head>") ? html.replace("</head>", css + "</head>") : css + html;
+  return withCss.replace(/<body([^>]*)>/i, (m) => `${m}${img}`);
 }
