@@ -4486,7 +4486,7 @@ export function CashEntryForm({
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
-                Clear
+                {tr("common.clear", "Clear")}
               </button>
               <button
                 type="button"
@@ -4497,7 +4497,7 @@ export function CashEntryForm({
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
               >
                 <X className="h-3.5 w-3.5" />
-                Cancel
+                {tr("common.cancel", "Cancel")}
               </button>
             </div>
 
@@ -4515,7 +4515,7 @@ export function CashEntryForm({
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-white px-5 py-2.5 text-xs font-bold text-blue-600 shadow-xs hover:bg-blue-50/50 dark:border-blue-900 dark:bg-slate-900 dark:text-blue-400 dark:hover:bg-blue-950/30 transition-colors"
               >
                 <Plus className="h-3.5 w-3.5" />
-                Save & New
+                {tr("common.save_and_new", "Save & New")}
               </button>
               <button
                 type="button"
@@ -4529,7 +4529,7 @@ export function CashEntryForm({
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-500/20 hover:bg-blue-700 disabled:opacity-50 transition-colors"
               >
                 <Save className="h-3.5 w-3.5" />
-                Save Entry
+                {tr("transit.save_entry", "Save Entry")}
               </button>
             </div>
           </div>
