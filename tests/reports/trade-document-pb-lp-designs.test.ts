@@ -284,6 +284,11 @@ describe("Local Purchase 3f7c20ad - saved row values", () => {
     expect(input.tradeScope).toBe("local");
   });
 
+  it("a Local Purchase with a system journal serial is numbered by it, not by its record id", () => {
+    const input = localPurchaseToTradeInput({ ...localRec, journal_serial_no: "LP-JRN-00000081", contract_no: "4" }, opts({ docType: "commercial_invoice" }));
+    expect(input.docNo).toBe("CI-LP-JRN-00000081");
+  });
+
   it("the Local Purchase Commercial Invoice prints its totals in PKR", () => {
     const html = buildTradeDocumentHtml(localPurchaseToTradeInput(localRec, opts({ docType: "commercial_invoice" })));
     expect(html).toMatch(/Three Hundred Ten Thousand Only PKR/);

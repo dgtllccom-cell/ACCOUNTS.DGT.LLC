@@ -776,7 +776,18 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
     }
   }
 
-  await localizeNames(rows, data.warehouses, f.lang);
+  // Deduplicate rows by canonical ID to ensure no duplicate entries are returned
+  const seenRowIds = new Set<string>();
+  const uniqueRows: StockJournalRow[] = [];
+  for (const r of rows) {
+    const key = r.id || `${r.sourceType}-${r.sourceId}-${r.lineKey}-${r.stage}`;
+    if (!seenRowIds.has(key)) {
+      seenRowIds.add(key);
+      uniqueRows.push(r);
+    }
+  }
+
+  await localizeNames(uniqueRows, data.warehouses, f.lang);
 
   // ── Summary: all scoped stock, before any tab / search filter ──
   const summary: StockJournalSummary = {
@@ -784,7 +795,7 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
     readyForConfirmation: emptyCard(), availableMixed: emptyCard(), reserved: emptyCard(), soldExported: emptyCard(), totalBills: 0,
   };
   const bills = new Set<string>();
-  for (const r of rows) {
+  for (const r of uniqueRows) {
     bills.add(r.sourceId);
     if (r.stage === "booking") { addCard(summary.booking, r); if (r.bookingStatus === "confirmed") addCard(summary.confirmedBooking, r); }
     else if (r.stage === "transit") addCard(summary.transit, r);
@@ -812,7 +823,7 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
   };
   const has = (v: string | null | undefined, q: string) => !!v && v.toLowerCase().includes(q);
   const search = f.search?.toLowerCase().trim();
-  const filtered = rows.filter((r) => {
+  const filtered = uniqueRows.filter((r) => {
     if (!stageOk(r)) return false;
     if (f.sourceType && f.sourceType !== "all" && r.sourceType !== f.sourceType) return false;
     if (f.destination && r.destinationType !== f.destination) return false;

@@ -971,6 +971,18 @@ export function CashEntryForm({
   const [ledgerRefreshCount, setLedgerRefreshCount] = useState(0);
   const [showPaymentWorkReport, setShowPaymentWorkReport] = useState(false);
   const [showNewRoznamchaEntryCard, setShowNewRoznamchaEntryCard] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  const entryTypeDropdownRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    setMounted(true);
+    const handleOutside = (e: MouseEvent) => {
+      if (entryTypeDropdownRef.current && !entryTypeDropdownRef.current.contains(e.target as Node)) {
+        setEntryTypeDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, []);
   const [registerType, setRegisterType] = useState("Cash Register");
   const [registerNumber, setRegisterNumber] = useState("000134");
   const [entryTypeSelection, setEntryTypeSelection] = useState("Cash");
@@ -3911,9 +3923,9 @@ export function CashEntryForm({
           NEW ROZNAMCHA ENTRY MODAL (MATCHING EXACT REFERENCE IMAGE)
           Centered modal dialog with backdrop blur, max-w-5xl, and tight layout
       ============================================================ */}
-      {showNewRoznamchaEntryCard && (
+      {mounted && showNewRoznamchaEntryCard && createPortal(
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-3 sm:p-5 md:p-6 overflow-y-auto animate-in fade-in duration-200"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-3 sm:p-5 md:p-6 overflow-y-auto animate-in fade-in duration-200"
           onClick={() => {
             setShowNewRoznamchaEntryCard(false);
             setEditEntryId(null);
@@ -3921,7 +3933,7 @@ export function CashEntryForm({
         >
           <div 
             id="new-roznamcha-entry-card" 
-            className="relative w-full max-w-5xl max-h-[94vh] overflow-y-auto rounded-2xl border border-slate-200/90 bg-white p-3 sm:p-4 shadow-2xl dark:border-slate-800 dark:bg-slate-900 transition-all my-auto"
+            className="relative w-full max-w-5xl max-h-[94vh] overflow-y-auto rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-2xl dark:border-slate-800 dark:bg-slate-900 transition-all my-auto"
             onClick={(e) => e.stopPropagation()}
           >
           {/* ── CARD HEADER ── */}
@@ -4128,16 +4140,127 @@ export function CashEntryForm({
                     <label className="mb-0.5 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                       {tr("cef.entry_type", "Entry Type")} <span className="text-rose-500">*</span>
                     </label>
-                    <div className="relative">
-                      {paymentType === "cash" ? (
-                        <Banknote className="pointer-events-none absolute left-2 top-2 h-3.5 w-3.5 text-emerald-600" />
-                      ) : paymentType === "bank" ? (
-                        <CreditCard className="pointer-events-none absolute left-2 top-2 h-3.5 w-3.5 text-emerald-600" />
-                      ) : paymentType === "transfer" ? (
-                        <ArrowLeftRight className="pointer-events-none absolute left-2 top-2 h-3.5 w-3.5 text-blue-600" />
-                      ) : (
-                        <FileText className="pointer-events-none absolute left-2 top-2 h-3.5 w-3.5 text-blue-600" />
+                    <div className="relative" ref={entryTypeDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => setEntryTypeDropdownOpen((v) => !v)}
+                        className="flex h-8 w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                      >
+                        <div className="flex items-center gap-1.5 truncate">
+                          {paymentType === "cash" && <Banknote className="h-3.5 w-3.5 text-emerald-600 shrink-0" />}
+                          {paymentType === "bank" && <CreditCard className="h-3.5 w-3.5 text-emerald-600 shrink-0" />}
+                          {(paymentType === "business" || paymentType === "invoice") && <FileText className="h-3.5 w-3.5 text-blue-600 shrink-0" />}
+                          {paymentType === "transfer" && <ArrowLeftRight className="h-3.5 w-3.5 text-blue-600 shrink-0" />}
+                          <span className="truncate">
+                            {paymentType === "cash" ? tr("cef.opt_cash", "Cash")
+                              : paymentType === "bank" ? tr("cef.opt_cheque", "Cheque")
+                              : paymentType === "transfer" ? tr("cef.opt_transfer", "Transfer")
+                              : tr("cef.opt_invoice", "Invoice")}
+                          </span>
+                        </div>
+                        <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                      </button>
+
+                      {entryTypeDropdownOpen && (
+                        <div className="absolute left-0 right-0 top-full z-50 mt-1 min-w-[150px] rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900 animate-in fade-in duration-100">
+                          {/* Cash */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPaymentType("cash");
+                              setRoznamchaBookType("branch_payment_voucher");
+                              setEntryTypeDropdownOpen(false);
+                            }}
+                            className={cn(
+                              "flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold transition-colors",
+                              paymentType === "cash"
+                                ? "bg-blue-600 text-white"
+                                : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={cn("grid h-5 w-5 place-items-center rounded-md", paymentType === "cash" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400")}>
+                                <Banknote className="h-3.5 w-3.5" />
+                              </span>
+                              <span>{tr("cef.opt_cash", "Cash")}</span>
+                            </div>
+                            {paymentType === "cash" && <Check className="h-3.5 w-3.5 text-white" />}
+                          </button>
+
+                          {/* Cheque */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPaymentType("bank");
+                              setRoznamchaBookType("branch_payment_voucher");
+                              setEntryTypeDropdownOpen(false);
+                            }}
+                            className={cn(
+                              "flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold transition-colors",
+                              paymentType === "bank"
+                                ? "bg-blue-600 text-white"
+                                : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={cn("grid h-5 w-5 place-items-center rounded-md", paymentType === "bank" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400")}>
+                                <CreditCard className="h-3.5 w-3.5" />
+                              </span>
+                              <span>{tr("cef.opt_cheque", "Cheque")}</span>
+                            </div>
+                            {paymentType === "bank" && <Check className="h-3.5 w-3.5 text-white" />}
+                          </button>
+
+                          {/* Invoice */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPaymentType("business");
+                              setRoznamchaBookType("branch_payment_voucher");
+                              setEntryTypeDropdownOpen(false);
+                            }}
+                            className={cn(
+                              "flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold transition-colors",
+                              (paymentType === "business" || paymentType === "invoice")
+                                ? "bg-blue-600 text-white"
+                                : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={cn("grid h-5 w-5 place-items-center rounded-md", (paymentType === "business" || paymentType === "invoice") ? "bg-white/20 text-white" : "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400")}>
+                                <FileText className="h-3.5 w-3.5" />
+                              </span>
+                              <span>{tr("cef.opt_invoice", "Invoice")}</span>
+                            </div>
+                            {(paymentType === "business" || paymentType === "invoice") && <Check className="h-3.5 w-3.5 text-white" />}
+                          </button>
+
+                          {/* Transfer */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPaymentType("transfer");
+                              setRoznamchaBookType("branch_payment_voucher");
+                              setEntryTypeDropdownOpen(false);
+                            }}
+                            className={cn(
+                              "flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold transition-colors",
+                              paymentType === "transfer"
+                                ? "bg-blue-600 text-white"
+                                : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={cn("grid h-5 w-5 place-items-center rounded-md", paymentType === "transfer" ? "bg-white/20 text-white" : "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400")}>
+                                <ArrowLeftRight className="h-3.5 w-3.5" />
+                              </span>
+                              <span>{tr("cef.opt_transfer", "Transfer")}</span>
+                            </div>
+                            {paymentType === "transfer" && <Check className="h-3.5 w-3.5 text-white" />}
+                          </button>
+                        </div>
                       )}
+
                       <select
                         id="cash-entry-roz-category"
                         value={paymentType === "invoice" ? "business" : paymentType}
@@ -4146,14 +4269,15 @@ export function CashEntryForm({
                           setPaymentType(val);
                           setRoznamchaBookType(val ? "branch_payment_voucher" : "");
                         }}
-                        className="h-8 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-7 pr-6 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                        className="sr-only"
+                        aria-hidden="true"
+                        tabIndex={-1}
                       >
                         <option value="cash">{tr("cef.opt_cash", "Cash")}</option>
                         <option value="bank">{tr("cef.opt_cheque", "Cheque")}</option>
                         <option value="business">{tr("cef.opt_invoice", "Invoice")}</option>
                         <option value="transfer">{tr("cef.opt_transfer", "Transfer")}</option>
                       </select>
-                      <ChevronDown className="pointer-events-none absolute right-2 top-2 h-3.5 w-3.5 text-slate-400" />
                     </div>
                   </div>
 
@@ -4805,7 +4929,8 @@ export function CashEntryForm({
             </div>
           </div>
         </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ============================================================
