@@ -499,11 +499,24 @@ export async function auditTrail(session: ErpSession, id: string) {
 export async function renderDocumentHtml(session: ErpSession, id: string, lang: SupportedLanguage, publicOrigin?: string | null): Promise<{ html: string; title: string }> {
   const inv = await getInvoice(session, id, { original: true });
 
-  const branding = await resolveBrandingServer({
+  const branding0 = await resolveBrandingServer({
     countryId: inv.countryId,
     countryBranchId: inv.countryBranchId,
     cityBranchId: inv.cityBranchId,
   });
+  // The company selected on the invoice supplies the name, address, phone, email and TRN printed on the document.
+  const company = inv.companyId ? await loadCompanyMaster(String(inv.companyId)) : null;
+  const branding: DocumentBranding = company
+    ? {
+        ...branding0,
+        entityName: company.name ?? branding0.entityName,
+        legalName: company.legalName ?? company.name ?? branding0.legalName,
+        address: company.address ?? branding0.address,
+        phone: company.phone ?? branding0.phone,
+        email: company.email ?? branding0.email,
+        taxNumber: company.taxNumber ?? branding0.taxNumber,
+      }
+    : branding0;
 
   await withLocalPg(async (sql) => {
     await sql`insert into public.business_edit_invoice_events (invoice_id, event_type, detail, actor_id, actor_name)
@@ -563,6 +576,37 @@ export async function renderDocumentHtml(session: ErpSession, id: string, lang: 
   // Every saved invoice uses the Damaan layout (the sample's section order, bank block and full-page goods table).
   const html = renderTaxInvoice({ ...input, publicUrl }, DEFAULT_TEMPLATE_FLAGS);
   return { html, title: `${inv.invoiceNo}` };
+}
+
+/** The company record an invoice is issued under (name, legal name, address, phone, email, TRN). */
+async function loadCompanyMaster(companyId: string): Promise<{ name: string | null; legalName: string | null; address: string | null; phone: string | null; email: string | null; taxNumber: string | null } | null> {
+  return withLocalPg(async (sql) => {
+    const rows = (await sql`
+      select name, legal_name, address, contacts, tax_number
+      from public.companies
+      where id = ${companyId}::uuid and deleted_at is null
+      limit 1
+    `) as any[];
+    const row = rows[0];
+    if (!row) return null;
+    const contacts: any = row.contacts ?? {};
+    const list: any[] = Array.isArray(contacts) ? contacts : [];
+    const pick = (keys: string[]): string | null => {
+      if (!Array.isArray(contacts)) {
+        for (const k of keys) if (contacts[k]) return String(contacts[k]);
+      }
+      const hit = list.find((x) => keys.includes(String(x?.type ?? "").toLowerCase()));
+      return hit?.value ? String(hit.value) : null;
+    };
+    return {
+      name: row.name || null,
+      legalName: row.legal_name || null,
+      address: row.address || null,
+      phone: pick(["phone", "mobile", "tel"]),
+      email: pick(["email"]),
+      taxNumber: row.tax_number || null,
+    };
+  });
 }
 
 /** Stores a snapshot of this invoice and returns its public link (random 192-bit token, no login to open). */

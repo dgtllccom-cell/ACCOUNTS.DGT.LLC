@@ -107,8 +107,8 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
     firstRate != null ? `${cur} ${money(firstRate)} PER ${rateLabel}` : null,
   ].filter(Boolean) as string[];
 
-  // Company header: the creating branch's company (logo space on the left, company details on the right).
-  const logo = isReal(br.logoUrl) ? String(br.logoUrl) : "/images/damaan-logo.png";
+  // The Damaan group logo: the same on every page, in every country. The company block is the invoice's company.
+  const logo = "/images/damaan-logo.png";
   // A branch without a company profile falls back to its country name in the branding; that is never printed as the company.
   const companyName = br.legalName || (isReal(br.entityName) && br.entityName !== br.countryName ? br.entityName : null);
   const companyLines = [br.address, br.phone ? `TEL: ${br.phone}` : null, br.email, br.website, br.taxNumber ? `TRN: ${br.taxNumber}` : null]
@@ -123,13 +123,15 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
   const style = `
     body { background: #fff; color: #000; font-family: 'Times New Roman', Georgia, serif; font-size: 9pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .page { width: ${pageW}; height: ${pageH}; margin: 0 auto; padding: 6mm 8mm; box-sizing: border-box; display: flex; flex-direction: column; }
-    .companyhead { display: flex; align-items: flex-start; gap: 8px; min-height: 30mm; }
-    .logocell { width: 40%; min-height: 28mm; display: flex; align-items: center; justify-content: flex-start; gap: 8px; }
-    .logo { max-height: 28mm; max-width: 60%; }
-    .qr { text-align: center; font-family: Arial, Helvetica, sans-serif; font-size: 6.5pt; font-weight: 700; }
+    .companyhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; min-height: 30mm; }
+    .leftblock { width: 58%; display: flex; align-items: flex-start; gap: 8px; }
+    .qr { text-align: center; font-family: Arial, Helvetica, sans-serif; font-size: 6.5pt; font-weight: 700; flex: 0 0 auto; }
     .qr svg { width: 24mm; height: 24mm; display: block; }
-    .companydetails { width: 60%; text-align: right; font-size: 8.5pt; line-height: 1.35; }
-    .companydetails .cname { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; font-weight: 700; }
+    .companydetails { font-size: 8.5pt; line-height: 1.35; text-align: left; }
+    .companydetails .cname { font-family: Arial, Helvetica, sans-serif; font-size: 10.5pt; font-weight: 700; }
+    .centerlogo { width: 20%; text-align: center; }
+    .logo { max-height: 12mm; max-width: 100%; }
+    .rightblock { width: 20%; }
     table.frame { width: 100%; border-collapse: collapse; }
     table.frame td { border: 1px solid #000; padding: 4px 6px; vertical-align: top; }
     .title { font-family: Arial, Helvetica, sans-serif; font-size: 17pt; font-weight: 700; text-align: center; letter-spacing: .3px; }
@@ -163,22 +165,23 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
       .goods-wrap { overflow-x: auto; }
       table.goods { min-width: 720px; height: auto; }
       .companyhead { flex-direction: column; }
-      .companydetails { text-align: left; width: 100%; }
-      .logocell { width: 100%; }
+      .leftblock, .centerlogo, .rightblock { width: 100%; }
+      .centerlogo { text-align: center; }
     }
   `;
 
   const body = `
     <div class="page">
       <div class="companyhead">
-        <div class="logocell">
-          <img class="logo" src="${esc(logo)}" alt="" />
+        <div class="leftblock">
           ${isReal(input.publicUrl) ? `<div class="qr">${invoiceQrSvg(String(input.publicUrl), 90)}<div>SCAN TO VIEW</div></div>` : ""}
+          <div class="companydetails">
+            ${companyName ? `<div class="cname">${esc(String(companyName))}</div>` : ""}
+            ${companyLines}
+          </div>
         </div>
-        <div class="companydetails">
-          ${companyName ? `<div class="cname">${esc(String(companyName))}</div>` : ""}
-          ${companyLines}
-        </div>
+        <div class="centerlogo"><img class="logo" src="${esc(logo)}" alt="" /></div>
+        <div class="rightblock"></div>
       </div>
 
       <table class="frame" style="margin-top:4px">
