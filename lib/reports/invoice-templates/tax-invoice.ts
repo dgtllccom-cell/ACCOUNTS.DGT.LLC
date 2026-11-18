@@ -123,15 +123,18 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
   const pageW = landscape ? "297mm" : "210mm";
   const style = `
     body { background: #fff; color: #000; font-family: 'Times New Roman', Georgia, serif; font-size: 9pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .page { width: ${pageW}; height: ${pageH}; margin: 0 auto; padding: 6mm 8mm; box-sizing: border-box; display: flex; flex-direction: column; }
+    .page { width: ${pageW}; height: ${pageH}; margin: 0 auto; padding: 6mm 8mm; box-sizing: border-box; display: flex; flex-direction: column; position: relative; }
     .companyhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; min-height: 30mm; }
     .leftblock { width: 58%; display: flex; align-items: flex-start; gap: 8px; }
     .qr { text-align: center; font-family: Arial, Helvetica, sans-serif; font-size: 6.5pt; font-weight: 700; flex: 0 0 auto; background: #fff; padding: 2mm; }
     .qr svg { width: 24mm; height: 24mm; display: block; }
     .companydetails { font-size: 8.5pt; line-height: 1.35; text-align: left; }
-    .companydetails .cname { font-family: Arial, Helvetica, sans-serif; font-size: 10.5pt; font-weight: 700; }
+    .companydetails .cname { font-family: Arial, Helvetica, sans-serif; font-size: 10.5pt; font-weight: 700; color: #0b4f9c; }
     .centerlogo { width: 20%; text-align: center; }
     .logo { max-height: 12mm; max-width: 100%; }
+    /* The group logo as a large, faded background in the centre of the page; the content sits above it. */
+    .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 120mm; max-width: 80%; opacity: .09; pointer-events: none; z-index: 0; }
+    .page > *:not(.watermark) { position: relative; z-index: 1; }
     .rightblock { width: 20%; }
     .corner { text-align: right; font-family: Arial, Helvetica, sans-serif; font-size: 12pt; font-weight: 700; letter-spacing: .3px; }
     table.frame { width: 100%; border-collapse: collapse; }
@@ -174,6 +177,7 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
 
   const body = `
     <div class="page">
+      <img class="watermark" src="${esc(logo)}" alt="" />
       <div class="companyhead">
         <div class="leftblock">
           ${isReal(input.publicUrl) ? `<div class="qr">${invoiceQrSvg(String(input.publicUrl), 90)}<div>SCAN TO VIEW</div></div>` : ""}
@@ -182,7 +186,7 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
             ${companyLines}
           </div>
         </div>
-        <div class="centerlogo"><img class="logo" src="${esc(logo)}" alt="" /></div>
+        <div class="centerlogo"></div>
         <div class="rightblock"><div class="corner">TAX INVOICE</div></div>
       </div>
 
