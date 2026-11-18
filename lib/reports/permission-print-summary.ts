@@ -1,4 +1,5 @@
 import { permissionCatalog } from "@/lib/permissions/catalog";
+import { parseJsonArray } from "@/lib/utils/parse-json-array";
 
 /**
  * Compact print summary of a branch/user permission grant set.
@@ -65,10 +66,14 @@ const BUCKET_ORDER = [
 ];
 
 export function buildPermissionPrintSummary(
-  grantedKeys: string[] | null | undefined,
+  grantedKeys: unknown,
   template?: string | null,
 ): PermissionPrintSummary {
-  const granted = new Set((grantedKeys ?? []).filter(Boolean));
+  // Saved records may hold the grant list as a JSON-encoded string (double-encoded jsonb);
+  // normalise first so an unexpected shape can never crash the report or print.
+  const granted = new Set(
+    parseJsonArray(grantedKeys).filter((key): key is string => typeof key === "string" && key.length > 0),
+  );
   const buckets = new Map<string, PermissionPrintItem[]>();
 
   for (const perm of permissionCatalog) {

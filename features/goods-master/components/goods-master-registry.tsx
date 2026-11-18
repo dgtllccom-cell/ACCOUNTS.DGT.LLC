@@ -384,8 +384,9 @@ export function GoodsMasterRegistry() {
       chsCode: "",
       category: "Dry Fruits",
       description: "",
-      originCountry: countries[0]?.name || "Chile",
-      originCountryId: countries[0]?.id || "",
+      // No default origin: the registry note says origin is chosen per transaction, not locked to the master.
+      originCountry: "",
+      originCountryId: "",
       isActive: true,
     });
     setIsMasterModalOpen(true);
@@ -410,11 +411,27 @@ export function GoodsMasterRegistry() {
   }
 
   // Save Section 1 (Main Goods - Save Once)
+  // Localized save error. A duplicate code and validation failures come from the server as machine codes.
+  // Reads the machine code by property (not instanceof), so it works for any thrown error shape.
+  function saveErrorMessage(err: unknown): string {
+    const rawCode = (err as { code?: unknown } | null)?.code;
+    const code = typeof rawCode === "string" ? rawCode : null;
+    if (code === "GOODS_CHS_DUPLICATE") return goodsRegistryText(lang, "duplicate").replace("{code}", masterForm.chsCode.trim().toUpperCase());
+    if (code === "VALIDATION_ERROR") return goodsRegistryText(lang, "invalid");
+    // Uncoded errors (e.g. permission or network): localized lead-in plus the server's detail text.
+    const detail = err instanceof Error ? err.message : "";
+    return `${goodsRegistryText(lang, "failed")}${detail ? ` ${detail}` : ""}`;
+  }
+
   async function handleSaveMasterSection1(e: React.FormEvent) {
     e.preventDefault();
     if (saveInFlight.current) return;
     if (!masterForm.name.trim() || !masterForm.chsCode.trim()) {
       setMasterFeedback({ type: "error", message: goodsRegistryText(lang, "required") });
+      return;
+    }
+    if (masterForm.name.trim().length < 2) {
+      setMasterFeedback({ type: "error", message: goodsRegistryText(lang, "name_short") });
       return;
     }
     saveInFlight.current = true;
@@ -433,6 +450,8 @@ export function GoodsMasterRegistry() {
           isActive: masterForm.isActive,
         });
 
+        // Confirm the save immediately: the list refresh below can take several seconds on a slow connection.
+        setMasterFeedback({ type: "success", message: goodsRegistryText(lang, "saved") });
         const updated: GoodsRecord = {
           ...activeModalGoods,
           name: masterForm.name.trim(),
@@ -459,6 +478,7 @@ export function GoodsMasterRegistry() {
 
         const newId = res?.id;
         if (!newId) throw new Error(goodsRegistryText(lang, "unconfirmed"));
+        setMasterFeedback({ type: "success", message: goodsRegistryText(lang, "saved") });
         const newGood: GoodsRecord = {
           id: newId,
           name: masterForm.name.trim(),
@@ -477,10 +497,8 @@ export function GoodsMasterRegistry() {
         await loadGoods(newId);
         loadGoodsParameters(newGood);
       }
-      setMasterFeedback({ type: "success", message: goodsRegistryText(lang, "saved") });
     } catch (err: unknown) {
-      const detail = err instanceof Error ? err.message : "";
-      setMasterFeedback({ type: "error", message: `${goodsRegistryText(lang, "failed")}${detail ? ` ${detail}` : ""}` });
+      setMasterFeedback({ type: "error", message: saveErrorMessage(err) });
     } finally {
       saveInFlight.current = false;
       setSavingMasterSection1(false);
@@ -736,7 +754,7 @@ export function GoodsMasterRegistry() {
             <div className="flex items-center gap-2.5 shrink-0">
               <div className="bg-blue-50/80 dark:bg-blue-950/40 border border-blue-150 dark:border-blue-900/60 px-4 py-2 rounded-lg min-w-[90px]">
                 <div className="text-[11px] font-bold text-blue-600 dark:text-blue-400 tracking-wider">
-                  TOTAL
+                  {translateHeader(lang, "TOTAL")}
                 </div>
                 <div className="text-xl font-bold text-blue-950 dark:text-blue-200 leading-tight">
                   {summary.total}
@@ -745,7 +763,7 @@ export function GoodsMasterRegistry() {
 
               <div className="bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-150 dark:border-emerald-900/60 px-4 py-2 rounded-lg min-w-[90px]">
                 <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">
-                  ACTIVE
+                  {translateHeader(lang, "ACTIVE")}
                 </div>
                 <div className="text-xl font-bold text-emerald-950 dark:text-emerald-200 leading-tight">
                   {summary.active}
@@ -754,7 +772,7 @@ export function GoodsMasterRegistry() {
 
               <div className="bg-rose-50/80 dark:bg-rose-950/40 border border-rose-150 dark:border-rose-900/60 px-4 py-2 rounded-lg min-w-[90px]">
                 <div className="text-[11px] font-bold text-rose-600 dark:text-rose-400 tracking-wider">
-                  INACTIVE
+                  {translateHeader(lang, "INACTIVE")}
                 </div>
                 <div className="text-xl font-bold text-rose-950 dark:text-rose-200 leading-tight">
                   {summary.inactive}
@@ -944,7 +962,7 @@ export function GoodsMasterRegistry() {
                                     : "bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300"
                                 )}
                               >
-                                {g.is_active ? "ACTIVE" : "INACTIVE"}
+                                {g.is_active ? translateHeader(lang, "ACTIVE") : translateHeader(lang, "INACTIVE")}
                               </span>
                             </td>
 
@@ -1123,7 +1141,7 @@ export function GoodsMasterRegistry() {
             {/* Stepper Tabs Bar */}
             <div className="flex items-center border-b border-slate-200 dark:border-slate-800 px-6 bg-slate-100/60 dark:bg-slate-900 overflow-x-auto gap-1">
               {[
-                { step: 1, label: "1. Main Goods (Save Once)", enabled: true },
+                { step: 1, label: goodsRegistryText(lang, "step1"), enabled: true },
                 { step: 2, label: "2. Variety / Type", enabled: masterSection1Saved },
                 { step: 3, label: "3. Size / Grade", enabled: masterSection1Saved },
                 { step: 4, label: "4. Brand", enabled: masterSection1Saved },
@@ -1172,7 +1190,7 @@ export function GoodsMasterRegistry() {
                   <div className="bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-3.5 rounded-xl flex items-center gap-3">
                     <Sparkles className="w-5 h-5 text-blue-600 shrink-0" />
                     <p className="text-xs text-blue-900 dark:text-blue-200">
-                      <strong>1. Main Goods (Save Once):</strong> Enter Goods Name, HS Code and Category (Dry / Fresh). After saving, Options 2, 3, 4, 5 unlock below.
+                      <strong>{goodsRegistryText(lang, "step1")}:</strong> {goodsRegistryText(lang, "s1_intro")}
                     </p>
                   </div>
 
@@ -1180,7 +1198,7 @@ export function GoodsMasterRegistry() {
                     {/* Goods Name */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                        Goods Name <span className="text-rose-500">*</span>
+                        {goodsRegistryText(lang, "label_name")} <span className="text-rose-500">*</span>
                       </label>
                       <Input
                         placeholder="e.g. ALMOND KERNELS / WALNUT IN SHELL"
@@ -1194,7 +1212,7 @@ export function GoodsMasterRegistry() {
                     {/* HS / PCT Code */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                        HS / PCT Code <span className="text-rose-500">*</span>
+                        {goodsRegistryText(lang, "label_hs")} <span className="text-rose-500">*</span>
                       </label>
                       <Input
                         placeholder="0000-0000"
@@ -1211,7 +1229,7 @@ export function GoodsMasterRegistry() {
                     {/* Category (Dry Fruits / Fresh Fruits / etc.) */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                        Category (Dry / Fresh) <span className="text-rose-500">*</span>
+                        {goodsRegistryText(lang, "label_category")} <span className="text-rose-500">*</span>
                       </label>
                       <div className="relative">
                         <select
@@ -1231,15 +1249,15 @@ export function GoodsMasterRegistry() {
 
 {/* Origin Country note: selected at transaction level */}
                     <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-slate-500 flex items-center gap-2">
-                      <span className="font-semibold text-slate-700 dark:text-slate-300">Transaction-Level Origin:</span>
-                      <span>Product origin is selected during Purchase/Sales booking rather than permanently locked to the master good.</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">{goodsRegistryText(lang, "origin_note_title")}</span>
+                      <span>{goodsRegistryText(lang, "origin_note")}</span>
                     </div>
                   </div>
 
                   {/* Description */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                      Description / Commercial Specification
+                      {goodsRegistryText(lang, "label_description")}
                     </label>
                     <textarea
                       rows={2}
@@ -1260,7 +1278,7 @@ export function GoodsMasterRegistry() {
                         className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                       />
                       <label htmlFor="master_modal_active" className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        Active in ERP
+                        {goodsRegistryText(lang, "label_active")}
                       </label>
                     </div>
 
@@ -1274,7 +1292,7 @@ export function GoodsMasterRegistry() {
                       ) : (
                         <Check className="w-4 h-4 mr-2" />
                       )}
-                      {activeModalGoods ? "💾 Update Goods" : "💾 Save Goods & Unlock Options 2–6"}
+                      {activeModalGoods ? goodsRegistryText(lang, "save_update") : goodsRegistryText(lang, "save_new")}
                     </Button>
                   </div>
                 </form>
@@ -2139,7 +2157,7 @@ export function GoodsMasterRegistry() {
                           : "bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300"
                       )}
                     >
-                      {viewingGoods.is_active ? "ACTIVE" : "INACTIVE"}
+                      {viewingGoods.is_active ? translateHeader(lang, "ACTIVE") : translateHeader(lang, "INACTIVE")}
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">

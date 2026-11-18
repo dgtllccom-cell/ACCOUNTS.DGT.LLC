@@ -145,9 +145,11 @@ export function PurchaseBookingReportGrid({
       <div
         className={cn(
           "grid gap-3.5 items-stretch w-full",
+          // Do not squeeze four rich account panels into a narrow wizard
+          // right column. Only use four columns in the wider final report.
           fullWidth
-            ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-            : "grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4"
+            ? "grid-cols-1 md:grid-cols-2 2xl:grid-cols-4"
+            : "grid-cols-1 md:grid-cols-2"
         )}
       >
         {/* ================= CARD 1: BRANCH & USER INFORMATION ================= */}

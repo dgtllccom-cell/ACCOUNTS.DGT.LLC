@@ -51,14 +51,21 @@ export async function GET(request: NextRequest) {
     const supabase = await createApiSupabaseClient();
     const targetDate = date || new Date().toISOString().slice(0, 10);
     if (!Number.isFinite(Date.parse(`${targetDate}T00:00:00Z`)) || new Date(`${targetDate}T00:00:00Z`).toISOString().slice(0, 10) !== targetDate) throw new ApiClientError("Invalid transaction date.");
+    // The Daily Exchange Rate module keeps one approved rate per country and date: units of the country's
+    // currency for 1 USD. A USD entry in a non-USD country is converted with that same rate, so the country
+    // rate is resolved here whatever the entry currency is. Only a USD-based country returns 1.
+    // Carry-forward (latest approved rate on or before the date) is kept from the live version and uses the country currency.
+    const { data: countryData } = await supabase.from("countries").select("currency_code").eq("id", countryId).maybeSingle();
+    const countryRow = countryData as { currency_code?: string | null } | null;
+    const countryCurrency = String(countryRow?.currency_code || "").toUpperCase() || null;
     let row: any = null;
     let isCarryForward = false;
     let carryForwardFromDate: string | null = null;
     try {
-      if (currency === "USD") {
+      if (countryCurrency === "USD") {
         row = { rate_date: targetDate, currency_code: "USD", credit_rate: 1, debit_rate: 1, buying_rate: 1, selling_rate: 1 };
       } else {
-        row = await loadExactDailyRate(supabase, { countryId, branchId: countryBranchId, date: targetDate, currency });
+        row = await loadExactDailyRate(supabase, { countryId, branchId: countryBranchId, date: targetDate, currency: "" });
         // If not found for exact date, carry forward from the latest approved rate on or before targetDate
         if (!row) {
           let query = (supabase as any).from("daily_usd_rates")
@@ -72,7 +79,7 @@ export async function GET(request: NextRequest) {
           } else {
             query = query.is("country_branch_id", null);
           }
-          if (currency) query = query.eq("currency_code", currency);
+          if (countryCurrency) query = query.eq("currency_code", countryCurrency);
           const { data: latestRates, error: cfErr } = await query.order("rate_date", { ascending: false }).limit(10);
           if (!cfErr && latestRates && latestRates.length > 0) {
             const best = latestRates.find((r: any) => countryBranchId && r.country_branch_id === countryBranchId) || latestRates[0];
@@ -105,7 +112,10 @@ export async function GET(request: NextRequest) {
       isExactDate,
       isCarryForward,
       carryForwardFromDate,
-      isBranchSpecific: found && Boolean(row?.country_branch_id || row?.is_branch_specific)
+      isBranchSpecific: found && Boolean(row?.country_branch_id || row?.is_branch_specific),
+      countryCurrency,
+      entryCurrency: currency || countryCurrency,
+      isBaseCurrency: !currency || currency === countryCurrency
     });
   } catch (error) {
     return handleApiError(error);

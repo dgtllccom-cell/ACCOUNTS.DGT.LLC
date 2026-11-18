@@ -2,6 +2,7 @@ import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { printStore } from "@/lib/store/print-store";
 import type { PermissionPrintSummary } from "@/lib/reports/permission-print-summary";
+import { qrCodeSvgMarkup } from "@/lib/qr/qr-core";
 
 /**
  * Canonical, reusable A4 "master profile" print/PDF engine for the whole ERP.
@@ -56,8 +57,57 @@ export type MProfileApproval = {
   companyValue?: string;
 };
 
+/** One label/value row of the Customer Account Profile card. value null = not held by the ERP → shown as "-". */
+export type ProfileCardField = { label: string; value: string | null | undefined };
+export type ProfileCardBank = {
+  no: string;
+  name: string | null;
+  iban: string | null;
+  currency: string | null;
+  branch: string | null;
+  accountType: string | null;
+  status: string | null;
+  active: boolean;
+};
+/** The Customer Account Profile layout (sample: DGT header, holder card, account / branch / customer / bank tables,
+ *  activities + remarks, signatures, footer). Every string is already translated; every value is real data or null. */
+export type ProfileCardConfig = {
+  title: string;
+  brand: string;
+  tagline: string;
+  trust: string;
+  footerReport: string;
+  companyLines: Array<string | null | undefined>;
+  logoUrl?: string | null;
+  brandEntityName?: string | null;
+  photoUrl?: string | null;
+  holderName: string;
+  holderIdLabel: string;
+  holderId: string | null;
+  /** Text encoded in the QR under the photo (account identifiers only). Null = no QR. */
+  qrValue?: string | null;
+  /** Caption under the QR, already translated. */
+  qrCaption?: string;
+  account: ProfileCardField[];
+  branch: ProfileCardField[];
+  branchStatus: { label: string; value: string | null; active: boolean };
+  personal: ProfileCardField[];
+  contact: ProfileCardField[];
+  business: ProfileCardField[];
+  banks: { columns: string[]; rows: ProfileCardBank[] };
+  activitiesTitle: string;
+  activities: string[];
+  remarksTitle: string;
+  remarks: string[];
+  sectionTitles: { account: string; branch: string; customer: string; personal: string; contact: string; business: string; banks: string };
+  signatures: string[];
+  signatureHint: string;
+};
+
 export type MasterProfileConfig = {
   lang?: string;
+  /** Customer Account Profile layout (sample). When set, buildMasterProfileReportHtml renders it instead of the section cards. */
+  profileCard?: ProfileCardConfig;
   autoPrint?: boolean;
   title: string;            // translated report title, e.g. t(lang,"branch.report_title")
   subtitle?: string;        // translated subtitle
@@ -111,6 +161,7 @@ function escapeHtml(value: string) {
  * verification/snapshot tooling.
  */
 export function buildMasterProfileReportHtml(config: MasterProfileConfig): string {
+  if (config.profileCard) return buildProfileCardHtml(config, config.profileCard);
   const lang = (config.lang || "en") as SupportedLanguage;
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
@@ -454,4 +505,236 @@ export function buildMasterProfileReportHtml(config: MasterProfileConfig): strin
 export function openMasterProfileReportWindow(config: MasterProfileConfig) {
   if (typeof window === "undefined") return;
   printStore.openPrint(buildMasterProfileReportHtml(config), config.title);
+}
+
+/**
+ * Customer Account Profile layout (the owner's sample). Same engine as every master profile: same escaping, same A4 @page
+ * rules, same RTL switch, same print store. Values are real data or "-"; nothing is ever filled from a sample.
+ */
+function buildProfileCardHtml(config: MasterProfileConfig, pc: ProfileCardConfig): string {
+  const lang = (config.lang || "en") as SupportedLanguage;
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+  const DASH = "-";
+  const v = (value: string | null | undefined) => {
+    const s = value === null || value === undefined ? "" : String(value);
+    return s.trim() ? escapeHtml(s.trim()) : DASH;
+  };
+  const safeImg = (u: string) => (/^https?:\/\//i.test(u) || u.startsWith("data:") || u.startsWith("/") ? escapeHtml(u) : "");
+  const logo = (pc.logoUrl || "").toString().trim();
+  const photo = (pc.photoUrl || "").toString().trim();
+  const qrSvg = pc.qrValue ? qrCodeSvgMarkup(pc.qrValue, { size: 120, quietZone: 2 }) : "";
+  const holder = (pc.holderName || "").trim();
+  const initials = holder && holder !== DASH
+    ? holder.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => Array.from(w)[0]).join("").toUpperCase()
+    : "";
+  const reportId = `${escapeHtml(config.reportIdPrefix || "ACCT")}-${v(config.reportIdValue)}`;
+  const stampDate = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+
+  const kv = (fields: ProfileCardField[]) =>
+    `<table class="pc-kv">${fields
+      .map((f) => `<tr><td class="pc-k">${escapeHtml(f.label)}</td><td class="pc-v">${v(f.value)}</td></tr>`)
+      .join("")}</table>`;
+
+  const pill = (text: string | null, active: boolean) =>
+    text ? `<span class="pc-pill ${active ? "pc-pill-on" : "pc-pill-off"}">${escapeHtml(text)}</span>` : v(null);
+
+  const branchRows = pc.branch
+    .map((f) => `<tr><td class="pc-k">${escapeHtml(f.label)}</td><td class="pc-v">${v(f.value)}</td></tr>`)
+    .join("");
+  const statusRow = `<tr><td class="pc-k">${escapeHtml(pc.branchStatus.label)}</td><td class="pc-v">${pill(pc.branchStatus.value, pc.branchStatus.active)}</td></tr>`;
+
+  const bankRows = pc.banks.rows.length
+    ? pc.banks.rows
+        .map(
+          (b) => `<tr>
+            <td>${escapeHtml(b.no)}</td>
+            <td>${v(b.name)}</td>
+            <td class="pc-num">${v(b.iban)}</td>
+            <td>${v(b.currency)}</td>
+            <td>${v(b.branch)}</td>
+            <td>${v(b.accountType)}</td>
+            <td>${pill(b.status, b.active)}</td>
+          </tr>`,
+        )
+        .join("")
+    : `<tr><td colspan="${pc.banks.columns.length}" class="pc-none">${DASH}</td></tr>`;
+
+  const activities = pc.activities.length
+    ? pc.activities.map((a) => `<li><span class="pc-tick">✓</span>${escapeHtml(a)}</li>`).join("")
+    : `<li class="pc-none">${DASH}</li>`;
+  const remarks = pc.remarks.length
+    ? pc.remarks.map((r) => `<li>${escapeHtml(r)}</li>`).join("")
+    : `<li class="pc-none">${DASH}</li>`;
+
+  const companyLines = pc.companyLines
+    .map((s) => (s == null ? "" : String(s).trim()))
+    .filter(Boolean)
+    .map((s) => `<div>${escapeHtml(s)}</div>`)
+    .join("") || `<div>${DASH}</div>`;
+
+  const signatures = pc.signatures
+    .map(
+      (label) => `<div class="pc-sig">
+        <div class="pc-sig-label">${escapeHtml(label)}</div>
+        <div class="pc-sig-line"></div>
+        <div class="pc-sig-hint">${escapeHtml(pc.signatureHint)}</div>
+      </div>`,
+    )
+    .join("");
+
+  return `<!doctype html>
+<html lang="${lang}" dir="${isRtl ? "rtl" : "ltr"}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${escapeHtml(pc.title)}</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Naskh+Arabic:wght@400;600;700&family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap');
+      @page {
+        size: A4 portrait;
+        margin: 8mm 9mm 10mm 9mm;
+        @bottom-left  { content: "${escapeHtml(pc.footerReport)}"; font-size: 6.5pt; color: #64748b; }
+        @bottom-right { content: counter(page) " / " counter(pages); font-size: 6.5pt; color: #64748b; }
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body { background: #eef2f7; color: #0f172a; font-family: 'Inter', 'Noto Naskh Arabic', Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      html[lang="ur"] body { font-family: 'Noto Nastaliq Urdu', 'Noto Naskh Arabic', 'Inter', serif; }
+      html[lang="ar"] body, html[lang="fa"] body, html[lang="ps"] body { font-family: 'Noto Naskh Arabic', 'Inter', sans-serif; }
+      .pc-page { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 8mm 9mm 10mm; background: #fff; display: flex; flex-direction: column; gap: 6px; }
+      @media print { body { background: #fff; } .pc-page { width: auto; min-height: 0; margin: 0; padding: 0; } }
+      .pc-card, .pc-holder, .pc-sign, .pc-bottom, .pc-cust, .pc-banksec { break-inside: avoid; page-break-inside: avoid; }
+      /* header */
+      .pc-head { display: grid; grid-template-columns: 1fr 1.6fr 1fr; align-items: center; gap: 10px; }
+      .pc-logo { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+      .pc-logo-img { max-height: 46px; max-width: 100%; object-fit: contain; }
+      .pc-logo-name { font-size: 9px; font-weight: 900; color: #0b2d5b; text-transform: uppercase; }
+      .pc-titlebox { background: #0b2d5b; color: #fff; border-radius: 6px; padding: 7px 10px; text-align: center; }
+      .pc-title { font-size: 14px; font-weight: 900; letter-spacing: 0.3px; text-transform: uppercase; }
+      .pc-brandline { font-size: 9px; font-weight: 700; letter-spacing: 3px; margin-top: 3px; }
+      .pc-tagline { font-size: 7px; font-weight: 700; letter-spacing: 1.2px; margin-top: 3px; color: #cfe3ff; }
+      .pc-contact { font-size: 7.5px; color: #1e293b; line-height: 1.45; font-weight: 600; }
+      .pc-rule { height: 2px; background: #1f9d55; margin: 2px 0 4px; }
+      /* top row: holder | account | branch */
+      .pc-top { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.2fr) minmax(0, 1.2fr); gap: 8px; align-items: start; }
+      .pc-holder { background: #0b2d5b; color: #fff; border-radius: 8px; padding: 8px 8px 10px; text-align: center; }
+      .pc-photo { width: 100%; aspect-ratio: 3 / 3.6; background: #dbe6f4; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+      .pc-photo img { width: 100%; height: 100%; object-fit: cover; }
+      .pc-initials { font-size: 30px; font-weight: 900; color: #0b2d5b; }
+      .pc-holder-name { font-size: 11px; font-weight: 900; margin-top: 7px; text-transform: uppercase; word-break: break-word; }
+      .pc-holder-id { font-size: 8px; margin-top: 4px; color: #cfe3ff; font-weight: 600; word-break: break-word; }
+      .pc-qr { margin: 8px auto 0; width: 84px; background: #fff; border-radius: 4px; padding: 3px; }
+      .pc-qr svg { display: block; width: 100%; height: auto; max-width: 100%; }
+      .pc-qr-cap { font-size: 6.5px; margin-top: 4px; color: #cfe3ff; font-weight: 700; text-align: center; line-height: 1.3; }
+      .pc-card { background: #fff; border: 1px solid #cfd9e6; border-radius: 7px; overflow: hidden; }
+      .pc-card-h { background: #0b2d5b; color: #fff; padding: 6px 9px; font-size: 9.5px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.4px; }
+      .pc-kv, .pc-table-branch { width: 100%; border-collapse: collapse; }
+      .pc-kv td, .pc-table-branch td { padding: 4px 7px; border-bottom: 1px solid #e3eaf3; font-size: 8.5px; vertical-align: top; }
+      .pc-k { background: #f3f7fc; color: #334155; font-weight: 600; width: 46%; word-break: break-word; }
+      .pc-v { font-weight: 800; color: #0f172a; word-break: break-word; }
+      .pc-pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 8px; font-weight: 800; }
+      .pc-pill-on { background: #1e9e54; color: #fff; }
+      .pc-pill-off { background: #e2e8f0; color: #334155; }
+      /* customer details */
+      .pc-cust { background: #fff; border: 1px solid #0b2d5b; border-radius: 7px; overflow: hidden; }
+      .pc-cust-h { background: #0b2d5b; color: #fff; padding: 6px 9px; font-size: 9.5px; font-weight: 900; text-transform: uppercase; }
+      .pc-cust-grid { display: grid; grid-template-columns: 1.1fr 1fr 1fr; }
+      .pc-sub + .pc-sub { border-inline-start: 1px solid #cfd9e6; }
+      .pc-sub-h { background: #cdeedd; color: #0b2d5b; font-size: 8.5px; font-weight: 900; padding: 4px 8px; }
+      /* banks */
+      .pc-banksec { background: #fff; border: 1px solid #0b2d5b; border-radius: 7px; overflow: hidden; }
+      .pc-banks { width: 100%; border-collapse: collapse; }
+      .pc-banks th { background: #cdeedd; color: #0b2d5b; font-size: 7.5px; font-weight: 900; text-transform: uppercase; padding: 4px 6px; text-align: start; border-bottom: 1px solid #b6d9c4; }
+      .pc-banks td { font-size: 8px; padding: 4px 6px; border-bottom: 1px solid #e3eaf3; vertical-align: top; word-break: break-word; }
+      .pc-num { direction: ltr; text-align: start; font-variant-numeric: tabular-nums; }
+      .pc-none { color: #64748b; font-weight: 700; }
+      /* bottom: activities | remarks */
+      .pc-bottom { display: grid; grid-template-columns: 1fr 1.25fr; gap: 8px; }
+      .pc-bottom .pc-card-h { display: flex; align-items: center; }
+      .pc-ticks, .pc-bullets { list-style: none; margin: 0; padding: 7px 10px; }
+      .pc-ticks li, .pc-bullets li { font-size: 8.5px; font-weight: 600; padding: 3px 0; display: flex; gap: 6px; align-items: flex-start; }
+      .pc-tick { color: #1e9e54; font-weight: 900; }
+      .pc-bullets li::before { content: "•"; color: #0b2d5b; font-weight: 900; }
+      /* signatures + footer */
+      .pc-sign-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 6px; }
+      .pc-sig { text-align: center; }
+      .pc-sig-label { font-size: 9.5px; font-weight: 900; color: #0b2d5b; }
+      .pc-sig-line { height: 18px; border-bottom: 1px solid #64748b; margin: 16px 12px 3px; }
+      .pc-sig-hint { font-size: 7.5px; color: #64748b; }
+      .pc-foot { margin-top: auto; background: #0b2d5b; color: #e2e8f0; border-radius: 4px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; font-size: 8px; font-weight: 700; }
+      .pc-foot-tag { font-style: italic; color: #bfdbfe; font-weight: 800; }
+      .pc-green { height: 2px; background: #1f9d55; }
+    </style>
+  </head>
+  <body>
+    <div class="pc-page" data-report-id="${reportId}" data-stamp="${escapeHtml(stampDate)}">
+      <div class="pc-head">
+        <div class="pc-logo">
+          ${logo ? `<img class="pc-logo-img" src="${safeImg(logo)}" alt="" />` : ""}
+          <div class="pc-logo-name">${v(pc.brandEntityName)}</div>
+        </div>
+        <div class="pc-titlebox">
+          <div class="pc-title">${escapeHtml(pc.title)}</div>
+          <div class="pc-brandline">${escapeHtml(pc.brand)}</div>
+          <div class="pc-tagline">${escapeHtml(pc.tagline)}</div>
+        </div>
+        <div class="pc-contact">${companyLines}</div>
+      </div>
+      <div class="pc-rule"></div>
+
+      <div class="pc-top">
+        <div class="pc-holder">
+          <div class="pc-photo">${photo ? `<img src="${safeImg(photo)}" alt="" />` : `<span class="pc-initials">${escapeHtml(initials || DASH)}</span>`}</div>
+          <div class="pc-holder-name">${v(pc.holderName)}</div>
+          <div class="pc-holder-id">${escapeHtml(pc.holderIdLabel)}: ${v(pc.holderId)}</div>
+          ${qrSvg ? `<div class="pc-qr">${qrSvg}</div><div class="pc-qr-cap">${escapeHtml(pc.qrCaption || "")}</div>` : ""}
+        </div>
+        <div class="pc-card">
+          <div class="pc-card-h">${escapeHtml(pc.sectionTitles.account)}</div>
+          ${kv(pc.account)}
+        </div>
+        <div class="pc-card">
+          <div class="pc-card-h">${escapeHtml(pc.sectionTitles.branch)}</div>
+          <table class="pc-table-branch">${branchRows}${statusRow}</table>
+        </div>
+      </div>
+
+      <div class="pc-cust">
+        <div class="pc-cust-h">${escapeHtml(pc.sectionTitles.customer)}</div>
+        <div class="pc-cust-grid">
+          <div class="pc-sub"><div class="pc-sub-h">${escapeHtml(pc.sectionTitles.personal)}</div>${kv(pc.personal)}</div>
+          <div class="pc-sub"><div class="pc-sub-h">${escapeHtml(pc.sectionTitles.contact)}</div>${kv(pc.contact)}</div>
+          <div class="pc-sub"><div class="pc-sub-h">${escapeHtml(pc.sectionTitles.business)}</div>${kv(pc.business)}</div>
+        </div>
+      </div>
+
+      <div class="pc-banksec">
+        <div class="pc-card-h">${escapeHtml(pc.sectionTitles.banks)}</div>
+        <table class="pc-banks">
+          <thead><tr>${pc.banks.columns.map((c) => `<th>${escapeHtml(c)}</th>`).join("")}</tr></thead>
+          <tbody>${bankRows}</tbody>
+        </table>
+      </div>
+
+      <div class="pc-bottom">
+        <div class="pc-card">
+          <div class="pc-card-h">${escapeHtml(pc.activitiesTitle)}</div>
+          <ul class="pc-ticks">${activities}</ul>
+        </div>
+        <div class="pc-card">
+          <div class="pc-card-h">${escapeHtml(pc.remarksTitle)}</div>
+          <ul class="pc-bullets">${remarks}</ul>
+        </div>
+      </div>
+
+      <div class="pc-sign-row">${signatures}</div>
+
+      <div class="pc-green"></div>
+      <div class="pc-foot">
+        <span>${v(pc.brandEntityName)} | ${escapeHtml(pc.footerReport)}</span>
+        <span class="pc-foot-tag">${escapeHtml(pc.trust)}</span>
+      </div>
+    </div>
+  </body>
+</html>`;
 }

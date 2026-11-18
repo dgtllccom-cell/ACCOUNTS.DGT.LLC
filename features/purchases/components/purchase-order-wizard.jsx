@@ -966,8 +966,15 @@ export function PurchaseOrderWizard({ session }) {
     const sComp = dbCompanies.find(c => String(c.id) === String(form.salesCompanyId) || c.name === form.salesCompanyName) || {};
 
     // Find accounts for purchase and sales
-    const pAcc = dbAccounts.find(a => a.accountCode === form.purchaseAccountNo || a.accountName === form.purchaseAccountName) || {};
-    const sAcc = dbAccounts.find(a => a.accountCode === form.salesAccountNo || a.accountName === form.salesAccountName) || {};
+    // Match only an explicitly selected account. Empty names/codes must not
+    // resolve to an unrelated record in the shared account master.
+    const matchesSelectedAccount = (account, id, code, name) => {
+      if (id && String(account.id || account.accountId || "") === String(id)) return true;
+      if (code && String(account.accountCode || "") === String(code)) return true;
+      return !id && !code && Boolean(name) && account.accountName === name;
+    };
+    const pAcc = dbAccounts.find(a => matchesSelectedAccount(a, form.purchaseAccountId, form.purchaseAccountNo, form.purchaseAccountName)) || {};
+    const sAcc = dbAccounts.find(a => matchesSelectedAccount(a, form.salesAccountId, form.salesAccountNo, form.salesAccountName)) || {};
 
     // Real account figures only — never fabricated (no multipliers, no invented defaults).
     const numOrNull = (v) => (v === undefined || v === null || v === "" || Number.isNaN(Number(v)) ? null : Number(v));
@@ -1005,7 +1012,8 @@ export function PurchaseOrderWizard({ session }) {
       userStatus: form.userStatus || "",
       userJoiningDate: form.userJoiningDate || "",
       userPasswordExpiry: form.userPasswordExpiry || "",
-      userLastLogin: `${form.purchaseDate || new Date().toISOString().slice(0, 10)} 10:25 AM`,
+      // Never synthesize a login time from the booking date.
+      userLastLogin: activeSession?.user?.lastLoginAt || "",
       userLanguage: lang || "",
 
       // Bill Info
@@ -1862,14 +1870,13 @@ export function PurchaseOrderWizard({ session }) {
       matchedComp = dbCompanies.find(c => c.id === companyId);
     }
     let cName = matchedComp?.name || richAccount.companyName || richAccount.company_name || "";
-    if (!cName && dbCompanies.length > 0) {
-      cName = dbCompanies[0]?.name || "";
-    }
+    // Do not silently show the first unrelated company when this account has
+    // no linked company. Preserve an empty company field until explicitly set.
     const cCode = cName ? "COM-" + cName.slice(0, 3).toUpperCase() : "";
-    const resolvedCompId = matchedComp?.id || companyId || (dbCompanies.length > 0 ? dbCompanies[0].id : null);
+    const resolvedCompId = matchedComp?.id || companyId || null;
     const entityId = richAccount.customerId || richAccount.customer_id || richAccount.id || accountNo;
-    const contactPerson = richAccount.contactPerson || richAccount.contact_person || (accountNo === "UAE-DUB-AC-0003" ? "Lily" : "");
-    const bankName = richAccount.bankName || richAccount.bank_name || (accountNo === "UAE-DUB-AC-0003" ? "CHINA CONSTRUCTION BANK (DALIAN BRANCH)" : "");
+    const contactPerson = richAccount.contactPerson || richAccount.contact_person || "";
+    const bankName = richAccount.bankName || richAccount.bank_name || "";
     const resolvedAccountId = richAccount.id || richAccount.accountId || null;
 
     setForm((prev) => ({
@@ -3808,7 +3815,7 @@ export function PurchaseOrderWizard({ session }) {
   };
 
   return (
-    <div id="wizard-root-print" dir={isRtl ? "rtl" : "ltr"} className="space-y-2 text-foreground bg-background mt-[-10px] max-w-[1500px] mx-auto">
+    <div id="wizard-root-print" dir={isRtl ? "rtl" : "ltr"} className="w-full min-w-0 max-w-[1900px] mx-auto space-y-2 text-foreground bg-background mt-[-10px] print:max-w-none">
       {draftPrefillRef && (
         <div className="rounded-lg bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200">
           {t(lang, "dintake.wizard_prefilled", "Pre-filled from reviewed document draft")} — {draftPrefillRef}. {t(lang, "dintake.wizard_prefilled_hint", "Review every field, then save and post as usual.")}
@@ -4979,9 +4986,9 @@ export function PurchaseOrderWizard({ session }) {
                   </div>
 
                   {/* ================= MAIN 2-COLUMN WORKSPACE ================= */}
-                  <div className="flex flex-col lg:flex-row gap-4 items-start w-full">
+                  <div className="flex flex-col xl:flex-row gap-4 items-start w-full min-w-0">
                     {/* LEFT COLUMN: Form (Step 1 Booking or Step 2 Goods) */}
-                    <div className="w-full lg:w-[380px] xl:w-[410px] 2xl:w-[430px] shrink-0 space-y-4">
+                    <div className="w-full xl:w-[380px] 2xl:w-[410px] shrink-0 space-y-4">
                       {activeTab === "booking" && (
                         <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-4 w-full">
                           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
@@ -6321,7 +6328,7 @@ export function PurchaseOrderWizard({ session }) {
                     </div>
 
                     {/* RIGHT COLUMN: 4 Report Cards (Top) + Purchase Booking Register Table (Bottom) */}
-                    <div className="flex-1 min-w-0 w-full space-y-4">
+                    <div className="flex-1 min-w-0 w-full space-y-4 overflow-hidden">
                       {/* 4 Report Cards */}
                       {renderGlobalInfoCards(false)}
 

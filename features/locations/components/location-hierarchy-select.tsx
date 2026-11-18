@@ -624,6 +624,8 @@ export function LocationQuickCreateModal({
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Set on the first Save click so the required-field message appears next to the button.
+  const [attempted, setAttempted] = useState(false);
 
   // Country-specific fields
   const [iso2, setIso2] = useState("");
@@ -647,17 +649,22 @@ export function LocationQuickCreateModal({
     return null;
   }, [type, countryId, stateProvinceId, cityId, lang]);
 
-  const canSave = useMemo(() => {
-    if (!name.trim()) return false;
-    if (missingParentMessage) return false;
-    if (type === "country") return Boolean(iso2.trim());
-    return true;
-  }, [type, missingParentMessage, name, iso2]);
+  // Required-field message shown next to the Save button (not disabled silently).
+  const requiredMessage = useMemo(() => {
+    if (!name.trim()) {
+      if (type === "area") return t(lang, "lfix.err_area_name_required", "Area name is required.");
+      return t(lang, "lfix.err_name_required", "{0} name is required.").split("{0}").join(typeLabel);
+    }
+    if (type === "country" && !iso2.trim()) return t(lang, "lfix.err_iso2_required", "ISO2 country code is required.");
+    return null;
+  }, [type, name, iso2, typeLabel, lang]);
 
   async function handleSave() {
-    if (!canSave || !type) return;
-    setSaving(true);
+    if (!type) return;
+    setAttempted(true);
     setError(null);
+    if (requiredMessage || missingParentMessage) return;
+    setSaving(true);
     try {
       if (type === "country") {
         const res = await apiPost<{ country: LocationCountry }>("/api/erp/locations/countries", {
@@ -706,7 +713,7 @@ export function LocationQuickCreateModal({
         onCreated(res.area.id, res.area);
       }
     } catch (err: any) {
-      setError(err?.message || "An error occurred while saving.");
+      setError(err?.message || t(lang, "lfix.err_save_generic", "An error occurred while saving."));
     } finally {
       setSaving(false);
     }
@@ -726,12 +733,6 @@ export function LocationQuickCreateModal({
 
   return (
     <SimpleModal title={title} onClose={onClose} className="max-w-md">
-      {error ? (
-        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
-          {error}
-        </div>
-      ) : null}
-
       {missingParentMessage ? (
         <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800 flex items-center gap-2 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300">
           <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
@@ -764,6 +765,8 @@ export function LocationQuickCreateModal({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={`${t(lang, "lqm.enter_name_ph")}`}
+            aria-invalid={attempted && !name.trim() ? true : undefined}
+            className={attempted && !name.trim() ? "border-rose-400 focus-visible:ring-rose-300" : undefined}
           />
         </div>
 
@@ -781,7 +784,7 @@ export function LocationQuickCreateModal({
 
         {(type === "state" || type === "district" || type === "city" || type === "area") && (
           <div className="space-y-2">
-            <Label>{type === "area" ? t(lang, "lqm.area_code_label") : `${typeLabel} Code`}</Label>
+            <Label>{type === "area" ? t(lang, "lqm.area_code_label") : `${typeLabel} ${t(lang, "lfix.label_code", "Code")}`}</Label>
             <Input
               value={code}
               onChange={(e) => setCode(e.target.value)}
@@ -800,31 +803,37 @@ export function LocationQuickCreateModal({
             />
             {type === "area" && (
               <p className="text-[11px] text-slate-500 leading-tight">
-                This postal code will be linked to the new area and available for future use with this City + State.
+                {t(lang, "lfix.zip_area_note", "This postal code will be linked to the new area and available for future use with this City + State.")}
               </p>
             )}
           </div>
         )}
 
-        <div className="modal-footer flex justify-end gap-2 border-t pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            className="btn-secondary"
-            onClick={onClose}
-            disabled={saving}
-          >
-            {t(lang, "common.cancel")}
-          </Button>
-          <Button
-            type="button"
-            className="btn-primary bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold shadow-md border-0 px-5 py-2 disabled:bg-[#2563eb]/60 disabled:text-white"
-            onClick={handleSave}
-            disabled={saving || !canSave}
-          >
-            <Plus className="h-4 w-4 mr-1 text-white" />
-            {saveButtonLabel}
-          </Button>
+        <div className="modal-footer flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+          {/* Save errors and required-field messages sit beside the button that caused them. */}
+          <div role="alert" className="min-w-0 flex-1 text-xs font-semibold text-rose-700 dark:text-rose-300">
+            {(attempted && requiredMessage) || error || ""}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="btn-secondary"
+              onClick={onClose}
+              disabled={saving}
+            >
+              {t(lang, "common.cancel")}
+            </Button>
+            <Button
+              type="button"
+              className="btn-primary bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold shadow-md border-0 px-5 py-2 disabled:bg-[#2563eb]/60 disabled:text-white"
+              onClick={handleSave}
+              disabled={saving || Boolean(missingParentMessage)}
+            >
+              <Plus className="h-4 w-4 mr-1 text-white" />
+              {saveButtonLabel}
+            </Button>
+          </div>
         </div>
       </div>
     </SimpleModal>

@@ -16,10 +16,14 @@ export const revalidate = 0;
  * 1. Country Admin owns their country's rate (Pakistan -> PKR, UAE -> AED, AFN, INR, etc.).
  * 2. Country-wide allocation: one authoritative country rate (country_branch_id = null),
  *    automatically available to all branches, operations, shipping, purchase, sales, roznamcha.
- * 3. Never throw duplicate key error: if rate exists for Country + Date, a controlled
- *    correction workflow with mandatory reason and full audit logging is enforced.
+ * 3. Append-only: a second rate for the same date is a controlled correction (mandatory reason,
+ *    audit row) that INSERTS a new row. The trigger daily_usd_rates_mark_superseded sets
+ *    superseded_at on the previous row, so nothing is overwritten and no duplicate active row exists.
  * 4. Missing rate status tracking for Super Admin (all countries) and Country Admin (own country).
+ *    Status and the latest approved rate are computed over the whole scope, never over the table filters.
  */
+
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 
 function mapRow(row: any) {
   return {
@@ -28,6 +32,7 @@ function mapRow(row: any) {
     country_branch_id: row.country_branch_id ?? null,
     rate_date: row.rate_date,
     rate_time: row.rate_time ?? null,
+    carried_forward_from: row.carried_forward_from ?? null,
     effective_from: row.effective_from ?? null,
     superseded_at: row.superseded_at ?? null,
     currency_code: row.currency_code ?? row.countries?.currency_code ?? null,
@@ -63,7 +68,7 @@ export async function GET(req: NextRequest) {
 
     const supabase = createSupabaseAdminClient() as any;
 
-    // 1. Fetch exchange rate records
+    // 1. Fetch exchange rate records (the filtered list shown in the table)
     let q = supabase
       .from("daily_usd_rates")
       .select("*, countries(id, name, currency_code, iso2)")
@@ -101,27 +106,55 @@ export async function GET(req: NextRequest) {
       .is("deleted_at", null)
       .order("name", { ascending: true });
 
+    // Only countries where the company has a live branch (country or city branch). Other countries stay in the
+    // master list (goods origin, customers, accounts); they are simply not offered on the daily-rate board.
+    const { data: operatingBranchRows } = await supabase.from("country_branches").select("country_id").is("deleted_at", null);
+    const { data: operatingCityRows } = await supabase.from("city_branches").select("country_id").is("deleted_at", null);
+    const operatingCountryIds = new Set([...(operatingBranchRows || []), ...(operatingCityRows || [])].map((r: any) => r.country_id));
+
     const cleanCountries = (countriesMaster || []).filter((c: any) => {
       const n = (c.name || "").toUpperCase();
-      return !n.startsWith("QA ") && !n.includes("QA COUNTRY") && !n.startsWith("DEVTEST") && !n.startsWith("DEV-DEMO");
+      return !n.startsWith("QA ") && !n.includes("QA COUNTRY") && !n.startsWith("DEVTEST") && !n.startsWith("DEV-DEMO")
+        && operatingCountryIds.has(c.id);
     });
 
     const scopedCountries = session.isSuperAdmin
       ? cleanCountries
       : cleanCountries.filter((c: any) => session.countryIds?.includes(c.id));
 
-    const targetRateDate = dateParam || isoToday();
+    // "Today" is the operator's local calendar date, sent by the page as ?today=YYYY-MM-DD.
+    // The UTC server date is only a fallback: in Dubai it is still yesterday until 04:00.
+    const todayParam = searchParams.get("today")?.trim() || "";
+    const targetRateDate = dateParam || (DATE_ONLY.test(todayParam) ? todayParam : isoToday());
+
+    // Status and the latest approved rate are read over the WHOLE scope, never from the filtered list above,
+    // so a search, branch or date-range filter can never make an approved rate look missing.
+    const activeScopeRows = async (onDate?: string) => {
+      if (!session.isSuperAdmin && !session.countryIds?.length) return [] as any[];
+      let aq = supabase
+        .from("daily_usd_rates")
+        .select("*, countries(name, currency_code, iso2)")
+        .is("deleted_at", null)
+        .is("superseded_at", null)
+        .order("effective_from", { ascending: false })
+        .limit(1000);
+      if (!session.isSuperAdmin) aq = aq.in("country_id", session.countryIds);
+      if (onDate) aq = aq.eq("rate_date", onDate);
+      const { data: activeData, error: activeErr } = await aq;
+      if (activeErr) throw new Error(activeErr.message);
+      return (Array.isArray(activeData) ? activeData : []).map(mapRow);
+    };
+    const [targetActive, latestActive] = await Promise.all([activeScopeRows(targetRateDate), activeScopeRows()]);
 
     // Map status for each scoped country for the requested date (exact match prioritized, carry-forward identified)
     const countriesStatus = scopedCountries.map((c: any) => {
-      const activeRate = rows.find(
-        (r) => r.country_id === c.id && r.rate_date === targetRateDate && !r.superseded_at
-      );
-      const prevRate = !activeRate ? rows.find(
-        (r) => r.country_id === c.id && r.rate_date < targetRateDate && !r.superseded_at
-      ) : null;
+      // Today's approved rate (exact date). Carry-forward = newest approved rate dated before the target date.
+      const activeRate: any = targetActive.find((r: any) => r.country_id === c.id);
+      const prevRate: any = !activeRate
+        ? latestActive.find((r: any) => r.country_id === c.id && r.rate_date < targetRateDate)
+        : null;
       const isCarryForward = !activeRate && Boolean(prevRate);
-      const chosenRate = activeRate || prevRate;
+      const chosenRate: any = activeRate || prevRate;
       return {
         countryId: c.id,
         countryName: c.name,
@@ -136,6 +169,26 @@ export async function GET(req: NextRequest) {
         enteredBy: chosenRate ? chosenRate.user_name : null,
         updatedAt: chosenRate ? chosenRate.updated_at || chosenRate.created_at : null,
       };
+    });
+
+    // Latest APPROVED (active) rate per country, with its own date: the carry-forward source and the summary card.
+    const latestApproved = scopedCountries.flatMap((c: any) => {
+      const r: any = latestActive.find((x: any) => x.country_id === c.id);
+      if (!r) return [];
+      return [{
+        countryId: c.id,
+        countryName: c.name,
+        currencyCode: r.currency_code ?? c.currency_code,
+        iso2: c.iso2,
+        rateId: r.id,
+        rateDate: r.rate_date,
+        rateTime: r.rate_time ?? null,
+        effectiveFrom: r.effective_from ?? null,
+        creditRate: r.credit_rate,
+        debitRate: r.debit_rate,
+        enteredBy: r.user_name ?? null,
+        updatedAt: r.updated_at || r.created_at || null,
+      }];
     });
 
     // 3. Fetch Audit History from exchange_rate_history
@@ -157,6 +210,7 @@ export async function GET(req: NextRequest) {
     const payload = {
       rates: rows,
       countriesStatus,
+      latestApproved,
       auditHistory: auditRows || [],
     };
 
@@ -165,6 +219,7 @@ export async function GET(req: NextRequest) {
       data: payload,
       rates: rows,
       countriesStatus,
+      latestApproved,
       auditHistory: auditRows || [],
     });
   } catch (error: any) {
@@ -194,6 +249,7 @@ export async function POST(req: NextRequest) {
       reason,
       action, // 'create' | 'correct'
       timeZoneOffsetMinutes,
+      carriedForwardFrom, // YYYY-MM-DD of the approved rate this row copies (carry-forward only)
     } = body;
 
     if (!countryId) {
@@ -241,8 +297,11 @@ export async function POST(req: NextRequest) {
     }
 
     const targetDate = rateDate || isoToday();
-    const effectiveFrom = dailyRateEffectiveFrom(targetDate, rateTime, timeZoneOffsetMinutes);
+    // A rate applies from the START of its rate date (operator's local midnight), so a rate entered for today is
+    // active today. The entry time is kept for display only (rate_time); it no longer moves the start.
+    const effectiveFrom = dailyRateEffectiveFrom(targetDate, "00:00", timeZoneOffsetMinutes);
     const operatorName = session.fullName || session.email || "Country Admin";
+    const cleanReason = String(reason || "").trim();
 
     // Safely check if session.userId exists in profiles to satisfy FK constraint
     let validUserId: string | null = session.userId || null;
@@ -253,7 +312,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Check if an authoritative rate ALREADY exists for this Country on targetDate
+    // Check if an authoritative rate ALREADY exists for this Country on targetDate (newest first)
     const { data: existingRates } = await supabase
       .from("daily_usd_rates")
       .select("*")
@@ -265,10 +324,28 @@ export async function POST(req: NextRequest) {
     const existingRate = existingRates && existingRates.length > 0 ? existingRates[0] : null;
     authorizeApiScope(session, { resource: "currency_rates", action: existingRate ? "update" : "create", countryId });
 
-    // Case 1: Rate ALREADY exists for this date -> Controlled Edit/Correction Workflow
-    if (existingRate) {
-      const cleanReason = String(reason || "").trim();
+    // The values a new rate row carries (a correction and a first entry share them).
+    const rateRow = (effective: string, time: string | null) => ({
+      country_id: countryId,
+      country_branch_id: null, // country-wide allocation (Requirement 2)
+      rate_date: targetDate,
+      rate_time: time,
+      effective_from: effective,
+      currency_code: currency,
+      buying_rate: debit,
+      selling_rate: credit,
+      credit_rate: credit,
+      debit_rate: debit,
+      entered_by: validUserId,
+      user_name: operatorName,
+      branch_name: "Country-wide (All Branches)",
+      carried_forward_from: /^\d{4}-\d{2}-\d{2}$/.test(String(carriedForwardFrom || "")) && carriedForwardFrom !== targetDate
+        ? String(carriedForwardFrom)
+        : null,
+    });
 
+    // Case 1: Rate ALREADY exists for this date -> controlled, append-only correction
+    if (existingRate) {
       // If user did not provide a reason or did not explicitly choose correction mode
       if (!cleanReason || action !== "correct") {
         return NextResponse.json(
@@ -283,7 +360,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Log the full audit history in exchange_rate_history:
+      // Log the full audit history in exchange_rate_history first:
       // Old Rate -> New Rate -> Changed By -> Date/Time -> Reason
       const { error: auditError } = await supabase.from("exchange_rate_history").insert({
         country_id: countryId,
@@ -303,49 +380,37 @@ export async function POST(req: NextRequest) {
       });
       if (auditError) throw new Error(auditError.message);
 
-      // Update existing record with the corrected rates without duplicate-key errors
-      const { data: updated, error: updateErr } = await supabase
+      // Append-only: the corrected rate is a NEW row. The trigger daily_usd_rates_mark_superseded
+      // sets superseded_at on the previous row. The new row must sort after the newest rate of this
+      // country, otherwise the trigger would supersede the correction at once.
+      const { data: newest } = await supabase
         .from("daily_usd_rates")
-        .update({
-          credit_rate: credit,
-          selling_rate: credit,
-          debit_rate: debit,
-          buying_rate: debit,
-          rate_time: rateTime || existingRate.rate_time,
-          user_name: operatorName,
-          entered_by: validUserId,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", existingRate.id)
+        .select("effective_from")
+        .eq("country_id", countryId)
+        .is("deleted_at", null)
+        .order("effective_from", { ascending: false })
+        .limit(1);
+      const newestMs = newest?.[0]?.effective_from ? Date.parse(newest[0].effective_from) : Number.NaN;
+      const correctedAt = new Date(Math.max(Date.parse(effectiveFrom), Number.isFinite(newestMs) ? newestMs + 1000 : 0)).toISOString();
+
+      const { data: corrected, error: correctedErr } = await supabase
+        .from("daily_usd_rates")
+        .insert(rateRow(correctedAt, rateTime || existingRate.rate_time))
         .select("*, countries(name, currency_code, iso2)")
         .single();
-
-      if (updateErr) throw new Error(updateErr.message);
+      if (correctedErr) throw new Error(correctedErr.message);
 
       return NextResponse.json({
         ok: true,
-        data: mapRow(updated),
-        message: `Exchange rate for ${countryName} (${targetDate}) corrected successfully with complete audit log.`,
+        data: mapRow(corrected),
+        message: `Exchange rate for ${countryName} (${targetDate}) corrected. The previous rate is superseded and kept in history.`,
       });
     }
 
-    // Case 2: New Daily Rate entry for this date
-    // Country-wide allocation: country_branch_id = null per Requirement 2
-    const insertRow = {
-      country_id: countryId,
-      country_branch_id: null,
-      rate_date: targetDate,
-      rate_time: rateTime || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      effective_from: effectiveFrom,
-      currency_code: currency,
-      buying_rate: debit,
-      selling_rate: credit,
-      credit_rate: credit,
-      debit_rate: debit,
-      entered_by: validUserId,
-      user_name: operatorName,
-      branch_name: "Country-wide (All Branches)",
-    };
+    // Case 2: New Daily Rate entry for this date.
+    // A reason is optional here; the carry-forward action sends one so the history says where the rate came from.
+    const historyReason = cleanReason || "Initial daily exchange rate entry";
+    const insertRow = rateRow(effectiveFrom, rateTime || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
 
     const { data: inserted, error: insertErr } = await supabase
       .from("daily_usd_rates")
@@ -363,7 +428,7 @@ export async function POST(req: NextRequest) {
           .select("*, countries(name, currency_code, iso2)")
           .single();
         if (retry.error) throw new Error(retry.error.message);
-        
+
         // Log initial entry in audit trail
         await supabase.from("exchange_rate_history").insert({
           country_id: countryId,
@@ -378,7 +443,7 @@ export async function POST(req: NextRequest) {
           effective_date: targetDate,
           changed_by: session.userId || null,
           user_name: operatorName,
-          reason: "Initial daily exchange rate entry",
+          reason: historyReason,
           created_at: new Date().toISOString(),
         });
 
@@ -405,7 +470,7 @@ export async function POST(req: NextRequest) {
       effective_date: targetDate,
       changed_by: session.userId || null,
       user_name: operatorName,
-      reason: "Initial daily exchange rate entry",
+      reason: historyReason,
       created_at: new Date().toISOString(),
     });
 

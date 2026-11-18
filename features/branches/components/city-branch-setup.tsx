@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { Pencil, Eye, ArrowLeft, ArrowRight, Printer, Download, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,10 +22,18 @@ import {
   type LocationHierarchyMeta,
   type LocationHierarchyValue
 } from "@/features/locations/components/location-hierarchy-select";
-import type { LocationCountry } from "@/features/locations/location-api";
+import {
+  listAreas,
+  listCountries,
+  listStates,
+  type LocationCity,
+  type LocationCountry,
+  type LocationDistrict
+} from "@/features/locations/location-api";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { getPermissionKeysForTemplate } from "@/lib/permissions/catalog";
+import { parseJsonArray } from "@/lib/utils/parse-json-array";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
 import { t } from "@/lib/i18n/ui";
@@ -249,6 +257,8 @@ function CityBranchSetupContent() {
   const [mainBranches, setMainBranches] = useState<CountryBranchRow[]>([]);
 
   const [existingCityBranches, setExistingCityBranches] = useState<CityBranchRow[]>([]);
+  // The mailbox the branch's saved row holds. An edit save keeps it unless the form sets another email.
+  const [savedCityMailbox, setSavedCityMailbox] = useState("");
   const [existingCitySearch, setExistingCitySearch] = useState("");
   const [editingCityBranchId, setEditingCityBranchId] = useState("");
 
@@ -266,6 +276,12 @@ function CityBranchSetupContent() {
   const [saving, setSaving] = useState(false);
   const [formTouched, setFormTouched] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  // The id of the latest edit-load request; responses for any other id are ignored.
+  const editRequestRef = useRef("");
+  // Saved branch whose location names are being resolved; cleared when the user changes the location.
+  const locationResolveRef = useRef("");
+  // The save-result element on the Final Review step; scrolled into view when a result appears.
+  const reviewFeedbackRef = useRef<HTMLDivElement | null>(null);
 
   const [emailPrefix, setEmailPrefix] = useState("");
   const [emailServerName, setEmailServerName] = useState("Local IP Server (UPS Linked)");
@@ -428,7 +444,11 @@ function CityBranchSetupContent() {
   const previewLocation = [locationMeta.state?.name, locationMeta.city?.name, locationMeta.area?.name, zip].filter(Boolean).join(" / ") || "-";
   const previewCompany = company?.name || "-";
   const companyCode = company?.id ? compactCode(company.id, "CMP") : "-";
-  const parentPermissionGrants = selectedMainBranch?.permission_grants?.length ? selectedMainBranch.permission_grants : undefined;
+  // Normalised: a double-encoded (string) grant list must never reach the Set/filter logic below.
+  const parentGrantList = parseJsonArray(selectedMainBranch?.permission_grants).filter(
+    (key): key is string => typeof key === "string" && key.length > 0
+  );
+  const parentPermissionGrants = parentGrantList.length ? parentGrantList : undefined;
 
   useEffect(() => {
     if (!parentPermissionGrants?.length) return;
@@ -843,8 +863,10 @@ function CityBranchSetupContent() {
       .filter((row): row is ContactRow => Boolean(row));
   }
 
-  function beginEditCityBranch(row: CityBranchRow) {
+  // Fills the form from a saved row. Also used to reload the saved values after an update.
+  function applyCityBranchRow(row: CityBranchRow) {
     setEditingCityBranchId(row.id);
+    setSavedCityMailbox(row.email ?? "");
     setCountryBranchId(row.country_branch_id);
     const domain = (row.operational_domain === "shipping" ? "shipping" : "business") as "business" | "shipping";
     setOperationalDomain(domain);
@@ -874,6 +896,60 @@ function CityBranchSetupContent() {
     setBranchCode(row.code || "");
     setPermissionTemplate(row.permission_template ?? "city-standard");
     setPermissionGrants(Array.isArray(row.permission_grants) ? row.permission_grants : getPermissionKeysForTemplate("city-standard"));
+    // Names for the saved ids come from the location APIs, so the review shows names instead of "-".
+    void resolveLocationMetaForRow(row);
+  }
+
+  async function resolveLocationMetaForRow(row: CityBranchRow) {
+    const rowId = row.id;
+    locationResolveRef.current = rowId;
+    const attempt = async <T,>(load: () => Promise<T>): Promise<T | null> => {
+      try {
+        return await load();
+      } catch {
+        return null;
+      }
+    };
+    const [countryRows, stateRows, districtRes, cityRes, areaRows] = await Promise.all([
+      attempt(() => listCountries({ all: true })),
+      attempt(() => listStates({ countryId: row.country_id })),
+      row.district_id
+        ? attempt(() => apiGet<{ district: LocationDistrict | null }>(`/api/erp/locations/districts/${encodeURIComponent(row.district_id as string)}`))
+        : Promise.resolve(null),
+      row.city_id
+        ? attempt(() => apiGet<{ city: LocationCity | null }>(`/api/erp/locations/cities/${encodeURIComponent(row.city_id as string)}`))
+        : Promise.resolve(null),
+      row.area_location_id && row.city_id
+        ? attempt(() => listAreas({ cityId: row.city_id as string }))
+        : Promise.resolve(null)
+    ]);
+    // Drop the result if the user changed the location or opened another branch meanwhile.
+    if (locationResolveRef.current !== rowId) return;
+    setLocationMeta((current) => ({
+      country: countryRows?.find((c) => c.id === row.country_id) ?? current.country,
+      state: stateRows?.find((s) => s.id === row.state_province_id) ?? current.state,
+      district: districtRes?.district ?? current.district,
+      city: cityRes?.city ?? current.city,
+      area: areaRows?.find((a) => a.id === row.area_location_id) ?? current.area
+    }));
+  }
+
+  // Reloads the saved row after an update so the form and the review show what the server stored.
+  async function refreshSavedCityBranch(id: string): Promise<boolean> {
+    try {
+      const res = await fetch(`/api/branch-management/city-branches?id=${encodeURIComponent(id)}`, { cache: "no-store" });
+      const json = (await res.json().catch(() => ({}))) as { cityBranches?: CityBranchRow[] };
+      const row = Array.isArray(json.cityBranches) ? json.cityBranches[0] : null;
+      if (!res.ok || !row) return false;
+      applyCityBranchRow(row);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function beginEditCityBranch(row: CityBranchRow) {
+    applyCityBranchRow(row);
     setBanner({
       type: "success",
       message: `${t(lang, "cbs.editing_existing_branch")}\n${t(lang, "cbs.branch_name")}: ${row.name}\n${t(lang, "cbs.branch_code_word")}: ${row.code}`
@@ -997,19 +1073,30 @@ function CityBranchSetupContent() {
     setDrawerBranchData(payload);
   }
 
+  // A save result on the Final Review must be visible: bring it into view when it appears.
+  const scrolledBannerRef = useRef<object | null>(null);
+  useEffect(() => {
+    if (activeStep !== 9 || !banner || scrolledBannerRef.current === banner) return;
+    scrolledBannerRef.current = banner;
+    reviewFeedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [banner, activeStep]);
+
   useEffect(() => {
     if (!isUuid(editId)) return;
     if (editingCityBranchId === editId) return;
 
-    let cancelled = false;
+    // Keyed by the requested id, not by the effect's lifetime: the old `cancelled` flag let an
+    // effect re-run or unmount leave "Loading City Branch Setup..." on screen forever (the same
+    // race the Country page had). A response is applied only when it belongs to the latest request.
+    editRequestRef.current = editId;
+    setEditLoading(true);
     (async () => {
-      setEditLoading(true);
       try {
         const res = await fetch(`/api/branch-management/city-branches?id=${encodeURIComponent(editId)}`, {
           cache: "no-store"
         });
         const json = (await res.json().catch(() => ({}))) as { cityBranches?: CityBranchRow[]; error?: string };
-        if (cancelled) return;
+        if (editRequestRef.current !== editId) return;
         if (!res.ok) {
           setBanner({ type: "error", message: json.error || t(lang, "cbs.branch_not_found") });
           return;
@@ -1019,19 +1106,23 @@ function CityBranchSetupContent() {
           setBanner({ type: "error", message: t(lang, "cbs.branch_not_found") });
           return;
         }
-        await loadMainBranches(row.country_id);
-        await loadExistingCityBranches(row.country_id, row.country_branch_id);
+        // Parent list and sibling list load in parallel, both for the SAVED record's domain
+        // (without the domain the parent list is empty and the review shows "-").
+        const rowDomain = row.operational_domain === "shipping" ? "shipping" : "business";
+        await Promise.all([
+          loadMainBranches(row.country_id, rowDomain),
+          loadExistingCityBranches(row.country_id, row.country_branch_id, rowDomain)
+        ]);
+        if (editRequestRef.current !== editId) return;
         beginEditCityBranch(row);
       } catch (error) {
-        if (!cancelled) setBanner({ type: "error", message: error instanceof Error ? error.message : t(lang, "cbs.failed_load_branch") });
+        if (editRequestRef.current === editId) {
+          setBanner({ type: "error", message: error instanceof Error ? error.message : t(lang, "cbs.failed_load_branch") });
+        }
       } finally {
-        if (!cancelled) setEditLoading(false);
+        if (editRequestRef.current === editId) setEditLoading(false);
       }
     })();
-
-    return () => {
-      cancelled = true;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId]);
 
@@ -1191,6 +1282,7 @@ function CityBranchSetupContent() {
 
   async function onCountrySelected(next: LocationHierarchyValue, meta: LocationHierarchyMeta) {
     setBanner(null);
+    locationResolveRef.current = "";
     if (editingCityBranchId && next.countryId === location.countryId) {
       setLocation(next);
       setLocationMeta(meta);
@@ -1250,11 +1342,13 @@ function CityBranchSetupContent() {
       }
     }
     const parent = mainBranches.find((branch) => branch.id === nextId);
-    const parentPermissions = parent?.permission_grants?.length ? parent.permission_grants : undefined;
+    const parentGrants = parseJsonArray(parent?.permission_grants).filter((key): key is string => typeof key === "string");
+    const parentPermissions = parentGrants.length ? parentGrants : undefined;
     setPermissionGrants((current) => (parentPermissions ? current.filter((permission) => parentPermissions.includes(permission)) : current));
   }
 
   function onLocationChange(next: LocationHierarchyValue, meta: LocationHierarchyMeta) {
+    locationResolveRef.current = "";
     setLocation(next);
     setLocationMeta(meta);
 
@@ -1367,7 +1461,11 @@ function CityBranchSetupContent() {
         .filter((row) => row.type && row.value);
 
       const emailContact = contactsPayload.find((row) => row.type.toLowerCase().includes("email"))?.value;
-      const email = emailContact && emailContact.includes("@") ? emailContact : `${branchCode.trim().toLowerCase()}@dgt.llc`;
+      // Editing keeps the mailbox the branch already has; only a new branch gets the generated <code>@dgt.llc address.
+      const savedMailbox = editingCityBranchId ? savedCityMailbox : "";
+      const email = emailContact && emailContact.includes("@")
+        ? emailContact
+        : savedMailbox.includes("@") ? savedMailbox : `${branchCode.trim().toLowerCase()}@dgt.llc`;
       const phone = contactsPayload.find((row) => row.type.toLowerCase().includes("phone") || row.type.toLowerCase().includes("mobile"))?.value;
       const whatsappNumber = contactsPayload.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value;
 
@@ -1442,10 +1540,32 @@ function CityBranchSetupContent() {
         return;
       }
 
-      setBanner({ type: "success", message: `${editingCityBranchId ? t(lang, "cbs.updated_status_word") : t(lang, "cbs.saved_status_word")}: ${branchName} (${branchCode})` });
+      const savedId = editingCityBranchId;
       const list = await loadExistingCityBranches(location.countryId, countryBranchId, operationalDomain);
-      setEditingCityBranchId("");
-      if (!editingCityBranchId) {
+      if (savedId) {
+        // Stay in edit mode: the next Save & Update is another PUT for this id, never a create.
+        const reloaded = await refreshSavedCityBranch(savedId);
+        setBanner({
+          type: "success",
+          message: `${t(lang, "cbs.updated_status_word")}: ${finalBranchName} (${branchCode})\n${reloaded ? t(lang, "cnbs.saved_values_reloaded", "Saved values reloaded from the server.") : t(lang, "cnbs.saved_values_not_reloaded", "Saved, but the saved values could not be reloaded. Refresh the page to confirm.")}`
+        });
+      } else {
+        // The POST response carries the automatic New Account outcome (app/api/branch-management/city-branches).
+        const account = (json as { account?: { created?: boolean; existed?: boolean; accountCode?: string; reason?: string } | null })?.account ?? null;
+        let accountNote = "";
+        let accountFailed = false;
+        if (account && account.created === false) {
+          accountFailed = true;
+          accountNote = t(lang, "lfix.account_failed", "The branch is saved, but its New Account was not created: {0}").split("{0}").join(String(account.reason ?? ""));
+        } else if (account && account.created === true) {
+          accountNote = account.existed
+            ? t(lang, "lfix.account_existing", "New Account {0} is already linked to this branch.").split("{0}").join(String(account.accountCode ?? ""))
+            : t(lang, "lfix.account_created", "New Account {0} was created automatically.").split("{0}").join(String(account.accountCode ?? ""));
+        }
+        const savedLine = `${t(lang, "cbs.saved_status_word")}: ${finalBranchName} (${branchCode})`;
+        setBanner({ type: accountFailed ? "error" : "success", message: accountNote ? `${savedLine}\n${accountNote}` : savedLine });
+      }
+      if (!savedId) {
         setBranchCode(suggestBranchCode(locationMeta, list, operationalDomain));
         setBranchName("");
         setPermissionTemplate("city-standard");
@@ -1489,6 +1609,22 @@ function CityBranchSetupContent() {
     setAccessToken("");
   }
 
+  // The page banner is not rendered on the Final Review, so the result is shown beside its Save button.
+  const reviewFeedback = banner ? (
+    <div
+      ref={reviewFeedbackRef}
+      role={banner.type === "error" ? "alert" : "status"}
+      className={cn(
+        "whitespace-pre-line rounded-lg border px-3 py-2 text-xs font-semibold",
+        banner.type === "success"
+          ? "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200"
+          : "border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-200"
+      )}
+    >
+      {banner.message}
+    </div>
+  ) : null;
+
   if (activeStep === 9) {
     return (
       <div className="space-y-6">
@@ -1498,39 +1634,43 @@ function CityBranchSetupContent() {
           branchName={branchName.trim() || effectiveBranchName}
           branchCode={branchCode}
           branchType="City Branch"
-          category="Own Operation"
+          category="-"
           country={previewCountry}
           stateProvince={locationMeta.state?.name || ""}
           city={locationMeta.city?.name || activeExistingCityBranch?.city_name || ""}
           fullAddress={fullAddress}
           companyName={company?.name || ""}
-          businessDomain="Trading & Distribution"
-          shippingDomain="Import & Export"
+          businessDomain={operationalDomain === "business" ? "Business & Trading" : "-"}
+          shippingDomain={operationalDomain === "shipping" ? "Shipping Line & Clearing Agent" : "-"}
           currency={currency}
           mainBranchName={previewMainBranch || "Head Office (DXB-001)"}
           isSaving={saving}
           isEditing={Boolean(editingCityBranchId)}
+          showSavedNotice={false}
+          feedback={reviewFeedback}
           checklistStatus={{
             countrySelected: Boolean(location.countryId),
             mainBranchSelected: Boolean(countryBranchId),
             branchNameCodeGenerated: Boolean((branchName.trim() || effectiveBranchName) && branchCode.trim()),
-            branchCategoryType: true,
-            ownerResponsiblePerson: true,
-            companyLinked: true,
-            businessShippingDomain: true,
+            // Derived from real form state. An item with no data source in this wizard is NOT
+            // marked complete (previously every one of these was hard-coded to true).
+            branchCategoryType: Boolean(operationalDomain),
+            ownerResponsiblePerson: Boolean(ownerCustomerId || ownerId),
+            companyLinked: Boolean(companyId),
+            businessShippingDomain: Boolean(operationalDomain),
             fullAddressLocation: Boolean(fullAddress.trim() || locationMeta.city?.name || activeExistingCityBranch?.city_name),
-            mobileEmail: true,
+            mobileEmail: contacts.some((c) => c.value.trim() && /mobile|phone|email/i.test(c.type)),
             currencySelected: Boolean(currency),
-            bankAccountSetup: true,
-            userAdminAssigned: true,
+            bankAccountSetup: false,
+            userAdminAssigned: false,
             rolePermissions: Boolean(permissionGrants.length),
-            requiredDocumentsUploaded: true,
-            serialNumbersGenerated: true,
-            approvalStatusReady: true,
-            businessAdminAssigned: true,
-            shippingClearingAdminAssigned: true,
-            operationsAdminAssigned: true,
-            ledgerScopeConfirmed: true
+            requiredDocumentsUploaded: false,
+            serialNumbersGenerated: false,
+            approvalStatusReady: Boolean(activeExistingCityBranch),
+            businessAdminAssigned: false,
+            shippingClearingAdminAssigned: false,
+            operationsAdminAssigned: false,
+            ledgerScopeConfirmed: Boolean(countryBranchId)
           }}
           onBack={() => setActiveStep(8)}
           onGoToStep={(step) => {
@@ -1715,6 +1855,7 @@ function CityBranchSetupContent() {
                   <LocationHierarchySelect
                     value={location}
                     showState={false}
+                    showDistrict={false}
                     showCity={false}
                     showArea={false}
                     onChange={onCountrySelected}
@@ -1858,7 +1999,7 @@ function CityBranchSetupContent() {
                     <LocationHierarchySelect
                       value={location}
                       showCountry={false}
-                      showDistrict={false}
+                      showDistrict={true}
                       showArea={true}
                       allowManageLink={false}
                       onChange={onLocationChange}

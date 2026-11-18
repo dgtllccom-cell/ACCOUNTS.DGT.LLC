@@ -117,6 +117,13 @@ export async function GET(request: NextRequest) {
         left join public.profiles cp on cp.id = e.created_by
         left join public.profiles ap on ap.id = e.approved_by
         where e.deleted_at is null
+          -- Reversed (cancelled) originals and REV- reversal vouchers stay in the ledger and audit trail but are
+          -- not active rows, so the list shows one live row per entry.
+          and e.status <> 'cancelled'
+          and e.voucher_no not like 'REV-%'
+          and not exists (
+            select 1 from public.roznamcha_reversals rv where rv.reversal_roznamcha_entry_id = e.id
+          )
           and (${scope.countryId ? sql`e.country_id = ${scope.countryId}` : sql`true`})
           and (${scope.countryBranchId ? sql`e.country_branch_id = ${scope.countryBranchId}` : sql`true`})
           and (${scope.cityBranchId ? sql`e.city_branch_id = ${scope.cityBranchId}` : sql`true`})
@@ -204,6 +211,9 @@ export async function GET(request: NextRequest) {
         "id, type, country_id, countries(name,currency_code), country_branch_id, country_branches(name,code,operational_domain), city_branch_id, city_branches(name,code,operational_domain), journal_no, voucher_no, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, main_branch_transaction_serial, city_branch_transaction_serial, entry_serial_number, entry_date, payment_method_id, payment_methods(name,code), reference_no, narration, status, created_by, profiles!roznamcha_entries_created_by_fkey(full_name), approved_by, approver_profile:profiles!roznamcha_entries_approved_by_fkey(full_name), approved_at, posted_at, created_at, updated_at, source_module, source_transaction_type, source_transaction_id, source_reference_no, operational_domain, roznamcha_lines(id, payment_entry_type, description, debit, credit, currency, ledger_id, ledgers(id, code, name, city_branches(name), country_branches(name)), accounts(id, code, name), account_number, manual_reference_number, customer_number, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, entry_serial_number, country_serial_number, branch_serial_number, usd_rate, usd_amount)"
       )
       .is("deleted_at", null)
+      // Same active-row rule as the direct-Postgres path: no cancelled originals, no REV- reversal vouchers.
+      .neq("status", "cancelled")
+      .not("voucher_no", "like", "REV-%")
       .order("entry_date", { ascending: false });
 
     // Enforce scope isolation:

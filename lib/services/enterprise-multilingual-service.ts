@@ -5,10 +5,65 @@ import { supportedLanguages, type SupportedLanguage } from "@/lib/i18n/languages
 import { multilingualService } from "@/lib/services/multilingual-service";
 import { buildVerifiedTranslationSet, type VerifiedTranslationMap } from "@/lib/i18n/verified-record-translations";
 import { withLocalPg, withReadPg } from "@/lib/db/local-postgres";
-import { lookupApprovedDictionary } from "@/lib/i18n/localize-records";
+import { lookupApprovedDictionary, isApprovedStoredTranslation, sameSavedText } from "@/lib/i18n/localize-records";
 import { translateToAllLanguages } from "@/lib/i18n/machine-translation-client";
 
 const LANG_KEYS: SupportedLanguage[] = ["en", "ur", "ar", "fa", "ps"];
+
+const PERSO_ARABIC_RE = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
+
+/**
+ * The language a saved text is written in, read from its SCRIPT. The screen language is only the fallback for text that
+ * carries no letters of its own; a Latin-script name typed while the UI is in Urdu is English text, not Urdu.
+ */
+export function originalLanguageFor(text: string, screenLanguage: SupportedLanguage): SupportedLanguage {
+  if (PERSO_ARABIC_RE.test(text)) return screenLanguage === "en" ? "ur" : screenLanguage;
+  if (/[A-Za-z]/.test(text)) return "en";
+  return screenLanguage;
+}
+
+/**
+ * Owner rule: an AUTOMATIC save never overwrites an approved variant of the SAME saved text. upsert_record_translation is an
+ * ON CONFLICT DO UPDATE, so before this guard every save of an account / customer / ledger (even one that did not change the
+ * name) replaced the person's approved translations with machine output and cleared their approval. A changed spelling still
+ * gets its new rendering: the old approved row described the old text. Fails closed when the existing row cannot be read.
+ */
+async function hasApprovedRowForSameText(args: UpsertRecordTranslationArgs, db?: EnterpriseDbClient): Promise<boolean> {
+  try {
+    const viaPg = await withReadPg(async (sql) => {
+      const rows = await sql`
+        select source::text as source, translation_status, translated_by_engine, corrected_by, original_text
+        from record_translations
+        where record_table = ${args.recordTable} and record_id = ${args.recordId}::uuid
+          and field_name = ${args.fieldName} and deleted_at is null
+        limit 1`;
+      return { row: (rows[0] as any) ?? null };
+    });
+    let existing: any = viaPg ? viaPg.row : null;
+    if (!viaPg) {
+      const client = (db ?? adminDb()) as any;
+      const res = await client
+        .from("record_translations")
+        .select("source, translation_status, translated_by_engine, corrected_by, original_text")
+        .eq("record_table", args.recordTable)
+        .eq("record_id", args.recordId)
+        .eq("field_name", args.fieldName)
+        .is("deleted_at", null)
+        .maybeSingle();
+      existing = res?.data ?? null;
+    }
+    if (!existing) return false;
+    return isApprovedStoredTranslation({
+      source: existing.source,
+      translation_status: existing.translation_status,
+      translated_by_engine: existing.translated_by_engine,
+      corrected_by: existing.corrected_by
+    }) && sameSavedText(existing.original_text, args.originalText);
+  } catch (err) {
+    console.error("Translation overwrite guard could not read the stored row; skipping the automatic write:", err);
+    return true;
+  }
+}
 
 /** Route a record_translations table to the closest ERP glossary domain (for the Local Translator). */
 type TrDomain = "accounting" | "shipping" | "clearing" | "banking" | "tax" | "hr" | "crm" | "purchase" | "sales" | "inventory" | "general";
@@ -57,6 +112,8 @@ export async function upsertRecordTranslationRpc(
   args: UpsertRecordTranslationArgs,
   db?: EnterpriseDbClient
 ): Promise<void> {
+  // an automatic save keeps an approved variant of the same saved text (see hasApprovedRowForSameText)
+  if (args.source === "auto" && (await hasApprovedRowForSameText(args, db))) return;
   const actorId = args.actorId && /^[0-9a-f-]{36}$/i.test(args.actorId) ? args.actorId : null;
   // Direct-Postgres first — do NOT construct the Supabase admin client unless we actually
   // fall through to it (createSupabaseAdminClient throws when only a publishable key exists,
@@ -205,9 +262,7 @@ export async function saveEnterpriseRecordTranslations(
   for (const field of activeFields) {
     const originalText = String(field.value).trim();
     const { autoTranslateText } = await import("./auto-translation-service");
-    const { detectScriptType } = await import("@/lib/i18n/multilingual-translator");
-    const isArabicScript = detectScriptType(originalText) === "arabic";
-    const originalLanguage = isArabicScript ? (input.originalLanguage === "en" ? "ur" : input.originalLanguage) : input.originalLanguage;
+    const originalLanguage = originalLanguageFor(originalText, input.originalLanguage);
     const translations = await autoTranslateText(originalText, originalLanguage, field.mode ?? "translate");
     // Upsert via the dedicated RPC. Direct supabase-js .upsert({ onConflict }) cannot be
     // used here because the unique index on record_translations is PARTIAL
@@ -249,9 +304,8 @@ export async function saveVerifiedEnterpriseRecordTranslations(
   const results: Array<{ fieldName: string; status: "complete" | "pending" | "needs_review"; missingLanguages: SupportedLanguage[]; translations: VerifiedTranslationMap }> = [];
   for (const field of input.fields.filter((item) => typeof item.value === "string" && item.value.trim())) {
     const originalText = String(field.value).trim();
-    const { autoTranslate5Languages, detectScriptType } = await import("@/lib/i18n/multilingual-translator");
-    const isArabicScript = detectScriptType(originalText) === "arabic";
-    const originalLanguage = isArabicScript ? (input.originalLanguage === "en" ? "ur" : input.originalLanguage) : input.originalLanguage;
+    const { autoTranslate5Languages } = await import("@/lib/i18n/multilingual-translator");
+    const originalLanguage = originalLanguageFor(originalText, input.originalLanguage);
 
     const verified = await buildVerifiedTranslationSet({
       value: originalText,

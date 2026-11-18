@@ -1,7 +1,7 @@
 "use client";
 import { translateHeader } from "@/lib/i18n/table-headers";
 
-import { Suspense, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { Pencil, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,13 @@ import {
   type LocationHierarchyMeta,
   type LocationHierarchyValue
 } from "@/features/locations/components/location-hierarchy-select";
-import type { LocationCountry } from "@/features/locations/location-api";
+import {
+  listCountries,
+  listStates,
+  type LocationCity,
+  type LocationCountry,
+  type LocationDistrict
+} from "@/features/locations/location-api";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
 import { BranchOwnerPicker } from "@/features/branches/components/branch-owner-picker";
 import { BranchLiveReportPanel } from "@/features/branches/components/branch-live-report-panel";
@@ -53,6 +59,7 @@ type CountryBranchRow = {
   district_id?: string | null;
   city_id?: string | null;
   address?: string | null;
+  email?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -225,6 +232,10 @@ function CountryBranchSetupContent() {
   const [banner, setBanner] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  // Saved branch whose location names are being resolved; cleared when the user changes the location.
+  const locationResolveRef = useRef("");
+  // The save result on the Final Review step; scrolled into view when a result appears.
+  const reviewFeedbackRef = useRef<HTMLDivElement | null>(null);
 
   const filteredCountryBranches = useMemo(() => {
     const q = countryBranchSearch.trim().toLowerCase();
@@ -428,7 +439,7 @@ function CountryBranchSetupContent() {
           { label: tt("cnbs.contacts", "Contacts"), value: contactItems.length ? contactItems.join(", ") : "" },
           { label: tt("cnbs.phone", "Phone"), value: contacts.find((row) => row.type.toLowerCase().includes("phone"))?.value },
           { label: tt("cnbs.whatsapp", "WhatsApp"), value: contacts.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value },
-          { label: tt("cnbs.email", "Email"), value: contacts.find((row) => row.type.toLowerCase().includes("email"))?.value }
+          { label: tt("cnbs.email", "Email"), value: branchEmail || contacts.find((row) => row.type.toLowerCase().includes("email"))?.value }
         ]
       },
       {
@@ -442,6 +453,7 @@ function CountryBranchSetupContent() {
     [
       tt,
       branchCode,
+      branchEmail,
       branchType,
       company,
       contactItems,
@@ -463,7 +475,7 @@ function CountryBranchSetupContent() {
   const liveBranchData = useMemo(() => {
     const active = existingMainBranch;
     const phoneVal = contacts.find((row) => row.type.toLowerCase().includes("phone"))?.value || "";
-    const emailVal = contacts.find((row) => row.type.toLowerCase().includes("email"))?.value || "";
+    const emailVal = branchEmail.trim() || contacts.find((row) => row.type.toLowerCase().includes("email"))?.value || "";
     const whatsappVal = contacts.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value || "";
 
     return {
@@ -535,6 +547,7 @@ function CountryBranchSetupContent() {
     existingMainBranch,
     contacts,
     branchCode,
+    branchEmail,
     previewCountry,
     currency,
     locationMeta,
@@ -629,7 +642,8 @@ function CountryBranchSetupContent() {
       .filter((row): row is ContactRow => Boolean(row));
   }
 
-  function beginEditCountryBranch(row: CountryBranchRow) {
+  // Fills the form from a saved row. Also used to reload the saved values after an update.
+  function applyCountryBranchRow(row: CountryBranchRow) {
     setEditingCountryBranchId(row.id);
     setExistingMainBranch(row);
     const domain = (row.operational_domain === "shipping" ? "shipping" : "business") as "business" | "shipping";
@@ -642,11 +656,12 @@ function CountryBranchSetupContent() {
       cityId: row.city_id ?? "",
       areaId: ""
     });
-    setLocationMeta({ country: null, state: null, district: null, city: null, area: null });
     setBranchType("MAIN");
     setBranchCode(row.code || "");
     setCurrency(row.local_currency || "");
     setFullAddress(row.address ?? "");
+    // The branch mailbox is required on save, so the reloaded form must carry the saved one.
+    setBranchEmail(row.email ?? "");
     setCompanyId(row.company_id ?? "");
     setOwnerName(row.owner_name ?? "");
     setOwnerCustomerId(row.owner_customer_id ?? null);
@@ -655,6 +670,12 @@ function CountryBranchSetupContent() {
     setContacts(normalizeContacts(row.contacts));
     setPermissionTemplate(row.permission_template ?? "country-standard");
     setPermissionGrants(Array.isArray(row.permission_grants) ? row.permission_grants : getPermissionKeysForTemplate("country-standard"));
+    // Names for the saved ids come from the location APIs, so the panel and review show names instead of "Missing" / "-".
+    void resolveLocationMetaForRow(row);
+  }
+
+  function beginEditCountryBranch(row: CountryBranchRow) {
+    applyCountryBranchRow(row);
     setBanner({
       type: "success",
       message: `Editing Existing Branch\nBranch Name: ${row.name}\nBranch Code: ${row.code}`
@@ -662,9 +683,56 @@ function CountryBranchSetupContent() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  async function resolveLocationMetaForRow(row: CountryBranchRow) {
+    const rowId = row.id;
+    locationResolveRef.current = rowId;
+    const attempt = async <T,>(load: () => Promise<T>): Promise<T | null> => {
+      try {
+        return await load();
+      } catch {
+        return null;
+      }
+    };
+    const [countryRows, stateRows, districtRes, cityRes] = await Promise.all([
+      attempt(() => listCountries({ all: true })),
+      row.state_province_id
+        ? attempt(() => listStates({ countryId: row.country_id }))
+        : Promise.resolve(null),
+      row.district_id
+        ? attempt(() => apiGet<{ district: LocationDistrict | null }>(`/api/erp/locations/districts/${encodeURIComponent(row.district_id as string)}`))
+        : Promise.resolve(null),
+      row.city_id
+        ? attempt(() => apiGet<{ city: LocationCity | null }>(`/api/erp/locations/cities/${encodeURIComponent(row.city_id as string)}`))
+        : Promise.resolve(null)
+    ]);
+    // Drop the result if the user changed the location or opened another branch meanwhile.
+    if (locationResolveRef.current !== rowId) return;
+    setLocationMeta({
+      country: countryRows?.find((c) => c.id === row.country_id) ?? null,
+      state: stateRows?.find((s) => s.id === row.state_province_id) ?? null,
+      district: districtRes?.district ?? null,
+      city: cityRes?.city ?? null,
+      area: null
+    });
+  }
+
+  // Reloads the saved row after an update so the form and the review show what the server stored.
+  async function refreshSavedCountryBranch(id: string): Promise<CountryBranchRow | null> {
+    try {
+      const res = await fetch(`/api/branch-management/country-branches?id=${encodeURIComponent(id)}`, { cache: "no-store" });
+      const json = (await res.json().catch(() => ({}))) as { countryBranches?: CountryBranchRow[] };
+      const row = Array.isArray(json.countryBranches) ? json.countryBranches[0] : null;
+      if (!res.ok || !row) return null;
+      applyCountryBranchRow(row);
+      return row;
+    } catch {
+      return null;
+    }
+  }
+
   function viewSavedBranch(row: CountryBranchRow) {
     const phoneVal = normalizeContacts(row.contacts).find((c) => c.type.toLowerCase().includes("phone") || c.type.toLowerCase().includes("mobile"))?.value || "";
-    const emailVal = normalizeContacts(row.contacts).find((c) => c.type.toLowerCase().includes("email"))?.value || "";
+    const emailVal = row.email || normalizeContacts(row.contacts).find((c) => c.type.toLowerCase().includes("email"))?.value || "";
     const whatsappVal = normalizeContacts(row.contacts).find((c) => c.type.toLowerCase().includes("whatsapp"))?.value || "";
 
     const payload = {
@@ -855,6 +923,7 @@ function CountryBranchSetupContent() {
 
   async function onLocationChange(next: LocationHierarchyValue, meta: LocationHierarchyMeta) {
     const isCountryChanged = next.countryId !== location.countryId;
+    locationResolveRef.current = "";
     setLocation(next);
     setLocationMeta(meta);
 
@@ -942,7 +1011,7 @@ function CountryBranchSetupContent() {
     }
 
     if (!branchEmail || !branchEmail.includes("@")) {
-      setBanner({ type: "error", message: "Branch Email (Hostinger Titan Mailbox) is required." });
+      setBanner({ type: "error", message: t(lang, "lfix.cb_mailbox_required", "Branch Email (Hostinger Titan Mailbox) is required.") });
       return;
     }
 
@@ -1016,8 +1085,18 @@ function CountryBranchSetupContent() {
         setBanner({ type: "error", message });
         return;
       }
-      setBanner({ type: "success", message: `${editingCountryBranchId ? "Updated" : "Saved"}: ${branchName} (${branchCode})` });
-      setEditingCountryBranchId("");
+      const savedId = editingCountryBranchId;
+      if (savedId) {
+        // Stay in edit mode (the next Update is a PUT for this id) and show the row the server now holds.
+        const reloaded = await refreshSavedCountryBranch(savedId);
+        setBanner({
+          type: "success",
+          message: `${t(lang, "cbs.updated_status_word")}: ${reloaded?.name ?? branchName} (${reloaded?.code ?? branchCode})\n${reloaded ? t(lang, "cnbs.saved_values_reloaded") : t(lang, "cnbs.saved_values_not_reloaded")}`
+        });
+      } else {
+        setBanner({ type: "success", message: `${t(lang, "cbs.saved_status_word")}: ${branchName} (${branchCode})` });
+        setEditingCountryBranchId("");
+      }
       await loadExistingMainBranch(location.countryId, operationalDomain);
     } catch (err) {
       setBanner({ type: "error", message: err instanceof Error ? err.message : "Failed to save country branch." });
@@ -1028,6 +1107,7 @@ function CountryBranchSetupContent() {
 
   function onReset() {
     setBanner(null);
+    locationResolveRef.current = "";
     setLocation({ countryId: "", stateProvinceId: "", districtId: "", cityId: "", areaId: "" });
     setLocationMeta({ country: null, state: null, district: null, city: null, area: null });
     setCurrency("");
@@ -1047,6 +1127,30 @@ function CountryBranchSetupContent() {
     setPermissionGrants(getPermissionKeysForTemplate("country-standard"));
     setActiveStep(1);
   }
+
+  // A save result on the Final Review must be visible: bring it into view when it appears.
+  const scrolledBannerRef = useRef<object | null>(null);
+  useEffect(() => {
+    if (activeStep !== 9 || !banner || scrolledBannerRef.current === banner) return;
+    scrolledBannerRef.current = banner;
+    reviewFeedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [banner, activeStep]);
+
+  // The page banner is not rendered on the Final Review, so the result is shown beside its Save button.
+  const reviewFeedback = banner ? (
+    <div
+      ref={reviewFeedbackRef}
+      role={banner.type === "error" ? "alert" : "status"}
+      className={cn(
+        "whitespace-pre-line rounded-lg border px-3 py-2 text-xs font-semibold",
+        banner.type === "success"
+          ? "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200"
+          : "border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-200"
+      )}
+    >
+      {banner.message}
+    </div>
+  ) : null;
 
   if (activeStep === 9) {
     return (
@@ -1069,6 +1173,8 @@ function CountryBranchSetupContent() {
           mainBranchName="Head Office (DXB-001)"
           isSaving={saving}
           isEditing={Boolean(existingMainBranch?.id)}
+          showSavedNotice={false}
+          feedback={reviewFeedback}
           checklistStatus={{
             countrySelected: Boolean(location.countryId),
             mainBranchSelected: true,
@@ -1267,6 +1373,9 @@ function CountryBranchSetupContent() {
                     allowManageLink={true}
                     onChange={onLocationChange}
                   />
+                  {location.areaId ? (
+                    <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">{t(lang, "lfix.cb_area_not_saved", "Area is shown for reference only. A country branch does not store an area yet.")}</p>
+                  ) : null}
 
                   {/* Branch Business Nature / Type Selector */}
                   <div className="space-y-2 p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 font-sans">

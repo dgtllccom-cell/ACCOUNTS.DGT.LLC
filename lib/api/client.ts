@@ -38,6 +38,23 @@ function clientErpLang(): string | null {
   }
 }
 
+/** Error thrown for a non-OK ERP API response. Keeps the server's machine `code` so screens can show a localized message. */
+export class ApiRequestError extends Error {
+  readonly status: number;
+  readonly code: string | null;
+  constructor(message: string, status: number, code: string | null) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+    this.code = code;
+  }
+}
+
+function apiRequestError(body: unknown, status: number, fallback: string): ApiRequestError {
+  const code = (body as any)?.error?.code;
+  return new ApiRequestError(messageFromBody(body) || fallback, status, typeof code === "string" ? code : null);
+}
+
 export async function apiFetch<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
   const lang = clientErpLang();
   const mergedInit: RequestInit = { credentials: "include", ...init };
@@ -48,11 +65,11 @@ export async function apiFetch<T>(input: RequestInfo | URL, init?: RequestInit):
   const body = (await parseJsonSafe(res)) as ApiOk<T> | ApiErr | unknown;
 
   if (!res.ok) {
-    throw new Error(messageFromBody(body) || `Request failed: ${res.status}`);
+    throw apiRequestError(body, res.status, `Request failed: ${res.status}`);
   }
 
   if (body && typeof body === "object" && (body as any).ok === false) {
-    throw new Error(messageFromBody(body) || "Request failed");
+    throw apiRequestError(body, res.status, "Request failed");
   }
 
   // Our ERP APIs usually wrap payload in { ok: true, data }, but some legacy routes return raw JSON.

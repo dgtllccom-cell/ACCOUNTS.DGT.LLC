@@ -7,6 +7,9 @@ import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
 import { rowInSessionDomain } from "@/lib/permissions/domain-scope";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames, wantsRawRecord } from "@/lib/i18n/localize-records";
+import { resolveCustomerName } from "@/lib/i18n/customer-name";
+import { customersRepository } from "@/lib/repositories/customers-repository";
+import { storableLinkedMaster } from "@/lib/services/account-linked-masters";
 import { ledgerScopeSchema, optionalUuidSchema, scopeSchema, supportedLanguageSchema } from "@/lib/api/erp-validation";
 import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
 
@@ -56,7 +59,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 async function loadAccount(id: string) {
   const admin = createSupabaseAdminClient() as any;
-  const selectFields = "id, scope, operational_domain, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, shipping_line_id, linked_countries, linked_companies, linked_banks, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, address_country_id, address_state_id, address_city_id, address_postal_code, full_address, account_address, created_at, updated_at, deleted_at";
+  const selectFields = "id, scope, operational_domain, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, shipping_line_id, linked_countries, linked_companies, linked_banks, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, address_country_id, address_state_id, address_city_id, address_postal_code, full_address, account_address, created_at, updated_at, deleted_at, category, created_by";
 
   let data = null;
   if (isUuid(id)) {
@@ -197,7 +200,7 @@ async function loadAccount(id: string) {
       try {
         const { data: custRow } = await admin
           .from("customers")
-          .select("id, customer_name, company_name, mobile, whatsapp, email, address, country_id, person_code")
+          .select("id, customer_name, father_name, photo_url, company_name, mobile, whatsapp, email, address, country_id, person_code")
           .eq("id", data.customer_id)
           .maybeSingle();
         if (custRow) {
@@ -320,14 +323,63 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
           { phraseFallback: true }
         );
     const localizedName = resolvedAccount?.name ?? account.name;
+
+    // The linked master records (customer / owner, companies, banks, the ledger) are shown in the viewer's language by the same
+    // rule as the Customer Register and the pickers: an authorized variant of THAT saved name, otherwise the saved name itself.
+    // Edit forms (?raw=1) keep the saved names; `*_raw` / `original_*` fields always carry the saved legal name.
+    const raw = wantsRawRecord(request);
+    let customer: any = account.customer ?? null;
+    if (!raw && customer?.id) {
+      const customerRow = await customersRepository.getById(customer.id).catch(() => null);
+      if (customerRow) {
+        const view = resolveCustomerName(customerRow as any, language);
+        customer = { ...customer, customer_name: view.primary, original_customer_name: view.savedName };
+      }
+    }
+    let companies: any[] = account.companies ?? [];
+    if (!raw && companies.length > 0) {
+      const names = await localizeRecordNames(companies.map((c: any) => ({ id: c.id, name: String(c.name ?? "") })), "companies", "name", language);
+      const byId = new Map(names.map((c) => [c.id, c.name] as const));
+      companies = companies.map((c: any) => ({ ...c, name: byId.get(c.id) ?? c.name, original_name: c.name }));
+    }
+    let banks: any[] = account.banks ?? [];
+    if (!raw && banks.length > 0) {
+      const names = await localizeRecordNames(banks.map((b: any) => ({ id: b.id, bank_name: String(b.name ?? "") })), "banks", "bank_name", language);
+      const byId = new Map(names.map((b: any) => [b.id, b.bank_name] as const));
+      banks = banks.map((b: any) => ({ ...b, name: byId.get(b.id) ?? b.name, original_name: b.name }));
+    }
+    let ledgerOut: any = ledger ?? null;
+    if (!raw && ledgerOut?.id) {
+      const [localizedLedger] = await localizeRecordNames([{ id: ledgerOut.id, name: String(ledgerOut.name ?? "") }], "ledgers", "name", language);
+      if (localizedLedger) ledgerOut = { ...ledgerOut, name: localizedLedger.name, original_name: ledgerOut.name };
+    }
+
+    // Customer Account Profile: the main branch code and the creator's name, read from their master records (null when not held)
+    let mainBranchCode: string | null = null;
+    if (account.country_branch_id) {
+      const { data: countryBranch } = await admin.from("country_branches").select("code").eq("id", account.country_branch_id).maybeSingle();
+      mainBranchCode = (countryBranch as { code?: string } | null)?.code ?? null;
+    }
+    let createdByName: string | null = null;
+    const creatorId = (account as { created_by?: string | null }).created_by ?? null;
+    if (creatorId) {
+      const { data: creator } = await admin.from("profiles").select("full_name").eq("id", creatorId).maybeSingle();
+      createdByName = (creator as { full_name?: string } | null)?.full_name ?? null;
+    }
+
     const localizedAccount = {
       ...account,
+      main_branch_code: mainBranchCode,
+      created_by_name: createdByName,
       raw_name: account.name,
       localized_name: localizedName,
-      name: localizedName
+      name: localizedName,
+      customer,
+      companies,
+      banks
     };
 
-    return apiOk({ account: localizedAccount, ledger: ledger ?? null });
+    return apiOk({ account: localizedAccount, ledger: ledgerOut });
   } catch (error) {
     return handleApiError(error);
   }
@@ -427,7 +479,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         const id = item?.id ? String(item.id).trim() : null;
         return id ? arr.findIndex((x: any) => String(x?.id).trim() === id) === idx : true;
       });
-      updatePayload.linked_companies = dedupedComps;
+      updatePayload.linked_companies = dedupedComps.map((item: any) => storableLinkedMaster(item));
       if (!rawHas("companyId")) {
         const primaryComp = dedupedComps.find((c: any) => c.isPrimary) || dedupedComps[0];
         if (primaryComp?.id) {
@@ -440,7 +492,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         const id = item?.id ? String(item.id).trim() : null;
         return id ? arr.findIndex((x: any) => String(x?.id).trim() === id) === idx : true;
       });
-      updatePayload.linked_banks = dedupedBnks;
+      updatePayload.linked_banks = dedupedBnks.map((item: any) => storableLinkedMaster(item));
       if (!rawHas("bankId")) {
         const primaryBank = dedupedBnks.find((b: any) => b.isPrimary) || dedupedBnks[0];
         if (primaryBank?.id) {

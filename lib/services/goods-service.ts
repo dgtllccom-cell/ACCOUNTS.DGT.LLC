@@ -4,6 +4,12 @@ import { translateMasterRecord } from "@/lib/services/translation-trigger-servic
 import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
 
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { ApiClientError } from "@/lib/api/response";
+
+/** A goods CHS code already used by another live goods record: a client error (409), not a server fault. */
+function duplicateChsCodeError(chsCode: string) {
+  return new ApiClientError(`CHS Code "${chsCode}" is already in use.`, { status: 409, code: "GOODS_CHS_DUPLICATE" });
+}
 
 async function nextGoodsChsCode(): Promise<string> {
   const code = await withLocalPg(async (sql) => {
@@ -26,6 +32,8 @@ export type GoodsMasterInput = {
   initialVariation?: {
     size: string;
     brand: string;
+    variety?: string | null;
+    extraDetails?: string | null;
   } | null;
 };
 
@@ -52,7 +60,7 @@ export class GoodsService {
     const chsCode = input.chsCode?.trim() || (await nextGoodsChsCode());
     const exists = await goodsRepository.checkChsCodeExists(chsCode);
     if (exists) {
-      throw new Error(`CHS Code "${chsCode}" is already in use.`);
+      throw duplicateChsCodeError(chsCode);
     }
 
     const goodsId = await goodsRepository.create({
@@ -85,7 +93,9 @@ export class GoodsService {
         {
           goodsId,
           size: input.initialVariation.size,
-          brand: input.initialVariation.brand
+          brand: input.initialVariation.brand,
+          variety: input.initialVariation.variety ?? null,
+          extraDetails: input.initialVariation.extraDetails ?? null
         },
         actorId
       );
@@ -112,7 +122,7 @@ export class GoodsService {
     if (input.chsCode) {
       const exists = await goodsRepository.checkChsCodeExists(input.chsCode, id);
       if (exists) {
-        throw new Error(`CHS Code "${input.chsCode}" is already in use.`);
+        throw duplicateChsCodeError(input.chsCode);
       }
     }
 

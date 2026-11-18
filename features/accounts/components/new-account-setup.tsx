@@ -2,6 +2,7 @@
 
 import { accountSectionsFor, isPersonalSubType } from "@/lib/accounts/account-type-sections";
 import { useEffect, useMemo, useState, useRef } from "react";
+import { AccountCategoryPicker } from "./account-category-picker";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -23,7 +24,6 @@ import {
   Phone,
   X,
   Plus,
-  Pencil,
   Globe2,
   Ship,
   UserCheck,
@@ -73,7 +73,7 @@ import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { localizeTerm, localizeName } from "@/lib/i18n/transliteration";
 import { getLabel } from "./translations";
 import { AccountLiveReportPanel } from "./account-live-report-panel";
-import { openAccountA4ReportWindow } from "@/lib/reports/open-account-a4-report-window";
+import { openMasterProfile } from "@/lib/reports/master-profiles";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { LoginScopeBanner } from "@/components/layout/login-scope-banner";
 import { fetchBranding } from "@/lib/branding/client";
@@ -1304,6 +1304,7 @@ export function NewAccountSetup({
   // Load Categories from database
   async function loadCategories(domain = operationalDomain) {
     try {
+      // The API wraps its payload as { ok, data: { categories } } and filters by operationalDomain (both shapes accepted).
       const res = await fetch(`/api/erp/account-categories?operationalDomain=${encodeURIComponent(domain)}&domain=${encodeURIComponent(domain)}&language=${encodeURIComponent(lang)}`).then((r) => r.json());
       const list = res?.categories || res?.data?.categories;
       if (Array.isArray(list)) {
@@ -1328,8 +1329,8 @@ export function NewAccountSetup({
     setShowCategoryModal(true);
   }
 
-  function handleOpenEditCategory() {
-    const item = dbCategories.find((c) => c.name === category || c.id === selectedCategoryId);
+  function handleOpenEditCategory(target?: { id: string; name: string; code: string; description?: string | null }) {
+    const item = target ?? dbCategories.find((c) => c.code === category || c.id === selectedCategoryId);
     if (!item) return;
     setCategoryModalMode("edit");
     setEditingCategoryId(item.id);
@@ -1361,8 +1362,9 @@ export function NewAccountSetup({
         }).then((r) => r.json());
         if (!res.ok) throw new Error(res.error?.message || "Failed to create category");
         await loadCategories(operationalDomain);
-        setCategory(res.category.name);
-        setSelectedCategoryId(res.category.id);
+        // Dropdown values are category codes (the same values existing accounts store in enterprise_accounts.category).
+        setCategory(res.data.category.code);
+        setSelectedCategoryId(res.data.category.id);
         setShowCategoryModal(false);
       } else if (editingCategoryId) {
         const res = await fetch(`/api/erp/account-categories/${editingCategoryId}`, {
@@ -1377,8 +1379,8 @@ export function NewAccountSetup({
         }).then((r) => r.json());
         if (!res.ok) throw new Error(res.error?.message || "Failed to update category");
         await loadCategories(operationalDomain);
-        setCategory(res.category.name);
-        setSelectedCategoryId(res.category.id);
+        setCategory(res.data.category.code);
+        setSelectedCategoryId(res.data.category.id);
         setShowCategoryModal(false);
       }
     } catch (err: any) {
@@ -1704,36 +1706,60 @@ export function NewAccountSetup({
     }
   }
 
+  // New Account View / Print = the owner's Customer Account Profile card (same layout as the Account View).
+  // Values come from the form as it stands; anything not held is printed as "-" (no sample values, no invented AED fallback).
   function openReport(autoPrint: boolean) {
-    openAccountA4ReportWindow({
-      title: t(lang, "acct.report_title", "Account Profile Report"),
-      subtitle: t(lang, "acct.report_subtitle", "Account Profile Summary"),
-      autoPrint,
+    const cust = customerDetail ?? null;
+    const comp = companyDetail ?? null;
+    const bank = bankDetail ?? null;
+    const isMain = branchType === "Main";
+    void openMasterProfile({
+      entity: "account",
+      layout: "profile_card",
       lang,
-      accountData: {
+      autoPrint,
+      scope: { countryId: selectedCountry?.id, countryName: selectedCountry?.name, branchName: isMain ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch) },
+      record: {
+        accountId: "",
+        accountCode: accountCode || "",
         accountName,
-        accountCode: accountPreview,
-        accountTitle,
-        subType,
-        category,
-        manualReferenceNumber,
-        currency: branchInfo?.currency || selectedCountry?.currency_code || "AED",
+        globalAccountNumber: null,
+        accountType: cust ? "Customer" : comp ? "Company" : bank ? "Bank" : "Personal",
+        accountCategory: category || null,
         status: saved ? "Active" : "In Progress",
-        customerDetail,
-        companyDetail,
-        bankDetail,
-        warehouseDetail,
-        companyRequired,
-        bankRequired,
-        warehouseRequired,
-        shippingLineName: shippingLineDetail?.name || linkedShippingLineName || undefined,
-        linkedCountriesNames: linkedCountries.map((id) => countries.find((c) => c.id === id)?.name || id),
-        selectedCountryName: selectedCountry?.name,
-        selectedCountryCode: (selectedCountry?.iso2 || selectedCountry?.iso3 || undefined),
-        selectedBranchName: branchType === "Main" ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch),
-        selectedBranchCode: branchInfo?.code,
-        createdBy: ""
-      }
+        currency: branchInfo?.currency || selectedCountry?.currency_code || null,
+        countryName: selectedCountry?.name ?? null,
+        mainBranchName: isMain ? selectedBranchName(mainBranches, branch) : null,
+        mainBranchCode: isMain ? branchInfo?.code ?? null : null,
+        branchName: isMain ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch),
+        branchCode: branchInfo?.code ?? null,
+        cityBranchName: isMain ? null : selectedCityBranchName(cityBranches, branch),
+        companyName: comp?.name ?? null,
+        companyCode: comp?.code ?? null,
+        createdByName: null,
+        customerId: cust?.id ?? null,
+        customerNumber: cust?.customer_number ?? cust?.customer_code ?? null,
+        customerName: cust?.customer_name ?? null,
+        customerFatherName: cust?.father_name ?? null,
+        customerPhotoUrl: cust?.photo_url ?? null,
+        customerMobile: cust?.mobile_number || cust?.phone_number || null,
+        customerEmail: cust?.email_address || null,
+        customerAddress: cust?.address || null,
+        banks: bank
+          ? [
+              {
+                name: bank.bank_name ?? bank.name ?? null,
+                accountNumber: bank.account_number ?? null,
+                ibanNumber: bank.iban_number ?? null,
+                branchName: bank.branch_name ?? null,
+                currency: bank.currency_code ?? bank.currency ?? null,
+                status: null,
+              },
+            ]
+          : [],
+        remarks: [],
+        activities: [],
+      },
     });
   }
 
@@ -2689,16 +2715,6 @@ export function NewAccountSetup({
                   <div className="flex items-center justify-between">
                     <Label htmlFor="category">{getLabel("category", lang)} *</Label>
                     <div className="flex items-center gap-2">
-                      {category && dbCategories.some((c) => c.name === category || c.id === selectedCategoryId) && (
-                        <button
-                          type="button"
-                          onClick={handleOpenEditCategory}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-                        >
-                          <Pencil className="h-2.5 w-2.5" />
-                          {getLabel("editCategory", lang)}
-                        </button>
-                      )}
                       <button
                         type="button"
                         onClick={handleOpenAddCategory}
@@ -2709,41 +2725,29 @@ export function NewAccountSetup({
                       </button>
                     </div>
                   </div>
-                  <select
+                  <AccountCategoryPicker
                     id="category"
                     value={category}
-                    onChange={(event) => {
-                      const val = event.target.value;
-                      if (val === "__ADD_NEW_CATEGORY__") {
-                        handleOpenAddCategory();
-                      } else {
-                        setCategory(val);
-                        const matched = dbCategories.find((c) => c.name === val || c.id === val);
-                        if (matched) {
-                          setSelectedCategoryId(matched.id);
-                        } else {
-                          setSelectedCategoryId("");
-                        }
-                      }
+                    placeholder={getLabel("selectCategory", lang)}
+                    addNewLabel={t(lang, "acct.add_new_category_ellipsis", "Add New Category...")}
+                    editLabel={getLabel("editCategory", lang)}
+                    canEdit={erpScope.isSuperAdmin}
+                    items={
+                      dbCategories.length > 0
+                        ? dbCategories.map((item) => ({ id: item.id, code: item.code, name: item.name }))
+                        : categories.map((item) => ({ id: item, code: item, name: localizedOption(item, lang) }))
+                    }
+                    onSelect={(item) => {
+                      setCategory(item.code);
+                      const matched = dbCategories.find((c) => c.id === item.id);
+                      setSelectedCategoryId(matched ? matched.id : "");
                     }}
-                    className={selectClass()}
-                  >
-                    <option value="">{getLabel("selectCategory", lang)}</option>
-                    {dbCategories.length > 0
-                      ? dbCategories.map((item) => (
-                          <option key={item.id} value={item.name}>
-                            {item.name} ({item.code})
-                          </option>
-                        ))
-                      : categories.map((item) => (
-                          <option key={item} value={item}>
-                            {localizedOption(item, lang)}
-                          </option>
-                        ))}
-                    <option value="__ADD_NEW_CATEGORY__">
-                      + {t(lang, "acct.add_new_category_ellipsis", "Add New Category...")}
-                    </option>
-                  </select>
+                    onAddNew={handleOpenAddCategory}
+                    onEdit={(item) => {
+                      const full = dbCategories.find((c) => c.id === item.id);
+                      if (full) handleOpenEditCategory(full);
+                    }}
+                  />
                 </div>
               </div>
 

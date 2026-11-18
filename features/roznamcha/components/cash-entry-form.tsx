@@ -1,6 +1,6 @@
 "use client";
 
-import { cashDirectionRate, cashUsdEquivalent } from "@/lib/currency/exact-daily-rate";
+import { cashDirectionRate } from "@/lib/currency/exact-daily-rate";
 import { pl } from "@/lib/reports/print-label";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
@@ -65,7 +65,8 @@ import {
   RotateCcw,
   Check,
   Phone,
-  CreditCard
+  CreditCard,
+  Landmark
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -568,8 +569,10 @@ export function CashEntryForm({
         if (cancelled) return;
         const list = res?.countries || res?.data?.countries || [];
         setCountries(list);
-        if (list.length > 0 && !countryId) {
-          setCountryId(list[0].id);
+        // Functional update: never overwrite a country the user (or the session scope) already selected
+        // while this request was in flight (the closure's countryId is the stale mount-time value).
+        if (list.length > 0) {
+          setCountryId((current) => current || list[0].id);
         }
       })
       .catch(() => {})
@@ -705,7 +708,9 @@ export function CashEntryForm({
   // Currency calculation panel
   const [calcAmount, setCalcAmount] = useState("");
   const [calcPrice, setCalcPrice] = useState("");
-  const [calcOp, setCalcOp] = useState<"mul" | "div">("mul");
+  // The operation is derived from the entry currency (see derivedCalcOp below). The override is set only when a
+  // saved entry is loaded (its stored operation) or an admin uses "divide this entry"; a currency change clears it.
+  const [calcOpOverride, setCalcOpOverride] = useState<"mul" | "div" | null>(null);
 
   // Local cache for Bank/Method quick add (until centralized management tables are wired in).
   const [savedBanks, setSavedBanks] = useState<SavedBankItem[]>([]);
@@ -972,6 +977,86 @@ export function CashEntryForm({
   const [partyDialCode, setPartyDialCode] = useState("+971");
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
   const [accountSearchQuery, setAccountSearchQuery] = useState("");
+  const [transferDestScope, setTransferDestScope] = useState<"same_branch" | "other_branch">("same_branch");
+  const [destCountryId, setDestCountryId] = useState<string>("");
+  const [destMainBranchId, setDestMainBranchId] = useState<string>("");
+  const [destCityBranchId, setDestCityBranchId] = useState<string>("");
+  const [destAccountId, setDestAccountId] = useState<string>("");
+
+  const [destMainBranches, setDestMainBranches] = useState<CountryBranchRow[]>([]);
+  const [destCityBranches, setDestCityBranches] = useState<CityBranchRow[]>([]);
+  const [destAccounts, setDestAccounts] = useState<any[]>([]);
+  const [loadingDestBranches, setLoadingDestBranches] = useState(false);
+  const [loadingDestAccounts, setLoadingDestAccounts] = useState(false);
+
+  useEffect(() => {
+    if (!destCountryId) {
+      setDestMainBranches([]);
+      setDestCityBranches([]);
+      setDestAccounts([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingDestBranches(true);
+    fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(destCountryId)}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (cancelled) return;
+        const list = Array.isArray(res?.countryBranches) ? res.countryBranches : [];
+        setDestMainBranches(list);
+        if (list.length > 0 && (!destMainBranchId || !list.some((b: any) => b.id === destMainBranchId))) {
+          setDestMainBranchId(list[0].id);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoadingDestBranches(false);
+      });
+    return () => { cancelled = true; };
+  }, [destCountryId]);
+
+  useEffect(() => {
+    if (!destCountryId || !destMainBranchId) {
+      setDestCityBranches([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/branch-management/city-branches?countryId=${encodeURIComponent(destCountryId)}&countryBranchId=${encodeURIComponent(destMainBranchId)}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (cancelled) return;
+        const list = Array.isArray(res?.cityBranches) ? res.cityBranches : [];
+        setDestCityBranches(list);
+        if (list.length > 0 && (!destCityBranchId || !list.some((b: any) => b.id === destCityBranchId))) {
+          setDestCityBranchId(list[0].id);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [destCountryId, destMainBranchId]);
+
+  useEffect(() => {
+    if (!destCountryId) return;
+    let cancelled = false;
+    setLoadingDestAccounts(true);
+    listLedgerReportLedgers({
+      reportScope: "branch",
+      countryId: destCountryId,
+      countryBranchId: destMainBranchId || null,
+      cityBranchId: destCityBranchId || null,
+      limit: 500,
+    })
+      .then((res) => {
+        if (cancelled) return;
+        const list = Array.isArray(res?.ledgers) ? res.ledgers : [];
+        setDestAccounts(list);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoadingDestAccounts(false);
+      });
+    return () => { cancelled = true; };
+  }, [destCountryId, destMainBranchId, destCityBranchId]);
 
 
 
@@ -999,7 +1084,7 @@ export function CashEntryForm({
     selectedMainBranch?.local_currency ||
     selectedCountry?.currency_code ||
     assignedCountryCurrency ||
-    (isSuperAdmin ? "USD" : "PKR");
+    (selectedCountry?.iso2 === "PK" || (countries.find((c) => c.id === countryId)?.iso2 === "PK") ? "PKR" : "AED");
 
 
   const userRoleLevel: "operator" | "branch" | "country" | "super_admin" = useMemo(() => {
@@ -1544,7 +1629,7 @@ export function CashEntryForm({
     try {
       setLoadingDailyRate(true);
       setDailyRate(null); setDailyUsdRates(null); setDailyRateError("");
-      setExchangeRate(currency.trim().toUpperCase() === "USD" ? "1" : "");
+      // The entry rate is applied by the currency rate effect below (isLocalCurrency block).
       const params = new URLSearchParams({ countryId, currency: currency.trim().toUpperCase() });
       if (cityBranchId) params.set("cityBranchId", cityBranchId);
       if (countryBranchId) params.set("countryBranchId", countryBranchId);
@@ -1589,22 +1674,7 @@ export function CashEntryForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [countryId, countryBranchId, cityBranchId, entryDate, currency]);
 
-  useEffect(() => {
-    if (normalizedCurrency === "USD") {
-      setExchangeRate("1");
-      return;
-    }
-    if (dailyRate && dailyRate.found) {
-      const activeRate = cashDirectionRate(dailyRate, paymentMode);
-      if (activeRate && activeRate > 0) {
-        setExchangeRate(String(activeRate));
-      } else {
-        setExchangeRate("");
-      }
-    } else {
-      setExchangeRate("");
-    }
-  }, [dailyRate, paymentMode, normalizedCurrency]);
+  // Entry rate: see the isLocalCurrency block below.
 
   useEffect(() => {
     fetchRecentEntries();
@@ -1694,7 +1764,7 @@ export function CashEntryForm({
     const list = [
       branchCurrency,
       targetAccountCurrency,
-      ...(canViewUsd ? ["USD"] : []),
+      "USD",
       "AED", "PKR", "AFN", "INR", "IRR"
     ]
       .map((v) => (v ?? "").toString().trim().toUpperCase())
@@ -1704,6 +1774,67 @@ export function CashEntryForm({
 
   const isLocalCurrency = normalizedCurrency === targetAccountCurrency.toUpperCase();
 
+  // The entry currency decides the operation. A foreign quantity (USD) posted to a local-currency account is
+  // multiplied by the rate (USD x rate = local). A local quantity posted to a foreign-currency account is divided
+  // by the rate (local / rate = foreign). Same-currency entries carry no rate.
+  const derivedCalcOp: "mul" | "div" =
+    targetAccountCurrency.trim().toUpperCase() !== branchCurrency.trim().toUpperCase() &&
+    normalizedCurrency === branchCurrency.trim().toUpperCase()
+      ? "div"
+      : "mul";
+  const calcOp: "mul" | "div" = calcOpOverride ?? derivedCalcOp;
+
+  // A base-currency entry needs no exchange rate at all. USD is converted with the country's approved daily
+  // rate (units of the local currency per 1 USD, DR or CR side as the entry is). Any other foreign currency has
+  // no approved rate in the Daily Exchange Rate module, so its rate is typed inline for this entry (manual).
+  const approvedRateForEntry = !isLocalCurrency && normalizedCurrency === "USD" && Boolean(dailyRate?.found);
+  const approvedRateValue = dailyRate?.found ? cashDirectionRate(dailyRate, paymentMode) : null;
+  const lastRateCurrencyRef = useRef("");
+  useEffect(() => {
+    if (!normalizedCurrency) return;
+    // While the Daily Exchange Rate is being re-read, keep the current rate and source (no flip to "manual" mid-fetch).
+    if (!isLocalCurrency && loadingDailyRate) return;
+    const currencyChanged = lastRateCurrencyRef.current !== normalizedCurrency;
+    lastRateCurrencyRef.current = normalizedCurrency;
+    if (isLocalCurrency) {
+      setExchangeRate("1");
+      setExchangeRateSource("base");
+      setExchangeRateEffectiveAt(null);
+      return;
+    }
+    if (normalizedCurrency === "USD" && dailyRate?.found) {
+      setExchangeRate(approvedRateValue ? String(approvedRateValue) : "");
+      setExchangeRateSource("approved");
+      setExchangeRateEffectiveAt(dailyRate.rateDate ?? null);
+      return;
+    }
+    // No approved rate for this currency on the entry date: keep the rate typed for this entry.
+    if (currencyChanged) setExchangeRate("");
+    setExchangeRateSource("manual");
+    setExchangeRateEffectiveAt(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [normalizedCurrency, isLocalCurrency, loadingDailyRate, paymentMode, dailyRate?.found, dailyRate?.debitRate, dailyRate?.creditRate, dailyRate?.rateDate]);
+
+  // Switching the entry currency keeps the same money: the account-currency amount is re-expressed as the
+  // quantity of the new currency at the approved USD rate (or kept as the local amount when switching back).
+  function changeEntryCurrency(nextRaw: string) {
+    const nextCurrency = String(nextRaw || "").trim().toUpperCase();
+    const localAmountNow = calcFinal;
+    const nextIsLocal = nextCurrency === targetAccountCurrency.trim().toUpperCase();
+    setCurrency(nextCurrency);
+    setCalcOpOverride(null);
+    if (localAmountNow === null || !(localAmountNow > 0)) return;
+    if (nextIsLocal) {
+      setCalcAmount(String(Math.round(localAmountNow * 100) / 100));
+      return;
+    }
+    if (nextCurrency === "USD" && approvedRateValue && approvedRateValue > 0) {
+      setCalcAmount(String(Math.round((localAmountNow / approvedRateValue) * 10000) / 10000));
+      return;
+    }
+    setCalcAmount("");
+  }
+
   const showCalcPanel =
     Boolean(currency) &&
     ["USD", "AED", "AFN", "INR", "IRR", "PKR"].includes(currency.toUpperCase());
@@ -1712,23 +1843,24 @@ export function CashEntryForm({
     const cleanAmt = String(calcAmount || "").replace(/,/g, "").trim();
     const a = Number(cleanAmt);
     if (!Number.isFinite(a) || a <= 0) return null;
+    if (isLocalCurrency) return a;
 
+    // A foreign entry is never converted at a guessed rate: no rate (approved or typed) means no converted amount.
     const cleanRate = String(exchangeRate || "").replace(/,/g, "").trim();
     const p = Number(cleanRate);
-    const rate = Number.isFinite(p) && p > 0 ? p : 1;
-
-    if (calcOp === "div" && rate === 0) return null;
-    const v = calcOp === "mul" ? a * rate : a / rate;
-    return Number.isFinite(v) ? v : null;
-  }, [calcAmount, calcOp, exchangeRate]);
+    if (!Number.isFinite(p) || p <= 0) return null;
+    const v = calcOp === "mul" ? a * p : a / p;
+    return Number.isFinite(v) ? Math.round(v * 100) / 100 : null;
+  }, [calcAmount, calcOp, exchangeRate, isLocalCurrency]);
 
   const amount = useMemo(() => {
+    if (!isLocalCurrency && calcFinal === null) return 0;
     if (calcFinal !== null) return calcFinal;
     const cleanAmt = String(calcAmount || "").replace(/,/g, "").trim();
     const a = Number(cleanAmt);
     if (Number.isFinite(a) && a > 0) return a;
     return Number(finalPayment || 0);
-  }, [calcFinal, calcAmount, finalPayment]);
+  }, [calcFinal, calcAmount, finalPayment, isLocalCurrency]);
 
   const txAmount = useMemo(() => {
     if (calcAmount) {
@@ -1877,33 +2009,15 @@ export function CashEntryForm({
     attachmentFile
   ]);
 
-  // Sync calculation details directly to remarks textarea dynamically
-  useEffect(() => {
-    if (showCalcPanel && calcAmount && exchangeRate && calcFinal !== null) {
-      setRemarks((prev) => {
-        const opSymbol = calcOp === "mul" ? "×" : "÷";
-        const newCalcLine = `Calculation: ${Number(calcAmount).toLocaleString()} ${currency.toUpperCase()} ${opSymbol} ${Number(exchangeRate).toLocaleString()} = ${calcFinal.toFixed(2)} ${targetAccountCurrency}`;
-        
-        // Remove any existing lines starting with "Calculation:"
-        const lines = prev.split("\n").map((l) => l.trim()).filter((l) => !l.startsWith("Calculation:"));
-        lines.push(newCalcLine);
-        return lines.filter(Boolean).join("\n");
-      });
-    } else {
-      // If the calculation is no longer active/valid, remove any stale calculation lines
-      setRemarks((prev) => {
-        const lines = prev.split("\n").map((l) => l.trim()).filter((l) => !l.startsWith("Calculation:"));
-        return lines.filter(Boolean).join("\n");
-      });
-    }
-  }, [showCalcPanel, calcAmount, exchangeRate, calcOp, currency, calcFinal, targetAccountCurrency]);
+  // The calculation (quantity, rate, operation, converted amount, rate source) is recorded in the posted audit
+  // trail (see save()). Remarks / Notes stay exactly what the user typed, so the 1000-character limit is theirs.
 
   const detailsString = useMemo(() => {
     if (!paymentType) return "";
     if (paymentType === "bank") {
       const bankName = typeDetails.bankName || "";
       const method = typeDetails.method || "";
-      const refNo = typeDetails.refNo || "";
+      const refNo = typeDetails.receiptNumber || typeDetails.refNo || "";
       const payDate = typeDetails.payDate || entryDate;
       const formattedDate = payDate ? payDate.split("-").reverse().join("/") : "";
       const attachment = attachmentFile?.name || typeDetails.bankAttachmentName || "";
@@ -1911,7 +2025,7 @@ export function CashEntryForm({
       const parts = [
         bankName && `Bank: ${bankName}`,
         method && `Method: ${method}`,
-        refNo && `Ref: ${refNo}`,
+        refNo && `Receipt: ${refNo}`,
         formattedDate && `Date: ${formattedDate}`,
         attachment && `Attachment: ${attachment}`
       ].filter(Boolean);
@@ -1922,11 +2036,15 @@ export function CashEntryForm({
       const receiver = typeDetails.receiverSenderName || "";
       const mobile = typeDetails.mobileNumber || "";
       const whatsapp = typeDetails.whatsappNumber || "";
+      const docType = typeDetails.idDocumentType || "";
+      const docFile = attachmentFile?.name || typeDetails.idCardCopyName || "";
       
       const parts = [
         receiver && `Receiver/Sender: ${receiver}`,
         mobile && `Mobile: ${mobile}`,
-        whatsapp && `WhatsApp: ${whatsapp}`
+        whatsapp && `WhatsApp: ${whatsapp}`,
+        docType && `ID: ${docType}`,
+        docFile && `Document: ${docFile}`
       ].filter(Boolean);
       
       return parts.length ? `Cash Details: ${parts.join(" | ")}` : "";
@@ -1946,11 +2064,13 @@ export function CashEntryForm({
     }
     if (paymentType === "business" || paymentType === "invoice") {
       const invNo = typeDetails.invoiceNumber || "";
-      const purInfo = typeDetails.purchaseInfo || typeDetails.businessName || "";
+      const purInfo = typeDetails.invoiceName || typeDetails.purchaseInfo || typeDetails.businessName || "";
+      const invFile = attachmentFile?.name || "";
       
       const parts = [
+        purInfo && `Invoice: ${purInfo}`,
         invNo && `Invoice #: ${invNo}`,
-        purInfo && `Info: ${purInfo}`
+        invFile && `File: ${invFile}`
       ].filter(Boolean);
       
       return parts.length ? `Invoice/Business Details: ${parts.join(" | ")}` : "";
@@ -2274,7 +2394,8 @@ export function CashEntryForm({
     }
   }, [countryId, countryBranchId, cityBranchId, branchCurrency]);
 
-  const isRatePending = loadingDailyRate || !dailyRate || !dailyRate.found || Number(exchangeRate) <= 0;
+  // Pending = a foreign entry with no approved rate for the date (USD) or any non-USD foreign entry; the user types its rate inline.
+  const isRatePending = !isLocalCurrency && !approvedRateForEntry && !loadingDailyRate;
 
   const canSave =
     Boolean(countryId && (countryBranchId || cityBranchId)) &&
@@ -2283,9 +2404,30 @@ export function CashEntryForm({
     Boolean(paymentType) &&
     Boolean(amount && amount > 0) &&
     currency.trim().length === 3 &&
-    !isRatePending &&
     Number(exchangeRate) > 0 &&
     !saving;
+
+  // Why the entry cannot be posted yet. Shown next to the Post button, on phones too.
+  const postBlockReason: string | null = saving ? null
+    : !(countryId && (countryBranchId || cityBranchId)) ? tr("cef.msg_need_country_branch", "Please select a Country and Branch before posting.")
+    : !(counterLedgerId || selectedCrossBranchAccount) ? tr("cef.msg_need_account", "Please select an Account (Step 2).")
+    : !paymentType ? tr("cj.mNeedCategory", "Choose a Roznamcha Category (Cash, Bank, Business, Invoice or Transfer) in Roznamcha Details.")
+    : !paymentMode ? tr("cef.msg_need_payment_mode", "Please select Payment Mode (Debit or Credit).")
+    : (!isLocalCurrency && Boolean(calcAmount) && !(Number(exchangeRate) > 0))
+      ? tr("cj.mRateNeededBlock", "Enter the {cur} rate for this entry to post (no approved rate on {date}).").replace("{cur}", normalizedCurrency).replace("{date}", String(entryDate))
+    : !(amount > 0) ? tr("cef.msg_need_amount", "Please enter a valid Amount greater than 0.")
+    : currency.trim().length !== 3 ? tr("cef.msg_need_currency", "Please select a valid 3-letter currency.")
+    : null;
+
+  // Line currency (account currency) and the USD equivalent shown on the rate line: the approved USD rate for
+  // the entry direction, or the typed USD rate for a USD entry without one.
+  const lineCurrencyCode = (targetAccountCurrency || branchCurrency || "AED").toUpperCase();
+  const usdRateForDisplay = dailyRate?.found
+    ? cashDirectionRate(dailyRate, paymentMode)
+    : (normalizedCurrency === "USD" && Number(exchangeRate) > 0 ? Number(exchangeRate) : null);
+  const usdEquivalentDisplay = lineCurrencyCode === "USD"
+    ? amount
+    : (usdRateForDisplay && usdRateForDisplay > 0 ? amount / usdRateForDisplay : null);
 
   useEffect(() => {
     console.log("canSave check details:", {
@@ -2366,15 +2508,18 @@ export function CashEntryForm({
     setCrossBranchDropdownOpen(false);
     setAccountNoInput("");
     setAccountLookupError(null);
-    setPaymentType("");
-    setPaymentMode("");
+    // Roznamcha Category defaults to Cash and the mode to Debit (the page's own defaults), so an account pick never
+    // leaves the required category empty.
+    setPaymentType("cash");
+    setPaymentMode("DEBIT");
     setFinalPayment("");
     setTypeDetails({});
+    setDestAccountId(""); setTransferDestScope("same_branch");
     setCurrency("");
     setCurrencyError(false);
     setCalcAmount("");
     setCalcPrice("");
-    setCalcOp("mul");
+    setCalcOpOverride(null);
     setExchangeRate("1");
     setAttachmentFile(null);
     setActiveCreator("");
@@ -2384,7 +2529,7 @@ export function CashEntryForm({
 
   function resetPaymentDraft() {
     clearSelectedAccount();
-    setRoznamchaBookType("");
+    setRoznamchaBookType("branch_payment_voucher");
     setRoznamchaType("Cash Book No.");
     setRoznamchaNumber("");
     setEntryDate(todayIso());
@@ -2923,7 +3068,7 @@ export function CashEntryForm({
         setCurrency(audit.currency);
         setCalcAmount(audit.qty);
         setExchangeRate(audit.rate);
-        setCalcOp(audit.op);
+        setCalcOpOverride(audit.op);
         const amt = Number(firstLine.debit || firstLine.credit || 0);
         setFinalPayment(String(amt));
       } else {
@@ -2932,7 +3077,7 @@ export function CashEntryForm({
         setFinalPayment(String(amt));
         setCalcAmount("");
         setExchangeRate("1");
-        setCalcOp("mul");
+        setCalcOpOverride(null);
       }
     }
     
@@ -2954,6 +3099,19 @@ export function CashEntryForm({
     
     const formElement = document.querySelector("h3")?.closest(".Card") || document.querySelector(".Payment-Work-Entry-card");
     formElement?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  // Admin-only: "divide this entry" opens a saved entry for correction with the operation set to divide.
+  const canUseDivideEntry = useMemo(() => {
+    if (!session) return false;
+    if (session.scopes?.isSuperAdmin || (session as any).isSuperAdmin) return true;
+    return session.roles?.some((role) => role === "admin" || role.endsWith("_admin")) ?? false;
+  }, [session]);
+
+  const handleDivideEntry = (row: any) => {
+    if (!canUseDivideEntry) return;
+    handleEditEntry(row);
+    setCalcOpOverride("div");
   };
 
   const handleEditLastEntry = async () => {
@@ -3008,6 +3166,7 @@ export function CashEntryForm({
       setMessage(tr("cef.msg_delete_failed", "Failed to delete entry: {error}").replace("{error}", error?.message || tr("cef.msg_unknown_error", "Unknown error")), true);
     }
   };
+  // Switching the entry currency keeps the same money (see changeEntryCurrency above).
   async function save() {
     if (savingRef.current) return null;
     savingRef.current = true;
@@ -3015,40 +3174,20 @@ export function CashEntryForm({
     setLastEntryId(null);
 
     if (!canSave) {
-      if (!countryId || (!countryBranchId && !cityBranchId)) {
-        setMessage(tr("cef.msg_need_country_branch", "Please select a Country and Branch before posting."), true);
-      } else if (!counterLedgerId && !selectedCrossBranchAccount) {
-        setMessage(tr("cef.msg_need_account", "Please select an Account (Step 2)."), true);
-      } else if (!paymentType) {
-        setMessage(tr("cef.msg_need_txn_type", "Please select a Transaction Type (Customer, Supplier, etc.)."), true);
-      } else if (!paymentMode) {
-        setMessage(tr("cef.msg_need_payment_mode", "Please select Payment Mode (Debit or Credit)."), true);
-      } else if (!amount || amount <= 0) {
-        setMessage(tr("cef.msg_need_amount", "Please enter a valid Amount greater than 0."), true);
-      } else if ((currency || "").trim().length !== 3) {
-        setMessage(tr("cef.msg_need_currency", "Please select a valid 3-letter currency."), true);
-      } else if (isRatePending) {
-        setMessage(tr("cj.mRatePendingBody", "No approved exchange rate for {cur} on {date}. Country Admin must enter today's rate in Daily Exchange Rate module before financial postings can be saved.").replace("{cur}", String(currency || branchCurrency)).replace("{date}", String(entryDate)), true);
-      } else {
-        setMessage(tr("cef.msg_need_all", "Please select account, Debit/Credit transaction type, currency, and amount."), true);
-      }
+      // Bring the field the reason names onto the screen (it sits in Roznamcha Details, above the footer on phones).
+      if (!paymentType) document.getElementById("cash-entry-roz-category")?.scrollIntoView({ block: "center" });
+      setMessage(postBlockReason ?? tr("cef.msg_need_all", "Please select account, Debit/Credit transaction type, currency, and amount."), true);
       savingRef.current = false;
       return null;
     }
 
 
-    if (editEntryId) {
-      try {
-        const delRes = await fetch(`/api/erp/roznamcha/${editEntryId}`, { method: "DELETE" });
-        if (!delRes.ok) {
-          const errText = await delRes.text();
-          setMessage(tr("cef.msg_reverse_failed", "Failed to reverse the old entry: {error}").replace("{error}", errText), true);
-          return null;
-        }
-      } catch (e: any) {
-        setMessage(tr("cef.msg_reverse_failed", "Failed to reverse the old entry: {error}").replace("{error}", String(e?.message || "")), true);
-        return null;
-      }
+    // A save reverses an existing entry only when the user is correcting it (edit mode) and confirms it.
+    // A plain save never reverses anything: it posts exactly one new entry.
+    const correctingEntryId = editEntryId;
+    if (correctingEntryId && !window.confirm(tr("cef.confirm_correct_entry", "Save this correction? The saved entry will be reversed (kept in the ledger and audit trail) and this corrected entry will replace it in the list. Cancel keeps the saved entry unchanged."))) {
+      savingRef.current = false;
+      return null;
     }
 
     // Voucher / Journal numbers are generated automatically; do not ask the user to enter them.
@@ -3058,11 +3197,13 @@ export function CashEntryForm({
     setSaving(true);
     try {
       let auditTrail = "";
-      if (showCalcPanel && calcFinal !== null) {
+      const auditCurrency = (targetAccountCurrency || branchCurrency || "").toUpperCase();
+      if (!isLocalCurrency && calcFinal !== null) {
         const opSymbol = calcOp === "mul" ? "×" : "÷";
-        auditTrail = `[Audit Trail - Qty: ${calcAmount} | Currency: ${currency.toUpperCase()} | Rate: ${exchangeRate} | Op: ${opSymbol} | Converted: ${amount.toFixed(2)} ${branchCurrency}]`;
+        const rateSourceLabel = exchangeRateSource === "approved" ? "Approved daily rate" : "Manual rate (no approved rate for this date)";
+        auditTrail = `[Audit Trail - Qty: ${calcAmount} | Currency: ${currency.toUpperCase()} | Rate: ${exchangeRate} | Op: ${opSymbol} | Converted: ${amount.toFixed(2)} ${auditCurrency} | Rate Source: ${rateSourceLabel}${exchangeRateEffectiveAt ? ` ${exchangeRateEffectiveAt}` : ""}]`;
       } else {
-        auditTrail = `[Audit Trail - Final Amount: ${amount.toFixed(2)} ${branchCurrency} (Local Currency Entry)]`;
+        auditTrail = `[Audit Trail - Final Amount: ${amount.toFixed(2)} ${auditCurrency} (Local Currency Entry)]`;
       }
       const combinedNarration = remarks.trim();
       const finalNarration = `${combinedNarration.trim()}\n${auditTrail}`;
@@ -3086,6 +3227,7 @@ export function CashEntryForm({
       const effectiveCountryBranchId = countryBranchId || null;
       const effectiveCityBranchId = cityBranchId || null;
 
+      const lineRateSource = isLocalCurrency ? "base" : (exchangeRateSource === "approved" ? "approved" : "manual");
       const postingLines: any[] = [
         {
           paymentEntryType: roznamchaBookType === "bank" ? (paymentMode === "DEBIT" ? "bank_cheque" : "bank_deposit") : (paymentMode === "DEBIT" ? "cash_payment" : "cash_receipt"),
@@ -3096,6 +3238,8 @@ export function CashEntryForm({
           credit: paymentMode === "CREDIT" ? amount : 0,
           currency: targetAccountCurrency.trim().toUpperCase(),
           exchangeRate: Number(exchangeRate),
+          rateSource: lineRateSource,
+          entryCurrency: normalizedCurrency || null,
           accountNumber: selectedCrossBranchAccount?.accountNumber || selectedCrossBranchAccount?.code || selectedCounterLedger?.accountCode || selectedCounterLedger?.rawAccountCode || null,
           manualReferenceNumber: selectedCounterLedger?.manualReferenceNumber || null,
           customerNumber: selectedCrossBranchAccount?.accountNumber || selectedCounterLedger?.customerNumber || null,
@@ -3104,25 +3248,9 @@ export function CashEntryForm({
         }
       ];
 
-      // If cross-branch payment, or if selectedCashLedger is chosen, include source bank/cash offset
-      if (selectedCashLedger?.ledgerId && (isCrossBranch || selectedCashLedger.ledgerId !== counterLedgerId)) {
-        const sourceCurrency = (selectedCashLedger.ledgerCurrency || branchCurrency).trim().toUpperCase();
-        postingLines.push({
-          paymentEntryType: roznamchaBookType === "bank" ? (paymentMode === "DEBIT" ? "bank_payment" : "bank_deposit") : (paymentMode === "DEBIT" ? "cash_payment" : "cash_receipt"),
-          enterpriseAccountId: selectedCashLedger.accountId || null,
-          ledgerId: selectedCashLedger.ledgerId,
-          description: `Offset - Source Cash/Bank (${selectedMainBranch?.name || "Branch A"})`,
-          debit: paymentMode === "CREDIT" ? amount : 0,
-          credit: paymentMode === "DEBIT" ? amount : 0,
-          currency: sourceCurrency,
-          exchangeRate: Number(exchangeRate),
-          accountNumber: selectedCashLedger.accountCode || selectedCashLedger.rawAccountCode || null,
-          manualReferenceNumber: selectedCashLedger.manualReferenceNumber || null,
-          customerNumber: selectedCashLedger.customerNumber || null,
-          countrySerialNumber: selectedCashLedger.countrySerialNumber || null,
-          branchSerialNumber: selectedCashLedger.branchSerialNumber || null
-        });
-      }
+      // Manual Cash Roznamcha entries post ONE visible line on the side the user selected (DR or CR). No
+      // automatic opposite-side offset line is added here; the other side is entered later as its own entry.
+      // Automatic transfers from other ERP modules post their own legs through their own routes.
 
       const payload = {
         mode: "post" as const,
@@ -3182,6 +3310,18 @@ export function CashEntryForm({
       };
 
       const res = await apiPost<RoznamchaPostResponse>("/api/erp/roznamcha", payload);
+      // The corrected entry is posted first, so a failed save never reverses the original. Only then is the
+      // confirmed correction's original reversed; the reversal stays in the ledger and audit trail and is hidden
+      // from the active list, so the corrected entry is the only active row.
+      let reverseError: string | null = null;
+      if (correctingEntryId) {
+        try {
+          const delRes = await fetch(`/api/erp/roznamcha/${correctingEntryId}`, { method: "DELETE" });
+          if (!delRes.ok) reverseError = await delRes.text();
+        } catch (e: any) {
+          reverseError = String(e?.message || "");
+        }
+      }
       setLastEntryId(res.entryId ?? null);
       setEditEntryId(null);
       const incrementSerial = (serial: string | null | undefined) => {
@@ -3211,7 +3351,11 @@ export function CashEntryForm({
       const serialText = [res.superAdminSerialNumber, res.countryTransactionSerialNumber, res.branchTransactionSerialNumber, (res as any).mainBranchTransactionSerialNumber, (res as any).cityBranchTransactionSerialNumber, (res as any).entrySerialNumber]
         .filter(Boolean)
         .join(" / ");
-      setMessage(tr("cef.msg_saved_serials", "Saved successfully. Serials: {serials}").replace("{serials}", serialText || res.entryId || "—"));
+      if (reverseError) {
+        setMessage(tr("cef.msg_reverse_pending", "Corrected entry saved, but the old entry could not be reversed: {error}. Reverse the old entry from the list.").replace("{error}", reverseError), true);
+      } else {
+        setMessage(tr("cef.msg_saved_serials", "Saved successfully. Serials: {serials}").replace("{serials}", serialText || res.entryId || "—"));
+      }
       window.dispatchEvent(
         new CustomEvent("erp:posting-saved", {
           detail: { source: "roznamcha", entryId: res.entryId ?? null }
@@ -3237,6 +3381,7 @@ export function CashEntryForm({
       setReferenceNo("");
       setRemarks("");
       setTypeDetails({});
+      setDestAccountId(""); setTransferDestScope("same_branch");
       setAttachmentFile(null);
       setFinalPayment("");
 
@@ -3761,28 +3906,33 @@ export function CashEntryForm({
 
 
       {/* ============================================================
-          NEW ROZNAMCHA ENTRY INTERFACE (MATCHING EXACT REFERENCE IMAGE)
-          1. Header: Green calculator icon + Title + Subtitle + Close button
-          2. Entry Scope & Branch: Country, Branch, City/Location, Entry Date
-          3. Two-Column Layout:
-             - Left (Steps 1 to 6): Register Setup, Account Selection,
-               Category & Reference, Party Details, Amount & Posting, Remarks
-             - Right: Selected Account Details, Location Details, Financial Snapshot
-          4. Action Bar: Clear, Cancel, Save & New, Save Entry
+          NEW ROZNAMCHA ENTRY MODAL (MATCHING EXACT REFERENCE IMAGE)
+          Centered modal dialog with backdrop blur, max-w-5xl, and tight layout
       ============================================================ */}
       {showNewRoznamchaEntryCard && (
-        <div id="new-roznamcha-entry-card" className="mx-4 my-4 rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-7 shadow-lg shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none transition-all">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-3 sm:p-5 md:p-6 overflow-y-auto animate-in fade-in duration-200"
+          onClick={() => {
+            setShowNewRoznamchaEntryCard(false);
+            setEditEntryId(null);
+          }}
+        >
+          <div 
+            id="new-roznamcha-entry-card" 
+            className="relative w-full max-w-5xl max-h-[94vh] overflow-y-auto rounded-2xl border border-slate-200/90 bg-white p-3 sm:p-4 shadow-2xl dark:border-slate-800 dark:bg-slate-900 transition-all my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
           {/* ── CARD HEADER ── */}
-          <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-3.5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-sm shadow-emerald-500/30 shrink-0">
-                <Calculator className="h-6 w-6 stroke-[2.2]" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm shadow-emerald-500/30 shrink-0">
+                <Calculator className="h-4 w-4 stroke-[2.2]" />
               </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
                   New Roznamcha Entry
                 </h2>
-                <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                   Record Cash/Bank/Business transaction in Roznamcha
                 </p>
               </div>
@@ -3812,17 +3962,17 @@ export function CashEntryForm({
           )}
 
           {/* ── TOP SECTION: ENTRY SCOPE & BRANCH ── */}
-          <div className="mt-5 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-800/40">
+          <div className="mt-2.5 rounded-xl border border-slate-200/80 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-800/40">
             <div className="flex items-center gap-2 mb-3">
               <Target className="h-4 w-4 text-blue-600 dark:text-blue-400 stroke-[2.5]" />
               <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
                 Entry Scope & Branch
               </span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
               {/* Country */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5">
                   Country <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
@@ -3830,7 +3980,7 @@ export function CashEntryForm({
                     value={countryId}
                     onChange={(e) => setCountryId(e.target.value)}
                     disabled={!isSuperAdmin && !isCountryAdmin}
-                    className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 disabled:opacity-80 pr-8"
+                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-2 h-8 text-[11px] font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 disabled:opacity-80 pr-8"
                   >
                     {countries.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -3839,13 +3989,13 @@ export function CashEntryForm({
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
+                  <ChevronDown className="pointer-events-none absolute right-2 top-2 h-4 w-4 text-slate-400" />
                 </div>
               </div>
 
               {/* Branch */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5">
                   Branch <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
@@ -3861,7 +4011,7 @@ export function CashEntryForm({
                       }
                     }}
                     disabled={!isSuperAdmin && !isCountryAdmin}
-                    className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 disabled:opacity-80 pr-8"
+                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-2 h-8 text-[11px] font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 disabled:opacity-80 pr-8"
                   >
                     {cityBranches.length > 0
                       ? cityBranches.map((b) => (
@@ -3875,20 +4025,20 @@ export function CashEntryForm({
                           </option>
                         ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
+                  <ChevronDown className="pointer-events-none absolute right-2 top-2 h-4 w-4 text-slate-400" />
                 </div>
               </div>
 
               {/* City / Location */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5">
                   City / Location
                 </label>
                 <div className="relative">
                   <select
                     value={cityBranchId || ""}
                     onChange={(e) => setCityBranchId(e.target.value)}
-                    className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 pr-8"
+                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-2 h-8 text-[11px] font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 pr-8"
                   >
                     {cityBranches.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -3896,16 +4046,16 @@ export function CashEntryForm({
                       </option>
                     ))}
                     {cityBranches.length === 0 && (
-                      <option value="">📍 Dubai</option>
+                      <option value="">—</option>
                     )}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
+                  <ChevronDown className="pointer-events-none absolute right-2 top-2 h-4 w-4 text-slate-400" />
                 </div>
               </div>
 
               {/* Entry Date */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5">
                   Entry Date <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
@@ -3913,7 +4063,7 @@ export function CashEntryForm({
                     type="date"
                     value={entryDate}
                     onChange={(e) => setEntryDate(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-2 h-8 text-[11px] font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                   />
                 </div>
               </div>
@@ -3921,452 +4071,465 @@ export function CashEntryForm({
           </div>
 
           {/* ── TWO-COLUMN MAIN BODY ── */}
-          <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="mt-2.5 grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
             {/* ══ LEFT COLUMN: STEPS 1 TO 6 (8 cols) ══ */}
-            <div className="lg:col-span-8 space-y-5">
-              {/* STEP 1: REGISTER & ENTRY SETUP */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
-                    1
-                  </span>
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Register & Entry Setup
-                  </span>
+            <div className="lg:col-span-8 space-y-2">
+              {/* ── 1. REGISTER & ENTRY TYPE (original state: roznamchaType / roznamchaNumber / paymentType / currency) ── */}
+              <section className="rounded-xl border border-slate-200/80 p-2.5 dark:border-slate-800">
+                <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[9px] text-white">1</span>
+                  {tr("cj.mStep3", "Roznamcha Details")}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                  {/* Register Type */}
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Register Type <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={registerType}
-                        onChange={(e) => setRegisterType(e.target.value)}
-                        className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-8 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                      >
-                        <option value="Cash Register">Cash Register</option>
-                        <option value="Bank Register">Bank Register</option>
-                        <option value="General Register">General Register</option>
-                      </select>
-                      <Layers className="pointer-events-none absolute left-2.5 top-3 h-4 w-4 text-blue-600" />
-                      <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
-                    </div>
-                  </div>
-
-                  {/* Register No. */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Register No. <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="flex items-center rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden dark:border-slate-700 dark:bg-slate-900">
-                      <span className="bg-slate-100 px-2.5 py-2.5 text-xs font-bold text-slate-500 border-r border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
-                        RZ-
-                      </span>
-                      <input
-                        type="text"
-                        value={registerNumber}
-                        onChange={(e) => setRegisterNumber(e.target.value)}
-                        className="w-full px-3 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none bg-transparent dark:text-slate-100"
-                        placeholder="000134"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Entry Type with openable dropdown */}
-                  <div className="relative">
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Entry Type <span className="text-rose-500">*</span>
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setEntryTypeDropdownOpen((v) => !v)}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-800 shadow-xs flex items-center justify-between hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("cj.mRozType", "Roznamcha Type")} <span className="text-rose-500">*</span></label>
+                    <select
+                      value={roznamchaType}
+                      onChange={(e) => setRoznamchaType(e.target.value)}
+                      className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                     >
-                      <div className="flex items-center gap-2">
-                        {entryTypeSelection === "Cash" && <Banknote className="h-4 w-4 text-emerald-600" />}
-                        {entryTypeSelection === "Cheque" && <CreditCard className="h-4 w-4 text-emerald-600" />}
-                        {entryTypeSelection === "Invoice" && <FileText className="h-4 w-4 text-blue-600" />}
-                        {entryTypeSelection === "Transfer" && <ArrowLeftRight className="h-4 w-4 text-blue-600" />}
-                        <span>{entryTypeSelection}</span>
-                      </div>
-                      <ChevronDown className="h-4 w-4 text-slate-400" />
-                    </button>
-
-                    {entryTypeDropdownOpen && (
-                      <div className="absolute z-30 left-0 right-0 mt-1 rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900 animate-in fade-in-50 zoom-in-95">
-                        {[
-                          { label: "Cash", icon: Banknote, color: "text-emerald-600", mode: "cash" },
-                          { label: "Cheque", icon: CreditCard, color: "text-emerald-600", mode: "bank" },
-                          { label: "Invoice", icon: FileText, color: "text-blue-600", mode: "invoice" },
-                          { label: "Transfer", icon: ArrowLeftRight, color: "text-blue-600", mode: "transfer" },
-                        ].map((item) => (
-                          <button
-                            key={item.label}
-                            type="button"
-                            onClick={() => {
-                              setEntryTypeSelection(item.label);
-                              setPaymentType(item.mode as any);
-                              setEntryTypeDropdownOpen(false);
-                            }}
-                            className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-left transition-colors ${
-                              entryTypeSelection === item.label
-                                ? "bg-blue-600 text-white"
-                                : "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5">
-                              <item.icon className={`h-4 w-4 ${entryTypeSelection === item.label ? "text-white" : item.color}`} />
-                              <span>{item.label}</span>
-                            </div>
-                            {entryTypeSelection === item.label && <Check className="h-4 w-4 text-white" />}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                      <option value="Cash Book No.">{tr("cj.mOptCashBook", "Cash Book No.")}</option>
+                      <option value="Roznamcha Book No.">{tr("cj.mOptRozBook", "Roznamcha Book No.")}</option>
+                      <option value="Receipt No.">{tr("cj.mOptReceiptNo", "Receipt No.")}</option>
+                    </select>
                   </div>
-
-                  {/* Currency */}
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Currency <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={currency || branchCurrency}
-                        onChange={(e) => setCurrency(e.target.value)}
-                        className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-8 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                      >
-                        <option value="AED">AED</option>
-                        <option value="USD">USD</option>
-                        <option value="PKR">PKR</option>
-                        <option value="EUR">EUR</option>
-                        <option value="GBP">GBP</option>
-                        <option value="SAR">SAR</option>
-                        <option value="OMR">OMR</option>
-                      </select>
-                      <Coins className="pointer-events-none absolute left-2.5 top-3 h-4 w-4 text-slate-500" />
-                      <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* STEP 2: ACCOUNT SELECTION */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
-                    2
-                  </span>
-                  <User className="h-4 w-4 text-slate-700 dark:text-slate-300" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Account Selection
-                  </span>
-                </div>
-                <div className="relative">
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Account (Search by Name / No.) <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Search className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("cj.mRozNumber", "Roznamcha Number")} <span className="text-rose-500">*</span></label>
                     <input
-                      type="text"
-                      value={accountSearchQuery || (selectedCounterLedger ? `${selectedCounterLedger.accountName} (${selectedCounterLedger.accountCode || selectedCounterLedger.rawAccountCode || ""})` : "")}
-                      onChange={(e) => {
-                        setAccountSearchQuery(e.target.value);
-                        setAccountDropdownOpen(true);
-                      }}
-                      onFocus={() => setAccountDropdownOpen(true)}
-                      placeholder={tr("roz.search_account_placeholder", "Search account by name or number...")}
-                      className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-9 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                    />
-                    <ChevronDown
-                      onClick={() => setAccountDropdownOpen((v) => !v)}
-                      className="cursor-pointer absolute right-3 top-3 h-4 w-4 text-slate-400 hover:text-slate-600"
+                      value={roznamchaNumber}
+                      onChange={(e) => setRoznamchaNumber(e.target.value)}
+                      placeholder={tr("cj.mRozNumberPh", "Number")}
+                      className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 font-mono text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                     />
                   </div>
+                  <div>
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("cj.mRozCategory", "Roznamcha Category")} <span className="text-rose-500">*</span></label>
+                    <select
+                      id="cash-entry-roz-category"
+                      value={paymentType === "invoice" ? "business" : paymentType}
+                      onChange={(e) => {
+                        const val = e.target.value as any;
+                        setPaymentType(val);
+                        setRoznamchaBookType(val ? "branch_payment_voucher" : "");
+                      }}
+                      className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    >
+                      <option value="cash">{t(lang, "cef.opt_cash_roznamcha", "Cash Roznamcha")}</option>
+                      <option value="bank">{t(lang, "cef.opt_bank_roznamcha", "Bank Roznamcha")}</option>
+                      <option value="business">{t(lang, "cef.opt_business_roznamcha", "Business Roznamcha")}</option>
+                      <option value="transfer">{t(lang, "cef.opt_transfer", "Transfer")}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("cj.mCurrencyType", "Currency Type")} <span className="text-rose-500">*</span></label>
+                    <select
+                      value={currency || branchCurrency}
+                      onChange={(e) => changeEntryCurrency(e.target.value)}
+                      className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    >
+                      {Array.from(new Set([targetAccountCurrency.toUpperCase(), branchCurrency.toUpperCase(), "USD", "AED", "PKR", "AFN", "INR", "SAR"])).filter(Boolean).map((c) => (
+                        <option key={c} value={c}>
+                          {c}{c === targetAccountCurrency.toUpperCase() ? ` · ${tr("cj.mLocal", "local")}` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </section>
 
-                  {accountDropdownOpen && (
-                    <div className="absolute z-30 left-0 right-0 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-                      {ledgerRowsWithAccount
-                        .filter((acc) => {
-                          if (!accountSearchQuery.trim()) return true;
-                          const q = accountSearchQuery.toLowerCase();
-                          return (
-                            acc.accountName?.toLowerCase().includes(q) ||
-                            acc.accountCode?.toLowerCase().includes(q) ||
-                            acc.rawAccountCode?.toLowerCase().includes(q)
-                          );
-                        })
-                        .slice(0, 30)
-                        .map((acc) => (
-                          <button
-                            key={acc.ledgerId}
-                            type="button"
-                            onClick={() => {
-                              applyPostingLedger(acc);
-                              setAccountSearchQuery(`${acc.accountName} (${acc.accountCode || acc.rawAccountCode || ""})`);
-                              setAccountDropdownOpen(false);
-                            }}
-                            className="w-full flex items-center justify-between px-3.5 py-2 text-xs font-medium text-left hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-50 last:border-0"
-                          >
-                            <div>
-                              <div className="font-bold text-slate-900 dark:text-white">{acc.accountName}</div>
-                              <div className="text-[10px] text-slate-400 font-mono">
-                                {acc.accountCode || acc.rawAccountCode || "—"} | {acc.accountKind || "Account"}
-                              </div>
-                            </div>
-                            <div className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">
-                              {acc.ledgerCurrency || branchCurrency}
-                            </div>
-                          </button>
-                        ))}
-                    </div>
+              {/* ── 2. ACCOUNT + REFERENCE (original SearchSelect bound to the branch ledgers) ── */}
+              <section className="rounded-xl border border-slate-200/80 p-2.5 dark:border-slate-800">
+                <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[9px] text-white">2</span>
+                  {tr("money_exchange.dash_account", "Account")}
+                </div>
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+                  <div className="md:col-span-2">
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{t(lang, "cef.search_account_ph", "Search account code or name...")} <span className="text-rose-500">*</span></label>
+                    <SearchSelect
+                      label=""
+                      value={counterLedgerId}
+                      placeholder={t(lang, "cef.search_account_ph", "Search account code or name...")}
+                      options={accountOptions}
+                      disabled={loadingLedgers}
+                      onValueChange={handleCounterLedgerChange}
+                      onSearchValueChange={setAccountNoInput}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("smart_due.col_reference", "Reference No.")}</label>
+                    <input
+                      value={referenceNo}
+                      onChange={(e) => setReferenceNo(e.target.value)}
+                      placeholder="INV-001 / PAY-001"
+                      className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    />
+                  </div>
+                </div>
+              </section>
+
+              {/* ── 3. ENTRY TYPE DETAILS (Bank / Cash / Business Roznamcha / Transfer) ── */}
+              <section className="rounded-xl border border-slate-200/80 p-2.5 dark:border-slate-800">
+                <div className="mb-1.5 flex flex-wrap items-center justify-between gap-1.5">
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100">
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[9px] text-white">3</span>
+                    {paymentType === "bank"
+                      ? tr("cj.mBankDetails", "Bank Details")
+                      : paymentType === "business" || paymentType === "invoice"
+                      ? tr("cj.mBusinessDetails", "Business / Invoice Details")
+                      : paymentType === "transfer"
+                      ? tr("cj.mTransferDetails", "Transfer Details")
+                      : tr("cj.mCashDetails", "Cash Details")}
+                  </div>
+                  {(paymentType === "business" || paymentType === "invoice") && (
+                    <span className="rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[9px] font-semibold text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300">
+                      Purchase · Sales · Daily Payment
+                    </span>
                   )}
                 </div>
-              </div>
 
-              {/* STEP 3: CATEGORY & REFERENCE */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
-                    3
-                  </span>
-                  <Layers className="h-4 w-4 text-blue-600" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Category & Reference
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {/* Category */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Category <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={categoryType}
-                        onChange={(e) => setCategoryType(e.target.value)}
-                        className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-8 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                      >
-                        <option value="Cash Roznamcha">Cash Roznamcha</option>
-                        <option value="Bank Roznamcha">Bank Roznamcha</option>
-                        <option value="General Journal">General Journal</option>
-                      </select>
-                      <Layers className="pointer-events-none absolute left-2.5 top-3 h-4 w-4 text-blue-600" />
-                      <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
-                    </div>
-                  </div>
-
-                  {/* Reference / Voucher No. */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Reference / Voucher No.
-                    </label>
-                    <div className="relative">
-                      <FileText className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                {paymentType === "bank" ? (
+                  /* Bank Name (Settings Bank Master, filtered by country) → Payment Type (Transfer Mode master: Mobile / TT) → Receipt Number → Receipt Attachment */
+                  <TransferDetailsSection
+                    bankName={typeDetails.bankName || ""}
+                    onBankNameChange={(bankName) => setTypeDetails((p) => ({ ...p, bankName }))}
+                    onBankRecordChange={(bank) => setTypeDetails((p) => ({ ...p, bankId: bank?.id || "", bankName: bank?.bank_name || p.bankName }))}
+                    transferMode={typeDetails.method || typeDetails.transferType || ""}
+                    onTransferModeChange={(method) => setTypeDetails((p) => ({ ...p, method, transferType: method }))}
+                    transactionReference={typeDetails.receiptNumber || typeDetails.transferReferenceNumber || typeDetails.refNo || ""}
+                    onTransactionReferenceChange={(refNo) => setTypeDetails((p) => ({ ...p, refNo, ref: refNo, receiptNumber: refNo, transferReferenceNumber: refNo }))}
+                    attachmentFile={attachmentFile}
+                    onAttachmentChange={setAttachmentFile}
+                    countryId={countryId || selectedCountry?.id || session?.scopes?.countryIds?.[0] || undefined}
+                    countryIso={activeCountryIso}
+                    showAttachment={true}
+                    lang={lang as SupportedLanguage}
+                  />
+                ) : paymentType === "business" || paymentType === "invoice" ? (
+                  /* Invoice Name → Invoice Number → View / Download Invoice */
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <div>
+                      <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{"Invoice Name"}</label>
                       <input
-                        type="text"
-                        value={referenceNo}
-                        onChange={(e) => setReferenceNo(e.target.value)}
-                        placeholder="e.g. INV-001 / PAY-001"
-                        className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                        value={typeDetails.invoiceName || typeDetails.purchaseInfo || ""}
+                        onChange={(e) => setTypeDetails((p) => ({ ...p, invoiceName: e.target.value, purchaseInfo: e.target.value, businessName: e.target.value }))}
+                        placeholder={t(lang, "cef.supplier_ph", "Supplier LLC")}
+                        className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                       />
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* STEP 4: PARTY DETAILS */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
-                    4
-                  </span>
-                  <Users className="h-4 w-4 text-blue-600" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Party Details
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {/* Party Name */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Party Name <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <User className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <div>
+                      <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("cj.mInvoiceNumber", "Invoice / Bill Number")}</label>
                       <input
-                        type="text"
-                        value={typeDetails.partyName || typeDetails.receiverSenderName || ""}
-                        onChange={(e) =>
-                          setTypeDetails((prev) => ({
-                            ...prev,
-                            partyName: e.target.value,
-                            receiverSenderName: e.target.value,
-                          }))
-                        }
-                        placeholder="Enter name"
-                        className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                        value={typeDetails.invoiceNumber || ""}
+                        onChange={(e) => setTypeDetails((p) => ({ ...p, invoiceNumber: e.target.value }))}
+                        placeholder={tr("cj.mInvoicePh", "Invoice number")}
+                        className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 font-mono text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                       />
                     </div>
-                  </div>
-
-                  {/* Mobile No. */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Mobile No. <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="flex items-center rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden dark:border-slate-700 dark:bg-slate-900">
-                      <div className="flex items-center gap-1 bg-slate-50 px-2.5 py-2.5 text-xs font-bold text-slate-700 border-r border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
-                        <Phone className="h-3.5 w-3.5 text-emerald-600" />
-                        <span>{partyDialCode}</span>
-                        <ChevronDown className="h-3 w-3 text-slate-400" />
+                    <div>
+                      <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("common.view", "View")} / {tr("common.download", "Download")}</label>
+                      <div className="flex h-8 items-center gap-1">
+                        <label className="flex h-8 min-w-0 flex-1 cursor-pointer items-center gap-1 rounded-lg border border-dashed border-indigo-300 bg-indigo-50/50 px-2 text-[11px] font-semibold text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300">
+                          <Paperclip className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{attachmentFile ? attachmentFile.name : tr("cj.mAttach", "Attach File")}</span>
+                          <input type="file" className="hidden" onChange={(e) => setAttachmentFile(e.target.files?.[0] ?? null)} />
+                        </label>
+                        {attachmentFile && (
+                          <button
+                            type="button"
+                            title={`${tr("common.view", "View")} / ${tr("common.download", "Download")}`}
+                            onClick={() => {
+                              const url = URL.createObjectURL(attachmentFile);
+                              window.open(url, "_blank", "noopener");
+                              setTimeout(() => URL.revokeObjectURL(url), 60000);
+                            }}
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                       </div>
-                      <input
-                        type="text"
-                        value={typeDetails.mobileNo || ""}
-                        onChange={(e) =>
-                          setTypeDetails((prev) => ({ ...prev, mobileNo: e.target.value }))
-                        }
-                        placeholder="50 123 4567"
-                        className="w-full px-3 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none bg-transparent dark:text-slate-100"
-                      />
                     </div>
                   </div>
+                ) : paymentType === "transfer" ? (
+                  /* Same branch → destination account only. Other branch → Country → Main Branch → City Branch → Destination Account */
+                  <div className="space-y-2">
+                    <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 text-[10px] font-bold dark:border-slate-700 dark:bg-slate-900">
+                      {(["same_branch", "other_branch"] as const).map((scope) => (
+                        <button
+                          key={scope}
+                          type="button"
+                          onClick={() => {
+                            setTransferDestScope(scope);
+                            setDestAccountId("");
+                            setTypeDetails((p) => ({ ...p, to: "", transferTo: "", transferInfo: "" }));
+                            if (scope === "other_branch" && !destCountryId) setDestCountryId(countryId || countries[0]?.id || "");
+                          }}
+                          className={cn(
+                            "rounded-md px-2.5 py-1 transition",
+                            transferDestScope === scope ? "bg-blue-600 text-white shadow-2xs" : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                          )}
+                        >
+                          {scope === "same_branch" ? tr("cef.same_branch_accounts", "Same Branch") : "Other Branch"}
+                        </button>
+                      ))}
+                    </div>
 
-                  {/* Download ID */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Download ID
-                    </label>
-                    <div className="relative">
-                      <CreditCard className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                      <input
-                        type="text"
-                        value={typeDetails.downloadId || ""}
-                        onChange={(e) =>
-                          setTypeDetails((prev) => ({ ...prev, downloadId: e.target.value }))
-                        }
-                        placeholder="Enter ID (Optional)"
-                        className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                      />
+                    <div className={cn("grid grid-cols-1 gap-2", transferDestScope === "same_branch" ? "sm:grid-cols-2" : "sm:grid-cols-2 md:grid-cols-4")}>
+                      {transferDestScope === "other_branch" && (
+                        <>
+                          <div>
+                            <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("common.country", "Country")} <span className="text-rose-500">*</span></label>
+                            <select
+                              value={destCountryId}
+                              onChange={(e) => { setDestCountryId(e.target.value); setDestMainBranchId(""); setDestCityBranchId(""); setDestAccountId(""); }}
+                              className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                            >
+                              <option value="">—</option>
+                              {countries.map((c) => (
+                                <option key={c.id} value={c.id}>{c.iso2 ? `${c.iso2} · ` : ""}{c.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("crm.main_branch", "Main Branch")} <span className="text-rose-500">*</span></label>
+                            <select
+                              value={destMainBranchId}
+                              disabled={!destCountryId || loadingDestBranches}
+                              onChange={(e) => { setDestMainBranchId(e.target.value); setDestCityBranchId(""); setDestAccountId(""); }}
+                              className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                            >
+                              <option value="">—</option>
+                              {destMainBranches.map((b) => (
+                                <option key={b.id} value={b.id}>{b.name}{b.code ? ` (${b.code})` : ""}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("crm.city_branch", "City Branch")} <span className="text-rose-500">*</span></label>
+                            <select
+                              value={destCityBranchId}
+                              disabled={!destMainBranchId}
+                              onChange={(e) => { setDestCityBranchId(e.target.value); setDestAccountId(""); }}
+                              className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                            >
+                              <option value="">—</option>
+                              {destCityBranches.map((b) => (
+                                <option key={b.id} value={b.id}>{b.name}{(b as any).code ? ` (${(b as any).code})` : ""}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </>
+                      )}
+                      <div className={transferDestScope === "same_branch" ? "sm:col-span-1" : ""}>
+                        <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{"Destination Account"} <span className="text-rose-500">*</span></label>
+                        <select
+                          value={destAccountId}
+                          disabled={transferDestScope === "other_branch" && (!destCityBranchId || loadingDestAccounts)}
+                          onChange={(e) => {
+                            const accId = e.target.value;
+                            setDestAccountId(accId);
+                            const pool: any[] = transferDestScope === "same_branch" ? ledgerRowsWithAccount : destAccounts;
+                            const acc = pool.find((a: any) => a.ledgerId === accId || a.id === accId);
+                            if (!acc) { setTypeDetails((p) => ({ ...p, to: "", transferTo: "", transferInfo: "" })); return; }
+                            const name = acc.accountName || acc.ledgerName || acc.name || "";
+                            const code = acc.accountCode || acc.rawAccountCode || acc.code || "";
+                            const where = transferDestScope === "same_branch"
+                              ? ""
+                              : [
+                                  destCityBranches.find((b) => b.id === destCityBranchId)?.name,
+                                  destMainBranches.find((b) => b.id === destMainBranchId)?.name,
+                                  countries.find((c) => c.id === destCountryId)?.name,
+                                ].filter(Boolean).join(", ");
+                            const label = `${name}${code ? ` (${code})` : ""}${where ? ` @ ${where}` : ""}`;
+                            setTypeDetails((p) => ({ ...p, to: label, transferTo: label, transferInfo: transferDestScope === "same_branch" ? "Same branch transfer" : "Other branch transfer" }));
+                          }}
+                          className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                        >
+                          <option value="">{loadingDestAccounts && transferDestScope === "other_branch" ? "…" : "—"}</option>
+                          {(transferDestScope === "same_branch"
+                            ? ledgerRowsWithAccount.filter((a) => a.ledgerId !== counterLedgerId)
+                            : destAccounts
+                          ).slice(0, 300).map((a: any) => (
+                            <option key={a.ledgerId || a.id} value={a.ledgerId || a.id}>
+                              {(a.accountName || a.ledgerName || a.name) ?? ""} ({a.accountCode || a.rawAccountCode || a.code || "—"})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      {transferDestScope === "same_branch" && (
+                        <div>
+                          <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("report.col_reference", "Reference")}</label>
+                          <input
+                            value={typeDetails.ref || ""}
+                            onChange={(e) => setTypeDetails((p) => ({ ...p, ref: e.target.value, refNo: e.target.value, transferReferenceNumber: e.target.value }))}
+                            className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* STEP 5: AMOUNT & POSTING */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
-                    5
-                  </span>
-                  <Coins className="h-4 w-4 text-blue-600" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Amount & Posting
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-stretch">
-                  {/* Amount */}
-                  <div className="md:col-span-4">
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Amount <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <Coins className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                ) : (
+                  /* Cash: Person Name → Mobile Number → ID / Document Type → Document Attachment */
+                  <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                    <div>
+                      <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{t(lang, "cef.receiver_sender_name", "Receiver / Sender Name")}</label>
                       <input
-                        type="number"
-                        step="any"
-                        value={finalPayment}
-                        onChange={(e) => setFinalPayment(e.target.value)}
-                        placeholder="0.00"
-                        className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                        value={typeDetails.receiverSenderName || ""}
+                        onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))}
+                        placeholder={t(lang, "cef.full_name_ph", "Full name")}
+                        className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                       />
                     </div>
-                  </div>
-
-                  {/* Posting Side Radio Pills */}
-                  <div className="md:col-span-4">
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Posting Side <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="flex items-center gap-2 pt-0.5">
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMode("DEBIT")}
-                        className={`flex-1 flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${
-                          paymentMode === "DEBIT"
-                            ? "border-blue-500 bg-blue-50/80 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
-                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
-                        }`}
+                    <div>
+                      <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("cj.mMobile", "Mobile Number")}</label>
+                      <input
+                        dir="ltr"
+                        inputMode="tel"
+                        value={typeDetails.mobileNumber || ""}
+                        onChange={(e) => setTypeDetails((p) => ({ ...p, mobileNumber: e.target.value }))}
+                        placeholder={tr("cj.mMobilePh", "Mobile number")}
+                        className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 font-mono text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("tdoc.document_type", "Document Type")}</label>
+                      <select
+                        value={typeDetails.idDocumentType || ""}
+                        onChange={(e) => setTypeDetails((p) => ({ ...p, idDocumentType: e.target.value }))}
+                        className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                       >
-                        <span className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${paymentMode === "DEBIT" ? "border-blue-600 bg-white" : "border-slate-400"}`}>
-                          {paymentMode === "DEBIT" && <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />}
-                        </span>
-                        <span>Debit (DR)</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMode("CREDIT")}
-                        className={`flex-1 flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${
-                          paymentMode === "CREDIT"
-                            ? "border-blue-500 bg-blue-50/80 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
-                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
-                        }`}
-                      >
-                        <span className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${paymentMode === "CREDIT" ? "border-blue-600 bg-white" : "border-slate-400"}`}>
-                          {paymentMode === "CREDIT" && <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />}
-                        </span>
-                        <span>Credit (CR)</span>
-                      </button>
+                        <option value="">—</option>
+                        <option value="Emirates ID">{tr("extform.doc_emirates_id", "Emirates ID (UAE)")}</option>
+                        <option value="CNIC">{tr("extform.doc_cnic", "CNIC / National ID Card")}</option>
+                        <option value="Passport">{tr("extform.doc_passport", "Passport")}</option>
+                        <option value="Tazkira">{tr("extform.doc_tazkira", "Tazkira / National ID (AFG)")}</option>
+                        <option value="Driving License">{tr("extform.doc_driving_license", "Driving License")}</option>
+                        <option value="Other">{tr("god.lt_other", "Other")}</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("cj.mIdCard", "ID Card Copy Upload")}</label>
+                      <label className="flex h-8 cursor-pointer items-center gap-1 rounded-lg border border-dashed border-blue-300 bg-blue-50/50 px-2 text-[11px] font-semibold text-blue-700 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300">
+                        <Paperclip className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{attachmentFile ? attachmentFile.name : tr("cj.mAttach", "Attach File")}</span>
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] ?? null;
+                            setAttachmentFile(file);
+                            setTypeDetails((p) => ({ ...p, idCardCopyName: file?.name || "" }));
+                          }}
+                        />
+                      </label>
                     </div>
                   </div>
+                )}
+              </section>
 
-                  {/* Final Amount Display Card */}
-                  <div className="md:col-span-4 rounded-2xl border border-emerald-200/80 bg-emerald-50/60 p-3 sm:p-4 text-right flex flex-col justify-center dark:border-emerald-900/60 dark:bg-emerald-950/30">
-                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                      Final Amount
+              {/* ── 4. AMOUNT, EXCHANGE RATE & DR / CR (original calcAmount / exchangeRate / calcFinal / paymentMode) ── */}
+              <section className="rounded-xl border border-slate-200/80 p-2.5 dark:border-slate-800">
+                <div className="mb-1.5 flex flex-wrap items-center justify-between gap-1.5">
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100">
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[9px] text-white">4</span>
+                    {tr("cj.mStep5", "Transaction Conversion (Local Calculation)")}
+                  </div>
+                  {!isLocalCurrency && (
+                    <span className="rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                      {normalizedCurrency} → {targetAccountCurrency.toUpperCase()}
+                      {exchangeRateSource === "approved" ? " · Daily Board" : " · Manual"}
                     </span>
-                    <span className="font-mono text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight" dir="ltr">
-                      {currency || branchCurrency || "AED"} {fmtAmount(Number(finalPayment || 0))}
-                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 items-end gap-2 md:grid-cols-12">
+                  <div className={isLocalCurrency ? "col-span-2 md:col-span-4" : "md:col-span-3"}>
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">
+                      {isLocalCurrency ? `${tr("cj.mAmount", "Amount")} (${targetAccountCurrency.toUpperCase()})` : `${tr("cj.mQuantity", "Quantity (Foreign Amount)")} (${normalizedCurrency})`} <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      inputMode="decimal"
+                      value={calcAmount}
+                      onChange={(e) => setCalcAmount(e.target.value)}
+                      placeholder="0.00"
+                      className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 font-mono text-[12px] font-bold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    />
+                  </div>
+                  {!isLocalCurrency && (
+                    <div className="md:col-span-3">
+                      <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">
+                        {calcOp === "mul" ? "×" : "÷"} {tr("cj.mRate", "Transaction Rate")} <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        inputMode="decimal"
+                        value={exchangeRate}
+                        onChange={(e) => { setExchangeRate(e.target.value); setExchangeRateSource("manual"); }}
+                        readOnly={approvedRateForEntry}
+                        placeholder="0.0000"
+                        className={cn(
+                          "h-8 w-full rounded-lg border px-2 font-mono text-[12px] font-bold outline-none focus:border-blue-500 dark:text-slate-100",
+                          approvedRateForEntry ? "border-emerald-200 bg-emerald-50/60 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/30" : "border-slate-200 bg-white text-slate-800 dark:border-slate-700 dark:bg-slate-950"
+                        )}
+                      />
+                    </div>
+                  )}
+                  <div className={isLocalCurrency ? "col-span-2 md:col-span-4" : "col-span-2 md:col-span-3"}>
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("cj.mStep6", "Debit / Credit Entry")} <span className="text-rose-500">*</span></label>
+                    <div className="grid h-8 grid-cols-2 gap-1">
+                      {(["DEBIT", "CREDIT"] as const).map((side) => (
+                        <button
+                          key={side}
+                          type="button"
+                          onClick={() => setPaymentMode(side)}
+                          className={cn(
+                            "rounded-lg border text-[11px] font-bold transition",
+                            paymentMode === side
+                              ? side === "DEBIT"
+                                ? "border-rose-400 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
+                                : "border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                              : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900"
+                          )}
+                        >
+                          {side === "DEBIT" ? "DR" : "CR"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className={isLocalCurrency ? "col-span-2 md:col-span-4" : "col-span-2 md:col-span-3"}>
+                    <div className="flex h-[52px] flex-col justify-center rounded-lg border border-emerald-200 bg-emerald-50/80 px-2.5 text-right dark:border-emerald-800 dark:bg-emerald-950/30">
+                      <span className="text-[9px] font-bold uppercase tracking-wide text-slate-500">{tr("cj.mFinalAmount", "Final Amount")}</span>
+                      <span className="font-mono text-[15px] font-black leading-tight text-emerald-700 dark:text-emerald-300" dir="ltr">
+                        {targetAccountCurrency.toUpperCase()} {fmtAmount(amount || 0)}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
+                {!isLocalCurrency && (
+                  <div className="mt-1.5 rounded-md bg-slate-50 px-2 py-1 font-mono text-[10px] font-semibold text-slate-600 dark:bg-slate-900 dark:text-slate-300" dir="ltr">
+                    {fmtAmount(Number(String(calcAmount || "0").replace(/,/g, "")) || 0)} {normalizedCurrency} {calcOp === "mul" ? "×" : "÷"} {exchangeRate || "—"} = {calcFinal !== null ? fmtAmount(calcFinal) : "—"} {targetAccountCurrency.toUpperCase()}
+                    <span className="ml-1 text-slate-400">· {paymentMode === "CREDIT" ? "CR" : "DR"} {targetAccountCurrency.toUpperCase()} {calcFinal !== null ? fmtAmount(calcFinal) : "0.00"}</span>
+                  </div>
+                )}
+              </section>
 
-              {/* STEP 6: REMARKS */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
-                    6
-                  </span>
-                  <Pencil className="h-4 w-4 text-blue-600" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Remarks
-                  </span>
-                </div>
+              {/* ── 5. NOTES (entry-type details are synced here; the currency audit trail is appended on save) ── */}
+              <section>
+                <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("bankroz.optional_remarks_ph", "Enter remarks / details (optional)")}</label>
                 <div className="relative">
-                  <Pencil className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
                   <textarea
                     rows={2}
-                    maxLength={500}
+                    maxLength={1000}
                     value={remarks}
                     onChange={(e) => setRemarks(e.target.value)}
-                    placeholder="Enter remarks / details (optional)"
-                    className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-16 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 resize-none"
+                    className="w-full resize-none rounded-lg border border-slate-200 bg-white px-2 py-1.5 pr-14 text-[11px] font-medium text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                   />
-                  <div className="absolute right-3 bottom-2 text-[10px] font-medium text-slate-400">
-                    {remarks.length} / 500
-                  </div>
+                  <span className="absolute bottom-1.5 right-2 text-[9px] text-slate-400">{remarks.length} / 1000</span>
                 </div>
-              </div>
+              </section>
             </div>
 
             {/* ══ RIGHT COLUMN: 3 SUMMARY CARDS (4 cols) ══ */}
-            <div className="lg:col-span-4 space-y-4">
+            <div className="lg:col-span-4 space-y-2">
               {/* Card 1: Selected Account Details */}
               <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex items-center gap-2 mb-3">
@@ -4533,6 +4696,7 @@ export function CashEntryForm({
               </button>
             </div>
           </div>
+        </div>
         </div>
       )}
 
@@ -5535,6 +5699,7 @@ export function CashEntryForm({
                             {tr("cj.mRozCategory", "Roznamcha Category")} <span className="text-red-500">*</span>
                           </Label>
                           <select
+                            id="cash-entry-roz-category"
                             value={paymentType}
                             onChange={(e) => {
                               const val = e.target.value as any;
@@ -5557,10 +5722,10 @@ export function CashEntryForm({
                           </Label>
                           <select
                             value={currency || branchCurrency}
-                            onChange={(e) => setCurrency(e.target.value)}
+                            onChange={(e) => changeEntryCurrency(e.target.value)}
                             className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
                           >
-                            {canViewUsd && <option value="USD">USD</option>}
+                            <option value="USD">USD</option>
                             <option value="PKR">PKR</option>
                             <option value="AED">AED</option>
                             <option value="INR">INR</option>
@@ -5766,35 +5931,20 @@ export function CashEntryForm({
                               </Label>
                               <Input
                                 value={exchangeRate}
-                                onChange={(e) => setExchangeRate(e.target.value)}
+                                onChange={(e) => { setExchangeRate(e.target.value); setExchangeRateSource("manual"); }}
+                                readOnly={approvedRateForEntry}
+                                inputMode="decimal"
                                 placeholder="0.0000"
                                 className="h-9 text-xs font-mono font-bold bg-white dark:bg-slate-950"
                               />
                             </div>
 
-                            <div className="sm:col-span-1 flex justify-center pb-0.5">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                onClick={() => setCalcOp(calcOp === "mul" ? "div" : "mul")}
-                                className="h-9 w-9 rounded-xl border-slate-200 dark:border-slate-700"
-                                title={t(lang, "cef.toggle_operation", "Toggle Operation")}
-                              >
-                                <ArrowLeftRight className="h-4 w-4 text-blue-600" />
-                              </Button>
-                            </div>
-
-                            <div className="sm:col-span-2 space-y-1">
+                            {/* The operation follows the entry currency (derivedCalcOp); it is shown, not chosen. */}
+                            <div className="sm:col-span-3 space-y-1">
                               <Label className="text-[10px] font-bold text-slate-500 uppercase">{tr("cj.mOperation", "Operation")}</Label>
-                              <select
-                                value={calcOp}
-                                onChange={(e) => setCalcOp(e.target.value as any)}
-                                className="h-9 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-xs font-bold outline-none"
-                              >
-                                <option value="mul">{tr("cj.mMultiply", "Multiply (x)")}</option>
-                                <option value="div">{tr("cj.mDivide", "Divide (/)")}</option>
-                              </select>
+                              <div className="h-9 flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">
+                                {calcOp === "mul" ? "× " : "÷ "}{calcOp === "mul" ? tr("cj.mMultiply", "Multiply (x)") : tr("cj.mDivide", "Divide (/)")}
+                              </div>
                             </div>
                           </>
                         )}
@@ -5835,14 +5985,6 @@ export function CashEntryForm({
                             onClick={() => {
                               setPaymentMode("DEBIT");
                               setRoznamchaBookType("branch_payment_voucher");
-                              if (normalizedCurrency !== "USD") {
-                                const targetRate = dailyRate?.debitRate ?? dailyRate?.buyingRate;
-                                if (targetRate && Number(targetRate) > 0) {
-                                  setExchangeRate(String(targetRate));
-                                } else {
-                                  setExchangeRate("");
-                                }
-                              }
                             }}
                             className={cn(
                               "flex-1 flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer",
@@ -5860,14 +6002,6 @@ export function CashEntryForm({
                             onClick={() => {
                               setPaymentMode("CREDIT");
                               setRoznamchaBookType("branch_payment_voucher");
-                              if (normalizedCurrency !== "USD") {
-                                const targetRate = dailyRate?.creditRate ?? dailyRate?.sellingRate;
-                                if (targetRate && Number(targetRate) > 0) {
-                                  setExchangeRate(String(targetRate));
-                                } else {
-                                  setExchangeRate("");
-                                }
-                              }
                             }}
                             className={cn(
                               "flex-1 flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-xs font-bold transition cursor-pointer",
@@ -5890,46 +6024,58 @@ export function CashEntryForm({
                       </div>
 
                       <div className="flex flex-wrap justify-between gap-2 text-[11px] font-mono">
-                        <span>{tr("cj.drRate", "DR Rate (Buying)")}: {dailyRate?.debitRate ?? "—"}</span>
-                        <span>{tr("cj.crRate", "CR Rate (Selling)")}: {dailyRate?.creditRate ?? "—"}</span>
-                        <span>{normalizedCurrency} {fmtAmount(Number(amount) || 0)} · USD {cashUsdEquivalent(Number(amount) || 0, normalizedCurrency, Number(exchangeRate)) == null ? "—" : fmtAmount(cashUsdEquivalent(Number(amount) || 0, normalizedCurrency, Number(exchangeRate))!)}</span>
+                        <span>{tr("cj.drRate", "DR Rate (Buying)")}: {dailyRate?.found && dailyRate.debitRate ? Number(dailyRate.debitRate).toFixed(4) : "—"}</span>
+                        <span>{tr("cj.crRate", "CR Rate (Selling)")}: {dailyRate?.found && dailyRate.creditRate ? Number(dailyRate.creditRate).toFixed(4) : "—"}{dailyRate?.found && dailyRate.rateDate ? ` · ${dailyRate.rateDate}` : ""}</span>
+                        <span>{lineCurrencyCode} {fmtAmount(Number(amount) || 0)} · USD {usdEquivalentDisplay == null ? "—" : fmtAmount(usdEquivalentDisplay)}</span>
                         {dailyRateError && <span className="text-red-600">{dailyRateError}</span>}
                       </div>
                       {/* Remarks / Notes Textarea */}
                       <div className="space-y-1">
                         <Label className="text-[10px] font-bold text-slate-500 uppercase">{tr("cj.mRemarks", "Remarks / Notes")}</Label>
                         <textarea
-                          rows={2}
+                          rows={6}
+                          maxLength={1000}
+                          style={{ height: "120px", minHeight: "120px" }}
                           value={remarks}
                           onChange={(e) => setRemarks(e.target.value)}
                           placeholder={tr("cj.mRemarksPh", "Enter transaction details...")}
-                          className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full h-[120px] min-h-[120px] p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500 resize-y"
                         />
                         <div className="text-right text-[10px] font-mono text-slate-400">
-                          {remarks.length}/500
+                          {remarks.length}/1000
                         </div>
                       </div>
 
-                      {/* Rate Pending Warning Banner */}
+                      {/* Inline rate for a foreign entry that has no approved rate on the entry date */}
                       {isRatePending && (
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs">
+                        <div className="flex flex-col gap-3 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs">
                           <div className="flex items-start gap-2">
                             <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
                             <div>
-                              <span className="font-bold">{tr("cj.mRatePendingTitle", "TODAY'S EXCHANGE RATE PENDING / MISSING:")}</span>{" "}
-                              {tr("cj.mRatePendingBody", "No approved exchange rate for {cur} on {date}. Country Admin must enter today's rate in Daily Exchange Rate module before financial postings can be saved.").replace("{cur}", String(currency || branchCurrency)).replace("{date}", String(entryDate))}
+                              <span className="font-bold">{tr("cj.mNeedRateTitle", "No approved exchange rate for {cur} on {date}.").replace("{cur}", normalizedCurrency).replace("{date}", String(entryDate))}</span>{" "}
+                              {tr("cj.mNeedRateBody", "Enter the rate for this entry below. It is saved on this entry as a manual rate. The Country Admin can approve the daily rate in Daily Exchange Rate.")}
                             </div>
                           </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => router.push("/dashboard/reports/exchange-rate")}
-                            className="shrink-0 h-8 px-3 rounded-lg text-xs font-bold gap-1.5 border-amber-300 dark:border-amber-700 bg-white/80 dark:bg-slate-900 hover:bg-amber-100/50 text-amber-900 dark:text-amber-100 cursor-pointer"
-                          >
-                            <ExternalLink className="h-3.5 w-3.5" />
-                            <span>{t(lang, "nav.super_admin_exchange_rate", "Daily Exchange Rate")}</span>
-                          </Button>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span className="font-bold">{tr("cj.mNeedRateInput", "1 {cur} = ? {local}").replace("{cur}", normalizedCurrency).replace("{local}", lineCurrencyCode)}</span>
+                            <Input
+                              value={exchangeRate}
+                              onChange={(e) => { setExchangeRate(e.target.value); setExchangeRateSource("manual"); }}
+                              inputMode="decimal"
+                              placeholder="0.0000"
+                              className="h-9 w-40 text-xs font-mono font-bold bg-white dark:bg-slate-950"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => router.push("/dashboard/reports/exchange-rate")}
+                              className="shrink-0 h-8 px-3 rounded-lg text-xs font-bold gap-1.5 border-amber-300 dark:border-amber-700 bg-white/80 dark:bg-slate-900 hover:bg-amber-100/50 text-amber-900 dark:text-amber-100 cursor-pointer"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                              <span>{t(lang, "nav.super_admin_exchange_rate", "Daily Exchange Rate")}</span>
+                            </Button>
+                          </div>
                         </div>
                       )}
 
@@ -5948,10 +6094,10 @@ export function CashEntryForm({
                           <span>{t(lang, "common.reset", "Reset")}</span>
                         </Button>
 
-                        <div className="flex items-center gap-3">
-                          {isRatePending && (
-                            <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 hidden sm:inline-block">
-                              {tr("cj.mRatePendingBtn", "Today's Exchange Rate Pending / Missing")}
+                        <div className="flex flex-wrap items-center justify-end gap-3">
+                          {postBlockReason && (
+                            <span role="status" className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 text-right max-w-[22rem]">
+                              {postBlockReason}
                             </span>
                           )}
                           <Button
@@ -6373,10 +6519,10 @@ export function CashEntryForm({
                 <Th className="py-2.5 px-3 font-bold whitespace-nowrap min-w-[130px]">Roznamcha</Th>
                 <Th className="py-2.5 px-3 font-bold min-w-[180px]">Details</Th>
                 <Th className="py-2.5 px-2.5 font-bold text-center whitespace-nowrap">Currency</Th>
+                <Th className="py-2.5 px-3 font-bold text-right whitespace-nowrap">Credit (Local)</Th>
                 {canViewUsd && (
                   <Th className="py-2.5 px-2.5 font-bold text-right whitespace-nowrap">Exchange Rate</Th>
                 )}
-                <Th className="py-2.5 px-3 font-bold text-right whitespace-nowrap">Credit (Local)</Th>
                 {canViewUsd && (
                   <Th className="py-2.5 px-3 font-bold text-right whitespace-nowrap">Credit (USD)</Th>
                 )}
@@ -6537,14 +6683,7 @@ export function CashEntryForm({
                             {lineCurr}
                           </td>
 
-                          {/* Remaining: Exchange Rate */}
-                          {canViewUsd && (
-                            <td className="py-2.5 px-2.5 text-right font-mono font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap" dir="ltr">
-                              {rateNum ? rateNum.toFixed(4) : "—"}
-                            </td>
-                          )}
-
-                          {/* Remaining: Credit (Local) */}
+                          {/* 8. Credit (Local) */}
                           <td className={cn(
                             "py-2.5 px-3 text-right font-mono whitespace-nowrap",
                             creditLocal > 0 ? "font-bold text-emerald-600 dark:text-emerald-400" : "font-medium text-slate-400 dark:text-slate-600"
@@ -6552,7 +6691,14 @@ export function CashEntryForm({
                             {fmtAmount(creditLocal)}
                           </td>
 
-                          {/* Remaining: Credit (USD) */}
+                          {/* 9. Exchange Rate, shown with the operation that links the CR amount and the USD amount */}
+                          {canViewUsd && (
+                            <td className="py-2.5 px-2.5 text-right font-mono font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap" dir="ltr">
+                              {rateNum ? `${(parseAuditTrail(row.narration)?.op ?? "mul") === "div" ? "÷" : "×"} ${rateNum.toFixed(4)}` : "—"}
+                            </td>
+                          )}
+
+                          {/* 10. Credit (USD) */}
                           {canViewUsd && (
                             <td className={cn(
                               "py-2.5 px-3 text-right font-mono whitespace-nowrap",
@@ -6596,7 +6742,18 @@ export function CashEntryForm({
                           {/* Remaining: Actions */}
                           <td className="py-2.5 px-3 text-center whitespace-nowrap">
                             {idx === 0 ? (
-                              <div className="relative inline-block">
+                              <div className="relative inline-flex items-center gap-1">
+                                {canUseDivideEntry && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDivideEntry(row)}
+                                    className="inline-flex h-6 w-7 items-center justify-center rounded-md border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300 cursor-pointer"
+                                    title={tr("cef.divide_entry", "Divide this entry")}
+                                    aria-label={tr("cef.divide_entry", "Divide this entry")}
+                                  >
+                                    <ArrowLeftRight className="h-3.5 w-3.5" />
+                                  </button>
+                                )}
                                 <button
                                   type="button"
                                   onClick={() => setActiveRowMenuId(activeRowMenuId === row.id ? null : row.id)}

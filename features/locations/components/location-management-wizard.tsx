@@ -81,8 +81,9 @@ type DistrictRow = {
   is_active: boolean;
 };
 
+// A District row (public.districts) with the number of Cities (public.cities) under it.
 type CitySummaryRow = DistrictRow & {
-  total_districts: number;
+  total_cities: number;
 };
 
 type CityRow = {
@@ -222,6 +223,8 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
   // i18n
   const lang = useActiveLanguage();
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  // Fills {0}, {1} placeholders in a translated message.
+  const fmtMsg = (key: string, fallback: string, ...args: string[]) => args.reduce((acc, v, i) => acc.split(`{${i}}`).join(v), tt(key, fallback));
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
 
   // Initial tab sync
@@ -360,7 +363,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
         setDistricts(res.citySummaries);
       } else {
         const raw = await apiGet<{ districts: DistrictRow[] }>(`/api/erp/locations/districts?stateProvinceId=${stateId}`);
-        setDistricts((raw.districts || []).map((d) => ({ ...d, total_districts: 0 })));
+        setDistricts((raw.districts || []).map((d) => ({ ...d, total_cities: 0 })));
       }
     } catch (e: any) {
       showBanner("error", e.message || "Failed to load cities");
@@ -668,13 +671,13 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
 
         if (modalMode === "add") {
           const res = await apiPost<{ country: CountryRow }>("/api/erp/locations/countries", payload);
-          showBanner("success", `Country ${res.country.name} created successfully.`);
+          showBanner("success", fmtMsg("lfix.msg_created", "{0} {1} created successfully.", tt("lfix.level_country", "Country"), res.country.name));
         } else {
           const res = await apiPatch<{ country: CountryRow }>(`/api/erp/locations/countries/${editRecordId}`, {
             ...payload,
             isActive: formCountry.isActive
           });
-          showBanner("success", `Country ${res.country.name} updated successfully.`);
+          showBanner("success", fmtMsg("lfix.msg_updated", "{0} {1} updated successfully.", tt("lfix.level_country", "Country"), res.country.name));
         }
       } else if (activeTab === "state") {
         if (!modalCountryId) throw new Error("Please select a Country first");
@@ -690,14 +693,14 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
 
         if (modalMode === "add") {
           const res = await apiPost<{ state: StateRow }>("/api/erp/locations/states", payload);
-          showBanner("success", `State ${res.state.name} created successfully.`);
+          showBanner("success", fmtMsg("lfix.msg_created", "{0} {1} created successfully.", tt("lfix.level_state", "State / Province"), res.state.name));
         } else {
           const res = await apiPatch<{ state: StateRow }>(`/api/erp/locations/states/${editRecordId}`, {
             name: formState.name.trim(),
             code: fullCode,
             isActive: formState.isActive
           });
-          showBanner("success", `State ${res.state.name} updated successfully.`);
+          showBanner("success", fmtMsg("lfix.msg_updated", "{0} {1} updated successfully.", tt("lfix.level_state", "State / Province"), res.state.name));
         }
       } else if (activeTab === "city") {
         if (!modalCountryId || !modalStateId) throw new Error("Country and State selections are required");
@@ -714,14 +717,14 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
 
         if (modalMode === "add") {
           const res = await apiPost<{ district: DistrictRow }>("/api/erp/locations/districts", payload);
-          showBanner("success", `City ${res.district.name} created successfully.`);
+          showBanner("success", fmtMsg("lfix.msg_created", "{0} {1} created successfully.", tt("lfix.level_district", "District"), res.district.name));
         } else {
           const res = await apiPatch<{ district: DistrictRow }>(`/api/erp/locations/districts/${editRecordId}`, {
             name: formCity.name.trim(),
             code: fullCode,
             isActive: formCity.isActive
           });
-          showBanner("success", `City ${res.district.name} updated successfully.`);
+          showBanner("success", fmtMsg("lfix.msg_updated", "{0} {1} updated successfully.", tt("lfix.level_district", "District"), res.district.name));
         }
       } else if (activeTab === "tehsil") {
         if (!modalCountryId || !modalStateId || !modalDistrictId) {
@@ -742,7 +745,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
 
         if (modalMode === "add") {
           const res = await apiPost<{ city: CityRow }>("/api/erp/locations/cities", payload);
-          showBanner("success", `District/Tehsil ${res.city.name} created successfully.`);
+          showBanner("success", fmtMsg("lfix.msg_created", "{0} {1} created successfully.", tt("lfix.level_city", "City"), res.city.name));
         } else {
           const res = await apiPatch<{ city: CityRow }>(`/api/erp/locations/cities/${editRecordId}`, {
             name: formTehsil.name.trim(),
@@ -751,7 +754,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
             isActive: formTehsil.isActive,
             districtId: modalDistrictId
           });
-          showBanner("success", `District/Tehsil ${res.city.name} updated successfully.`);
+          showBanner("success", fmtMsg("lfix.msg_updated", "{0} {1} updated successfully.", tt("lfix.level_city", "City"), res.city.name));
         }
       }
 
@@ -1007,7 +1010,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
 
     if (activeTab === "country") {
       filename = "Country_Summary_Export.csv";
-      headers = ["Country Code", "Country Name", "Total States", "Total Cities", "Total Districts/Tehsils", "Status"];
+      headers = ["Country Code", "Country Name", "Total States", "Total Cities", "Total Districts", "Status"];
       rows = filteredCountries.map((c) => [
         c.iso2 || "",
         c.name,
@@ -1019,7 +1022,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
     } else if (activeTab === "state") {
       filename = "State_Summary_Export.csv";
       const c = countries.find((x) => x.id === selectedCountryId);
-      headers = ["Country Name", "State Code", "State Name", "Total Cities", "Total Districts/Tehsils", "Status"];
+      headers = ["Country Name", "State Code", "State Name", "Total Cities", "Total Districts", "Status"];
       rows = filteredStates.map((s) => [
         c?.name || "",
         s.code || "",
@@ -1029,24 +1032,26 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
         s.is_active ? "Active" : "Inactive"
       ]);
     } else if (activeTab === "city") {
-      filename = "City_Summary_Export.csv";
+      // Tab key "city" lists public.districts rows (the District level under a State).
+      filename = "District_Summary_Export.csv";
       const c = countries.find((x) => x.id === selectedCountryId);
       const s = states.find((x) => x.id === selectedStateId);
-      headers = ["Country Name", "State Name", "City Code", "City Name", "Total Districts/Tehsils", "Status"];
+      headers = ["Country Name", "State Name", "District Code", "District Name", "Total Cities", "Status"];
       rows = filteredDistricts.map((d) => [
         c?.name || "",
         s?.name || "",
         d.code || "",
         d.name,
-        String(d.total_districts || 0),
+        String(d.total_cities || 0),
         d.is_active ? "Active" : "Inactive"
       ]);
     } else if (activeTab === "tehsil") {
-      filename = "Tehsil_Master_Export.csv";
+      // Tab key "tehsil" lists public.cities rows (the City level under a District).
+      filename = "City_Master_Export.csv";
       const c = countries.find((x) => x.id === selectedCountryId);
       const s = states.find((x) => x.id === selectedStateId);
       const d = districts.find((x) => x.id === selectedDistrictId);
-      headers = ["Country Name", "State Name", "City Name", "District/Tehsil Code", "District/Tehsil Name", "Zip Code", "Status"];
+      headers = ["Country Name", "State Name", "District Name", "City Code", "City Name", "Zip Code", "Status"];
       rows = filteredCities.map((ct) => [
         c?.name || "",
         s?.name || "",
@@ -1141,7 +1146,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{tt("loc.subtitle", "ERP Location Settings")}</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight text-foreground">{tt("loc.title", "Location Management Workspace")}</h1>
           <p className="text-sm text-muted-foreground">
-            {tt("loc.description", "Multi-level location hierarchy drill-down: Country → State → City → District/Tehsil.")}
+            {tt("lfix.drill_description", "Multi-level location hierarchy drill-down: Country → State → District → City.")}
           </p>
         </div>
 
@@ -1225,7 +1230,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
         >
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tt("loc.cities_districts", "Cities / Districts")}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tt("lfix.stat_cities", "Cities")}</p>
               <p className="text-2xl font-bold text-teal-950 mt-1">{Number(stats.totalCities || 0).toLocaleString()}</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-100 text-teal-700">
@@ -1243,7 +1248,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
         >
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tt("loc.districts_tehsils", "Districts / Tehsils")}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tt("lfix.stat_districts", "Districts")}</p>
               <p className="text-2xl font-bold text-amber-950 mt-1">{Number(stats.totalDistricts || 0).toLocaleString()}</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
@@ -1348,7 +1353,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
               activeTab === "city" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
-            {tt("loc.tab_city", "3. City Summary")}
+            {tt("lfix.tab_district", "3. District Summary")}
           </button>
           <button
             onClick={() => {
@@ -1361,7 +1366,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
               activeTab === "tehsil" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
-            {tt("loc.tab_tehsil", "4. Tehsil / District List")}
+            {tt("lfix.tab_city", "4. City List")}
           </button>
         </div>
 
@@ -1495,8 +1500,8 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                       <Th className="px-4 py-3">Country Code</Th>
                       <Th className="px-4 py-3">Country Name</Th>
                       <Th className="px-4 py-3 text-center">Total States</Th>
-                      <Th className="px-4 py-3 text-center">Total Cities</Th>
-                      <Th className="px-4 py-3 text-center">Total Districts / Tehsils</Th>
+                      <Th className="px-4 py-3 text-center">{tt("lfix.th_total_cities", "Total Cities")}</Th>
+                      <Th className="px-4 py-3 text-center">{tt("lfix.th_total_districts", "Total Districts")}</Th>
                       <Th className="px-4 py-3">Status</Th>
                       <Th className="px-4 py-3 text-center">Actions</Th>
                     </tr>
@@ -1580,8 +1585,8 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                     <tr className="border-b bg-muted/40 font-semibold text-muted-foreground">
                       <Th className="px-4 py-3">State Code</Th>
                       <Th className="px-4 py-3">State Name</Th>
-                      <Th className="px-4 py-3 text-center">Total Cities</Th>
-                      <Th className="px-4 py-3 text-center">Total Districts / Tehsils</Th>
+                      <Th className="px-4 py-3 text-center">{tt("lfix.th_total_cities", "Total Cities")}</Th>
+                      <Th className="px-4 py-3 text-center">{tt("lfix.th_total_districts", "Total Districts")}</Th>
                       <Th className="px-4 py-3">Status</Th>
                       <Th className="px-4 py-3 text-center">Actions</Th>
                     </tr>
@@ -1659,15 +1664,15 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                       {tt("loc.active_state", "Active State:")} <span className="font-bold text-teal-700">{drillPath.stateName || tt("loc.selected_state", "Selected State")}</span>
                     </span>
                   </div>
-                  <span className="text-xs text-teal-600 font-medium">{tt("loc.total_cities_count", "Total Cities:")} {filteredDistricts.length}</span>
+                  <span className="text-xs text-teal-600 font-medium">{tt("lfix.th_total_districts", "Total Districts")}: {filteredDistricts.length}</span>
                 </div>
 
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b bg-muted/40 font-semibold text-muted-foreground">
-                      <Th className="px-4 py-3">City Code</Th>
-                      <Th className="px-4 py-3">City Name</Th>
-                      <Th className="px-4 py-3 text-center">Total Districts / Tehsils</Th>
+                      <Th className="px-4 py-3">{tt("lfix.th_district_code", "District Code")}</Th>
+                      <Th className="px-4 py-3">{tt("lfix.th_district_name", "District Name")}</Th>
+                      <Th className="px-4 py-3 text-center">{tt("lfix.th_total_cities", "Total Cities")}</Th>
                       <Th className="px-4 py-3">Status</Th>
                       <Th className="px-4 py-3 text-center">Actions</Th>
                     </tr>
@@ -1697,7 +1702,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                           <td className="px-4 py-3 font-mono font-bold text-teal-700">{d.code || "-"}</td>
                           <td className="px-4 py-3 font-semibold text-foreground">{d.name}</td>
                           <td className="px-4 py-3 text-center font-semibold text-amber-700">
-                            <span className="rounded-md bg-amber-50 px-2.5 py-1 border border-amber-100">{d.total_districts}</span>
+                            <span className="rounded-md bg-amber-50 px-2.5 py-1 border border-amber-100">{d.total_cities}</span>
                           </td>
                           <td className="px-4 py-3">
                             <span
@@ -1742,14 +1747,14 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                       {tt("loc.active_city", "Active City:")} <span className="font-bold text-amber-700">{drillPath.cityName || tt("loc.selected_city", "Selected City")}</span>
                     </span>
                   </div>
-                  <span className="text-xs text-amber-600 font-medium">{tt("loc.total_tehsils_count", "Total Tehsils:")} {filteredCities.length}</span>
+                  <span className="text-xs text-amber-600 font-medium">{tt("loc.total_cities_count", "Total Cities:")} {filteredCities.length}</span>
                 </div>
 
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b bg-muted/40 font-semibold text-muted-foreground">
-                      <Th className="px-4 py-3">District / Tehsil Code</Th>
-                      <Th className="px-4 py-3">District / Tehsil Name</Th>
+                      <Th className="px-4 py-3">{tt("lfix.th_city_code", "City Code")}</Th>
+                      <Th className="px-4 py-3">{tt("lfix.th_city_name", "City Name")}</Th>
                       <Th className="px-4 py-3">ZIP Code</Th>
                       <Th className="px-4 py-3">Status</Th>
                       <Th className="px-4 py-3 text-center">Actions</Th>
@@ -1825,8 +1830,8 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
               : activeTab === "state"
               ? tt("loc.state_province", "State / Province")
               : activeTab === "city"
-              ? tt("common.city", "City")
-              : tt("loc.district_tehsil", "District / Tehsil")
+              ? tt("lfix.level_district", "District")
+              : tt("lfix.level_city", "City")
           }`}
           onClose={() => setIsAddEditModalOpen(false)}
           className="max-w-lg"
@@ -1945,7 +1950,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>{tt("loc.city_name_label", "City Name")} *</Label>
+                  <Label>{tt("lfix.th_district_name", "District Name")} *</Label>
                   <Input
                     placeholder={tt("loc.city_name_ph", "e.g. Quetta")}
                     value={formCity.name}
@@ -1953,7 +1958,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>{tt("loc.city_code_suffix", "City Code Suffix")} *</Label>
+                  <Label>{tt("lfix.th_district_code", "District Code")} *</Label>
                   <div className="flex items-center gap-1">
                     <span className="rounded-md border bg-muted px-3 py-2 font-mono text-xs font-bold">{modalDistrictCodePrefix || "XX-XX-"}</span>
                     <Input
@@ -2018,7 +2023,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>{tt("loc.dist_name_label", "District / Tehsil Name")} *</Label>
+                  <Label>{tt("lfix.th_city_name", "City Name")} *</Label>
                   <Input
                     placeholder={tt("loc.dist_name_ph", "e.g. Quetta District")}
                     value={formTehsil.name}
