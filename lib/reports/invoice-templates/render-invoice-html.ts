@@ -40,9 +40,10 @@ export function renderInvoiceHtml(
   colorId?: string | null,
 ): string {
   const tpl = getInvoiceTemplate(templateId);
-  // A local sale's sales / tax invoice uses the local tax layout (proforma-style VAT table).
+  // The Damaan layout is the one design for every purchase and sales invoice (local sales included). The older
+  // UAE tax builder is used only when another template is chosen explicitly.
   const html =
-    input.layout === "uae_tax" && (input.docType === "sales_invoice" || input.docType === "tax_invoice")
+    input.layout === "uae_tax" && templateId !== "tax_invoice" && (input.docType === "sales_invoice" || input.docType === "tax_invoice")
       ? buildUaeTaxInvoiceHtml(input)
       : tpl.render(input, flags);
   return withGroupWatermark(stretchGoodsTable(themeInvoiceHtml(html, colorId), input.orientation === "landscape"));
