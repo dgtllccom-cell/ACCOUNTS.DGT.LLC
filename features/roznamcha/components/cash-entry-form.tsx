@@ -2015,7 +2015,7 @@ export function CashEntryForm({
     if (paymentType === "bank") {
       const bankName = typeDetails.bankName || "";
       const method = typeDetails.method || "";
-      const refNo = typeDetails.refNo || "";
+      const refNo = typeDetails.receiptNumber || typeDetails.refNo || "";
       const payDate = typeDetails.payDate || entryDate;
       const formattedDate = payDate ? payDate.split("-").reverse().join("/") : "";
       const attachment = attachmentFile?.name || typeDetails.bankAttachmentName || "";
@@ -2023,7 +2023,7 @@ export function CashEntryForm({
       const parts = [
         bankName && `Bank: ${bankName}`,
         method && `Method: ${method}`,
-        refNo && `Ref: ${refNo}`,
+        refNo && `Receipt: ${refNo}`,
         formattedDate && `Date: ${formattedDate}`,
         attachment && `Attachment: ${attachment}`
       ].filter(Boolean);
@@ -2034,11 +2034,15 @@ export function CashEntryForm({
       const receiver = typeDetails.receiverSenderName || "";
       const mobile = typeDetails.mobileNumber || "";
       const whatsapp = typeDetails.whatsappNumber || "";
+      const docType = typeDetails.idDocumentType || "";
+      const docFile = attachmentFile?.name || typeDetails.idCardCopyName || "";
       
       const parts = [
         receiver && `Receiver/Sender: ${receiver}`,
         mobile && `Mobile: ${mobile}`,
-        whatsapp && `WhatsApp: ${whatsapp}`
+        whatsapp && `WhatsApp: ${whatsapp}`,
+        docType && `ID: ${docType}`,
+        docFile && `Document: ${docFile}`
       ].filter(Boolean);
       
       return parts.length ? `Cash Details: ${parts.join(" | ")}` : "";
@@ -2058,11 +2062,13 @@ export function CashEntryForm({
     }
     if (paymentType === "business" || paymentType === "invoice") {
       const invNo = typeDetails.invoiceNumber || "";
-      const purInfo = typeDetails.purchaseInfo || typeDetails.businessName || "";
+      const purInfo = typeDetails.invoiceName || typeDetails.purchaseInfo || typeDetails.businessName || "";
+      const invFile = attachmentFile?.name || "";
       
       const parts = [
+        purInfo && `Invoice: ${purInfo}`,
         invNo && `Invoice #: ${invNo}`,
-        purInfo && `Info: ${purInfo}`
+        invFile && `File: ${invFile}`
       ].filter(Boolean);
       
       return parts.length ? `Invoice/Business Details: ${parts.join(" | ")}` : "";
@@ -2506,6 +2512,7 @@ export function CashEntryForm({
     setPaymentMode("DEBIT");
     setFinalPayment("");
     setTypeDetails({});
+    setDestAccountId(""); setTransferDestScope("same_branch");
     setCurrency("");
     setCurrencyError(false);
     setCalcAmount("");
@@ -3372,6 +3379,7 @@ export function CashEntryForm({
       setReferenceNo("");
       setRemarks("");
       setTypeDetails({});
+      setDestAccountId(""); setTransferDestScope("same_branch");
       setAttachmentFile(null);
       setFinalPayment("");
 
@@ -3909,20 +3917,20 @@ export function CashEntryForm({
         >
           <div 
             id="new-roznamcha-entry-card" 
-            className="relative w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-7 shadow-2xl dark:border-slate-800 dark:bg-slate-900 transition-all my-auto"
+            className="relative w-full max-w-5xl max-h-[94vh] overflow-y-auto rounded-2xl border border-slate-200/90 bg-white p-3 sm:p-4 shadow-2xl dark:border-slate-800 dark:bg-slate-900 transition-all my-auto"
             onClick={(e) => e.stopPropagation()}
           >
           {/* ── CARD HEADER ── */}
-          <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-3.5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-sm shadow-emerald-500/30 shrink-0">
-                <Calculator className="h-6 w-6 stroke-[2.2]" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm shadow-emerald-500/30 shrink-0">
+                <Calculator className="h-4 w-4 stroke-[2.2]" />
               </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
                   New Roznamcha Entry
                 </h2>
-                <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                   Record Cash/Bank/Business transaction in Roznamcha
                 </p>
               </div>
@@ -3952,17 +3960,17 @@ export function CashEntryForm({
           )}
 
           {/* ── TOP SECTION: ENTRY SCOPE & BRANCH ── */}
-          <div className="mt-5 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-800/40">
+          <div className="mt-2.5 rounded-xl border border-slate-200/80 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-800/40">
             <div className="flex items-center gap-2 mb-3">
               <Target className="h-4 w-4 text-blue-600 dark:text-blue-400 stroke-[2.5]" />
               <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
                 Entry Scope & Branch
               </span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
               {/* Country */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5">
                   Country <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
@@ -3970,7 +3978,7 @@ export function CashEntryForm({
                     value={countryId}
                     onChange={(e) => setCountryId(e.target.value)}
                     disabled={!isSuperAdmin && !isCountryAdmin}
-                    className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 disabled:opacity-80 pr-8"
+                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-2 h-8 text-[11px] font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 disabled:opacity-80 pr-8"
                   >
                     {countries.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -3979,13 +3987,13 @@ export function CashEntryForm({
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
+                  <ChevronDown className="pointer-events-none absolute right-2 top-2 h-4 w-4 text-slate-400" />
                 </div>
               </div>
 
               {/* Branch */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5">
                   Branch <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
@@ -4001,7 +4009,7 @@ export function CashEntryForm({
                       }
                     }}
                     disabled={!isSuperAdmin && !isCountryAdmin}
-                    className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 disabled:opacity-80 pr-8"
+                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-2 h-8 text-[11px] font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 disabled:opacity-80 pr-8"
                   >
                     {cityBranches.length > 0
                       ? cityBranches.map((b) => (
@@ -4015,20 +4023,20 @@ export function CashEntryForm({
                           </option>
                         ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
+                  <ChevronDown className="pointer-events-none absolute right-2 top-2 h-4 w-4 text-slate-400" />
                 </div>
               </div>
 
               {/* City / Location */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5">
                   City / Location
                 </label>
                 <div className="relative">
                   <select
                     value={cityBranchId || ""}
                     onChange={(e) => setCityBranchId(e.target.value)}
-                    className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 pr-8"
+                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-2 h-8 text-[11px] font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 pr-8"
                   >
                     {cityBranches.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -4036,16 +4044,16 @@ export function CashEntryForm({
                       </option>
                     ))}
                     {cityBranches.length === 0 && (
-                      <option value="">📍 Dubai</option>
+                      <option value="">—</option>
                     )}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
+                  <ChevronDown className="pointer-events-none absolute right-2 top-2 h-4 w-4 text-slate-400" />
                 </div>
               </div>
 
               {/* Entry Date */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5">
                   Entry Date <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
@@ -4053,7 +4061,7 @@ export function CashEntryForm({
                     type="date"
                     value={entryDate}
                     onChange={(e) => setEntryDate(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-2 h-8 text-[11px] font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                   />
                 </div>
               </div>
@@ -4061,975 +4069,465 @@ export function CashEntryForm({
           </div>
 
           {/* ── TWO-COLUMN MAIN BODY ── */}
-          <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="mt-2.5 grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
             {/* ══ LEFT COLUMN: STEPS 1 TO 6 (8 cols) ══ */}
-            <div className="lg:col-span-8 space-y-5">
-              {/* STEP 1: REGISTER & ENTRY SETUP */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
-                    1
-                  </span>
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Register & Entry Setup
-                  </span>
+            <div className="lg:col-span-8 space-y-2">
+              {/* ── 1. REGISTER & ENTRY TYPE (original state: roznamchaType / roznamchaNumber / paymentType / currency) ── */}
+              <section className="rounded-xl border border-slate-200/80 p-2.5 dark:border-slate-800">
+                <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[9px] text-white">1</span>
+                  {tr("cj.mStep3", "Roznamcha Details")}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                  {/* Register Type */}
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Register Type <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={registerType}
-                        onChange={(e) => setRegisterType(e.target.value)}
-                        className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-8 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                      >
-                        <option value="Cash Register">Cash Register</option>
-                        <option value="Bank Register">Bank Register</option>
-                        <option value="General Register">General Register</option>
-                      </select>
-                      <Layers className="pointer-events-none absolute left-2.5 top-3 h-4 w-4 text-blue-600" />
-                      <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
-                    </div>
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("cj.mRozType", "Roznamcha Type")} <span className="text-rose-500">*</span></label>
+                    <select
+                      value={roznamchaType}
+                      onChange={(e) => setRoznamchaType(e.target.value)}
+                      className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    >
+                      <option value="Cash Book No.">{tr("cj.mOptCashBook", "Cash Book No.")}</option>
+                      <option value="Roznamcha Book No.">{tr("cj.mOptRozBook", "Roznamcha Book No.")}</option>
+                      <option value="Receipt No.">{tr("cj.mOptReceiptNo", "Receipt No.")}</option>
+                    </select>
                   </div>
-
-                  {/* Register No. */}
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Register No. <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="flex items-center rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden dark:border-slate-700 dark:bg-slate-900">
-                      <span className="bg-slate-100 px-2.5 py-2.5 text-xs font-bold text-slate-500 border-r border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
-                        RZ-
-                      </span>
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("cj.mRozNumber", "Roznamcha Number")} <span className="text-rose-500">*</span></label>
+                    <input
+                      value={roznamchaNumber}
+                      onChange={(e) => setRoznamchaNumber(e.target.value)}
+                      placeholder={tr("cj.mRozNumberPh", "Number")}
+                      className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 font-mono text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("cj.mRozCategory", "Roznamcha Category")} <span className="text-rose-500">*</span></label>
+                    <select
+                      id="cash-entry-roz-category"
+                      value={paymentType === "invoice" ? "business" : paymentType}
+                      onChange={(e) => {
+                        const val = e.target.value as any;
+                        setPaymentType(val);
+                        setRoznamchaBookType(val ? "branch_payment_voucher" : "");
+                      }}
+                      className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    >
+                      <option value="cash">{t(lang, "cef.opt_cash_roznamcha", "Cash Roznamcha")}</option>
+                      <option value="bank">{t(lang, "cef.opt_bank_roznamcha", "Bank Roznamcha")}</option>
+                      <option value="business">{t(lang, "cef.opt_business_roznamcha", "Business Roznamcha")}</option>
+                      <option value="transfer">{t(lang, "cef.opt_transfer", "Transfer")}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("cj.mCurrencyType", "Currency Type")} <span className="text-rose-500">*</span></label>
+                    <select
+                      value={currency || branchCurrency}
+                      onChange={(e) => changeEntryCurrency(e.target.value)}
+                      className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    >
+                      {Array.from(new Set([targetAccountCurrency.toUpperCase(), branchCurrency.toUpperCase(), "USD", "AED", "PKR", "AFN", "INR", "SAR"])).filter(Boolean).map((c) => (
+                        <option key={c} value={c}>
+                          {c}{c === targetAccountCurrency.toUpperCase() ? ` · ${tr("cj.mLocal", "local")}` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </section>
+
+              {/* ── 2. ACCOUNT + REFERENCE (original SearchSelect bound to the branch ledgers) ── */}
+              <section className="rounded-xl border border-slate-200/80 p-2.5 dark:border-slate-800">
+                <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[9px] text-white">2</span>
+                  {tr("money_exchange.dash_account", "Account")}
+                </div>
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+                  <div className="md:col-span-2">
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{t(lang, "cef.search_account_ph", "Search account code or name...")} <span className="text-rose-500">*</span></label>
+                    <SearchSelect
+                      label=""
+                      value={counterLedgerId}
+                      placeholder={t(lang, "cef.search_account_ph", "Search account code or name...")}
+                      options={accountOptions}
+                      disabled={loadingLedgers}
+                      onValueChange={handleCounterLedgerChange}
+                      onSearchValueChange={setAccountNoInput}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("smart_due.col_reference", "Reference No.")}</label>
+                    <input
+                      value={referenceNo}
+                      onChange={(e) => setReferenceNo(e.target.value)}
+                      placeholder="INV-001 / PAY-001"
+                      className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    />
+                  </div>
+                </div>
+              </section>
+
+              {/* ── 3. ENTRY TYPE DETAILS (Bank / Cash / Business Roznamcha / Transfer) ── */}
+              <section className="rounded-xl border border-slate-200/80 p-2.5 dark:border-slate-800">
+                <div className="mb-1.5 flex flex-wrap items-center justify-between gap-1.5">
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100">
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[9px] text-white">3</span>
+                    {paymentType === "bank"
+                      ? tr("cj.mBankDetails", "Bank Details")
+                      : paymentType === "business" || paymentType === "invoice"
+                      ? tr("cj.mBusinessDetails", "Business / Invoice Details")
+                      : paymentType === "transfer"
+                      ? tr("cj.mTransferDetails", "Transfer Details")
+                      : tr("cj.mCashDetails", "Cash Details")}
+                  </div>
+                  {(paymentType === "business" || paymentType === "invoice") && (
+                    <span className="rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[9px] font-semibold text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300">
+                      Purchase · Sales · Daily Payment
+                    </span>
+                  )}
+                </div>
+
+                {paymentType === "bank" ? (
+                  /* Bank Name (Settings Bank Master, filtered by country) → Payment Type (Transfer Mode master: Mobile / TT) → Receipt Number → Receipt Attachment */
+                  <TransferDetailsSection
+                    bankName={typeDetails.bankName || ""}
+                    onBankNameChange={(bankName) => setTypeDetails((p) => ({ ...p, bankName }))}
+                    onBankRecordChange={(bank) => setTypeDetails((p) => ({ ...p, bankId: bank?.id || "", bankName: bank?.bank_name || p.bankName }))}
+                    transferMode={typeDetails.method || typeDetails.transferType || ""}
+                    onTransferModeChange={(method) => setTypeDetails((p) => ({ ...p, method, transferType: method }))}
+                    transactionReference={typeDetails.receiptNumber || typeDetails.transferReferenceNumber || typeDetails.refNo || ""}
+                    onTransactionReferenceChange={(refNo) => setTypeDetails((p) => ({ ...p, refNo, ref: refNo, receiptNumber: refNo, transferReferenceNumber: refNo }))}
+                    attachmentFile={attachmentFile}
+                    onAttachmentChange={setAttachmentFile}
+                    countryId={countryId || selectedCountry?.id || session?.scopes?.countryIds?.[0] || undefined}
+                    countryIso={activeCountryIso}
+                    showAttachment={true}
+                    lang={lang as SupportedLanguage}
+                  />
+                ) : paymentType === "business" || paymentType === "invoice" ? (
+                  /* Invoice Name → Invoice Number → View / Download Invoice */
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <div>
+                      <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{"Invoice Name"}</label>
                       <input
-                        type="text"
-                        value={registerNumber}
-                        onChange={(e) => setRegisterNumber(e.target.value)}
-                        className="w-full px-3 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none bg-transparent dark:text-slate-100"
-                        placeholder="000134"
+                        value={typeDetails.invoiceName || typeDetails.purchaseInfo || ""}
+                        onChange={(e) => setTypeDetails((p) => ({ ...p, invoiceName: e.target.value, purchaseInfo: e.target.value, businessName: e.target.value }))}
+                        placeholder={t(lang, "cef.supplier_ph", "Supplier LLC")}
+                        className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                       />
                     </div>
-                  </div>
-
-                  {/* Entry Type with openable dropdown */}
-                  <div className="relative">
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Entry Type <span className="text-rose-500">*</span>
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setEntryTypeDropdownOpen((v) => !v)}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-800 shadow-xs flex items-center justify-between hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                    >
-                      <div className="flex items-center gap-2">
-                        {entryTypeSelection === "Cash" && <Banknote className="h-4 w-4 text-emerald-600" />}
-                        {(entryTypeSelection === "Cheque" || entryTypeSelection === "Bank") && <CreditCard className="h-4 w-4 text-emerald-600" />}
-                        {(entryTypeSelection === "Invoice" || entryTypeSelection === "Business Roznamcha") && <FileText className="h-4 w-4 text-blue-600" />}
-                        {entryTypeSelection === "Transfer" && <ArrowLeftRight className="h-4 w-4 text-blue-600" />}
-                        <span>{entryTypeSelection === "Bank" ? "Cheque" : entryTypeSelection === "Business Roznamcha" ? "Invoice" : entryTypeSelection}</span>
-                      </div>
-                      <ChevronDown className="h-4 w-4 text-slate-400" />
-                    </button>
-
-                    {entryTypeDropdownOpen && (
-                      <div className="absolute z-30 left-0 right-0 mt-1 rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900 animate-in fade-in-50 zoom-in-95">
-                        {[
-                          { label: "Cash", display: tr("cef.opt_cash_roznamcha", "Cash"), icon: Banknote, color: "text-emerald-600", mode: "cash" },
-                          { label: "Cheque", display: tr("cef.opt_bank_roznamcha", "Cheque"), icon: CreditCard, color: "text-emerald-600", mode: "bank" },
-                          { label: "Invoice", display: tr("cef.opt_business_roznamcha", "Invoice"), icon: FileText, color: "text-blue-600", mode: "business" },
-                          { label: "Transfer", display: tr("cef.opt_transfer", "Transfer"), icon: ArrowLeftRight, color: "text-blue-600", mode: "transfer" },
-                        ].map((item) => (
+                    <div>
+                      <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("cj.mInvoiceNumber", "Invoice / Bill Number")}</label>
+                      <input
+                        value={typeDetails.invoiceNumber || ""}
+                        onChange={(e) => setTypeDetails((p) => ({ ...p, invoiceNumber: e.target.value }))}
+                        placeholder={tr("cj.mInvoicePh", "Invoice number")}
+                        className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 font-mono text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("common.view", "View")} / {tr("common.download", "Download")}</label>
+                      <div className="flex h-8 items-center gap-1">
+                        <label className="flex h-8 min-w-0 flex-1 cursor-pointer items-center gap-1 rounded-lg border border-dashed border-indigo-300 bg-indigo-50/50 px-2 text-[11px] font-semibold text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300">
+                          <Paperclip className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{attachmentFile ? attachmentFile.name : tr("cj.mAttach", "Attach File")}</span>
+                          <input type="file" className="hidden" onChange={(e) => setAttachmentFile(e.target.files?.[0] ?? null)} />
+                        </label>
+                        {attachmentFile && (
                           <button
-                            key={item.label}
                             type="button"
+                            title={`${tr("common.view", "View")} / ${tr("common.download", "Download")}`}
                             onClick={() => {
-                              setEntryTypeSelection(item.label);
-                              setPaymentType(item.mode as any);
-                              setEntryTypeDropdownOpen(false);
+                              const url = URL.createObjectURL(attachmentFile);
+                              window.open(url, "_blank", "noopener");
+                              setTimeout(() => URL.revokeObjectURL(url), 60000);
                             }}
-                            className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-left transition-colors ${
-                              entryTypeSelection === item.label || (item.label === "Cheque" && entryTypeSelection === "Bank") || (item.label === "Invoice" && entryTypeSelection === "Business Roznamcha")
-                                ? "bg-blue-600 text-white"
-                                : "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
-                            }`}
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300"
                           >
-                            <div className="flex items-center gap-2.5">
-                              <item.icon className={`h-4 w-4 ${entryTypeSelection === item.label || (item.label === "Cheque" && entryTypeSelection === "Bank") || (item.label === "Invoice" && entryTypeSelection === "Business Roznamcha") ? "text-white" : item.color}`} />
-                              <span>{item.label}</span>
-                            </div>
-                            {(entryTypeSelection === item.label || (item.label === "Cheque" && entryTypeSelection === "Bank") || (item.label === "Invoice" && entryTypeSelection === "Business Roznamcha")) && <Check className="h-4 w-4 text-white" />}
+                            <Eye className="h-3.5 w-3.5" />
                           </button>
-                        ))}
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
+                ) : paymentType === "transfer" ? (
+                  /* Same branch → destination account only. Other branch → Country → Main Branch → City Branch → Destination Account */
+                  <div className="space-y-2">
+                    <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 text-[10px] font-bold dark:border-slate-700 dark:bg-slate-900">
+                      {(["same_branch", "other_branch"] as const).map((scope) => (
+                        <button
+                          key={scope}
+                          type="button"
+                          onClick={() => {
+                            setTransferDestScope(scope);
+                            setDestAccountId("");
+                            setTypeDetails((p) => ({ ...p, to: "", transferTo: "", transferInfo: "" }));
+                            if (scope === "other_branch" && !destCountryId) setDestCountryId(countryId || countries[0]?.id || "");
+                          }}
+                          className={cn(
+                            "rounded-md px-2.5 py-1 transition",
+                            transferDestScope === scope ? "bg-blue-600 text-white shadow-2xs" : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                          )}
+                        >
+                          {scope === "same_branch" ? tr("cef.same_branch_accounts", "Same Branch") : "Other Branch"}
+                        </button>
+                      ))}
+                    </div>
 
-                  {/* Currency */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Currency <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={currency || branchCurrency}
-                        onChange={(e) => changeEntryCurrency(e.target.value)}
-                        className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-8 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                      >
-                        <option value={branchCurrency}>
-                          {branchCurrency} ({branchCurrency === "AED" ? "UAE Base" : branchCurrency === "PKR" ? "PK Base" : "Branch Base"})
-                        </option>
-                        {["USD", "AED", "PKR", "AFN", "EUR", "GBP", "SAR", "OMR"]
-                          .filter((c) => c !== branchCurrency)
-                          .map((c) => (
-                            <option key={c} value={c}>
-                              {c}
+                    <div className={cn("grid grid-cols-1 gap-2", transferDestScope === "same_branch" ? "sm:grid-cols-2" : "sm:grid-cols-2 md:grid-cols-4")}>
+                      {transferDestScope === "other_branch" && (
+                        <>
+                          <div>
+                            <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("common.country", "Country")} <span className="text-rose-500">*</span></label>
+                            <select
+                              value={destCountryId}
+                              onChange={(e) => { setDestCountryId(e.target.value); setDestMainBranchId(""); setDestCityBranchId(""); setDestAccountId(""); }}
+                              className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                            >
+                              <option value="">—</option>
+                              {countries.map((c) => (
+                                <option key={c.id} value={c.id}>{c.iso2 ? `${c.iso2} · ` : ""}{c.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("crm.main_branch", "Main Branch")} <span className="text-rose-500">*</span></label>
+                            <select
+                              value={destMainBranchId}
+                              disabled={!destCountryId || loadingDestBranches}
+                              onChange={(e) => { setDestMainBranchId(e.target.value); setDestCityBranchId(""); setDestAccountId(""); }}
+                              className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                            >
+                              <option value="">—</option>
+                              {destMainBranches.map((b) => (
+                                <option key={b.id} value={b.id}>{b.name}{b.code ? ` (${b.code})` : ""}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("crm.city_branch", "City Branch")} <span className="text-rose-500">*</span></label>
+                            <select
+                              value={destCityBranchId}
+                              disabled={!destMainBranchId}
+                              onChange={(e) => { setDestCityBranchId(e.target.value); setDestAccountId(""); }}
+                              className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                            >
+                              <option value="">—</option>
+                              {destCityBranches.map((b) => (
+                                <option key={b.id} value={b.id}>{b.name}{(b as any).code ? ` (${(b as any).code})` : ""}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </>
+                      )}
+                      <div className={transferDestScope === "same_branch" ? "sm:col-span-1" : ""}>
+                        <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{"Destination Account"} <span className="text-rose-500">*</span></label>
+                        <select
+                          value={destAccountId}
+                          disabled={transferDestScope === "other_branch" && (!destCityBranchId || loadingDestAccounts)}
+                          onChange={(e) => {
+                            const accId = e.target.value;
+                            setDestAccountId(accId);
+                            const pool: any[] = transferDestScope === "same_branch" ? ledgerRowsWithAccount : destAccounts;
+                            const acc = pool.find((a: any) => a.ledgerId === accId || a.id === accId);
+                            if (!acc) { setTypeDetails((p) => ({ ...p, to: "", transferTo: "", transferInfo: "" })); return; }
+                            const name = acc.accountName || acc.ledgerName || acc.name || "";
+                            const code = acc.accountCode || acc.rawAccountCode || acc.code || "";
+                            const where = transferDestScope === "same_branch"
+                              ? ""
+                              : [
+                                  destCityBranches.find((b) => b.id === destCityBranchId)?.name,
+                                  destMainBranches.find((b) => b.id === destMainBranchId)?.name,
+                                  countries.find((c) => c.id === destCountryId)?.name,
+                                ].filter(Boolean).join(", ");
+                            const label = `${name}${code ? ` (${code})` : ""}${where ? ` @ ${where}` : ""}`;
+                            setTypeDetails((p) => ({ ...p, to: label, transferTo: label, transferInfo: transferDestScope === "same_branch" ? "Same branch transfer" : "Other branch transfer" }));
+                          }}
+                          className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                        >
+                          <option value="">{loadingDestAccounts && transferDestScope === "other_branch" ? "…" : "—"}</option>
+                          {(transferDestScope === "same_branch"
+                            ? ledgerRowsWithAccount.filter((a) => a.ledgerId !== counterLedgerId)
+                            : destAccounts
+                          ).slice(0, 300).map((a: any) => (
+                            <option key={a.ledgerId || a.id} value={a.ledgerId || a.id}>
+                              {(a.accountName || a.ledgerName || a.name) ?? ""} ({a.accountCode || a.rawAccountCode || a.code || "—"})
                             </option>
                           ))}
-                      </select>
-                      <Coins className="pointer-events-none absolute left-2.5 top-3 h-4 w-4 text-slate-500" />
-                      <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
+                        </select>
+                      </div>
+                      {transferDestScope === "same_branch" && (
+                        <div>
+                          <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("report.col_reference", "Reference")}</label>
+                          <input
+                            value={typeDetails.ref || ""}
+                            onChange={(e) => setTypeDetails((p) => ({ ...p, ref: e.target.value, refNo: e.target.value, transferReferenceNumber: e.target.value }))}
+                            className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* STEP 2: ACCOUNT SELECTION */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
-                    2
-                  </span>
-                  <User className="h-4 w-4 text-slate-700 dark:text-slate-300" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Account Selection
-                  </span>
-                </div>
-                <div className="relative">
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Account (Search by Name / No.) <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Search className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
-                    <input
-                      type="text"
-                      value={accountSearchQuery || (selectedCounterLedger ? `${selectedCounterLedger.accountName} (${selectedCounterLedger.accountCode || selectedCounterLedger.rawAccountCode || ""})` : "")}
-                      onChange={(e) => {
-                        setAccountSearchQuery(e.target.value);
-                        setAccountDropdownOpen(true);
-                      }}
-                      onFocus={() => setAccountDropdownOpen(true)}
-                      placeholder={tr("roz.search_account_placeholder", "Search account by name or number...")}
-                      className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-9 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                    />
-                    <ChevronDown
-                      onClick={() => setAccountDropdownOpen((v) => !v)}
-                      className="cursor-pointer absolute right-3 top-3 h-4 w-4 text-slate-400 hover:text-slate-600"
-                    />
-                  </div>
-
-                  {accountDropdownOpen && (
-                    <div className="absolute z-30 left-0 right-0 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-                      {ledgerRowsWithAccount
-                        .filter((acc) => {
-                          if (!accountSearchQuery.trim()) return true;
-                          const q = accountSearchQuery.toLowerCase();
-                          return (
-                            acc.accountName?.toLowerCase().includes(q) ||
-                            acc.accountCode?.toLowerCase().includes(q) ||
-                            acc.rawAccountCode?.toLowerCase().includes(q)
-                          );
-                        })
-                        .slice(0, 30)
-                        .map((acc) => (
-                          <button
-                            key={acc.ledgerId}
-                            type="button"
-                            onClick={() => {
-                              applyPostingLedger(acc);
-                              setAccountSearchQuery(`${acc.accountName} (${acc.accountCode || acc.rawAccountCode || ""})`);
-                              setAccountDropdownOpen(false);
-                            }}
-                            className="w-full flex items-center justify-between px-3.5 py-2 text-xs font-medium text-left hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-50 last:border-0"
-                          >
-                            <div>
-                              <div className="font-bold text-slate-900 dark:text-white">{acc.accountName}</div>
-                              <div className="text-[10px] text-slate-400 font-mono">
-                                {acc.accountCode || acc.rawAccountCode || "—"} | {acc.accountKind || "Account"}
-                              </div>
-                            </div>
-                            <div className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">
-                              {acc.ledgerCurrency || branchCurrency}
-                            </div>
-                          </button>
-                        ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* STEP 3: CATEGORY & REFERENCE */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
-                    3
-                  </span>
-                  <Layers className="h-4 w-4 text-blue-600" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Category & Reference
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {/* Category */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Category <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={categoryType}
-                        onChange={(e) => setCategoryType(e.target.value)}
-                        className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-8 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                      >
-                        <option value="Cash Roznamcha">Cash Roznamcha</option>
-                        <option value="Bank Roznamcha">Bank Roznamcha</option>
-                        <option value="General Journal">General Journal</option>
-                      </select>
-                      <Layers className="pointer-events-none absolute left-2.5 top-3 h-4 w-4 text-blue-600" />
-                      <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
-                    </div>
-                  </div>
-
-                  {/* Reference / Voucher No. */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Reference / Voucher No.
-                    </label>
-                    <div className="relative">
-                      <FileText className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                ) : (
+                  /* Cash: Person Name → Mobile Number → ID / Document Type → Document Attachment */
+                  <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                    <div>
+                      <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{t(lang, "cef.receiver_sender_name", "Receiver / Sender Name")}</label>
                       <input
-                        type="text"
-                        value={referenceNo}
-                        onChange={(e) => setReferenceNo(e.target.value)}
-                        placeholder="e.g. INV-001 / PAY-001"
-                        className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                        value={typeDetails.receiverSenderName || ""}
+                        onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))}
+                        placeholder={t(lang, "cef.full_name_ph", "Full name")}
+                        className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                       />
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* STEP 4: DYNAMIC ENTRY TYPE DETAILS */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
-                      4
-                    </span>
-                    {paymentType === "bank" && <Landmark className="h-4 w-4 text-blue-600" />}
-                    {paymentType === "cash" && <Users className="h-4 w-4 text-emerald-600" />}
-                    {(paymentType === "business" || paymentType === "invoice") && <FileText className="h-4 w-4 text-indigo-600" />}
-                    {paymentType === "transfer" && <ArrowLeftRight className="h-4 w-4 text-purple-600" />}
-                    <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                      {paymentType === "bank"
-                        ? "Bank Details"
-                        : paymentType === "cash"
-                        ? "Party Details"
-                        : (paymentType === "business" || paymentType === "invoice")
-                        ? "Business Roznamcha Details"
-                        : "Transfer Destination & Details"}
-                    </span>
-                  </div>
-                  {paymentType === "business" && (
-                    <div className="flex items-center gap-1.5 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span>Connected: Purchase · Sales · Daily Payments</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Bank: Bank Name (linked to Bank Master) -> Payment Type (Mobile/TT) -> Receipt Number -> Receipt Attachment */}
-                {paymentType === "bank" && (
-                  <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-2.5 dark:border-slate-800 dark:bg-slate-900/50">
-                    <TransferDetailsSection
-                      bankName={typeDetails.bankName || ""}
-                      onBankNameChange={(bankName) => setTypeDetails((p) => ({ ...p, bankName }))}
-                      onBankRecordChange={(bank) =>
-                        setTypeDetails((p) => ({
-                          ...p,
-                          bankId: bank?.id || "",
-                          bankName: bank?.bank_name || p.bankName,
-                          bankAccount: bank?.full_address || p.bankAccount,
-                        }))
-                      }
-                      transferMode={typeDetails.method || typeDetails.transferType || "TT"}
-                      onTransferModeChange={(method) => setTypeDetails((p) => ({ ...p, method, transferType: method }))}
-                      transactionReference={typeDetails.receiptNumber || typeDetails.transferReferenceNumber || typeDetails.refNo || ""}
-                      onTransactionReferenceChange={(receiptNumber) =>
-                        setTypeDetails((p) => ({
-                          ...p,
-                          receiptNumber,
-                          refNo: receiptNumber,
-                          transferReferenceNumber: receiptNumber,
-                        }))
-                      }
-                      attachmentFile={attachmentFile}
-                      onAttachmentChange={setAttachmentFile}
-                      countryId={countryId || selectedCountry?.id}
-                      countryIso={selectedCountry?.iso2 || undefined}
-                      showAttachment={true}
-                      lang={lang as SupportedLanguage}
-                    />
-                  </div>
-                )}
-
-                {/* Cash: Party Name -> Mobile No. -> Download ID (Exact Match to Screenshot 2) */}
-                {paymentType === "cash" && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {/* Party Name */}
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Party Name <span className="text-rose-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <User className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                        <input
-                          type="text"
-                          value={typeDetails.partyName || typeDetails.receiverSenderName || ""}
-                          onChange={(e) =>
-                            setTypeDetails((prev) => ({
-                              ...prev,
-                              partyName: e.target.value,
-                              receiverSenderName: e.target.value,
-                            }))
-                          }
-                          placeholder={tr("lqm.enter_name_ph", "Enter name")}
-                          className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                        />
-                      </div>
+                      <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("cj.mMobile", "Mobile Number")}</label>
+                      <input
+                        dir="ltr"
+                        inputMode="tel"
+                        value={typeDetails.mobileNumber || ""}
+                        onChange={(e) => setTypeDetails((p) => ({ ...p, mobileNumber: e.target.value }))}
+                        placeholder={tr("cj.mMobilePh", "Mobile number")}
+                        className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 font-mono text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                      />
                     </div>
-
-                    {/* Mobile No. */}
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Mobile No. <span className="text-rose-500">*</span>
-                      </label>
-                      <div className="flex items-center rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden dark:border-slate-700 dark:bg-slate-900">
-                        <div className="flex items-center gap-1 bg-slate-50 px-2.5 py-2.5 text-xs font-bold text-slate-700 border-r border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 shrink-0">
-                          <span>{selectedCountry?.iso2 === "PK" ? "🇵🇰" : "🇦🇪"}</span>
-                          <span>{partyDialCode || "+971"}</span>
-                          <ChevronDown className="h-3 w-3 text-slate-400" />
-                        </div>
-                        <input
-                          type="tel"
-                          value={typeDetails.mobileNo || typeDetails.mobileNumber || ""}
-                          onChange={(e) =>
-                            setTypeDetails((prev) => ({ ...prev, mobileNo: e.target.value, mobileNumber: e.target.value }))
-                          }
-                          placeholder="50 123 4567"
-                          className="w-full px-3 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none bg-transparent dark:text-slate-100"
-                        />
-                      </div>
+                      <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("tdoc.document_type", "Document Type")}</label>
+                      <select
+                        value={typeDetails.idDocumentType || ""}
+                        onChange={(e) => setTypeDetails((p) => ({ ...p, idDocumentType: e.target.value }))}
+                        className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                      >
+                        <option value="">—</option>
+                        <option value="Emirates ID">{tr("extform.doc_emirates_id", "Emirates ID (UAE)")}</option>
+                        <option value="CNIC">{tr("extform.doc_cnic", "CNIC / National ID Card")}</option>
+                        <option value="Passport">{tr("extform.doc_passport", "Passport")}</option>
+                        <option value="Tazkira">{tr("extform.doc_tazkira", "Tazkira / National ID (AFG)")}</option>
+                        <option value="Driving License">{tr("extform.doc_driving_license", "Driving License")}</option>
+                        <option value="Other">{tr("god.lt_other", "Other")}</option>
+                      </select>
                     </div>
-
-                    {/* Download ID */}
                     <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                          Download ID
-                        </label>
-                        <label className="text-[10px] font-bold text-blue-600 dark:text-blue-400 cursor-pointer hover:underline flex items-center gap-1">
-                          <Paperclip className="h-3 w-3" />
-                          <span>{attachmentFile ? attachmentFile.name.slice(0, 10) + "..." : "Attach"}</span>
-                          <input
-                            type="file"
-                            className="hidden"
-                            onChange={(e) => setAttachmentFile(e.target.files?.[0] ?? null)}
-                          />
-                        </label>
-                      </div>
-                      <div className="relative">
-                        <CreditCard className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                        <input
-                          type="text"
-                          value={typeDetails.idCardCopyName || typeDetails.downloadId || ""}
-                          onChange={(e) =>
-                            setTypeDetails((prev) => ({
-                              ...prev,
-                              idCardCopyName: e.target.value,
-                              downloadId: e.target.value,
-                            }))
-                          }
-                          placeholder={`${tr("urf.user_id_placeholder", "ID")} (${tr("extform.optional", "Optional")})`}
-                          className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Business Roznamcha: Invoice Name -> Invoice Number -> View/Download Invoice */}
-                {(paymentType === "business" || paymentType === "invoice") && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    {/* Invoice Name */}
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Invoice / Party Name <span className="text-rose-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <FileText className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                        <input
-                          type="text"
-                          value={typeDetails.invoiceName || typeDetails.businessName || typeDetails.purchaseInfo || ""}
-                          onChange={(e) =>
-                            setTypeDetails((prev) => ({
-                              ...prev,
-                              invoiceName: e.target.value,
-                              businessName: e.target.value,
-                              purchaseInfo: e.target.value,
-                            }))
-                          }
-                          placeholder="e.g. Local Purchase / Sales Party"
-                          className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Invoice Number */}
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Invoice / Bill Number <span className="text-rose-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <FileText className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                        <input
-                          type="text"
-                          value={typeDetails.invoiceNumber || ""}
-                          onChange={(e) =>
-                            setTypeDetails((prev) => ({
-                              ...prev,
-                              invoiceNumber: e.target.value,
-                            }))
-                          }
-                          placeholder="e.g. INV-2026-0042"
-                          className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 font-mono"
-                        />
-                      </div>
-                    </div>
-
-                    {/* View / Download Invoice Attachment */}
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Invoice Document Copy
-                      </label>
-                      <label className="flex items-center justify-between h-[38px] px-3 rounded-xl border border-dashed border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100/60 text-xs font-semibold cursor-pointer transition shadow-xs">
-                        <div className="flex items-center gap-1.5 truncate">
-                          <Paperclip className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
-                          <span className="truncate">{attachmentFile ? attachmentFile.name : "Attach Invoice Copy"}</span>
-                        </div>
-                        {attachmentFile ? (
-                          <span
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setAttachmentFile(null);
-                            }}
-                            className="text-[10px] text-rose-500 hover:text-rose-700 font-bold ml-1"
-                          >
-                            ✕
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-indigo-600 font-bold ml-1">Upload</span>
-                        )}
+                      <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("cj.mIdCard", "ID Card Copy Upload")}</label>
+                      <label className="flex h-8 cursor-pointer items-center gap-1 rounded-lg border border-dashed border-blue-300 bg-blue-50/50 px-2 text-[11px] font-semibold text-blue-700 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300">
+                        <Paperclip className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{attachmentFile ? attachmentFile.name : tr("cj.mAttach", "Attach File")}</span>
                         <input
                           type="file"
                           className="hidden"
                           onChange={(e) => {
                             const file = e.target.files?.[0] ?? null;
                             setAttachmentFile(file);
+                            setTypeDetails((p) => ({ ...p, idCardCopyName: file?.name || "" }));
                           }}
                         />
                       </label>
                     </div>
                   </div>
                 )}
+              </section>
 
-                {/* Transfer: Same branch -> Destination Account | Other branch -> Country -> Main Branch -> City Branch -> Destination Account */}
-                {paymentType === "transfer" && (
-                  <div className="space-y-3 rounded-xl border border-purple-200/80 bg-purple-50/30 p-3 dark:border-purple-900/60 dark:bg-purple-950/20">
-                    {/* Transfer Scope Toggle */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                        Transfer Scope:
-                      </span>
-                      <div className="flex rounded-lg border border-slate-200 bg-white p-0.5 shadow-2xs dark:border-slate-700 dark:bg-slate-900">
-                        <button
-                          type="button"
-                          onClick={() => setTransferDestScope("same_branch")}
-                          className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${
-                            transferDestScope === "same_branch"
-                              ? "bg-purple-600 text-white shadow-xs"
-                              : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                          }`}
-                        >
-                          Same Branch Transfer
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setTransferDestScope("other_branch");
-                            if (!destCountryId && countries.length > 0) {
-                              setDestCountryId(countries[0].id);
-                            }
-                          }}
-                          className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${
-                            transferDestScope === "other_branch"
-                              ? "bg-purple-600 text-white shadow-xs"
-                              : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                          }`}
-                        >
-                          Other Branch Transfer
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Same Branch Transfer Fields */}
-                    {transferDestScope === "same_branch" ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                            Destination Account (Name / No.) <span className="text-rose-500">*</span>
-                          </label>
-                          <div className="relative">
-                            <select
-                              value={destAccountId}
-                              onChange={(e) => {
-                                const accId = e.target.value;
-                                setDestAccountId(accId);
-                                const acc = ledgerRowsWithAccount.find((a) => a.ledgerId === accId);
-                                if (acc) {
-                                  setTypeDetails((prev) => ({
-                                    ...prev,
-                                    to: acc.accountName || "",
-                                    transferTo: `${acc.accountName || ""} (${acc.accountCode || acc.rawAccountCode || ""})`,
-                                    transferInfo: `Same branch transfer to ${acc.accountName || ""}`,
-                                  }));
-                                }
-                              }}
-                              className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-3.5 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-purple-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                            >
-                              <option value="">Select destination account...</option>
-                              {ledgerRowsWithAccount
-                                .filter((acc) => acc.ledgerId !== counterLedgerId)
-                                .slice(0, 50)
-                                .map((acc) => (
-                                  <option key={acc.ledgerId} value={acc.ledgerId}>
-                                    {acc.accountName} ({acc.accountCode || acc.rawAccountCode || "—"}) — {acc.ledgerCurrency || branchCurrency}
-                                  </option>
-                                ))}
-                            </select>
-                            <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                            Transfer Reference / Notes
-                          </label>
-                          <input
-                            type="text"
-                            value={typeDetails.transferReferenceNumber || typeDetails.refNo || ""}
-                            onChange={(e) =>
-                              setTypeDetails((prev) => ({
-                                ...prev,
-                                transferReferenceNumber: e.target.value,
-                                refNo: e.target.value,
-                              }))
-                            }
-                            placeholder="e.g. Internal Account Transfer / Ref #"
-                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-purple-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      /* Other Branch Transfer: Country -> Main Branch -> City Branch -> Destination Account */
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
-                        {/* Destination Country */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                            Destination Country <span className="text-rose-500">*</span>
-                          </label>
-                          <div className="relative">
-                            <select
-                              value={destCountryId}
-                              onChange={(e) => {
-                                setDestCountryId(e.target.value);
-                                setDestMainBranchId("");
-                                setDestCityBranchId("");
-                                setDestAccountId("");
-                              }}
-                              className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-3.5 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-purple-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                            >
-                              <option value="">Select country...</option>
-                              {countries.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                  {c.iso2 ? `${c.iso2} - ` : ""}{c.name}
-                                </option>
-                              ))}
-                            </select>
-                            <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
-                          </div>
-                        </div>
-
-                        {/* Destination Main Branch */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                            Destination Main Branch <span className="text-rose-500">*</span>
-                          </label>
-                          <div className="relative">
-                            <select
-                              value={destMainBranchId}
-                              onChange={(e) => {
-                                setDestMainBranchId(e.target.value);
-                                setDestCityBranchId("");
-                                setDestAccountId("");
-                              }}
-                              disabled={!destCountryId}
-                              className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-3.5 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-purple-500 focus:outline-none disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800"
-                            >
-                              <option value="">Select main branch...</option>
-                              {destMainBranches.map((b) => (
-                                <option key={b.id} value={b.id}>
-                                  {b.name} ({b.code})
-                                </option>
-                              ))}
-                            </select>
-                            <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
-                          </div>
-                        </div>
-
-                        {/* Destination City Branch */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                            Destination City Branch <span className="text-rose-500">*</span>
-                          </label>
-                          <div className="relative">
-                            <select
-                              value={destCityBranchId}
-                              onChange={(e) => {
-                                setDestCityBranchId(e.target.value);
-                                setDestAccountId("");
-                              }}
-                              disabled={!destMainBranchId}
-                              className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-3.5 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-purple-500 focus:outline-none disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800"
-                            >
-                              <option value="">Select city branch...</option>
-                              {destCityBranches.map((b) => (
-                                <option key={b.id} value={b.id}>
-                                  {b.city_name} - {b.name} ({b.code})
-                                </option>
-                              ))}
-                            </select>
-                            <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
-                          </div>
-                        </div>
-
-                        {/* Destination Account */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                            Destination Account <span className="text-rose-500">*</span>
-                          </label>
-                          <div className="relative">
-                            <select
-                              value={destAccountId}
-                              onChange={(e) => {
-                                const accId = e.target.value;
-                                setDestAccountId(accId);
-                                const acc = destAccounts.find((a) => a.ledgerId === accId || a.id === accId);
-                                if (acc) {
-                                  const targetName = acc.accountName || acc.name || "";
-                                  const targetCode = acc.accountCode || acc.code || "";
-                                  setTypeDetails((prev) => ({
-                                    ...prev,
-                                    to: targetName,
-                                    transferTo: `${targetName} (${targetCode})`,
-                                    transferInfo: `Cross-branch transfer to ${targetName}`,
-                                  }));
-                                }
-                              }}
-                              disabled={!destCityBranchId && destAccounts.length === 0}
-                              className="w-full appearance-none rounded-xl border border-slate-200 bg-white pl-3.5 pr-8 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-purple-500 focus:outline-none disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800"
-                            >
-                              <option value="">
-                                {loadingDestAccounts ? "Loading accounts..." : "Select destination account..."}
-                              </option>
-                              {destAccounts.slice(0, 50).map((acc) => (
-                                <option key={acc.ledgerId || acc.id} value={acc.ledgerId || acc.id}>
-                                  {acc.accountName || acc.name} ({acc.accountCode || acc.code || "—"})
-                                </option>
-                              ))}
-                            </select>
-                            <ChevronDown className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-400" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* STEP 5: AMOUNT & POSTING */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
-                      5
-                    </span>
-                    <Coins className="h-4 w-4 text-blue-600" />
-                    <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                      Amount & Posting
-                    </span>
+              {/* ── 4. AMOUNT, EXCHANGE RATE & DR / CR (original calcAmount / exchangeRate / calcFinal / paymentMode) ── */}
+              <section className="rounded-xl border border-slate-200/80 p-2.5 dark:border-slate-800">
+                <div className="mb-1.5 flex flex-wrap items-center justify-between gap-1.5">
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100">
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[9px] text-white">4</span>
+                    {tr("cj.mStep5", "Transaction Conversion (Local Calculation)")}
                   </div>
                   {!isLocalCurrency && (
-                    <div className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                      Foreign Currency Conversion ({currency} → {branchCurrency})
-                    </div>
+                    <span className="rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                      {normalizedCurrency} → {targetAccountCurrency.toUpperCase()}
+                      {exchangeRateSource === "approved" ? " · Daily Board" : " · Manual"}
+                    </span>
                   )}
                 </div>
-
-                {isLocalCurrency ? (
-                  /* Local currency: Direct amount, NO exchange rate */
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-stretch">
-                    <div className="md:col-span-4">
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Amount ({branchCurrency}) <span className="text-rose-500">*</span>
+                <div className="grid grid-cols-2 items-end gap-2 md:grid-cols-12">
+                  <div className={isLocalCurrency ? "col-span-2 md:col-span-4" : "md:col-span-3"}>
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">
+                      {isLocalCurrency ? `${tr("cj.mAmount", "Amount")} (${targetAccountCurrency.toUpperCase()})` : `${tr("cj.mQuantity", "Quantity (Foreign Amount)")} (${normalizedCurrency})`} <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      inputMode="decimal"
+                      value={calcAmount}
+                      onChange={(e) => setCalcAmount(e.target.value)}
+                      placeholder="0.00"
+                      className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 font-mono text-[12px] font-bold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    />
+                  </div>
+                  {!isLocalCurrency && (
+                    <div className="md:col-span-3">
+                      <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">
+                        {calcOp === "mul" ? "×" : "÷"} {tr("cj.mRate", "Transaction Rate")} <span className="text-rose-500">*</span>
                       </label>
-                      <div className="relative">
-                        <Coins className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                        <input
-                          type="number"
-                          step="any"
-                          value={calcAmount}
-                          onChange={(e) => {
-                            setCalcAmount(e.target.value);
-                            setFinalPayment(e.target.value);
-                          }}
-                          placeholder="0.00"
-                          className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                        />
-                      </div>
+                      <input
+                        inputMode="decimal"
+                        value={exchangeRate}
+                        onChange={(e) => { setExchangeRate(e.target.value); setExchangeRateSource("manual"); }}
+                        readOnly={approvedRateForEntry}
+                        placeholder="0.0000"
+                        className={cn(
+                          "h-8 w-full rounded-lg border px-2 font-mono text-[12px] font-bold outline-none focus:border-blue-500 dark:text-slate-100",
+                          approvedRateForEntry ? "border-emerald-200 bg-emerald-50/60 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/30" : "border-slate-200 bg-white text-slate-800 dark:border-slate-700 dark:bg-slate-950"
+                        )}
+                      />
                     </div>
-
-                    <div className="md:col-span-4">
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Posting Side <span className="text-rose-500">*</span>
-                      </label>
-                      <div className="flex items-center gap-2 pt-0.5">
+                  )}
+                  <div className={isLocalCurrency ? "col-span-2 md:col-span-4" : "col-span-2 md:col-span-3"}>
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("cj.mStep6", "Debit / Credit Entry")} <span className="text-rose-500">*</span></label>
+                    <div className="grid h-8 grid-cols-2 gap-1">
+                      {(["DEBIT", "CREDIT"] as const).map((side) => (
                         <button
+                          key={side}
                           type="button"
-                          onClick={() => setPaymentMode("DEBIT")}
-                          className={`flex-1 flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${
-                            paymentMode === "DEBIT"
-                              ? "border-blue-500 bg-blue-50/80 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
-                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
-                          }`}
+                          onClick={() => setPaymentMode(side)}
+                          className={cn(
+                            "rounded-lg border text-[11px] font-bold transition",
+                            paymentMode === side
+                              ? side === "DEBIT"
+                                ? "border-rose-400 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
+                                : "border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                              : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900"
+                          )}
                         >
-                          <span className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${paymentMode === "DEBIT" ? "border-blue-600 bg-white" : "border-slate-400"}`}>
-                            {paymentMode === "DEBIT" && <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />}
-                          </span>
-                          <span>Debit (DR)</span>
+                          {side === "DEBIT" ? "DR" : "CR"}
                         </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setPaymentMode("CREDIT")}
-                          className={`flex-1 flex items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${
-                            paymentMode === "CREDIT"
-                              ? "border-blue-500 bg-blue-50/80 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
-                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
-                          }`}
-                        >
-                          <span className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${paymentMode === "CREDIT" ? "border-blue-600 bg-white" : "border-slate-400"}`}>
-                            {paymentMode === "CREDIT" && <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />}
-                          </span>
-                          <span>Credit (CR)</span>
-                        </button>
-                      </div>
+                      ))}
                     </div>
-
-                    <div className="md:col-span-4 rounded-2xl border border-emerald-200/80 bg-emerald-50/60 p-3 text-right flex flex-col justify-center dark:border-emerald-900/60 dark:bg-emerald-950/30">
-                      <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                        Final Amount ({branchCurrency})
-                      </span>
-                      <span className="font-mono text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight" dir="ltr">
-                        {branchCurrency} {fmtAmount(Number(calcAmount || finalPayment || 0))}
+                  </div>
+                  <div className={isLocalCurrency ? "col-span-2 md:col-span-4" : "col-span-2 md:col-span-3"}>
+                    <div className="flex h-[52px] flex-col justify-center rounded-lg border border-emerald-200 bg-emerald-50/80 px-2.5 text-right dark:border-emerald-800 dark:bg-emerald-950/30">
+                      <span className="text-[9px] font-bold uppercase tracking-wide text-slate-500">{tr("cj.mFinalAmount", "Final Amount")}</span>
+                      <span className="font-mono text-[15px] font-black leading-tight text-emerald-700 dark:text-emerald-300" dir="ltr">
+                        {targetAccountCurrency.toUpperCase()} {fmtAmount(amount || 0)}
                       </span>
                     </div>
                   </div>
-                ) : (
-                  /* Foreign currency: Foreign Amount/Qty x Exchange Rate = Final Amount */
-                  <div className="space-y-2.5">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-2.5 items-end">
-                      {/* Foreign Currency Amount / Quantity */}
-                      <div className="md:col-span-3">
-                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          Foreign Amount ({currency}) <span className="text-rose-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <Coins className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                          <input
-                            type="number"
-                            step="any"
-                            value={calcAmount}
-                            onChange={(e) => {
-                              setCalcAmount(e.target.value);
-                              setFinalPayment(e.target.value);
-                            }}
-                            placeholder="0.00"
-                            className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 font-mono"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Exchange Rate */}
-                      <div className="md:col-span-3">
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                            Exchange Rate ({currency} → {branchCurrency}) <span className="text-rose-500">*</span>
-                          </label>
-                          {approvedRateForEntry && (
-                            <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
-                              Daily Board
-                            </span>
-                          )}
-                        </div>
-                        <div className="relative">
-                          <ArrowLeftRight className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                          <input
-                            type="text"
-                            value={exchangeRate}
-                            onChange={(e) => {
-                              setExchangeRate(e.target.value);
-                              setExchangeRateSource("manual");
-                            }}
-                            readOnly={approvedRateForEntry}
-                            placeholder="0.0000"
-                            className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 font-mono"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Operation */}
-                      <div className="md:col-span-2">
-                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          Operation
-                        </label>
-                        <div className="flex h-[38px] items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                          {calcOp === "mul" ? "× Multiply" : "÷ Divide"}
-                        </div>
-                      </div>
-
-                      {/* Posting Side Radio Pills */}
-                      <div className="md:col-span-4">
-                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          Posting Side <span className="text-rose-500">*</span>
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setPaymentMode("DEBIT")}
-                            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl border px-2 py-2 text-xs font-bold transition-colors ${
-                              paymentMode === "DEBIT"
-                                ? "border-blue-500 bg-blue-50/80 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
-                                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
-                            }`}
-                          >
-                            <span className={`h-3 w-3 rounded-full border flex items-center justify-center ${paymentMode === "DEBIT" ? "border-blue-600 bg-white" : "border-slate-400"}`}>
-                              {paymentMode === "DEBIT" && <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />}
-                            </span>
-                            <span>DR</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setPaymentMode("CREDIT")}
-                            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl border px-2 py-2 text-xs font-bold transition-colors ${
-                              paymentMode === "CREDIT"
-                                ? "border-blue-500 bg-blue-50/80 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
-                                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
-                            }`}
-                          >
-                            <span className={`h-3 w-3 rounded-full border flex items-center justify-center ${paymentMode === "CREDIT" ? "border-blue-600 bg-white" : "border-slate-400"}`}>
-                              {paymentMode === "CREDIT" && <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />}
-                            </span>
-                            <span>CR</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Live Formula Banner & Final Amount in Branch Currency */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-xl border border-emerald-200/80 bg-emerald-50/50 dark:border-emerald-900/60 dark:bg-emerald-950/20">
-                      <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
-                        <span className="text-slate-500 font-medium">Conversion Formula:</span>
-                        <span className="font-mono text-blue-600 dark:text-blue-400">
-                          {fmtAmount(Number(calcAmount || 0))} {currency}
-                        </span>
-                        <span>{calcOp === "mul" ? "×" : "÷"}</span>
-                        <span className="font-mono text-purple-600 dark:text-purple-400">
-                          {exchangeRate || "0"}
-                        </span>
-                        <span>=</span>
-                        <span className="font-mono text-emerald-600 dark:text-emerald-400 font-extrabold">
-                          {fmtAmount(calcFinal || 0)} {branchCurrency}
-                        </span>
-                      </div>
-
-                      <div className="text-right">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase block">
-                          Final Posted Amount ({branchCurrency})
-                        </span>
-                        <span className="font-mono text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400" dir="ltr">
-                          {branchCurrency} {fmtAmount(calcFinal || 0)}
-                        </span>
-                      </div>
-                    </div>
+                </div>
+                {!isLocalCurrency && (
+                  <div className="mt-1.5 rounded-md bg-slate-50 px-2 py-1 font-mono text-[10px] font-semibold text-slate-600 dark:bg-slate-900 dark:text-slate-300" dir="ltr">
+                    {fmtAmount(Number(String(calcAmount || "0").replace(/,/g, "")) || 0)} {normalizedCurrency} {calcOp === "mul" ? "×" : "÷"} {exchangeRate || "—"} = {calcFinal !== null ? fmtAmount(calcFinal) : "—"} {targetAccountCurrency.toUpperCase()}
+                    <span className="ml-1 text-slate-400">· {paymentMode === "CREDIT" ? "CR" : "DR"} {targetAccountCurrency.toUpperCase()} {calcFinal !== null ? fmtAmount(calcFinal) : "0.00"}</span>
                   </div>
                 )}
-              </div>
+              </section>
 
-              {/* STEP 6: REMARKS */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
-                    6
-                  </span>
-                  <Pencil className="h-4 w-4 text-blue-600" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Remarks
-                  </span>
-                </div>
+              {/* ── 5. NOTES (entry-type details are synced here; the currency audit trail is appended on save) ── */}
+              <section>
+                <label className="mb-0.5 block text-[10px] font-semibold text-slate-500">{tr("bankroz.optional_remarks_ph", "Enter remarks / details (optional)")}</label>
                 <div className="relative">
-                  <Pencil className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
                   <textarea
                     rows={2}
-                    maxLength={500}
+                    maxLength={1000}
                     value={remarks}
                     onChange={(e) => setRemarks(e.target.value)}
-                    placeholder={tr("bankroz.optional_remarks_ph", "Enter remarks / details (optional)")}
-                    className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-16 py-2.5 text-xs font-semibold text-slate-800 shadow-xs focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 resize-none"
+                    className="w-full resize-none rounded-lg border border-slate-200 bg-white px-2 py-1.5 pr-14 text-[11px] font-medium text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                   />
-                  <div className="absolute right-3 bottom-2 text-[10px] font-medium text-slate-400">
-                    {remarks.length} / 500
-                  </div>
+                  <span className="absolute bottom-1.5 right-2 text-[9px] text-slate-400">{remarks.length} / 1000</span>
                 </div>
-              </div>
+              </section>
             </div>
 
             {/* ══ RIGHT COLUMN: 3 SUMMARY CARDS (4 cols) ══ */}
-            <div className="lg:col-span-4 space-y-4">
+            <div className="lg:col-span-4 space-y-2">
               {/* Card 1: Selected Account Details */}
               <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex items-center gap-2 mb-3">
