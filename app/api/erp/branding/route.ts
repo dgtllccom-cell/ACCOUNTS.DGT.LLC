@@ -10,6 +10,37 @@ import { rethrowIfNextControlFlow } from "@/lib/api/response";
  * their assigned countries. Used by certificates, reports, print, PDF, etc.
  *   GET /api/erp/branding?countryId=<uuid>
  */
+/**
+ * The country's company from the company master (companies table): used when the country has no
+ * profile name. The country name is never returned as a company.
+ */
+async function resolveCountryCompany(supabase: any, countryId: string) {
+  const { data } = await (supabase.from("companies") as any)
+    .select("name, legal_name, address, contacts, tax_number")
+    .eq("country_id", countryId)
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!data) return null;
+  const contacts: any = data.contacts ?? {};
+  const list: any[] = Array.isArray(contacts) ? contacts : [];
+  const pick = (keys: string[]): string | null => {
+    if (!Array.isArray(contacts)) for (const k of keys) if (contacts[k]) return String(contacts[k]);
+    const hit = list.find((x) => keys.includes(String(x?.type ?? "").toLowerCase()));
+    return hit?.value ? String(hit.value) : null;
+  };
+  return {
+    name: (data.name as string) || null,
+    legalName: (data.legal_name as string) || null,
+    address: (data.address as string) || null,
+    taxNumber: (data.tax_number as string) || null,
+    phone: pick(["phone", "mobile", "tel"]),
+    email: pick(["email"]),
+  };
+}
+
 export async function GET(req: Request) {
   try {
     const session = await requireErpSession();
@@ -79,6 +110,18 @@ export async function GET(req: Request) {
     // branch with no branding of its own inherits the country's — country
     // branding is never affected.
     const brandingAny = branding as Record<string, any>;
+    // No company name in the country profile: the country's company from the company master is printed instead.
+    if (countryId && !profile?.company_name) {
+      const company = await resolveCountryCompany(supabase, countryId);
+      if (company) {
+        brandingAny.companyName = company.name ?? brandingAny.companyName;
+        brandingAny.legalName = company.legalName ?? company.name ?? brandingAny.legalName;
+        brandingAny.address = brandingAny.address ?? company.address;
+        brandingAny.taxNumber = brandingAny.taxNumber ?? company.taxNumber;
+        brandingAny.phone = brandingAny.phone ?? company.phone;
+        brandingAny.email = brandingAny.email ?? company.email;
+      }
+    }
     const overlayBranch = async (table: string, id: string | null) => {
       if (!id) return;
       const { data: br } = await (supabase

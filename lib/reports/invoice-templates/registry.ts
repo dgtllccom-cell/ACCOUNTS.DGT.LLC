@@ -151,4 +151,5 @@ export function listTemplatesForDocType(docType: TradeDocType): InvoiceTemplateD
   return INVOICE_TEMPLATES.filter((def) => templateSupportsDocType(def, docType));
 }
 
-export const DEFAULT_INVOICE_TEMPLATE_ID: InvoiceTemplateId = "classic";
+// The Damaan sales layout is the default for every purchase and sales print (saved per-branch defaults still apply).
+export const DEFAULT_INVOICE_TEMPLATE_ID: InvoiceTemplateId = "tax_invoice";

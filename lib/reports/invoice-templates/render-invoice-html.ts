@@ -40,10 +40,50 @@ export function renderInvoiceHtml(
   colorId?: string | null,
 ): string {
   const tpl = getInvoiceTemplate(templateId);
-  // A local sale's sales / tax invoice uses the local tax layout (proforma-style VAT table).
+  // The Damaan layout is the one design for every purchase and sales invoice (local sales included). The older
+  // UAE tax builder is used only when another template is chosen explicitly.
   const html =
-    input.layout === "uae_tax" && (input.docType === "sales_invoice" || input.docType === "tax_invoice")
+    input.layout === "uae_tax" && templateId !== "tax_invoice" && (input.docType === "sales_invoice" || input.docType === "tax_invoice")
       ? buildUaeTaxInvoiceHtml(input)
       : tpl.render(input, flags);
-  return themeInvoiceHtml(html, colorId);
+  return withGroupWatermark(stretchGoodsTable(themeInvoiceHtml(html, colorId), input.orientation === "landscape"));
+}
+
+/**
+ * Every invoice template: the goods table grows down the page, so the totals and the bank block sit at the bottom
+ * of the A4 sheet instead of leaving a gap under a short table. The sales tax layout already does this and is skipped.
+ */
+export function stretchGoodsTable(html: string, landscape = false): string {
+  if (html.includes("grp-goods-fill") || html.includes("goods-wrap")) return html;
+  const start = html.search(/<table[^>]*class="goods"/i);
+  if (start < 0) return html;
+  const end = html.indexOf("</table>", start);
+  if (end < 0) return html;
+  const wrapped = html.slice(0, start) + `<div class="grp-goods-fill">` + html.slice(start, end + 8) + `</div>` + html.slice(end + 8);
+  // A fixed A4 sheet height (usable area) gives the goods area a definite height; content that is longer
+  // still shows (overflow is visible), so no line is ever cut off.
+  const sheet = landscape ? "190mm" : "277mm";
+  // The chain from the sheet down to the goods table is made a flex column, so the table can take the leftover height.
+  const css = `<style data-erp-invoice-fill>
+    .page { height: ${sheet}; display: flex; flex-direction: column; box-sizing: border-box; }
+    .page > *:has(.grp-goods-fill) { flex: 1 1 auto; min-height: 0; }
+    *:has(> .grp-goods-fill) { display: flex !important; flex-direction: column; min-height: 0; }
+    .grp-goods-fill { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+    .grp-goods-fill > table.goods { flex: 1 1 auto; height: 100%; }
+  </style>`;
+  return wrapped.includes("</head>") ? wrapped.replace("</head>", css + "</head>") : css + wrapped;
+}
+
+/**
+ * The Damaan group logo as a large, faded background in the centre of every invoice template (the same on
+ * every page, in every country). A template that already draws it (the Sales Tax Invoice) is left as it is.
+ */
+export function withGroupWatermark(html: string): string {
+  if (html.includes('class="watermark"') || html.includes("grp-watermark")) return html;
+  const css = `<style data-erp-invoice-watermark>
+    .grp-watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 120mm; max-width: 80vw; opacity: .08; pointer-events: none; z-index: 0; }
+  </style>`;
+  const img = `<img class="grp-watermark" src="/images/damaan-logo.png" alt="" aria-hidden="true" />`;
+  const withCss = html.includes("</head>") ? html.replace("</head>", css + "</head>") : css + html;
+  return withCss.replace(/<body([^>]*)>/i, (m) => `${m}${img}`);
 }

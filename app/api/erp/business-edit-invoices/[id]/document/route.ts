@@ -4,6 +4,7 @@ import { getRequestLanguage } from "@/lib/i18n/server";
 import { requireBeiSession, beiErrorResponse } from "@/lib/business-edit-invoice/route-helpers";
 import { renderDocumentHtml } from "@/lib/business-edit-invoice/service";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { publicOriginFor } from "@/lib/reports/public-origin";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
   try {
     const { id } = await ctx.params;
     const lang = (await getRequestLanguage(request.nextUrl.searchParams.get("lang"))) as SupportedLanguage;
-    const { html, title } = await renderDocumentHtml(auth.session, id, lang);
+    const { html, title } = await renderDocumentHtml(auth.session, id, lang, publicOriginFor(request));
     return apiOk({ html, title, lang });
   } catch (error) {
     return beiErrorResponse(error);

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   FileText,
@@ -316,6 +317,7 @@ export function LocalPurchaseTransferPaymentView({
   const [viewingBill, setViewingBill] = useState<any | null>(null);
   const [editingBill, setEditingBill] = useState<any | null>(null);
   const [printingBill, setPrintingBill] = useState<any | null>(null);
+  const [documentBill, setDocumentBill] = useState<any | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [posting, setPosting] = useState(false);
@@ -946,12 +948,9 @@ export function LocalPurchaseTransferPaymentView({
     URL.revokeObjectURL(url);
   };
 
-  // Print A4 helper for a single bill without dashboard navigation
+  // A single bill prints through the Damaan invoice design (the same document centre as the other purchase screens).
   const handlePrintA4Bill = (bill: any) => {
-    setPrintingBill(bill);
-    setTimeout(() => {
-      window.print();
-    }, 120);
+    setDocumentBill(bill);
   };
 
   return (
@@ -960,6 +959,7 @@ export function LocalPurchaseTransferPaymentView({
       className="min-h-screen bg-[#f4f7fb] dark:bg-slate-950 p-3 sm:p-5 space-y-4 text-slate-900 dark:text-slate-100"
     >
       {/* ── Print-Only Compact A4 Bill Sheet (hides dashboard navigation when printing a bill) ── */}
+      {documentBill ? (<TradeDocumentCenter open onClose={() => setDocumentBill(null)} txnKind="purchase" source="local_purchase" record={documentBill} companyId={documentBill.company_id ?? null} scope={{ countryId: documentBill.country_id ?? null, countryBranchId: documentBill.country_branch_id ?? null, cityBranchId: documentBill.city_branch_id ?? null }} />) : null}
       {printingBill && (
         <style>{`
           @page { size: A4; margin: 10mm; }

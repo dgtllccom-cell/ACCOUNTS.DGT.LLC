@@ -13,16 +13,11 @@ import { randomBytes } from "node:crypto";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { publicOriginFor } from "@/lib/reports/public-origin";
 
 export const dynamic = "force-dynamic";
 
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
-
-function publicOrigin(request: NextRequest): string {
-  const proto = request.headers.get("x-forwarded-proto") || "https";
-  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || request.nextUrl.host;
-  return `${proto}://${host}`;
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -67,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { ok: true, data: { url: `${publicOrigin(request)}/i/${token}` } },
+      { ok: true, data: { url: `${publicOriginFor(request)}/i/${token}` } },
       { status: 201 },
     );
   } catch (error) {
