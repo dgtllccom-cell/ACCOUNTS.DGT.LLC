@@ -6,7 +6,6 @@ import { translateMasterRecord } from "@/lib/services/translation-trigger-servic
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
 import type { DocumentBranding } from "@/lib/reports/resolve-document-branding";
 import { resolveBrandingServer } from "@/lib/branding/server";
-import { buildTradeDocumentHtml } from "@/lib/reports/trade-documents/build-trade-document";
 import { renderTaxInvoice } from "@/lib/reports/invoice-templates/tax-invoice";
 import { DEFAULT_TEMPLATE_FLAGS } from "@/lib/reports/invoice-templates/types";
 import {
@@ -533,7 +532,7 @@ export async function renderDocumentHtml(session: ErpSession, id: string, lang: 
       invoice: inv.originalBillNo || inv.originalManualBillNo || (inv.referenceNos as any)?.invoice,
     },
     // A Sales Tax Invoice is issued by the branch that creates it: its shipper is that branch's company profile.
-    seller: inv.docType === "tax_invoice"
+    seller: (inv.docType === "tax_invoice" || inv.txnKind === "sales")
       ? { name: branding.legalName || branding.entityName || undefined, address: branding.address || undefined, email: branding.email || undefined, phone: branding.phone || undefined, taxId: branding.taxNumber || undefined }
       : ((inv.seller as any) || (inv.txnKind === "purchase" ? { name: inv.partyName } : { name: branding.entityName })),
     buyer: (inv.buyer as any) || (inv.txnKind === "sales" ? { name: inv.partyName } : { name: branding.entityName }),
@@ -559,7 +558,8 @@ export async function renderDocumentHtml(session: ErpSession, id: string, lang: 
   };
 
   // A saved Sales Tax Invoice uses the Damaan tax layout (same template as the print registry); other types keep the generic builder.
-  const html = inv.docType === "tax_invoice" ? renderTaxInvoice(input, DEFAULT_TEMPLATE_FLAGS) : buildTradeDocumentHtml(input);
+  // Every saved invoice uses the Damaan layout (the sample's section order, bank block and full-page goods table).
+  const html = renderTaxInvoice(input, DEFAULT_TEMPLATE_FLAGS);
   return { html, title: `${inv.invoiceNo}` };
 }
 

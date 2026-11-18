@@ -69,7 +69,10 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
     && Math.abs(Number(pricedLine.netWeight) * Number(pricedLine.unitPrice) - Number(pricedLine.amount))
       <= Math.max(1, Math.abs(Number(pricedLine.amount)) * 0.005);
   const rateLabel = rateOnKg ? "KG" : unitLabel;
-  const headline = "SALES INVOICE";
+  // Sales and tax invoices carry the sample's headline; other document types keep their own title on the same layout.
+  const headline = input.docType === "tax_invoice" || input.docType === "sales_invoice"
+    ? "SALES INVOICE"
+    : (d.docTitle || "INVOICE").toUpperCase();
   const netPerCarton = perPack(totals.totalNetWeight ?? goods.reduce((s, g) => s + (Number(g.netWeight) || 0), 0), totalPacks);
   const firstRate = goods.find((g) => g.unitPrice != null)?.unitPrice;
   const zeroVatSingle = goods.length === 1 && (goods[0].taxAmount == null || Number(goods[0].taxAmount) === 0);
