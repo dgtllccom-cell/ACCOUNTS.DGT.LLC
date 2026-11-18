@@ -309,7 +309,8 @@ export function prepareInvoiceData(input: TradeDocumentInput, flags: InvoiceTemp
  */
 export function invoiceQrSvg(url: string | null | undefined, size = 60): string {
   if (!url) return "";
-  return qrCodeSvgMarkup(url, { size, quietZone: 1 });
+  // Four modules of blank border (the QR standard): a phone camera cannot read a code with a thinner border.
+  return qrCodeSvgMarkup(url, { size, quietZone: 4 });
 }
 
 /** Common `@page`/print doctype wrapper every hand-built template shares. */

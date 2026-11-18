@@ -126,7 +126,7 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
     .page { width: ${pageW}; height: ${pageH}; margin: 0 auto; padding: 6mm 8mm; box-sizing: border-box; display: flex; flex-direction: column; }
     .companyhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; min-height: 30mm; }
     .leftblock { width: 58%; display: flex; align-items: flex-start; gap: 8px; }
-    .qr { text-align: center; font-family: Arial, Helvetica, sans-serif; font-size: 6.5pt; font-weight: 700; flex: 0 0 auto; }
+    .qr { text-align: center; font-family: Arial, Helvetica, sans-serif; font-size: 6.5pt; font-weight: 700; flex: 0 0 auto; background: #fff; padding: 2mm; }
     .qr svg { width: 24mm; height: 24mm; display: block; }
     .companydetails { font-size: 8.5pt; line-height: 1.35; text-align: left; }
     .companydetails .cname { font-family: Arial, Helvetica, sans-serif; font-size: 10.5pt; font-weight: 700; }

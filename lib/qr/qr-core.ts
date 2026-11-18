@@ -27,9 +27,10 @@ function rsGenPoly(deg: number): number[] {
   let poly = [1];
   for (let i = 0; i < deg; i++) {
     const next = new Array(poly.length + 1).fill(0);
+    // poly * (x + alpha^i), highest power first: x*poly keeps the index, alpha^i*poly shifts it by one.
     for (let j = 0; j < poly.length; j++) {
-      next[j] ^= gfMul(poly[j], EXP[i]);
-      next[j + 1] ^= poly[j];
+      next[j] ^= poly[j];
+      next[j + 1] ^= gfMul(poly[j], EXP[i]);
     }
     poly = next;
   }
@@ -38,21 +39,23 @@ function rsGenPoly(deg: number): number[] {
 function rsEncode(data: number[], ecLen: number): number[] {
   const gen = rsGenPoly(ecLen);
   const res = new Array(ecLen).fill(0);
+  // gen[0] is the leading coefficient (always 1); the division uses gen[1..ecLen].
   for (const d of data) {
     const factor = d ^ res[0];
     res.shift();
     res.push(0);
-    for (let i = 0; i < ecLen; i++) res[i] ^= gfMul(gen[i], factor);
+    for (let i = 0; i < ecLen; i++) res[i] ^= gfMul(gen[i + 1], factor);
   }
   return res;
 }
 
-type VerInfo = { ver: number; dataCw: number; ecCw: number };
+// Level M block structure: versions 1-3 use one block; version 4 uses two blocks of 32 data codewords.
+type VerInfo = { ver: number; dataCw: number; ecCw: number; blocks: number };
 const VER_M: VerInfo[] = [
-  { ver: 1, dataCw: 16, ecCw: 10 },
-  { ver: 2, dataCw: 28, ecCw: 16 },
-  { ver: 3, dataCw: 44, ecCw: 26 },
-  { ver: 4, dataCw: 64, ecCw: 18 },
+  { ver: 1, dataCw: 16, ecCw: 10, blocks: 1 },
+  { ver: 2, dataCw: 28, ecCw: 16, blocks: 1 },
+  { ver: 3, dataCw: 44, ecCw: 26, blocks: 1 },
+  { ver: 4, dataCw: 64, ecCw: 18, blocks: 2 },
 ];
 const ALIGN_POS: Record<number, number[]> = { 1: [], 2: [6, 18], 3: [6, 22], 4: [6, 26] };
 
@@ -86,7 +89,7 @@ export function encodeByteMode(text: string): { matrix: boolean[][]; size: numbe
   if (bytes.length === 0) return null;
   const info = VER_M.find((v) => Math.ceil((4 + 8 + bytes.length * 8) / 8) <= v.dataCw);
   if (!info) return null;
-  const { ver, dataCw, ecCw } = info;
+  const { ver, dataCw, ecCw, blocks } = info;
   const size = 17 + ver * 4;
 
   // ── bit stream ──
@@ -110,8 +113,18 @@ export function encodeByteMode(text: string): { matrix: boolean[][]; size: numbe
     for (let j = 0; j < 8; j++) b = (b << 1) | bits[i + j];
     data.push(b);
   }
-  const ec = rsEncode(data, ecCw);
-  const allCw = [...data, ...ec];
+  // Split the data into blocks, add each block's error codewords, then interleave (data first, then error codewords).
+  const per = dataCw / blocks;
+  const dataBlocks: number[][] = [];
+  const ecBlocks: number[][] = [];
+  for (let b = 0; b < blocks; b++) {
+    const blk = data.slice(b * per, (b + 1) * per);
+    dataBlocks.push(blk);
+    ecBlocks.push(rsEncode(blk, ecCw));
+  }
+  const allCw: number[] = [];
+  for (let i = 0; i < per; i++) for (const blk of dataBlocks) allCw.push(blk[i]);
+  for (let i = 0; i < ecCw; i++) for (const blk of ecBlocks) allCw.push(blk[i]);
   const dataBits: number[] = [];
   for (const cw of allCw) for (let i = 7; i >= 0; i--) dataBits.push((cw >> i) & 1);
 
@@ -167,16 +180,16 @@ export function encodeByteMode(text: string): { matrix: boolean[][]; size: numbe
   // ── format info (EC M + mask 0) ──
   const fmt = formatInfoBits();
   const fbit = (i: number) => ((fmt >> i) & 1) === 1;
-  // copy 1 — around top-left finder
-  for (let i = 0; i <= 5; i++) m[8][i] = fbit(i);
-  m[8][7] = fbit(6);
+  // Standard placement (row, column). Copy 1 sits around the top-left finder.
+  for (let i = 0; i <= 5; i++) m[i][8] = fbit(i);
+  m[7][8] = fbit(6);
   m[8][8] = fbit(7);
-  m[7][8] = fbit(8);
-  for (let i = 9; i <= 14; i++) m[14 - i][8] = fbit(i);
-  // copy 2 — split: bits 0..6 vertical bottom-left, bits 7..14 horizontal top-right
-  for (let i = 0; i <= 6; i++) m[size - 1 - i][8] = fbit(i);
-  for (let i = 7; i <= 14; i++) m[8][size - 15 + i] = fbit(i);
-  // restore the always-dark module (overwritten by the loop above)
+  m[8][7] = fbit(8);
+  for (let i = 9; i <= 14; i++) m[8][14 - i] = fbit(i);
+  // Copy 2: bits 0..7 along the bottom row of the top-right finder's column strip, bits 8..14 down the left column.
+  for (let i = 0; i <= 7; i++) m[8][size - 1 - i] = fbit(i);
+  for (let i = 8; i <= 14; i++) m[size - 15 + i][8] = fbit(i);
+  // The always-dark module sits at row size-8, column 8.
   m[size - 8][8] = true;
 
   return { matrix: m, size };
@@ -205,10 +218,25 @@ export function decodeQrByteMode(matrix: boolean[][], size: number): string | nu
     }
     upward = !upward;
   }
+  // Undo the interleaving: data codewords come out block by block.
+  const info = VER_M.find((v) => v.ver === ver);
+  if (!info) return null;
+  const per = info.dataCw / info.blocks;
+  const inter: number[] = [];
+  for (let i = 0; i < info.dataCw; i++) {
+    let v = 0;
+    for (let k = 0; k < 8; k++) v = (v << 1) | (bits[i * 8 + k] || 0);
+    inter.push(v);
+  }
+  const orderedBits: number[] = [];
+  for (let b = 0; b < info.blocks; b++) for (let i = 0; i < per; i++) {
+    const cw = inter[i * info.blocks + b];
+    for (let k = 7; k >= 0; k--) orderedBits.push((cw >> k) & 1);
+  }
   let bp = 0;
   const take = (n: number) => {
     let v = 0;
-    for (let i = 0; i < n; i++) v = (v << 1) | (bits[bp++] || 0);
+    for (let i = 0; i < n; i++) v = (v << 1) | (orderedBits[bp++] || 0);
     return v;
   };
   if (take(4) !== 0b0100) return null;
@@ -233,5 +261,6 @@ export function qrCodeSvgMarkup(value: string, opts?: { size?: number; quietZone
     }
   }
   const esc = (s: string) => s.replace(/[<>&"]/g, (mm) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[mm] as string));
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="QR code ${esc(value)}"><rect x="0" y="0" width="${size}" height="${size}" fill="#fff"/>${rects}</svg>`;
+  // crispEdges: no anti-aliased grey edges between modules, so a camera reads every module cleanly.
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" role="img" aria-label="QR code ${esc(value)}"><rect x="0" y="0" width="${size}" height="${size}" fill="#fff"/>${rects}</svg>`;
 }
