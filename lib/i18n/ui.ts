@@ -88,6 +88,7 @@ export type UiKey =
   | "invtpl.default_save_failed"
   | "invtpl.default_saved"
   | "invtpl.desc_classic"
+  | "invtpl.desc_tax"
   | "invtpl.desc_compact"
   | "invtpl.desc_modern"
   | "invtpl.desc_premium"
@@ -111,6 +112,7 @@ export type UiKey =
   | "invtpl.sign_for"
   | "invtpl.stamp_here"
   | "invtpl.template_classic"
+  | "invtpl.template_tax"
   | "invtpl.template_compact"
   | "invtpl.template_modern"
   | "invtpl.template_premium"
@@ -13570,6 +13572,7 @@ const en: Dict = {  "cef.step1_setup": "Register & Entry Setup",
   "invtpl.default_save_failed": "Could not save default template",
   "invtpl.default_saved": "Default template saved",
   "invtpl.desc_classic": "Traditional bordered table layout",
+  "invtpl.desc_tax": "Sales tax invoice: shipper and consignee, cartons, weights, HS code, rate per kg, VAT",
   "invtpl.desc_compact": "Dense, minimal layout for short / single-line invoices",
   "invtpl.desc_modern": "Clean sans-serif design with a single color accent",
   "invtpl.desc_premium": "Elaborate design with extra branding emphasis",
@@ -13592,6 +13595,7 @@ const en: Dict = {  "cef.step1_setup": "Register & Entry Setup",
   "invtpl.sign_for": "For",
   "invtpl.stamp_here": "Stamp & Seal",
   "invtpl.template_classic": "Classic",
+  "invtpl.template_tax": "Sales Tax Invoice",
   "invtpl.template_compact": "Compact",
   "invtpl.template_modern": "Modern",
   "invtpl.template_premium": "Premium",
@@ -59815,6 +59819,7 @@ const ur: Dict = {
   "invtpl.default_save_failed": "ڈیفالٹ ٹیمپلیٹ محفوظ نہ ہو سکا",
   "invtpl.default_saved": "ڈیفالٹ ٹیمپلیٹ محفوظ ہو گیا",
   "invtpl.desc_classic": "روایتی بارڈر والا جدولی لے آؤٹ",
+  "invtpl.desc_tax": "سیلز ٹیکس انوائس: شپر اور کنسائنی، کارٹن، وزن، HS کوڈ، فی کلو ریٹ، VAT",
   "invtpl.desc_compact": "مختصر / ایک سطر والے انوائسز کے لیے سادہ، جامع لے آؤٹ",
   "invtpl.desc_modern": "ایک رنگ کی جھلک کے ساتھ صاف ستھرا جدید ڈیزائن",
   "invtpl.desc_premium": "برانڈنگ پر زیادہ زور کے ساتھ شاندار ڈیزائن",
@@ -59837,6 +59842,7 @@ const ur: Dict = {
   "invtpl.sign_for": "برائے",
   "invtpl.stamp_here": "مہر و دستخط",
   "invtpl.template_classic": "کلاسک",
+  "invtpl.template_tax": "سیلز ٹیکس انوائس",
   "invtpl.template_compact": "کومپیکٹ",
   "invtpl.template_modern": "جدید",
   "invtpl.template_premium": "پریمیم",
@@ -86423,6 +86429,7 @@ const ar: Dict = {
   "invtpl.default_save_failed": "تعذر حفظ القالب الافتراضي",
   "invtpl.default_saved": "تم حفظ القالب الافتراضي",
   "invtpl.desc_classic": "تخطيط جدولي تقليدي بحدود",
+  "invtpl.desc_tax": "فاتورة ضريبة المبيعات: الشاحن والمرسل إليه، الكراتين، الأوزان، رمز HS، السعر للكيلو، ضريبة القيمة المضافة",
   "invtpl.desc_compact": "تخطيط مكثف وبسيط للفواتير القصيرة / ذات السطر الواحد",
   "invtpl.desc_modern": "تصميم أنيق بخط بلا زوائد بلمسة لون واحدة",
   "invtpl.desc_premium": "تصميم فاخر مع تركيز إضافي على الهوية التجارية",
@@ -86445,6 +86452,7 @@ const ar: Dict = {
   "invtpl.sign_for": "لـ",
   "invtpl.stamp_here": "الختم والتوقيع",
   "invtpl.template_classic": "كلاسيكي",
+  "invtpl.template_tax": "فاتورة ضريبة المبيعات",
   "invtpl.template_compact": "مضغوط",
   "invtpl.template_modern": "عصري",
   "invtpl.template_premium": "مميز",
@@ -113030,6 +113038,7 @@ const fa: Dict = {
   "invtpl.default_save_failed": "ذخیره قالب پیش‌فرض ممکن نشد",
   "invtpl.default_saved": "قالب پیش‌فرض ذخیره شد",
   "invtpl.desc_classic": "چیدمان جدولی سنتی با کادر",
+  "invtpl.desc_tax": "صورتحساب مالیات فروش: فرستنده و گیرنده، کارتن، وزن، کد HS، نرخ هر کیلو، مالیات بر ارزش افزوده",
   "invtpl.desc_compact": "چیدمان فشرده و ساده برای فاکتورهای کوتاه / تک‌خطی",
   "invtpl.desc_modern": "طراحی ساده و مدرن با یک رنگ برجسته",
   "invtpl.desc_premium": "طراحی پرکار با تأکید بیشتر بر برند",
@@ -113052,6 +113061,7 @@ const fa: Dict = {
   "invtpl.sign_for": "برای",
   "invtpl.stamp_here": "مهر و امضا",
   "invtpl.template_classic": "کلاسیک",
+  "invtpl.template_tax": "صورتحساب مالیات فروش",
   "invtpl.template_compact": "فشرده",
   "invtpl.template_modern": "مدرن",
   "invtpl.template_premium": "ویژه",
@@ -139635,6 +139645,7 @@ const ps: Dict = {
   "invtpl.default_save_failed": "ډیفالټ ټمپلیټ خوندي نه شو",
   "invtpl.default_saved": "ډیفالټ ټمپلیټ خوندي شو",
   "invtpl.desc_classic": "دودیز پوله لرونکی جدول ترتیب",
+  "invtpl.desc_tax": "د پلور د مالیې بل: لېږونکی او ترلاسه کوونکی، کارټنونه، وزنونه، HS کوډ، د کیلو نرخ، VAT",
   "invtpl.desc_compact": "د لنډو / یو-کرښې فاکتورونو لپاره ګڼ، ساده ترتیب",
   "invtpl.desc_modern": "د یو رنګ ټکي سره پاک عصري ډیزاین",
   "invtpl.desc_premium": "د زیات برانډینګ تاکید سره ښکلی ډیزاین",
@@ -139657,6 +139668,7 @@ const ps: Dict = {
   "invtpl.sign_for": "لپاره",
   "invtpl.stamp_here": "مهر او لاسلیک",
   "invtpl.template_classic": "کلاسیک",
+  "invtpl.template_tax": "د پلور د مالیې بل",
   "invtpl.template_compact": "کومپیکټ",
   "invtpl.template_modern": "عصري",
   "invtpl.template_premium": "پریمیم",

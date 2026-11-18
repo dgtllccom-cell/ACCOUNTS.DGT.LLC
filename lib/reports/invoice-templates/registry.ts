@@ -12,6 +12,7 @@ import { renderModernInvoice } from "./modern";
 import { renderProfessionalInvoice } from "./professional";
 import { renderCompactInvoice } from "./compact";
 import { renderPremiumInvoice } from "./premium";
+import { renderTaxInvoice } from "./tax-invoice";
 import type { TradeDocType } from "@/lib/reports/trade-documents/types";
 
 const mini = (rects: string, accent: string) =>
@@ -119,6 +120,26 @@ export const INVOICE_TEMPLATES: InvoiceTemplateDefinition[] = [
       "#0b1120",
     ),
     render: renderPremiumInvoice,
+  },
+  {
+    id: "tax_invoice",
+    nameKey: "invtpl.template_tax",
+    nameFallback: "Sales Tax Invoice",
+    descKey: "invtpl.desc_tax",
+    descFallback: "Sales tax invoice: shipper and consignee, cartons, weights, HS code, rate per kg, VAT",
+    supports: "all",
+    thumbnail: mini(
+      `<rect x="8" y="8" width="60" height="10" fill="#111827"/>
+       <rect x="78" y="8" width="34" height="10" fill="none" stroke="#111827"/>
+       <rect x="8" y="24" width="50" height="22" fill="none" stroke="#111827"/>
+       <rect x="62" y="24" width="50" height="22" fill="none" stroke="#111827"/>
+       <rect x="8" y="52" width="104" height="8" fill="#f3f4f6" stroke="#111827"/>
+       <rect x="8" y="62" width="104" height="6" fill="none" stroke="#cbd5e1"/>
+       <rect x="8" y="70" width="104" height="6" fill="none" stroke="#cbd5e1"/>
+       <rect x="8" y="90" width="104" height="10" fill="none" stroke="#111827"/>`,
+      "#111827",
+    ),
+    render: renderTaxInvoice,
   },
 ];
 
