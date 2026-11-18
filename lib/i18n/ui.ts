@@ -11917,6 +11917,27 @@ export type UiKey =
   | "cef.originating_branch"
   | "cef.isolated_ledger_notice"
   | "cef.country_locked"
+  | "cef.step1_setup"
+  | "cef.register_type"
+  | "cef.register_no"
+  | "cef.entry_type"
+  | "cef.account_selection"
+  | "cef.category_reference"
+  | "cef.category_label"
+  | "cef.reference_voucher"
+  | "cef.party_name"
+  | "cef.mobile_no"
+  | "cef.download_id"
+  | "cef.amount_posting"
+  | "cef.posting_side"
+  | "cef.debit_dr"
+  | "cef.credit_cr"
+  | "cef.save_entry"
+  | "cef.opt_cash"
+  | "cef.opt_invoice"
+  | "cef.enter_id_ph"
+  | "cef.enter_name_ph"
+  | "cef.remarks_optional_ph"
   | "tbill.item"
   | "tbill.print_title_purchase"
   | "tbill.print_title_sale"
@@ -13213,8 +13234,27 @@ export type UiKey =
 
 type Dict = Record<string, string>;
 
-const en: Dict = {
-  "pis.title": "Invoice summary",
+const en: Dict = {  "cef.step1_setup": "Register & Entry Setup",
+  "cef.register_type": "Register Type",
+  "cef.register_no": "Register No.",
+  "cef.entry_type": "Entry Type",
+  "cef.account_selection": "Account Selection",
+  "cef.category_reference": "Category & Reference",
+  "cef.category_label": "Category",
+  "cef.reference_voucher": "Reference / Voucher No.",
+  "cef.party_name": "Party Name",
+  "cef.mobile_no": "Mobile No.",
+  "cef.download_id": "Download ID",
+  "cef.amount_posting": "Amount & Posting",
+  "cef.posting_side": "Posting Side",
+  "cef.debit_dr": "Debit (DR)",
+  "cef.credit_cr": "Credit (CR)",
+  "cef.save_entry": "Save Entry",
+  "cef.opt_cash": "Cash",
+  "cef.opt_invoice": "Invoice",
+  "cef.enter_id_ph": "Enter ID (Optional)",
+  "cef.enter_name_ph": "Enter name",
+  "cef.remarks_optional_ph": "Enter remarks / details (optional)",  "pis.title": "Invoice summary",
   "pis.invoice": "Purchase Invoice",
   "pis.paid": "Invoice Paid",
   "pis.remaining": "Invoice Remaining",
@@ -39831,9 +39871,28 @@ const en: Dict = {
 };
 
 const ur: Dict = {
-
-
-...en,
+  ...en,
+  "cef.step1_setup": "رجسٹر اور اندراج سیٹ اپ",
+  "cef.register_type": "رجسٹر کی قسم",
+  "cef.register_no": "رجسٹر نمبر",
+  "cef.entry_type": "اندراج کی قسم",
+  "cef.account_selection": "اکاؤنٹ کا انتخاب",
+  "cef.category_reference": "زمرہ اور حوالہ",
+  "cef.category_label": "زمرہ",
+  "cef.reference_voucher": "حوالہ / واؤچر نمبر",
+  "cef.party_name": "پارٹی کا نام",
+  "cef.mobile_no": "موبائل نمبر",
+  "cef.download_id": "شناختی دستاویز",
+  "cef.amount_posting": "رقم اور پوسٹنگ",
+  "cef.posting_side": "پوسٹنگ سائیڈ",
+  "cef.debit_dr": "ڈیبٹ (DR)",
+  "cef.credit_cr": "کریڈٹ (CR)",
+  "cef.save_entry": "اندراج محفوظ کریں",
+  "cef.opt_cash": "نقد",
+  "cef.opt_invoice": "انوائس",
+  "cef.enter_id_ph": "شناخت درج کریں (اختیاری)",
+  "cef.enter_name_ph": "نام درج کریں",
+  "cef.remarks_optional_ph": "ریمارکس / تفصیلات درج کریں (اختیاری)",
   "pis.title": "انوائس کا خلاصہ",
   "pis.invoice": "خریداری انوائس",
   "pis.paid": "انوائس کی ادا شدہ رقم",
@@ -66419,9 +66478,28 @@ const ur: Dict = {
 };
 
 const ar: Dict = {
-
-
-...en,
+  ...en,
+  "cef.step1_setup": "إعداد السجل والقيد",
+  "cef.register_type": "نوع السجل",
+  "cef.register_no": "رقم السجل",
+  "cef.entry_type": "نوع القيد",
+  "cef.account_selection": "اختيار الحساب",
+  "cef.category_reference": "الفئة والمرجع",
+  "cef.category_label": "الفئة",
+  "cef.reference_voucher": "المرجع / رقم السند",
+  "cef.party_name": "اسم الطرف",
+  "cef.mobile_no": "رقم الجوال",
+  "cef.download_id": "تحميل الهوية",
+  "cef.amount_posting": "المبلغ والترحيل",
+  "cef.posting_side": "جهة القيد",
+  "cef.debit_dr": "مدين (DR)",
+  "cef.credit_cr": "دائن (CR)",
+  "cef.save_entry": "حفظ القيد",
+  "cef.opt_cash": "نقداً",
+  "cef.opt_invoice": "فاتورة",
+  "cef.enter_id_ph": "أدخل الهوية (اختياري)",
+  "cef.enter_name_ph": "أدخل الاسم",
+  "cef.remarks_optional_ph": "أدخل الملاحظات / التفاصيل (اختياري)",
   "pis.title": "ملخص الفاتورة",
   "pis.invoice": "فاتورة الشراء",
   "pis.paid": "المدفوع من الفاتورة",
@@ -93008,9 +93086,28 @@ const ar: Dict = {
 };
 
 const fa: Dict = {
-
-
-...en,
+  ...en,
+  "cef.step1_setup": "تنظیمات دفتر و ثبت",
+  "cef.register_type": "نوع دفتر",
+  "cef.register_no": "شماره دفتر",
+  "cef.entry_type": "نوع ثبت",
+  "cef.account_selection": "انتخاب حساب",
+  "cef.category_reference": "دسته‌بندی و مرجع",
+  "cef.category_label": "دسته‌بندی",
+  "cef.reference_voucher": "شماره مرجع / سند",
+  "cef.party_name": "نام طرف حساب",
+  "cef.mobile_no": "شماره موبایل",
+  "cef.download_id": "بارگیری شناسه",
+  "cef.amount_posting": "مبلغ و ارسال سند",
+  "cef.posting_side": "طرف سند",
+  "cef.debit_dr": "بدهکار (DR)",
+  "cef.credit_cr": "بستانکار (CR)",
+  "cef.save_entry": "ذخیره ثبت",
+  "cef.opt_cash": "نقد",
+  "cef.opt_invoice": "فاکتور",
+  "cef.enter_id_ph": "شناسه را وارد کنید (اختیاری)",
+  "cef.enter_name_ph": "نام را وارد کنید",
+  "cef.remarks_optional_ph": "توضیحات / جزئیات را وارد کنید (اختیاری)",
   "pis.title": "خلاصه فاکتور",
   "pis.invoice": "فاکتور خرید",
   "pis.paid": "مبلغ پرداخت‌شده فاکتور",
@@ -119596,9 +119693,28 @@ const fa: Dict = {
 };
 
 const ps: Dict = {
-
-
-...en,
+  ...en,
+  "cef.step1_setup": "د ثبت او اندراج تنظیم",
+  "cef.register_type": "د ثبت ډول",
+  "cef.register_no": "د ثبت شمیره",
+  "cef.entry_type": "د اندراج ډول",
+  "cef.account_selection": "د حساب ټاکنه",
+  "cef.category_reference": "کټګوري او مرجع",
+  "cef.category_label": "کټګوري",
+  "cef.reference_voucher": "د مرجع / واؤچر شمیره",
+  "cef.party_name": "د اړخ نوم",
+  "cef.mobile_no": "د موبایل شمیره",
+  "cef.download_id": "د پیژندپاڼې ډاونلوډ",
+  "cef.amount_posting": "اندازه او ثبتول",
+  "cef.posting_side": "د ثبت اړخ",
+  "cef.debit_dr": "ډیبټ (DR)",
+  "cef.credit_cr": "کریډټ (CR)",
+  "cef.save_entry": "اندراج خوندي کړئ",
+  "cef.opt_cash": "نغد",
+  "cef.opt_invoice": "انواس",
+  "cef.enter_id_ph": "پیژندپاڼه ولیکئ (اختیاري)",
+  "cef.enter_name_ph": "نوم ولیکئ",
+  "cef.remarks_optional_ph": "توضیحات / تفصیل ولیکئ (اختیاري)",
   "pis.title": "د انوایس لنډیز",
   "pis.invoice": "د پېرود انوایس",
   "pis.paid": "د انوایس ورکړل شوې پیسې",
