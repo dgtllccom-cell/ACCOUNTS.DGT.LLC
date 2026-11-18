@@ -4372,30 +4372,30 @@ export function CashEntryForm({
                 <div className="flex items-center gap-2 mb-3">
                   <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Selected Account Details
+                    {tr("cmf.sel_account", "Selected Account Details")}
                   </span>
                 </div>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">Account Name</span>
+                    <span className="text-slate-500 font-medium">{tr("lp.account_name", "Account Name")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 text-right truncate max-w-[170px]">
                       {selectedCounterLedger?.accountName || "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">Account No.</span>
+                    <span className="text-slate-500 font-medium">{tr("creg.col_account_no", "Account No.")}</span>
                     <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">
                       {selectedCounterLedger?.accountCode || selectedCounterLedger?.rawAccountCode || "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">Parent Account</span>
+                    <span className="text-slate-500 font-medium">{tr("asr.col_parent_account", "Parent Account")}</span>
                     <span className="font-medium text-slate-700 dark:text-slate-300">
                       {(selectedCounterLedger as any)?.parentAccountName || "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-slate-500 font-medium">Account Type</span>
+                    <span className="text-slate-500 font-medium">{tr("bank.account_type", "Account Type")}</span>
                     <span className="font-medium text-slate-700 dark:text-slate-300 capitalize">
                       {selectedCounterLedger?.accountKind || "—"}
                     </span>
@@ -4408,30 +4408,30 @@ export function CashEntryForm({
                 <div className="flex items-center gap-2 mb-3">
                   <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Location Details
+                    {tr("locedit.details", "Location Details")}
                   </span>
                 </div>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">Country</span>
+                    <span className="text-slate-500 font-medium">{tr("clearing.col_country", "Country")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 text-right">
-                      {selectedCountry?.name || "UAE - United Arab Emirates"}
+                      {selectedCountry?.name || "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">Branch</span>
+                    <span className="text-slate-500 font-medium">{tr("crm.th_branch", "Branch")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 text-right">
-                      {(selectedCityBranch as any)?.branch_name || (selectedCityBranch as any)?.name || (selectedMainBranch as any)?.name || "Dubai City Branch"}
+                      {(selectedCityBranch as any)?.branch_name || (selectedCityBranch as any)?.name || (selectedMainBranch as any)?.name || "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">City</span>
+                    <span className="text-slate-500 font-medium">{tr("lp.city", "City")}</span>
                     <span className="font-medium text-slate-700 dark:text-slate-300">
-                      {(selectedCityBranch as any)?.city_name || (selectedCityBranch as any)?.name || "Dubai"}
+                      {(selectedCityBranch as any)?.city_name || (selectedCityBranch as any)?.name || "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-slate-500 font-medium">Address</span>
+                    <span className="text-slate-500 font-medium">{tr("tax_einv.set_f_address", "Address")}</span>
                     <span className="font-medium text-slate-700 dark:text-slate-300">
                       {(selectedCityBranch as any)?.address || "—"}
                     </span>
@@ -4444,30 +4444,30 @@ export function CashEntryForm({
                 <div className="flex items-center gap-2 mb-3">
                   <BarChart3 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Financial Snapshot
+                    {tr("roz.financial_snapshot", "Financial Snapshot")}
                   </span>
                 </div>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">Opening Balance</span>
+                    <span className="text-slate-500 font-medium">{tr("bankroz.opening_balance", "Opening Balance")}</span>
                     <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">
                       {branchCurrency || "AED"} {fmtAmount(accountSnapshot.oldBalance)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">Total Debit</span>
+                    <span className="text-slate-500 font-medium">{tr("bankroz.total_debit", "Total Debit")}</span>
                     <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">
                       {branchCurrency || "AED"} {fmtAmount(accountSnapshot.totalDebit)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">Total Credit</span>
+                    <span className="text-slate-500 font-medium">{tr("bankroz.total_credit", "Total Credit")}</span>
                     <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">
                       {branchCurrency || "AED"} {fmtAmount(accountSnapshot.totalCredit)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-slate-900 dark:text-white font-extrabold">Current Balance</span>
+                    <span className="text-slate-900 dark:text-white font-extrabold">{tr("comv.active_balance", "Current Balance")}</span>
                     <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm" dir="ltr">
                       {branchCurrency || "AED"} {fmtAmount(accountSnapshot.currentBalance)}
                     </span>

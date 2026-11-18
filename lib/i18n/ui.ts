@@ -1113,7 +1113,7 @@ export type UiKey =
   | "bankroz.reset_filters" | "bankroz.all_companies" | "bankroz.all_countries"
   | "bankroz.all_main_branches" | "bankroz.all_branches" | "bankroz.all_banks"
   | "bankroz.search_placeholder" | "bankroz.total_entries" | "bankroz.all_transactions"
-  | "bankroz.total_debit" | "bankroz.total_credit" | "bankroz.opening_balance"
+  | "bankroz.total_debit" | "bankroz.total_credit" | "bankroz.opening_balance" | "roz.financial_snapshot"
   | "bankroz.closing_balance" | "bankroz.pending_unclear" | "bankroz.entries" | "bankroz.cleared"
   | "bankroz.pending" | "bankroz.due_today" | "bankroz.dishonored" | "bankroz.post_dated"
   | "bankroz.overdue" | "bankroz.sr" | "bankroz.entry_no" | "bankroz.date_time"
@@ -17557,6 +17557,7 @@ const en: Dict = {
   "bankroz.total_debit": "Total Debit",
   "bankroz.total_credit": "Total Credit",
   "bankroz.opening_balance": "Opening Balance",
+  "roz.financial_snapshot": "Financial Snapshot",
   "bankroz.closing_balance": "Closing Balance",
   "bankroz.pending_unclear": "Pending / Unclear",
   "bankroz.entries": "Entries",
@@ -45951,6 +45952,7 @@ const ur: Dict = {
   "bankroz.total_debit": "کل بنام",
   "bankroz.total_credit": "کل جمع",
   "bankroz.opening_balance": "ابتدائی بیلنس",
+  "roz.financial_snapshot": "مالی خلاصہ",
   "bankroz.closing_balance": "اختتامی بیلنس",
   "bankroz.pending_unclear": "زیر التوا / غیر واضح",
   "bankroz.entries": "اندراجات",
@@ -72343,6 +72345,7 @@ const ar: Dict = {
   "bankroz.total_debit": "إجمالي المدين",
   "bankroz.total_credit": "إجمالي الدائن",
   "bankroz.opening_balance": "الرصيد الافتتاحي",
+  "roz.financial_snapshot": "الملخص المالي",
   "bankroz.closing_balance": "الرصيد الختامي",
   "bankroz.pending_unclear": "معلق / غير مقاصّ",
   "bankroz.entries": "قيود",
@@ -98761,6 +98764,7 @@ const fa: Dict = {
   "bankroz.total_debit": "مجموع بدهکار",
   "bankroz.total_credit": "مجموع بستانکار",
   "bankroz.opening_balance": "مانده ابتدایی",
+  "roz.financial_snapshot": "خلاصه مالی",
   "bankroz.closing_balance": "مانده پایانی",
   "bankroz.pending_unclear": "در انتظار / تسویه‌نشده",
   "bankroz.entries": "ثبت‌ها",
@@ -125206,6 +125210,7 @@ const ps: Dict = {
   "bankroz.total_debit": "ټول ډیبیټ",
   "bankroz.total_credit": "ټول کریډیټ",
   "bankroz.opening_balance": "پیل بیلانس",
+  "roz.financial_snapshot": "مالي لنډیز",
   "bankroz.closing_balance": "د پای بیلانس",
   "bankroz.pending_unclear": "پاتې / نه تصفیه شوی",
   "bankroz.entries": "ثبتونه",
