@@ -569,8 +569,10 @@ export function CashEntryForm({
         if (cancelled) return;
         const list = res?.countries || res?.data?.countries || [];
         setCountries(list);
-        if (list.length > 0 && !countryId) {
-          setCountryId(list[0].id);
+        // Functional update: never overwrite a country the user (or the session scope) already selected
+        // while this request was in flight (the closure's countryId is the stale mount-time value).
+        if (list.length > 0) {
+          setCountryId((current) => current || list[0].id);
         }
       })
       .catch(() => {})
@@ -4576,19 +4578,19 @@ export function CashEntryForm({
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
                     <span className="text-slate-500 font-medium">Country</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 text-right">
-                      {selectedCountry?.name || "UAE - United Arab Emirates"}
+                      {selectedCountry?.name || "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
                     <span className="text-slate-500 font-medium">Branch</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 text-right">
-                      {(selectedCityBranch as any)?.branch_name || (selectedCityBranch as any)?.name || (selectedMainBranch as any)?.name || "Dubai City Branch"}
+                      {(selectedCityBranch as any)?.branch_name || (selectedCityBranch as any)?.name || (selectedMainBranch as any)?.name || "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
                     <span className="text-slate-500 font-medium">City</span>
                     <span className="font-medium text-slate-700 dark:text-slate-300">
-                      {(selectedCityBranch as any)?.city_name || (selectedCityBranch as any)?.name || "Dubai"}
+                      {(selectedCityBranch as any)?.city_name || (selectedCityBranch as any)?.name || "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1">
