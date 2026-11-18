@@ -828,9 +828,9 @@ export function PurchaseOrderWizard({ session }) {
     const contact = (Array.isArray(acc.contacts) && acc.contacts[0]?.name)
       || acc.contact_person
       || acc.contactPerson
-      || (acc.code === "UAE-DUB-AC-0003" ? "Lily" : "");
-    const bank = acc.bank_name || acc.bankName || (acc.code === "UAE-DUB-AC-0003" ? "CHINA CONSTRUCTION BANK (DALIAN BRANCH)" : "");
-    const comp = acc.company_name || acc.companyName || acc.company?.name || (acc.code === "UAE-DUB-AC-0003" ? "DALIAN SUNSHINE IMP. & EXP." : "");
+      || "";
+    const bank = acc.bank_name || acc.bankName || "";
+    const comp = acc.company_name || acc.companyName || acc.company?.name || "";
 
     return {
       id: acc.id || null,
@@ -854,7 +854,7 @@ export function PurchaseOrderWizard({ session }) {
       accountSerialNumber: acc.account_serial_number || "",
       countrySerialNumber: acc.country_serial_number || "",
       branchSerialNumber: acc.branch_serial_number || "",
-      manualReferenceNumber: acc.manual_reference_number || (acc.code === "UAE-DUB-AC-0003" ? "7070" : ""),
+      manualReferenceNumber: acc.manual_reference_number || "",
       customerNumber: acc.customer_number || "",
       countryId: acc.country_id || null,
       countryBranchId: acc.country_branch_id || null,
@@ -5064,7 +5064,7 @@ export function PurchaseOrderWizard({ session }) {
                                   </div>
                                   <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
                                     {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, purchaseSearch)).map((acc) => {
-                                      const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || t(lang, "purchase.card_none_label", "None");
+                                      const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || t(lang, "purchase.card_none_label", "None");
                                       return (
                                         <button
                                           key={acc.accountCode}
@@ -5169,7 +5169,7 @@ export function PurchaseOrderWizard({ session }) {
                                   </div>
                                   <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
                                     {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).map((acc) => {
-                                      const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || t(lang, "purchase.card_none_label", "None");
+                                      const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || t(lang, "purchase.card_none_label", "None");
                                       return (
                                         <button
                                           key={acc.accountCode}
