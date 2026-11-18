@@ -1176,7 +1176,7 @@ export type UiKey =
   | "bankroz.reset_filters" | "bankroz.all_companies" | "bankroz.all_countries"
   | "bankroz.all_main_branches" | "bankroz.all_branches" | "bankroz.all_banks"
   | "bankroz.search_placeholder" | "bankroz.total_entries" | "bankroz.all_transactions"
-  | "bankroz.total_debit" | "bankroz.total_credit" | "bankroz.opening_balance"
+  | "bankroz.total_debit" | "bankroz.total_credit" | "bankroz.opening_balance" | "roz.financial_snapshot"
   | "bankroz.closing_balance" | "bankroz.pending_unclear" | "bankroz.entries" | "bankroz.cleared"
   | "bankroz.pending" | "bankroz.due_today" | "bankroz.dishonored" | "bankroz.post_dated"
   | "bankroz.overdue" | "bankroz.sr" | "bankroz.entry_no" | "bankroz.date_time"
@@ -17714,6 +17714,7 @@ const en: Dict = {
   "bankroz.total_debit": "Total Debit",
   "bankroz.total_credit": "Total Credit",
   "bankroz.opening_balance": "Opening Balance",
+  "roz.financial_snapshot": "Financial Snapshot",
   "bankroz.closing_balance": "Closing Balance",
   "bankroz.pending_unclear": "Pending / Unclear",
   "bankroz.entries": "Entries",
@@ -26596,6 +26597,7 @@ const en: Dict = {
   "plrd.loading_record_details": "Loading Loading Record Details…",
   "pbr.business_name": "Business Name",
   "pbr.view_account_details": "View Account Details",
+  "pbr.info_panels": "Bill & Account Details",
   "gec.refresh_goods": "Refresh goods",
   "gec.add_custom_brand": "+ Add Custom Brand…",
   "gec.add_custom_size": "+ Add Custom Size…",
@@ -46282,6 +46284,7 @@ const ur: Dict = {
   "bankroz.total_debit": "کل بنام",
   "bankroz.total_credit": "کل جمع",
   "bankroz.opening_balance": "ابتدائی بیلنس",
+  "roz.financial_snapshot": "مالی خلاصہ",
   "bankroz.closing_balance": "اختتامی بیلنس",
   "bankroz.pending_unclear": "زیر التوا / غیر واضح",
   "bankroz.entries": "اندراجات",
@@ -53361,6 +53364,7 @@ const ur: Dict = {
   "plrd.loading_record_details": "لوڈنگ ریکارڈ کی تفصیلات لوڈ ہو رہی ہیں…",
   "pbr.business_name": "کاروبار کا نام",
   "pbr.view_account_details": "اکاؤنٹ کی تفصیلات دیکھیں",
+  "pbr.info_panels": "بل اور اکاؤنٹ کی تفصیلات",
   "gec.refresh_goods": "سامان تازہ کریں",
   "gec.add_custom_brand": "+ حسب ضرورت برانڈ شامل کریں…",
   "gec.add_custom_size": "+ حسب ضرورت سائز شامل کریں…",
@@ -72836,6 +72840,7 @@ const ar: Dict = {
   "bankroz.total_debit": "إجمالي المدين",
   "bankroz.total_credit": "إجمالي الدائن",
   "bankroz.opening_balance": "الرصيد الافتتاحي",
+  "roz.financial_snapshot": "الملخص المالي",
   "bankroz.closing_balance": "الرصيد الختامي",
   "bankroz.pending_unclear": "معلق / غير مقاصّ",
   "bankroz.entries": "قيود",
@@ -79911,6 +79916,7 @@ const ar: Dict = {
   "plrd.loading_record_details": "جارٍ تحميل تفاصيل سجل التحميل…",
   "pbr.business_name": "الاسم التجاري",
   "pbr.view_account_details": "عرض تفاصيل الحساب",
+  "pbr.info_panels": "تفاصيل الفاتورة والحساب",
   "gec.refresh_goods": "تحديث البضائع",
   "gec.add_custom_brand": "+ إضافة علامة تجارية مخصصة…",
   "gec.add_custom_size": "+ إضافة حجم مخصص…",
@@ -99416,6 +99422,7 @@ const fa: Dict = {
   "bankroz.total_debit": "مجموع بدهکار",
   "bankroz.total_credit": "مجموع بستانکار",
   "bankroz.opening_balance": "مانده ابتدایی",
+  "roz.financial_snapshot": "خلاصه مالی",
   "bankroz.closing_balance": "مانده پایانی",
   "bankroz.pending_unclear": "در انتظار / تسویه‌نشده",
   "bankroz.entries": "ثبت‌ها",
@@ -106511,6 +106518,7 @@ const fa: Dict = {
   "plrd.loading_record_details": "در حال بارگیری جزئیات سابقه بارگیری…",
   "pbr.business_name": "نام تجاری",
   "pbr.view_account_details": "مشاهده جزئیات حساب",
+  "pbr.info_panels": "جزئیات صورتحساب و حساب",
   "gec.refresh_goods": "بازآوری کالا",
   "gec.add_custom_brand": "+ افزودن برند سفارشی…",
   "gec.add_custom_size": "+ افزودن اندازه سفارشی…",
@@ -126023,6 +126031,7 @@ const ps: Dict = {
   "bankroz.total_debit": "ټول ډیبیټ",
   "bankroz.total_credit": "ټول کریډیټ",
   "bankroz.opening_balance": "پیل بیلانس",
+  "roz.financial_snapshot": "مالي لنډیز",
   "bankroz.closing_balance": "د پای بیلانس",
   "bankroz.pending_unclear": "پاتې / نه تصفیه شوی",
   "bankroz.entries": "ثبتونه",
@@ -133109,6 +133118,7 @@ const ps: Dict = {
   "plrd.loading_record_details": "د بارولو د ریکارډ جزئیات بارول کیږي…",
   "pbr.business_name": "د سوداګرۍ نوم",
   "pbr.view_account_details": "د حساب جزئیات وګورئ",
+  "pbr.info_panels": "د بل او حساب جزئیات",
   "gec.refresh_goods": "مالونه تازه کړئ",
   "gec.add_custom_brand": "+ دودیز برنډ اضافه کړئ…",
   "gec.add_custom_size": "+ دودیزه کچه اضافه کړئ…",

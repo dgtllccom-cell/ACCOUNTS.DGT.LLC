@@ -153,7 +153,7 @@ export function PurchaseBookingReportGrid({
         )}
       >
         {/* ================= CARD 1: BRANCH & USER INFORMATION ================= */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-2xs space-y-3 hover:shadow-xs transition-shadow flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-2xs space-y-3 hover:shadow-xs transition-shadow flex flex-col">
           <div>
             {/* Card Header */}
             <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
@@ -169,27 +169,27 @@ export function PurchaseBookingReportGrid({
             <div className="space-y-1.5 text-xs pt-2">
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch_name", "Branch Name")}</span>
-                <span className="font-bold text-slate-900 dark:text-slate-100 text-right text-[11px] truncate max-w-[65%]">{branchName}</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100 text-end text-xs break-words min-w-0">{branchName}</span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch_code", "Branch Code")}</span>
-                <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-right text-[11px]">{branchCode}</span>
+                <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-end text-xs break-words min-w-0">{branchCode}</span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch_type", "Branch Type")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{branchType}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200 text-end text-xs break-words min-w-0">{branchType}</span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.parent_branch", "Parent Branch")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{parentBranch}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200 text-end text-xs break-words min-w-0">{parentBranch}</span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.country", "Country")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{branchCountry}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200 text-end text-xs break-words min-w-0">{branchCountry}</span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.city", "City")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{branchCity}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200 text-end text-xs break-words min-w-0">{branchCity}</span>
               </div>
             </div>
           </div>
@@ -201,14 +201,14 @@ export function PurchaseBookingReportGrid({
                 <User className="h-3 w-3 text-blue-500" />
                 {t(lang, "pbr.user_name", "User Name")}
               </span>
-              <span className="font-bold uppercase text-slate-900 dark:text-slate-100 text-right text-[11px]">{userName}</span>
+              <span className="font-bold uppercase text-slate-900 dark:text-slate-100 text-end text-xs break-words min-w-0">{userName}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1 uppercase tracking-wide">
                 <ShieldCheck className="h-3 w-3 text-blue-500" />
                 {t(lang, "pbr.role", "Role")}
               </span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{userRole}</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200 text-end text-xs break-words min-w-0">{userRole}</span>
             </div>
             <div className="flex justify-end pt-1">
               <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 whitespace-nowrap">
@@ -239,51 +239,51 @@ export function PurchaseBookingReportGrid({
           <div className="space-y-1.5 text-xs pt-2">
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.booking_date", "Booking Date")}</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-right text-[11px]">{bookingDate}</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-end text-xs break-words min-w-0">{bookingDate}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.fiscal_year", "Fiscal Year")}</span>
-              <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-right text-[11px]">{fiscalYear}</span>
+              <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-end text-xs break-words min-w-0">{fiscalYear}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.booking_branch", "Booking Branch")}</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{bookingBranch}</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200 text-end text-xs break-words min-w-0">{bookingBranch}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.system_serial_no", "System Serial No.")}</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-right text-[11px]">{systemSerialNo}</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-slate-100 text-end text-xs break-words min-w-0">{systemSerialNo}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.country_serial_no", "Country Serial No.")}</span>
-              <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-right text-[11px]">{countrySerialNo}</span>
+              <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-end text-xs break-words min-w-0">{countrySerialNo}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.super_admin_serial_no", "Super Admin Serial No.")}</span>
-              <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-right text-[11px]">{superAdminSerialNo}</span>
+              <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-end text-xs break-words min-w-0">{superAdminSerialNo}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch_serial_no", "Branch Serial No.")}</span>
-              <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-right text-[11px]">{branchSerialNo}</span>
+              <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-end text-xs break-words min-w-0">{branchSerialNo}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.bill_contract_no", "Bill / Contract No.")}</span>
-              <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-right text-[11px]">{billContractNo}</span>
+              <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-end text-xs break-words min-w-0">{billContractNo}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.payment_type", "Payment Type")}</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{paymentType}</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200 text-end text-xs break-words min-w-0">{paymentType}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.ship_type", "Ship Type")}</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{shipType}</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200 text-end text-xs break-words min-w-0">{shipType}</span>
             </div>
             <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.loading_mode", "Loading Mode")}</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{loadingMode}</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200 text-end text-xs break-words min-w-0">{loadingMode}</span>
             </div>
             <div className="flex justify-between items-center gap-2 pt-0.5">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.origin_country", "Origin Country")}</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 text-right text-[11px]">{originCountry}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 text-end text-xs break-words min-w-0">{originCountry}</span>
             </div>
           </div>
         </div>
@@ -307,37 +307,37 @@ export function PurchaseBookingReportGrid({
             <div className="space-y-1.5 text-xs pt-2">
               <div className="pb-1 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.account_name", "Account Name")}</span>
-                <span className="font-bold text-slate-900 dark:text-slate-100 leading-snug block text-right text-[11px]">
+                <span className="font-bold text-slate-900 dark:text-slate-100 leading-snug block text-end text-xs break-words min-w-0">
                   {purchaseAccountName}
                 </span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.account_code", "Account Code")}</span>
-                <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-right text-[11px]">{purchaseAccountCode}</span>
+                <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-end text-xs break-words min-w-0">{purchaseAccountCode}</span>
               </div>
               <div className="pb-1 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.company", "Company")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-snug block text-right text-[11px]">
+                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-snug block text-end text-xs break-words min-w-0">
                   {purchaseCompanyName}
                 </span>
               </div>
               <div className="pb-1 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.business_name", "Business Name")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-snug block text-right text-[11px]">
+                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-snug block text-end text-xs break-words min-w-0">
                   {purchaseBusinessName}
                 </span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.country", "Country")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{purchaseCountry}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200 text-end text-xs break-words min-w-0">{purchaseCountry}</span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.city", "City")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{purchaseCity}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200 text-end text-xs break-words min-w-0">{purchaseCity}</span>
               </div>
               <div className="flex justify-between items-center gap-2 pt-0.5">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch", "Branch")}</span>
-                <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{purchaseBranch}</span>
+                <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 text-end text-xs break-words min-w-0">{purchaseBranch}</span>
               </div>
             </div>
           </div>
@@ -347,7 +347,8 @@ export function PurchaseBookingReportGrid({
             <button
               type="button"
               onClick={data.onViewPurchaseAccount}
-              className="w-full flex items-center justify-center gap-1.5 h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+              disabled={!data.onViewPurchaseAccount}
+              className="disabled:cursor-not-allowed disabled:opacity-50 w-full flex items-center justify-center gap-1.5 h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
               <Eye className="h-3.5 w-3.5 text-slate-500" />
               <span>{t(lang, "pbr.view_account_details", "View Account Details")}</span>
@@ -374,37 +375,37 @@ export function PurchaseBookingReportGrid({
             <div className="space-y-1.5 text-xs pt-2">
               <div className="pb-1 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.account_name", "Account Name")}</span>
-                <span className="font-bold text-slate-900 dark:text-slate-100 leading-snug block text-right text-[11px]">
+                <span className="font-bold text-slate-900 dark:text-slate-100 leading-snug block text-end text-xs break-words min-w-0">
                   {salesAccountName}
                 </span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.account_code", "Account Code")}</span>
-                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-right text-[11px]">{salesAccountCode}</span>
+                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-end text-xs break-words min-w-0">{salesAccountCode}</span>
               </div>
               <div className="pb-1 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.company", "Company")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-snug block text-right text-[11px]">
+                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-snug block text-end text-xs break-words min-w-0">
                   {salesCompanyName}
                 </span>
               </div>
               <div className="pb-1 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide mb-0.5">{t(lang, "pbr.business_name", "Business Name")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-snug block text-right text-[11px]">
+                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-snug block text-end text-xs break-words min-w-0">
                   {salesBusinessName}
                 </span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.country", "Country")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{salesCountry}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200 text-end text-xs break-words min-w-0">{salesCountry}</span>
               </div>
               <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-100 dark:border-slate-800/60">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.city", "City")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{salesCity}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200 text-end text-xs break-words min-w-0">{salesCity}</span>
               </div>
               <div className="flex justify-between items-center gap-2 pt-0.5">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t(lang, "pbr.branch", "Branch")}</span>
-                <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 text-right text-[11px]">{salesBranch}</span>
+                <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 text-end text-xs break-words min-w-0">{salesBranch}</span>
               </div>
             </div>
           </div>
@@ -414,7 +415,8 @@ export function PurchaseBookingReportGrid({
             <button
               type="button"
               onClick={data.onViewSalesAccount}
-              className="w-full flex items-center justify-center gap-1.5 h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+              disabled={!data.onViewSalesAccount}
+              className="disabled:cursor-not-allowed disabled:opacity-50 w-full flex items-center justify-center gap-1.5 h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
               <Eye className="h-3.5 w-3.5 text-slate-500" />
               <span>{t(lang, "pbr.view_account_details", "View Account Details")}</span>

@@ -56,7 +56,8 @@ import {
   ScanLine,
   FileClock,
   Mic,
-  Sparkles
+  Sparkles,
+  ChevronDown
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -77,6 +78,7 @@ import { translationPendingLabel } from "@/lib/i18n/purchase-order-translations"
 import { readDraftPrefill, clearDraftPrefill } from "@/features/document-intelligence/components/entry-method-selector";
 import { translateOptionLabel } from "@/lib/i18n/option-labels";
 import { VoiceFormFill } from "@/components/voice-form-fill";
+import { findSelectedAccount, resolveAccountCompany, accountCompanyName } from "@/lib/purchases/booking-account-panel";
 
 // --- Non-location constants (static values, not from master forms) ---
 const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY", "SAR"];
@@ -617,10 +619,10 @@ export function PurchaseOrderWizard({ session }) {
   }, []);
 
   const [savingOrder, setSavingOrder] = useState(false);
-  // "View company" buttons call setViewCompanyModal; the state was never declared (ReferenceError on click).
-  const [, setViewCompanyModal] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [savedOrderId, setSavedOrderId] = useState("");
+  // Serial numbers issued to a loaded bill (row + saved workflow). Shown as saved; never synthesized.
+  const [loadedBillSerials, setLoadedBillSerials] = useState(null);
   const [savedOrderNo, setSavedOrderNo] = useState("");
   const [registerRefreshKey, setRegisterRefreshKey] = useState(0);
   const [accountLookupMessage, setAccountLookupMessage] = useState("");
@@ -825,12 +827,10 @@ export function PurchaseOrderWizard({ session }) {
   }, [form.countryId, form.countryBranchId]);
 
   const mapEnterpriseAccount = (acc) => {
-    const contact = (Array.isArray(acc.contacts) && acc.contacts[0]?.name)
-      || acc.contact_person
-      || acc.contactPerson
-      || (acc.code === "UAE-DUB-AC-0003" ? "Lily" : "");
-    const bank = acc.bank_name || acc.bankName || (acc.code === "UAE-DUB-AC-0003" ? "CHINA CONSTRUCTION BANK (DALIAN BRANCH)" : "");
-    const comp = acc.company_name || acc.companyName || acc.company?.name || (acc.code === "UAE-DUB-AC-0003" ? "DALIAN SUNSHINE IMP. & EXP." : "");
+    // Only what this account record holds — no per-code invented contact, bank, company or reference values.
+    const contact = (Array.isArray(acc.contacts) && acc.contacts[0]?.name) || acc.contact_person || acc.contactPerson || "";
+    const bank = acc.bank_name || acc.bankName || "";
+    const comp = acc.company_name || acc.companyName || acc.company?.name || "";
 
     return {
       id: acc.id || null,
@@ -854,7 +854,9 @@ export function PurchaseOrderWizard({ session }) {
       accountSerialNumber: acc.account_serial_number || "",
       countrySerialNumber: acc.country_serial_number || "",
       branchSerialNumber: acc.branch_serial_number || "",
-      manualReferenceNumber: acc.manual_reference_number || (acc.code === "UAE-DUB-AC-0003" ? "7070" : ""),
+      manualReferenceNumber: acc.manual_reference_number || "",
+      accountNumber: acc.account_number || "",
+      addressCountryId: acc.address_country_id || null,
       customerNumber: acc.customer_number || "",
       countryId: acc.country_id || null,
       countryBranchId: acc.country_branch_id || null,
@@ -961,20 +963,20 @@ export function PurchaseOrderWizard({ session }) {
 
     const primaryRole = (activeSession?.roles?.[0] || activeSession?.scopes?.roles?.[0] || "Super Admin").replace(/_/g, " ");
 
-    // Find companies for purchase and sales
-    const pComp = dbCompanies.find(c => String(c.id) === String(form.purchaseCompanyId) || c.name === form.purchaseCompanyName) || {};
-    const sComp = dbCompanies.find(c => String(c.id) === String(form.salesCompanyId) || c.name === form.salesCompanyName) || {};
-
-    // Find accounts for purchase and sales
-    // Match only an explicitly selected account. Empty names/codes must not
-    // resolve to an unrelated record in the shared account master.
-    const matchesSelectedAccount = (account, id, code, name) => {
-      if (id && String(account.id || account.accountId || "") === String(id)) return true;
-      if (code && String(account.accountCode || "") === String(code)) return true;
-      return !id && !code && Boolean(name) && account.accountName === name;
-    };
-    const pAcc = dbAccounts.find(a => matchesSelectedAccount(a, form.purchaseAccountId, form.purchaseAccountNo, form.purchaseAccountName)) || {};
-    const sAcc = dbAccounts.find(a => matchesSelectedAccount(a, form.salesAccountId, form.salesAccountNo, form.salesAccountName)) || {};
+    // Purchase / Sales panels show only the selected account record and the company THAT account links to.
+    // A company name saved on the bill alone (old "first company" fallback) is not shown — see lib/purchases/booking-account-panel.
+    const pAccRec = findSelectedAccount(dbAccounts, form.purchaseAccountId, form.purchaseAccountNo, form.purchaseAccountName);
+    const sAccRec = findSelectedAccount(dbAccounts, form.salesAccountId, form.salesAccountNo, form.salesAccountName);
+    const pAcc = pAccRec || {};
+    const sAcc = sAccRec || {};
+    const pComp = resolveAccountCompany(pAccRec, dbCompanies, form.purchaseCompanyId) || {};
+    const sComp = resolveAccountCompany(sAccRec, dbCompanies, form.salesCompanyId) || {};
+    const pCompName = accountCompanyName(pAccRec, pComp.id ? pComp : null);
+    const sCompName = accountCompanyName(sAccRec, sComp.id ? sComp : null);
+    const countryNameOf = (id) => (id && [...allCountries, ...countries].find(c => String(c.id) === String(id))?.name) || "";
+    // Country of the account itself; the booking branch's city only when the account belongs to that same branch.
+    const accountCountry = (acc) => countryNameOf(acc.addressCountryId || acc.countryId) || (acc.countryId && String(acc.countryId) === String(form.countryId) ? form.branchCountry : "") || "";
+    const accountCity = (acc) => (acc.cityBranchId && String(acc.cityBranchId) === String(form.cityBranchId) ? form.branchCity : "") || "";
 
     // Real account figures only — never fabricated (no multipliers, no invented defaults).
     const numOrNull = (v) => (v === undefined || v === null || v === "" || Number.isNaN(Number(v)) ? null : Number(v));
@@ -1019,12 +1021,13 @@ export function PurchaseOrderWizard({ session }) {
       // Bill Info
       bookingDate: form.purchaseDate || new Date().toISOString().slice(0, 10),
       fiscalYear: form.fiscalYear || "",
-      bookingBranch: loginBranchName || "",
+      bookingBranch: form.branchName || loginBranchName || "",
       status: form.salesStatus || "DRAFT",
       systemSerialNo: form.purchaseOrderNo || "",
-      countrySerialNo: form.countrySerial || (form.purchaseOrderNo ? `CS-${form.purchaseOrderNo.slice(-4)}` : ""),
-      superAdminSerialNo: form.purchaseOrderNo ? `SA-2026-${form.purchaseOrderNo.slice(-4)}` : "",
-      branchSerialNo: form.billNo || (form.purchaseOrderNo ? `BR-${form.purchaseOrderNo.slice(-5)}` : ""),
+      // Issued serials only (the saved bill's own numbers); a new, unsaved booking shows "—".
+      countrySerialNo: form.countrySerial || loadedBillSerials?.countrySerialNo || "",
+      superAdminSerialNo: loadedBillSerials?.superAdminSerialNo || "",
+      branchSerialNo: loadedBillSerials?.branchSerialNo || "",
       billContractNo: form.purchaseContractNo || "—",
       paymentType: form.paymentType || "—",
       shipType: form.shipmentType || "—",
@@ -1049,10 +1052,10 @@ export function PurchaseOrderWizard({ session }) {
       purchaseTotalCredit: typeof pCredit === "number" ? pCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : (pCredit || "0.00"),
       purchaseTotalDebit: typeof pDebit === "number" ? pDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : (pDebit || "0.00"),
       purchaseBalance: typeof pBal === "number" ? pBal.toLocaleString(undefined, { minimumFractionDigits: 2 }) : (pBal || "0.00"),
-      purchaseCompanyName: form.purchaseCompanyName || pComp.name || "—",
-      purchaseBranch: form.purchaseAccountBranch || form.branchName || "—",
-      purchaseCountry: form.branchCountry || "—",
-      purchaseCompanyCode: form.purchaseCompanyCode || pComp.code || "—",
+      purchaseCompanyName: pCompName || "—",
+      purchaseBranch: form.purchaseAccountBranch || pAcc.cityBranchName || "—",
+      purchaseCountry: accountCountry(pAcc) || "—",
+      purchaseCompanyCode: pComp.code || pComp.company_code || "—",
       purchaseLegalType: pComp.legal_type || pComp.legalType || "—",
       purchaseLicenseNo: pComp.license_no || pComp.licenseNo || "—",
       purchaseTaxRegNo: pComp.tax_reg_no || pComp.taxRegistrationNumber || pComp.taxRegNo || "—",
@@ -1068,8 +1071,8 @@ export function PurchaseOrderWizard({ session }) {
       purchaseIban: pComp.iban || pComp.ibanNo || "—",
       purchaseSwiftCode: pComp.swift_code || pComp.swiftCode || "—",
       purchaseCurrencyLabel: pComp.currency || (form.purchaseCurrency ? `${form.purchaseCurrency} - ${form.purchaseCurrency === "AED" ? "UAE Dirham" : form.purchaseCurrency === "USD" ? "US Dollar" : form.purchaseCurrency}` : "—"),
-      purchaseCity: form.branchCity || "",
-      purchaseBusinessName: pComp.business_name || form.purchaseCompanyName || "",
+      purchaseCity: accountCity(pAcc),
+      purchaseBusinessName: pComp.business_name || pComp.trade_name || "",
 
       // Sales Account
       salesAccountName: form.salesAccountName || "",
@@ -1077,12 +1080,12 @@ export function PurchaseOrderWizard({ session }) {
       salesTotalCredit: typeof sCredit === "number" ? sCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : (sCredit || "0.00"),
       salesTotalDebit: typeof sDebit === "number" ? sDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : (sDebit || "0.00"),
       salesBalance: typeof sBal === "number" ? sBal.toLocaleString(undefined, { minimumFractionDigits: 2 }) : (sBal || "0.00"),
-      salesCompanyName: form.salesCompanyName || sComp.name || "",
-      salesBranch: form.salesAccountBranch || form.branchCode || "",
-      salesCountry: form.branchCountry || "",
-      salesCity: form.branchCity || "",
-      salesBusinessName: sComp.business_name || form.salesCompanyName || "",
-      salesCompanyCode: form.salesCompanyCode || sComp.code || "",
+      salesCompanyName: sCompName,
+      salesBranch: form.salesAccountBranch || sAcc.cityBranchName || "",
+      salesCountry: accountCountry(sAcc),
+      salesCity: accountCity(sAcc),
+      salesBusinessName: sComp.business_name || sComp.trade_name || "",
+      salesCompanyCode: sComp.code || sComp.company_code || "",
       salesLegalType: sComp.legal_type || sComp.legalType || "—",
       salesLicenseNo: sComp.license_no || sComp.licenseNo || "—",
       salesTaxRegNo: sComp.tax_reg_no || sComp.taxRegistrationNumber || sComp.taxRegNo || "—",
@@ -1099,8 +1102,9 @@ export function PurchaseOrderWizard({ session }) {
       salesSwiftCode: sComp.swift_code || sComp.swiftCode || "—",
       salesCurrencyLabel: sComp.currency || (form.purchaseCurrency ? `${form.purchaseCurrency} - ${form.purchaseCurrency === "AED" ? "UAE Dirham" : form.purchaseCurrency === "USD" ? "US Dollar" : form.purchaseCurrency}` : "—"),
       salesCurrencyCode: form.purchaseCurrency || "—",
-      onViewPurchaseAccount: () => setViewCompanyModal(true),
-      onViewSalesAccount: () => setViewCompanyModal(true)
+      // Opens the selected account's own profile (existing Account Ledger View); disabled when no account is selected.
+      onViewPurchaseAccount: pAcc.id ? () => window.open(`/dashboard/accounts/view?accountId=${encodeURIComponent(pAcc.id)}`, "_blank", "noopener") : undefined,
+      onViewSalesAccount: sAcc.id ? () => window.open(`/dashboard/accounts/view?accountId=${encodeURIComponent(sAcc.id)}`, "_blank", "noopener") : undefined
     };
 
     return (
@@ -1473,6 +1477,14 @@ export function PurchaseOrderWizard({ session }) {
 
         setSavedOrderId(poData.id || "");
         setSavedOrderNo(poNumber);
+        {
+          const wf = (rawFormData && typeof rawFormData === "object" && rawFormData.workflow) || {};
+          setLoadedBillSerials({
+            countrySerialNo: wf.countrySerialNo || poData.country_transaction_serial_number || "",
+            superAdminSerialNo: wf.superAdminSerialNo || "",
+            branchSerialNo: wf.branchSerialNo || poData.branch_transaction_serial_number || "",
+          });
+        }
 
         const mergedCountryId = loadedForm.countryId || poData.country_id || poData.countryId || "";
         const mergedCountryBranchId = loadedForm.countryBranchId || poData.country_branch_id || poData.countryBranchId || poData.branch_id || poData.branchId || "";
@@ -1672,6 +1684,9 @@ export function PurchaseOrderWizard({ session }) {
   // Auto-select Default Purchase and Sales Accounts for the selected Branch or on initial load
   useEffect(() => {
     if (dbAccounts.length === 0) return;
+    // A bill named in the URL is still loading: wait for its own saved accounts instead of filling defaults first.
+    const urlBillRef = searchParams.get("id") || searchParams.get("purchaseOrderId") || searchParams.get("purchaseId") || searchParams.get("orderId") || searchParams.get("purchaseOrderNo");
+    if (urlBillRef && !savedOrderId) return;
     
     // Find matching accounts for the current scope or fallback to all dbAccounts
     let scopedAccounts = dbAccounts.filter(acc => accountMatchesScope(acc));
@@ -1679,8 +1694,15 @@ export function PurchaseOrderWizard({ session }) {
       scopedAccounts = dbAccounts;
     }
 
-    const purchaseNeedsUpdate = !form.purchaseAccountNo || !dbAccounts.some(a => a.accountCode === form.purchaseAccountNo);
-    const salesNeedsUpdate = !form.salesAccountNo || !dbAccounts.some(a => a.accountCode === form.salesAccountNo);
+    // A saved bill keeps the accounts it was saved with. Its account no. may be the ledger number (ACC-000006) while
+    // the master list is keyed by code (AE-AEDU-PS-001), so match by id, code or account number — never swap a saved
+    // bill's Purchase / Sales account for a "default" one (that showed another party's account on AE-001-0004).
+    const isKnownAccount = (id, no) => dbAccounts.some(a =>
+      (id && String(a.id || a.accountId || "") === String(id)) || (no && (a.accountCode === no || a.accountNumber === no)));
+    const purchaseHasAccount = Boolean(form.purchaseAccountId || form.purchaseAccountNo);
+    const salesHasAccount = Boolean(form.salesAccountId || form.salesAccountNo);
+    const purchaseNeedsUpdate = !purchaseHasAccount || (!savedOrderId && !isKnownAccount(form.purchaseAccountId, form.purchaseAccountNo));
+    const salesNeedsUpdate = !salesHasAccount || (!savedOrderId && !isKnownAccount(form.salesAccountId, form.salesAccountNo));
 
     let newPurchaseAcc = null;
     let newSalesAcc = null;
@@ -1699,7 +1721,7 @@ export function PurchaseOrderWizard({ session }) {
 
     if (newPurchaseAcc) applyAccountMaster("purchase", newPurchaseAcc);
     if (newSalesAcc) applyAccountMaster("sales", newSalesAcc);
-  }, [form.cityBranchId, form.countryBranchId, form.countryId, dbAccounts]);
+  }, [form.cityBranchId, form.countryBranchId, form.countryId, dbAccounts, savedOrderId]);
 
   // Load latest exchange rate and set currency when country or branch changes
   useEffect(() => {
@@ -2813,7 +2835,7 @@ export function PurchaseOrderWizard({ session }) {
       manualFinalAmount: "",
     });
     setGoodsEntries([]);
-    setSavedOrderId("");
+    setSavedOrderId(""); setLoadedBillSerials(null);
     setSavedOrderNo("");
     setTransferredData(null);
     setIsTransferred(false);
@@ -3443,7 +3465,7 @@ export function PurchaseOrderWizard({ session }) {
   );
 
   const headerActions = (
-    <div className="flex items-center gap-1.5 shrink-0 relative" ref={dropdownRef}>
+    <div className="flex flex-wrap items-center gap-1.5 min-w-0 max-w-full relative" ref={dropdownRef}>
         <div className="flex items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 mr-2">
           <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-2 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab1_booking", "1 Booking")}</button>
           <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`py-1 px-2 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab2_goods", "2 Goods")}</button>
@@ -3680,7 +3702,7 @@ export function PurchaseOrderWizard({ session }) {
           highlightPurchaseOrderNo={savedOrderNo}
           onNewBooking={() => {
             handleReset();
-            setSavedOrderId("");
+            setSavedOrderId(""); setLoadedBillSerials(null);
             setSavedOrderNo("");
             setIsFormOpen(true);
             setActiveTab("booking");
@@ -3813,6 +3835,10 @@ export function PurchaseOrderWizard({ session }) {
       }, 100);
     }
   };
+
+  // Banner over the workspace: the selected purchase account and only the company that account links to.
+  const bannerPurchaseAccount = findSelectedAccount(dbAccounts, form.purchaseAccountId, form.purchaseAccountNo, form.purchaseAccountName);
+  const bannerPurchaseCompany = accountCompanyName(bannerPurchaseAccount, resolveAccountCompany(bannerPurchaseAccount, dbCompanies, form.purchaseCompanyId));
 
   return (
     <div id="wizard-root-print" dir={isRtl ? "rtl" : "ltr"} className="w-full min-w-0 max-w-[1900px] mx-auto space-y-2 text-foreground bg-background mt-[-10px] print:max-w-none">
@@ -3978,7 +4004,7 @@ export function PurchaseOrderWizard({ session }) {
                   type="button"
                   onClick={() => {
                     setEntryMethodModalOpen(false);
-                    router.push("/dashboard/smart-operations/intake?target=purchase_orders");
+                    router.push("/dashboard/document-intelligence?module=purchase_booking");
                   }}
                   className="group flex flex-col justify-between p-4 rounded-xl border border-border/80 hover:border-blue-500/70 hover:bg-blue-50/40 dark:hover:bg-blue-950/20 text-left transition-all shadow-xs"
                 >
@@ -4951,36 +4977,36 @@ export function PurchaseOrderWizard({ session }) {
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
                           <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight">
-                            {form.purchaseCompanyName || form.purchaseAccountName || "\u2014"}
+                            {bannerPurchaseCompany || form.purchaseAccountName || "\u2014"}
                           </h2>
                           <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded whitespace-nowrap">
                             ({form.purchaseAccountNo || "\u2014"})
                           </span>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                          {t(lang, "purchase.business_name_colon", "Business Name:")} {form.purchaseCompanyName || "\u2014"}
+                          {t(lang, "purchase.business_name_colon", "Business Name:")} {bannerPurchaseCompany || "\u2014"}
                         </p>
                       </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4 sm:gap-6">
                       <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
-                        <span className="text-base">🇦🇪</span>
                         <span className="text-slate-400 font-semibold">{t(lang, "purchase.country", "Country")}</span>
                         <span className="font-bold text-slate-800 dark:text-slate-200">{form.branchCountry || "\u2014"}</span>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
                         <MapPin className="h-4 w-4 text-blue-500" />
                         <span className="text-slate-400 font-semibold">{t(lang, "purchase.city", "City")}</span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200">{form.branchCity || "Dubai"}</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200">{form.branchCity || "\u2014"}</span>
                       </div>
                       <button
                         type="button"
-                        onClick={() => setViewCompanyModal(true)}
+                        disabled={!bannerPurchaseAccount?.id}
+                        onClick={() => bannerPurchaseAccount?.id && window.open(`/dashboard/accounts/view?accountId=${encodeURIComponent(bannerPurchaseAccount.id)}`, "_blank", "noopener")}
                         className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-2xs transition-colors cursor-pointer"
                       >
                         <Building2 className="h-3.5 w-3.5 text-slate-500" />
-                        <span>{t(lang, "purchase.view_full_company_details", "View Full Company Details")}</span>
+                        <span>{t(lang, "pbr.view_account_details", "View Account Details")}</span>
                       </button>
                     </div>
                   </div>
@@ -6329,8 +6355,25 @@ export function PurchaseOrderWizard({ session }) {
 
                     {/* RIGHT COLUMN: 4 Report Cards (Top) + Purchase Booking Register Table (Bottom) */}
                     <div className="flex-1 min-w-0 w-full space-y-4 overflow-hidden">
-                      {/* 4 Report Cards */}
-                      {renderGlobalInfoCards(false)}
+                      {/* 4 Report Cards — shown open beside Step 1. On the other steps they are reference only, so they
+                          fold into one line (keyed per step so each step opens in its default state) and keep the
+                          Goods / Shipping form and the register close together, especially on tablets and phones. */}
+                      {activeTab === "booking" ? (
+                        renderGlobalInfoCards(false)
+                      ) : (
+                        <details key={`info-${activeTab}`} className="group w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
+                          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 [&::-webkit-details-marker]:hidden">
+                            <span className="min-w-0 truncate">
+                              {t(lang, "pbr.info_panels", "Bill & Account Details")}
+                              <span className="ms-2 font-semibold normal-case tracking-normal text-slate-500 dark:text-slate-400">
+                                {form.purchaseAccountName || "\u2014"} · {form.salesAccountName || "\u2014"}
+                              </span>
+                            </span>
+                            <ChevronDown className="h-4 w-4 shrink-0 text-slate-500 transition-transform group-open:rotate-180" />
+                          </summary>
+                          <div className="px-3 pb-3">{renderGlobalInfoCards(false)}</div>
+                        </details>
+                      )}
 
                       {/* ================= PURCHASE BOOKING REGISTER CARD ================= */}
                       <div className="w-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-3">
