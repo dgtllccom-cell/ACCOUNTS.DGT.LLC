@@ -534,7 +534,7 @@ export async function renderDocumentHtml(session: ErpSession, id: string, lang: 
     },
     // A Sales Tax Invoice is issued by the branch that creates it: its shipper is that branch's company profile.
     seller: (inv.docType === "tax_invoice" || inv.txnKind === "sales")
-      ? { name: branding.legalName || branding.entityName || undefined, address: branding.address || undefined, email: branding.email || undefined, phone: branding.phone || undefined, taxId: branding.taxNumber || undefined }
+      ? { name: branding.legalName || (branding.entityName && branding.entityName !== branding.countryName ? branding.entityName : undefined), address: branding.address || undefined, email: branding.email || undefined, phone: branding.phone || undefined, taxId: branding.taxNumber || undefined }
       : ((inv.seller as any) || (inv.txnKind === "purchase" ? { name: inv.partyName } : { name: branding.entityName })),
     buyer: (inv.buyer as any) || (inv.txnKind === "sales" ? { name: inv.partyName } : { name: branding.entityName }),
     notifyParty: (inv.notifyParty as any) ?? null,

@@ -109,7 +109,8 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
 
   // Company header: the creating branch's company (logo space on the left, company details on the right).
   const logo = isReal(br.logoUrl) ? String(br.logoUrl) : "/images/damaan-logo.png";
-  const companyName = br.legalName || br.entityName;
+  // A branch without a company profile falls back to its country name in the branding; that is never printed as the company.
+  const companyName = br.legalName || (isReal(br.entityName) && br.entityName !== br.countryName ? br.entityName : null);
   const companyLines = [br.address, br.phone ? `TEL: ${br.phone}` : null, br.email, br.website, br.taxNumber ? `TRN: ${br.taxNumber}` : null]
     .filter(isReal).map((x) => `<div>${esc(String(x))}</div>`).join("");
   const stamp = isReal(br.stampUrl) ? `<img class="stamp" src="${esc(br.stampUrl)}" alt="" />` : `<div class="stamp-empty">COMPANY STAMP</div>`;
@@ -156,6 +157,15 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
     .foot { margin-top: 4px; font-size: 7.5pt; display: flex; justify-content: space-between; gap: 6px; border-top: 1px solid #aaa; padding-top: 3px; }
     .notes { font-size: 8pt; margin-top: 4px; }
     .bottom { flex: 0 0 auto; }
+    /* Phone screens (the public link is scanned on a phone): the page reflows to the screen width and the goods table scrolls sideways. */
+    @media screen and (max-width: 640px) {
+      .page { width: 100%; height: auto; padding: 4mm; }
+      .goods-wrap { overflow-x: auto; }
+      table.goods { min-width: 720px; height: auto; }
+      .companyhead { flex-direction: column; }
+      .companydetails { text-align: left; width: 100%; }
+      .logocell { width: 100%; }
+    }
   `;
 
   const body = `
