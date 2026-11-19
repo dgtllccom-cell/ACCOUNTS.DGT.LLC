@@ -58,14 +58,14 @@ describe("Print Reports hub opens trade documents through the template engine (s
 });
 
 describe("invoice template registry backs the hub picker (behavior)", () => {
-  it("offers exactly the five templates in order, with classic as the default", () => {
-    expect(INVOICE_TEMPLATES.map((d) => d.id)).toEqual(["classic", "modern", "professional", "compact", "premium"]);
-    expect(DEFAULT_INVOICE_TEMPLATE_ID).toBe("classic");
+  it("offers exactly the six templates in order, with the Damaan tax invoice as the default", () => {
+    expect(INVOICE_TEMPLATES.map((d) => d.id)).toEqual(["classic", "modern", "professional", "compact", "premium", "tax_invoice"]);
+    expect(DEFAULT_INVOICE_TEMPLATE_ID).toBe("tax_invoice");
   });
 
   it("every template is offered for Proforma Invoice and Trade Contract", () => {
     for (const docType of ["proforma_invoice", "contract"] as const) {
-      expect(listTemplatesForDocType(docType).map((d) => d.id)).toEqual(["classic", "modern", "professional", "compact", "premium"]);
+      expect(listTemplatesForDocType(docType).map((d) => d.id)).toEqual(["classic", "modern", "professional", "compact", "premium", "tax_invoice"]);
     }
   });
 

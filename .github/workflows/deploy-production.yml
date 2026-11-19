@@ -1,0 +1,117 @@
+# "Deploy to EPS / Live" — a button in GitHub Actions that runs the SAME controlled gate the laptop uses
+# (scripts/production/deploy-via-gate.sh: approve -> dry-run -> database backup -> isolated build -> atomic swap -> pm2 reload).
+#
+# Safety:
+# - runs only when started by hand, only for the current tip of `production`, and only if "CI / verify" passed on it;
+# - the `production` environment requires the owner's approval in GitHub before any step runs;
+# - the VPS host key is pinned (secret VPS_KNOWN_HOSTS) and the SSH key (secret VPS_SSH_KEY) is a dedicated deploy key;
+# - database migrations are never applied from here (no --migrations); a release with migrations stays a laptop deploy.
+# Rollback: `dgt-deploy --rollback` on the VPS. Setup: docs/production-deployment-control.md ("GitHub" section).
+name: Deploy to EPS / Live
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Commit to deploy: the current tip of production (full or short SHA)"
+        required: true
+        type: string
+      confirm:
+        description: "Type DEPLOY to confirm"
+        required: true
+        type: string
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  checks: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: production
+    steps:
+      - name: Confirm
+        if: inputs.confirm != 'DEPLOY'
+        run: |
+          echo "::error::Type DEPLOY in the confirm box to deploy."
+          exit 1
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: The commit must be on production
+        id: commit
+        run: |
+          git fetch origin production
+          SHA="$(git rev-parse --verify "${{ inputs.sha }}^{commit}")"
+          # the gate pushes this commit to production, so it must be production's current tip (older builds: dgt-deploy --rollback)
+          [ "$SHA" = "$(git rev-parse origin/production)" ] || { echo "::error::$SHA is not the current tip of production ($(git rev-parse --short origin/production))."; exit 1; }
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          git checkout --quiet "$SHA"
+          echo "Deploying $SHA: $(git log -1 --format=%s "$SHA")"
+
+      - name: "CI / verify must have passed on this commit"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          ok="$(gh api "repos/${{ github.repository }}/commits/$SHA/check-runs?check_name=verify&per_page=20" \
+                --jq '[.check_runs[] | select(.conclusion == "success")] | length')"
+          if [ "${ok:-0}" -lt 1 ]; then
+            echo "::error::CI / verify has not passed on $SHA. Deploy only a commit whose CI is green."
+            exit 1
+          fi
+
+      - name: Deploy key and pinned host key
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          if [ -z "$VPS_SSH_KEY" ] || [ -z "$VPS_KNOWN_HOSTS" ]; then
+            echo "::error::Add the VPS_SSH_KEY and VPS_KNOWN_HOSTS secrets first (docs/production-deployment-control.md)."
+            exit 1
+          fi
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy through the gate (backup first)
+        id: gate
+        env:
+          SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          bash scripts/production/deploy-via-gate.sh "$SHA" 2>&1 | tee gate.log
+          grep -q "DEPLOYED $SHA" gate.log || { echo "::error::The gate did not report DEPLOYED $SHA (see the log above)."; exit 1; }
+
+      - name: Live health check
+        run: |
+          for i in 1 2 3 4 5 6; do
+            code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 http://72.60.209.121/auth/login || true)"
+            [ "$code" = "200" ] && { echo "Login page: 200"; exit 0; }
+            sleep 10
+          done
+          echo "::error::The live login page did not answer 200 after the deploy (last: $code)."
+          exit 1
+
+      - name: Summary
+        if: always()
+        env:
+          SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          {
+            echo "### Deploy to EPS / Live"
+            echo "- Commit: \`$SHA\`"
+            echo '```'
+            tail -12 gate.log 2>/dev/null || echo "(gate did not run)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
