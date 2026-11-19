@@ -408,20 +408,20 @@ export function OpenFullBillModal({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <div className="rounded-xl bg-slate-800/80 px-3.5 py-2 text-center border border-slate-700 min-w-[75px]">
+              <div className="grid w-full grid-cols-4 gap-2 sm:flex sm:w-auto sm:items-center">
+                <div className="rounded-xl bg-slate-800/80 px-2 py-2 sm:px-3.5 text-center border border-slate-700 min-w-0 sm:min-w-[75px]">
                   <div className="text-[11px] font-bold uppercase text-slate-400">{t("GOODS")}</div>
                   <div className="text-sm font-black text-white">{goodsEntries.length}</div>
                 </div>
-                <div className="rounded-xl bg-slate-800/80 px-3.5 py-2 text-center border border-slate-700 min-w-[75px]">
+                <div className="rounded-xl bg-slate-800/80 px-2 py-2 sm:px-3.5 text-center border border-slate-700 min-w-0 sm:min-w-[75px]">
                   <div className="text-[11px] font-bold uppercase text-slate-400">{t("SYMBOL")}</div>
                   <div className="text-sm font-black text-emerald-400">{statusBadge}</div>
                 </div>
-                <div className="rounded-xl bg-slate-800/80 px-3.5 py-2 text-center border border-slate-700 min-w-[75px]">
+                <div className="rounded-xl bg-slate-800/80 px-2 py-2 sm:px-3.5 text-center border border-slate-700 min-w-0 sm:min-w-[75px]">
                   <div className="text-[11px] font-bold uppercase text-slate-400">{t("RATE")}</div>
                   <div className="text-sm font-mono font-black text-white">{exchangeRate.toFixed(4)}</div>
                 </div>
-                <div className="rounded-xl bg-slate-800/80 px-3.5 py-2 text-center border border-slate-700 min-w-[75px]">
+                <div className="rounded-xl bg-slate-800/80 px-2 py-2 sm:px-3.5 text-center border border-slate-700 min-w-0 sm:min-w-[75px]">
                   <div className="text-[11px] font-bold uppercase text-slate-400">{t("LOCAL")}</div>
                   <div className="text-sm font-black text-white">{currency}</div>
                 </div>
@@ -540,7 +540,7 @@ export function OpenFullBillModal({
                 type="button"
                 onClick={() => setActiveTab(tab)}
                 className={cn(
-                  "px-3.5 py-2 font-bold whitespace-nowrap rounded-t-lg transition border-b-2",
+                  "shrink-0 px-3.5 py-2 font-bold whitespace-nowrap rounded-t-lg transition border-b-2",
                   activeTab === tab
                     ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 bg-white dark:bg-slate-900 shadow-sm"
                     : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
