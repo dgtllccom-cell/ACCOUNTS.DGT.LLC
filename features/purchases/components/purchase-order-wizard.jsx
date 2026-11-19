@@ -5090,7 +5090,7 @@ export function PurchaseOrderWizard({ session }) {
                                   </div>
                                   <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
                                     {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, purchaseSearch)).map((acc) => {
-                                      const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || t(lang, "purchase.card_none_label", "None");
+                                      const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || t(lang, "purchase.card_none_label", "None");
                                       return (
                                         <button
                                           key={acc.accountCode}
@@ -5195,7 +5195,7 @@ export function PurchaseOrderWizard({ session }) {
                                   </div>
                                   <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
                                     {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).map((acc) => {
-                                      const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || t(lang, "purchase.card_none_label", "None");
+                                      const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || t(lang, "purchase.card_none_label", "None");
                                       return (
                                         <button
                                           key={acc.accountCode}

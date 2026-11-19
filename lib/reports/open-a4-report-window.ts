@@ -771,10 +771,13 @@ export function openA4ReportWindow(input: {
               <td style="padding: 8px 10px; text-align: right; font-family: monospace; font-size: 11px; font-weight: 900; color: #16a34a;">
                 ${fmtM(c.totalCredit || 0)}
               </td>
-              <td colspan="${showUsdCols ? '2' : '1'}" style="padding: 8px 10px; text-align: right;">
-                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-                  <span style="font-size: 8px; text-transform: uppercase; color: #64748b;">Final:</span>
-                  <span style="font-family: monospace; font-size: 12px; font-weight: 900; color: #2563eb;">
+              ${showUsdCols ? '<td colspan="2"></td>' : ''}
+            </tr>
+            <tr>
+              <td colspan="${showUsdCols ? '7' : '5'}" style="padding: 6px 10px 10px; text-align: right;">
+                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-wrap: wrap; white-space: nowrap;">
+                  <span style="font-size: 9px; text-transform: uppercase; color: #64748b;">Final:</span>
+                  <span style="font-family: monospace; font-size: 12px; font-weight: 900; color: #2563eb; white-space: nowrap;">
                     ${escapeHtml(c.currency || "AED")} ${fmtM(c.finalBalance || 0)}
                   </span>
                   <span style="background: ${c.balanceDirection === 'DR' ? '#ffe4e6' : c.balanceDirection === 'CR' ? '#dcfce7' : '#f1f5f9'}; color: ${c.balanceDirection === 'DR' ? '#be123c' : c.balanceDirection === 'CR' ? '#15803d' : '#475569'}; font-size: 9px; font-weight: 900; padding: 1px 5px; border-radius: 4px;">

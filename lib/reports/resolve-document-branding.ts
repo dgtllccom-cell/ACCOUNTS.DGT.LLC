@@ -1,7 +1,7 @@
-"use client";
-
 /**
  * Document branding resolver (spec D).
+ * Pure logic, no React: no "use client" directive, so server routes can call it
+ * (business-edit invoice documents and master profiles run on the server).
  *
  * Every professional document (Master Profile report, Commercial Invoice,
  * Packing List, Proforma Invoice) resolves its header/footer branding from the

@@ -10,7 +10,7 @@
 
 import type { TradeDocumentInput, TradeDocType } from "@/lib/reports/trade-documents/types";
 
-export type InvoiceTemplateId = "classic" | "modern" | "professional" | "compact" | "premium";
+export type InvoiceTemplateId = "classic" | "modern" | "professional" | "compact" | "premium" | "tax_invoice";
 
 /**
  * Show/Hide controls threaded into every template's render call. A template

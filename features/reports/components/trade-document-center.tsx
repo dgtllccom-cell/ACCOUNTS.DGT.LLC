@@ -182,7 +182,8 @@ export function TradeDocumentCenter(props: TradeDocumentCenterProps) {
         setDefaultLoadFailed(Boolean(resolved.loadFailed));
         setDefaultSavedMsg(null);
         if (templateChosenRef.current) return;
-        setTemplateId(resolved.templateId);
+        // The Damaan invoice design is used for every purchase and sales document; a saved default does not change it.
+        setTemplateId("tax_invoice");
         setShowLogo(resolved.showLogo);
         setShowBankDetails(resolved.showBankDetails);
         setShowTerms(resolved.showTerms);
@@ -384,7 +385,7 @@ export function TradeDocumentCenter(props: TradeDocumentCenterProps) {
                 <button
                   key={def.id}
                   type="button"
-                  onClick={() => { markTemplateChosen(); setTemplateId(def.id); }}
+                  onClick={() => { markTemplateChosen(); setTemplateId("tax_invoice"); }}
                   title={tt(def.descKey, def.descFallback)}
                   className={`relative flex flex-col items-center gap-1 rounded-lg border p-1.5 transition ${on ? "border-blue-500 ring-2 ring-blue-200 dark:ring-blue-900" : "border-slate-200 dark:border-slate-700 hover:border-slate-300"}`}
                 >

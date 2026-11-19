@@ -50,7 +50,10 @@ export type BeneficiaryBank = {
   iban?: string | null;
   swift?: string | null;
   currency?: string | null;
+  /** beneficiary (account holder) address */
   address?: string | null;
+  /** address of the bank branch that holds the account (printed as BENEFICIARY BANK ADDRESS) */
+  bankAddress?: string | null;
 };
 
 export type TradeTransport = {

@@ -1853,15 +1853,15 @@ export function JournalBookingStockDashboard({
                   const grossWeight = r.grossWeight || r.quantity;
                   const netWeight = r.netWeight || (r.grossWeight ? Math.round(r.grossWeight * 0.984) : r.quantity);
                   const isMenuOpen = openMenuRowId === r.id;
-                  const isExpanded = Boolean(expandedRows[r.billNumber] ?? (idx === 0)); // open first row by default as in reference
+                  const isExpanded = Boolean(expandedRows[r.billNumber]);
                   const currentTab = billActiveTab[r.billNumber] || "overview";
 
-                  const loaded = Number(r.loadedQuantity) || (idx === 0 ? 14290 : idx === 1 ? 2250 : idx === 2 ? 1300 : 0);
-                  const confirmed = Number(r.receivedQuantity) || (idx === 0 ? 10000 : 0);
+                  const loaded = Number(r.loadedQuantity) || 0;
+                  const confirmed = Number(r.receivedQuantity) || 0;
                   const total = Number(r.quantity) || 1;
                   const pct = total > 0 ? Math.min(100, Math.round(((loaded + confirmed) / (total * 2)) * 100)) : 0;
-                  const isStatusConfirmed = idx === 0 || r.stage === "available" || r.stage === "ready";
-                  const isStatusLoading = idx === 1 || idx === 2 || r.stage === "transit";
+                  const isStatusConfirmed = r.stage === "available" || r.stage === "ready" || r.stage === "sold";
+                  const isStatusLoading = r.stage === "transit" || (loaded > 0 && confirmed < loaded);
 
                   return (
                     <React.Fragment key={r.id}>
@@ -2073,7 +2073,7 @@ export function JournalBookingStockDashboard({
                                   }`}
                                 >
                                   <Truck className="h-3.5 w-3.5" />
-                                  <span>Loading / Transit Entries (5)</span>
+                                  <span>Loading / Transit Entries ({r.loadingRecordId ? 1 : 0})</span>
                                 </button>
                                 <button
                                   type="button"
@@ -2085,7 +2085,7 @@ export function JournalBookingStockDashboard({
                                   }`}
                                 >
                                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                                  <span>Confirmed Entries (10)</span>
+                                  <span>Confirmed Entries ({r.stage === "available" || r.stage === "ready" || r.stage === "sold" ? 1 : 0})</span>
                                 </button>
                                 <button
                                   type="button"
