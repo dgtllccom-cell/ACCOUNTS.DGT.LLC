@@ -1,0 +1,65 @@
+# One required check for every change to main and production: typecheck, the whole test suite, the guards and the
+# production build. Branch rulesets require "CI / verify" before a pull request can merge (docs/production-deployment-control.md).
+name: CI
+
+on:
+  pull_request:
+    branches: [main, production]
+  push:
+    branches: [main, production]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+
+      - name: TypeScript
+        run: npx tsc --noEmit -p .
+        env:
+          NODE_OPTIONS: "--max-old-space-size=6144"
+
+      - name: Tests (full suite)
+        run: npx vitest run
+        env:
+          TZ: UTC
+          NODE_OPTIONS: "--max-old-space-size=6144"
+
+      - name: Five-language guard
+        run: npm run i18n:guard
+
+      - name: Five-language guard (changed files)
+        if: github.event_name == 'pull_request'
+        run: node scripts/i18n-ui-guard.mjs --changed=origin/${{ github.base_ref }}
+
+      - name: Stock Journal guard
+        run: node scripts/stock-journal-guard.mjs
+
+      - name: Production build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: "https://csesvyxqjivnkkozgopt.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "sb_publishable_22nhsWCggOvyEf-hYmAcfA_vFo7zk4w"
+          SUPABASE_SERVICE_ROLE_KEY: "dummy_key_for_ci_build"
+          DATABASE_URL: "postgresql://postgres:dummy@localhost:5432/postgres"
+          NODE_OPTIONS: "--max-old-space-size=6144"
+          NEXT_TELEMETRY_DISABLED: 1
+          CI: false
+        run: npm run build

@@ -82,3 +82,43 @@ What is in place now:
 3. `scripts/safe-build-deploy.sh` (the build primitive every path calls) refuses on the gated server unless the checked-out commit is exactly the commit the owner approved and the gate consumed (`scripts/production/require-approved-commit.sh`, sandbox test `test-require-approved.sh`). A reset-to-main-and-build now fails instead of replacing the live build.
 4. Supported deployment: `scripts/production/deploy-via-gate.sh <commit>` (push to `production`, approve, dry-run, backup, isolated build, atomic swap; `--dry-run` to rehearse).
 Pushing to `main` never deploys. Promote work with a normal merge to `main`, then deploy the same commit through the gate.
+
+## GitHub: CI, protected production, Deploy button (19 Nov 2026)
+
+### What runs
+| Workflow | When | What |
+|---|---|---|
+| `.github/workflows/ci.yml` — **CI / verify** | every PR to `main` / `production`, every push to them | `tsc`, the whole vitest suite, five-language guard (+ changed files on PRs), Stock Journal guard, production build |
+| `.github/workflows/deploy-production.yml` — **Deploy to EPS / Live** | only by hand (Actions → Deploy to EPS / Live → Run workflow) | waits for the owner's approval (`production` environment), checks the commit is the tip of `production` and that CI / verify passed on it, then runs the SAME gate `scripts/production/deploy-via-gate.sh <sha>` (backup first), checks the live login page answers 200, and writes the gate log to the run summary |
+
+The Deploy button never applies database migrations (`--migrations` is not passed); a release with migrations stays a laptop gate deploy.
+Rollback is unchanged: `dgt-deploy --rollback` on the VPS.
+
+### Owner one-time setup (repository settings — an agent cannot do these)
+1. **Protect `production`** — Settings → Rules → Rulesets → New ruleset → New branch ruleset
+   - Name `production`, Enforcement **Active**, Target branches → Add target → Include by pattern → `production`
+   - Tick **Require a pull request before merging**, **Require status checks to pass** → Add check → `verify`,
+     **Block force pushes**, **Restrict deletions**
+   - Bypass list: add yourself (Repository admin) only → Create.
+   (Optional: the same ruleset for `main`.)
+2. **Approval before a deploy** — Settings → Environments → New environment `production` → tick **Required reviewers** → add yourself → Save.
+3. **Deploy key** — on the laptop: `ssh-keygen -t ed25519 -f ~/.ssh/dgt_github_deploy -N "" -C github-actions-deploy`, then add the
+   public key to the VPS: `ssh root@72.60.209.121 "cat >> /root/.ssh/authorized_keys" < ~/.ssh/dgt_github_deploy.pub`.
+   Use a NEW key — never the laptop's own key.
+4. **Secrets** — Settings → Secrets and variables → Actions → New repository secret (or environment secret under `production`):
+   - `VPS_SSH_KEY` = the whole content of `~/.ssh/dgt_github_deploy` (private key);
+   - `VPS_KNOWN_HOSTS` = the line(s) for 72.60.209.121 from the laptop's `~/.ssh/known_hosts` (already trusted), or
+     `ssh-keyscan 72.60.209.121` checked against them.
+
+### Deploying from GitHub
+Actions → **Deploy to EPS / Live** → Run workflow → `sha` = the current tip of `production`, `confirm` = `DEPLOY` → approve the
+`production` environment when GitHub asks → the run summary shows `DEPLOYED <sha>`, `live HEAD` and PM2 status.
+Sessions and agents must not push to `production` directly; changes reach it through a pull request with CI / verify green.
+
+### Branches (clean-up 19 Nov 2026)
+- `main` and `production` hold the same code. Work reaches them only through pull requests with CI / verify green.
+- `archive/branches-20261119` keeps every commit of the 48 old branches that were never merged (its files equal `main`; nothing
+  from them entered `main`). Its last commit message lists each branch with its tip SHA. Restore one with
+  `git fetch origin archive/branches-20261119 && git branch <name> <sha> && git push origin <name>`.
+- `scripts/github/cleanup-branches-20261119.sh` (run once from the laptop) deletes every other branch, and only one whose commits
+  are all inside `main` or the archive.

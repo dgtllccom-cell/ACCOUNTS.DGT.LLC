@@ -173,6 +173,19 @@ function formatKycStatusLabel(lang: SupportedLanguage, status: KycItem["status"]
   return status === "near_expiry" ? `${kycT(lang, "nearExpiryStatus")} — ${daysText}` : `${kycT(lang, "incompleteStatus")} — ${daysText}`;
 }
 
+function formatMissingRequirement(lang: SupportedLanguage, requirement: string) {
+  if (requirement === "qvc.pending") {
+    return `${t(lang, "qvc.title", "QVC Review Queue")}: ${t(lang, "qvc.pending", "Pending")}`;
+  }
+  if (requirement === "qvc.needs_review") {
+    return `${t(lang, "qvc.title", "QVC Review Queue")}: ${t(lang, "qvc.needs_review", "Needs Review")}`;
+  }
+  if (requirement === "qvc.error") {
+    return `${t(lang, "qvc.title", "QVC Review Queue")}: ${t(lang, "qvc.error", "Error")}`;
+  }
+  return requirement;
+}
+
 export default function KycReportsPage() {
   const router = useRouter();
   const [activeLang, setActiveLang] = useState<SupportedLanguage>("en");
@@ -1082,7 +1095,7 @@ export default function KycReportsPage() {
                         <div className="flex flex-wrap gap-1">
                           {item.missingRequirements.map((req, idx) => (
                             <span key={idx} className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 whitespace-nowrap">
-                              ⚠ {req}
+                              ⚠ {formatMissingRequirement(activeLang, req)}
                             </span>
                           ))}
                         </div>
@@ -1144,12 +1157,22 @@ export default function KycReportsPage() {
                           </Button>
                         </Link>
                       )}
-                      <Button
-                        onClick={() => handleOpenKycModal(item)}
-                        className="bg-rose-600 hover:bg-rose-700 text-white font-bold h-8 px-3 rounded-lg text-xs shadow-xs"
-                      >
-                        <Upload className="h-3.5 w-3.5 mr-1" /> {tUI("completeNow")}
-                      </Button>
+                      {item.type === "new_account" ? (
+                        sessionCtx?.isSuperAdmin ? (
+                          <Link href={`/dashboard/qvc?status=${encodeURIComponent(String(item.rawDetails.qvc_status ?? "qvc_pending"))}&q=${encodeURIComponent(item.code ?? item.name)}` as any}>
+                            <Button className="bg-rose-600 hover:bg-rose-700 text-white font-bold h-8 px-3 rounded-lg text-xs shadow-xs">
+                              <Upload className="h-3.5 w-3.5 mr-1" /> {t(activeLang, "qvc.title", "QVC Review Queue")}
+                            </Button>
+                          </Link>
+                        ) : null
+                      ) : (
+                        <Button
+                          onClick={() => handleOpenKycModal(item)}
+                          className="bg-rose-600 hover:bg-rose-700 text-white font-bold h-8 px-3 rounded-lg text-xs shadow-xs"
+                        >
+                          <Upload className="h-3.5 w-3.5 mr-1" /> {tUI("completeNow")}
+                        </Button>
+                      )}
                       </div>
                     </td>
                   </tr>
@@ -1283,3 +1306,4 @@ export default function KycReportsPage() {
     </div>
   );
 }
+

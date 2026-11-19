@@ -33,6 +33,10 @@ import {
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { cn } from "@/lib/utils";
+import { printDomFragmentViaModal } from "@/lib/reports/print-dom-fragment";
+import { localPurchasePaymentState } from "@/lib/purchases/local-purchase-payment-state";
+
+const PRINT_ROOT_ID = "lp-global-register-print";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { OpenFullBillModal } from "@/components/invoices/open-full-bill-modal";
 
@@ -65,6 +69,11 @@ export function LocalPurchaseGlobalRegisterView({
   const lang = activeLang || "en";
   const tr = useCallback((key: string) => translateHeader(lang, key), [lang]);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+  // Print / Export PDF: the register as its own A4 document (landscape for the wide bill table), never the phone screen
+  // itself — on a phone window.print() printed the narrow mobile layout and cut the table columns off.
+  const printRegister = useCallback(() => {
+    if (!printDomFragmentViaModal(PRINT_ROOT_ID, tr("LOCAL PURCHASE (GLOBAL & BRANCH WISE)"), { lang })) window.print();
+  }, [lang, tr]);
   const router = useRouter();
 
   // Modals & Drawers
@@ -325,15 +334,7 @@ export function LocalPurchaseGlobalRegisterView({
         if (sup !== filterSupplier.toLowerCase()) return false;
       }
       if (filterStatus !== "all") {
-        const pCost = Number(r.final_cost || r.purchase_cost || 0);
-        const pPaid = Number(r.posted_paid_amount || r.paid_amount || r.advance_amount || 0);
-        const stRaw = String(r.status || "").toLowerCase();
-        let computedStatus = "Pending";
-        if (stRaw === "posted" || stRaw === "completed" || stRaw === "accepted" || (pCost > 0 && pPaid >= pCost - 0.05)) {
-          computedStatus = "Paid";
-        } else if (pPaid > 0.05) {
-          computedStatus = "Partial";
-        }
+        const computedStatus = localPurchasePaymentState(r);
         if (computedStatus.toLowerCase() !== filterStatus.toLowerCase()) return false;
       }
 
@@ -398,17 +399,10 @@ export function LocalPurchaseGlobalRegisterView({
     const total = filteredRows.length;
 
     filteredRows.forEach((r) => {
-      const cost = Number(r.final_cost || r.purchase_cost || 0);
-      const paidAmt = Number(r.posted_paid_amount || r.paid_amount || r.advance_amount || 0);
-      const st = String(r.status || "").toLowerCase();
-
-      if (st === "posted" || st === "completed" || st === "accepted" || (cost > 0 && paidAmt >= cost - 0.05)) {
-        paid++;
-      } else if (paidAmt > 0.05) {
-        partial++;
-      } else {
-        pending++;
-      }
+      const state = localPurchasePaymentState(r);
+      if (state === "Paid") paid++;
+      else if (state === "Partial") partial++;
+      else pending++;
     });
 
     return {
@@ -454,18 +448,15 @@ export function LocalPurchaseGlobalRegisterView({
 
   // Status Badge Component
   const renderStatusBadge = (r: any) => {
-    const cost = Number(r.final_cost || r.purchase_cost || 0);
-    const paidAmt = Number(r.posted_paid_amount || r.paid_amount || r.advance_amount || 0);
-    const st = String(r.status || "").toLowerCase();
-
-    if (st === "posted" || st === "completed" || st === "accepted" || (cost > 0 && paidAmt >= cost - 0.05)) {
+    const state = localPurchasePaymentState(r);
+    if (state === "Paid") {
       return (
         <span className="inline-block px-3 py-1 rounded-md text-[11px] font-bold bg-[#dcfce7] text-[#15803d]">
           {tr("Paid")}
         </span>
       );
     }
-    if (paidAmt > 0.05) {
+    if (state === "Partial") {
       return (
         <span className="inline-block px-3 py-1 rounded-md text-[11px] font-bold bg-[#fef3c7] text-[#b45309]">
           {tr("Partial")}
@@ -561,6 +552,8 @@ export function LocalPurchaseGlobalRegisterView({
 
   return (
     <div
+      id={PRINT_ROOT_ID}
+      data-lp-register-print
       dir={isRtl ? "rtl" : "ltr"}
       className={cn(
         "w-full space-y-3.5 p-2 sm:p-4 text-slate-900 dark:text-slate-100",
@@ -582,7 +575,7 @@ export function LocalPurchaseGlobalRegisterView({
           </span>
         </div>
 
-        <nav aria-label="breadcrumb" className="text-xs font-semibold text-slate-500">
+        <nav aria-label="breadcrumb" className="no-print text-xs font-semibold text-slate-500">
           <span className="hover:text-slate-700">{tr("Dashboard")}</span>
           <span className="mx-1.5 text-slate-400">/</span>
           <span className="hover:text-slate-700">{tr("Purchase")}</span>
@@ -592,7 +585,7 @@ export function LocalPurchaseGlobalRegisterView({
       </div>
 
       {/* ── 2. Top Action Toolbar ── */}
-      <div className="relative flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/90 bg-white p-2 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+      <div data-print-exclude className="no-print relative flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/90 bg-white p-2 shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center gap-2">
           {/* Reports Dropdown Button */}
           <div className="relative" ref={reportsRef}>
@@ -704,7 +697,7 @@ export function LocalPurchaseGlobalRegisterView({
                 <button
                   type="button"
                   onClick={() => {
-                    window.print();
+                    printRegister();
                     setActionsOpen(false);
                   }}
                   className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
@@ -727,7 +720,7 @@ export function LocalPurchaseGlobalRegisterView({
                 <button
                   type="button"
                   onClick={() => {
-                    window.print();
+                    printRegister();
                     setActionsOpen(false);
                   }}
                   className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
@@ -900,7 +893,7 @@ export function LocalPurchaseGlobalRegisterView({
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-xs mt-1 border-collapse whitespace-nowrap">
+              <table className="w-full text-xs mt-1 border-collapse whitespace-nowrap print:whitespace-normal">
                 <thead>
                   <tr className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 border-b border-slate-150 dark:border-slate-800">
                     <th className="py-1 text-center w-6">#</th>
@@ -947,7 +940,7 @@ export function LocalPurchaseGlobalRegisterView({
       </div>
 
       {/* ── 4. Navigation Tab Strip ── */}
-      <div className="flex flex-wrap items-center gap-2 pt-1">
+      <div data-print-exclude className="no-print flex flex-wrap items-center gap-2 pt-1">
         <button
           type="button"
           className="inline-flex items-center gap-2 rounded-lg bg-[#2563eb] text-white px-4 py-2 text-xs font-black shadow-xs cursor-pointer"
@@ -1035,7 +1028,7 @@ export function LocalPurchaseGlobalRegisterView({
                   <button
                     type="button"
                     onClick={() => {
-                      window.print();
+                      printRegister();
                       setExportOpen(false);
                     }}
                     className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -1071,7 +1064,7 @@ export function LocalPurchaseGlobalRegisterView({
         </div>
 
         {/* Filter Inputs Row */}
-        <div className="bg-white dark:bg-slate-900 p-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-2.5 text-xs">
+        <div data-print-exclude className="no-print bg-white dark:bg-slate-900 p-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-2.5 text-xs">
           {/* Branch Select */}
           <div className="w-36">
             <select
@@ -1170,7 +1163,7 @@ export function LocalPurchaseGlobalRegisterView({
       {/* ── 6. Main 15-Column Table with Amber Header ── */}
       <div className="rounded-xl border border-slate-200 shadow-xs overflow-hidden dark:border-slate-800 bg-white dark:bg-slate-900">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left border-collapse whitespace-nowrap">
+          <table data-lp-bill-table className="w-full text-xs text-start border-collapse whitespace-nowrap print:whitespace-normal">
             {/* Approved Light Amber Header (#ffd257) with dark bold text */}
             <thead className="bg-[#ffd257] text-slate-900 border-b border-amber-300 text-[11px] font-black uppercase tracking-tight">
               <tr>
@@ -1256,6 +1249,7 @@ export function LocalPurchaseGlobalRegisterView({
                       <td className="py-2 px-3 text-start">
                         <button
                           type="button"
+                          data-print-text
                           onClick={() => {
                             setFullBillRow(r);
                             setSelectedRow(r);

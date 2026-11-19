@@ -1113,3 +1113,21 @@ button, a {
   /* the table's horizontal-scroll wrappers must not clip the cards */
   main[data-erp-content][data-view-mode="grid"] :has(> table[data-card-ready]) { overflow: visible !important; max-width: 100%; }
 }
+
+/* Local Purchase register printed straight from the browser (Share → Print on a phone): use the whole sheet, show every
+   table column (wrap instead of sideways-scroll clipping), drop screen-only controls. The in-app Print button gives the
+   full A4 landscape document (printDomFragmentViaModal). */
+@media print {
+  [data-lp-register-print] { width: 100% !important; max-width: none !important; padding: 0 !important; }
+  [data-lp-register-print] .overflow-x-auto,
+  [data-lp-register-print] .overflow-hidden { overflow: visible !important; max-height: none !important; }
+  [data-lp-register-print] table { width: 100% !important; min-width: 0 !important; table-layout: auto; font-size: 8.5px !important; }
+  [data-lp-register-print] th, [data-lp-register-print] td { white-space: normal !important; padding: 2px 3px !important; }
+  [data-lp-register-print] .truncate { overflow: visible !important; white-space: normal !important; text-overflow: clip !important; max-width: none !important; }
+  [data-lp-register-print] input, [data-lp-register-print] select { display: none !important; }
+  [data-lp-register-print] tr { break-inside: avoid; }
+}
+/* A phone prints at its own narrow width: scale the 16-column bill list down to the sheet instead of cutting columns. */
+@media print and (max-width: 700px) {
+  [data-lp-register-print] [data-lp-bill-table] { zoom: 0.4; }
+}

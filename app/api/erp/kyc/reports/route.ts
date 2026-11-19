@@ -7,6 +7,7 @@ import { recordInSessionScope } from "@/lib/api/scope-middleware";
 import type { ErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { getAccountMissingRequirements } from "@/lib/kyc/account-completeness";
 
 type KycEntityType = "country_branch" | "city_branch" | "user_account" | "new_account";
 
@@ -119,6 +120,9 @@ function compactAccountRawDetails(row: any) {
   return {
     name: row.name ?? null,
     code: row.code ?? null,
+    currency: row.currency ?? null,
+    qvc_status: row.qvc_status ?? null,
+    qvc_notes: row.qvc_notes ?? null,
     company_id: row.company_id ?? null,
     bank_id: row.bank_id ?? null,
     customer_id: row.customer_id ?? null
@@ -207,7 +211,7 @@ export async function GET(request: Request) {
       const enterpriseAccounts = await timedQuery(
         "enterpriseAccounts",
         sql`
-          select id, code, name, country_id, country_branch_id, city_branch_id, company_id, bank_id, customer_id, created_at
+          select id, code, name, currency, qvc_status, qvc_notes, country_id, country_branch_id, city_branch_id, company_id, bank_id, customer_id, created_at
           from public.enterprise_accounts
           where deleted_at is null
           order by created_at desc
@@ -263,7 +267,7 @@ export async function GET(request: Request) {
           supabase.from("city_branches").select("id, country_id, country_branch_id, name, code, address, phone, email, owner_name, owner_customer_id, owner_profile_id, contacts, documents, created_at").is("deleted_at", null),
           supabase.from("profiles").select("id, full_name, preferred_language_code, created_at").order("created_at", { ascending: false }).limit(50),
           supabase.from("user_role_assignments").select("user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at").is("deleted_at", null),
-          supabase.from("enterprise_accounts").select("id, code, name, country_id, country_branch_id, city_branch_id, company_id, bank_id, customer_id, created_at").is("deleted_at", null).order("created_at", { ascending: false }).limit(100),
+          supabase.from("enterprise_accounts").select("id, code, name, currency, qvc_status, qvc_notes, country_id, country_branch_id, city_branch_id, company_id, bank_id, customer_id, created_at").is("deleted_at", null).order("created_at", { ascending: false }).limit(100),
           supabase.from("companies").select("id, name, legal_name, company_code, address, country_id, city_id, owner_name, contacts, created_at").is("deleted_at", null).limit(50),
           supabase.from("customers").select("id, customer_name, company_name, contact_person, mobile, whatsapp, email, address, country_id, created_at").is("deleted_at", null).limit(50)
         ]);
@@ -392,8 +396,7 @@ export async function GET(request: Request) {
     // 4. Process Commercial / New Enterprise Accounts (including newly created ones)
     (enterpriseAccountsRes.data ?? []).forEach((acc: any) => {
       if (!rowMatchesScope(session, acc)) return;
-      const missing: string[] = [];
-      if (!acc.name) missing.push("Missing Account Title");
+      const missing = getAccountMissingRequirements(acc);
       // Only flag NTN/tax registration if the column exists and is empty
       if (acc.hasOwnProperty("ntn_number") && !acc.ntn_number) {
         missing.push("Missing Commercial Tax / NTN Registration");
@@ -547,3 +550,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
