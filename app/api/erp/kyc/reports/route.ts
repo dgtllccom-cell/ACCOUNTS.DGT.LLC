@@ -8,8 +8,9 @@ import type { ErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import { getAccountMissingRequirements } from "@/lib/kyc/account-completeness";
+import { getCompanyMissingRequirements, getCustomerMissingRequirements } from "@/lib/kyc/master-data-completeness";
 
-type KycEntityType = "country_branch" | "city_branch" | "user_account" | "new_account";
+type KycEntityType = "country_branch" | "city_branch" | "user_account" | "new_account" | "company" | "customer";
 
 export type KycReportItem = {
   id: string;
@@ -129,6 +130,28 @@ function compactAccountRawDetails(row: any) {
   };
 }
 
+function compactCompanyRawDetails(row: any) {
+  return {
+    name: row.name ?? null,
+    legal_name: row.legal_name ?? null,
+    base_currency: row.base_currency ?? null,
+    owner_name: row.owner_name ?? null,
+    address: row.address ?? null,
+    contacts: Array.isArray(row.contacts) ? row.contacts : []
+  };
+}
+
+function compactCustomerRawDetails(row: any) {
+  return {
+    customer_name: row.customer_name ?? null,
+    company_name: row.company_name ?? null,
+    contact_person: row.contact_person ?? null,
+    phone: row.mobile ?? row.whatsapp ?? null,
+    email: row.email ?? null,
+    address: row.address ?? null
+  };
+}
+
 export async function GET(request: Request) {
   try {
     const session = await requireErpSession();
@@ -221,7 +244,7 @@ export async function GET(request: Request) {
       const companies = await timedQuery(
         "companies",
         sql`
-          select id, name, legal_name, company_code, address, country_id, city_id, owner_name, contacts, created_at
+          select id, name, legal_name, company_code, base_currency, business_type, address, country_id, city_id, owner_name, contacts, created_at
           from public.companies
           where deleted_at is null
           order by created_at desc
@@ -268,7 +291,7 @@ export async function GET(request: Request) {
           supabase.from("profiles").select("id, full_name, preferred_language_code, created_at").order("created_at", { ascending: false }).limit(50),
           supabase.from("user_role_assignments").select("user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at").is("deleted_at", null),
           supabase.from("enterprise_accounts").select("id, code, name, currency, qvc_status, qvc_notes, country_id, country_branch_id, city_branch_id, company_id, bank_id, customer_id, created_at").is("deleted_at", null).order("created_at", { ascending: false }).limit(100),
-          supabase.from("companies").select("id, name, legal_name, company_code, address, country_id, city_id, owner_name, contacts, created_at").is("deleted_at", null).limit(50),
+          supabase.from("companies").select("id, name, legal_name, company_code, base_currency, business_type, address, country_id, city_id, owner_name, contacts, created_at").is("deleted_at", null).limit(50),
           supabase.from("customers").select("id, customer_name, company_name, contact_person, mobile, whatsapp, email, address, country_id, created_at").is("deleted_at", null).limit(50)
         ]);
 
@@ -426,6 +449,65 @@ export async function GET(request: Request) {
         documentsCount: 0,
         editUrl: `/dashboard/accounts/setup?id=${acc.id}`,
         rawDetails: compactAccountRawDetails(acc)
+      });
+    });
+
+    // 5. Process Company masters. Creation rules stay untouched; this report
+    // only exposes incomplete live records and deep-links to the existing form.
+    (companiesRes.data ?? []).forEach((company: any) => {
+      if (!rowMatchesScope(session, { country_id: company.country_id })) return;
+      const missing = getCompanyMissingRequirements(company);
+      const countryName = countriesMap.get(company.country_id) || "Global";
+      const grace = calculateGraceStatus(company.created_at, missing);
+
+      items.push({
+        id: company.id,
+        name: company.legal_name || company.name || "Company",
+        code: company.company_code || "COMPANY",
+        type: "company",
+        typeLabel: "Company Master",
+        countryName,
+        status: grace.status,
+        statusBadge: grace.statusBadge,
+        missingRequirements: missing,
+        createdAt: company.created_at || new Date().toISOString(),
+        graceTotalDays: 15,
+        daysRemaining: grace.daysRemaining,
+        progressPercent: grace.progressPercent,
+        ownerName: company.owner_name,
+        documentsCount: 0,
+        editUrl: `/dashboard/settings/company?companyId=${company.id}`,
+        rawDetails: compactCompanyRawDetails(company)
+      });
+    });
+
+    // 6. Process Customer masters in the same scope-safe completion queue.
+    (customersRes.data ?? []).forEach((customer: any) => {
+      if (!rowMatchesScope(session, { country_id: customer.country_id })) return;
+      const missing = getCustomerMissingRequirements(customer);
+      const countryName = countriesMap.get(customer.country_id) || "Global";
+      const grace = calculateGraceStatus(customer.created_at, missing);
+
+      items.push({
+        id: customer.id,
+        name: customer.customer_name || customer.company_name || "Customer",
+        code: `CUS-${String(customer.id).substring(0, 6).toUpperCase()}`,
+        type: "customer",
+        typeLabel: "Customer Master",
+        countryName,
+        email: customer.email,
+        phone: customer.mobile || customer.whatsapp,
+        status: grace.status,
+        statusBadge: grace.statusBadge,
+        missingRequirements: missing,
+        createdAt: customer.created_at || new Date().toISOString(),
+        graceTotalDays: 15,
+        daysRemaining: grace.daysRemaining,
+        progressPercent: grace.progressPercent,
+        ownerName: customer.contact_person,
+        documentsCount: 0,
+        editUrl: `/dashboard/settings/customers/setup?customerId=${customer.id}`,
+        rawDetails: compactCustomerRawDetails(customer)
       });
     });
 
