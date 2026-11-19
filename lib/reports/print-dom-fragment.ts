@@ -27,6 +27,14 @@ export function printDomFragmentViaModal(
 
   const clone = el.cloneNode(true) as HTMLElement;
 
+  // ── 0) A button that carries document data (a bill no. you click to open the bill) prints as its text ──────
+  clone.querySelectorAll<HTMLElement>("[data-print-text]").forEach((b) => {
+    const span = document.createElement("span");
+    span.textContent = b.textContent || "";
+    span.className = "font-bold";
+    b.replaceWith(span);
+  });
+
   // ── 1) Remove application chrome + interactive controls ────────────────────
   const STRIP = [
     // app chrome
@@ -161,7 +169,8 @@ ${styleLinks}
   #__frag table { width: 100%; border-collapse: collapse; table-layout: auto; }
   #__frag th, #__frag td { border: 1px solid #d1d5db !important; padding: 3px 5px !important; text-align: ${isRtl ? "right" : "left"}; font-size: ${widestTableCols >= 9 ? "9px" : "10px"}; }
   /* headers keep whole words — never fragment "COUNTRY" into "COU / NTR / Y" */
-  #__frag th { white-space: nowrap; overflow-wrap: normal; word-break: keep-all; }
+  #__frag th { white-space: ${widestTableCols >= 12 ? "normal" : "nowrap"}; overflow-wrap: normal; word-break: keep-all; }
+  /* (12+ columns cannot fit A4 landscape on one heading line each: they wrap BETWEEN words, never inside one) */
   /* cells wrap only at natural break points, and only break long unbroken tokens */
   #__frag td { overflow-wrap: break-word; word-break: normal; }
   #__frag thead th { background: #f1f5f9 !important; font-weight: 700; }
@@ -178,6 +187,8 @@ ${styleLinks}
   #__frag h2 { font-size: 15px !important; line-height: 1.3 !important; }
   #__frag h1, #__frag h2, #__frag h3 { text-wrap: balance; overflow-wrap: break-word; }
   #__frag button, #__frag input, #__frag select, #__frag textarea { display: none !important; }
+  /* a printed document shows whole values: no on-screen ellipsis ("United Arab Emira…") */
+  #__frag .truncate { overflow: visible !important; white-space: normal !important; text-overflow: clip !important; max-width: none !important; }
   /* Multi-page document pagination: allow voucher root and large document containers to paginate cleanly */
   #__frag, #__frag > div, #sales-booking-voucher-root, [data-printable-document] {
     page-break-inside: auto !important;
