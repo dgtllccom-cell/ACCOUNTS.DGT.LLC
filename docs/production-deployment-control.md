@@ -114,3 +114,11 @@ Rollback is unchanged: `dgt-deploy --rollback` on the VPS.
 Actions → **Deploy to EPS / Live** → Run workflow → `sha` = the current tip of `production`, `confirm` = `DEPLOY` → approve the
 `production` environment when GitHub asks → the run summary shows `DEPLOYED <sha>`, `live HEAD` and PM2 status.
 Sessions and agents must not push to `production` directly; changes reach it through a pull request with CI / verify green.
+
+### Branches (clean-up 19 Nov 2026)
+- `main` and `production` hold the same code. Work reaches them only through pull requests with CI / verify green.
+- `archive/branches-20261119` keeps every commit of the 48 old branches that were never merged (its files equal `main`; nothing
+  from them entered `main`). Its last commit message lists each branch with its tip SHA. Restore one with
+  `git fetch origin archive/branches-20261119 && git branch <name> <sha> && git push origin <name>`.
+- `scripts/github/cleanup-branches-20261119.sh` (run once from the laptop) deletes every other branch, and only one whose commits
+  are all inside `main` or the archive.
