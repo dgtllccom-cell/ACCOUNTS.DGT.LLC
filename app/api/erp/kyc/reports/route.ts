@@ -227,7 +227,6 @@ export async function GET(request: Request) {
               from public.profiles
               where id = any(${scopedUserIds}::uuid[])
               order by created_at desc
-              limit 500
             `
           )
         : [];
@@ -238,7 +237,6 @@ export async function GET(request: Request) {
           from public.enterprise_accounts
           where deleted_at is null
           order by created_at desc
-          limit 100
         `
       );
       const companies = await timedQuery(
@@ -248,7 +246,6 @@ export async function GET(request: Request) {
           from public.companies
           where deleted_at is null
           order by created_at desc
-          limit 50
         `
       );
       const customers = await timedQuery(
@@ -258,7 +255,6 @@ export async function GET(request: Request) {
           from public.customers
           where deleted_at is null
           order by created_at desc
-          limit 50
         `
       );
       return { countries, countryBranches, cityBranches, users, assignments, enterpriseAccounts, companies, customers };
@@ -288,11 +284,11 @@ export async function GET(request: Request) {
           supabase.from("countries").select("id, name, iso2, currency_code, official_email, admin_email, created_at").is("deleted_at", null),
           supabase.from("country_branches").select("id, country_id, name, code, is_main, address, phone, email, whatsapp_number, owner_name, owner_customer_id, owner_profile_id, documents, contacts, created_at").is("deleted_at", null),
           supabase.from("city_branches").select("id, country_id, country_branch_id, name, code, address, phone, email, owner_name, owner_customer_id, owner_profile_id, contacts, documents, created_at").is("deleted_at", null),
-          supabase.from("profiles").select("id, full_name, preferred_language_code, created_at").order("created_at", { ascending: false }).limit(50),
+          supabase.from("profiles").select("id, full_name, preferred_language_code, created_at").order("created_at", { ascending: false }),
           supabase.from("user_role_assignments").select("user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at").is("deleted_at", null),
-          supabase.from("enterprise_accounts").select("id, code, name, currency, qvc_status, qvc_notes, country_id, country_branch_id, city_branch_id, company_id, bank_id, customer_id, created_at").is("deleted_at", null).order("created_at", { ascending: false }).limit(100),
-          supabase.from("companies").select("id, name, legal_name, company_code, base_currency, business_type, address, country_id, city_id, owner_name, contacts, created_at").is("deleted_at", null).limit(50),
-          supabase.from("customers").select("id, customer_name, company_name, contact_person, mobile, whatsapp, email, address, country_id, created_at").is("deleted_at", null).limit(50)
+          supabase.from("enterprise_accounts").select("id, code, name, currency, qvc_status, qvc_notes, country_id, country_branch_id, city_branch_id, company_id, bank_id, customer_id, created_at").is("deleted_at", null).order("created_at", { ascending: false }),
+          supabase.from("companies").select("id, name, legal_name, company_code, base_currency, business_type, address, country_id, city_id, owner_name, contacts, created_at").is("deleted_at", null),
+          supabase.from("customers").select("id, customer_name, company_name, contact_person, mobile, whatsapp, email, address, country_id, created_at").is("deleted_at", null)
         ]);
 
     const countriesMap = new Map<string, string>();
