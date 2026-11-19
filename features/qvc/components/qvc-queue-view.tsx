@@ -33,7 +33,7 @@ function LangChip({ lang, status }: { lang: string; status: string }) {
   );
 }
 
-export function QvcQueueView() {
+export function QvcQueueView({ initialQuery = "", initialFilter = "qvc_pending" }: { initialQuery?: string; initialFilter?: string }) {
   const lang = useActiveLanguage();
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
@@ -41,8 +41,8 @@ export function QvcQueueView() {
   const [rows, setRows] = useState<QvcRow[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("qvc_pending");
-  const [q, setQ] = useState("");
+  const [filter, setFilter] = useState(initialFilter);
+  const [q, setQ] = useState(initialQuery);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -168,3 +168,4 @@ export function QvcQueueView() {
     </div>
   );
 }
+
