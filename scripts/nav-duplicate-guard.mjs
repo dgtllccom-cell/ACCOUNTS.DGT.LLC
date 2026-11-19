@@ -21,7 +21,9 @@ const src = fs.readFileSync(FILE, "utf8");
 
 // Legit same-destination pairs (label → why). Keep this list SHORT.
 const ALLOW_DUP_HREF = new Set([
-  // (currently none — every function has exactly one menu home)
+  // Other Expenses Bill: the owner wants it under Daily Payment Entry. It also stays under Shipping & Clearing > Expenses Bill,
+  // which remains in the menu and is still route-gated per user (the Shipping Line Daily Payment filter hides expense rows by design).
+  "/dashboard/clearing-agent/other-expenses",
 ]);
 
 const fail = [];
