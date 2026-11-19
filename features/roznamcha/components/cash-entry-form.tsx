@@ -971,6 +971,18 @@ export function CashEntryForm({
   const [ledgerRefreshCount, setLedgerRefreshCount] = useState(0);
   const [showPaymentWorkReport, setShowPaymentWorkReport] = useState(false);
   const [showNewRoznamchaEntryCard, setShowNewRoznamchaEntryCard] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  const entryTypeDropdownRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    setMounted(true);
+    const handleOutside = (e: MouseEvent) => {
+      if (entryTypeDropdownRef.current && !entryTypeDropdownRef.current.contains(e.target as Node)) {
+        setEntryTypeDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, []);
   const [registerType, setRegisterType] = useState("Cash Register");
   const [registerNumber, setRegisterNumber] = useState("000134");
   const [entryTypeSelection, setEntryTypeSelection] = useState("Cash");
@@ -3911,9 +3923,9 @@ export function CashEntryForm({
           NEW ROZNAMCHA ENTRY MODAL (MATCHING EXACT REFERENCE IMAGE)
           Centered modal dialog with backdrop blur, max-w-5xl, and tight layout
       ============================================================ */}
-      {showNewRoznamchaEntryCard && (
+      {mounted && showNewRoznamchaEntryCard && createPortal(
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-3 sm:p-5 md:p-6 overflow-y-auto animate-in fade-in duration-200"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-3 sm:p-5 md:p-6 overflow-y-auto animate-in fade-in duration-200"
           onClick={() => {
             setShowNewRoznamchaEntryCard(false);
             setEditEntryId(null);
@@ -3921,7 +3933,7 @@ export function CashEntryForm({
         >
           <div 
             id="new-roznamcha-entry-card" 
-            className="relative w-full max-w-5xl max-h-[94vh] overflow-y-auto rounded-2xl border border-slate-200/90 bg-white p-3 sm:p-4 shadow-2xl dark:border-slate-800 dark:bg-slate-900 transition-all my-auto"
+            className="relative w-full max-w-5xl max-h-[94vh] overflow-y-auto rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-2xl dark:border-slate-800 dark:bg-slate-900 transition-all my-auto"
             onClick={(e) => e.stopPropagation()}
           >
           {/* ── CARD HEADER ── */}
@@ -4128,16 +4140,127 @@ export function CashEntryForm({
                     <label className="mb-0.5 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                       {tr("cef.entry_type", "Entry Type")} <span className="text-rose-500">*</span>
                     </label>
-                    <div className="relative">
-                      {paymentType === "cash" ? (
-                        <Banknote className="pointer-events-none absolute left-2 top-2 h-3.5 w-3.5 text-emerald-600" />
-                      ) : paymentType === "bank" ? (
-                        <CreditCard className="pointer-events-none absolute left-2 top-2 h-3.5 w-3.5 text-emerald-600" />
-                      ) : paymentType === "transfer" ? (
-                        <ArrowLeftRight className="pointer-events-none absolute left-2 top-2 h-3.5 w-3.5 text-blue-600" />
-                      ) : (
-                        <FileText className="pointer-events-none absolute left-2 top-2 h-3.5 w-3.5 text-blue-600" />
+                    <div className="relative" ref={entryTypeDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => setEntryTypeDropdownOpen((v) => !v)}
+                        className="flex h-8 w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                      >
+                        <div className="flex items-center gap-1.5 truncate">
+                          {paymentType === "cash" && <Banknote className="h-3.5 w-3.5 text-emerald-600 shrink-0" />}
+                          {paymentType === "bank" && <CreditCard className="h-3.5 w-3.5 text-emerald-600 shrink-0" />}
+                          {(paymentType === "business" || paymentType === "invoice") && <FileText className="h-3.5 w-3.5 text-blue-600 shrink-0" />}
+                          {paymentType === "transfer" && <ArrowLeftRight className="h-3.5 w-3.5 text-blue-600 shrink-0" />}
+                          <span className="truncate">
+                            {paymentType === "cash" ? tr("cef.opt_cash", "Cash")
+                              : paymentType === "bank" ? tr("cef.opt_cheque", "Cheque")
+                              : paymentType === "transfer" ? tr("cef.opt_transfer", "Transfer")
+                              : tr("cef.opt_invoice", "Invoice")}
+                          </span>
+                        </div>
+                        <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                      </button>
+
+                      {entryTypeDropdownOpen && (
+                        <div className="absolute left-0 right-0 top-full z-50 mt-1 min-w-[150px] rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900 animate-in fade-in duration-100">
+                          {/* Cash */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPaymentType("cash");
+                              setRoznamchaBookType("branch_payment_voucher");
+                              setEntryTypeDropdownOpen(false);
+                            }}
+                            className={cn(
+                              "flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold transition-colors",
+                              paymentType === "cash"
+                                ? "bg-blue-600 text-white"
+                                : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={cn("grid h-5 w-5 place-items-center rounded-md", paymentType === "cash" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400")}>
+                                <Banknote className="h-3.5 w-3.5" />
+                              </span>
+                              <span>{tr("cef.opt_cash", "Cash")}</span>
+                            </div>
+                            {paymentType === "cash" && <Check className="h-3.5 w-3.5 text-white" />}
+                          </button>
+
+                          {/* Cheque */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPaymentType("bank");
+                              setRoznamchaBookType("branch_payment_voucher");
+                              setEntryTypeDropdownOpen(false);
+                            }}
+                            className={cn(
+                              "flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold transition-colors",
+                              paymentType === "bank"
+                                ? "bg-blue-600 text-white"
+                                : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={cn("grid h-5 w-5 place-items-center rounded-md", paymentType === "bank" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400")}>
+                                <CreditCard className="h-3.5 w-3.5" />
+                              </span>
+                              <span>{tr("cef.opt_cheque", "Cheque")}</span>
+                            </div>
+                            {paymentType === "bank" && <Check className="h-3.5 w-3.5 text-white" />}
+                          </button>
+
+                          {/* Invoice */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPaymentType("business");
+                              setRoznamchaBookType("branch_payment_voucher");
+                              setEntryTypeDropdownOpen(false);
+                            }}
+                            className={cn(
+                              "flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold transition-colors",
+                              (paymentType === "business" || paymentType === "invoice")
+                                ? "bg-blue-600 text-white"
+                                : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={cn("grid h-5 w-5 place-items-center rounded-md", (paymentType === "business" || paymentType === "invoice") ? "bg-white/20 text-white" : "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400")}>
+                                <FileText className="h-3.5 w-3.5" />
+                              </span>
+                              <span>{tr("cef.opt_invoice", "Invoice")}</span>
+                            </div>
+                            {(paymentType === "business" || paymentType === "invoice") && <Check className="h-3.5 w-3.5 text-white" />}
+                          </button>
+
+                          {/* Transfer */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPaymentType("transfer");
+                              setRoznamchaBookType("branch_payment_voucher");
+                              setEntryTypeDropdownOpen(false);
+                            }}
+                            className={cn(
+                              "flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold transition-colors",
+                              paymentType === "transfer"
+                                ? "bg-blue-600 text-white"
+                                : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={cn("grid h-5 w-5 place-items-center rounded-md", paymentType === "transfer" ? "bg-white/20 text-white" : "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400")}>
+                                <ArrowLeftRight className="h-3.5 w-3.5" />
+                              </span>
+                              <span>{tr("cef.opt_transfer", "Transfer")}</span>
+                            </div>
+                            {paymentType === "transfer" && <Check className="h-3.5 w-3.5 text-white" />}
+                          </button>
+                        </div>
                       )}
+
                       <select
                         id="cash-entry-roz-category"
                         value={paymentType === "invoice" ? "business" : paymentType}
@@ -4146,14 +4269,15 @@ export function CashEntryForm({
                           setPaymentType(val);
                           setRoznamchaBookType(val ? "branch_payment_voucher" : "");
                         }}
-                        className="h-8 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-7 pr-6 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                        className="sr-only"
+                        aria-hidden="true"
+                        tabIndex={-1}
                       >
                         <option value="cash">{tr("cef.opt_cash", "Cash")}</option>
                         <option value="bank">{tr("cef.opt_cheque", "Cheque")}</option>
                         <option value="business">{tr("cef.opt_invoice", "Invoice")}</option>
                         <option value="transfer">{tr("cef.opt_transfer", "Transfer")}</option>
                       </select>
-                      <ChevronDown className="pointer-events-none absolute right-2 top-2 h-3.5 w-3.5 text-slate-400" />
                     </div>
                   </div>
 
@@ -4643,18 +4767,18 @@ export function CashEntryForm({
                 <div className="flex items-center gap-2 mb-3">
                   <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    {tr("cmf.sel_account", "Selected Account Details")}
+                    {tr("cj.mAcctDetails", "Selected Account Details")}
                   </span>
                 </div>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">{tr("lp.account_name", "Account Name")}</span>
+                    <span className="text-slate-500 font-medium">{tr("cj.mAccountName", "Account Name")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 text-right truncate max-w-[170px]">
                       {selectedCounterLedger?.accountName || "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">{tr("creg.col_account_no", "Account No.")}</span>
+                    <span className="text-slate-500 font-medium">{tr("cj.mAccountNoDot", "Account No.")}</span>
                     <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">
                       {selectedCounterLedger?.accountCode || selectedCounterLedger?.rawAccountCode || "—"}
                     </span>
@@ -4684,25 +4808,25 @@ export function CashEntryForm({
                 </div>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">{tr("clearing.col_country", "Country")}</span>
+                    <span className="text-slate-500 font-medium">{tr("common.country", "Country")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 text-right">
                       {selectedCountry?.name || "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">{tr("crm.th_branch", "Branch")}</span>
+                    <span className="text-slate-500 font-medium">{tr("common.branch", "Branch")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 text-right">
                       {(selectedCityBranch as any)?.branch_name || (selectedCityBranch as any)?.name || (selectedMainBranch as any)?.name || "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">{tr("lp.city", "City")}</span>
+                    <span className="text-slate-500 font-medium">{tr("common.city", "City")}</span>
                     <span className="font-medium text-slate-700 dark:text-slate-300">
                       {(selectedCityBranch as any)?.city_name || (selectedCityBranch as any)?.name || "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-slate-500 font-medium">{tr("tax_einv.set_f_address", "Address")}</span>
+                    <span className="text-slate-500 font-medium">{tr("common.address", "Address")}</span>
                     <span className="font-medium text-slate-700 dark:text-slate-300">
                       {(selectedCityBranch as any)?.address || "—"}
                     </span>
@@ -4715,7 +4839,7 @@ export function CashEntryForm({
                 <div className="flex items-center gap-2 mb-3">
                   <BarChart3 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    {tr("roz.financial_snapshot", "Financial Snapshot")}
+                    {tr("cj.mSnapshot", "Financial Snapshot")}
                   </span>
                 </div>
                 <div className="space-y-2 text-xs">
@@ -4726,19 +4850,19 @@ export function CashEntryForm({
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">{tr("bankroz.total_debit", "Total Debit")}</span>
+                    <span className="text-slate-500 font-medium">{tr("ledger.total_debit", "Total Debit")}</span>
                     <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">
                       {branchCurrency || "AED"} {fmtAmount(accountSnapshot.totalDebit)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">{tr("bankroz.total_credit", "Total Credit")}</span>
+                    <span className="text-slate-500 font-medium">{tr("ledger.total_credit", "Total Credit")}</span>
                     <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">
                       {branchCurrency || "AED"} {fmtAmount(accountSnapshot.totalCredit)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-slate-900 dark:text-white font-extrabold">{tr("comv.active_balance", "Current Balance")}</span>
+                    <span className="text-slate-900 dark:text-white font-extrabold">{tr("roz.current_balance", "Current Balance")}</span>
                     <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm" dir="ltr">
                       {branchCurrency || "AED"} {fmtAmount(accountSnapshot.currentBalance)}
                     </span>
@@ -4786,7 +4910,7 @@ export function CashEntryForm({
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl border-2 border-blue-600 bg-white px-5 py-2.5 text-xs font-bold text-blue-600 shadow-xs hover:bg-blue-50/50 dark:border-blue-500 dark:bg-slate-900 dark:text-blue-400 dark:hover:bg-blue-950/30 transition-colors"
               >
                 <Plus className="h-3.5 w-3.5" />
-                {tr("common.save_and_new", "Save & New")}
+                {tr("common.save_and_new", "+ Save & New")}
               </button>
               <button
                 type="button"
@@ -4800,12 +4924,13 @@ export function CashEntryForm({
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-500/20 hover:bg-blue-700 disabled:opacity-50 transition-colors"
               >
                 <Save className="h-3.5 w-3.5" />
-                {tr("transit.save_entry", "Save Entry")}
+                {tr("cef.save_entry", "Save Entry")}
               </button>
             </div>
           </div>
         </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ============================================================
