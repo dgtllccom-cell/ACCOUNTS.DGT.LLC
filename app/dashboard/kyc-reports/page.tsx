@@ -50,7 +50,7 @@ import { translateHeader } from "@/lib/i18n/table-headers";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { Th } from "@/components/ui/translated-th";
 
-type KycEntityType = "country_branch" | "city_branch" | "user_account" | "new_account";
+type KycEntityType = "country_branch" | "city_branch" | "user_account" | "new_account" | "company" | "customer";
 
 type KycItem = {
   id: string;
@@ -163,7 +163,19 @@ function kycT(lang: SupportedLanguage, key: string) {
 }
 
 function getKycEntityLabel(type: KycEntityType, lang: SupportedLanguage) {
+  if (type === "company") return t(lang, "nav.company_form", "Company");
+  if (type === "customer") return t(lang, "nav.customers_form", "Customer");
   return kycT(lang, type);
+}
+
+function getKycFilterLabel(type: string, lang: SupportedLanguage) {
+  if (type === "country_branch") return kycT(lang, "countryBranches");
+  if (type === "city_branch") return kycT(lang, "cityBranches");
+  if (type === "user_account") return kycT(lang, "usersStaff");
+  if (type === "new_account") return kycT(lang, "commercialAccounts");
+  if (type === "company") return t(lang, "nav.company_form", "Company");
+  if (type === "customer") return t(lang, "nav.customers_form", "Customer");
+  return kycT(lang, "allEntities");
 }
 
 function formatKycStatusLabel(lang: SupportedLanguage, status: KycItem["status"], daysRemaining: number) {
@@ -625,15 +637,7 @@ export default function KycReportsPage() {
             >
               <Building2 className="h-3.5 w-3.5 text-blue-600" />
               <span>
-                {selectedType === "all"
-                  ? tUI("allEntities")
-                  : selectedType === "country_branch"
-                  ? tUI("countryBranches")
-                  : selectedType === "city_branch"
-                  ? tUI("cityBranches")
-                  : selectedType === "user_account"
-                  ? tUI("usersStaff")
-                  : tUI("commercialAccounts")}
+                {getKycFilterLabel(selectedType, activeLang)}
               </span>
               <ChevronDown className="h-3 w-3 text-muted-foreground" />
             </button>
@@ -645,7 +649,9 @@ export default function KycReportsPage() {
                   { id: "country_branch", label: tUI("countryBranches"), icon: Globe2 },
                   { id: "city_branch", label: tUI("cityBranches"), icon: Building2 },
                   { id: "user_account", label: tUI("usersStaff"), icon: Users },
-                  { id: "new_account", label: tUI("commercialAccounts"), icon: UserCheck }
+                  { id: "new_account", label: tUI("commercialAccounts"), icon: UserCheck },
+                  { id: "company", label: t(activeLang, "nav.company_form", "Company"), icon: Building2 },
+                  { id: "customer", label: t(activeLang, "nav.customers_form", "Customer"), icon: Users }
                 ].map((type) => {
                   const Icon = type.icon;
                   return (
@@ -1075,6 +1081,8 @@ export default function KycReportsPage() {
                         {item.type === "city_branch" && <Building2 className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />}
                         {item.type === "user_account" && <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
                         {item.type === "new_account" && <FileText className="h-4 w-4 text-purple-600 dark:text-purple-400" />}
+                        {item.type === "company" && <Building2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />}
+                        {item.type === "customer" && <Users className="h-4 w-4 text-teal-600 dark:text-teal-400" />}
                         <span>{item.name}</span>
                       </div>
                       <div className="text-[11px] font-mono text-muted-foreground mt-0.5 flex items-center gap-2">
@@ -1165,7 +1173,7 @@ export default function KycReportsPage() {
                             </Button>
                           </Link>
                         ) : null
-                      ) : (
+                      ) : item.type === "company" || item.type === "customer" ? null : (
                         <Button
                           onClick={() => handleOpenKycModal(item)}
                           className="bg-rose-600 hover:bg-rose-700 text-white font-bold h-8 px-3 rounded-lg text-xs shadow-xs"
