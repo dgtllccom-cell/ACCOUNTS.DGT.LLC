@@ -610,7 +610,8 @@ export function PurchaseBookingGlobalRegisterView({
   if (isFormMode) {
     return (
       <div dir={isRtl ? "rtl" : "ltr"} className="w-full space-y-4 p-3 sm:p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        {/* phones: the form header already has "← Register"; this bar only pushed the form further down */}
+        <div className="hidden sm:flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -630,7 +631,7 @@ export function PurchaseBookingGlobalRegisterView({
           </div>
         </div>
 
-        <PurchaseOrderWizard session={session} />
+        <PurchaseOrderWizard session={session} startOnForm={!idParam} />
       </div>
     );
   }

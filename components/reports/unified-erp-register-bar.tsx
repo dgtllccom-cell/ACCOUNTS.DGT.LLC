@@ -116,6 +116,10 @@ export function UnifiedErpRegisterBar({
 
   useEffect(() => {
     setMounted(true);
+    // Phones: the page header holds only Back + title. The filters and actions wrap into a block taller than the
+    // screen there (an iPhone showed nothing but filters), so on narrow screens they stay inline with the register.
+    const wide = typeof window === "undefined" || !window.matchMedia || window.matchMedia("(min-width: 768px)").matches;
+    if (!wide) return;
     setTitleSlot(document.getElementById("erp-page-title-slot"));
     setActionsSlot(document.getElementById("erp-page-actions-slot"));
   }, []);
