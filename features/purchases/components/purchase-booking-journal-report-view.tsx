@@ -2931,7 +2931,7 @@ export function PurchaseBookingJournalReportView({
                 const superSerialNo = (report as any).superAdminSerialNo || `GBL-${report.purchaseBookingOrderNumber}`;
                 const countrySerialNo = (report as any).computedCountrySerial || "-";
                 const branchSerialNo = (report as any).computedBranchSerial || "-";
-                const entrySerialNo = report.purchaseBookingOrderNumber || report.purchase_order_no || report.manualBillNumber || `PB-${srNo}`;
+                const entrySerialNo = report.purchaseBookingOrderNumber || (report as any).purchase_order_no || report.manualBillNumber || `PB-${srNo}`;
                 const purchaseAccCode = report.purchaseAccountNumber || report.form_data?.form?.purchaseAccountNo || "-";
                 const purchaseAccName = report.purchaseAccountName || report.form_data?.form?.purchaseAccountName || report.supplierName || "-";
                 const salesAccCode = report.salesAccountNumber || report.form_data?.form?.salesAccountNo || "-";
