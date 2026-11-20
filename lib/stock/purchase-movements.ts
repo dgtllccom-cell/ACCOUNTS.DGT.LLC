@@ -105,6 +105,14 @@ export type PurchaseRow = {
   purchaseDate: string;
   countryName: string;
   branch: string;
+  mainBranchCode: string;
+  cityBranchCode: string;
+  serials: {
+    superAdmin: string;
+    country: string;
+    branch: string;
+    entry: string;
+  };
   goodsNames: string[];
   unit: string;
   qty: number;
@@ -319,6 +327,14 @@ export function buildPurchaseRows(
       purchaseDate: b.date ?? "",
       countryName: b.countryName,
       branch: b.branchFullLabel || b.branchName || DASH,
+      mainBranchCode: str(b.mainBranchCode) || DASH,
+      cityBranchCode: str(b.cityBranchCode) || DASH,
+      serials: {
+        superAdmin: str(b.serials?.superAdmin) || DASH,
+        country: str(b.serials?.country) || DASH,
+        branch: str(b.serials?.branch) || DASH,
+        entry: str(b.serials?.entry) || DASH,
+      },
       goodsNames: [...new Set(b.entries.map((e) => e.goodsName).filter(Boolean))],
       unit: units.length === 1 ? units[0] : "",
       qty: b.totals.purchased.qty,

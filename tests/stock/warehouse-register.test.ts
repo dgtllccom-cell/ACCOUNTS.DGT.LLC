@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { branchLabel, groupPurchases, groupRegister, loadTotals, normalizeBalanceRow, normalizeLoadRow, registerTotals } from "@/lib/stock/warehouse-register";
+import { branchCodeLabel, branchLabel, groupPurchases, groupRegister, loadTotals, normalizeBalanceRow, normalizeLoadRow, registerTotals } from "@/lib/stock/warehouse-register";
 
 describe("warehouse stock register", () => {
   it("maps a balance row, reading numeric strings as numbers and blank names as a dash", () => {
@@ -19,6 +19,13 @@ describe("warehouse stock register", () => {
     expect(branchLabel(r)).toBe("Pakistan Main Branch (PK-MB) / Quetta City Branch (QTA)");
     const noCity = normalizeBalanceRow({ country_branch_id: "cb1", country_branch_name: "Pakistan Main Branch", country_branch_code: "PK-MB" });
     expect(branchLabel(noCity)).toBe("Pakistan Main Branch (PK-MB)");
+  });
+
+  it("provides a compact code-only branch label for dense registers", () => {
+    const r = normalizeBalanceRow({ country_branch_code: "ARE-MAIN-001", city_branch_code: "ARE-AEDU-001" });
+    expect(branchCodeLabel(r)).toBe("ARE-MAIN-001 / ARE-AEDU-001");
+    expect(branchCodeLabel({ countryBranchCode: "ARE-MAIN-001", cityBranchCode: "" })).toBe("ARE-MAIN-001");
+    expect(branchCodeLabel({ countryBranchCode: "", cityBranchCode: "" })).toBe("—");
   });
 
   it("branch label joins the country and city branch names and skips missing ones", () => {
