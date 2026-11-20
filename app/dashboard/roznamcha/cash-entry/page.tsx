@@ -10,7 +10,7 @@ export default async function CashEntryPage() {
   const lang = await getRequestLanguage();
 
   return (
-    <CashEntryStyleScope lang={lang} hideBar>
+    <CashEntryStyleScope lang={lang}>
       <CashEntryForm
         lang={lang}
         pageTitle={t(lang, "nav.cash_entry", "Cash & Journal Entry (Roznamcha Bill)")}

@@ -3925,7 +3925,7 @@ export function CashEntryForm({
       ============================================================ */}
       {mounted && showNewRoznamchaEntryCard && createPortal(
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-3 sm:p-5 md:p-6 overflow-y-auto animate-in fade-in duration-200"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-3 sm:p-5 md:p-6 overflow-y-auto animate-in fade-in duration-200"
           onClick={() => {
             setShowNewRoznamchaEntryCard(false);
             setEditEntryId(null);
@@ -3933,7 +3933,7 @@ export function CashEntryForm({
         >
           <div 
             id="new-roznamcha-entry-card" 
-            className="relative w-full max-w-5xl max-h-[94vh] overflow-y-auto rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-2xl dark:border-slate-800 dark:bg-slate-900 transition-all my-auto"
+            className="relative w-full max-w-4xl max-h-[94vh] overflow-y-auto rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-2xl dark:border-slate-800 dark:bg-slate-900 transition-all my-auto"
             onClick={(e) => e.stopPropagation()}
           >
           {/* ── CARD HEADER ── */}
