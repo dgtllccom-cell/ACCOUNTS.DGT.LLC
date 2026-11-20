@@ -2494,7 +2494,6 @@ export function LocalPurchaseView({
                   : "text-slate-600 hover:text-slate-900 hover:bg-white/80 dark:text-slate-400 dark:hover:text-slate-200"
               }`}
             >
-              <span className="opacity-80">1</span>
               <span>{t(lang, "lp.step1_tab", "Booking")}</span>
             </button>
             <ArrowRight className="h-2.5 w-2.5 text-slate-300 dark:text-slate-600 shrink-0 rtl:rotate-180" />
@@ -2510,7 +2509,6 @@ export function LocalPurchaseView({
                   : "text-slate-600 hover:text-slate-900 hover:bg-white/80 dark:text-slate-400 dark:hover:text-slate-200"
               }`}
             >
-              <span className="opacity-80">2</span>
               <span>{t(lang, "lp.step2_tab", "Goods")}</span>
             </button>
             <ArrowRight className="h-2.5 w-2.5 text-slate-300 dark:text-slate-600 shrink-0 rtl:rotate-180" />
@@ -2527,7 +2525,6 @@ export function LocalPurchaseView({
                   : "text-slate-600 hover:text-slate-900 hover:bg-white/80 dark:text-slate-400 dark:hover:text-slate-200"
               }`}
             >
-              <span className="opacity-80">3</span>
               <span>{t(lang, "lp.step3_tab", "Payment & Loading")}</span>
             </button>
             <ArrowRight className="h-2.5 w-2.5 text-slate-300 dark:text-slate-600 shrink-0 rtl:rotate-180" />
@@ -2545,7 +2542,6 @@ export function LocalPurchaseView({
                   : "text-slate-600 hover:text-slate-900 hover:bg-white/80 dark:text-slate-400 dark:hover:text-slate-200"
               }`}
             >
-              <span className="opacity-80">4</span>
               <span>{t(lang, "lp.queue_step", "4 Verify & Transfer")}</span>
             </button>
           </div>
