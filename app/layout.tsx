@@ -8,6 +8,14 @@ import { legacyThemeMode, themeModes } from "@/lib/ui/theme-modes";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { getHtmlLanguage, getLanguageDirection } from "@/lib/i18n/languages";
 
+/** iPhone / iPad launch screens, portrait: CSS width × height @ pixel ratio (matches SPLASHES in the generator script). */
+const APPLE_STARTUP_IMAGES = [
+  [375, 667, 2], [414, 896, 2], [390, 844, 3], [393, 852, 3], [430, 932, 3], [820, 1180, 2], [834, 1194, 2], [1024, 1366, 2],
+].map(([w, h, r]) => ({
+  url: `/app/splash-${w}x${h}@${r}x.png`,
+  media: `(device-width: ${w}px) and (device-height: ${h}px) and (-webkit-device-pixel-ratio: ${r}) and (orientation: portrait)`,
+}));
+
 export const metadata: Metadata = {
   applicationName: "Damaan Business Group",
   title: {
@@ -16,14 +24,17 @@ export const metadata: Metadata = {
   },
   description: "Damaan Business Group (DGT.LLC) Multi-country ERP for accounts, ledgers, purchases, sales, roznamcha, stock, and reports.",
   manifest: "/manifest.webmanifest",
+  // square PNG icons and iPhone / iPad launch screens (scripts/generate-web-app-assets.mjs). The logo file itself is a
+  // non-square JPEG, which iOS cropped on the home screen; without launch screens the app opened on a white page.
   icons: {
-    icon: "/images/damaan-logo.png",
-    apple: "/images/damaan-logo.png"
+    icon: [{ url: "/app/icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/app/icon-180.png", sizes: "180x180", type: "image/png" }]
   },
   appleWebApp: {
     capable: true,
-    title: "Damaan Business Group",
-    statusBarStyle: "default"
+    title: "DGT Group",
+    statusBarStyle: "default",
+    startupImage: APPLE_STARTUP_IMAGES
   },
   formatDetection: {
     telephone: false
