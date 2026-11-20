@@ -89,7 +89,8 @@ export function expensesBillToTradeInput(
     referenceNos: { po: str(bill.reference_no) },
     // seller = the branch's own company (branding), so each branch prints its own name at the top
     seller: {
-      name: str(branding.legalName) ?? str(branding.entityName),
+      // a branch without a company branding profile prints its own branch name, never another branch's name
+      name: str(branding.legalName) ?? str(branding.entityName) ?? str(bill.city_branches?.name),
       address: str(branding.address),
       phone: str(branding.phone),
       email: str(branding.email),
