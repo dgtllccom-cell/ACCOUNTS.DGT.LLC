@@ -1,5 +1,6 @@
 "use client";
 
+import { A4DocumentViewer } from "@/components/ui/a4-document-viewer";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { IntakeDraftPicker } from "@/features/document-intelligence/components/intake-draft-picker";
 import React, { useMemo, useState, useEffect, useRef } from "react";
@@ -4891,13 +4892,15 @@ export function LocalPurchaseView({
       )}
       {/* Printable A4 Voucher Modal from registry log list */}
       {selectedRowForVoucher && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs overflow-y-auto animate-in fade-in">
-          <div className="w-full max-w-5xl rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[92vh] overflow-y-auto relative">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3 print:hidden">
-              <h3 className="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
-                <FileText className="h-4 w-4 text-blue-600" /> VOUCHER DETAILS FOR LP-{selectedRowForVoucher.id?.slice(0, 5).toUpperCase()}
-              </h3>
-              <div className="flex gap-2">
+        <A4DocumentViewer
+          isOpen
+          onClose={() => setSelectedRowForVoucher(null)}
+          fit="page"
+          icon={<FileText className="h-4 w-4 text-blue-600" />}
+          title={<>{th("VOUCHER DETAILS FOR")} LP-{selectedRowForVoucher.id?.slice(0, 5).toUpperCase()}</>}
+          actions={
+            <>
+
                 {selectedRowForVoucher.status === "accepted" && (
                   <Button
                     onClick={() => router.push(`/dashboard/purchase/local-purchase-transfer-payment?billId=${selectedRowForVoucher.id}`)}
@@ -4947,17 +4950,11 @@ export function LocalPurchaseView({
                 >
                   <Printer className="h-3.5 w-3.5" /> {th("Print")}
                 </Button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedRowForVoucher(null)}
-                  className="text-slate-400 hover:text-slate-600 text-xs font-bold bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-lg transition-colors"
-                >
-                  {th("Close")}
-                </button>
-              </div>
-            </div>
+            </>
+          }
+        >
 
-            <div id="printable-modal-voucher" className="p-4 bg-white border border-slate-200 rounded-xl space-y-4 font-sans text-xs">
+            <div id="printable-modal-voucher" className="bg-white space-y-4 font-sans text-xs">
 
               {/* UAE-specific invoice format */}
               {(() => {
@@ -5044,7 +5041,7 @@ export function LocalPurchaseView({
                         </div>
 
                         <div className="p-4">
-                          <table className="w-full border-collapse overflow-hidden rounded-xl border border-slate-200 text-[11px]">
+                          <table className="w-full border-collapse overflow-hidden rounded-xl border border-slate-200 text-[10.5px] [&_th]:!whitespace-normal [&_th]:break-words [&_th]:!text-[10px] [&_th]:!leading-tight [&_th]:!px-1 [&_th]:!py-1.5 [&_td]:p-1.5 [&_td]:!whitespace-normal">
                             <thead className="bg-slate-900 text-white">
                               <tr>
                                 <Th className="border border-slate-800 p-2 text-left">{t(lang, "lp.col_sr", "Sr.")}</Th>
@@ -5227,8 +5224,7 @@ export function LocalPurchaseView({
               })()}
 
             </div>
-          </div>
-        </div>
+        </A4DocumentViewer>
       )}
 
       {handoverModalOpen && handoverTargetRow ? (

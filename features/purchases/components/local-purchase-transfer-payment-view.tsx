@@ -1,5 +1,6 @@
 "use client";
 
+import { A4DocumentViewer } from "@/components/ui/a4-document-viewer";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
@@ -2149,43 +2150,23 @@ export function LocalPurchaseTransferPaymentView({
 
       {/* ── MODAL 1: View Complete Original Bill (Centered Modal with Print inside) ── */}
       {viewingBill && (
-        <div role="dialog" aria-modal="true" aria-label={tr("Original Local Purchase Bill")} className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 print:hidden">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap gap-3 items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
-              <div>
-                <div className="text-[11px] font-black uppercase tracking-wider text-blue-600">
-                  {tr("Original Local Purchase Bill")}
-                </div>
-                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <span>{viewingBill._billNo}</span>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                    {viewingBill._countryCode} • {viewingBill._branchCode}
-                  </span>
-                </h3>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handlePrintA4Bill(viewingBill)}
-                  className="h-8 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Printer className="h-3.5 w-3.5" />
-                  <span>{tr("Print")}</span>
-                </button>
-                <button
-                  type="button"
-                  disabled={posting}
-                  onClick={() => setViewingBill(null)}
-                  aria-label={tr("Close")}
-                  className="h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-5 space-y-4 text-xs">
+        <A4DocumentViewer
+          isOpen
+          onClose={() => { if (!posting) setViewingBill(null); }}
+          subtitle={tr("Original Local Purchase Bill")}
+          title={<>{viewingBill._billNo} · {viewingBill._countryCode} • {viewingBill._branchCode}</>}
+          actions={
+            <button
+              type="button"
+              onClick={() => handlePrintA4Bill(viewingBill)}
+              className="h-8 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <Printer className="h-3.5 w-3.5" />
+              <span>{tr("Print")}</span>
+            </button>
+          }
+        >
+            <div className="space-y-4 text-xs">
               {/* Retained Invoice / Contract / Reference Metadata inside the original bill */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200/70 dark:border-slate-800">
                 <div>
@@ -2392,8 +2373,7 @@ export function LocalPurchaseTransferPaymentView({
                 </div>
               )}
             </div>
-          </div>
-        </div>
+        </A4DocumentViewer>
       )}
 
       {/* ── MODAL 2: Edit Bill (Super Admin & Authorized Country Admin Only) ── */}

@@ -1,5 +1,6 @@
 "use client";
 
+import { A4DocumentViewer } from "@/components/ui/a4-document-viewer";
 import { pl } from "@/lib/reports/print-label";
 import React, { useMemo, useState, useEffect, Fragment } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -262,28 +263,6 @@ export function LocalPurchaseDestinationQueueView({
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [selectedRowForVoucher, setSelectedRowForVoucher] = useState<LocalPurchaseDestinationRecord | null>(null);
-  // Phones: show the whole A4 page (794px) scaled to the screen width, like a PDF viewer.
-  const [voucherZoom, setVoucherZoom] = useState(1);
-  useEffect(() => {
-    if (!selectedRowForVoucher) return;
-    const fit = () => setVoucherZoom(Math.min(1, Math.max(0.3, (window.innerWidth - 16) / 794)));
-    fit();
-    window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
-  }, [selectedRowForVoucher]);
-  useEffect(() => {
-    if (!selectedRowForVoucher) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelectedRowForVoucher(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [selectedRowForVoucher]);
   const [actingId, setActingId] = useState<string | null>(null);
   const [openRowMenuId, setOpenRowMenuId] = useState<string | null>(null);
 
@@ -1971,24 +1950,18 @@ export function LocalPurchaseDestinationQueueView({
       )}
 
       {selectedRowForVoucher && (
-        <div
-          aria-modal="true"
-          aria-label={th("VOUCHER DETAILS FOR")}
-          data-testid="lp-voucher-fullscreen"
-          className="fixed inset-0 !m-0 z-[200] overflow-y-auto bg-slate-950/85 backdrop-blur-sm animate-in fade-in"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setSelectedRowForVoucher(null);
-          }}
-        >
-          <div className="relative mx-auto w-full max-w-[calc(794px+3rem)] min-h-full sm:min-h-[297mm] sm:my-6 bg-white shadow-2xl sm:rounded-md">
-            <div className="sticky top-0 z-10 flex flex-wrap justify-between items-center gap-2 border-b border-slate-200 bg-white/95 backdrop-blur px-3 sm:px-6 py-3 shadow-sm sm:rounded-t-md print:hidden">
-              <h3 className="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
-                <FileText className="h-4 w-4 text-blue-600" /> {th("VOUCHER DETAILS FOR")}{" "}
+        <A4DocumentViewer
+          isOpen
+          onClose={() => setSelectedRowForVoucher(null)}
+          fit="page"
+          testId="lp-voucher-fullscreen"
+          icon={<FileText className="h-4 w-4 text-blue-600" />}
+          title={<>{th("VOUCHER DETAILS FOR")}{" "}
                 {selectedRowForVoucher.serialNo ||
                   selectedRowForVoucher.serial_no ||
-                  `LP-${selectedRowForVoucher.id?.slice(0, 5).toUpperCase()}`}
-              </h3>
-              <div className="flex flex-wrap gap-2">
+                  `LP-${selectedRowForVoucher.id?.slice(0, 5).toUpperCase()}`}</>}
+          actions={
+            <>
                 {stage === "loading" && (() => {
                   const st = getLoadingStats(selectedRowForVoucher);
                   return (
@@ -2022,17 +1995,10 @@ export function LocalPurchaseDestinationQueueView({
                 >
                   <Printer className="h-3.5 w-3.5" /> {th("Print")}
                 </Button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedRowForVoucher(null)}
-                  className="text-slate-400 hover:text-slate-600 text-xs font-bold bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-lg transition-colors"
-                >
-                  {th("Close")}
-                </button>
-              </div>
-            </div>
+            </>
+          }
+        >
 
-            <div className="mx-auto py-2 sm:p-6" style={{ width: 794, zoom: voucherZoom }}>
             <div
               id="printable-modal-voucher"
               className="bg-white space-y-4 font-sans text-xs"
@@ -2493,9 +2459,7 @@ export function LocalPurchaseDestinationQueueView({
                 );
               })()}
             </div>
-            </div>
-          </div>
-        </div>
+        </A4DocumentViewer>
       )}
     </div>
   );

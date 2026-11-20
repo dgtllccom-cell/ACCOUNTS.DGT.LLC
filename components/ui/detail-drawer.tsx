@@ -1,10 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { t } from "@/lib/i18n/ui";
+import { A4DocumentViewer } from "@/components/ui/a4-document-viewer";
 
 interface DetailDrawerProps {
   isOpen: boolean;
@@ -14,85 +10,33 @@ interface DetailDrawerProps {
   children: React.ReactNode;
   actions?: React.ReactNode;
   className?: string;
+  /** detail views wider than an A4 page (multi-column reports) */
+  wide?: boolean;
 }
 
-export function DetailDrawer({
-  isOpen,
-  onClose,
-  title,
-  subtitle,
-  children,
-  actions,
-  className
-}: DetailDrawerProps) {
-  const drawerRef = useRef<HTMLDivElement>(null);
-  const lang = useActiveLanguage();
-
-  // Close on Escape key press
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
-
-  // Prevent scroll when drawer is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
+/**
+ * Record "View" panel used across the ERP. It used to slide in from the side over a still-visible screen; it now opens
+ * the record full screen as one centred A4 page (see A4DocumentViewer), the same in every module.
+ * `className` applies to the page; callers that asked for a full-width panel ("max-w-none") get the wide page.
+ */
+export function DetailDrawer({ isOpen, onClose, title, subtitle, children, actions, className, wide }: DetailDrawerProps) {
+  const askedFullWidth = /max-w-none|w-screen/.test(className ?? "");
+  const pageClassName = (className ?? "")
+    .split(/\s+/)
+    .filter((c) => c && !/^(sm:|md:)?max-w-none$|^w-screen$|^h-screen$/.test(c))
+    .join(" ");
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      {/* Backdrop overlay */}
-      <div
-        className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in"
-        onClick={onClose}
-      />
-
-      {/* Slide-out Drawer Panel */}
-      <div
-        ref={drawerRef}
-        className={cn(
-          "relative z-10 flex h-full w-full flex-col bg-background shadow-2xl border-s border-border animate-in slide-in-from-right duration-300 ease-out sm:max-w-xl md:max-w-2xl ltr:left-auto rtl:right-auto",
-          className
-        )}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b px-6 py-4 bg-slate-50/50 dark:bg-slate-900/10">
-          <div className="space-y-0.5">
-            <h2 className="text-base font-bold text-slate-800 dark:text-slate-200">{title}</h2>
-            {subtitle && <p className="text-xs text-muted-foreground font-medium">{subtitle}</p>}
-          </div>
-          <div className="flex items-center gap-3">
-            {actions && <div className="flex items-center gap-2">{actions}</div>}
-            <button
-              type="button"
-              onClick={onClose}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors border border-transparent hover:border-border"
-              aria-label={t(lang, "dd.close_panel", "Close panel")}
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 bg-card">
-          {children}
-        </div>
-      </div>
-    </div>
+    <A4DocumentViewer
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      subtitle={subtitle}
+      actions={actions}
+      wide={wide ?? askedFullWidth}
+      pageClassName={pageClassName || undefined}
+      testId="detail-drawer"
+    >
+      {children}
+    </A4DocumentViewer>
   );
 }
