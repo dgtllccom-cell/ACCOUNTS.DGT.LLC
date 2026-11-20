@@ -37,7 +37,7 @@ import { printDomFragmentViaModal } from "@/lib/reports/print-dom-fragment";
 import { localPurchasePaymentState } from "@/lib/purchases/local-purchase-payment-state";
 
 const PRINT_ROOT_ID = "lp-global-register-print";
-import { DetailDrawer } from "@/components/ui/detail-drawer";
+import { InvoiceDocumentView } from "@/components/invoices/invoice-document-view";
 import { OpenFullBillModal } from "@/components/invoices/open-full-bill-modal";
 
 export interface LocalPurchaseGlobalRegisterViewProps {
@@ -80,6 +80,16 @@ export function LocalPurchaseGlobalRegisterView({
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [fullBillRow, setFullBillRow] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
+  const selectedInvoiceScope = useMemo(() => {
+    const r: any = selectedRow;
+    return {
+      countryId: r?.country_id || null,
+      countryBranchId: r?.country_branch_id || null,
+      cityBranchId: r?.city_branch_id || null,
+      countryName: r?.country_name || r?.countryName || null,
+      branchName: r?.branch_name || r?.branchName || null,
+    };
+  }, [selectedRow]);
 
   // Menus & Popovers
   const [reportsOpen, setReportsOpen] = useState<boolean>(false);
@@ -1689,45 +1699,20 @@ export function LocalPurchaseGlobalRegisterView({
         />
       )}
 
-      {/* ── 9. Detail Drawer ── */}
-      {selectedRow && !fullBillRow && (
-        <DetailDrawer
+      {/* ── 9. View: the complete Local Purchase invoice, full screen as one A4 page ── */}
+      {selectedRow && !fullBillRow && drawerOpen && (
+        <InvoiceDocumentView
           isOpen={drawerOpen}
           onClose={() => {
             setDrawerOpen(false);
             setSelectedRow(null);
           }}
           title={`${tr("Local Purchase Voucher")} ${getBillNumber(selectedRow)}`}
-        >
-          <div className="p-4 space-y-3 text-xs">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <span className="text-slate-500 font-bold uppercase">{tr("Bill No.")}:</span>
-                <p className="font-mono font-bold text-slate-800 dark:text-slate-200">{getBillNumber(selectedRow)}</p>
-              </div>
-              <div>
-                <span className="text-slate-500 font-bold uppercase">{tr("Date")}:</span>
-                <p className="font-semibold text-slate-800 dark:text-slate-200">{formatDashDate(selectedRow.created_at || selectedRow.purchase_date)}</p>
-              </div>
-              <div>
-                <span className="text-slate-500 font-bold uppercase">{tr("Branch")}:</span>
-                <p className="font-semibold text-slate-800 dark:text-slate-200">{getCleanBranchName(selectedRow)}</p>
-              </div>
-              <div>
-                <span className="text-slate-500 font-bold uppercase">{tr("Supplier")}:</span>
-                <p className="font-semibold text-slate-800 dark:text-slate-200">{selectedRow.supplier_name || selectedRow.supplierName || "—"}</p>
-              </div>
-              <div>
-                <span className="text-slate-500 font-bold uppercase">{tr("Goods Name")}:</span>
-                <p className="font-semibold text-slate-800 dark:text-slate-200">{selectedRow.goods_name || selectedRow.goodsName || "—"}</p>
-              </div>
-              <div>
-                <span className="text-slate-500 font-bold uppercase">{tr("Amount")}:</span>
-                <p className="font-mono font-bold text-slate-800 dark:text-slate-200">{getCurrency(selectedRow)} {fmt(Number(selectedRow.final_cost || selectedRow.purchase_cost || 0))}</p>
-              </div>
-            </div>
-          </div>
-        </DetailDrawer>
+          source="local_purchase"
+          record={selectedRow}
+          scope={selectedInvoiceScope}
+          companyId={selectedRow.company_id || null}
+        />
       )}
     </div>
   );
