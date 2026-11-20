@@ -294,17 +294,28 @@ export function OpenFullBillModal({
         remainingAmountFc: remainingFC,
         remainingAmountLc: remainingLC,
         status: statusBadge,
-        goodsItems: goodsEntries.map((g: any, i: number) => ({
-          srNo: i + 1,
-          goodsName: g.goodsName || "—",
-          origin: form.originCountry || countryName,
-          quantity: Number(g.qtyNo || 0),
-          unit: g.qtyName || form.qtyName || "KG",
-          grossWeight: Number(g.grossWeight || 0),
-          netWeight: Number(g.netWeight || 0),
-          unitPrice: Number(g.coursePrice || 0),
-          totalAmount: Number(g.totalAmount || 0)
-        }))
+        goodsItems: goodsEntries.map((g: any, i: number) => {
+          // Same row math as the on-screen goods table, so the print matches the modal.
+          const qty = Number(g.qtyNo || g.quantity || 0);
+          const price = Number(g.coursePrice || g.unitPrice || 0);
+          const total = Number(g.totalAmount || qty * price || 0);
+          const finalAmt = Number(g.finalAmount || total * exchangeRate || total);
+          return {
+            srNo: i + 1,
+            goodsName: g.goodsName || g.productName || "—",
+            origin: form.originCountry || countryName,
+            quantity: qty,
+            unit: g.qtyName || form.qtyName || "KG",
+            grossWeight: Number(g.grossWeight || 0),
+            netWeight: Number(g.netWeight || 0),
+            rateKg: price,
+            amountFc: total,
+            currencyFc: currency,
+            exchangeRate: exchangeRate,
+            amountLc: finalAmt,
+            currencyLc: localCurrency
+          };
+        })
       },
       companyInfo: {
         name: "DIGITAL DOCK ERP",

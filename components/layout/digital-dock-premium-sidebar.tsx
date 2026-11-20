@@ -715,13 +715,9 @@ function hasUpgraded(item: SidebarMenuItem | SidebarSubItem | SidebarDeepChild):
 }
 
 function UpgradedMark({ lang, dotOnly = false }: { lang?: string; dotOnly?: boolean }) {
+  // Group-level green dots are removed on purpose (owner request): no dot for "contains upgraded pages".
   if (dotOnly) {
-    return (
-      <span className="relative flex h-2 w-2 ms-auto shrink-0 me-1" title={nt("Contains New ERP Pages")}>
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-      </span>
-    );
+    return null;
   }
 
   return (
@@ -1448,9 +1444,6 @@ export function DigitalDockPremiumSidebar({
                                         <span className={`tracking-tight ${isLeafNew ? "font-semibold truncate" : isLeafRed ? "text-red-600 font-bold break-words leading-snug" : "truncate"}`}>
                                           {tr(leaf.label)}
                                         </span>
-                                        {isLeafNew && (
-                                          <span aria-label={tUi(lang as never, "common.new", "New")} title={tUi(lang as never, "common.new", "New")} className="ms-auto h-2 w-2 shrink-0 rounded-full bg-emerald-500 ring-2 ring-emerald-100" />
-                                        )}
                                         {leaf.upgraded && !isLeafNew && <UpgradedMark lang={lang} />}
                                       </Link>
                                     );

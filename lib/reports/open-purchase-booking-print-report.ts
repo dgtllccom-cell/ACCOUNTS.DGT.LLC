@@ -162,7 +162,7 @@ export function openPurchaseBookingOrderPrintReport(input: {
               <td style="text-align: right; font-weight: 800;">${formatNumber(item.quantity)} ${escapeHtml(item.unit || "BAGS")}</td>
               <td style="text-align: right;">${formatNumber(item.grossWeight)} KG</td>
               <td style="text-align: right; font-weight: 800;">${formatNumber(item.netWeight)} KG</td>
-              <td style="text-align: right; font-family: monospace;">${item.rateKg.toFixed(2)}</td>
+              <td style="text-align: right; font-family: monospace;">${Number(item.rateKg || 0).toFixed(2)}</td>
               <td style="text-align: right; font-family: monospace; font-weight: 800; color: #2563eb;">${formatMoney(item.amountFc, item.currencyFc)}</td>
               <td style="text-align: center; font-family: monospace;">${item.exchangeRate}</td>
               <td style="text-align: right; font-family: monospace; font-weight: 900; color: #059669;">${formatMoney(item.amountLc, item.currencyLc)}</td>
