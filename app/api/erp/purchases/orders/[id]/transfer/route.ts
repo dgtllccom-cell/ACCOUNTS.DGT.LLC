@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { billFxOperator, checkPostingAgainstSaved, effectiveFxRate } from "@/lib/purchases/fx-operator";
 import { z } from "zod";
 import { ApiClientError, apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
@@ -238,7 +239,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       const rawTotal = String(orderRow.order_total || formData.totals?.grandFinal || "0").replace(/,/g, "");
       const legacyTotal = Number(rawTotal);
       const legacyRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
-      totalPurchaseAmount = legacyRate > 1 ? legacyTotal / legacyRate : legacyTotal;
+      totalPurchaseAmount = billFxOperator(formData) === "/" ? legacyTotal * legacyRate : (legacyRate > 1 ? legacyTotal / legacyRate : legacyTotal);
     }
     if (!Number.isFinite(totalPurchaseAmount) || totalPurchaseAmount <= 0) {
       throw new Error("Purchase order total must be a valid number greater than zero to transfer.");
@@ -286,7 +287,25 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     await validateLedgerCountryScope(session, creditAccountObj.id, orderRow.country_id, adminSupabase);
 
     const currencyCode = orderRow.currency_code || form.currencyType || "USD";
-    const exRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
+    // The posting engine multiplies p_amount by p_exchange_rate once. A bill saved with the "/" operator (PKR per AED,
+    // e.g. 20,250,000 PKR ÷ 77.2) needs the effective rate 1/77.2 — passing 77.2 posted original × 77.2 (1,563,300,000 AED
+    // instead of 262,305.70). lib/purchases/fx-operator.ts
+    const savedRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
+    const fxOp = billFxOperator(formData);
+    const exRate = effectiveFxRate(savedRate, fxOp);
+    // Never post an amount that disagrees with the converted total the bill saved: stop for reconciliation instead.
+    const fxCheck = checkPostingAgainstSaved({
+      original: totalPurchaseAmount,
+      rate: savedRate,
+      op: fxOp,
+      savedBase: Number(String(orderRow.order_total ?? formData.totals?.grandFinal ?? "").replace(/,/g, "")),
+    });
+    if (!fxCheck.ok) {
+      throw new Error(
+        `Transfer stopped: ${totalPurchaseAmount} ${currencyCode} ${fxOp === "/" ? "÷" : "×"} ${savedRate} = ${fxCheck.computedBase.toFixed(2)}, ` +
+        `but the bill's saved total is ${Number(fxCheck.savedBase).toFixed(2)}. Correct the bill's rate / amount before transferring.`
+      );
+    }
 
     let roznamchaEntryId: string | null = null;
     let paymentId: string | null = null;
