@@ -133,6 +133,12 @@ export function branchLabel(r: BranchFields): string {
   return parts.length ? parts.join(" / ") : "—";
 }
 
+/** Dense registers show saved branch codes only; names remain available in detailed views. */
+export function branchCodeLabel(r: Pick<BranchFields, "countryBranchCode" | "cityBranchCode">): string {
+  const parts = [r.countryBranchCode, r.cityBranchCode].map((value) => value.trim()).filter(Boolean);
+  return parts.length ? parts.join(" / ") : "—";
+}
+
 /** Sums the balances per key (goods, country or branch). Groups are sorted by label. */
 export function groupRegister(
   rows: WarehouseBalanceRow[],
