@@ -1,5 +1,7 @@
 import type { ErpSession } from "@/lib/auth/session";
 import { billFxOperator, checkPostingAgainstSaved, effectiveFxRate } from "@/lib/purchases/fx-operator";
+import { buildPostingSummary, describePostingMismatch, postedDebitTotal } from "@/lib/purchases/posting-summary";
+import { ApiClientError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers } from "@/lib/services/posting-verification";
 import { resolvePurchaseBookingTransferDestination } from "@/lib/services/purchase-booking-transfer-routing";
@@ -230,13 +232,30 @@ export async function transferPurchaseBookingViaLocalPg(input: {
         op: fxOp,
         savedBase: Number(String(orderRow.order_total ?? formData.totals?.grandFinal ?? "").replace(/,/g, "")),
       });
-      if (!fxCheck.ok) {
-        throw new Error(
-          `Transfer stopped: ${totalPurchaseAmount} ${String(orderRow.currency_code || form.currencyType || "USD")} ${fxOp === "/" ? "÷" : "×"} ${savedRate} = ${fxCheck.computedBase.toFixed(2)}, ` +
-          `but the bill's saved total is ${Number(fxCheck.savedBase).toFixed(2)}. Correct the bill's rate / amount before transferring.`
-        );
-      }
+      const billCurrency = String(orderRow.currency_code || form.currencyType || "USD");
+      const baseCurrency = String(form.secondaryCurrency || form.localCurrency || form.baseCurrency || "");
       const expectedFinalAmount = Number(orderRow.order_total || 0) > 0 ? Number(orderRow.order_total) : (totalPurchaseAmount * exRate);
+      // the posting as planned (Dr / Cr / amounts / user) — returned with any "stopped" error so the screen shows it
+      const plannedPosting = (reason: string) =>
+        buildPostingSummary({
+          status: "not_posted",
+          debitAccount: debitAccountObj,
+          creditAccount: creditAccountObj,
+          plannedBaseAmount: expectedFinalAmount,
+          originalAmount: totalPurchaseAmount,
+          currency: billCurrency,
+          baseCurrency,
+          rate: savedRate,
+          op: fxOp,
+          postedBy: { id: session.userId, name: session.fullName || session.email || null },
+          reason,
+        });
+      if (!fxCheck.ok) {
+        const reason =
+          `Transfer stopped — nothing was posted: ${totalPurchaseAmount} ${billCurrency} ${fxOp === "/" ? "÷" : "×"} ${savedRate} = ${fxCheck.computedBase.toFixed(2)}, ` +
+          `but the bill's saved total is ${Number(fxCheck.savedBase).toFixed(2)}. Correct the bill's rate / amount before transferring.`;
+        throw new ApiClientError(reason, { status: 409, code: "POSTING_STOPPED", details: { posting: plannedPosting(reason) } });
+      }
 
       let paymentId: string | null = null;
       let roznamchaEntryId: string | null = null;
@@ -311,15 +330,31 @@ export async function transferPurchaseBookingViaLocalPg(input: {
         where roznamcha_entry_id = ${roznamchaEntryId}::uuid
       `;
       assertDistinctBookingLedgers(debitAccountObj.id, creditAccountObj.id, "Business Roznamcha");
-      assertBalancedPostedLines({
-        label: "Business Roznamcha",
-        lines: postedLines,
-        expectedDebitLedgerId: debitAccountObj.id,
-        expectedCreditLedgerId: creditAccountObj.id,
-        expectedAmount: totalPurchaseAmount,
-        expectedExchangeRate: exRate,
-        expectedBaseAmount: expectedFinalAmount
-      });
+      try {
+        assertBalancedPostedLines({
+          label: "Business Roznamcha",
+          lines: postedLines,
+          expectedDebitLedgerId: debitAccountObj.id,
+          expectedCreditLedgerId: creditAccountObj.id,
+          expectedAmount: totalPurchaseAmount,
+          expectedExchangeRate: exRate,
+          expectedBaseAmount: expectedFinalAmount
+        });
+      } catch (err: any) {
+        // the transaction rolls back: say in figures what the engine produced versus the bill, and show the planned Dr / Cr
+        const reason = /posted amount/.test(String(err?.message))
+          ? describePostingMismatch({
+              postedBase: postedDebitTotal(postedLines),
+              expectedBase: expectedFinalAmount,
+              originalAmount: totalPurchaseAmount,
+              currency: billCurrency,
+              baseCurrency,
+              rate: savedRate,
+              op: fxOp,
+            })
+          : `Transfer stopped — nothing was posted. ${String(err?.message || err)}`;
+        throw new ApiClientError(reason, { status: 409, code: "POSTING_STOPPED", details: { posting: plannedPosting(reason) } });
+      }
 
       const journalRecordRows = await tx`
         select id, source_module, source_transaction_type, source_transaction_id, source_reference_no, status, posted_at, country_id, country_branch_id, city_branch_id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number
@@ -340,6 +375,22 @@ export async function transferPurchaseBookingViaLocalPg(input: {
       if ((effectiveCountryBranchId || effectiveCityBranchId) && !journalRecord.branch_transaction_serial_number) {
         throw new Error("Business Roznamcha posting verification failed: linked Roznamcha entry is missing branch serial.");
       }
+
+      const posting = buildPostingSummary({
+        status: "posted",
+        lines: postedLines,
+        debitAccount: debitAccountObj,
+        creditAccount: creditAccountObj,
+        originalAmount: totalPurchaseAmount,
+        currency: billCurrency,
+        baseCurrency,
+        rate: savedRate,
+        op: fxOp,
+        roznamchaSerialNo: journalRecord.super_admin_serial_number || journalRecord.country_transaction_serial_number || journalRecord.branch_transaction_serial_number || roznamchaEntryId,
+        entryDate: now.slice(0, 10),
+        postedAt: journalRecord.posted_at ? new Date(journalRecord.posted_at).toISOString() : now,
+        postedBy: { id: session.userId, name: session.fullName || session.email || null },
+      });
 
       const selectedPaymentType = form.paymentType || body?.paymentType || "";
       const destination = resolvePurchaseBookingTransferDestination(selectedPaymentType);
@@ -389,7 +440,8 @@ export async function transferPurchaseBookingViaLocalPg(input: {
           superAdminSerialNo: journalRecord.super_admin_serial_number,
           countrySerialNo: journalRecord.country_transaction_serial_number,
           branchSerialNo: journalRecord.branch_transaction_serial_number,
-          payDidSerialNo: paymentId ? `PAY-${paymentId.slice(-6).toUpperCase()}` : "PAY-OK"
+          payDidSerialNo: paymentId ? `PAY-${paymentId.slice(-6).toUpperCase()}` : "PAY-OK",
+          posting
         }
       };
 
@@ -426,7 +478,8 @@ export async function transferPurchaseBookingViaLocalPg(input: {
         superAdminSerialNo: journalRecord.super_admin_serial_number,
         countrySerialNo: journalRecord.country_transaction_serial_number,
         branchSerialNo: journalRecord.branch_transaction_serial_number,
-        payDidSerialNo: paymentId ? `PAY-${paymentId.slice(-6).toUpperCase()}` : "PAY-OK"
+        payDidSerialNo: paymentId ? `PAY-${paymentId.slice(-6).toUpperCase()}` : "PAY-OK",
+        posting
       };
     });
   });

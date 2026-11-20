@@ -11,6 +11,7 @@ import { getDbUrl } from "@/lib/db/local-postgres";
 import { isPurchaseBookingTransferLocked, resolvePurchaseBookingTransferDestination } from "@/lib/services/purchase-booking-transfer-routing";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
 import { transferPurchaseBookingViaLocalPg } from "@/lib/services/purchase-booking-transfer-local-pg";
+import { buildPostingSummary } from "@/lib/purchases/posting-summary";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -300,11 +301,30 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       op: fxOp,
       savedBase: Number(String(orderRow.order_total ?? formData.totals?.grandFinal ?? "").replace(/,/g, "")),
     });
+    const baseCurrency = String(form.secondaryCurrency || form.localCurrency || form.baseCurrency || "");
     if (!fxCheck.ok) {
-      throw new Error(
-        `Transfer stopped: ${totalPurchaseAmount} ${currencyCode} ${fxOp === "/" ? "÷" : "×"} ${savedRate} = ${fxCheck.computedBase.toFixed(2)}, ` +
-        `but the bill's saved total is ${Number(fxCheck.savedBase).toFixed(2)}. Correct the bill's rate / amount before transferring.`
-      );
+      const reason =
+        `Transfer stopped — nothing was posted: ${totalPurchaseAmount} ${currencyCode} ${fxOp === "/" ? "÷" : "×"} ${savedRate} = ${fxCheck.computedBase.toFixed(2)}, ` +
+        `but the bill's saved total is ${Number(fxCheck.savedBase).toFixed(2)}. Correct the bill's rate / amount before transferring.`;
+      throw new ApiClientError(reason, {
+        status: 409,
+        code: "POSTING_STOPPED",
+        details: {
+          posting: buildPostingSummary({
+            status: "not_posted",
+            debitAccount: debitAccountObj,
+            creditAccount: creditAccountObj,
+            plannedBaseAmount: Number(orderRow.order_total || 0) || fxCheck.computedBase,
+            originalAmount: totalPurchaseAmount,
+            currency: String(currencyCode),
+            baseCurrency,
+            rate: savedRate,
+            op: fxOp,
+            postedBy: { id: session.userId, name: session.fullName || session.email || null },
+            reason,
+          }),
+        },
+      });
     }
 
     let roznamchaEntryId: string | null = null;
@@ -431,15 +451,29 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       expectedAmount: totalPurchaseAmount,
       expectedExchangeRate: exRate
     });
-    assertPostedRoznamchaTrace({
-      label: postingAssertionLabel,
-      entry: (await requireSupabaseData(
-        supabase
-          .from("roznamcha_entries")
-          .select("country_id, country_branch_id, city_branch_id, status, posted_at, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number")
-          .eq("id", roznamchaEntryId)
-          .maybeSingle()
-      )) as any
+    const postedEntry = (await requireSupabaseData(
+      supabase
+        .from("roznamcha_entries")
+        .select("country_id, country_branch_id, city_branch_id, status, posted_at, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number")
+        .eq("id", roznamchaEntryId)
+        .maybeSingle()
+    )) as any;
+    assertPostedRoznamchaTrace({ label: postingAssertionLabel, entry: postedEntry });
+    // what was posted, for the verification screen's Posting Details panel
+    const posting = buildPostingSummary({
+      status: "posted",
+      lines: postedLines,
+      debitAccount: debitAccountObj,
+      creditAccount: creditAccountObj,
+      originalAmount: totalPurchaseAmount,
+      currency: String(currencyCode),
+      baseCurrency,
+      rate: savedRate,
+      op: fxOp,
+      roznamchaSerialNo: postedEntry?.super_admin_serial_number || postedEntry?.country_transaction_serial_number || postedEntry?.branch_transaction_serial_number || roznamchaEntryId,
+      entryDate: now.slice(0, 10),
+      postedAt: postedEntry?.posted_at ? new Date(postedEntry.posted_at).toISOString() : now,
+      postedBy: { id: session.userId, name: session.fullName || session.email || null },
     });
 
     // NOTE: A separate journal_entries/journal_lines posting used to be written here for the same
@@ -495,7 +529,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         partyName,
         referenceNo,
         sourceModule: "purchase",
-        sourceTransactionType: "purchase_transfer_to_payment"
+        sourceTransactionType: "purchase_transfer_to_payment",
+        posting
       }
     };
 
@@ -542,7 +577,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       advancePaid: existingAdvance,
       remainingDue: newRemainingDue,
       paymentFlow: destination.flow,
-      destinationPath: destination.path
+      destinationPath: destination.path,
+      posting
     };
 
     if (idempotencyKey && tenantHash) {

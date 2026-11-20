@@ -12923,6 +12923,18 @@ export type UiKey =
   | "sales.stk_panel_sub"
   | "sales.stk_cancel"
   | "sales.stk_source_warehouse"
+  | "pterv2.pd_title"
+  | "pterv2.pd_posted"
+  | "pterv2.pd_stopped"
+  | "pterv2.pd_debit"
+  | "pterv2.pd_credit"
+  | "pterv2.pd_not_posted"
+  | "pterv2.pd_serial"
+  | "pterv2.pd_date"
+  | "pterv2.pd_posted_by"
+  | "pterv2.pd_balanced"
+  | "pterv2.pd_unbalanced"
+  | "pterv2.pd_continue"
   | "sales.s2_stock_source"
   | "sales.s2_item_name"
   | "sales.s2_item_search_ph"
@@ -20454,6 +20466,18 @@ const en: Dict = {
   "common.time": "Time",
 
   "pterv2.report_title": "ENTERPRISE PURCHASE TRANSFER & SETTLEMENT VERIFICATION AUDIT SHEET",
+  "pterv2.pd_title": "Posting Details",
+  "pterv2.pd_posted": "Posted to Business Roznamcha",
+  "pterv2.pd_stopped": "Transfer stopped — nothing was posted",
+  "pterv2.pd_debit": "Debit (Dr)",
+  "pterv2.pd_credit": "Credit (Cr)",
+  "pterv2.pd_not_posted": "Not posted",
+  "pterv2.pd_serial": "Roznamcha No.",
+  "pterv2.pd_date": "Date / time",
+  "pterv2.pd_posted_by": "Posted by",
+  "pterv2.pd_balanced": "Debit = Credit (balanced)",
+  "pterv2.pd_unbalanced": "Debit and Credit differ",
+  "pterv2.pd_continue": "Continue to next stage",
   "pterv2.not_found": "This purchase booking was not found.",
   "pterv2.flow_step1": "1. PO Booking Created",
   "pterv2.flow_step2": "2. Audit & Branch Verification",
@@ -41307,6 +41331,18 @@ const ur: Dict = {
   "tax_einv.cat_stock_transfer": "اسٹاک ٹرانسفر",
   "tax_einv.cat_other": "دیگر",
   "pterv2.report_title": "انٹرپرائز پرچیز ٹرانسفر و سیٹلمنٹ کی تصدیقی و آڈٹ رپورٹ",
+  "pterv2.pd_title": "پوسٹنگ کی تفصیل",
+  "pterv2.pd_posted": "بزنس روزنامچہ میں پوسٹ ہو گیا",
+  "pterv2.pd_stopped": "ٹرانسفر روک دیا گیا — کچھ بھی پوسٹ نہیں ہوا",
+  "pterv2.pd_debit": "ڈیبٹ (Dr)",
+  "pterv2.pd_credit": "کریڈٹ (Cr)",
+  "pterv2.pd_not_posted": "پوسٹ نہیں ہوا",
+  "pterv2.pd_serial": "روزنامچہ نمبر",
+  "pterv2.pd_date": "تاریخ / وقت",
+  "pterv2.pd_posted_by": "پوسٹ کرنے والا",
+  "pterv2.pd_balanced": "ڈیبٹ = کریڈٹ (برابر)",
+  "pterv2.pd_unbalanced": "ڈیبٹ اور کریڈٹ برابر نہیں",
+  "pterv2.pd_continue": "اگلے مرحلے پر جائیں",
   "pterv2.not_found": "یہ پرچیز بکنگ نہیں ملی۔",
   "pterv2.flow_step1": "1۔ پرچیز آرڈر بکنگ درج کی گئی",
   "pterv2.flow_step2": "2۔ برانچ آڈٹ و تصدیق مکمل",
@@ -67900,6 +67936,18 @@ const ar: Dict = {
   "tax_einv.cat_stock_transfer": "نقل المخزون",
   "tax_einv.cat_other": "أخرى",
   "pterv2.report_title": "تقرير التحقق والتدقيق لنقل وتسوية المشتريات للمؤسسات",
+  "pterv2.pd_title": "تفاصيل الترحيل",
+  "pterv2.pd_posted": "تم الترحيل إلى روزنامچه الأعمال",
+  "pterv2.pd_stopped": "تم إيقاف التحويل — لم يُرحَّل أي شيء",
+  "pterv2.pd_debit": "مدين (Dr)",
+  "pterv2.pd_credit": "دائن (Cr)",
+  "pterv2.pd_not_posted": "لم يُرحَّل",
+  "pterv2.pd_serial": "رقم الروزنامچه",
+  "pterv2.pd_date": "التاريخ / الوقت",
+  "pterv2.pd_posted_by": "تم الترحيل بواسطة",
+  "pterv2.pd_balanced": "المدين = الدائن (متوازن)",
+  "pterv2.pd_unbalanced": "المدين والدائن غير متساويين",
+  "pterv2.pd_continue": "المتابعة إلى المرحلة التالية",
   "pterv2.not_found": "لم يتم العثور على حجز الشراء هذا.",
   "pterv2.flow_step1": "1. إنشاء حجز أمر الشراء",
   "pterv2.flow_step2": "2. التدقيق والتحقق من الفرع",
@@ -94545,6 +94593,18 @@ const fa: Dict = {
   "tax_einv.cat_stock_transfer": "انتقال موجودی",
   "tax_einv.cat_other": "سایر",
   "pterv2.report_title": "گزارش تایید و حسابرسی انتقال و تسویه خرید سازمانی",
+  "pterv2.pd_title": "جزئیات ثبت",
+  "pterv2.pd_posted": "در روزنامچه تجاری ثبت شد",
+  "pterv2.pd_stopped": "انتقال متوقف شد — هیچ چیزی ثبت نشد",
+  "pterv2.pd_debit": "بدهکار (Dr)",
+  "pterv2.pd_credit": "بستانکار (Cr)",
+  "pterv2.pd_not_posted": "ثبت نشد",
+  "pterv2.pd_serial": "شماره روزنامچه",
+  "pterv2.pd_date": "تاریخ / زمان",
+  "pterv2.pd_posted_by": "ثبت‌کننده",
+  "pterv2.pd_balanced": "بدهکار = بستانکار (تراز)",
+  "pterv2.pd_unbalanced": "بدهکار و بستانکار برابر نیستند",
+  "pterv2.pd_continue": "ادامه به مرحله بعد",
   "pterv2.not_found": "این رزرو خرید پیدا نشد.",
   "pterv2.flow_step1": "1. ایجاد رزرو سفارش خرید",
   "pterv2.flow_step2": "2. حسابرسی و تایید شعبه",
@@ -121189,6 +121249,18 @@ const ps: Dict = {
   "tax_einv.cat_stock_transfer": "د ذخیرې لیږد",
   "tax_einv.cat_other": "نور",
   "pterv2.report_title": "د سازماني پیرود لیږد او حساب تصفیې تصدیق راپور",
+  "pterv2.pd_title": "د ثبت جزیات",
+  "pterv2.pd_posted": "په سوداګریز روزنامچه کې ثبت شو",
+  "pterv2.pd_stopped": "لېږد ودرول شو — هېڅ شی ثبت نه شو",
+  "pterv2.pd_debit": "ډیبټ (Dr)",
+  "pterv2.pd_credit": "کریډټ (Cr)",
+  "pterv2.pd_not_posted": "ثبت نه شو",
+  "pterv2.pd_serial": "د روزنامچې شمېره",
+  "pterv2.pd_date": "نېټه / وخت",
+  "pterv2.pd_posted_by": "ثبتوونکی",
+  "pterv2.pd_balanced": "ډیبټ = کریډټ (برابر)",
+  "pterv2.pd_unbalanced": "ډیبټ او کریډټ برابر نه دي",
+  "pterv2.pd_continue": "بل پړاو ته دوام",
   "pterv2.not_found": "دا د پیرود بکنګ ونه موندل شو.",
   "pterv2.flow_step1": "1. د پیرود امر راجستر شو",
   "pterv2.flow_step2": "2. د څانګې پلټنه او تصدیق",
