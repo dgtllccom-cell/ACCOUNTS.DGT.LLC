@@ -1,5 +1,6 @@
 "use client";
 
+import { A4DocumentViewer } from "@/components/ui/a4-document-viewer";
 import { pl } from "@/lib/reports/print-label";
 import React, { useMemo, useState, useEffect, Fragment } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -22,6 +23,7 @@ import {
   FileText,
   Plus,
   MoreVertical,
+  ArrowRightLeft,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -303,6 +305,9 @@ export function LocalPurchaseDestinationQueueView({
   });
   const [loadingSubmitting, setLoadingSubmitting] = useState(false);
   const [loadingError, setLoadingError] = useState("");
+
+  // The one onward step after loading: the Goods Transfer Journal (Export / Warehouse / Local Market Sale / Hold)
+  const goodsTransferHref = (row: LocalPurchaseDestinationRecord) => `/dashboard/purchase/local-purchase/${row.id}/goods-transfer`;
 
   function getLoadingStats(row: LocalPurchaseDestinationRecord) {
     const booked = Number(row.numbers || row.quantity_kgs || 0);
@@ -1391,6 +1396,21 @@ export function LocalPurchaseDestinationQueueView({
                                         <span>{th("ADD LOADING")}</span>
                                       </button>
 
+                                      {/* after loading: onward to Warehouse / Export / Local Sale / Hold (the existing Goods Transfer Journal) */}
+                                      <button
+                                        type="button"
+                                        disabled={loaded <= 0}
+                                        title={loaded <= 0 ? th("ADD LOADING") : undefined}
+                                        onClick={() => {
+                                          setOpenRowMenuId(null);
+                                          router.push(goodsTransferHref(row));
+                                        }}
+                                        className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 font-semibold text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/40 disabled:opacity-40 cursor-pointer"
+                                      >
+                                        <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
+                                        <span>{th("TRANSFER GOODS")}</span>
+                                      </button>
+
                                       <button
                                         type="button"
                                         onClick={() => {
@@ -1930,35 +1950,58 @@ export function LocalPurchaseDestinationQueueView({
       )}
 
       {selectedRowForVoucher && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs overflow-y-auto animate-in fade-in">
-          <div className="w-full max-w-5xl rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[92vh] overflow-y-auto relative">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3 print:hidden">
-              <h3 className="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
-                <FileText className="h-4 w-4 text-blue-600" /> VOUCHER DETAILS FOR{" "}
+        <A4DocumentViewer
+          isOpen
+          onClose={() => setSelectedRowForVoucher(null)}
+          fit="page"
+          testId="lp-voucher-fullscreen"
+          icon={<FileText className="h-4 w-4 text-blue-600" />}
+          title={<>{th("VOUCHER DETAILS FOR")}{" "}
                 {selectedRowForVoucher.serialNo ||
                   selectedRowForVoucher.serial_no ||
-                  `LP-${selectedRowForVoucher.id?.slice(0, 5).toUpperCase()}`}
-              </h3>
-              <div className="flex gap-2">
+                  `LP-${selectedRowForVoucher.id?.slice(0, 5).toUpperCase()}`}</>}
+          actions={
+            <>
+                {stage === "loading" && (() => {
+                  const st = getLoadingStats(selectedRowForVoucher);
+                  return (
+                    <>
+                      <Button
+                        type="button"
+                        disabled={st.booked > 0 && st.loaded >= st.booked}
+                        onClick={() => {
+                          const bill = selectedRowForVoucher;
+                          setSelectedRowForVoucher(null);
+                          openLoadingModal(bill);
+                        }}
+                        className="h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1"
+                      >
+                        <Truck className="h-3.5 w-3.5" /> {th("ADD LOADING")}
+                      </Button>
+                      <Button
+                        type="button"
+                        disabled={st.loaded <= 0}
+                        onClick={() => router.push(goodsTransferHref(selectedRowForVoucher))}
+                        className="h-8 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold flex items-center gap-1"
+                      >
+                        <ArrowRightLeft className="h-3.5 w-3.5" /> {th("TRANSFER GOODS")}
+                      </Button>
+                    </>
+                  );
+                })()}
                 <Button
                   onClick={() => printDomFragmentViaModal("printable-modal-voucher", "Voucher")}
                   className="h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1"
                 >
                   <Printer className="h-3.5 w-3.5" /> {th("Print")}
                 </Button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedRowForVoucher(null)}
-                  className="text-slate-400 hover:text-slate-600 text-xs font-bold bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-lg transition-colors"
-                >
-                  {th("Close")}
-                </button>
-              </div>
-            </div>
+            </>
+          }
+        >
 
             <div
               id="printable-modal-voucher"
-              className="p-4 bg-white border border-slate-200 rounded-xl space-y-4 font-sans text-xs"
+              className="bg-white space-y-4 font-sans text-xs"
             >
               {(() => {
                 const rowCountry =
@@ -2182,7 +2225,7 @@ export function LocalPurchaseDestinationQueueView({
                           </div>
 
                           <div className="p-4">
-                            <table className="w-full border-collapse overflow-hidden rounded-xl border border-slate-200 text-[11px]">
+                            <table className="w-full border-collapse overflow-hidden rounded-xl border border-slate-200 text-[10.5px] [&_th]:!whitespace-normal [&_th]:break-words [&_th]:!text-[10px] [&_th]:!leading-tight [&_th]:!px-1 [&_th]:!py-1.5 [&_td]:p-1.5 [&_td]:!whitespace-normal">
                               <thead className="bg-slate-900 text-white">
                                 <tr>
                                   <Th className="border border-slate-800 p-2 text-left">
@@ -2416,8 +2459,7 @@ export function LocalPurchaseDestinationQueueView({
                 );
               })()}
             </div>
-          </div>
-        </div>
+        </A4DocumentViewer>
       )}
     </div>
   );

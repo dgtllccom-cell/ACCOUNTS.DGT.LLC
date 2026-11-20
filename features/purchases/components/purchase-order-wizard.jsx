@@ -1,4 +1,5 @@
 "use client";
+import { A4DocumentViewer } from "@/components/ui/a4-document-viewer";
 import React, { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -7116,23 +7117,16 @@ export function PurchaseOrderWizard({ session }) {
         </SimpleModal>
       )}
       {previewModalOpen && (
-        <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-5xl h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden relative">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
-              <h2 className="text-sm font-black text-slate-800 uppercase tracking-wide flex items-center gap-2">
-                <Printer className="h-4 w-4 text-blue-600" /> {t(lang, "purchase.print_preview_title", "Print Preview")}
-              </h2>
-              <div className="flex items-center gap-3">
-                <Button type="button" onClick={() => { import("@/lib/reports/print-dom-fragment").then((m) => { if (!m.printDomFragmentViaModal("wizard-a4-preview", t(lang, "purchase.print_document_btn", "Print Document"), { lang })) window.print(); }); }} className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-4 text-xs font-bold rounded shadow transition-all">{t(lang, "purchase.print_document_btn", "Print Document")}</Button>
-                <Button type="button" variant="outline" onClick={() => setPreviewModalOpen(false)} className="h-8 px-4 text-xs font-bold hover:bg-slate-100">{t(lang, "purchase.close_btn", "Close")}</Button>
-              </div>
-            </div>
-            {/* flex+justify-center clips the start of overflowing content when it also
-                scrolls (a well-known flexbox centering bug) — margin-auto on the child
-                centers it when it fits and scrolls cleanly from the true left edge when
-                it doesn't, on any screen narrower than 210mm. */}
-            <div className="flex-1 overflow-auto p-8 bg-slate-100/50 custom-scrollbar">
-              <div id="wizard-a4-preview" className="w-[210mm] min-h-[297mm] mx-auto bg-white shadow-xl border border-slate-200 p-8 transform scale-[0.9] origin-top print:scale-100 print:shadow-none print:m-0 print:border-none print:p-0">
+        <A4DocumentViewer
+          isOpen
+          onClose={() => setPreviewModalOpen(false)}
+          fit="page"
+          bodyClassName="!p-0"
+          icon={<Printer className="h-4 w-4 text-blue-600" />}
+          title={t(lang, "purchase.print_preview_title", "Print Preview")}
+          actions={<Button type="button" onClick={() => { import("@/lib/reports/print-dom-fragment").then((m) => { if (!m.printDomFragmentViaModal("wizard-a4-preview", t(lang, "purchase.print_document_btn", "Print Document"), { lang })) window.print(); }); }} className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-4 text-xs font-bold rounded shadow transition-all">{t(lang, "purchase.print_document_btn", "Print Document")}</Button>}
+        >
+              <div id="wizard-a4-preview" className="w-[210mm] min-h-[297mm] mx-auto bg-white p-8 print:scale-100 print:shadow-none print:m-0 print:border-none print:p-0">
 
                 {/* Header */}
                 <div className="text-center border-b-2 border-slate-800 pb-4 mb-6">
@@ -7296,9 +7290,7 @@ export function PurchaseOrderWizard({ session }) {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
+        </A4DocumentViewer>
       )}
 
       {/* --- NEW COUNTRY MODAL --- */}
