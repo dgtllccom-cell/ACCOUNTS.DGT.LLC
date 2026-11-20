@@ -211,8 +211,8 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
           <td style="width:50%">
             <div class="sec">Shipper:</div>
             <div class="v"><b>${dash(shipperName)}</b></div>
-            <div class="v">${dash(shipperAddress)}</div>
-            <div class="v">${isReal(shipperEmail) ? `EMAIL: ${esc(shipperEmail)}` : "—"}</div>
+            ${isReal(shipperAddress) ? `<div class="v">${esc(shipperAddress)}</div>` : ""}
+            ${isReal(shipperEmail) ? `<div class="v">EMAIL: ${esc(shipperEmail)}</div>` : ""}
           </td>
           <td colspan="2" style="padding:0">
             <table class="meta" style="width:100%;border-collapse:collapse">
@@ -225,10 +225,10 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
           <td style="width:50%">
             <div class="sec">Consignee (Notify Party):</div>
             <div class="v"><b>${dash(buyer.name)}</b></div>
-            <div class="v">${dash(buyer.address)}</div>
-            <div class="v">${isReal(buyer.phone) ? `TEL: ${esc(buyer.phone)}` : "—"}</div>
-            <div class="v">${isReal(buyer.email) ? `EMAIL: ${esc(buyer.email)}` : "—"}</div>
-            <div class="v">${isReal(buyer.taxId) ? `${TAXID}: ${esc(buyer.taxId)}` : "—"}</div>
+            ${isReal(buyer.address) ? `<div class="v">${esc(buyer.address)}</div>` : ""}
+            ${isReal(buyer.phone) ? `<div class="v">TEL: ${esc(buyer.phone)}</div>` : ""}
+            ${isReal(buyer.email) ? `<div class="v">EMAIL: ${esc(buyer.email)}</div>` : ""}
+            ${isReal(buyer.taxId) ? `<div class="v">${TAXID}: ${esc(buyer.taxId)}</div>` : ""}
           </td>
           <td style="width:25%">
             <div class="sec">Place of Delivery:</div>

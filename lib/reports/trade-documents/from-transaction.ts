@@ -192,7 +192,7 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
 
   const missing: string[] = [];
   if (!buyer.name) missing.push("Buyer");
-  if (!seller.name) missing.push("Seller");
+  if (!(opts.overrides?.seller?.name || seller.name)) missing.push("Seller");
   if (goods.length === 0) missing.push("Goods lines");
   if (opts.docType !== "packing_list" && !grand) missing.push("Total amount");
 
@@ -327,6 +327,10 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
   const lines = localPurchaseLines(rec);
   const goods: TradeLineItem[] = lines.length ? lines.map((x) => localPurchaseLineToItem(rec, x)) : [li];
   const lineSum = goods.reduce((sum, g) => sum + (g.amount ?? 0), 0);
+  // The supplier is the bill's Cr party (sales / supplier account) — by name. Ledger codes are not printed on the invoice
+  // (the View shows both accounts with their codes above the document); the buyer is our company (branding).
+  const sellerName = realText(rec.sales_account_name) || realText(rec._crName) || realText(rec.supplier_name) || undefined;
+
   return {
     docType: opts.docType,
     txnKind: "purchase",
@@ -338,7 +342,7 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
     docDate: rec.created_at || new Date().toISOString(),
     // The ledger code (purchase_account_no, e.g. 1002) is not an invoice number. The bill number is manual_bill_no.
     referenceNos: { invoice: realText(rec.manual_bill_no), contract: rec.chassis_code },
-    seller: { name: rec.supplier_name || undefined, ...(opts.overrides?.seller || {}) },
+    seller: { name: sellerName, ...(opts.overrides?.seller || {}) },
     buyer: { name: companyNameOrNull(opts.branding) || undefined, address: opts.branding.address, taxId: opts.branding.taxNumber, ...(opts.overrides?.buyer || {}) },
     notifyParty: null,
     delivery: { ...(opts.overrides?.delivery || {}) },
@@ -361,7 +365,7 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
     // a Local Purchase bill names its own tax type (e.g. "VAT"); that wins over the country's default word
     taxTerms: taxTermsFor(rec, opts, rec.tax_type || rec.taxType),
     missingFields: [
-      ...(rec.supplier_name ? [] : ["Supplier"]),
+      ...(rec.supplier_name || opts.overrides?.seller?.name ? [] : ["Supplier"]),
       ...(companyNameOrNull(opts.branding) ? [] : ["Buyer (company name not set in company profile)"]),
       ...(lines.length || rec.goods_name ? [] : ["Goods"]),
     ],

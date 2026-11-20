@@ -30,6 +30,7 @@ import { resolveInvoiceTemplateDefault } from "@/lib/reports/invoice-templates/r
 import { DEFAULT_TEMPLATE_FLAGS, type InvoiceTemplateFlags } from "@/lib/reports/invoice-templates/types";
 import { normalizeTemplateColor } from "@/lib/ui/template-colors";
 import { apiGet } from "@/lib/api/client";
+import { billAccounts, purchaseSupplierName, type BillAccounts } from "@/lib/purchases/bill-accounts";
 
 export type InvoiceSource = "purchase_order" | "sales_order" | "local_purchase";
 
@@ -56,7 +57,24 @@ export interface InvoiceDocumentViewProps {
   actions?: React.ReactNode;
 }
 
-type Built = { input: TradeDocumentInput; html: string; templateId: string; flags: InvoiceTemplateFlags };
+type Built = { input: TradeDocumentInput; html: string; templateId: string; flags: InvoiceTemplateFlags; accounts: BillAccounts };
+
+/** fill a missing account name from the account master (read only); the code stays as saved */
+async function withAccountNames(accounts: BillAccounts): Promise<BillAccounts> {
+  const fill = async (a: BillAccounts["debit"]) => {
+    if (a.name || !a.code) return a;
+    try {
+      const res = await apiGet<any>(`/api/erp/accounting/accounts/lookup?q=${encodeURIComponent(a.code)}&limit=50`);
+      const acc = res?.account ?? res?.data?.account;
+      const name = acc?.accountName || acc?.ledgerName || acc?.name || "";
+      return { ...a, name: String(name || "") };
+    } catch {
+      return a;
+    }
+  };
+  const [debit, credit] = await Promise.all([fill(accounts.debit), fill(accounts.credit)]);
+  return { debit, credit };
+}
 
 export function InvoiceDocumentView({ isOpen, onClose, title, source, record, scope, companyId, docType, actions }: InvoiceDocumentViewProps) {
   const lang = useActiveLanguage() as SupportedLanguage;
@@ -101,7 +119,13 @@ export function InvoiceDocumentView({ isOpen, onClose, title, source, record, sc
             bank = (Array.isArray(res?.banks) ? res.banks[0] : null) ?? null;
           } catch { /* no bank block */ }
         }
-        const input = mapRecordToInvoice(source, record, { docType: type, lang, branding, bank, orientation: "portrait", autoPrint: false, configuredTaxName });
+        // the two accounts of the bill, shown separately above the document (Purchase Dr / Supplier Cr, or Customer Dr / Sales Cr)
+        const accounts = await withAccountNames(billAccounts(source, record));
+        // a purchase invoice's supplier is the Cr party — never our own purchase office (often saved in supplierName)
+        const savedSupplier = source === "local_purchase" ? record?.supplier_name : (record?.form_data?.form?.supplierName ?? record?.supplier_name);
+        const supplier = source === "sales_order" ? "" : purchaseSupplierName(accounts, savedSupplier);
+        const overrides = supplier && supplier !== String(savedSupplier || "") ? { seller: { name: supplier } } : undefined;
+        const input = mapRecordToInvoice(source, record, { docType: type, lang, branding, bank, orientation: "portrait", autoPrint: false, configuredTaxName, overrides });
         const flags: InvoiceTemplateFlags = { ...DEFAULT_TEMPLATE_FLAGS, showLogo: def.showLogo, showBankDetails: def.showBankDetails, showTerms: def.showTerms };
         let colorId: string | null = null;
         try { colorId = normalizeTemplateColor(window.localStorage.getItem("erp_color")); } catch { /* default colour */ }
@@ -109,7 +133,7 @@ export function InvoiceDocumentView({ isOpen, onClose, title, source, record, sc
         const noAutosize = "<style>html,body{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}</style>";
         const raw = renderInvoiceHtml(input, def.templateId, flags, colorId);
         const html = raw.includes("</head>") ? raw.replace("</head>", noAutosize + "</head>") : noAutosize + raw;
-        if (alive) setBuilt({ input, html, templateId: def.templateId, flags });
+        if (alive) setBuilt({ input, html, templateId: def.templateId, flags, accounts });
       } catch {
         if (alive) setError(true);
       }
@@ -166,6 +190,22 @@ export function InvoiceDocumentView({ isOpen, onClose, title, source, record, sc
           <Loader2 className="h-4 w-4 animate-spin" /> {t(lang, "common.loading", "Loading...")}
         </div>
       ) : (
+        <>
+        {(built.accounts.debit.code || built.accounts.debit.name || built.accounts.credit.code || built.accounts.credit.name) && (
+          <div className="grid grid-cols-2 gap-2 px-3 pt-3 print:hidden" data-testid="invoice-accounts">
+            {([
+              ["debit", source === "sales_order" ? t(lang, "idv.acc_customer", "Customer Account (Dr)") : t(lang, "idv.acc_purchase", "Purchase Account (Dr)"), built.accounts.debit],
+              ["credit", source === "sales_order" ? t(lang, "idv.acc_sales", "Sales Account (Cr)") : t(lang, "idv.acc_supplier", "Sales / Supplier Account (Cr)"), built.accounts.credit],
+            ] as const).map(([kind, label, a]) => (
+              <div key={kind} className={`rounded-lg border px-3 py-2 ${kind === "debit" ? "border-sky-200 bg-sky-50" : "border-amber-200 bg-amber-50"}`}>
+                <div className={`text-[10px] font-black uppercase tracking-wider ${kind === "debit" ? "text-sky-700" : "text-amber-700"}`}>{label}</div>
+                <div className="text-xs font-bold text-slate-800 break-words" dir="ltr">
+                  {a.code ? <span className="font-mono">{a.code}</span> : null} {a.name || "—"}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         <iframe
           ref={frameRef}
           title={typeof title === "string" ? title : "invoice"}
@@ -176,6 +216,7 @@ export function InvoiceDocumentView({ isOpen, onClose, title, source, record, sc
           style={{ height }}
           data-testid="invoice-document-frame"
         />
+        </>
       )}
     </A4DocumentViewer>
   );

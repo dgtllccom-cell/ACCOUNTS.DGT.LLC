@@ -75,6 +75,7 @@ import { buildPurchaseBookingTransferUrl } from "@/lib/services/purchase-booking
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { translateValue } from "@/lib/i18n/table-values";
 import { fetchBranding, brandingName } from "@/lib/branding/client";
+import { PostingDetailsPanel } from "@/features/purchases/components/posting-details-panel";
 
 type PurchaseReport = {
   [key: string]: any;
@@ -1439,6 +1440,8 @@ export function PurchaseBookingJournalReportView({
   const [activeTab, setActiveTab] = useState<DashboardTab>("purchase");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [transferring, setTransferring] = useState(false);
+  // Posting Details side panel after Transfer: what was debited / credited, by whom (or why it was stopped)
+  const [postingPanel, setPostingPanel] = useState<{ posting?: any; error?: string; destUrl?: string } | null>(null);
   const [expandedDashboardCountry, setExpandedDashboardCountry] = useState<string>("");
   const [usdRates, setUsdRates] = useState<Record<string, number>>({});
   const [lastExchangeRateUpdate, setLastExchangeRateUpdate] = useState<string | null>(null);
@@ -1505,6 +1508,7 @@ export function PurchaseBookingJournalReportView({
     if (typeof window !== "undefined" && !window.confirm(tt("confirm_post", "Post booking {no} to the ledger now? This creates the Debit / Credit entries once and cannot be repeated.").replace("{no}", String(orderNoForConfirm)))) return;
 
     setTransferring(true);
+    setPostingPanel(null);
     try {
       const transferResponse = await fetch(`/api/erp/purchases/orders/${reportToTransfer.id}/transfer`, {
         method: "POST",
@@ -1515,19 +1519,22 @@ export function PurchaseBookingJournalReportView({
 
       const transferPayload = await transferResponse.json().catch(() => ({}));
       if (!transferResponse.ok || !transferPayload.ok) {
-        throw new Error(transferPayload?.error?.message || transferPayload?.error || "Roznamcha/Ledger Transfer failed.");
+        // stopped: show the reason and the planned Dr / Cr at the side (no browser popup)
+        const msg = transferPayload?.error?.message || (typeof transferPayload?.error === "string" ? transferPayload.error : "") || "Roznamcha/Ledger Transfer failed.";
+        setPostingPanel({ posting: transferPayload?.error?.details?.posting, error: msg });
+        return;
       }
 
-      setIsDrawerOpen(false);
       const orderNo = reportToTransfer.purchaseBookingOrderNumber || (reportToTransfer as any).purchase_order_no || "";
       setMessage(`Sent ${orderNo} to Purchase Transfer Payment screen.`);
-      // Navigate directly to the payment/loading section
       const destUrl = transferPayload.data?.destinationPath
         ? `${transferPayload.data.destinationPath}?purchaseOrderNo=${encodeURIComponent(orderNo)}`
         : buildPurchaseBookingTransferUrl(form.paymentType, orderNo);
-      router.push(destUrl);
+      // posted: mark the row and show what was debited / credited; the user continues to the next stage from the panel
+      setReports((prev) => prev.map((r) => (r.id === reportToTransfer.id ? ({ ...r, status: "Posted", ledger_posting_status: "posted", is_edited_since_transfer: false } as any) : r)));
+      setPostingPanel({ posting: transferPayload.data?.posting, destUrl });
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error transferring booking.");
+      setPostingPanel({ error: err instanceof Error ? err.message : t(activeLang, "pterv2.pd_stopped", "Transfer stopped — nothing was posted") });
     } finally {
       setTransferring(false);
     }
@@ -2897,24 +2904,24 @@ export function PurchaseBookingJournalReportView({
             </DarkTable>
           </div>
         ) : (
-          /* ── Detailed 41-Column Audit Register View ──────────── */
+          /* ── Detailed Compact Consolidated Register View ──────────── */
           <div className="p-0 overflow-x-auto">
             <DarkTable
               lang={activeLang}
               tableGroups={[
-                { label: "General Information", span: 10, cls: "bg-[#0f2942] text-white border-b border-slate-800 border-r border-slate-700" },
-                { label: "Product Information", span: 7, cls: "bg-[#143657] text-white border-b border-slate-800 border-r border-slate-700" },
-                { label: "Financial Information", span: 10, cls: "bg-[#0f2942] text-white border-b border-slate-800 border-r border-slate-700" },
-                { label: "Route & Loading", span: 7, cls: "bg-[#143657] text-white border-b border-slate-800 border-r border-slate-700" },
-                { label: "Status", span: 4, cls: "bg-[#0f2942] text-white border-b border-slate-800 border-r border-slate-700" },
-                { label: "Actions", span: 1, cls: "bg-[#143657] text-white border-b border-slate-800" },
+                { label: t(activeLang, "pbjr.sec_general", "General Information"), span: 5, cls: "bg-[#0f2942] text-white border-b border-slate-800 border-r border-slate-700" },
+                { label: t(activeLang, "pbjr.sec_product", "Product Information"), span: 4, cls: "bg-[#143657] text-white border-b border-slate-800 border-r border-slate-700" },
+                { label: t(activeLang, "pbjr.sec_financial", "Financial Information"), span: 3, cls: "bg-[#0f2942] text-white border-b border-slate-800 border-r border-slate-700" },
+                { label: t(activeLang, "pbjr.sec_route_loading", "Route & Loading"), span: 3, cls: "bg-[#143657] text-white border-b border-slate-800 border-r border-slate-700" },
+                { label: t(activeLang, "common.status", "Status"), span: 1, cls: "bg-[#0f2942] text-white border-b border-slate-800 border-r border-slate-700" },
+                { label: t(activeLang, "pbjr.sec_actions", "Actions"), span: 1, cls: "bg-[#143657] text-white border-b border-slate-800" },
               ]}
               headers={[
-                "SR.", "SUPER S/N", "CTY S/N", "BR. S/N", "PURCHASE ACC.", "SALES ACC.", "COUNTRY", "CITY BRANCH", "DATE", "USER",
-                "GOODS NAME", "BRAND", "ORIGIN", "QTY", "UNIT", "GROSS WT (KG)", "NET WT (KG)",
-                "PURCH. CURR", "PURCH. PRICE", "TOTAL AMT", "ADVANCE (FC)", "EX. RATE", "FINAL CURR", "FINAL AMT", "ADVANCE (LC)", "INV. %", "PAY. CONDITION",
-                "ROUTE", "LOAD. COUNTRY", "LOAD. PORT", "LOAD. DATE", "RCV. COUNTRY", "RCV. PORT", "RCV. DATE",
-                "TRANSFER THE BILL", "INV. STS.", "PAY. STATUS", "LOAD. STATUS", "ACTIONS"
+                "SR.", "ENTRY / SERIAL NO.", "DATE", "COUNTRY / BRANCH", "ACCOUNTS (DR / CR)",
+                "GOODS (BRAND / SIZE)", "ORIGIN", "QTY (UNIT)", "WEIGHT (KG)",
+                "RATE / PRICE", "TOTAL / FINAL AMOUNT", "PAYMENT CONDITION",
+                "LOADING (CTY / PORT)", "RECEIVING (CTY / PORT)", "DATES (LOAD / RCV)",
+                "STATUS", "ACTIONS"
               ]}
             >
               {registerRows.map((report, index) => {
@@ -2924,10 +2931,15 @@ export function PurchaseBookingJournalReportView({
                 const superSerialNo = (report as any).superAdminSerialNo || `GBL-${report.purchaseBookingOrderNumber}`;
                 const countrySerialNo = (report as any).computedCountrySerial || "-";
                 const branchSerialNo = (report as any).computedBranchSerial || "-";
+                const entrySerialNo = report.purchaseBookingOrderNumber || (report as any).purchase_order_no || report.manualBillNumber || `PB-${srNo}`;
                 const purchaseAccCode = report.purchaseAccountNumber || report.form_data?.form?.purchaseAccountNo || "-";
+                const purchaseAccName = report.purchaseAccountName || report.form_data?.form?.purchaseAccountName || report.supplierName || "-";
                 const salesAccCode = report.salesAccountNumber || report.form_data?.form?.salesAccountNo || "-";
+                const salesAccName = report.salesAccountName || report.form_data?.form?.salesAccountName || report.buyerName || "-";
                 const dateStr = formatShortDate(report.purchaseDate || report.bookingDate);
                 const goodsName = goods.map((g: any) => g.goodsName).filter(Boolean).join(", ") || report.productName || "-";
+                const brand = g0?.brand || (report.form_data?.form as any)?.brand || "";
+                const size = g0?.size || (report.form_data?.form as any)?.size || "";
                 const ctyName = report.countryName || report.form_data?.form?.countryName || (report as any).country_name || "UAE";
                 const brName = report.branchName || report.form_data?.form?.branchName || (report as any).city_branch_name || (report as any).branch_name || "-";
 
@@ -2956,11 +2968,7 @@ export function PurchaseBookingJournalReportView({
                 const finalCur = report.finalCurrency || f.secondaryCurrency?.split(" ")[0] || "AED";
                 const totalAmtFc = Number(report.totalPurchaseAmount || report.purchaseAmount || 0);
                 const totalAmtLc = Number(report.finalAmount || (totalAmtFc * exRate) || 0);
-                const advFc = Number(f.advanceAmountFc || (report as any).advance_paid || 0);
-                const advLc = Number(f.advanceAmountLc || (advFc * exRate) || 0);
-                const invPercent = f.advancePercent ? `${f.advancePercent}%` : f.invoicePercent ? `${f.invoicePercent}%` : "10%";
                 const payCondition = f.paymentType || (report as any).paymentStatus || "Advance Payment";
-                const routeMode = f.shippingMode || "By Sea";
                 const loadCountry = f.loadingCountry || f.originCountry || report.countryName || ctyName;
                 const loadPort = f.loadingPort || f.loadingCountryPort || "Main Seaport";
                 const loadDate = formatShortDate(f.loadingDate || report.purchaseDate || report.bookingDate);
@@ -2968,51 +2976,138 @@ export function PurchaseBookingJournalReportView({
                 const rcvPort = f.receivedPort || f.receivedCountryPort || "Central Port";
                 const rcvDate = formatShortDate(f.receivedDate || report.purchaseDate || report.bookingDate);
 
-                const isAccepted = report.status === "accepted" || report.status === "approved" || isPosted;
-                const invStatus = (report as any).inventoryStatus || report.form_data?.workflow?.inventoryStatus || (isAccepted ? "In Transit" : "Completed");
-                const payStatus = (report as any).paymentStatus || report.form_data?.workflow?.paymentStatus || (advFc > 0 ? "Advance Paid" : "Pending");
-                const loadStatus = (report as any).containerStatus || report.form_data?.workflow?.containerStatus || (isAccepted ? "Loaded" : "Dispatched");
-
                 return (
                   <tr key={report.id} onClick={() => { setSelectedId(report.id); setIsDrawerOpen(true); }} className={cn("cursor-pointer border-b border-slate-200 transition-colors", rowBgClass)}>
+                    {/* 1. SR */}
                     <Td center className={cn("font-bold text-[11px]", rowTextColor)}>{srNo}</Td>
-                    <Td center className={cn("font-mono text-[11px]", rowTextColor)}>{superSerialNo}</Td>
-                    <Td center className={cn("font-mono text-[11px]", rowTextColor)}>{countrySerialNo}</Td>
-                    <Td center className={cn("font-mono text-[11px]", rowTextColor)}>{branchSerialNo}</Td>
-                    <Td className={cn("text-[11px]", rowTextColor)}>{purchaseAccCode}</Td>
-                    <Td className={cn("text-[11px]", rowTextColor)}>{salesAccCode}</Td>
-                    <Td className={cn("text-[11px] font-semibold whitespace-nowrap", rowTextColor)}>{trField(report, "countryName", ctyName)}</Td>
-                    <Td className={cn("text-[11px] font-semibold whitespace-nowrap", rowTextColor)}>{trField(report, "branchName", brName)}</Td>
+
+                    {/* 2. ENTRY NO. with popup on hover */}
+                    <Td center className={cn("text-[11px]", rowTextColor)}>
+                      <div className="relative group inline-block">
+                        <span className="font-mono font-bold text-blue-600 dark:text-blue-400 underline decoration-dotted cursor-pointer">
+                          {entrySerialNo}
+                        </span>
+                        <div className="hidden group-hover:block absolute left-0 top-full z-50 mt-1 min-w-[210px] rounded-lg border border-slate-200 bg-white p-2.5 text-[10px] text-slate-800 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 text-left pointer-events-none">
+                          <div className="font-bold border-b border-slate-100 dark:border-slate-800 pb-1 mb-1 text-slate-500 uppercase">Serial Information</div>
+                          <div className="grid grid-cols-[85px_1fr] gap-0.5">
+                            <span className="text-slate-500 font-medium">Super Admin:</span><span className="font-mono font-bold">{superSerialNo}</span>
+                            <span className="text-slate-500 font-medium">Country:</span><span className="font-mono font-bold">{countrySerialNo}</span>
+                            <span className="text-slate-500 font-medium">Branch:</span><span className="font-mono font-bold">{branchSerialNo}</span>
+                            <span className="text-slate-500 font-medium">Entry/Bill:</span><span className="font-mono font-bold text-blue-600 dark:text-blue-400">{entrySerialNo}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Td>
+
+                    {/* 3. DATE */}
                     <Td center className={cn("text-[11px] whitespace-nowrap", rowTextColor)}>{dateStr}</Td>
-                    <Td className={cn("text-[11px] font-semibold whitespace-nowrap", rowTextColor)}>{report.audit?.userName || "—"}</Td>
-                    <Td className={cn("text-[11px] max-w-[200px] truncate", rowTextColor)} title={goodsName}>{goodsName}</Td>
-                    <Td center className={cn("text-[11px]", rowTextColor)}>{trField(report, "items.0.brand", g0?.brand || "Standard")}</Td>
+
+                    {/* 4. COUNTRY / BRANCH */}
+                    <Td className={cn("text-[11px] whitespace-nowrap", rowTextColor)}>
+                      <div className="flex flex-col gap-0.5">
+                        <div className="font-bold flex items-center gap-1">
+                          <span>{getCountryFlag(ctyName)}</span>
+                          <span>{trField(report, "countryName", ctyName)}</span>
+                        </div>
+                        <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                          🏛️ {trField(report, "branchName", brName)}
+                        </div>
+                      </div>
+                    </Td>
+
+                    {/* 5. ACCOUNTS (DR / CR) */}
+                    <Td className={cn("text-[11px]", rowTextColor)}>
+                      <div className="flex flex-col gap-0.5 max-w-[220px]" title={`DR: ${purchaseAccCode} - ${purchaseAccName}\nCR: ${salesAccCode} - ${salesAccName}`}>
+                        <div className="truncate text-slate-900 dark:text-slate-100 font-bold flex items-center">
+                          <span className="text-[9px] uppercase font-bold text-blue-600 bg-blue-50 dark:bg-blue-950 px-1 py-0.2 rounded mr-1">DR</span>
+                          <span className="font-mono text-[10px] text-slate-600 dark:text-slate-400 mr-1">{purchaseAccCode}</span>
+                          <span className="truncate">{purchaseAccName}</span>
+                        </div>
+                        <div className="truncate text-slate-700 dark:text-slate-300 font-semibold flex items-center">
+                          <span className="text-[9px] uppercase font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-1 py-0.2 rounded mr-1">CR</span>
+                          <span className="font-mono text-[10px] text-slate-600 dark:text-slate-400 mr-1">{salesAccCode}</span>
+                          <span className="truncate">{salesAccName}</span>
+                        </div>
+                      </div>
+                    </Td>
+
+                    {/* 6. GOODS (BRAND / SIZE) */}
+                    <Td className={cn("text-[11px]", rowTextColor)}>
+                      <div className="flex flex-col gap-0.5 max-w-[200px]">
+                        <span className="font-bold truncate text-slate-900 dark:text-slate-100" title={goodsName}>{goodsName}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                          {brand ? `Brand: ${brand}` : ""}{brand && size ? " · " : ""}{size ? `Size: ${size}` : ""}
+                        </span>
+                      </div>
+                    </Td>
+
+                    {/* 7. ORIGIN */}
                     <Td center className={cn("text-[11px]", rowTextColor)}>{trField(report, "items.0.origin", g0?.origin || ctyName)}</Td>
-                    <Td right className={cn("font-mono text-[11px]", rowTextColor)}>{formatNumber(report.quantity || 0)}</Td>
-                    <Td center className={cn("text-[11px]", rowTextColor)}>{translateValue(activeLang, report.unit || "KG")}</Td>
-                    <Td right className={cn("font-mono text-[11px]", rowTextColor)}>{formatNumber(report.totalGrossWeight || 0)}</Td>
-                    <Td right className={cn("font-mono text-[11px]", rowTextColor)}>{formatNumber(report.totalNetWeight || 0)}</Td>
-                    <Td center className={cn("text-[11px]", rowTextColor)}>{report.currency || "USD"}</Td>
-                    <Td right className={cn("font-mono text-[11px]", rowTextColor)}>{formatMoney(report.purchaseRate || 0)}</Td>
-                    <Td right className={cn("font-mono font-bold text-[11px]", rowTextColor)}>{formatMoney(totalAmtFc)}</Td>
-                    <Td right className={cn("font-mono text-[11px]", rowTextColor)}>{formatMoney(advFc)}</Td>
-                    <Td right className={cn("font-mono text-[11px]", rowTextColor)}>{formatMoney(exRate)}</Td>
-                    <Td center className={cn("text-[11px]", rowTextColor)}>{finalCur}</Td>
-                    <Td right className={cn("font-mono font-bold text-[11px]", rowTextColor)}>{formatMoney(totalAmtLc)}</Td>
-                    <Td right className={cn("font-mono text-[11px]", rowTextColor)}>{formatMoney(advLc)}</Td>
-                    <Td center className={cn("text-[11px]", rowTextColor)}>{invPercent}</Td>
+
+                    {/* 8. QTY (UNIT) */}
+                    <Td center className={cn("font-mono text-[11px]", rowTextColor)}>
+                      <div className="flex flex-col items-center">
+                        <span className="font-bold text-slate-900 dark:text-slate-100">{formatNumber(report.quantity || 0)}</span>
+                        <span className="text-[10px] font-medium text-slate-500">{translateValue(activeLang, report.unit || g0?.qtyName || "KG")}</span>
+                      </div>
+                    </Td>
+
+                    {/* 9. WEIGHT (KG) */}
+                    <Td right className={cn("font-mono text-[11px]", rowTextColor)}>
+                      <div className="flex flex-col items-end">
+                        <span className="font-bold text-slate-800 dark:text-slate-200">G.WT: {formatNumber(report.totalGrossWeight || 0)} KG</span>
+                        <span className="text-[10px] text-slate-500">N.WT: {formatNumber(report.totalNetWeight || 0)} KG</span>
+                      </div>
+                    </Td>
+
+                    {/* 10. RATE / PRICE */}
+                    <Td right className={cn("font-mono text-[11px]", rowTextColor)}>
+                      <span className="font-bold">{report.currency || "USD"} {formatMoney(report.purchaseRate || 0)}</span>
+                    </Td>
+
+                    {/* 11. TOTAL / FINAL AMOUNT */}
+                    <Td right className={cn("font-mono text-[11px]", rowTextColor)}>
+                      <div className="flex flex-col items-end">
+                        <span className="font-semibold text-slate-600 dark:text-slate-400">{report.currency || "USD"} {formatMoney(totalAmtFc)}</span>
+                        <span className="font-black text-emerald-600 dark:text-emerald-400">{finalCur} {formatMoney(totalAmtLc)}</span>
+                      </div>
+                    </Td>
+
+                    {/* 12. PAYMENT CONDITION */}
                     <Td className={cn("text-[11px]", rowTextColor)}>{translateValue(activeLang, payCondition)}</Td>
-                    <Td center className={cn("text-[11px]", rowTextColor)}>{translateValue(activeLang, routeMode)}</Td>
-                    <Td className={cn("text-[11px]", rowTextColor)}>{trField(report, "loadingCountry", loadCountry)}</Td>
-                    <Td className={cn("text-[11px]", rowTextColor)}>{loadPort}</Td>
-                    <Td center className={cn("text-[11px]", rowTextColor)}>{loadDate}</Td>
-                    <Td className={cn("text-[11px]", rowTextColor)}>{trField(report, "receivedCountry", rcvCountry)}</Td>
-                    <Td className={cn("text-[11px]", rowTextColor)}>{rcvPort}</Td>
-                    <Td center className={cn("text-[11px]", rowTextColor)}>{rcvDate}</Td>
-                    <Td center><span className={cn("rounded px-2 py-0.5 text-[11px] font-bold", !isPosted ? "bg-red-100 text-red-700 border border-red-300" : "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-black")}>{!isPosted ? t(activeLang, "pb_register.status_no_pending", "NO (PENDING)") : t(activeLang, "pb_register.status_yes_transferred", "YES (TRANSFERRED)")}</span></Td>
-                    <Td center><span className={cn("rounded px-2 py-0.5 text-[11px] font-semibold", !isPosted ? "bg-red-100 text-red-800" : "bg-slate-100 text-slate-800 font-bold")}>{!isPosted ? t(activeLang, "pb_register.status_accepted", "Accepted (Not Transferred)") : t(activeLang, "pb_register.status_transferred", "Transferred")}</span></Td>
-                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[11px]">{translateValue(activeLang, payStatus)}</span></Td>
-                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[11px]">{translateValue(activeLang, loadStatus)}</span></Td>
+
+                    {/* 13. LOADING (CTY / PORT) */}
+                    <Td className={cn("text-[11px]", rowTextColor)}>
+                      <div className="flex flex-col">
+                        <span className="font-bold">{trField(report, "loadingCountry", loadCountry)}</span>
+                        <span className="text-[10px] text-slate-500">{loadPort}</span>
+                      </div>
+                    </Td>
+
+                    {/* 14. RECEIVING (CTY / PORT) */}
+                    <Td className={cn("text-[11px]", rowTextColor)}>
+                      <div className="flex flex-col">
+                        <span className="font-bold">{trField(report, "receivedCountry", rcvCountry)}</span>
+                        <span className="text-[10px] text-slate-500">{rcvPort}</span>
+                      </div>
+                    </Td>
+
+                    {/* 15. DATES (LOAD / RCV) */}
+                    <Td center className={cn("text-[11px] whitespace-nowrap", rowTextColor)}>
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-bold">L: {loadDate}</span>
+                        <span className="text-[10px] text-slate-500">R: {rcvDate}</span>
+                      </div>
+                    </Td>
+
+                    {/* 16. STATUS */}
+                    <Td center>
+                      <span className={cn("rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider", !isPosted ? "bg-red-100 text-red-700 border border-red-300" : "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900")}>
+                        {!isPosted ? t(activeLang, "pb_register.status_no_pending", "PENDING") : t(activeLang, "pb_register.status_yes_transferred", "TRANSFERRED")}
+                      </span>
+                    </Td>
+
+                    {/* 17. ACTIONS */}
                     <Td center onClick={(e) => e.stopPropagation()}>
                       <UnifiedActionMenu
                         align="right"
@@ -3258,6 +3353,16 @@ export function PurchaseBookingJournalReportView({
                   className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs h-8"
                 >
                   {accepting ? "Accepting..." : "Accept"}
+                </Button>
+              )}
+              {selected && (selected as any)?.form_data?.workflow?.posting && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setPostingPanel({ posting: (selected as any).form_data.workflow.posting })}
+                  className="font-bold text-xs h-8"
+                >
+                  {t(activeLang, "pterv2.pd_title", "Posting Details")}
                 </Button>
               )}
               {selected && (
@@ -3812,6 +3917,25 @@ export function PurchaseBookingJournalReportView({
             }}
           />
         )}
+
+      {postingPanel && (
+        <PostingDetailsPanel
+          posting={postingPanel.posting}
+          error={postingPanel.error}
+          onClose={() => setPostingPanel(null)}
+          action={
+            postingPanel.destUrl ? (
+              <button
+                type="button"
+                onClick={() => { const u = postingPanel.destUrl!; setPostingPanel(null); setIsDrawerOpen(false); router.push(u); }}
+                className="w-full h-9 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold"
+              >
+                {t(activeLang, "pterv2.pd_continue", "Continue to next stage")}
+              </button>
+            ) : null
+          }
+        />
+      )}
     </div>
   );
 }
