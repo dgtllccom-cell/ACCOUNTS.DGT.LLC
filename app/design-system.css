@@ -68,7 +68,8 @@
   /* chips / codes / badges inside table cells stay on one line (the table scrolls instead of stacking letters) */
   [data-erp-content] table :is(td, th) :is(.inline-flex, .font-mono, .rounded, .rounded-md, .rounded-full) { white-space: nowrap; }
   /* dialogs (pickers, confirmations, print previews) fit the screen and scroll */
-  [role="dialog"] { max-width: calc(100vw - 1rem) !important; max-height: calc(100dvh - 1rem); overflow-y: auto; }
+  /* (the full-screen A4 record viewer, components/ui/a4-document-viewer.tsx, sizes itself) */
+  [role="dialog"]:not([data-a4-viewer]) { max-width: calc(100vw - 1rem) !important; max-height: calc(100dvh - 1rem); overflow-y: auto; }
   /* grid cells may shrink below their content: long names wrap instead of pushing past the card */
   [data-erp-content] .grid > * { min-width: 0; overflow-wrap: break-word; }
   /* 4-12 column field grids become 2 columns */
