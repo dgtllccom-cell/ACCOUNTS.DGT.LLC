@@ -65,7 +65,8 @@ describe("purchase movements: categories", () => {
 
 describe("purchase movements: purchase rows", () => {
   const booking = bill({
-    id: "po1", type: "booking", billNo: "PB-001",
+    id: "po1", type: "booking", billNo: "PB-001", mainBranchCode: "ARE-MAIN-001", cityBranchCode: "ARE-AEDU-001",
+    serials: { superAdmin: "SA-44", country: "CO-12", branch: "BR-8", entry: "NC-4" },
     entries: [entry({ entryId: "po:po1::LOT-A::l1", lotNo: "LOT-A", lotEntryLabel: "LOT-A / Entry 1", loadingRecordId: "plr1", remaining: w(60, 600, 594) })],
   });
   const local = bill({
@@ -80,6 +81,8 @@ describe("purchase movements: purchase rows", () => {
     // blank brand and size show a dash, never an invented value
     expect(rows[1].entries[0]).toMatchObject({ brand: "—", size: "—", lot: "L7", qty: 50 });
     expect(rows[0].remaining).toBe(60);
+    expect(rows[0]).toMatchObject({ mainBranchCode: "ARE-MAIN-001", cityBranchCode: "ARE-AEDU-001", serials: { superAdmin: "SA-44", country: "CO-12", branch: "BR-8", entry: "NC-4" } });
+    expect(rows[1]).toMatchObject({ mainBranchCode: "—", cityBranchCode: "—", serials: { superAdmin: "—", country: "—", branch: "—", entry: "—" } });
   });
 
   it("puts every loading and stock transfer under its original purchase number", () => {
