@@ -502,11 +502,6 @@ export function TransferDetailsSection({
                       className="flex-1 text-left truncate flex items-center gap-1.5 cursor-pointer"
                     >
                       <span className="truncate">{opt.name}</span>
-                      {opt.record?.branch_name && (
-                        <span className="text-[10px] text-slate-400 font-normal truncate">
-                          ({opt.record.branch_name})
-                        </span>
-                      )}
                     </button>
 
                     <div className="flex items-center gap-1 shrink-0 ml-1">

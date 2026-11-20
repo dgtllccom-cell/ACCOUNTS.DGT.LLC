@@ -2029,17 +2029,17 @@ export function CashEntryForm({
   const detailsString = useMemo(() => {
     if (!paymentType) return "";
     if (paymentType === "bank") {
-      const bankName = typeDetails.bankName || "";
-      const method = typeDetails.method || "";
-      const refNo = typeDetails.receiptNumber || typeDetails.refNo || "";
+      const bName = typeDetails.bankName || "";
+      const method = typeDetails.method || typeDetails.transferType || "";
+      const refNo = typeDetails.receiptNumber || typeDetails.refNo || typeDetails.transferReferenceNumber || "";
       const payDate = typeDetails.payDate || entryDate;
       const formattedDate = payDate ? payDate.split("-").reverse().join("/") : "";
       const attachment = attachmentFile?.name || typeDetails.bankAttachmentName || "";
       
       const parts = [
-        bankName && `Bank: ${bankName}`,
-        method && `Method: ${method}`,
-        refNo && `Receipt: ${refNo}`,
+        bName && `Bank: ${bName}`,
+        method && `Transfer: ${method}`,
+        refNo && `Receipt #: ${refNo}`,
         formattedDate && `Date: ${formattedDate}`,
         attachment && `Attachment: ${attachment}`
       ].filter(Boolean);
@@ -2054,7 +2054,7 @@ export function CashEntryForm({
       const docFile = attachmentFile?.name || typeDetails.idCardCopyName || "";
       
       const parts = [
-        receiver && `Receiver/Sender: ${receiver}`,
+        receiver && `Party: ${receiver}`,
         mobile && `Mobile: ${mobile}`,
         whatsapp && `WhatsApp: ${whatsapp}`,
         docType && `ID: ${docType}`,
@@ -4088,49 +4088,47 @@ export function CashEntryForm({
           <div className="mt-2.5 grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
             {/* ══ LEFT COLUMN: STEPS 1 TO 6 (8 cols) ══ */}
             <div className="lg:col-span-8 space-y-2">
-              {/* ── 1. REGISTER & ENTRY SETUP ── */}
+              {/* ── 1. CATEGORY & ENTRY SETUP ── */}
               <section className="rounded-xl border border-slate-200/80 p-2.5 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs">
                 <div className="mb-2 flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-100">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-xs">1</span>
                   <Layers className="h-4 w-4 text-blue-600 dark:text-blue-400 stroke-[2.2]" />
-                  <span>{tr("cef.step1_setup", "Register & Entry Setup")}</span>
+                  <span>{tr("cef.step1_setup", "Category & Entry Setup")}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                  {/* Register Type */}
+                  {/* Category */}
                   <div>
                     <label className="mb-0.5 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                      {tr("cef.register_type", "Register Type")} <span className="text-rose-500">*</span>
+                      {tr("cef.category_label", "Category")} <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
                       <Layers className="pointer-events-none absolute left-2 top-2 h-3.5 w-3.5 text-slate-400" />
                       <select
-                        value={roznamchaType}
-                        onChange={(e) => setRoznamchaType(e.target.value)}
+                        value={categoryType}
+                        onChange={(e) => setCategoryType(e.target.value)}
                         className="h-8 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-7 pr-6 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                       >
-                        <option value="Cash Register">{tr("cef.opt_cash", "Cash Register")}</option>
-                        <option value="Cash Book No.">{tr("cj.mOptCashBook", "Cash Book No.")}</option>
-                        <option value="Roznamcha Book No.">{tr("cj.mOptRozBook", "Roznamcha Book No.")}</option>
-                        <option value="Receipt No.">{tr("cj.mOptReceiptNo", "Receipt No.")}</option>
+                        <option value="Cash Roznamcha">{tr("cef.opt_cash_roznamcha", "Cash Roznamcha")}</option>
+                        <option value="General Journal">{tr("roz.entry_type_journal", "General Journal")}</option>
+                        <option value="Bank Roznamcha">{tr("cef.opt_bank_roznamcha", "Bank Roznamcha")}</option>
+                        <option value="Daily Payment">{tr("cj.mDailyDate", "Daily Payment")}</option>
                       </select>
                       <ChevronDown className="pointer-events-none absolute right-2 top-2 h-3.5 w-3.5 text-slate-400" />
                     </div>
                   </div>
 
-                  {/* Register No. */}
+                  {/* Reference / Voucher No. */}
                   <div>
                     <label className="mb-0.5 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                      {tr("cef.register_no", "Register No.")} <span className="text-rose-500">*</span>
+                      {tr("cef.reference_voucher", "Reference / Voucher No.")}
                     </label>
-                    <div className="flex h-8 rounded-lg border border-slate-200 bg-white overflow-hidden dark:border-slate-700 dark:bg-slate-950 focus-within:border-blue-500">
-                      <span className="flex items-center bg-slate-100 dark:bg-slate-800 px-2 text-[10px] font-bold text-slate-600 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
-                        RZ-
-                      </span>
+                    <div className="relative">
+                      <FileText className="pointer-events-none absolute left-2 top-2 h-3.5 w-3.5 text-slate-400" />
                       <input
-                        value={roznamchaNumber.replace(/^RZ-?/i, "")}
-                        onChange={(e) => setRoznamchaNumber(e.target.value)}
-                        placeholder="000134"
-                        className="w-full bg-transparent px-2 font-mono text-[11px] font-bold text-slate-800 outline-none dark:text-slate-100"
+                        value={referenceNo}
+                        onChange={(e) => setReferenceNo(e.target.value)}
+                        placeholder="e.g. INV-001 / PAY-001"
+                        className="h-8 w-full rounded-lg border border-slate-200 bg-white pl-7 pr-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                       />
                     </div>
                   </div>
@@ -4328,44 +4326,49 @@ export function CashEntryForm({
                 </div>
               </section>
 
-              {/* ── 3. CATEGORY & REFERENCE ── */}
+              {/* ── 3. ROZNAMCHA REGISTER SETUP ── */}
               <section className="rounded-xl border border-slate-200/80 p-2.5 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs">
                 <div className="mb-2 flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-100">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-xs">3</span>
                   <Layers className="h-4 w-4 text-blue-600 dark:text-blue-400 stroke-[2.2]" />
-                  <span>{tr("cef.category_reference", "Category & Reference")}</span>
+                  <span>{tr("cef.register_type", "Roznamcha Register Setup")}</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Register Type */}
                   <div>
                     <label className="mb-0.5 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                      {tr("cef.category_label", "Category")} <span className="text-rose-500">*</span>
+                      {tr("cef.register_type", "Register Type")} <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
                       <Layers className="pointer-events-none absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
                       <select
-                        value={categoryType}
-                        onChange={(e) => setCategoryType(e.target.value)}
+                        value={roznamchaType}
+                        onChange={(e) => setRoznamchaType(e.target.value)}
                         className="h-8 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-8 pr-6 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                       >
-                        <option value="Cash Roznamcha">{tr("cef.opt_cash_roznamcha", "Cash Roznamcha")}</option>
-                        <option value="General Journal">{tr("roz.entry_type_journal", "General Journal")}</option>
-                        <option value="Bank Roznamcha">{tr("cef.opt_bank_roznamcha", "Bank Roznamcha")}</option>
-                        <option value="Daily Payment">{tr("cj.mDailyDate", "Daily Payment")}</option>
+                        <option value="Cash Register">{tr("cef.opt_cash", "Cash Register")}</option>
+                        <option value="Cash Book No.">{tr("cj.mOptCashBook", "Cash Book No.")}</option>
+                        <option value="Roznamcha Book No.">{tr("cj.mOptRozBook", "Roznamcha Book No.")}</option>
+                        <option value="Receipt No.">{tr("cj.mOptReceiptNo", "Receipt No.")}</option>
                       </select>
                       <ChevronDown className="pointer-events-none absolute right-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
                     </div>
                   </div>
+
+                  {/* Register No. */}
                   <div>
                     <label className="mb-0.5 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                      {tr("cef.reference_voucher", "Reference / Voucher No.")}
+                      {tr("cef.register_no", "Register No.")} <span className="text-rose-500">*</span>
                     </label>
-                    <div className="relative">
-                      <FileText className="pointer-events-none absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                    <div className="flex h-8 rounded-lg border border-slate-200 bg-white overflow-hidden dark:border-slate-700 dark:bg-slate-950 focus-within:border-blue-500">
+                      <span className="flex items-center bg-slate-100 dark:bg-slate-800 px-2.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
+                        RZ-
+                      </span>
                       <input
-                        value={referenceNo}
-                        onChange={(e) => setReferenceNo(e.target.value)}
-                        placeholder="e.g. INV-001 / PAY-001"
-                        className="h-8 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                        value={roznamchaNumber.replace(/^RZ-?/i, "")}
+                        onChange={(e) => setRoznamchaNumber(e.target.value)}
+                        placeholder="000134"
+                        className="w-full bg-transparent px-2.5 font-mono text-[11px] font-bold text-slate-800 outline-none dark:text-slate-100"
                       />
                     </div>
                   </div>
@@ -4690,29 +4693,33 @@ export function CashEntryForm({
                         <label className="mb-0.5 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                           {tr("cef.posting_side", "Posting Side")} <span className="text-rose-500">*</span>
                         </label>
-                        <div className="flex h-8 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50/60 dark:border-slate-700 dark:bg-slate-950/60 px-3">
-                          <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-bold text-slate-800 dark:text-slate-200">
-                            <input
-                              type="radio"
-                              name="postingSide"
-                              value="DEBIT"
-                              checked={paymentMode === "DEBIT"}
-                              onChange={() => setPaymentMode("DEBIT")}
-                              className="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500"
-                            />
+                        <div className="grid grid-cols-2 gap-1.5 p-0.5 rounded-lg border border-slate-200 bg-slate-100/70 dark:border-slate-700 dark:bg-slate-950/70 h-8">
+                          <button
+                            type="button"
+                            onClick={() => setPaymentMode("DEBIT")}
+                            className={cn(
+                              "flex items-center justify-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer",
+                              paymentMode === "DEBIT"
+                                ? "bg-sky-600 text-white shadow-xs dark:bg-sky-500"
+                                : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+                            )}
+                          >
+                            <span className={cn("h-2 w-2 rounded-full", paymentMode === "DEBIT" ? "bg-white" : "bg-slate-300 dark:bg-slate-600")} />
                             <span>{tr("cef.debit_dr", "Debit (DR)")}</span>
-                          </label>
-                          <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-bold text-slate-800 dark:text-slate-200">
-                            <input
-                              type="radio"
-                              name="postingSide"
-                              value="CREDIT"
-                              checked={paymentMode === "CREDIT"}
-                              onChange={() => setPaymentMode("CREDIT")}
-                              className="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500"
-                            />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPaymentMode("CREDIT")}
+                            className={cn(
+                              "flex items-center justify-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer",
+                              paymentMode === "CREDIT"
+                                ? "bg-emerald-600 text-white shadow-xs dark:bg-emerald-500"
+                                : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+                            )}
+                          >
+                            <span className={cn("h-2 w-2 rounded-full", paymentMode === "CREDIT" ? "bg-white" : "bg-slate-300 dark:bg-slate-600")} />
                             <span>{tr("cef.credit_cr", "Credit (CR)")}</span>
-                          </label>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -4727,11 +4734,29 @@ export function CashEntryForm({
 
                   {/* Right Final Amount Card */}
                   <div className="md:col-span-4">
-                    <div className="flex h-[72px] flex-col justify-between rounded-xl border border-emerald-200 bg-emerald-50/80 p-3 text-right dark:border-emerald-800 dark:bg-emerald-950/30">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                        {tr("cj.mFinalAmount", "Final Amount")}
-                      </span>
-                      <span className="font-mono text-xl sm:text-2xl font-black leading-tight text-emerald-600 dark:text-emerald-400" dir="ltr">
+                    <div className={cn(
+                      "flex h-[72px] flex-col justify-between rounded-xl border p-2.5 text-right transition-colors",
+                      paymentMode === "CREDIT"
+                        ? "border-emerald-200 bg-emerald-50/80 dark:border-emerald-800 dark:bg-emerald-950/30"
+                        : "border-sky-200 bg-sky-50/80 dark:border-sky-800 dark:bg-sky-950/30"
+                    )}>
+                      <div className="flex items-center justify-between">
+                        <span className={cn(
+                          "rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider",
+                          paymentMode === "CREDIT"
+                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200"
+                            : "bg-sky-100 text-sky-800 dark:bg-sky-900/60 dark:text-sky-200"
+                        )}>
+                          {paymentMode === "CREDIT" ? "CR · Credit" : "DR · Debit"}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          {tr("cj.mFinalAmount", "Final Amount")}
+                        </span>
+                      </div>
+                      <span className={cn(
+                        "font-mono text-xl sm:text-2xl font-black leading-tight",
+                        paymentMode === "CREDIT" ? "text-emerald-600 dark:text-emerald-400" : "text-sky-600 dark:text-sky-400"
+                      )} dir="ltr">
                         {targetAccountCurrency.toUpperCase()} {fmtAmount(amount || 0)}
                       </span>
                     </div>
@@ -4850,13 +4875,13 @@ export function CashEntryForm({
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">{tr("ledger.total_debit", "Total Debit")}</span>
+                    <span className="text-slate-500 font-medium">{tr("bankroz.total_debit", "Total Debit")}</span>
                     <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">
                       {branchCurrency || "AED"} {fmtAmount(accountSnapshot.totalDebit)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-medium">{tr("ledger.total_credit", "Total Credit")}</span>
+                    <span className="text-slate-500 font-medium">{tr("bankroz.total_credit", "Total Credit")}</span>
                     <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">
                       {branchCurrency || "AED"} {fmtAmount(accountSnapshot.totalCredit)}
                     </span>
