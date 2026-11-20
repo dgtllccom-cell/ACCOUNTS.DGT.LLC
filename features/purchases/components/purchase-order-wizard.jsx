@@ -79,6 +79,7 @@ import { readDraftPrefill, clearDraftPrefill } from "@/features/document-intelli
 import { translateOptionLabel } from "@/lib/i18n/option-labels";
 import { VoiceFormFill } from "@/components/voice-form-fill";
 import { findSelectedAccount, resolveAccountCompany, accountCompanyName } from "@/lib/purchases/booking-account-panel";
+import { loadingReadinessNote } from "@/lib/purchases/loading-readiness";
 
 // --- Non-location constants (static values, not from master forms) ---
 const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY", "SAR"];
@@ -1483,6 +1484,10 @@ export function PurchaseOrderWizard({ session }) {
             countrySerialNo: wf.countrySerialNo || poData.country_transaction_serial_number || "",
             superAdminSerialNo: wf.superAdminSerialNo || "",
             branchSerialNo: wf.branchSerialNo || poData.branch_transaction_serial_number || "",
+            // transferred / posted bills are the only ones the Loading queue lists (app/api/erp/purchases/loading-records)
+            posted: String(poData.status || "").toLowerCase() === "transferred"
+              || String(poData.ledger_posting_status || "").toLowerCase() === "posted"
+              || String(wf.transferStatus || "").toLowerCase() === "transferred",
           });
         }
 
@@ -4968,6 +4973,19 @@ export function PurchaseOrderWizard({ session }) {
               );
             })() : (
                 <div className="w-full space-y-4 animate-in fade-in duration-200 mt-3">
+                  {/* Saved but not transferred: say why it is not in Loading yet (display only; rules unchanged) */}
+                  {(() => {
+                    const note = loadingReadinessNote({ saved: Boolean(savedOrderId), posted: isTransferred || Boolean(loadedBillSerials?.posted), paymentTerms: form.paymentType });
+                    if (!note) return null;
+                    return (
+                      <div role="status" data-testid="loading-readiness-note" className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-xs font-semibold text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                        <span aria-hidden="true">⏳</span>
+                        <span>{note === "transfer_then_advance"
+                          ? t(lang, "loadready.transfer_then_advance", "Not in Loading yet — Transfer & Post this bill, then pay the advance; it goes to Loading once the advance is paid.")
+                          : t(lang, "loadready.transfer_first", "Not in Loading yet — Transfer & Post this bill to send it to Loading. Credit / Final bills go to Loading as soon as they are transferred.")}</span>
+                      </div>
+                    );
+                  })()}
                   {/* ================= TOP COMPANY / COUNTRY CLEARING LEDGER BANNER ================= */}
                   <div className="w-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-3.5">
