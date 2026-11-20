@@ -93,7 +93,14 @@ export interface StockJournalRow {
   countryBranchId: string | null;
   cityBranchId: string | null;
   branchName: string;
+  mainBranchCode?: string;
+  cityBranchCode?: string;
   supplierName: string;
+  purchaseAccountName?: string;
+  purchaseAccountNo?: string;
+  salesAccountName?: string;
+  salesAccountNo?: string;
+  serials?: { superAdmin: string; country: string; branch: string; entry: string };
   productName: string;
   /** Goods master id when known — used only to show the product name in the viewer's language */
   goodsId: string | null;
@@ -423,8 +430,11 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
     const pos = await sql`
       select po.id, po.purchase_order_no, po.purchase_contract_no, po.country_id, po.country_branch_id, po.city_branch_id,
              po.status, po.ledger_posting_status, po.payment_status, po.purchase_currency, po.currency_code, po.form_data, po.created_at,
+             po.super_admin_serial_number, po.super_admin_serial, po.country_transaction_serial_number, po.country_serial,
+             po.branch_transaction_serial_number, po.branch_serial, po.main_branch_transaction_serial, po.city_branch_transaction_serial, po.entry_serial,
              po.exchange_rate, po.order_total, po.total_goods_original, po.advance_paid, po.remaining_paid, po.credit_amount, po.remaining_due,
-             c.name as country_name, c.iso2 as country_code, c.currency_code as base_currency, cb.name as country_branch_name, cib.city_name as city_branch_name
+             c.name as country_name, c.iso2 as country_code, c.currency_code as base_currency,
+             cb.name as country_branch_name, cb.code as country_branch_code, cib.city_name as city_branch_name, cib.code as city_branch_code
       from public.purchase_orders po
       left join public.countries c on c.id = po.country_id
       left join public.country_branches cb on cb.id = po.country_branch_id
@@ -457,8 +467,11 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
       select lp.id, lp.goods_id, lp.goods_name, lp.supplier_name, lp.quantity_name, lp.quantity_kgs, lp.numbers, lp.purchase_currency, lp.final_cost,
              lp.total_gross_weight, lp.net_weight,
              lp.status, lp.manual_bill_no, lp.journal_serial_no, lp.contract_no, lp.brand, lp.size, lp.country_id, lp.country_branch_id, lp.city_branch_id,
+             lp.purchase_account_no, lp.sales_account_no, lp.super_admin_serial, lp.country_serial, lp.country_serial_no,
+             lp.branch_serial, lp.branch_serial_no, lp.entry_serial,
              lp.created_at, lp.line_items, lp.truck_no, lp.warehouse_id,
-             c.name as country_name, c.iso2 as country_code, cb.name as country_branch_name, cib.city_name as city_branch_name,
+             c.name as country_name, c.iso2 as country_code, cb.name as country_branch_name, cb.code as country_branch_code,
+             cib.city_name as city_branch_name, cib.code as city_branch_code,
              coalesce((select sum(pay.amount) from public.purchase_order_payments pay where pay.local_purchase_id = lp.id and pay.deleted_at is null and coalesce(pay.status::text,'') not in ('cancelled','reversed','void','draft')), 0) as paid
       from public.local_purchases lp
       left join public.countries c on c.id = lp.country_id
@@ -563,7 +576,19 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
       countryBranchId: po.country_branch_id,
       cityBranchId: po.city_branch_id,
       branchName: po.city_branch_name ? `${po.city_branch_name}` : po.country_branch_name || "",
+      mainBranchCode: String(po.country_branch_code || ""),
+      cityBranchCode: String(po.city_branch_code || ""),
       supplierName: String(form.salesAccountName || form.salesAccount || form.supplierName || ""),
+      purchaseAccountName: String(form.purchaseAccountName || form.purchaseAccount || ""),
+      purchaseAccountNo: String(form.purchaseAccountNo || form.purchaseAccountNumber || ""),
+      salesAccountName: String(form.salesAccountName || form.salesAccount || form.supplierName || ""),
+      salesAccountNo: String(form.salesAccountNo || form.salesAccountNumber || form.supplierAccountNo || ""),
+      serials: {
+        superAdmin: String(po.super_admin_serial_number || po.super_admin_serial || ""),
+        country: String(po.country_transaction_serial_number || po.country_serial || ""),
+        branch: String(po.branch_transaction_serial_number || po.city_branch_transaction_serial || po.main_branch_transaction_serial || po.branch_serial || ""),
+        entry: String(po.entry_serial || ""),
+      },
       currencyCode: po.purchase_currency || po.currency_code || String(form.purchaseCurrency || ""),
       bookingStatus: (bookingConfirmed ? "confirmed" : "draft") as "confirmed" | "draft",
       invoiceStatus: (String(po.ledger_posting_status || "").toLowerCase() === "posted" ? "posted" : "unposted") as "posted" | "unposted",
@@ -726,7 +751,19 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
       countryBranchId: lp.country_branch_id,
       cityBranchId: lp.city_branch_id,
       branchName: lp.city_branch_name ? `${lp.city_branch_name}` : lp.country_branch_name || "",
+      mainBranchCode: String(lp.country_branch_code || ""),
+      cityBranchCode: String(lp.city_branch_code || ""),
       supplierName: lp.supplier_name || "",
+      purchaseAccountName: "",
+      purchaseAccountNo: String(lp.purchase_account_no || ""),
+      salesAccountName: String(lp.supplier_name || ""),
+      salesAccountNo: String(lp.sales_account_no || ""),
+      serials: {
+        superAdmin: String(lp.super_admin_serial || ""),
+        country: String(lp.country_serial_no || lp.country_serial || ""),
+        branch: String(lp.branch_serial_no || lp.branch_serial || ""),
+        entry: String(lp.entry_serial || ""),
+      },
       currencyCode: lp.purchase_currency || "",
       bookingStatus: (posted ? "confirmed" : "draft") as "confirmed" | "draft",
       invoiceStatus: (posted ? "posted" : "unposted") as "posted" | "unposted",

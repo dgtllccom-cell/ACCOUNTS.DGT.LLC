@@ -438,9 +438,9 @@ export function LocalPurchaseTransferPaymentView({
         _grossKg: grossKg,
         _netKg: netKg,
         _drName: r.purchase_account_name || "Purchase Inventory",
-        _drCode: r.purchase_account_code || "DR-001",
+        _drCode: r.purchase_account_no || r.purchase_account_code || "",
         _crName: r.sales_account_name || r.supplier_name || "Local Supplier",
-        _crCode: r.sales_account_code || "CR-101",
+        _crCode: r.sales_account_no || r.sales_account_code || "",
         _paymentMeta: paymentMeta,
       };
     });
@@ -967,6 +967,7 @@ export function LocalPurchaseTransferPaymentView({
 
   // A single bill prints through the Damaan invoice design (the same document centre as the other purchase screens).
   const handlePrintA4Bill = (bill: any) => {
+    setViewingBill(null);
     setDocumentBill(bill);
   };
 

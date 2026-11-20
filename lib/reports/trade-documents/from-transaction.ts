@@ -327,6 +327,14 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
   const lines = localPurchaseLines(rec);
   const goods: TradeLineItem[] = lines.length ? lines.map((x) => localPurchaseLineToItem(rec, x)) : [li];
   const lineSum = goods.reduce((sum, g) => sum + (g.amount ?? 0), 0);
+  const sellerAccName = realText(rec.sales_account_name) || realText(rec._crName) || realText(rec.supplier_name);
+  const sellerAccNo = realText(rec.sales_account_no) || realText(rec.sales_account_code) || realText(rec._crCode);
+  const sellerName = [sellerAccName, sellerAccNo ? `(${sellerAccNo})` : null].filter(Boolean).join(" ") || undefined;
+
+  const buyerAccName = realText(rec.purchase_account_name) || realText(rec._drName);
+  const buyerAccNo = realText(rec.purchase_account_no) || realText(rec.purchase_account_code) || realText(rec._drCode);
+  const buyerName = [buyerAccName, buyerAccNo ? `(${buyerAccNo})` : null].filter(Boolean).join(" ") || companyNameOrNull(opts.branding) || undefined;
+
   return {
     docType: opts.docType,
     txnKind: "purchase",
@@ -338,8 +346,17 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
     docDate: rec.created_at || new Date().toISOString(),
     // The ledger code (purchase_account_no, e.g. 1002) is not an invoice number. The bill number is manual_bill_no.
     referenceNos: { invoice: realText(rec.manual_bill_no), contract: rec.chassis_code },
-    seller: { name: rec.supplier_name || undefined, ...(opts.overrides?.seller || {}) },
-    buyer: { name: companyNameOrNull(opts.branding) || undefined, address: opts.branding.address, taxId: opts.branding.taxNumber, ...(opts.overrides?.buyer || {}) },
+    seller: {
+      name: sellerName,
+      address: sellerAccNo ? `A/C: ${sellerAccNo}` : undefined,
+      ...(opts.overrides?.seller || {}),
+    },
+    buyer: {
+      name: buyerName,
+      address: buyerAccNo ? `A/C: ${buyerAccNo}` : (opts.branding?.address || undefined),
+      taxId: opts.branding?.taxNumber || undefined,
+      ...(opts.overrides?.buyer || {}),
+    },
     notifyParty: null,
     delivery: { ...(opts.overrides?.delivery || {}) },
     transport: null,

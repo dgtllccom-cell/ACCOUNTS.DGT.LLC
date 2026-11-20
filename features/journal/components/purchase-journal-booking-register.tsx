@@ -41,6 +41,46 @@ function Qty({ q, strong }: { q: UnitQty | undefined; strong?: boolean }) {
   return <span dir="ltr" className={`tabular-nums ${strong ? "font-black" : "font-semibold"}`}>{fmtQty(q)}</span>;
 }
 
+function BillSerialDialog({ s, bill, onClose }: { s: ReturnType<typeof useErpScreen>; bill: RegisterBill; onClose: () => void }) {
+  const serials = [
+    [s.t("serial_super_admin", "Super Admin Serial"), bill.serials.superAdmin],
+    [s.t("serial_country", "Country Serial"), bill.serials.country],
+    [s.t("serial_branch", "Branch Serial"), bill.serials.branch],
+    [s.t("serial_entry", "Entry / NC Serial"), bill.serials.entry],
+  ];
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4" role="presentation" onMouseDown={onClose}>
+      <section role="dialog" aria-modal="true" aria-labelledby="pjb-serial-title" onMouseDown={(event) => event.stopPropagation()}
+        className="w-full max-w-xl overflow-hidden rounded-2xl border border-teal-200 bg-white shadow-2xl dark:border-teal-900 dark:bg-slate-900">
+        <header className="flex items-start justify-between gap-3 bg-gradient-to-r from-teal-950 to-teal-700 px-5 py-4 text-white">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-200">{s.t("serials_title", "Purchase Bill Serial Chain")}</p>
+            <h2 id="pjb-serial-title" className="mt-1 font-mono text-lg font-black" dir="ltr">{bill.purchaseNo}</h2>
+            <p className="mt-0.5 text-xs text-teal-100" dir="ltr">{day(bill.date)}</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label={s.t("close", "Close")} className="grid h-8 w-8 place-items-center rounded-full border border-white/30 text-lg">×</button>
+        </header>
+        <div className="space-y-3 p-5">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {serials.map(([label, value], index) => (
+              <div key={label} className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
+                <p className="text-[9px] font-black uppercase tracking-wide text-slate-500">{index + 1}. {label}</p>
+                <p className="mt-1 break-all font-mono text-sm font-black text-slate-950 dark:text-white" dir="ltr">{value}</p>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-3 gap-2 rounded-xl border border-teal-100 bg-teal-50 p-3 text-xs dark:border-teal-900 dark:bg-teal-950/30">
+            <div><span className="block text-[9px] font-black uppercase text-teal-700 dark:text-teal-300">{s.t("country_code", "Country")}</span><b className="font-mono" dir="ltr">{bill.countryCode || "—"}</b></div>
+            <div><span className="block text-[9px] font-black uppercase text-teal-700 dark:text-teal-300">{s.t("main_branch", "Main Branch")}</span><b className="font-mono" dir="ltr">{bill.mainBranchCode}</b></div>
+            <div><span className="block text-[9px] font-black uppercase text-teal-700 dark:text-teal-300">{s.t("city_branch", "City Branch")}</span><b className="font-mono" dir="ltr">{bill.cityBranchCode}</b></div>
+          </div>
+          <div className="flex justify-end"><button type="button" onClick={onClose} className="rounded-lg bg-teal-800 px-4 py-2 text-xs font-black text-white">{s.t("close", "Close")}</button></div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export function PurchaseJournalBookingRegister({ lang: langProp }: { lang?: string }) {
   const s = useErpScreen("pjb", langProp);
   const [data, setData] = useState<Resp | null>(null);
@@ -52,6 +92,7 @@ export function PurchaseJournalBookingRegister({ lang: langProp }: { lang?: stri
   const [place, setPlace] = useState<CountryStock | null>(null);
   const [page, setPage] = useState(1);
   const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [serialBill, setSerialBill] = useState<RegisterBill | null>(null);
 
   const statusLabel = useCallback((st: BillStatus) => s.t(`st_${st}`, st.replace(/_/g, " ")), [s]);
   const receivingLabel = (r: EntryReceiving) => s.t(`rcv_${r}`, r.replace(/_/g, " "));
@@ -171,16 +212,16 @@ export function PurchaseJournalBookingRegister({ lang: langProp }: { lang?: stri
   return (
     <div dir={s.dir} data-testid="pjb-register" className="mx-auto max-w-[1900px] space-y-3 p-2 text-slate-800 sm:p-4 dark:text-slate-100">
       {/* header */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-teal-100 bg-gradient-to-r from-white via-teal-50/70 to-cyan-50/60 p-3 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-teal-950/30">
         <div className="min-w-0">
           <h1 className="truncate text-lg font-black tracking-tight text-slate-900 dark:text-white">{s.t("title", "Purchase Journal Booking Stock")}</h1>
           <p className="text-[11px] text-slate-500">{s.t("subtitle", "Purchase Booking bills only · booking → loading → receiving → confirmed stock. Local Purchase has its own Goods Transfer Journal.")}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/dashboard/purchase/stock/journal" className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+        <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-950">
+          <Link href="/dashboard/purchase/stock/journal" className="rounded-lg bg-teal-800 px-3 py-2 text-xs font-black text-white hover:bg-teal-700">
             {s.t("open_stock_journal", "Confirm / issue in Stock Journal")}
           </Link>
-          <button type="button" onClick={() => void load()} aria-label={s.t("refresh", "Refresh")} className="rounded-lg border border-slate-200 p-1.5 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+          <button type="button" onClick={() => void load()} aria-label={s.t("refresh", "Refresh")} className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800">
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           </button>
           <UniversalPrintActionButton variant="menu" reportConfig={registerReport} />
@@ -191,13 +232,13 @@ export function PurchaseJournalBookingRegister({ lang: langProp }: { lang?: stri
       <div className="grid gap-2 lg:grid-cols-3" data-testid="pjb-panels">
         <section data-testid="pjb-panel-purchase" className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h2 className="mb-2 text-xs font-black uppercase tracking-wider text-slate-500">{s.t("panel_purchase", "Purchase Summary")}</h2>
-          <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
-            <dt className="text-slate-500">{s.t("p_bills", "Bills")}</dt><dd className="text-end font-black tabular-nums">{panels?.purchase.bills ?? "—"}</dd>
-            <dt className="text-slate-500">{s.t("p_booked", "Booked")}</dt><dd className="text-end"><Qty q={panels?.purchase.booked} strong /></dd>
-            <dt className="text-slate-500">{s.t("p_gross_net", "Gross / Net")}</dt><dd className="text-end tabular-nums" dir="ltr">{panels ? `${kg(panels.purchase.gross)} / ${kg(panels.purchase.net)}` : "—"}</dd>
-            <dt className="text-slate-500">{s.t("p_loaded", "Loaded")}</dt><dd className="text-end"><Qty q={panels?.purchase.loaded} /></dd>
-            <dt className="text-slate-500">{s.t("p_supplier_pending", "Supplier pending (booked − loaded)")}</dt><dd className="text-end text-rose-600 dark:text-rose-400"><Qty q={panels?.purchase.supplierPending} strong /></dd>
-          </dl>
+          <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
+            <div className="rounded-lg bg-slate-50 p-2 dark:bg-slate-800"><span className="block text-[9px] font-black uppercase text-slate-500">{s.t("p_bills", "Bills")}</span><b className="text-base tabular-nums">{panels?.purchase.bills ?? "—"}</b></div>
+            <div className="rounded-lg bg-blue-50 p-2 text-blue-900 dark:bg-blue-950/40 dark:text-blue-100"><span className="block text-[9px] font-black uppercase opacity-70">{s.t("p_booked", "Booked")}</span><Qty q={panels?.purchase.booked} strong /></div>
+            <div className="rounded-lg bg-amber-50 p-2 text-amber-900 dark:bg-amber-950/40 dark:text-amber-100"><span className="block text-[9px] font-black uppercase opacity-70">{s.t("p_loaded", "Loaded")}</span><Qty q={panels?.purchase.loaded} strong /></div>
+            <div className="col-span-2 rounded-lg bg-slate-50 p-2 dark:bg-slate-800"><span className="block text-[9px] font-black uppercase text-slate-500">{s.t("p_gross_net", "Gross / Net")}</span><b className="tabular-nums" dir="ltr">{panels ? `G ${kg(panels.purchase.gross)} · N ${kg(panels.purchase.net)}` : "—"}</b></div>
+            <div className="rounded-lg bg-rose-50 p-2 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"><span className="block text-[9px] font-black uppercase">{s.t("p_supplier_pending", "Balance")}</span><Qty q={panels?.purchase.supplierPending} strong /></div>
+          </div>
         </section>
         <section data-testid="pjb-panel-confirm" className="space-y-1.5 rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">{s.t("panel_confirm", "Confirm Stock")}</h2>
@@ -217,7 +258,7 @@ export function PurchaseJournalBookingRegister({ lang: langProp }: { lang?: stri
             {(panels?.countries ?? []).map((c) => (
               <button key={c.key} type="button" data-testid="pjb-country" onClick={() => setPlace(place?.key === c.key ? null : c)}
                 className={`flex w-full flex-wrap items-center justify-between gap-x-2 rounded-lg border px-2 py-1 text-start text-[11px] ${place?.key === c.key ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40" : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"}`}>
-                <span className="font-bold" dir="auto">{c.countryName} · {c.branchName || "—"}</span>
+                <span className="font-bold" dir="auto">{c.countryCode || c.countryName}<span className="ms-1 font-mono text-[10px] text-slate-500" dir="ltr">{c.mainBranchCode} / {c.cityBranchCode}</span></span>
                 <span className="flex flex-wrap gap-x-2 text-slate-600 dark:text-slate-300" dir="ltr">
                   <span>{c.bills} {s.t("p_bills", "Bills")}</span><Qty q={c.booked} /><span className="tabular-nums">G {kg(c.gross)}</span><span className="tabular-nums">N {kg(c.net)}</span>
                 </span>
@@ -250,27 +291,26 @@ export function PurchaseJournalBookingRegister({ lang: langProp }: { lang?: stri
 
       {/* register: desktop table */}
       <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm md:block dark:border-slate-800 dark:bg-slate-900">
-        <table className="w-full min-w-[1250px] text-xs" data-testid="pjb-table">
-          <thead className="bg-slate-50 text-[11px] font-black uppercase tracking-wide text-slate-500 dark:bg-slate-800/60">
+        <table className="w-full min-w-[1180px] text-xs" data-testid="pjb-table">
+          <thead className="bg-teal-950 text-[10px] font-black uppercase tracking-wide text-white dark:bg-teal-950">
             <tr>
-              <th className="w-8 p-2" />
-              <th className="p-2 text-start">{s.t("col_purchase_no", "Purchase No")}</th>
-              <th className="p-2 text-start">{s.t("col_place", "Country / Branch")}</th>
-              <th className="p-2 text-start">{s.t("col_supplier", "Supplier")}</th>
-              <th className="p-2 text-start">{s.t("col_goods", "Goods / Lot")}</th>
-              <th className="p-2 text-end">{s.t("col_qty", "Quantity")}</th>
-              <th className="p-2 text-end">{s.t("col_gross", "Gross kg")}</th>
-              <th className="p-2 text-end">{s.t("col_net", "Net kg")}</th>
-              <th className="p-2 text-start">{s.t("col_progress", "Entries | Loaded | Received | Confirmed | Pending")}</th>
-              <th className="p-2 text-start">{s.t("col_status", "Status")}</th>
+              <th className="w-8 p-2.5" />
+              <th className="p-2.5 text-start">{s.t("col_purchase_no", "Purchase Bill / Date")}</th>
+              <th className="p-2.5 text-start">{s.t("col_place", "Country / Branch Codes")}</th>
+              <th className="p-2.5 text-start">{s.t("col_accounts", "Purchase / Sales Accounts")}</th>
+              <th className="p-2.5 text-start">{s.t("col_goods", "Goods / Lot")}</th>
+              <th className="p-2.5 text-start">{s.t("col_qty", "Quantity Flow")}</th>
+              <th className="p-2.5 text-start">{s.t("p_gross_net", "Gross / Net")}</th>
+              <th className="p-2.5 text-start">{s.t("loading_summary", "Loading Summary")}</th>
+              <th className="p-2.5 text-start">{s.t("col_status", "Status")}</th>
               <th className="w-10 p-2" />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {loading && bills.length === 0 ? (
-              <tr><td colSpan={11} className="p-8 text-center text-slate-400"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
+              <tr><td colSpan={10} className="p-8 text-center text-slate-400"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
             ) : bills.length === 0 ? (
-              <tr><td colSpan={11} className="p-8 text-center text-slate-400" data-testid="pjb-empty">{s.t("empty", "No Purchase Booking bills in your scope.")}</td></tr>
+              <tr><td colSpan={10} className="p-8 text-center text-slate-400" data-testid="pjb-empty">{s.t("empty", "No Purchase Booking bills in your scope.")}</td></tr>
             ) : bills.map((b) => (
               <Fragment key={b.sourceId}>
                 <tr data-testid="pjb-bill" className="align-top hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
@@ -280,26 +320,52 @@ export function PurchaseJournalBookingRegister({ lang: langProp }: { lang?: stri
                       {open[b.sourceId] ? <ChevronDown className="h-3.5 w-3.5" /> : s.isRtl ? <ChevronRight className="h-3.5 w-3.5 rotate-180" /> : <ChevronRight className="h-3.5 w-3.5" />}
                     </button>
                   </td>
-                  <td className="p-2"><div className="font-mono font-black" dir="ltr">{b.purchaseNo}</div><div className="text-[10px] text-slate-500" dir="ltr">{day(b.date)}{b.manualNo ? ` · ${b.manualNo}` : ""}</div></td>
-                  <td className="p-2" dir="auto">{b.countryName}<div className="text-[10px] text-slate-500">{b.branchName || "—"}</div></td>
-                  <td className="p-2" dir="auto">{b.supplierName || "—"}</td>
-                  <td className="p-2" dir="auto">{b.goods.map((g) => <div key={`${g.name}-${g.unit}`}>{g.name}{g.brand || g.size ? <span className="text-[10px] text-slate-500"> · {[g.brand, g.size].filter(Boolean).join(" ")}</span> : null}</div>)}</td>
-                  <td className="p-2 text-end"><Qty q={b.booked} strong /></td>
-                  <td className="p-2 text-end tabular-nums" dir="ltr">{nq(b.gross)}</td>
-                  <td className="p-2 text-end tabular-nums" dir="ltr">{nq(b.net)}</td>
-                  <td className="p-2" data-testid="pjb-progress">
-                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[11px]" dir="ltr">
-                      <span title={s.t("pr_entries", "Entries")} className="font-black">{b.entries.length}</span><span className="text-slate-300">|</span>
-                      <span title={s.t("pr_loaded", "Loaded")}><Qty q={b.loaded} /></span><span className="text-slate-300">|</span>
-                      <span title={s.t("pr_received", "Received")} className="text-sky-700 dark:text-sky-300"><Qty q={b.received} /></span><span className="text-slate-300">|</span>
-                      <span title={s.t("pr_confirmed", "Confirmed")} className="text-emerald-700 dark:text-emerald-300"><Qty q={b.confirmed} /></span><span className="text-slate-300">|</span>
-                      <span title={s.t("pr_pending", "Pending")} className="text-rose-600 dark:text-rose-400"><Qty q={b.pending} /></span>
+                  <td className="p-2.5">
+                    <button type="button" onClick={() => setSerialBill(b)} title={s.t("serials_title", "Purchase Bill Serial Chain")} className="group text-start">
+                      <span className="block text-[10px] text-slate-500" dir="ltr">{day(b.date)}</span>
+                      <span className="font-mono font-black text-teal-900 underline decoration-dotted underline-offset-2 group-hover:text-teal-600 dark:text-teal-300" dir="ltr">{b.purchaseNo}</span>
+                      {b.manualNo ? <span className="block font-mono text-[9px] text-slate-400" dir="ltr">{b.manualNo}</span> : null}
+                    </button>
+                  </td>
+                  <td className="p-2.5" title={`${b.countryName} · ${b.branchName}`}>
+                    <span className="block font-mono text-[10px] font-black text-slate-900 dark:text-white" dir="ltr">{b.countryCode || "—"}</span>
+                    <span className="block font-mono text-[10px] text-slate-600 dark:text-slate-300" dir="ltr">{b.mainBranchCode}</span>
+                    <span className="block font-mono text-[10px] text-slate-500" dir="ltr">{b.cityBranchCode}</span>
+                  </td>
+                  <td className="relative p-2.5" dir="auto">
+                    <div className="group relative max-w-[220px] cursor-help">
+                      <span className="block truncate font-bold">{b.salesAccountName || b.supplierName || "—"}</span>
+                      <span className="block truncate font-mono text-[9px] text-slate-500" dir="ltr">{b.salesAccountNo}</span>
+                      <span className="mt-0.5 block text-[9px] font-black uppercase text-teal-700 dark:text-teal-300">{s.t("shipper_sales", "Shipper / Sales Account")}</span>
+                      <div className="pointer-events-none absolute start-0 top-full z-30 mt-1 hidden w-72 rounded-xl border border-slate-200 bg-white p-3 text-[10px] shadow-xl group-hover:block dark:border-slate-700 dark:bg-slate-900">
+                        <b className="block uppercase text-slate-500">{s.t("purchase_account", "Purchase Account")}</b><span>{b.purchaseAccountName}</span><span className="ms-1 font-mono" dir="ltr">{b.purchaseAccountNo}</span>
+                        <b className="mt-2 block uppercase text-slate-500">{s.t("shipper_sales", "Shipper / Sales Account")}</b><span>{b.salesAccountName}</span><span className="ms-1 font-mono" dir="ltr">{b.salesAccountNo}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-2.5" dir="auto">{b.goods.map((g) => <div key={`${g.name}-${g.unit}`} className="leading-tight"><span className="font-bold">{g.name}</span>{g.brand || g.size ? <span className="block text-[9px] text-slate-500">{[g.brand, g.size].filter(Boolean).join(" · ")}</span> : null}</div>)}</td>
+                  <td className="p-2.5" data-testid="pjb-progress">
+                    <div className="space-y-0.5 text-[10px]">
+                      <div className="flex justify-between gap-2"><span className="text-slate-500">{s.t("p_booked", "Booked")}</span><Qty q={b.booked} strong /></div>
+                      <div className="flex justify-between gap-2 text-amber-700 dark:text-amber-300"><span>{s.t("pr_loaded", "Loaded")}</span><Qty q={b.loaded} /></div>
+                      <div className="flex justify-between gap-2 text-rose-600 dark:text-rose-400"><span>{s.t("balance_qty", "Balance")}</span><Qty q={b.balance} /></div>
+                    </div>
+                  </td>
+                  <td className="p-2.5">
+                    <div className="rounded-lg bg-slate-50 p-1.5 text-[10px] dark:bg-slate-800" dir="ltr"><b>G {nq(b.gross)} kg</b><span className="block text-slate-500">N {nq(b.net)} kg</span></div>
+                  </td>
+                  <td className="p-2.5">
+                    <div className="space-y-0.5 text-[10px]" dir="ltr">
+                      <div><b>{s.t("pr_loaded", "Loaded")}</b> <Qty q={b.loaded} /></div>
+                      <div className="text-slate-500">G {kg(b.loadedGross)} · N {kg(b.loadedNet)}</div>
+                      <div className="text-sky-700 dark:text-sky-300">{b.entries.length} {s.t("pr_entries", "Entries")} · R <Qty q={b.received} /></div>
+                      <div className="text-emerald-700 dark:text-emerald-300">C <Qty q={b.confirmed} /></div>
                     </div>
                   </td>
                   <td className="p-2"><span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[b.status]}`}>{statusLabel(b.status)}</span></td>
                   <td className="p-2"><UniversalPrintActionButton variant="menu" reportConfig={billReport(b)} /></td>
                 </tr>
-                {open[b.sourceId] ? <tr><td colSpan={11} className="bg-slate-50/70 p-3 dark:bg-slate-950/40"><BillDetail s={s} b={b} modeLabel={modeLabel} receivingLabel={receivingLabel} confirmLabel={confirmLabel} /></td></tr> : null}
+                {open[b.sourceId] ? <tr><td colSpan={10} className="bg-slate-50/70 p-3 dark:bg-slate-950/40"><BillDetail s={s} b={b} modeLabel={modeLabel} receivingLabel={receivingLabel} confirmLabel={confirmLabel} /></td></tr> : null}
               </Fragment>
             ))}
           </tbody>
@@ -313,17 +379,15 @@ export function PurchaseJournalBookingRegister({ lang: langProp }: { lang?: stri
         {bills.map((b) => (
           <article key={b.sourceId} data-testid="pjb-bill-card" className="rounded-xl border border-slate-200 bg-white p-3 text-xs shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-start justify-between gap-2">
-              <div><div className="font-mono font-black" dir="ltr">{b.purchaseNo}</div><div className="text-[10px] text-slate-500" dir="auto">{day(b.date)} · {b.countryName} · {b.branchName}</div></div>
+              <button type="button" onClick={() => setSerialBill(b)} className="text-start"><div className="text-[10px] text-slate-500" dir="ltr">{day(b.date)}</div><div className="font-mono font-black text-teal-800 underline decoration-dotted" dir="ltr">{b.purchaseNo}</div><div className="font-mono text-[9px] text-slate-500" dir="ltr">{b.countryCode} · {b.mainBranchCode} · {b.cityBranchCode}</div></button>
               <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[b.status]}`}>{statusLabel(b.status)}</span>
             </div>
-            <p className="mt-1" dir="auto">{b.supplierName} · {b.goods.map((g) => g.name).join(", ")}</p>
-            <dl className="mt-2 grid grid-cols-3 gap-1 text-[11px]">
-              <div><dt className="text-slate-500">{s.t("col_qty", "Quantity")}</dt><dd><Qty q={b.booked} strong /></dd></div>
-              <div><dt className="text-slate-500">{s.t("pr_loaded", "Loaded")}</dt><dd><Qty q={b.loaded} /></dd></div>
-              <div><dt className="text-slate-500">{s.t("pr_confirmed", "Confirmed")}</dt><dd><Qty q={b.confirmed} /></dd></div>
-              <div><dt className="text-slate-500">{s.t("pr_received", "Received")}</dt><dd><Qty q={b.received} /></dd></div>
-              <div><dt className="text-slate-500">{s.t("pr_pending", "Pending")}</dt><dd><Qty q={b.pending} /></dd></div>
-              <div><dt className="text-slate-500">{s.t("pr_entries", "Entries")}</dt><dd className="font-black">{b.entries.length}</dd></div>
+            <p className="mt-1 font-bold" dir="auto">{b.salesAccountName || b.supplierName}<span className="block text-[9px] font-normal text-slate-500">{b.goods.map((g) => g.name).join(", ")}</span></p>
+            <dl className="mt-2 grid grid-cols-2 gap-1 text-[10px]">
+              <div className="rounded-lg bg-blue-50 p-2 dark:bg-blue-950/30"><dt className="text-slate-500">{s.t("p_booked", "Booked")}</dt><dd><Qty q={b.booked} strong /></dd><dt className="mt-1 text-slate-500">{s.t("balance_qty", "Balance")}</dt><dd className="text-rose-600"><Qty q={b.balance} strong /></dd></div>
+              <div className="rounded-lg bg-amber-50 p-2 dark:bg-amber-950/30"><dt className="text-slate-500">{s.t("pr_loaded", "Loaded")}</dt><dd><Qty q={b.loaded} strong /></dd><dd className="mt-1 text-slate-500" dir="ltr">G {kg(b.loadedGross)} · N {kg(b.loadedNet)}</dd></div>
+              <div className="rounded-lg bg-slate-50 p-2 dark:bg-slate-800"><dt className="text-slate-500">{s.t("p_gross_net", "Gross / Net")}</dt><dd dir="ltr">G {kg(b.gross)} · N {kg(b.net)}</dd></div>
+              <div className="rounded-lg bg-emerald-50 p-2 dark:bg-emerald-950/30"><dt className="text-slate-500">{s.t("pr_entries", "Entries")} / {s.t("pr_confirmed", "Confirmed")}</dt><dd><b>{b.entries.length}</b> · <Qty q={b.confirmed} /></dd></div>
             </dl>
             <div className="mt-2 flex items-center justify-between">
               <button type="button" onClick={() => setOpen((o) => ({ ...o, [b.sourceId]: !o[b.sourceId] }))} className="rounded-lg border border-slate-300 px-2 py-1 font-bold dark:border-slate-600">
@@ -346,6 +410,7 @@ export function PurchaseJournalBookingRegister({ lang: langProp }: { lang?: stri
           </span>
         </div>
       ) : null}
+      {serialBill ? <BillSerialDialog s={s} bill={serialBill} onClose={() => setSerialBill(null)} /> : null}
     </div>
   );
 }

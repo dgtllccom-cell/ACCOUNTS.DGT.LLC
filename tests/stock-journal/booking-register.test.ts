@@ -11,7 +11,10 @@ function row(over: Partial<StockJournalRow>): StockJournalRow {
     id: `R${n}`, sourceType: "purchase_booking", sourceId: "PO-1", lineKey: "walnuts", stage: "booking",
     billNumber: "PB-0001", systemBillNumber: "PB-0001", manualBillNumber: "MB-77", date: "2026-10-01T00:00:00.000Z",
     countryId: "C-PK", countryName: "Pakistan", countryCode: "PK", countryBranchId: "MB-PK", cityBranchId: "QTA", branchName: "Quetta",
-    supplierName: "Kabul Traders", productName: "Walnuts", goodsId: null, brand: "Gold", size: "L", unit: "CTN", currencyCode: "USD",
+    mainBranchCode: "PK-MAIN", cityBranchCode: "PK-QTA", supplierName: "Kabul Traders",
+    purchaseAccountName: "Purchase — Walnuts", purchaseAccountNo: "PUR-1001", salesAccountName: "Kabul Traders", salesAccountNo: "SUP-2001",
+    serials: { superAdmin: "SA-09", country: "PK-0042", branch: "QTA-0017", entry: "NC-0008" },
+    productName: "Walnuts", goodsId: null, brand: "Gold", size: "L", unit: "CTN", currencyCode: "USD",
     quantity: 0, bookedQuantity: 10000, loadedQuantity: 8000, receivedQuantity: 0, damagedQuantity: 0, shortageQuantity: 0, outstandingQuantity: 0,
     origin: "Afghanistan", grossWeight: 250000, netWeight: 240000, bookingNo: "#PB-0001", invoiceNo: "#INV-9", shipDetails: "",
     bookingStatus: "confirmed", invoiceStatus: "posted", paymentStatus: "partial", customsStatus: "not_recorded", truckOrContainer: "",
@@ -45,7 +48,8 @@ const rows: StockJournalRow[] = [
   row({ stage: "transit", quantity: 2000, ...chunk("L4", "2026-10-23T00:00:00.000Z", 2000, 0) }),
   // a second bill in another branch, counted in BAGS and with no recorded weight, nothing loaded
   row({ sourceId: "PO-2", systemBillNumber: "PB-0002", billNumber: "PB-0002", lineKey: "rice", productName: "Rice", unit: "BAG", stage: "booking", quantity: 1000,
-    bookedQuantity: 1000, loadedQuantity: 0, grossWeight: 0, netWeight: 0, cityBranchId: "CHM", branchName: "Chaman", date: "2026-10-05T00:00:00.000Z", bookingStatus: "draft" }),
+    bookedQuantity: 1000, loadedQuantity: 0, grossWeight: 0, netWeight: 0, cityBranchId: "CHM", branchName: "Chaman", date: "2026-10-05T00:00:00.000Z",
+    bookingStatus: "draft", serials: undefined, purchaseAccountName: undefined, purchaseAccountNo: undefined, salesAccountNo: undefined }),
   // a Local Purchase never appears in this register
   row({ sourceType: "local_purchase", sourceId: "LP-1", stage: "available", quantity: 99, unit: "CTN" }),
 ];
@@ -98,6 +102,25 @@ describe("Purchase Journal Booking Stock register (issue #38)", () => {
     expect(l1.blNumber).toBe("BL-L1");
   });
 
+  it("carries the saved audit serials, short branch codes and account identities without inventing values", () => {
+    expect(pb1.serials).toEqual({ superAdmin: "SA-09", country: "PK-0042", branch: "QTA-0017", entry: "NC-0008" });
+    expect(pb1).toMatchObject({
+      mainBranchCode: "PK-MAIN", cityBranchCode: "PK-QTA",
+      purchaseAccountName: "Purchase — Walnuts", purchaseAccountNo: "PUR-1001",
+      salesAccountName: "Kabul Traders", salesAccountNo: "SUP-2001",
+    });
+    expect(pb2.serials).toEqual({ superAdmin: "—", country: "—", branch: "—", entry: "—" });
+    expect(pb2.purchaseAccountName).toBe("—");
+  });
+
+  it("shows booked, loaded and balance quantities plus loading gross/net totals", () => {
+    expect(pb1.loaded).toEqual({ CARTON: 8000 });
+    expect(pb1.balance).toEqual({ CARTON: 2000 });
+    expect(pb1.loadedGross).toBe(200000);
+    expect(pb1.loadedNet).toBe(192000);
+    expect(pb2.balance).toEqual({ BAG: 1000 });
+  });
+
   it("derives kg only from the same goods line (25 / 24 kg per carton) and says when a line has no weight", () => {
     expect(pb1.gross).toBe(250000);
     expect(pb1.net).toBe(240000);
@@ -122,6 +145,7 @@ describe("Purchase Journal Booking Stock register (issue #38)", () => {
   it("groups the country-wise panel by country and branch", () => {
     expect(panels.countries.map((c) => `${c.countryName}/${c.branchName}`)).toEqual(["Pakistan/Chaman", "Pakistan/Quetta"]);
     expect(panels.countries.find((c) => c.branchName === "Quetta")!.booked).toEqual({ CARTON: 10000 });
+    expect(panels.countries.find((c) => c.branchName === "Quetta")).toMatchObject({ mainBranchCode: "PK-MAIN", cityBranchCode: "PK-QTA" });
   });
 
   it("keeps the invoice read-only and carries no payment figure", () => {
