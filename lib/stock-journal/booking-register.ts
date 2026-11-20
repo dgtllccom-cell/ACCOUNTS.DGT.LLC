@@ -68,12 +68,22 @@ export type RegisterBill = {
   countryBranchId: string | null;
   cityBranchId: string | null;
   branchName: string;
+  mainBranchCode: string;
+  cityBranchCode: string;
   supplierName: string;
+  purchaseAccountName: string;
+  purchaseAccountNo: string;
+  salesAccountName: string;
+  salesAccountNo: string;
+  serials: { superAdmin: string; country: string; branch: string; entry: string };
   goods: Array<{ name: string; unit: string; brand: string; size: string; booked: number; gross: number; net: number }>;
   booked: UnitQty;
   gross: number;
   net: number;
   loaded: UnitQty;
+  loadedGross: number;
+  loadedNet: number;
+  balance: UnitQty;
   received: UnitQty;
   inTransit: UnitQty;
   awaiting: UnitQty;
@@ -103,6 +113,8 @@ export type CountryStock = {
   countryBranchId: string | null;
   cityBranchId: string | null;
   branchName: string;
+  mainBranchCode: string;
+  cityBranchCode: string;
   bills: number;
   booked: UnitQty;
   gross: number;
@@ -314,9 +326,25 @@ export function buildBookingRegister(allRows: StockJournalRow[]): { bills: Regis
       countryBranchId: head.countryBranchId,
       cityBranchId: head.cityBranchId,
       branchName: head.branchName,
+      mainBranchCode: head.mainBranchCode || "—",
+      cityBranchCode: head.cityBranchCode || "—",
       supplierName: head.supplierName,
+      purchaseAccountName: head.purchaseAccountName || "—",
+      purchaseAccountNo: head.purchaseAccountNo || "—",
+      salesAccountName: head.salesAccountName || head.supplierName || "—",
+      salesAccountNo: head.salesAccountNo || "—",
+      serials: {
+        superAdmin: head.serials?.superAdmin || "—",
+        country: head.serials?.country || "—",
+        branch: head.serials?.branch || "—",
+        entry: head.serials?.entry || "—",
+      },
       goods: [...lines.values()].map((l) => ({ name: l.name, unit: l.unit, brand: l.brand, size: l.size, booked: l.booked, gross: r2(l.gross), net: r2(l.net) })),
-      booked, gross: r2(gross), net: r2(net), loaded, received, inTransit, awaiting, confirmed, sold, notLoaded, pending, damaged, shortage,
+      booked, gross: r2(gross), net: r2(net), loaded,
+      loadedGross: r2(entries.reduce((sum, entry) => sum + entry.gross, 0)),
+      loadedNet: r2(entries.reduce((sum, entry) => sum + entry.net, 0)),
+      balance: Object.fromEntries(Object.entries(minusQty(booked, loaded)).filter(([, qty]) => qty > EPS)),
+      received, inTransit, awaiting, confirmed, sold, notLoaded, pending, damaged, shortage,
       entries,
       status: "booked",
       bookingNo: head.bookingNo,
@@ -325,7 +353,9 @@ export function buildBookingRegister(allRows: StockJournalRow[]): { bills: Regis
       bookingStatus: head.bookingStatus,
       invoiceStatus: head.invoiceStatus,
       invoice: head.invoice ?? null,
-      text: [head.systemBillNumber, head.manualBillNumber, head.supplierName, head.countryName, head.branchName, ...[...lines.values()].map((l) => `${l.name} ${l.brand} ${l.size}`), ...entries.flatMap((e) => [e.entryNo, e.loadingNo, e.truckOrContainer, e.blNumber])]
+      text: [head.systemBillNumber, head.manualBillNumber, head.supplierName, head.purchaseAccountName, head.purchaseAccountNo, head.salesAccountName, head.salesAccountNo,
+        head.countryName, head.countryCode, head.mainBranchCode, head.cityBranchCode, head.branchName, ...Object.values(head.serials ?? {}),
+        ...[...lines.values()].map((l) => `${l.name} ${l.brand} ${l.size}`), ...entries.flatMap((e) => [e.entryNo, e.loadingNo, e.truckOrContainer, e.blNumber])]
         .filter(Boolean).join(" ").toLowerCase(),
     };
     bill.status = billStatus(bill);
@@ -338,7 +368,12 @@ export function buildBookingRegister(allRows: StockJournalRow[]): { bills: Regis
     panels.purchase.gross += gross;
     panels.purchase.net += net;
     const ck = `${head.countryId ?? "-"}|${head.cityBranchId ?? head.countryBranchId ?? "-"}`;
-    const c = countries.get(ck) ?? { key: ck, countryId: head.countryId, countryName: head.countryName, countryCode: head.countryCode, countryBranchId: head.countryBranchId, cityBranchId: head.cityBranchId, branchName: head.branchName, bills: 0, booked: {}, gross: 0, net: 0 };
+    const c = countries.get(ck) ?? {
+      key: ck, countryId: head.countryId, countryName: head.countryName, countryCode: head.countryCode,
+      countryBranchId: head.countryBranchId, cityBranchId: head.cityBranchId, branchName: head.branchName,
+      mainBranchCode: head.mainBranchCode || "—", cityBranchCode: head.cityBranchCode || "—",
+      bills: 0, booked: {}, gross: 0, net: 0,
+    };
     c.bills += 1;
     for (const [u, v] of Object.entries(booked)) addQty(c.booked, u, v);
     c.gross = r2(c.gross + gross);
