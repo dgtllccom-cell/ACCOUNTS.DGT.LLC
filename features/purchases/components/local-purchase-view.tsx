@@ -40,6 +40,7 @@ import { useSetActiveRecord } from "@/lib/support/active-record-context";
 import { VoiceFormFill } from "@/components/voice-form-fill";
 import { LocalPurchaseApprovedHeader } from "@/features/purchases/components/local-purchase-approved-header";
 import { LocalPurchaseGlobalRegisterView } from "@/features/purchases/components/local-purchase-global-register-view";
+import { loadingReadinessNote } from "@/lib/purchases/loading-readiness";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import "@/components/purchase-ui/purchase-table-skin.css";
 
@@ -2579,6 +2580,19 @@ export function LocalPurchaseView({
       {/* Conditional Content: Form Wizard vs Full-Width Registry Log Table */}
       {isFormOpen ? (
         <form onSubmit={handleSubmit} className="w-full space-y-5 animate-in fade-in duration-200">
+          {/* A saved draft bound for Loading: say why it is not in Loading yet (display only; rules unchanged) */}
+          {(() => {
+            const note = shippingMode === "Loading" ? loadingReadinessNote({ saved: Boolean(editingPurchaseId), posted: false, paymentTerms: paymentMode }) : null;
+            if (!note) return null;
+            return (
+              <div role="status" data-testid="loading-readiness-note" className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-xs font-semibold text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                <span aria-hidden="true">⏳</span>
+                <span>{note === "transfer_then_advance"
+                  ? t(lang, "loadready.transfer_then_advance", "Not in Loading yet — Transfer & Post this bill, then pay the advance; it goes to Loading once the advance is paid.")
+                  : t(lang, "loadready.transfer_first", "Not in Loading yet — Transfer & Post this bill to send it to Loading. Credit / Final bills go to Loading as soon as they are transferred.")}</span>
+              </div>
+            );
+          })()}
 
           {/* 2-Column Split: Active Step Form (Left) vs Added Goods Table (Right) */}
           <div className="grid grid-cols-1 lg:grid-cols-[440px_1fr] gap-5 items-start">
