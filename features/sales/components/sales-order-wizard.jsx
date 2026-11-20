@@ -3287,14 +3287,16 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 titlePortal
               )}
               {createPortal(
-                <div className="flex items-center gap-1.5 shrink-0 relative" ref={dropdownRef}>
-                  <div className="flex items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 me-2">
-                    <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")}</button>
-                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
-                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("shipping"); }} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${(activeTab === "shipping" || activeTab === "others") ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
-                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("reports_tab"); }} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
-                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("report"); }} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
+                <div className="flex flex-wrap items-center gap-1.5 min-w-0 max-w-full relative" ref={dropdownRef}>
+                  {/* phones: the five steps are one swipeable row and the buttons another (they used to wrap and fill the first screen) */}
+                  <div className="flex w-full sm:w-auto max-w-[calc(100vw-3rem)] sm:max-w-full !flex-nowrap overflow-x-auto items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 sm:me-2">
+                    <button type="button" onClick={() => setActiveTab("booking")} className={`shrink-0 whitespace-nowrap py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")}</button>
+                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`shrink-0 whitespace-nowrap py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
+                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("shipping"); }} className={`shrink-0 whitespace-nowrap py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${(activeTab === "shipping" || activeTab === "others") ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
+                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("reports_tab"); }} className={`shrink-0 whitespace-nowrap py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
+                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("report"); }} className={`shrink-0 whitespace-nowrap py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
                   </div>
+                  <div className="flex w-full sm:w-auto max-w-[calc(100vw-3rem)] sm:max-w-full !flex-nowrap sm:!flex-wrap items-center gap-1.5 overflow-x-auto sm:overflow-visible [&>*]:shrink-0">
                   <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border border-border/50 me-1">
                     <span className="relative flex h-2 w-2 ms-1">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -3327,9 +3329,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   >
                     {t(lang, "form.actions", "Actions")}<ChevronDown className="h-3 w-3" />
                   </Button>
+                  </div>
 
                   {viewDropdownOpen && (
-                    <div className="absolute right-0 top-8.5 w-48 rounded-xl bg-card border border-border shadow-2xl z-50 p-1.5 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="absolute right-0 top-full mt-1 w-48 rounded-xl bg-card border border-border shadow-2xl z-50 p-1.5 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                       <button
                         type="button"
                         onClick={() => {
@@ -3677,7 +3680,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 </div>
 
                 {/* Center: Step Navigation Pills */}
-                <div className="flex flex-wrap items-center justify-center gap-1.5 bg-slate-900/90 p-1.5 rounded-2xl sm:rounded-full border border-slate-800 max-w-full">
+                <div className="hidden sm:flex flex-wrap items-center justify-center gap-1.5 bg-slate-900/90 p-1.5 rounded-2xl sm:rounded-full border border-slate-800 max-w-full">
                   <button
                     type="button"
                     onClick={() => setActiveTab("booking")}
