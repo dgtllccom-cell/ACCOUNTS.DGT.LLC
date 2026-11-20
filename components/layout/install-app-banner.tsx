@@ -11,6 +11,8 @@ export function InstallAppBanner() {
   const tb = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isIOS, setIsIOS] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
+  const [showAndroidHint, setShowAndroidHint] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [showIOSGuide, setShowIOSGuide] = useState(false);
   const [showDesktopGuide, setShowDesktopGuide] = useState(false);
@@ -36,8 +38,11 @@ export function InstallAppBanner() {
 
     // Detect iOS
     const userAgent = typeof window !== "undefined" ? window.navigator.userAgent.toLowerCase() : "";
-    const isIphoneOrIpad = /iphone|ipad|ipod/.test(userAgent);
+    // iPadOS Safari reports a Mac user agent; a Mac with a touch screen is an iPad
+    const isIpadOs = /macintosh/.test(userAgent) && typeof navigator !== "undefined" && (navigator as any).maxTouchPoints > 1;
+    const isIphoneOrIpad = /iphone|ipad|ipod/.test(userAgent) || isIpadOs;
     setIsIOS(isIphoneOrIpad);
+    setIsAndroid(/android/.test(userAgent));
 
     // Listen for PWA install prompt event on Android/Chrome/Windows
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -92,6 +97,19 @@ export function InstallAppBanner() {
       setShowIOSGuide(true);
       return;
     }
+    // Android phones / tablets: the browser's own install prompt, or the menu hint — never the Windows installer (.bat)
+    if (isAndroid) {
+      if (deferredPrompt) {
+        try {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          if (outcome === "accepted") setDeferredPrompt(null);
+          return;
+        } catch { /* fall through to the hint */ }
+      }
+      setShowAndroidHint(true);
+      return;
+    }
 
     // 1. Immediately trigger automatic file download directly into the user's computer
     downloadDesktopShortcut("installer");
@@ -121,7 +139,49 @@ export function InstallAppBanner() {
 
   return (
     <>
-      {/* ── Top Install Banner ── */}
+      {/* ── Phones and tablets: one short line ("Add to Home Screen" / "Install App"), like an app store prompt ── */}
+      {(isIOS || isAndroid) && (
+        <div
+          data-testid="install-app-banner-mobile"
+          className="print:hidden flex items-center gap-2.5 px-3 py-2 text-xs text-white border-b border-blue-800/50"
+          style={{ backgroundColor: "#06122d", color: "#ffffff" }}
+        >
+          <img src="/app/icon-180.png" alt="" className="h-9 w-9 rounded-xl shrink-0 shadow-sm" />
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[13px] font-black leading-tight">DGT Group</div>
+            <div className="truncate text-[11px] text-blue-200/90 leading-tight">
+              {isIOS ? tb("iab.ios_title", "Install on iPhone / iPad") : tb("iab.install_app", "Install App")}
+            </div>
+          </div>
+          <Button
+            onClick={handleInstallClick}
+            className="h-8 shrink-0 rounded-full bg-emerald-600 hover:bg-emerald-500 px-3.5 text-[11px] font-black text-white gap-1.5"
+          >
+            {isIOS ? <PlusSquare className="h-3.5 w-3.5" /> : <Download className="h-3.5 w-3.5" />}
+            {isIOS ? tb("iab.add_home", "Add to Home Screen") : tb("iab.install_app", "Install App")}
+          </Button>
+          <button
+            suppressHydrationWarning
+            type="button"
+            onClick={handleDismiss}
+            className="shrink-0 p-1 rounded-lg text-blue-300 hover:text-white hover:bg-white/10"
+            title={tb("common.close", "Close")}
+            aria-label={tb("common.close", "Close")}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+      {showAndroidHint && (
+        <div role="status" className="print:hidden bg-emerald-50 text-emerald-900 border-b border-emerald-200 px-3 py-2 text-xs font-semibold flex items-start gap-2">
+          <Smartphone className="h-4 w-4 shrink-0 mt-0.5" />
+          <span className="flex-1">{tb("iab.android_hint", "Open the browser menu (⋮) and tap “Install app” or “Add to Home screen”.")}</span>
+          <button type="button" onClick={() => setShowAndroidHint(false)} className="shrink-0" aria-label={tb("common.close", "Close")}><X className="h-4 w-4" /></button>
+        </div>
+      )}
+
+      {/* ── Top Install Banner (computers) ── */}
+      {!(isIOS || isAndroid) && (
       <div
         className="print:hidden bg-gradient-to-r from-blue-900 via-[#06122d] to-indigo-950 text-white px-4 pt-3.5 pb-3 shadow-md border-b border-blue-800/50 flex flex-wrap items-center justify-between gap-3 text-xs overflow-visible min-h-[52px]"
         style={{ backgroundColor: "#06122d", color: "#ffffff" }}
@@ -167,6 +227,7 @@ export function InstallAppBanner() {
           </button>
         </div>
       </div>
+      )}
 
       {/* ── iOS Installation Guide Modal ── */}
       {showIOSGuide && (

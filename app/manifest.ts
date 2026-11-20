@@ -16,9 +16,11 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: "en",
     dir: "auto",
     categories: ["business", "finance", "productivity"],
+    // real square PNGs (the logo file is a non-square JPEG): scripts/generate-web-app-assets.mjs
     icons: [
-      { src: "/images/damaan-logo.png", sizes: "any", type: "image/png", purpose: "any" },
-      { src: "/images/damaan-logo.png", sizes: "any", type: "image/png", purpose: "maskable" }
+      { src: "/app/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/app/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/app/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" }
     ],
     shortcuts: [
       { name: "Cash Entry", short_name: "Cash", description: "Open Cash Entry / Roznamcha posting.", url: "/dashboard/roznamcha/cash-entry", icons: [{ src: "/icons/digital-dock-icon.svg", sizes: "any", type: "image/svg+xml" }] },

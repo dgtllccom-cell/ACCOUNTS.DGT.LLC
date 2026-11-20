@@ -3546,6 +3546,9 @@ export type UiKey =
   | "iab.download_url"
   | "iab.download_cmd"
   | "iab.done"
+  | "iab.add_home"
+  | "iab.install_app"
+  | "iab.android_hint"
   | "prep.active_users"
   | "prep.all_branches"
   | "prep.all_countries"
@@ -31219,6 +31222,9 @@ const en: Dict = {
   "iab.download_cmd": "DOWNLOAD STANDALONE WINDOW (.CMD)",
 
   "iab.done": "DONE",
+  "iab.add_home": "Add to Home Screen",
+  "iab.install_app": "Install App",
+  "iab.android_hint": "Open the browser menu (⋮) and tap “Install app” or “Add to Home screen”.",
   "prep.active_users": "Active Users",
 
   "prep.all_branches": "All Branches",
@@ -57716,6 +57722,9 @@ const ur: Dict = {
   "iab.download_cmd": "اسٹینڈ الون ونڈو ڈاؤن لوڈ کریں (.CMD)",
 
   "iab.done": "مکمل",
+  "iab.add_home": "ہوم اسکرین پر شامل کریں",
+  "iab.install_app": "ایپ انسٹال کریں",
+  "iab.android_hint": "براؤزر کا مینو (⋮) کھولیں اور “ایپ انسٹال کریں” یا “ہوم اسکرین پر شامل کریں” پر ٹیپ کریں۔",
   "prep.active_users": "فعال یوزرز",
 
   "prep.all_branches": "تمام برانچز",
@@ -84299,6 +84308,9 @@ const ar: Dict = {
   "iab.download_cmd": "نزّل النافذة المستقلة (.CMD)",
 
   "iab.done": "تم",
+  "iab.add_home": "إضافة إلى الشاشة الرئيسية",
+  "iab.install_app": "تثبيت التطبيق",
+  "iab.android_hint": "افتح قائمة المتصفح (⋮) واضغط على “تثبيت التطبيق” أو “إضافة إلى الشاشة الرئيسية”.",
   "prep.active_users": "المستخدمون النشطون",
 
   "prep.all_branches": "جميع الفروع",
@@ -110932,6 +110944,9 @@ const fa: Dict = {
   "iab.download_cmd": "دانلود پنجره مستقل (.CMD)",
 
   "iab.done": "انجام شد",
+  "iab.add_home": "افزودن به صفحه اصلی",
+  "iab.install_app": "نصب برنامه",
+  "iab.android_hint": "منوی مرورگر (⋮) را باز کنید و روی «نصب برنامه» یا «افزودن به صفحه اصلی» بزنید.",
   "prep.active_users": "کاربران فعال",
 
   "prep.all_branches": "همه شعب",
@@ -137563,6 +137578,9 @@ const ps: Dict = {
   "iab.download_cmd": "خپلواکه کړکۍ ډاونلوډ کړئ (.CMD)",
 
   "iab.done": "بشپړ شو",
+  "iab.add_home": "کور پاڼې ته ورزیات کړئ",
+  "iab.install_app": "اپ نصب کړئ",
+  "iab.android_hint": "د براوزر مینو (⋮) پرانیزئ او په “اپ نصب کړئ” یا “کور پاڼې ته ورزیات کړئ” ټک وکړئ.",
   "prep.active_users": "فعال کاروونکي",
 
   "prep.all_branches": "ټولې څانګې",
