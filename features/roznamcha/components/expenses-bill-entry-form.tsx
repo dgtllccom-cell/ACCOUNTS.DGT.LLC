@@ -19,6 +19,7 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { ExpensesInvoicePrint } from "@/components/reports/expenses-invoice-print";
 import { ExpensesInvoicePrintStyle2 } from "@/components/reports/expenses-invoice-print-style2";
+import { openExpensesBillDocument } from "@/lib/reports/expenses-bill/open-expense-bill-document";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { Th } from "@/components/ui/translated-th";
@@ -434,6 +435,22 @@ export function ExpensesBillEntryForm({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  /** Expenses Bill document (owner's sample layout) for the bill on screen, saved or not, from this branch's own branding. */
+  const handleExpensesBillPrint = async () => {
+    if (rows.length === 0) {
+      alert(tt("ebef.alert_add_rows_first", "Please add some rows to the bill first."));
+      return;
+    }
+    try {
+      await openExpensesBillDocument(previewBill as any, lang as SupportedLanguage, {
+        cityBranchId: branch || null,
+        countryId: selectedCountry || null,
+      });
+    } catch (err) {
+      console.error("expenses bill print failed", err);
+    }
+  };
 
   const handleGeneratePdf = (styleId: 1 | 2) => {
     if (rows.length === 0) {
@@ -1063,6 +1080,9 @@ export function ExpensesBillEntryForm({
                     </button>
                     <button className="flex w-full px-3 py-2 text-slate-700 hover:bg-slate-50 items-center gap-2" onClick={() => { setHeaderMenuOpen(false); handleGeneratePdf(2); }}>
                       <Printer className="w-4 h-4" /> {tt("exp.pdf_style2", "PDF / Print (Style 2)")}
+                    </button>
+                    <button className="flex w-full px-3 py-2 text-slate-700 hover:bg-slate-50 items-center gap-2" onClick={() => { setHeaderMenuOpen(false); handleExpensesBillPrint(); }}>
+                      <Printer className="w-4 h-4" /> Expenses Bill (View / Print)
                     </button>
                   </div>
                 )}
