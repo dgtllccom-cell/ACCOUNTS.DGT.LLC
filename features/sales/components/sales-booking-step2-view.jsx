@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Package,
   Search,
@@ -16,7 +16,17 @@ import {
 import { t as tUi } from "@/lib/i18n/ui";
 import { Button } from "@/components/ui/button";
 import { SalesBookingUpperCards } from "./sales-booking-upper-cards";
-import { SalesStockSelectionModal } from "./sales-stock-selection-modal";
+import { SalesStockPanel } from "./sales-stock-panel";
+
+// Stock sources a sale can take goods from (the same groups as the Select Stock panel, /api/erp/sales/available-lots):
+//   warehouse = Goods Transfer Journal lots + warehouse balances (Receiving / Confirm Stock) + Local Purchase
+//   booking   = Purchase Booking lines not yet loaded
+//   export    = Loading Booking goods on the way (in transit) + endorsed stock
+const STOCK_GROUPS = [
+  { id: "warehouse", sources: ["warehouse_all"], icon: Building2 },
+  { id: "booking", sources: ["booking"], icon: Package },
+  { id: "export", sources: ["export_all"], icon: Layers }
+];
 
 export function SalesBookingStep2({
   form,
@@ -31,8 +41,9 @@ export function SalesBookingStep2({
   dbAccounts = []
 }) {
   const [stockModalOpen, setStockModalOpen] = useState(false);
-  const [stockCategory, setStockCategory] = useState("warehouse");
-  const [stockDropdownOpen, setStockDropdownOpen] = useState(false);
+  const [stockGroup, setStockGroup] = useState(() => (["warehouse", "booking", "export"].includes(form.stockGroup) ? form.stockGroup : "warehouse"));
+  const [groupLots, setGroupLots] = useState({}); // { [group]: { status: "loading" | "ok" | "error", lots: [] } }
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const [stockError, setStockError] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
 
@@ -44,76 +55,150 @@ export function SalesBookingStep2({
   const size = form.size || "";
   const grade = form.grade || "";
   const quality = form.qualityReport || "";
-  const qtyName = form.qtyName || "Bag";
-  const qtyNo = Number(form.qtyNo || 10);
-  const unitPrice = Number(form.coursePrice || 2500);
-  const freightIca = Number(form.freightIca || 150);
+  const qtyName = form.qtyName || "";
+  const qtyNo = Number(form.qtyNo || 0);
+  const unitPrice = Number(form.coursePrice || 0);
+  const freightIca = Number(form.freightIca || 0);
   const itemType = form.itemType || "";
-  const stackWeight = form.stackWeight || "25kg / 1.5 CBM";
+  const stackWeight = form.stackWeight || "";
   const packType = form.packType || "";
   const totalBoxes = Number(form.totalBoxes || 0);
-  const availableQty = Number(form.lotAvailableQty || 5000);
+  const availableQty = Number(form.lotAvailableQty || 0);
   const selectedLotRef = form.stockLotNo || "";
 
   // Validate stock: check if quantity exceeds available balance
   const isOverStock = selectedLotRef && availableQty > 0 && qtyNo > availableQty;
 
-  const handleOpenStockModal = (cat) => {
-    setStockCategory(cat || "warehouse");
-    setStockDropdownOpen(false);
+  // Real stock records of one source group (loaded once per group; no demo rows)
+  const loadGroup = useCallback(async (group) => {
+    const def = STOCK_GROUPS.find((g) => g.id === group);
+    if (!def) return;
+    setGroupLots((p) => ({ ...p, [group]: { status: "loading", lots: [] } }));
+    try {
+      const results = await Promise.all(
+        def.sources.map(async (src) => {
+          const qs = new URLSearchParams({ source: src, limit: "300", lang });
+          const res = await fetch(`/api/erp/sales/available-lots?${qs.toString()}`, { credentials: "same-origin" });
+          const json = await res.json().catch(() => null);
+          if (!res.ok) throw new Error("load failed");
+          return json?.data?.lots ?? [];
+        })
+      );
+      setGroupLots((p) => ({ ...p, [group]: { status: "ok", lots: results.flat() } }));
+    } catch {
+      setGroupLots((p) => ({ ...p, [group]: { status: "error", lots: [] } }));
+    }
+  }, [lang]);
+
+  useEffect(() => {
+    if (!groupLots[stockGroup]) void loadGroup(stockGroup);
+  }, [stockGroup, groupLots, loadGroup]);
+
+  const groupState = groupLots[stockGroup] || { status: "loading", lots: [] };
+  const suggestions = useMemo(() => {
+    const q = productName.trim().toLowerCase();
+    const lots = groupState.lots || [];
+    const hits = q
+      ? lots.filter((l) => [l.goodsName, l.lotNo, l.stockRef, l.brand, l.origin, l.hsCode, l.warehouseName].filter(Boolean).join(" ").toLowerCase().includes(q))
+      : lots;
+    return hits.slice(0, 30);
+  }, [groupState, productName]);
+
+  const chooseGroup = (group) => {
+    setStockGroup(group);
+    setForm((p) => ({ ...p, stockGroup: group }));
+    setSuggestOpen(true);
+  };
+
+  const handleOpenStockModal = () => {
+    setSuggestOpen(false);
     setStockModalOpen(true);
   };
 
-  const handleStockSelected = (lot) => {
+  // Fill the goods entry from the chosen stock record (AvailableLot from /api/erp/sales/available-lots)
+  const handleStockSelected = (lot, group = stockGroup) => {
+    if (!lot) return;
+    const remaining = Number(lot.remainingQty ?? lot.availableQty ?? 0);
     setForm((prev) => ({
       ...prev,
-      goodsName: lot.productName || lot.goodsName,
-      hsCode: lot.hsCode,
-      stockLotNo: lot.lotNo,
-      allotName: lot.lotNo,
-      brand: lot.brand || prev.brand,
-      size: lot.size || prev.size,
-      origin: lot.origin || prev.origin,
-      qtyName: lot.unit || prev.qtyName || "Bag",
-      qtyNo: Math.min(prev.qtyNo > 0 ? prev.qtyNo : 10, lot.availableQty || 10),
-      coursePrice: prev.coursePrice > 0 ? prev.coursePrice : (lot.unitPrice || 2500),
-      warehouseName: lot.warehouse,
-      lotAvailableQty: lot.availableQty,
-      saleSource: lot.category || "warehouse"
+      stockGroup: group,
+      saleSource: lot.source || group,
+      goodsId: lot.goodsId || "",
+      goodsName: lot.goodsName || "",
+      hsCode: lot.hsCode || "",
+      stockLotNo: lot.lotNo || "",
+      allotName: lot.lotNo || "",
+      selectedLotId: lot.id || "",
+      managedLotId: lot.lotId || "",
+      managedWarehouseId: lot.warehouseId || "",
+      managedRack: lot.rackBin || "",
+      managedLabel: lot.placeLabel || "",
+      lotRef: lot.lotRef || lot.stockRef || "",
+      lotPurchaseId: lot.purchaseId || "",
+      lotUnitCost: Number(lot.landedUnitCost ?? lot.unitCost ?? 0),
+      lotCostCurrency: lot.costCurrency || lot.currencyType || "",
+      brand: lot.brand || "",
+      size: lot.size || "",
+      origin: lot.origin || "",
+      qtyName: lot.qtyName || prev.qtyName || "",
+      qtyKgs: Number(lot.qtyKgs || 0),
+      emptyKgs: Number(lot.emptyKgs || 0),
+      qtyNo: prev.qtyNo > 0 && prev.qtyNo <= remaining ? prev.qtyNo : 0,
+      warehouseId: lot.warehouseId || "",
+      warehouseName: lot.warehouseName || lot.location || "",
+      lotAvailableQty: remaining
     }));
+    setSuggestOpen(false);
     setStockError("");
   };
 
   // Add or update item in Goods Entries table
   const handleAddOrUpdateItem = () => {
     if (!productName.trim()) {
-      setStockError("Please enter product name or select stock.");
+      setStockError(tUi(lang, "sales.s2_err_pick_item", "Select a stock source, then search and pick the item."));
+      return;
+    }
+    if (!(qtyNo > 0)) {
+      setStockError(tUi(lang, "sales.s2_err_qty", "Enter the quantity."));
       return;
     }
     if (isOverStock) {
-      setStockError(`Quantity (${qtyNo}) exceeds available stock (${availableQty.toLocaleString()} ${qtyName}).`);
+      setStockError(tUi(lang, "sales.stk_err_over", "Quantity exceeds the remaining stock of this lot."));
+      return;
+    }
+    // the same stock lot may appear only once in the table (edit that line instead of adding it again)
+    const sameLot = selectedLotRef
+      ? goodsEntries.findIndex((it, i) => i !== editingIndex && (it.lotNo || "") === selectedLotRef)
+      : goodsEntries.findIndex((it, i) => i !== editingIndex && !it.lotNo && String(it.goodsName || "").trim().toLowerCase() === productName.trim().toLowerCase());
+    if (sameLot >= 0) {
+      setStockError(tUi(lang, "sales.s2_err_duplicate", "This item is already in the table. Edit that line instead of adding it again."));
       return;
     }
 
-    const calculatedGross = qtyNo * (Number(form.qtyKgs) || 1000);
-    const calculatedNet = calculatedGross - (qtyNo * (Number(form.emptyKgs) || 10));
+    const qtyKgs = Number(form.qtyKgs) || 0;
+    const emptyKgs = Number(form.emptyKgs) || 0;
+    const calculatedGross = qtyNo * qtyKgs;
+    const calculatedNet = Math.max(0, calculatedGross - qtyNo * emptyKgs);
     const calculatedAmount = qtyNo * unitPrice;
     const exRate = Number(form.exchangeRate) || 1;
-    const finalAmt = calculatedAmount * exRate;
+    const finalAmt = (form.operator === "/" ? calculatedAmount / exRate : calculatedAmount * exRate);
 
     const newItem = {
+      goodsId: form.goodsId || null,
       goodsName: productName,
       productName: productName,
-      hsCode: hsCode || "080212",
-      itemId: itemId || "ITEM-01",
-      brand: brand || "Al Baraka",
-      size: size || "Standard",
-      grade: grade || "A-Grade",
-      quality: quality || "Passed",
-      qtyName: qtyName || "MT",
-      unit: qtyName || "MT",
+      hsCode: hsCode,
+      itemId: itemId,
+      brand: brand,
+      size: size,
+      grade: grade,
+      quality: quality,
+      qtyName: qtyName,
+      unit: qtyName,
       qtyNo: qtyNo,
       quantity: qtyNo,
+      qtyKgs,
+      emptyKgs,
       unitPrice: unitPrice,
       coursePrice: unitPrice,
       freightIca: freightIca,
@@ -124,11 +209,16 @@ export function SalesBookingStep2({
       totalAmount: calculatedAmount,
       finalAmount: finalAmt,
       exchangeRate: exRate,
-      grossWeight: form.grossWeight || calculatedGross || (qtyNo * 1200),
-      netWeight: form.netWeight || calculatedNet || (qtyNo * 1100),
-      origin: form.origin || "United Arab Emirates",
+      grossWeight: calculatedGross,
+      netWeight: calculatedNet,
+      origin: form.origin || "",
       lotNo: selectedLotRef,
-      warehouse: form.warehouseName || "Dubai Main WH"
+      lotId: form.managedLotId || "",
+      saleSource: form.saleSource || stockGroup,
+      stockGroup,
+      lotAvailableQty: availableQty,
+      warehouse: form.warehouseName || "",
+      warehouseId: form.warehouseId || ""
     };
 
     if (editingIndex !== null) {
@@ -142,6 +232,14 @@ export function SalesBookingStep2({
       setGoodsEntries((prev) => [...prev, newItem]);
     }
 
+    // clear the entry so the next item starts empty (pressing Add again cannot add the same line twice)
+    setForm((p) => ({
+      ...p,
+      goodsId: "", goodsName: "", hsCode: "", stockLotNo: "", allotName: "", selectedLotId: "", managedLotId: "",
+      brand: "", size: "", grade: "", qualityReport: "", origin: "", qtyNo: 0, coursePrice: 0, freightIca: 0,
+      qtyKgs: 0, emptyKgs: 0, totalBoxes: 0, packType: "", itemType: "", stackWeight: "", lotAvailableQty: 0,
+      warehouseId: "", warehouseName: ""
+    }));
     setStockError("");
   };
 
@@ -166,7 +264,11 @@ export function SalesBookingStep2({
       stackWeight: item.stackWeight,
       packType: item.packType,
       totalBoxes: item.totalBoxes,
-      lotAvailableQty: item.lotAvailableQty || 5000
+      lotAvailableQty: item.lotAvailableQty || 0,
+      qtyKgs: item.qtyKgs || 0,
+      emptyKgs: item.emptyKgs || 0,
+      origin: item.origin || "",
+      warehouseName: item.warehouse || ""
     }));
   };
 
@@ -188,28 +290,93 @@ export function SalesBookingStep2({
           )}
         </div>
 
-        {/* Product Name * */}
+        {/* 1. STOCK SOURCE * — first choose where the goods come from */}
+        <div className="space-y-1" data-testid="sales-stock-source">
+          <label className="block text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+            {tUi(lang, "sales.s2_stock_source", "Stock")} <span className="text-red-500">*</span>
+          </label>
+          <div className="grid grid-cols-3 gap-1.5">
+            {STOCK_GROUPS.map((g) => {
+              const Icon = g.icon;
+              const active = stockGroup === g.id;
+              return (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => chooseGroup(g.id)}
+                  aria-pressed={active}
+                  className={`h-9 px-2 rounded-lg border text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors ${active ? "bg-emerald-600 border-emerald-600 text-white" : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:border-emerald-400"}`}
+                >
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">{tUi(lang, `sales.stk_source_${g.id}`, g.id)}</span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400">{tUi(lang, `sales.stk_source_${stockGroup}_hint`, "")}</p>
+        </div>
+
+        {/* 2. ITEM NAME * — search the chosen stock (e.g. "walnut"); picking a record fills the line */}
         <div className="space-y-1">
           <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            {tUi(lang, "sales.product_name", "Product Name")} <span className="text-red-500">*</span>
+            {tUi(lang, "sales.s2_item_name", "Item Name")} <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <input
               type="text"
               value={productName}
-              onChange={(e) => setForm((p) => ({ ...p, goodsName: e.target.value }))}
-              placeholder="Search or select product..."
-              className="w-full h-9 pl-3 pr-8 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
+              onChange={(e) => {
+                const v = e.target.value;
+                // typing a new name drops the previously picked stock record
+                setForm((p) => ({ ...p, goodsName: v, stockLotNo: "", allotName: "", selectedLotId: "", managedLotId: "", lotAvailableQty: 0 }));
+                setSuggestOpen(true);
+              }}
+              onFocus={() => setSuggestOpen(true)}
+              onBlur={() => setTimeout(() => setSuggestOpen(false), 150)}
+              placeholder={tUi(lang, "sales.s2_item_search_ph", "Search item in this stock (e.g. walnut)...")}
+              className="w-full h-9 ps-3 pe-8 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
+              data-testid="sales-item-search"
             />
             <button
               type="button"
-              onClick={() => handleOpenStockModal("warehouse")}
-              className="absolute right-2 top-2 p-1 text-slate-400 hover:text-blue-600"
-              title="Select from stock lots"
+              onClick={handleOpenStockModal}
+              className="absolute end-2 top-2 p-1 text-slate-400 hover:text-blue-600"
+              title={tUi(lang, "sales.stk_select_stock", "Select Stock")}
             >
               <Search className="w-3.5 h-3.5" />
             </button>
+            {suggestOpen && (
+              <div className="absolute start-0 top-10 w-full max-h-64 overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 p-1" data-testid="sales-item-suggestions">
+                {groupState.status === "loading" ? (
+                  <p className="px-3 py-2 text-[11px] text-slate-500">{tUi(lang, "sales.stk_loading", "Loading stock...")}</p>
+                ) : groupState.status === "error" ? (
+                  <p className="px-3 py-2 text-[11px] text-rose-600">{tUi(lang, "sales.stk_load_error", "Could not load stock.")}</p>
+                ) : suggestions.length === 0 ? (
+                  <p className="px-3 py-2 text-[11px] text-slate-500">{tUi(lang, "sales.stk_empty", "No stock found.")}</p>
+                ) : (
+                  suggestions.map((lot, i) => (
+                    <button
+                      key={`${lot.source}|${lot.lotNo}|${lot.id ?? i}`}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => handleStockSelected(lot)}
+                      className="w-full text-start px-3 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                    >
+                      <span className="block text-xs font-bold text-slate-800 dark:text-slate-100">{lot.goodsName}</span>
+                      <span className="block text-[10px] text-slate-500 font-mono">
+                        {lot.lotNo} · {Number(lot.remainingQty ?? lot.availableQty ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })} {lot.qtyName} · {lot.warehouseName || lot.location || ""}
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
           </div>
+          {availableQty > 0 && selectedLotRef && (
+            <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
+              {tUi(lang, "sales.stk_col_remaining", "Remaining")}: {availableQty.toLocaleString(undefined, { maximumFractionDigits: 3 })} {qtyName}
+            </p>
+          )}
         </div>
 
         {/* HS Code & Item Name / ID */}
@@ -222,20 +389,20 @@ export function SalesBookingStep2({
               type="text"
               value={hsCode}
               onChange={(e) => setForm((p) => ({ ...p, hsCode: e.target.value }))}
-              placeholder="e.g. 080212"
+              
               className="w-full h-8 px-2.5 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-mono"
             />
           </div>
 
           <div className="space-y-1">
             <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Item Name / ID
+              {tUi(lang, "sales.s2_lot_id", "Lot / Item ID")}
             </label>
             <input
               type="text"
               value={itemId}
               onChange={(e) => setForm((p) => ({ ...p, stockLotNo: e.target.value }))}
-              placeholder="e.g. ALM-001-2026"
+              readOnly
               className="w-full h-8 px-2.5 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-mono"
             />
           </div>
@@ -247,39 +414,24 @@ export function SalesBookingStep2({
             <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
               Brand
             </label>
-            <select
+            <input
+              type="text"
               value={brand}
               onChange={(e) => setForm((p) => ({ ...p, brand: e.target.value }))}
-              className="w-full h-8 px-2 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
-            >
-              <option value="">Select Brand</option>
-              <option value="Al Baraka">Al Baraka</option>
-              <option value="Golden">Golden</option>
-              <option value="Diamond">Diamond</option>
-              <option value="Royal">Royal</option>
-              <option value="Fresh">Fresh</option>
-              <option value="Organic">Organic</option>
-              <option value="Standard">Standard</option>
-            </select>
+              className="w-full h-8 px-2.5 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
+            />
           </div>
 
           <div className="space-y-1">
             <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
               Size / Specification
             </label>
-            <select
+            <input
+              type="text"
               value={size}
               onChange={(e) => setForm((p) => ({ ...p, size: e.target.value }))}
-              className="w-full h-8 px-2 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
-            >
-              <option value="">Select Size</option>
-              <option value="Standard">Standard</option>
-              <option value="5% Broken">5% Broken</option>
-              <option value="Medium">Medium</option>
-              <option value="Large">Large</option>
-              <option value="Extra Light">Extra Light</option>
-              <option value="9mm">9mm</option>
-            </select>
+              className="w-full h-8 px-2.5 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
+            />
           </div>
         </div>
 
@@ -449,63 +601,6 @@ export function SalesBookingStep2({
           </div>
         </div>
 
-        {/* STOCK * Dropdown (Warehouse, Booking, Export, Transit) */}
-        <div className="space-y-1 relative">
-          <label className="block text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-            STOCK <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setStockDropdownOpen(!stockDropdownOpen)}
-              className="w-full h-9 px-3 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-300 dark:border-emerald-800 rounded-lg flex items-center justify-between text-xs font-bold text-emerald-900 dark:text-emerald-200 hover:bg-emerald-100/50 transition-colors"
-            >
-              <span className="flex items-center gap-2">
-                <Building2 className="w-3.5 h-3.5 text-emerald-600" />
-                Select Stock Type ({form.saleSource || "Warehouse"})
-              </span>
-              <span className="text-[11px] text-emerald-600 font-black">▼</span>
-            </button>
-
-            {stockDropdownOpen && (
-              <div className="absolute left-0 bottom-11 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 p-1.5 space-y-1">
-                <button
-                  type="button"
-                  onClick={() => handleOpenStockModal("warehouse")}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 text-xs font-bold text-slate-800 dark:text-slate-200 transition-colors text-left"
-                >
-                  <Building2 className="w-4 h-4 text-blue-600" />
-                  Warehouse Stock
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleOpenStockModal("booking")}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 transition-colors text-left"
-                >
-                  <Package className="w-4 h-4 text-slate-600" />
-                  Booking Stock
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleOpenStockModal("export")}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sky-50 dark:hover:bg-sky-950/40 text-xs font-bold text-slate-800 dark:text-slate-200 transition-colors text-left"
-                >
-                  <Layers className="w-4 h-4 text-sky-600" />
-                  Export Stock
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleOpenStockModal("transit")}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-xs font-bold text-slate-800 dark:text-slate-200 transition-colors text-left"
-                >
-                  <Building2 className="w-4 h-4 text-indigo-600" />
-                  Transit Stock
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Stock Validation / Warning Banner */}
         {isOverStock && (
           <div className="p-2.5 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 flex items-center gap-2 text-[11px] font-bold">
@@ -659,13 +754,16 @@ export function SalesBookingStep2({
       </div>
 
       {/* Stock Selection Modal */}
-      <SalesStockSelectionModal
-        isOpen={stockModalOpen}
+      <SalesStockPanel
+        open={stockModalOpen}
         onClose={() => setStockModalOpen(false)}
-        onSelectStock={handleStockSelected}
-        initialCategory={stockCategory}
+        onConfirm={(lot, group) => {
+          setStockGroup(group);
+          handleStockSelected(lot, group);
+          setStockModalOpen(false);
+        }}
+        initialGroup={stockGroup}
         lang={lang}
-        availableLots={availableLots}
       />
     </div>
   );
