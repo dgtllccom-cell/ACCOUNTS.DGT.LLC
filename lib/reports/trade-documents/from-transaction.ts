@@ -192,7 +192,7 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
 
   const missing: string[] = [];
   if (!buyer.name) missing.push("Buyer");
-  if (!seller.name) missing.push("Seller");
+  if (!(opts.overrides?.seller?.name || seller.name)) missing.push("Seller");
   if (goods.length === 0) missing.push("Goods lines");
   if (opts.docType !== "packing_list" && !grand) missing.push("Total amount");
 
@@ -361,7 +361,7 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
     // a Local Purchase bill names its own tax type (e.g. "VAT"); that wins over the country's default word
     taxTerms: taxTermsFor(rec, opts, rec.tax_type || rec.taxType),
     missingFields: [
-      ...(rec.supplier_name ? [] : ["Supplier"]),
+      ...(rec.supplier_name || opts.overrides?.seller?.name ? [] : ["Supplier"]),
       ...(companyNameOrNull(opts.branding) ? [] : ["Buyer (company name not set in company profile)"]),
       ...(lines.length || rec.goods_name ? [] : ["Goods"]),
     ],

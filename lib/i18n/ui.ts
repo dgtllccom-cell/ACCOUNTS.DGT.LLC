@@ -12923,6 +12923,10 @@ export type UiKey =
   | "sales.stk_panel_sub"
   | "sales.stk_cancel"
   | "sales.stk_source_warehouse"
+  | "idv.acc_purchase"
+  | "idv.acc_supplier"
+  | "idv.acc_customer"
+  | "idv.acc_sales"
   | "pterv2.pd_title"
   | "pterv2.pd_posted"
   | "pterv2.pd_stopped"
@@ -20478,6 +20482,10 @@ const en: Dict = {
   "pterv2.pd_balanced": "Debit = Credit (balanced)",
   "pterv2.pd_unbalanced": "Debit and Credit differ",
   "pterv2.pd_continue": "Continue to next stage",
+  "idv.acc_purchase": "Purchase Account (Dr)",
+  "idv.acc_supplier": "Sales / Supplier Account (Cr)",
+  "idv.acc_customer": "Customer Account (Dr)",
+  "idv.acc_sales": "Sales Account (Cr)",
   "pterv2.not_found": "This purchase booking was not found.",
   "pterv2.flow_step1": "1. PO Booking Created",
   "pterv2.flow_step2": "2. Audit & Branch Verification",
@@ -41343,6 +41351,10 @@ const ur: Dict = {
   "pterv2.pd_balanced": "ڈیبٹ = کریڈٹ (برابر)",
   "pterv2.pd_unbalanced": "ڈیبٹ اور کریڈٹ برابر نہیں",
   "pterv2.pd_continue": "اگلے مرحلے پر جائیں",
+  "idv.acc_purchase": "پرچیز اکاؤنٹ (Dr)",
+  "idv.acc_supplier": "سیلز / سپلائر اکاؤنٹ (Cr)",
+  "idv.acc_customer": "کسٹمر اکاؤنٹ (Dr)",
+  "idv.acc_sales": "سیلز اکاؤنٹ (Cr)",
   "pterv2.not_found": "یہ پرچیز بکنگ نہیں ملی۔",
   "pterv2.flow_step1": "1۔ پرچیز آرڈر بکنگ درج کی گئی",
   "pterv2.flow_step2": "2۔ برانچ آڈٹ و تصدیق مکمل",
@@ -67948,6 +67960,10 @@ const ar: Dict = {
   "pterv2.pd_balanced": "المدين = الدائن (متوازن)",
   "pterv2.pd_unbalanced": "المدين والدائن غير متساويين",
   "pterv2.pd_continue": "المتابعة إلى المرحلة التالية",
+  "idv.acc_purchase": "حساب المشتريات (مدين)",
+  "idv.acc_supplier": "حساب المبيعات / المورّد (دائن)",
+  "idv.acc_customer": "حساب العميل (مدين)",
+  "idv.acc_sales": "حساب المبيعات (دائن)",
   "pterv2.not_found": "لم يتم العثور على حجز الشراء هذا.",
   "pterv2.flow_step1": "1. إنشاء حجز أمر الشراء",
   "pterv2.flow_step2": "2. التدقيق والتحقق من الفرع",
@@ -94605,6 +94621,10 @@ const fa: Dict = {
   "pterv2.pd_balanced": "بدهکار = بستانکار (تراز)",
   "pterv2.pd_unbalanced": "بدهکار و بستانکار برابر نیستند",
   "pterv2.pd_continue": "ادامه به مرحله بعد",
+  "idv.acc_purchase": "حساب خرید (بدهکار)",
+  "idv.acc_supplier": "حساب فروش / تأمین‌کننده (بستانکار)",
+  "idv.acc_customer": "حساب مشتری (بدهکار)",
+  "idv.acc_sales": "حساب فروش (بستانکار)",
   "pterv2.not_found": "این رزرو خرید پیدا نشد.",
   "pterv2.flow_step1": "1. ایجاد رزرو سفارش خرید",
   "pterv2.flow_step2": "2. حسابرسی و تایید شعبه",
@@ -121261,6 +121281,10 @@ const ps: Dict = {
   "pterv2.pd_balanced": "ډیبټ = کریډټ (برابر)",
   "pterv2.pd_unbalanced": "ډیبټ او کریډټ برابر نه دي",
   "pterv2.pd_continue": "بل پړاو ته دوام",
+  "idv.acc_purchase": "د پېرود حساب (Dr)",
+  "idv.acc_supplier": "د پلور / عرضه‌کوونکي حساب (Cr)",
+  "idv.acc_customer": "د پیرودونکي حساب (Dr)",
+  "idv.acc_sales": "د پلور حساب (Cr)",
   "pterv2.not_found": "دا د پیرود بکنګ ونه موندل شو.",
   "pterv2.flow_step1": "1. د پیرود امر راجستر شو",
   "pterv2.flow_step2": "2. د څانګې پلټنه او تصدیق",

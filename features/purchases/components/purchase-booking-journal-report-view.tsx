@@ -1534,7 +1534,7 @@ export function PurchaseBookingJournalReportView({
       setReports((prev) => prev.map((r) => (r.id === reportToTransfer.id ? ({ ...r, status: "Posted", ledger_posting_status: "posted", is_edited_since_transfer: false } as any) : r)));
       setPostingPanel({ posting: transferPayload.data?.posting, destUrl });
     } catch (err) {
-      setPostingPanel({ error: err instanceof Error ? err.message : "Error transferring booking." });
+      setPostingPanel({ error: err instanceof Error ? err.message : t(activeLang, "pterv2.pd_stopped", "Transfer stopped — nothing was posted") });
     } finally {
       setTransferring(false);
     }

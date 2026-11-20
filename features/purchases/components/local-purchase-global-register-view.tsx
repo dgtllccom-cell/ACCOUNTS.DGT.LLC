@@ -275,7 +275,7 @@ export function LocalPurchaseGlobalRegisterView({
       r.resolved_dr_account_code ||
       r.dr_account_no ||
       r.purchase_account_code ||
-      "AE-AEDU-S-012";
+      "";  // no invented account code
     return { name, code };
   };
 
@@ -297,7 +297,7 @@ export function LocalPurchaseGlobalRegisterView({
       r.resolved_cr_account_code ||
       r.cr_account_no ||
       r.supplier_code ||
-      "AE-AEDU-S-011";
+      "";  // no invented account code
     return { name, code };
   };
 
