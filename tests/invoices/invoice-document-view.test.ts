@@ -40,6 +40,19 @@ describe("Purchase Booking View shows the complete invoice", () => {
     expect(html).toContain("WALNUT KENRELS");
   });
 
+  it("a UAE bill keeps VAT / TRN; a Pakistan-branch bill prints Sales Tax / NTN", () => {
+    const uae = renderInvoiceHtml(mapRecordToInvoice("purchase_order", record, { docType: "purchase_invoice", lang: "en", branding }), "tax_invoice");
+    expect(uae).toContain("TOTAL AMOUNT (BEFORE VAT)");
+    expect(uae).toContain("TRN: 104127559300003");
+    const pk = renderInvoiceHtml(
+      mapRecordToInvoice("purchase_order", record, { docType: "purchase_invoice", lang: "en", branding: { ...branding, countryName: "Pakistan", taxNumber: "1234567-8" } }),
+      "tax_invoice",
+    );
+    expect(pk).toContain("TOTAL AMOUNT (BEFORE SALES TAX)");
+    expect(pk).toContain("NTN / STRN: 1234567-8");
+    expect(pk).not.toContain("BEFORE VAT");
+  });
+
   it("routes a Local Purchase bill to the Local Purchase mapper", () => {
     const input = mapRecordToInvoice("local_purchase", { id: "lp1", goods_name: "WALNUT KENRELS", numbers: 2100, quantity_name: "Box", purchase_rate: 17, final_cost: 425000, supplier_name: "Supplier" }, { docType: "purchase_invoice", lang: "en", branding });
     expect(input.tradeScope).toBe("local");

@@ -135,6 +135,8 @@ export type TradeDocumentInput = {
   signatureName?: string | null;
   /** Public invoice link encoded as the document's QR code (set when the document is printed). */
   publicUrl?: string | null;
+  /** the tax and tax-registration words of the bill's country ("VAT" / "TRN", "Sales Tax" / "NTN / STRN", "GST" / "GSTIN") */
+  taxTerms?: { taxLabel: string; taxIdLabel: string } | null;
 
   /** critical fields the source record was missing — surfaced to the user, not faked */
   missingFields?: string[];

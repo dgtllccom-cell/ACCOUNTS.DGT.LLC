@@ -34,17 +34,20 @@ beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+// The review modal re-renders its whole bill after each post; under a loaded test run that can take just over the
+// default 1 s (a CI failure at 1139 ms), so the waits after a post allow more time. The assertions are unchanged.
+const WAIT = { timeout: 5000 };
 const mount = () => render(<LocalPurchaseTransferPaymentView session={{ isSuperAdmin: true }} />);
 async function openQueued() {
   state.highlight = "queued";
   mount();
-  return await screen.findByRole("dialog");
+  return await screen.findByRole("dialog", {}, WAIT);
 }
 
 describe("Transfer Payment review", () => {
   it("reads the actual API envelope and excludes drafts", async () => {
     mount();
-    await screen.findByText("BILL-queued");
+    await screen.findByText("BILL-queued", {}, WAIT);
     expect(screen.queryByText("BILL-draft")).toBeNull();
     expect(screen.getByText("BILL-old")).toBeTruthy();
     expect(fetchMock.mock.calls.filter(([, options]) => options?.method === "POST")).toHaveLength(0);
@@ -56,7 +59,7 @@ describe("Transfer Payment review", () => {
     fireEvent.click(modal.getByRole("checkbox"));
     fireEvent.click(post);
     fireEvent.click(post);
-    await modal.findByText("Posted to Business Roznamcha and Ledgers");
+    await modal.findByText("Posted to Business Roznamcha and Ledgers", {}, WAIT);
     expect(modal.queryByRole("button", { name: "Transfer & Post" })).toBeNull();
     const posts = fetchMock.mock.calls.filter(([, options]) => options?.method === "POST");
     expect(posts).toHaveLength(1);
@@ -69,12 +72,12 @@ describe("Transfer Payment review", () => {
     const modal = within(await openQueued());
     fireEvent.click(modal.getByRole("checkbox"));
     fireEvent.click(modal.getByRole("button", { name: "Transfer & Post" }));
-    expect(await modal.findByRole("alert")).toHaveProperty("textContent", "Ledger unavailable");
-    await waitFor(() => expect((modal.getByRole("button", { name: "Transfer & Post" }) as HTMLButtonElement).disabled).toBe(false));
+    expect(await modal.findByRole("alert", {}, WAIT)).toHaveProperty("textContent", "Ledger unavailable");
+    await waitFor(() => expect((modal.getByRole("button", { name: "Transfer & Post" }) as HTMLButtonElement).disabled).toBe(false), WAIT);
   });
   it("does not offer financial posting for a historical posted bill", async () => {
     state.highlight = "old"; mount();
-    const modal = within(await screen.findByRole("dialog"));
+    const modal = within(await screen.findByRole("dialog", {}, WAIT));
     expect(modal.queryByRole("checkbox")).toBeNull();
     expect(modal.getByText("Posted to Business Roznamcha and Ledgers")).toBeTruthy();
   });
