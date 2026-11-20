@@ -1,4 +1,5 @@
 import type { ErpSession } from "@/lib/auth/session";
+import { billFxOperator, checkPostingAgainstSaved, effectiveFxRate } from "@/lib/purchases/fx-operator";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers } from "@/lib/services/posting-verification";
 import { resolvePurchaseBookingTransferDestination } from "@/lib/services/purchase-booking-transfer-routing";
@@ -144,7 +145,7 @@ export async function transferPurchaseBookingViaLocalPg(input: {
         const rawTotal = String(orderRow.order_total || formData.totals?.grandFinal || "0").replace(/,/g, "");
         const legacyTotal = Number(rawTotal);
         const legacyRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
-        totalPurchaseAmount = legacyRate > 1 ? legacyTotal / legacyRate : legacyTotal;
+        totalPurchaseAmount = billFxOperator(formData) === "/" ? legacyTotal * legacyRate : (legacyRate > 1 ? legacyTotal / legacyRate : legacyTotal);
       }
       if (!Number.isFinite(totalPurchaseAmount) || totalPurchaseAmount <= 0) {
         throw new Error("Purchase order total must be a valid number greater than zero to transfer.");
@@ -219,7 +220,22 @@ export async function transferPurchaseBookingViaLocalPg(input: {
       `;
       const existingPayment = existingPaymentRows[0] ?? null;
 
-      const exRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
+      // A "/" bill (PKR per AED) posts with the effective rate 1/rate; a "*" bill with its rate (lib/purchases/fx-operator.ts).
+      const savedRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
+      const fxOp = billFxOperator(formData);
+      const exRate = effectiveFxRate(savedRate, fxOp);
+      const fxCheck = checkPostingAgainstSaved({
+        original: totalPurchaseAmount,
+        rate: savedRate,
+        op: fxOp,
+        savedBase: Number(String(orderRow.order_total ?? formData.totals?.grandFinal ?? "").replace(/,/g, "")),
+      });
+      if (!fxCheck.ok) {
+        throw new Error(
+          `Transfer stopped: ${totalPurchaseAmount} ${String(orderRow.currency_code || form.currencyType || "USD")} ${fxOp === "/" ? "÷" : "×"} ${savedRate} = ${fxCheck.computedBase.toFixed(2)}, ` +
+          `but the bill's saved total is ${Number(fxCheck.savedBase).toFixed(2)}. Correct the bill's rate / amount before transferring.`
+        );
+      }
       const expectedFinalAmount = Number(orderRow.order_total || 0) > 0 ? Number(orderRow.order_total) : (totalPurchaseAmount * exRate);
 
       let paymentId: string | null = null;
@@ -251,7 +267,7 @@ export async function transferPurchaseBookingViaLocalPg(input: {
             ${now.slice(0, 10)}::date,
             ${totalPurchaseAmount},
             ${String(orderRow.currency_code || form.currencyType || "USD")},
-            ${Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1},
+            ${exRate},
             ${debitAccountObj.id}::uuid,
             ${creditAccountObj.id}::uuid,
             ${referenceNo},
