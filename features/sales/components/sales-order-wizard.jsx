@@ -140,62 +140,8 @@ async function lookupSalesBookingReport(query, countryId, countryBranchId, cityB
   return payload.data?.reports?.[0] ?? null;
 }
 
-const DEFAULT_SEEDED_GOODS = [
-  {
-    goodsName: "Almond Kernel",
-    hsCode: "080212",
-    unit: "MT",
-    qtyNo: 10,
-    quantity: 10,
-    coursePrice: 2500,
-    unitPrice: 2500,
-    totalAmount: 25000,
-    grossWeight: 12000,
-    netWeight: 11000,
-    size: "5% Broken",
-    brand: "Al Baraka",
-    origin: "USA",
-    originCountry: "United Arab Emirates",
-    exchangeRate: 3.6730,
-    finalAmount: 91825
-  },
-  {
-    goodsName: "Pistachio",
-    hsCode: "080252",
-    unit: "MT",
-    qtyNo: 5,
-    quantity: 5,
-    coursePrice: 3200,
-    unitPrice: 3200,
-    totalAmount: 16000,
-    grossWeight: 6000,
-    netWeight: 5500,
-    size: "Standard",
-    brand: "Al Baraka",
-    origin: "USA",
-    originCountry: "United Arab Emirates",
-    exchangeRate: 3.6730,
-    finalAmount: 58768
-  },
-  {
-    goodsName: "Raisins",
-    hsCode: "080620",
-    unit: "MT",
-    qtyNo: 8,
-    quantity: 8,
-    coursePrice: 1800,
-    unitPrice: 1800,
-    totalAmount: 14400,
-    grossWeight: 8000,
-    netWeight: 7500,
-    size: "Standard",
-    brand: "Golden",
-    origin: "Iran",
-    originCountry: "Iran",
-    exchangeRate: 3.6730,
-    finalAmount: 52891
-  }
-];
+// A new booking starts with no goods lines (the former sample Almond / Pistachio / Raisins rows were removed).
+const DEFAULT_SEEDED_GOODS = [];
 
 const DEFAULT_FORM = {
   countryId: "",
@@ -358,6 +304,21 @@ const SAVED_ORDER_BLANK_FORM = Object.fromEntries(
   })
 );
 
+// A NEW booking starts blank: no sample customer, sales account, order number, shipping or goods values
+// (DEFAULT_FORM's samples showed up as real data — "Al Noor Imports", "SB-2026-0001", "MSC Evergreen" ...).
+// Calculator / mode defaults and the usual choices are kept; the booking date is today; the server assigns the number.
+const NEW_ORDER_KEEP_DEFAULTS = [...SAVED_ORDER_KEEP_DEFAULTS, "currencyType", "salesCurrency", "paymentType", "shipmentType", "shippingMode", "salesStatus", "containerSize", "showRemarksOnA4", "saleSource", "secondaryCurrency"];
+function newOrderForm() {
+  const today = new Date().toISOString().slice(0, 10);
+  const blank = Object.fromEntries(
+    Object.entries(DEFAULT_FORM).map(([key, value]) => {
+      if (NEW_ORDER_KEEP_DEFAULTS.includes(key)) return [key, value];
+      return [key, SAVED_ORDER_BLANK_FORM[key]];
+    })
+  );
+  return { ...blank, salesDate: today, divideWeight: 1, containerCount: 1 };
+}
+
 // Seeded rows matching user's mock screenshots
 
 function calculateItemTotals(form) {
@@ -507,7 +468,7 @@ export function SalesOrderWizard({ session }) {
   const [previewType, setPreviewType] = useState("booking_report"); // "booking_report" | "contract" | "invoice"
   // Serial numbers (SO / Contract / Bill) are assigned by the server on save via
   // nextTransactionSerial — never a random client value. Form starts blank.
-  const [form, setForm] = useState(() => ({ ...DEFAULT_FORM }));
+  const [form, setForm] = useState(() => newOrderForm());
   const [goodsEntries, setGoodsEntries] = useState(() => [...DEFAULT_SEEDED_GOODS]);
   const setValue = useCallback((key, val) => setForm((p) => ({ ...p, [key]: val })), []);
 
@@ -2020,7 +1981,7 @@ export function SalesOrderWizard({ session }) {
   };
 
   const handleReset = () => {
-    setForm({ ...DEFAULT_FORM });
+    setForm(newOrderForm());
     setGoodsEntries([]);
     setReportsList([]);
     setSavedOrderId("");
