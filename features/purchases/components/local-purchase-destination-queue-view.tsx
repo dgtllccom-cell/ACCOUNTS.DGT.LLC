@@ -22,6 +22,7 @@ import {
   FileText,
   Plus,
   MoreVertical,
+  ArrowRightLeft,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -303,6 +304,9 @@ export function LocalPurchaseDestinationQueueView({
   });
   const [loadingSubmitting, setLoadingSubmitting] = useState(false);
   const [loadingError, setLoadingError] = useState("");
+
+  // The one onward step after loading: the Goods Transfer Journal (Export / Warehouse / Local Market Sale / Hold)
+  const goodsTransferHref = (row: LocalPurchaseDestinationRecord) => `/dashboard/purchase/local-purchase/${row.id}/goods-transfer`;
 
   function getLoadingStats(row: LocalPurchaseDestinationRecord) {
     const booked = Number(row.numbers || row.quantity_kgs || 0);
@@ -1391,6 +1395,21 @@ export function LocalPurchaseDestinationQueueView({
                                         <span>{th("ADD LOADING")}</span>
                                       </button>
 
+                                      {/* after loading: onward to Warehouse / Export / Local Sale / Hold (the existing Goods Transfer Journal) */}
+                                      <button
+                                        type="button"
+                                        disabled={loaded <= 0}
+                                        title={loaded <= 0 ? th("ADD LOADING") : undefined}
+                                        onClick={() => {
+                                          setOpenRowMenuId(null);
+                                          router.push(goodsTransferHref(row));
+                                        }}
+                                        className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 font-semibold text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/40 disabled:opacity-40 cursor-pointer"
+                                      >
+                                        <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
+                                        <span>{th("TRANSFER GOODS")}</span>
+                                      </button>
+
                                       <button
                                         type="button"
                                         onClick={() => {
@@ -1939,7 +1958,34 @@ export function LocalPurchaseDestinationQueueView({
                   selectedRowForVoucher.serial_no ||
                   `LP-${selectedRowForVoucher.id?.slice(0, 5).toUpperCase()}`}
               </h3>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
+                {stage === "loading" && (() => {
+                  const st = getLoadingStats(selectedRowForVoucher);
+                  return (
+                    <>
+                      <Button
+                        type="button"
+                        disabled={st.booked > 0 && st.loaded >= st.booked}
+                        onClick={() => {
+                          const bill = selectedRowForVoucher;
+                          setSelectedRowForVoucher(null);
+                          openLoadingModal(bill);
+                        }}
+                        className="h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1"
+                      >
+                        <Truck className="h-3.5 w-3.5" /> {th("ADD LOADING")}
+                      </Button>
+                      <Button
+                        type="button"
+                        disabled={st.loaded <= 0}
+                        onClick={() => router.push(goodsTransferHref(selectedRowForVoucher))}
+                        className="h-8 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold flex items-center gap-1"
+                      >
+                        <ArrowRightLeft className="h-3.5 w-3.5" /> {th("TRANSFER GOODS")}
+                      </Button>
+                    </>
+                  );
+                })()}
                 <Button
                   onClick={() => printDomFragmentViaModal("printable-modal-voucher", "Voucher")}
                   className="h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1"
