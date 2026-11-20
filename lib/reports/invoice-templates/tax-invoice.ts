@@ -119,11 +119,13 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
   const shipperAddress = seller.address || br.address;
   const shipperEmail = seller.email || br.email;
 
+  // one A4 sheet at least; taller content (long goods lists, Urdu / Arabic / Persian / Pashto lines) grows the sheet
+  // instead of squeezing the goods table under the totals
   const pageH = landscape ? "210mm" : "297mm";
   const pageW = landscape ? "297mm" : "210mm";
   const style = `
     body { background: #fff; color: #000; font-family: 'Times New Roman', Georgia, serif; font-size: 9pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .page { width: ${pageW}; height: ${pageH}; margin: 0 auto; padding: 6mm 8mm; box-sizing: border-box; display: flex; flex-direction: column; position: relative; }
+    .page { width: ${pageW}; min-height: ${pageH}; margin: 0 auto; padding: 6mm 8mm; box-sizing: border-box; display: flex; flex-direction: column; position: relative; }
     .companyhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; min-height: 30mm; }
     .leftblock { width: 58%; display: flex; align-items: flex-start; gap: 8px; }
     .qr { text-align: center; font-family: Arial, Helvetica, sans-serif; font-size: 6.5pt; font-weight: 700; flex: 0 0 auto; background: #fff; padding: 2mm; }
@@ -146,7 +148,7 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
     .meta td.mk { font-size: 8pt; font-weight: 700; }
     .meta td.mv { font-size: 9pt; text-align: left; }
     .sec { font-weight: 700; font-size: 8pt; text-transform: uppercase; }
-    .goods-wrap { flex: 1 1 auto; display: flex; flex-direction: column; margin-top: 4px; min-height: 0; }
+    .goods-wrap { flex: 1 1 auto; display: flex; flex-direction: column; margin-top: 4px; }
     table.goods { width: 100%; height: 100%; border-collapse: collapse; font-size: 8pt; }
     table.goods th, table.goods td { border: 1px solid #000; padding: 3px 3px; vertical-align: middle; }
     table.goods th { font-size: 6.8pt; font-weight: 700; text-align: center; text-transform: uppercase; }
