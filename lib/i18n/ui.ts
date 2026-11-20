@@ -12923,6 +12923,13 @@ export type UiKey =
   | "sales.stk_panel_sub"
   | "sales.stk_cancel"
   | "sales.stk_source_warehouse"
+  | "sales.s2_stock_source"
+  | "sales.s2_item_name"
+  | "sales.s2_item_search_ph"
+  | "sales.s2_lot_id"
+  | "sales.s2_err_pick_item"
+  | "sales.s2_err_qty"
+  | "sales.s2_err_duplicate"
   | "sales.stk_source_booking"
   | "sales.stk_source_export"
   | "sales.stk_source_warehouse_hint"
@@ -39542,6 +39549,13 @@ const en: Dict = {
   "sales.stk_panel_title": "Select Stock to Sell",
   "sales.stk_panel_sub": "Choose a source, open a lot to inspect it, then confirm.",
   "sales.stk_cancel": "Cancel",
+  "sales.s2_stock_source": "Stock",
+  "sales.s2_item_name": "Item Name",
+  "sales.s2_item_search_ph": "Search item in this stock (e.g. walnut)...",
+  "sales.s2_lot_id": "Lot / Item ID",
+  "sales.s2_err_pick_item": "Select a stock source, then search and pick the item.",
+  "sales.s2_err_qty": "Enter the quantity.",
+  "sales.s2_err_duplicate": "This item is already in the table. Edit that line instead of adding it again.",
   "sales.stk_source_warehouse": "Warehouse Stock",
   "sales.stk_source_booking": "Booking Stock",
   "sales.stk_source_export": "Export Stock",
@@ -66179,6 +66193,13 @@ const ur: Dict = {
   "sales.stk_panel_title": "فروخت کے لیے اسٹاک منتخب کریں",
   "sales.stk_panel_sub": "ذریعہ منتخب کریں، لاٹ کھول کر دیکھیں، پھر تصدیق کریں۔",
   "sales.stk_cancel": "منسوخ کریں",
+  "sales.s2_stock_source": "اسٹاک",
+  "sales.s2_item_name": "آئٹم کا نام",
+  "sales.s2_item_search_ph": "اس اسٹاک میں آئٹم تلاش کریں (مثلاً اخروٹ)...",
+  "sales.s2_lot_id": "لاٹ / آئٹم آئی ڈی",
+  "sales.s2_err_pick_item": "پہلے اسٹاک منتخب کریں، پھر آئٹم تلاش کر کے چنیں۔",
+  "sales.s2_err_qty": "مقدار درج کریں۔",
+  "sales.s2_err_duplicate": "یہ آئٹم پہلے سے ٹیبل میں موجود ہے۔ دوبارہ شامل کرنے کی بجائے اسی لائن کو ایڈٹ کریں۔",
   "sales.stk_source_warehouse": "گودام اسٹاک",
   "sales.stk_source_booking": "بکنگ اسٹاک",
   "sales.stk_source_export": "برآمدی اسٹاک",
@@ -92817,6 +92838,13 @@ const ar: Dict = {
   "sales.stk_panel_title": "اختر المخزون للبيع",
   "sales.stk_panel_sub": "اختر المصدر، افتح الدفعة لفحصها، ثم أكّد.",
   "sales.stk_cancel": "إلغاء",
+  "sales.s2_stock_source": "المخزون",
+  "sales.s2_item_name": "اسم الصنف",
+  "sales.s2_item_search_ph": "ابحث عن الصنف في هذا المخزون (مثل الجوز)...",
+  "sales.s2_lot_id": "رقم الدفعة / الصنف",
+  "sales.s2_err_pick_item": "اختر مصدر المخزون، ثم ابحث عن الصنف واختره.",
+  "sales.s2_err_qty": "أدخل الكمية.",
+  "sales.s2_err_duplicate": "هذا الصنف موجود بالفعل في الجدول. عدّل ذلك السطر بدلاً من إضافته مرة أخرى.",
   "sales.stk_source_warehouse": "مخزون المستودع",
   "sales.stk_source_booking": "مخزون الحجز",
   "sales.stk_source_export": "مخزون التصدير",
@@ -119454,6 +119482,13 @@ const fa: Dict = {
   "sales.stk_panel_title": "انتخاب موجودی برای فروش",
   "sales.stk_panel_sub": "منبع را انتخاب کنید، لات را برای بررسی باز کنید، سپس تأیید کنید.",
   "sales.stk_cancel": "لغو",
+  "sales.s2_stock_source": "موجودی",
+  "sales.s2_item_name": "نام کالا",
+  "sales.s2_item_search_ph": "جستجوی کالا در این موجودی (مثلاً گردو)...",
+  "sales.s2_lot_id": "شناسه بسته / کالا",
+  "sales.s2_err_pick_item": "ابتدا منبع موجودی را انتخاب کنید، سپس کالا را جستجو و انتخاب کنید.",
+  "sales.s2_err_qty": "مقدار را وارد کنید.",
+  "sales.s2_err_duplicate": "این کالا قبلاً در جدول است. به‌جای افزودن دوباره، همان ردیف را ویرایش کنید.",
   "sales.stk_source_warehouse": "موجودی انبار",
   "sales.stk_source_booking": "موجودی رزرو",
   "sales.stk_source_export": "موجودی صادرات",
@@ -146098,6 +146133,13 @@ const ps: Dict = {
   "sales.stk_panel_title": "د پلور لپاره ذخیره وټاکئ",
   "sales.stk_panel_sub": "سرچینه وټاکئ، لاټ د کتلو لپاره خلاص کړئ، بیا تایید کړئ.",
   "sales.stk_cancel": "لغوه",
+  "sales.s2_stock_source": "ذخیره",
+  "sales.s2_item_name": "د توکي نوم",
+  "sales.s2_item_search_ph": "په دې ذخیره کې توکی ولټوئ (لکه غوز)...",
+  "sales.s2_lot_id": "د لاټ / توکي پېژند",
+  "sales.s2_err_pick_item": "لومړی د ذخیرې سرچینه وټاکئ، بیا توکی ولټوئ او وټاکئ.",
+  "sales.s2_err_qty": "مقدار ولیکئ.",
+  "sales.s2_err_duplicate": "دا توکی دمخه په جدول کې دی. د بیا زیاتولو پر ځای همدا کرښه سمه کړئ.",
   "sales.stk_source_warehouse": "د ګودام ذخیره",
   "sales.stk_source_booking": "د بکینګ ذخیره",
   "sales.stk_source_export": "د صادراتو ذخیره",
