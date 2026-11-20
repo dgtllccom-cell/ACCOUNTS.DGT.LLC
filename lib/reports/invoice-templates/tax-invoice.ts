@@ -82,7 +82,11 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
   const netPerCarton = perPack(totals.totalNetWeight ?? goods.reduce((s, g) => s + (Number(g.netWeight) || 0), 0), totalPacks);
   const firstRate = goods.find((g) => g.unitPrice != null)?.unitPrice;
   const zeroVatSingle = goods.length === 1 && (goods[0].taxAmount == null || Number(goods[0].taxAmount) === 0);
-  const vatTotalLabel = zeroVatSingle ? "TOTAL VAT (0% ON THIS ITEM)" : "TOTAL VAT";
+  // The bill's country decides the tax words: "VAT" / "TRN" in the UAE, "SALES TAX" / "NTN / STRN" in Pakistan,
+  // "GST" / "GSTIN" in India (lib/tax/country-tax-terms.ts). Without them the UAE words are used, as before.
+  const TAX = esc(String(input.taxTerms?.taxLabel || "VAT").toUpperCase());
+  const TAXID = esc(String(input.taxTerms?.taxIdLabel || "TRN").toUpperCase());
+  const vatTotalLabel = zeroVatSingle ? `TOTAL ${TAX} (0% ON THIS ITEM)` : `TOTAL ${TAX}`;
 
   const goodsRows = goods.length
     ? goods.map((li, i) => {
@@ -117,7 +121,7 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
   const logo = "/images/damaan-logo.png";
   // A branch without a company profile falls back to its country name in the branding; that is never printed as the company.
   const companyName = br.legalName || (isReal(br.entityName) && br.entityName !== br.countryName ? br.entityName : null);
-  const companyLines = [br.address, br.phone ? `TEL: ${br.phone}` : null, br.email, br.website, br.taxNumber ? `TRN: ${br.taxNumber}` : null]
+  const companyLines = [br.address, br.phone ? `TEL: ${br.phone}` : null, br.email, br.website, br.taxNumber ? `${TAXID}: ${br.taxNumber}` : null]
     .filter(isReal).map((x) => `<div>${esc(String(x))}</div>`).join("");
   const stamp = isReal(br.stampUrl) ? `<img class="stamp" src="${esc(br.stampUrl)}" alt="" />` : `<div class="stamp-empty">COMPANY STAMP</div>`;
   const shipperName = seller.name || companyName;
@@ -224,7 +228,7 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
             <div class="v">${dash(buyer.address)}</div>
             <div class="v">${isReal(buyer.phone) ? `TEL: ${esc(buyer.phone)}` : "—"}</div>
             <div class="v">${isReal(buyer.email) ? `EMAIL: ${esc(buyer.email)}` : "—"}</div>
-            <div class="v">${isReal(buyer.taxId) ? `TRN NO: ${esc(buyer.taxId)}` : "—"}</div>
+            <div class="v">${isReal(buyer.taxId) ? `${TAXID}: ${esc(buyer.taxId)}` : "—"}</div>
           </td>
           <td style="width:25%">
             <div class="sec">Place of Delivery:</div>
@@ -249,8 +253,8 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
             <th style="width:12%">TOTAL WEIGHT<br/>GROSS / NET</th>
             <th style="width:7%">RATE<br/>${esc(cur)}/${esc(rateLabel)}</th>
             <th style="width:8%">AMOUNT<br/>${esc(cur)}</th>
-            <th style="width:6%">VAT %</th>
-            <th style="width:6%">VAT<br/>${esc(cur)}</th>
+            <th style="width:6%">${TAX} %</th>
+            <th style="width:6%">${TAX}<br/>${esc(cur)}</th>
             <th style="width:8%">FINAL<br/>${esc(cur)}</th>
           </tr></thead>
           <tbody>${goodsRows}</tbody>
@@ -263,13 +267,13 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
             <td style="width:50%">
               <div class="sec">Pricing basis:</div>
               ${pricing.length ? pricing.map((p) => `<div class="v">${esc(p)}</div>`).join("") : `<div class="v">—</div>`}
-              <div class="v" style="margin-top:3px">Item-level VAT is shown in the goods table.</div>
+              <div class="v" style="margin-top:3px">Item-level ${TAX} is shown in the goods table.</div>
             </td>
             <td style="width:50%;padding:0">
               <table class="tot">
-                <tr><td class="n">TOTAL AMOUNT (BEFORE VAT)</td><td class="v">${esc(cur)} ${totals.subTotal != null ? esc(money(totals.subTotal)) : "—"}</td></tr>
+                <tr><td class="n">TOTAL AMOUNT (BEFORE ${TAX})</td><td class="v">${esc(cur)} ${totals.subTotal != null ? esc(money(totals.subTotal)) : "—"}</td></tr>
                 <tr><td class="n">${esc(vatTotalLabel)}</td><td class="v">${esc(cur)} ${totals.taxAmount != null ? esc(money(totals.taxAmount)) : "—"}</td></tr>
-                <tr class="fin"><td class="n">FINAL TOTAL (INCL. VAT)</td><td class="v">${esc(cur)} ${totals.grandTotal != null ? esc(money(totals.grandTotal)) : "—"}</td></tr>
+                <tr class="fin"><td class="n">FINAL TOTAL (INCL. ${TAX})</td><td class="v">${esc(cur)} ${totals.grandTotal != null ? esc(money(totals.grandTotal)) : "—"}</td></tr>
               </table>
             </td>
           </tr>
