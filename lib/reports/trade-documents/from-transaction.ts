@@ -11,6 +11,7 @@
  */
 
 import { localPurchaseBillNo } from "@/lib/purchases/local-purchase-number";
+import { countryTaxTerms } from "@/lib/tax/country-tax-terms";
 import type { DocumentBranding } from "@/lib/reports/resolve-document-branding";
 import type {
   TradeDocumentInput, TradeDocType, TradeLineItem, TradeParty, TradeScope, BeneficiaryBank,
@@ -114,6 +115,8 @@ export type MapOptions = {
   overrides?: Partial<Pick<TradeDocumentInput, "buyer" | "seller" | "notifyParty" | "delivery" | "validity" | "notes" | "signatureName">>;
   orientation?: "portrait" | "landscape";
   autoPrint?: boolean;
+  /** the country's configured tax name (Settings → Tax Rate Management default), when known */
+  configuredTaxName?: string | null;
 };
 
 function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions): TradeDocumentInput {
@@ -248,12 +251,23 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
   };
 }
 
+/** The tax words of the bill's country: the issuing branch's country (branding), else the record's own country name. */
+function taxTermsFor(rec: AnyRec, opts: MapOptions, billTaxType?: unknown): TradeDocumentInput["taxTerms"] {
+  const fd = rec.form_data || rec.formData || {};
+  const form: AnyRec = fd.form || fd || {};
+  return countryTaxTerms({
+    iso2: (opts.branding.raw as any)?.countryIso2 ?? (opts.branding.raw as any)?.iso2 ?? null,
+    countryName: opts.branding.countryName || pick(form, "branchCountry") || pick(rec, "country_name", "countryName") || null,
+    configuredTaxName: (billTaxType as string) || opts.configuredTaxName || null,
+  });
+}
+
 export function purchaseOrderToTradeInput(rec: AnyRec, opts: MapOptions): TradeDocumentInput {
-  return baseFromForm(rec, "purchase", opts);
+  return { ...baseFromForm(rec, "purchase", opts), taxTerms: taxTermsFor(rec, opts) };
 }
 
 export function salesOrderToTradeInput(rec: AnyRec, opts: MapOptions): TradeDocumentInput {
-  return baseFromForm(rec, "sales", opts);
+  return { ...baseFromForm(rec, "sales", opts), taxTerms: taxTermsFor(rec, opts) };
 }
 
 /** `line_items` (jsonb) holds the goods lines of a Local Purchase. Some rows have none, and a string is parsed. */
@@ -344,6 +358,8 @@ export function localPurchaseToTradeInput(rec: AnyRec, opts: MapOptions): TradeD
     validity: opts.overrides?.validity ?? null,
     notes: opts.overrides?.notes ?? null,
     signatureName: opts.overrides?.signatureName ?? null,
+    // a Local Purchase bill names its own tax type (e.g. "VAT"); that wins over the country's default word
+    taxTerms: taxTermsFor(rec, opts, rec.tax_type || rec.taxType),
     missingFields: [
       ...(rec.supplier_name ? [] : ["Supplier"]),
       ...(companyNameOrNull(opts.branding) ? [] : ["Buyer (company name not set in company profile)"]),

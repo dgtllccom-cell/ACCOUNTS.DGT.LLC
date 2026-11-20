@@ -83,6 +83,17 @@ export function InvoiceDocumentView({ isOpen, onClose, title, source, record, sc
             cityBranchId: scope?.cityBranchId ?? null,
           }),
         ]);
+        // the country's default tax from Settings → Tax Rate Management (read only); its name labels the tax columns
+        let configuredTaxName: string | null = null;
+        if (scope?.countryId) {
+          try {
+            const res = await apiGet<any>(`/api/erp/tax?countryId=${encodeURIComponent(scope.countryId)}`);
+            const taxes: any[] = Array.isArray(res?.taxes) ? res.taxes : [];
+            const kind = source === "sales_order" ? "sales" : "purchase";
+            const usable = taxes.filter((x) => x?.isActive !== false && (!x?.appliesTo || x.appliesTo === "both" || x.appliesTo === kind));
+            configuredTaxName = (usable.find((x) => x?.isDefault) || usable[0])?.taxName ?? null;
+          } catch { /* no tax master: the country's standard word is used */ }
+        }
         let bank: BeneficiaryBank | null = branding.bank ?? null;
         if (!bank && companyId) {
           try {
@@ -90,7 +101,7 @@ export function InvoiceDocumentView({ isOpen, onClose, title, source, record, sc
             bank = (Array.isArray(res?.banks) ? res.banks[0] : null) ?? null;
           } catch { /* no bank block */ }
         }
-        const input = mapRecordToInvoice(source, record, { docType: type, lang, branding, bank, orientation: "portrait", autoPrint: false });
+        const input = mapRecordToInvoice(source, record, { docType: type, lang, branding, bank, orientation: "portrait", autoPrint: false, configuredTaxName });
         const flags: InvoiceTemplateFlags = { ...DEFAULT_TEMPLATE_FLAGS, showLogo: def.showLogo, showBankDetails: def.showBankDetails, showTerms: def.showTerms };
         let colorId: string | null = null;
         try { colorId = normalizeTemplateColor(window.localStorage.getItem("erp_color")); } catch { /* default colour */ }
