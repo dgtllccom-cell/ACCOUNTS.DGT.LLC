@@ -32,6 +32,14 @@ describe("Purchase Booking View shows the complete invoice", () => {
     }
   });
 
+  it("prints the English Damaan invoice left-to-right in Urdu too (no flipped labels)", () => {
+    const input = mapRecordToInvoice("purchase_order", record, { docType: "purchase_invoice", lang: "ur", branding });
+    const html = renderInvoiceHtml(input, "tax_invoice");
+    expect(html).toMatch(/<html lang="en" dir="ltr">/);
+    expect(html).toContain("PURCHASE INVOICE");
+    expect(html).toContain("WALNUT KENRELS");
+  });
+
   it("routes a Local Purchase bill to the Local Purchase mapper", () => {
     const input = mapRecordToInvoice("local_purchase", { id: "lp1", goods_name: "WALNUT KENRELS", numbers: 2100, quantity_name: "Box", purchase_rate: 17, final_cost: 425000, supplier_name: "Supplier" }, { docType: "purchase_invoice", lang: "en", branding });
     expect(input.tradeScope).toBe("local");

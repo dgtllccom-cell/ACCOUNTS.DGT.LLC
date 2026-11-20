@@ -51,6 +51,11 @@ const STANDARD_NOTES = [
 export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTemplateFlags): string {
   const d = prepareInvoiceData(input, flags);
   const lang = (input.lang || "en") as SupportedLanguage;
+  // This is the owner's English Damaan layout: every label on it is English. Rendering it right-to-left in Urdu /
+  // Arabic / Persian / Pashto flipped those English labels (":SHIPPER", "No Invoice Tax:") and printed them in the
+  // Nastaliq font, so the page read as mixed-up text. It therefore always prints left-to-right with its English title,
+  // in every UI language (names, goods and amounts are business data and print as entered).
+  const dEn = lang === "en" ? d : prepareInvoiceData({ ...input, lang: "en" as SupportedLanguage }, flags);
   const landscape = input.orientation === "landscape";
   const cur = d.currency || input.currency || "";
   const goods: TradeLineItem[] = input.goods || [];
@@ -73,7 +78,7 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
   // Sales and tax invoices are titled SALES TAX INVOICE; every other document type shows its own name, centred.
   const headline = input.docType === "tax_invoice" || input.docType === "sales_invoice"
     ? "SALES TAX INVOICE"
-    : (d.docTitle || "INVOICE").toUpperCase();
+    : (dEn.docTitle || "INVOICE").toUpperCase();
   const netPerCarton = perPack(totals.totalNetWeight ?? goods.reduce((s, g) => s + (Number(g.netWeight) || 0), 0), totalPacks);
   const firstRate = goods.find((g) => g.unitPrice != null)?.unitPrice;
   const zeroVatSingle = goods.length === 1 && (goods[0].taxAmount == null || Number(goods[0].taxAmount) === 0);
@@ -149,7 +154,7 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
     .meta td.mv { font-size: 9pt; text-align: left; }
     .sec { font-weight: 700; font-size: 8pt; text-transform: uppercase; }
     .goods-wrap { flex: 1 1 auto; display: flex; flex-direction: column; margin-top: 4px; }
-    table.goods { width: 100%; height: 100%; border-collapse: collapse; font-size: 8pt; }
+    table.goods { width: 100%; height: 100%; flex: 1 1 auto; border-collapse: collapse; font-size: 8pt; }
     table.goods th, table.goods td { border: 1px solid #000; padding: 3px 3px; vertical-align: middle; }
     table.goods th { font-size: 6.8pt; font-weight: 700; text-align: center; text-transform: uppercase; }
     table.goods td.r { text-align: right; } table.goods td.c { text-align: center; } table.goods td.b { font-weight: 700; }
@@ -316,8 +321,8 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
   `;
 
   return documentShell({
-    lang, dir: d.dir, title: headline, docNo: input.docNo, docTitle: headline,
-    brandName: d.brandName, stamp: d.stamp, orientation: landscape ? "landscape" : "portrait", style, body,
-    autoPrint: input.autoPrint, pageLabel: d.pageLabel, ofLabel: d.ofLabel,
+    lang: "en", dir: "ltr", title: headline, docNo: input.docNo, docTitle: headline,
+    brandName: dEn.brandName, stamp: dEn.stamp, orientation: landscape ? "landscape" : "portrait", style, body,
+    autoPrint: input.autoPrint, pageLabel: dEn.pageLabel, ofLabel: dEn.ofLabel,
   });
 }
