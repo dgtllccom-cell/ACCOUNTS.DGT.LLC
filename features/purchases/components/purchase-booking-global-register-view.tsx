@@ -37,7 +37,7 @@ import {
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { cn } from "@/lib/utils";
-import { DetailDrawer } from "@/components/ui/detail-drawer";
+import { InvoiceDocumentView } from "@/components/invoices/invoice-document-view";
 import { OpenFullBillModal } from "@/components/invoices/open-full-bill-modal";
 import { PurchaseOrderWizard } from "@/features/purchases/components/purchase-order-wizard.jsx";
 
@@ -121,6 +121,39 @@ export function PurchaseBookingGlobalRegisterView({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // The selected row as the invoice mapper expects it (same mapping as the Booking Journal's Document Center).
+  const selectedInvoiceRecord = useMemo(() => {
+    const r: any = selectedRow;
+    if (!r) return {};
+    const form = r.form_data?.form || {};
+    return {
+      ...r,
+      created_at: r.created_at || r.createdAt || r.bookingDate || null,
+      id: r.id,
+      purchase_order_no: r.purchaseBookingOrderNumber || r.purchase_order_no,
+      purchase_contract_no: r.purchaseContractNo || r.purchase_contract_no,
+      currency_code: r.currency || r.finalCurrency || r.currency_code,
+      exchange_rate: r.exchange_rate,
+      country_id: form.countryId ?? null,
+      country_branch_id: form.countryBranchId ?? null,
+      city_branch_id: form.cityBranchId ?? null,
+      country_name: r.countryName,
+      branch_name: r.branchName,
+      form_data: r.form_data,
+    };
+  }, [selectedRow]);
+  const selectedInvoiceScope = useMemo(() => {
+    const r: any = selectedRow;
+    const form = r?.form_data?.form || {};
+    return {
+      countryId: form.countryId || null,
+      countryBranchId: form.countryBranchId || null,
+      cityBranchId: form.cityBranchId || null,
+      countryName: r?.countryName || null,
+      branchName: r?.branchName || null,
+    };
+  }, [selectedRow]);
 
   // Fetch reports from genuine API
   const loadData = useCallback(async () => {
@@ -1602,66 +1635,29 @@ export function PurchaseBookingGlobalRegisterView({
         </div>
       )}
 
-      {/* ── Detail Drawer ── */}
-      {selectedRow && (
-        <DetailDrawer
+      {/* ── View: the complete purchase invoice, full screen as one A4 page ── */}
+      {selectedRow && drawerOpen && (
+        <InvoiceDocumentView
           isOpen={drawerOpen}
           onClose={() => setDrawerOpen(false)}
           title={`${tr("Purchase Booking Order")} — ${selectedRow.purchaseBookingOrderNumber || selectedRow.purchase_order_no || ""}`}
-        >
-          <div className="p-4 space-y-4 text-xs font-medium">
-            <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg">
-              <div>
-                <span className="text-slate-500 uppercase text-[10px] block font-bold">{tr("Bill No")}</span>
-                <span className="font-mono font-bold text-blue-600">{selectedRow.purchaseBookingOrderNumber || selectedRow.purchase_order_no}</span>
-              </div>
-              <div>
-                <span className="text-slate-500 uppercase text-[10px] block font-bold">{tr("Date")}</span>
-                <span className="font-mono">{formatDashDate(selectedRow.purchaseDate || selectedRow.bookingDate)}</span>
-              </div>
-              <div>
-                <span className="text-slate-500 uppercase text-[10px] block font-bold">{tr("Supplier")}</span>
-                <span className="font-bold">{selectedRow.supplierName}</span>
-              </div>
-              <div>
-                <span className="text-slate-500 uppercase text-[10px] block font-bold">{tr("Country / Branch")}</span>
-                <span>{selectedRow.countryName} / {selectedRow.branchName}</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 border border-slate-200 dark:border-slate-800 p-3 rounded-lg">
-              <div>
-                <span className="text-slate-500 uppercase text-[10px] block font-bold">{tr("Goods Name")}</span>
-                <span className="font-bold">{selectedRow.productName || selectedRow.goodsDescription}</span>
-              </div>
-              <div>
-                <span className="text-slate-500 uppercase text-[10px] block font-bold">{tr("Quantity")}</span>
-                <span className="font-mono font-bold">{selectedRow.quantity} {selectedRow.unit}</span>
-              </div>
-              <div>
-                <span className="text-slate-500 uppercase text-[10px] block font-bold">{tr("Purchase Amount")}</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{selectedRow.currency} {fmt(Number(selectedRow.purchaseAmount || 0))}</span>
-              </div>
-              <div>
-                <span className="text-slate-500 uppercase text-[10px] block font-bold">{tr("Final Amount")}</span>
-                <span className="font-mono font-bold text-red-600">{selectedRow.finalCurrency} {fmt(Number(selectedRow.finalAmount || 0))}</span>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setFullBillRow(selectedRow);
-                  setDrawerOpen(false);
-                }}
-                className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold"
-              >
-                {tr("View Full Bill")}
-              </button>
-            </div>
-          </div>
-        </DetailDrawer>
+          source="purchase_order"
+          record={selectedInvoiceRecord}
+          scope={selectedInvoiceScope}
+          companyId={selectedRow.form_data?.form?.purchaseCompanyId || null}
+          actions={
+            <button
+              type="button"
+              onClick={() => {
+                setFullBillRow(selectedRow);
+                setDrawerOpen(false);
+              }}
+              className="inline-flex h-8 items-center rounded-lg bg-slate-800 px-3 text-xs font-bold text-white hover:bg-slate-900"
+            >
+              {tr("View Full Bill")}
+            </button>
+          }
+        />
       )}
 
       {/* ── Open Full Bill Modal ── */}
