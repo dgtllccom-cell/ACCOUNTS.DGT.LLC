@@ -294,8 +294,12 @@ export function buildLedgerStatementPrintHtml(
   const side = (bal: number) => ((bal >= 0) === (data.normalBalance === "debit") ? dr : cr);
   const balWithSide = (n: number) =>
     `${ltr(signedMoney(n))}<span class="dc-sr"> ${esc(side(n))}</span>`;
+  // Table figures: if a very large amount must wrap, it breaks after a thousands
+  // separator (<wbr>), never between arbitrary digits.
+  const numLtr = (s: string) => `<bdi dir="ltr">${esc(s).replace(/,/g, ",<wbr>")}</bdi>`;
   const amtCell = (n: number | null | undefined) =>
-    n && Math.abs(n) > 0.0001 ? ltr(money(n)) : `<span class="dash">-</span>`;
+    n && Math.abs(n) > 0.0001 ? numLtr(money(n)) : `<span class="dash">-</span>`;
+  const balCell = (n: number) => `${numLtr(signedMoney(n))}<span class="dc-sr"> ${esc(side(n))}</span>`;
 
   const src = (s: LedgerPrintLine["source"]) =>
     s === "roznamcha_entries"
@@ -312,34 +316,38 @@ export function buildLedgerStatementPrintHtml(
   // ── 12-Column Definition for Landscape (Reference Image 1) & Portrait (Reference Image 2) ──
   type Col = { key: string; label: string; w: number; cls?: string };
 
+  // Fixed column widths (table-layout: fixed). Each set sums to exactly 100% so the
+  // table always fits the printable A4 width; long entry / Roznamcha codes wrap inside
+  // their own cell (class "code") instead of running into the neighbouring column.
+  // The layout depends ONLY on the requested orientation — never on the viewer's role.
   const landscapeCols: Col[] = [
-    { key: "date", label: L("col_date", "Date"), w: 7.5, cls: "nw" },
-    { key: "entryNo", label: L("col_entry_no", "Entry No."), w: 8.5, cls: "nw" },
-    { key: "rznNo", label: L("col_rzn_no", "Rzn. No."), w: 6.0, cls: "nw" },
-    { key: "rznName", label: L("col_rzn_name", "Rzn. Name"), w: 8.0 },
-    { key: "details", label: L("col_details", "Details"), w: 20.5 },
+    { key: "date", label: L("col_date", "Date"), w: 7.0, cls: "nw date" },
+    { key: "entryNo", label: L("col_entry_no", "Entry No."), w: 10.0, cls: "code" },
+    { key: "rznNo", label: L("col_rzn_no", "Rzn. No."), w: 9.0, cls: "code" },
+    { key: "rznName", label: L("col_rzn_name", "Rzn. Name"), w: 7.0, cls: "txt" },
+    { key: "details", label: L("col_details", "Details"), w: 17.0, cls: "txt" },
     { key: "debit", label: L("col_dr", "DR"), w: 7.5, cls: "num" },
     { key: "credit", label: L("col_cr", "CR"), w: 7.5, cls: "num" },
-    { key: "balance", label: L("col_balance", "Balance"), w: 8.0, cls: "num" },
-    { key: "exRate", label: L("col_ex_rate", "Ex. Rate"), w: 6.0, cls: "num rate" },
-    { key: "drUsd", label: L("col_dr_usd", "DR USD"), w: 6.5, cls: "num" },
-    { key: "crUsd", label: L("col_cr_usd", "CR USD"), w: 6.5, cls: "num" },
+    { key: "balance", label: L("col_balance", "Balance"), w: 8.5, cls: "num" },
+    { key: "exRate", label: L("col_ex_rate", "Ex. Rate"), w: 5.0, cls: "num rate" },
+    { key: "drUsd", label: L("col_dr_usd", "DR USD"), w: 7.0, cls: "num" },
+    { key: "crUsd", label: L("col_cr_usd", "CR USD"), w: 7.0, cls: "num" },
     { key: "balUsd", label: L("col_bal_usd", "Balance USD"), w: 7.5, cls: "num" },
   ];
 
   const portraitCols: Col[] = [
-    { key: "date", label: L("col_date", "Date"), w: 7.5, cls: "nw" },
-    { key: "entryNo", label: L("col_entry_no", "Entry No."), w: 8.5, cls: "nw" },
-    { key: "rznNo", label: L("col_rzn_no", "Rzn. No."), w: 6.0, cls: "nw" },
-    { key: "rznName", label: L("col_rzn_name", "Rzn. Name"), w: 7.5 },
-    { key: "details", label: L("col_details", "Details"), w: 20.5 },
-    { key: "debit", label: L("col_dr", "DR"), w: 7.5, cls: "num" },
-    { key: "credit", label: L("col_cr", "CR"), w: 7.5, cls: "num" },
-    { key: "balance", label: L("col_balance", "Balance"), w: 8.0, cls: "num" },
+    { key: "date", label: L("col_date", "Date"), w: 6.5, cls: "nw date" },
+    { key: "entryNo", label: L("col_entry_no", "Entry No."), w: 9.5, cls: "code" },
+    { key: "rznNo", label: L("col_rzn_no", "Rzn. No."), w: 9.0, cls: "code" },
+    { key: "rznName", label: L("col_rzn_name", "Rzn. Name"), w: 8.0, cls: "txt" },
+    { key: "details", label: L("col_details", "Details"), w: 12.0, cls: "txt" },
+    { key: "debit", label: L("col_dr", "DR"), w: 8.5, cls: "num" },
+    { key: "credit", label: L("col_cr", "CR"), w: 8.5, cls: "num" },
+    { key: "balance", label: L("col_balance", "Balance"), w: 9.5, cls: "num" },
     { key: "exRate", label: L("col_ex_rate_short", "Ex.Rate"), w: 5.5, cls: "num rate" },
-    { key: "drUsd", label: L("col_dr_usd", "DR USD"), w: 7.0, cls: "num" },
+    { key: "drUsd", label: L("col_dr_usd", "DR USD"), w: 7.5, cls: "num" },
     { key: "crUsd", label: L("col_cr_usd", "CR USD"), w: 7.0, cls: "num" },
-    { key: "balUsd", label: L("col_bal_usd_short", "Bal. USD"), w: 7.5, cls: "num" },
+    { key: "balUsd", label: L("col_bal_usd_short", "Bal. USD"), w: 8.5, cls: "num" },
   ];
 
   const cols = portrait ? portraitCols : landscapeCols;
@@ -424,8 +432,16 @@ export function buildLedgerStatementPrintHtml(
         return ltr(l.entryNo || l.serial || "—");
       case "rznNo":
         return ltr(l.rznNo || l.manualRef || "—");
-      case "rznName":
-        return esc(l.rznName || src(l.source) || "—");
+      case "rznName": {
+        // The source type is a label (translated), not business data.
+        const known =
+          l.source === "roznamcha_entries"
+            ? L("src_roznamcha", "Roznamcha")
+            : l.source === "ledger_posting_batches"
+            ? L("src_batch_posting", "Batch Posting")
+            : null;
+        return esc(known || l.rznName || src(l.source) || "—");
+      }
       case "details": {
         const main = `<span class="desc">${esc(l.description || "—")}</span>`;
         const fxTag =
@@ -441,7 +457,7 @@ export function buildLedgerStatementPrintHtml(
       case "balance":
         return l.debit === 0 && l.credit === 0 && Math.abs(l.balance) < 0.0001
           ? `<span class="dash">-</span>`
-          : balWithSide(l.balance);
+          : balCell(l.balance);
       case "exRate":
         return cl.rateDisplay;
       case "drUsd":
@@ -449,7 +465,7 @@ export function buildLedgerStatementPrintHtml(
       case "crUsd":
         return amtCell(cl.crUsd);
       case "balUsd":
-        return cl.balUsd !== null ? ltr(signedMoney(cl.balUsd)) : `<span class="dash">-</span>`;
+        return cl.balUsd !== null ? numLtr(signedMoney(cl.balUsd)) : `<span class="dash">-</span>`;
       default:
         return "";
     }
@@ -470,7 +486,7 @@ export function buildLedgerStatementPrintHtml(
     a.finalAddress || a.address || [a.city, a.stateProvince, a.country].filter(Boolean).join(", ") || "—";
 
   // Estimate page count for screen preview footer
-  const firstPageCap = portrait ? 27 : 12;
+  const firstPageCap = portrait ? 22 : 12;
   const nextPageCap = portrait ? 36 : 20;
   const totalRows = computedLines.length;
   const estimatedPages =
@@ -493,10 +509,34 @@ export function buildLedgerStatementPrintHtml(
   const coinsIconSvg = `<svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/><path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"/></svg>`;
   const infoIconSvg = `<svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
 
+  // ── Shared statement title bar — identical in BOTH orientations (and for every role) ──
+  const titleHeaderHtml = `
+  <header class="l-top-header">
+    <div class="l-title-wrap">
+      ${bankIconSvg}
+      <span class="l-title-divider"></span>
+      <div class="l-title">${esc(L("customer_general_ledger", "CUSTOMER GENERAL LEDGER"))}</div>
+    </div>
+    <div class="l-subtitle-wrap">
+      <span>${esc(L("admin_report", "ADMIN REPORT"))}</span>
+      <span class="pipe">|</span>
+      <span>${esc(L("bank_style_statement", "BANK-STYLE ACCOUNT STATEMENT"))}</span>
+    </div>
+  </header>`;
+
+  const basisMetaHtml = `
+        <div class="l-basis-meta">
+          <div class="l-basis-kv"><span class="bk">${esc(L("local_currency_lbl", "Local Currency"))}</span><span class="bv">${esc(L("local_currency_val", ": Per customer (e.g., AED, USD, EUR, etc.)"))}</span></div>
+          <div class="l-basis-kv"><span class="bk">${esc(L("usd_equivalent_lbl", "USD Equivalent"))}</span><span class="bv">${esc(L("usd_equivalent_val", ": Ex. Rate, DR USD, CR USD, Balance USD"))}</span></div>
+        </div>`;
+
   // ── Top Section HTML: Landscape (Reference Image 1) vs Portrait (Reference Image 2) ──
+  // Both carry the same blocks: title bar, ACCOUNT DETAILS, STATEMENT SUMMARY and
+  // REPORTING BASIS; only the arrangement adapts to the paper width.
   const topSectionHtml = portrait
     ? `
   <!-- PORTRAIT A4 DESIGN (Reference Image 2) -->
+  ${titleHeaderHtml}
   <section class="p-acct-card">
     <div class="p-card-title">${esc(L("account_details", "ACCOUNT DETAILS"))}</div>
     <div class="p-acct-code">${ltr(a.code || "—")}</div>
@@ -529,22 +569,15 @@ export function buildLedgerStatementPrintHtml(
     </div>
   </section>
 
-  <div class="p-basis-note">${esc(L("portrait_basis_note", "Local figures use the customer currency; USD columns use saved per-entry rates."))}</div>
+  <section class="p-basis-card">
+    <div class="p-basis-title">${infoIconSvg}<span>${esc(L("reporting_basis", "REPORTING BASIS"))}</span></div>
+    <div class="p-basis-note">${esc(L("portrait_basis_note", "Local figures use the customer currency; USD columns use saved per-entry rates."))}</div>
+    ${basisMetaHtml}
+  </section>
 `
     : `
   <!-- LANDSCAPE A4 DESIGN (Reference Image 1) -->
-  <header class="l-top-header">
-    <div class="l-title-wrap">
-      ${bankIconSvg}
-      <span class="l-title-divider"></span>
-      <h1>${esc(L("customer_general_ledger", "CUSTOMER GENERAL LEDGER"))}</h1>
-    </div>
-    <div class="l-subtitle-wrap">
-      <span>${esc(L("admin_report", "ADMIN REPORT"))}</span>
-      <span class="pipe">|</span>
-      <span>${esc(L("bank_style_statement", "BANK-STYLE ACCOUNT STATEMENT"))}</span>
-    </div>
-  </header>
+  ${titleHeaderHtml}
 
   <section class="l-panels-row">
     <!-- Panel 1: ACCOUNT DETAILS -->
@@ -588,10 +621,7 @@ export function buildLedgerStatementPrintHtml(
       <div class="l-card-hdr">${infoIconSvg}<span>${esc(L("reporting_basis", "REPORTING BASIS"))}</span></div>
       <div class="l-basis-body">
         <p class="l-basis-text">${esc(L("reporting_basis_desc", "Each customer uses its own local currency. The final columns show the exchange rate and the equivalent amounts in USD, including USD Debit, USD Credit, and USD Balance."))}</p>
-        <div class="l-basis-meta">
-          <div class="l-basis-kv"><span class="bk">${esc(L("local_currency_lbl", "Local Currency"))}</span><span class="bv">${esc(L("local_currency_val", ": Per customer (e.g., AED, USD, EUR, etc.)"))}</span></div>
-          <div class="l-basis-kv"><span class="bk">${esc(L("usd_equivalent_lbl", "USD Equivalent"))}</span><span class="bv">${esc(L("usd_equivalent_val", ": Ex. Rate, DR USD, CR USD, Balance USD"))}</span></div>
-        </div>
+        ${basisMetaHtml}
       </div>
     </div>
   </section>
@@ -696,9 +726,9 @@ export function buildLedgerStatementPrintHtml(
     background: #0f172a;
     display: inline-block;
   }
-  .l-title-wrap h1 {
+  .l-title {
     margin: 0;
-    font-size: 16.5pt;
+    font-size: ${portrait ? "13pt" : "16.5pt"};
     font-weight: 900;
     letter-spacing: 0.4px;
     color: #0f172a;
@@ -708,7 +738,7 @@ export function buildLedgerStatementPrintHtml(
     display: flex;
     align-items: center;
     gap: 2.5mm;
-    font-size: 8.2pt;
+    font-size: ${portrait ? "6.8pt" : "8.2pt"};
     font-weight: 600;
     color: #1e293b;
     letter-spacing: 0.3px;
@@ -940,10 +970,36 @@ export function buildLedgerStatementPrintHtml(
     font-weight: 800;
     font-variant-numeric: tabular-nums;
   }
+  .p-basis-card {
+    border: 1px solid #d8e2ec;
+    border-radius: 6px;
+    padding: 1.8mm 4.5mm;
+    margin-bottom: 2.4mm;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .p-basis-title {
+    display: flex;
+    align-items: center;
+    gap: 1.6mm;
+    font-size: 7.4pt;
+    font-weight: 800;
+    color: #1e293b;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 0.8mm;
+  }
+  .p-basis-title .card-icon { width: 3.4mm; height: 3.4mm; }
   .p-basis-note {
     font-size: 6.8pt;
     color: #64748b;
-    margin: 1mm 0 2mm;
+    margin: 0;
+  }
+  .p-basis-card .l-basis-meta {
+    margin-top: 1.2mm;
+    padding-top: 1.2mm;
+    flex-direction: row;
+    gap: 8mm;
   }
 
   .filter-note {
@@ -973,20 +1029,46 @@ export function buildLedgerStatementPrintHtml(
     border-top: 1px solid #cbd5e1;
     border-bottom: 1px solid #cbd5e1;
     vertical-align: middle;
-    white-space: nowrap;
+    /* headers wrap inside their own fixed-width column (long RTL labels) */
+    white-space: normal;
+    overflow-wrap: anywhere;
+    overflow: hidden;
+    line-height: 1.2;
   }
   thead tr.cols th.num {
     text-align: end;
   }
 
+  /* Every cell is confined to its fixed column: content wraps, it never spills over. */
+  table.data-table th,
+  table.data-table td {
+    overflow: hidden;
+    min-width: 0;
+  }
   tbody td {
-    padding: ${portrait ? "1.58mm 1.1mm" : "1.8mm 1.8mm"};
+    padding: ${portrait ? "1.3mm 0.8mm" : "1.6mm 1.4mm"};
     border-bottom: 1px solid #e2e8f0;
-    vertical-align: middle;
-    overflow-wrap: break-word;
+    vertical-align: top;
+    overflow-wrap: anywhere;
     word-break: normal;
-    font-size: ${portrait ? "6.5pt" : "7.4pt"};
+    font-size: ${portrait ? "6.3pt" : "7.2pt"};
     color: #0f172a;
+  }
+  /* Entry No. / Rzn. No.: compact monospace codes that break at any character
+     (e.g. "AREAEDU001-000123", "LP-JRN-000000001") inside their own cell. */
+  td.code {
+    font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: ${portrait ? "5.6pt" : "6.4pt"};
+    line-height: 1.25;
+    white-space: normal;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    text-align: start;
+  }
+  td.code bdi { display: inline-block; max-width: 100%; }
+  td.txt {
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
   tbody tr {
     break-inside: avoid;
@@ -1000,7 +1082,12 @@ export function buildLedgerStatementPrintHtml(
   }
   td.num {
     text-align: end;
-    white-space: nowrap;
+    /* numbers stay right-aligned; a very large figure wraps in its own cell
+       rather than overprinting the neighbouring column */
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: ${portrait ? "5.9pt" : "7.1pt"};
+    letter-spacing: ${portrait ? "-0.1px" : "0"};
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
     font-weight: 500;

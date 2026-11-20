@@ -75,6 +75,7 @@ import { buildPurchaseBookingTransferUrl } from "@/lib/services/purchase-booking
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { translateValue } from "@/lib/i18n/table-values";
 import { fetchBranding, brandingName } from "@/lib/branding/client";
+import { PostingDetailsPanel } from "@/features/purchases/components/posting-details-panel";
 
 type PurchaseReport = {
   [key: string]: any;
@@ -1439,6 +1440,8 @@ export function PurchaseBookingJournalReportView({
   const [activeTab, setActiveTab] = useState<DashboardTab>("purchase");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [transferring, setTransferring] = useState(false);
+  // Posting Details side panel after Transfer: what was debited / credited, by whom (or why it was stopped)
+  const [postingPanel, setPostingPanel] = useState<{ posting?: any; error?: string; destUrl?: string } | null>(null);
   const [expandedDashboardCountry, setExpandedDashboardCountry] = useState<string>("");
   const [usdRates, setUsdRates] = useState<Record<string, number>>({});
   const [lastExchangeRateUpdate, setLastExchangeRateUpdate] = useState<string | null>(null);
@@ -1505,6 +1508,7 @@ export function PurchaseBookingJournalReportView({
     if (typeof window !== "undefined" && !window.confirm(tt("confirm_post", "Post booking {no} to the ledger now? This creates the Debit / Credit entries once and cannot be repeated.").replace("{no}", String(orderNoForConfirm)))) return;
 
     setTransferring(true);
+    setPostingPanel(null);
     try {
       const transferResponse = await fetch(`/api/erp/purchases/orders/${reportToTransfer.id}/transfer`, {
         method: "POST",
@@ -1515,19 +1519,22 @@ export function PurchaseBookingJournalReportView({
 
       const transferPayload = await transferResponse.json().catch(() => ({}));
       if (!transferResponse.ok || !transferPayload.ok) {
-        throw new Error(transferPayload?.error?.message || transferPayload?.error || "Roznamcha/Ledger Transfer failed.");
+        // stopped: show the reason and the planned Dr / Cr at the side (no browser popup)
+        const msg = transferPayload?.error?.message || (typeof transferPayload?.error === "string" ? transferPayload.error : "") || "Roznamcha/Ledger Transfer failed.";
+        setPostingPanel({ posting: transferPayload?.error?.details?.posting, error: msg });
+        return;
       }
 
-      setIsDrawerOpen(false);
       const orderNo = reportToTransfer.purchaseBookingOrderNumber || (reportToTransfer as any).purchase_order_no || "";
       setMessage(`Sent ${orderNo} to Purchase Transfer Payment screen.`);
-      // Navigate directly to the payment/loading section
       const destUrl = transferPayload.data?.destinationPath
         ? `${transferPayload.data.destinationPath}?purchaseOrderNo=${encodeURIComponent(orderNo)}`
         : buildPurchaseBookingTransferUrl(form.paymentType, orderNo);
-      router.push(destUrl);
+      // posted: mark the row and show what was debited / credited; the user continues to the next stage from the panel
+      setReports((prev) => prev.map((r) => (r.id === reportToTransfer.id ? ({ ...r, status: "Posted", ledger_posting_status: "posted", is_edited_since_transfer: false } as any) : r)));
+      setPostingPanel({ posting: transferPayload.data?.posting, destUrl });
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error transferring booking.");
+      setPostingPanel({ error: err instanceof Error ? err.message : t(activeLang, "pterv2.pd_stopped", "Transfer stopped — nothing was posted") });
     } finally {
       setTransferring(false);
     }
@@ -2924,7 +2931,7 @@ export function PurchaseBookingJournalReportView({
                 const superSerialNo = (report as any).superAdminSerialNo || `GBL-${report.purchaseBookingOrderNumber}`;
                 const countrySerialNo = (report as any).computedCountrySerial || "-";
                 const branchSerialNo = (report as any).computedBranchSerial || "-";
-                const entrySerialNo = report.purchaseBookingOrderNumber || report.purchase_order_no || report.manualBillNumber || `PB-${srNo}`;
+                const entrySerialNo = report.purchaseBookingOrderNumber || (report as any).purchase_order_no || report.manualBillNumber || `PB-${srNo}`;
                 const purchaseAccCode = report.purchaseAccountNumber || report.form_data?.form?.purchaseAccountNo || "-";
                 const purchaseAccName = report.purchaseAccountName || report.form_data?.form?.purchaseAccountName || report.supplierName || "-";
                 const salesAccCode = report.salesAccountNumber || report.form_data?.form?.salesAccountNo || "-";
@@ -3346,6 +3353,16 @@ export function PurchaseBookingJournalReportView({
                   className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs h-8"
                 >
                   {accepting ? "Accepting..." : "Accept"}
+                </Button>
+              )}
+              {selected && (selected as any)?.form_data?.workflow?.posting && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setPostingPanel({ posting: (selected as any).form_data.workflow.posting })}
+                  className="font-bold text-xs h-8"
+                >
+                  {t(activeLang, "pterv2.pd_title", "Posting Details")}
                 </Button>
               )}
               {selected && (
@@ -3900,6 +3917,25 @@ export function PurchaseBookingJournalReportView({
             }}
           />
         )}
+
+      {postingPanel && (
+        <PostingDetailsPanel
+          posting={postingPanel.posting}
+          error={postingPanel.error}
+          onClose={() => setPostingPanel(null)}
+          action={
+            postingPanel.destUrl ? (
+              <button
+                type="button"
+                onClick={() => { const u = postingPanel.destUrl!; setPostingPanel(null); setIsDrawerOpen(false); router.push(u); }}
+                className="w-full h-9 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold"
+              >
+                {t(activeLang, "pterv2.pd_continue", "Continue to next stage")}
+              </button>
+            ) : null
+          }
+        />
+      )}
     </div>
   );
 }

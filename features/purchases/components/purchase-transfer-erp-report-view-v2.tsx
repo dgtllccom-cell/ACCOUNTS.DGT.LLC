@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { billFxOperator, toBaseAmount } from "@/lib/purchases/fx-operator";
 import { newIdempotencyKey } from "@/lib/api/idempotency-client";
+import { PostingDetailsPanel } from "@/features/purchases/components/posting-details-panel";
 import React, { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -74,6 +75,7 @@ function PurchaseTransferErpReportViewContent({
   const [transferring, setTransferring] = useState(false);
   const [transferSuccess, setTransferSuccess] = useState("");
   const [transferError, setTransferError] = useState("");
+  const [postingPanel, setPostingPanel] = useState<{ posting?: any; error?: string } | null>(null);
 
   /* Fetch if only ID was passed */
   useEffect(() => {
@@ -224,18 +226,24 @@ function PurchaseTransferErpReportViewContent({
         headers: { "Content-Type": "application/json", "Idempotency-Key": newIdempotencyKey("pb-transfer-payment", String(d.id)) },
         body: JSON.stringify({ advancePaid: advanceAmountLc })
       });
-      const json = await res.json();
+      const json = await res.json().catch(() => ({}));
       if (!res.ok || !json.ok) {
-        throw new Error(json?.error?.message || json?.error || "Failed to process transfer payment.");
+        const msg = json?.error?.message || (typeof json?.error === "string" ? json.error : "") || "Failed to process transfer payment.";
+        setTransferError(msg);
+        setPostingPanel({ posting: json?.error?.details?.posting, error: msg });
+        return;
       }
-      setTransferSuccess("✅ Booking Transfer successfully posted to Roznamcha & General Ledger! Double-entry accounts updated.");
+      setTransferSuccess(tt("pterv2.pd_posted", "Posted to Business Roznamcha"));
+      setPostingPanel({ posting: json?.data?.posting });
       setReportData((prev: any) => ({
         ...prev,
         ledger_posting_status: "posted",
-        payment_status: "POSTED"
+        payment_status: "POSTED",
+        form_data: { ...(prev?.form_data || {}), workflow: { ...(prev?.form_data?.workflow || {}), posting: json?.data?.posting } }
       }));
     } catch (err: any) {
       setTransferError(err?.message || "Error processing transfer payment.");
+      setPostingPanel({ error: err?.message || "Error processing transfer payment." });
     } finally {
       setTransferring(false);
     }
@@ -560,6 +568,19 @@ function PurchaseTransferErpReportViewContent({
               <div className="rounded-xl border border-rose-200 bg-rose-50 dark:border-rose-500/40 dark:bg-rose-950/60 p-3 text-xs font-bold text-rose-800 dark:text-rose-300">
                 {transferError}
               </div>
+            )}
+            {isPosted && (d as any)?.form_data?.workflow?.posting && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setPostingPanel({ posting: (d as any).form_data.workflow.posting })}
+                className="w-full h-9 text-xs font-bold"
+              >
+                {tt("pterv2.pd_title", "Posting Details")}
+              </Button>
+            )}
+            {postingPanel && (
+              <PostingDetailsPanel posting={postingPanel.posting} error={postingPanel.error} onClose={() => setPostingPanel(null)} />
             )}
 
           </div>

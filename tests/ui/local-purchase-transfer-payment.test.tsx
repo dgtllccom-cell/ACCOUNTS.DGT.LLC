@@ -44,7 +44,8 @@ async function openQueued() {
   return await screen.findByRole("dialog", {}, WAIT);
 }
 
-describe("Transfer Payment review", () => {
+// each test chains several 5 s waits (WAIT); the whole test needs room for them on a loaded CI runner
+describe("Transfer Payment review", { timeout: 20000 }, () => {
   it("reads the actual API envelope and excludes drafts", async () => {
     mount();
     await screen.findByText("BILL-queued", {}, WAIT);
