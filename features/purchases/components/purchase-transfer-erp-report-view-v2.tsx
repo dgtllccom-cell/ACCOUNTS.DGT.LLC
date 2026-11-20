@@ -1,6 +1,7 @@
 "use client";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { billFxOperator, toBaseAmount } from "@/lib/purchases/fx-operator";
 import { newIdempotencyKey } from "@/lib/api/idempotency-client";
 import React, { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -85,7 +86,14 @@ function PurchaseTransferErpReportViewContent({
         const res = await fetch(`/api/erp/purchases/booking-journal-report?id=${encodeURIComponent(idParam)}`, { cache: "no-store" });
         const json = await res.json();
         if (cancelled) return;
-        const row = json?.data?.reports?.[0] || json?.data?.selected || json?.reports?.[0] || json;
+        // Only the bill that was asked for — never "the first row" (the list is newest-first, so that showed another bill).
+        const list: any[] = [
+          ...(Array.isArray(json?.data?.reports) ? json.data.reports : []),
+          ...(Array.isArray(json?.reports) ? json.reports : []),
+          ...(json?.data?.selected ? [json.data.selected] : []),
+        ];
+        const row = list.find((r) => String(r?.id) === String(idParam)) || null;
+        if (!row) setError(tt("pterv2.not_found", "This purchase booking was not found."));
         setReportData(row);
       } catch (err: any) {
         if (!cancelled) setError(err?.message || "Failed to load purchase record.");
@@ -143,6 +151,9 @@ function PurchaseTransferErpReportViewContent({
   const branchCode = d?.branchCode || form.branchCode || "—";
 
   const exchangeRate = Number(d?.exchange_rate || form.exchangeRate || 0);
+  // the bill's own conversion: "*" (USD × 3.675) or "/" (PKR ÷ 77.2) — lib/purchases/fx-operator.ts
+  const fxOp = billFxOperator(d?.form_data);
+  const fxLabel = `${fxOp === "/" ? "÷" : "×"} ${exchangeRate}`;
   const currencyFc = d?.currency || form.currencyType || "USD";
   const currencyLc = form.secondaryCurrency || "AED";
 
@@ -166,20 +177,22 @@ function PurchaseTransferErpReportViewContent({
         netWeight: Number(d.totalNetWeight || 0),
         coursePrice: Number(d.purchaseRate || 0),
         totalAmount: Number(d.totalPurchaseAmount || 0),
-        finalAmount: Number(d.totalPurchaseAmount || 0) * exchangeRate,
+        finalAmount: toBaseAmount(Number(d.totalPurchaseAmount || 0), exchangeRate, fxOp),
       }];
     }
     return [];
-  }, [d, exchangeRate]);
+  }, [d, exchangeRate, fxOp]);
 
   const totalAmountFc = useMemo(() => {
     if (!d) return 0;
     return Number(d.totalPurchaseAmount || d.purchaseAmount || totals.grandPrimaryFinal || 0);
   }, [d, totals.grandPrimaryFinal]);
 
+  // the converted total the bill SAVED (order_total / totals.grandFinal); recomputed with the bill's operator only if absent
   const totalAmountLc = useMemo(() => {
-    return totalAmountFc * exchangeRate;
-  }, [totalAmountFc, exchangeRate]);
+    const saved = Number(d?.finalAmount || d?.order_total || totals.grandFinal || 0);
+    return saved > 0 ? saved : toBaseAmount(totalAmountFc, exchangeRate, fxOp);
+  }, [d, totals.grandFinal, totalAmountFc, exchangeRate, fxOp]);
 
   const totalGrossWt = goodsEntries.reduce((sum, g) => sum + (Number(g.grossWeight) || 0), 0);
   const totalNetWt = goodsEntries.reduce((sum, g) => sum + (Number(g.netWeight) || 0), 0);
@@ -455,7 +468,7 @@ function PurchaseTransferErpReportViewContent({
               </div>
               <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono">{money(totalAmountLc)} {currencyLc}</div>
               <div className="text-[11px] text-slate-600 dark:text-slate-400 font-mono">
-                Original Transaction: <span className="font-bold text-blue-600 dark:text-blue-400">{money(totalAmountFc)} {currencyFc}</span> @ FX {exchangeRate}
+                Original Transaction: <span className="font-bold text-blue-600 dark:text-blue-400">{money(totalAmountFc)} {currencyFc}</span> {fxLabel}
               </div>
               <div className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100/60 dark:bg-emerald-900/40 rounded-md py-0.5 px-2 mt-1 inline-block whitespace-nowrap">
                 ✓ Posted exactly once in approved final currency ({currencyLc})
@@ -814,7 +827,7 @@ function PurchaseTransferErpReportViewContent({
                       <td className="p-1 border border-slate-300 text-right font-mono font-bold">{money(g.netWeight || 0)} kg</td>
                       <td className="p-1 border border-slate-300 text-right font-mono">{currencyFc} {Number(g.coursePrice || 0).toFixed(2)}</td>
                       <td className="p-1 border border-slate-300 text-right font-mono font-bold text-blue-800">{currencyFc} {money(g.totalAmount || 0)}</td>
-                      <td className="p-1 border border-slate-300 text-center font-mono">{exchangeRate}</td>
+                      <td className="p-1 border border-slate-300 text-center font-mono">{fxLabel}</td>
                       <td className="p-1 border border-slate-300 text-right font-mono font-black text-emerald-800">{money(g.finalAmount || 0)} {currencyLc}</td>
                     </tr>
                   ))}
@@ -825,7 +838,7 @@ function PurchaseTransferErpReportViewContent({
                     <td className="p-1 border border-slate-300 text-right font-mono">{money(totalNetWt)} kg</td>
                     <td className="p-1 border border-slate-300 text-right font-mono">{totalNetWt > 0 ? "$" + (totalAmountFc / totalNetWt).toFixed(2) : "—"}</td>
                     <td className="p-1 border border-slate-300 text-right font-mono text-blue-800">${money(totalAmountFc)}</td>
-                    <td className="p-1 border border-slate-300 text-center font-mono">@ {exchangeRate}</td>
+                    <td className="p-1 border border-slate-300 text-center font-mono">{fxLabel}</td>
                     <td className="p-1 border border-slate-300 text-right font-mono text-emerald-800 font-black">{money(totalAmountLc)} {currencyLc}</td>
                   </tr>
                 </tbody>

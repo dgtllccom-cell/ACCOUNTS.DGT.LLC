@@ -11,6 +11,8 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 import { trustedTranslationMap } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
+  /** one bill by its id (the Transfer Verification screen); without it the newest bills are listed */
+  id: uuidSchema.optional(),
   purchaseOrderNo: z.string().trim().max(140).optional(),
   purchaseAccountNo: z.string().trim().max(140).optional(),
   salesAccountNo: z.string().trim().max(140).optional(),
@@ -218,6 +220,7 @@ function normalizeOrder(row: any) {
     try {
       const session = await requireErpSession();
       const query = querySchema.parse({
+        id: request.nextUrl.searchParams.get("id") ?? undefined,
         purchaseOrderNo: request.nextUrl.searchParams.get("purchaseOrderNo") ?? undefined,
         purchaseAccountNo: request.nextUrl.searchParams.get("purchaseAccountNo") ?? undefined,
         salesAccountNo: request.nextUrl.searchParams.get("salesAccountNo") ?? undefined,
@@ -277,6 +280,7 @@ function normalizeOrder(row: any) {
             LEFT JOIN public.country_branches cb ON cb.id = po.country_branch_id
             LEFT JOIN public.city_branches cib ON cib.id = po.city_branch_id
             WHERE po.deleted_at IS NULL
+              AND (${query.id ? sql`po.id = ${query.id}::uuid` : sql`true`})
               AND (${scopedCityBranchId ? sql`po.city_branch_id = ${scopedCityBranchId}::uuid` : sql`true`})
               AND (${!scopedCityBranchId && query.countryBranchId ? sql`po.country_branch_id = ${query.countryBranchId}::uuid` : sql`true`})
               AND (${scopedCountryId ? sql`po.country_id = ${scopedCountryId}::uuid` : sql`true`})
@@ -303,6 +307,9 @@ function normalizeOrder(row: any) {
             .is("deleted_at", null)
             .order("created_at", { ascending: false })
         : null;
+      if (requestQuery && query.id) {
+        requestQuery = requestQuery.eq("id", query.id);
+      }
 
       if (requestQuery && (query.purchaseOrderNo || query.q)) {
         const rawTerm = query.purchaseOrderNo || query.q || "";
