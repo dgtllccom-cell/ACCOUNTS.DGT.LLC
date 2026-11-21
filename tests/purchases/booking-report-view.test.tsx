@@ -25,17 +25,19 @@ function mockFetch() {
   });
 }
 
-describe("PurchaseBookingReportScreen", () => {
+// the save round-trip and the A4 viewer can take over 1 s on a loaded CI runner
+const WAIT = { timeout: 5000 };
+describe("PurchaseBookingReportScreen", { timeout: 20000 }, () => {
   it("renders the saved booking and View opens the full-screen A4 report", async () => {
     const fetchImpl = mockFetch();
     render(<PurchaseBookingReportScreen orderId={ORDER.id} fetchImpl={fetchImpl as any} lang="en" />);
-    await screen.findByText("BLACK MAFTA");
+    await screen.findByText("BLACK MAFTA", {}, WAIT);
     expect(screen.getAllByTestId("goods-rate")[0].textContent).toBe("÷ 77.2");
     expect(screen.getAllByTestId("goods-final")[0].textContent).toBe("262,305.70");
     expect(screen.queryByTestId("purchase-booking-report-view")).toBeNull();
 
     fireEvent.click(screen.getByTestId("report-view"));
-    const view = await screen.findByTestId("purchase-booking-report-view");
+    const view = await screen.findByTestId("purchase-booking-report-view", {}, WAIT);
     expect(view.getAttribute("role")).toBe("dialog");
     const page = within(view);
     expect(page.getAllByText("AE-001-0005").length).toBeGreaterThan(0);
@@ -51,10 +53,10 @@ describe("PurchaseBookingReportScreen", () => {
   it("a remarks Save PATCHes only formData with that one field changed", async () => {
     const fetchImpl = mockFetch();
     render(<PurchaseBookingReportScreen orderId={ORDER.id} fetchImpl={fetchImpl as any} lang="en" />);
-    const box = await screen.findByTestId("remark-payment");
+    const box = await screen.findByTestId("remark-payment", {}, WAIT);
     fireEvent.change(box, { target: { value: "Credit 30 days" } });
     fireEvent.click(screen.getByTestId("remark-save-payment"));
-    await screen.findByText("Saved");
+    await screen.findByText("Saved", {}, WAIT);
     const patch = fetchImpl.mock.calls.find((c) => (c[1] as RequestInit | undefined)?.method === "PATCH")!;
     expect(patch[0]).toBe(`/api/erp/purchases/orders/${ORDER.id}`);
     const body = JSON.parse(String((patch[1] as RequestInit).body));
@@ -67,7 +69,7 @@ describe("PurchaseBookingReportScreen", () => {
     const posted = { ...ORDER, ledger_posting_status: "posted" };
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ ok: true, data: { order: posted } }), { status: 200 }));
     render(<PurchaseBookingReportScreen orderId={ORDER.id} fetchImpl={fetchImpl as any} lang="en" onUpdate={() => {}} />);
-    await screen.findByTestId("report-locked-note");
+    await screen.findByTestId("report-locked-note", {}, WAIT);
     expect((screen.getByTestId("remark-payment") as HTMLTextAreaElement).disabled).toBe(true);
     expect((screen.getByTestId("report-update") as HTMLButtonElement).disabled).toBe(true);
   });
