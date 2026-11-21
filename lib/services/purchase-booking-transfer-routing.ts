@@ -53,10 +53,11 @@ export function resolvePurchaseBookingTransferDestination(
     };
   }
 
+  // Cash is paid in full at booking: it needs NO advance, so it never routes to the Advance journal.
   if (normalized.includes("cash")) {
     return {
-      flow: "advance",
-      path: "/dashboard/journal/purchase-order-payment/advance",
+      flow: "remaining",
+      path: "/dashboard/journal/purchase-order-payment/remaining",
       currentStep: "purchase_cash_payment",
       currentStepName: "Purchase Cash Payment"
     };
