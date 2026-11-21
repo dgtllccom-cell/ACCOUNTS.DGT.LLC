@@ -416,7 +416,16 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     // Stock deduction handling for Stock Sale vs Endorse Sale
     const saleType = String(form.saleType || form.saleSource || "").toLowerCase();
     const isEndorse = saleType === "endorse" || Boolean(form.isEndorseSale);
-    const isStockSale = saleType === "stock" || (!isEndorse && (Boolean(form.stockLotNo) || Boolean(form.selectedLotId)));
+    // Stock lines the wizard saved from warehouse / local / in-transit stock. The wizard clears the form-level pick
+    // (stockLotNo / selectedLotId / warehouseId / qtyNo) after every line, so the deduction must read each goods line.
+    const LEGACY_STOCK_SOURCES = ["warehouse", "local", "in_transit"];
+    const legacyStockLines: any[] = (Array.isArray(formData?.goodsEntries) ? formData.goodsEntries : []).filter((g: any) => {
+      if (!g || g.managedLotId) return false;
+      const lot = String(g.stockLotNo || g.lotNo || "").trim();
+      const src = String(g.saleSource || g.stockSource || "").toLowerCase();
+      return Boolean(lot) && (LEGACY_STOCK_SOURCES.includes(src) || /^(WH-|LP-|PLR-)/.test(lot));
+    });
+    const isStockSale = saleType === "stock" || (!isEndorse && (Boolean(form.stockLotNo) || Boolean(form.selectedLotId) || legacyStockLines.length > 0));
     const alreadyDeducted = Boolean(formData.stockDeducted || form.stockDeducted || orderRow.stock_deducted);
 
     let stockDeductionAudit: any = null;
@@ -456,105 +465,131 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     }
 
     if (isStockSale && !alreadyDeducted && !managedDeduction) {
-      const soldQty = Number(form.qtyNo || form.quantity || 1);
-      const lotNo = String(form.stockLotNo || form.allotName || "").trim();
-      const lotId = form.selectedLotId ? String(form.selectedLotId).trim() : null;
+      // Legacy stock: one deduction per saved goods line (its own lot, quantity and source). A booking that carries no goods-line
+      // stock falls back to the form-level pick, as before.
+      const stockLines = legacyStockLines.length > 0
+        ? legacyStockLines.map((g: any) => ({
+            soldQty: Number(g.qtyNo ?? g.quantity ?? 0),
+            lotNo: String(g.stockLotNo || g.lotNo || "").trim(),
+            lotId: g.selectedLotId ? String(g.selectedLotId).trim() : null,
+            saleSource: String(g.saleSource || g.stockSource || "").toLowerCase(),
+            warehouseId: g.warehouseId || null,
+          }))
+        : [{
+            soldQty: Number(form.qtyNo || form.quantity || 1),
+            lotNo: String(form.stockLotNo || form.allotName || "").trim(),
+            lotId: form.selectedLotId ? String(form.selectedLotId).trim() : null,
+            saleSource: String(form.saleSource || "").toLowerCase(),
+            warehouseId: form.warehouseId || null,
+          }];
 
-      await withLocalPg(async (sql) => {
-        if (lotNo.startsWith("WH-") || form.saleSource === "warehouse" || form.warehouseId) {
-          let updatedBalances: any[] = [];
-          // quantity_available is a Postgres GENERATED ALWAYS AS (quantity_on_hand -
-          // quantity_reserved) STORED column (see supabase/production-schema.sql) —
-          // it recomputes itself the instant quantity_on_hand changes and cannot be
-          // assigned directly; Postgres rejects any UPDATE that tries to SET it.
-          if (lotId) {
-            updatedBalances = await sql`
-              UPDATE public.product_inventory_balances
-              SET quantity_on_hand = GREATEST(0, quantity_on_hand - ${soldQty}),
-                  updated_at = ${now}
-              WHERE id = ${lotId}::uuid
-              RETURNING id, product_id, warehouse_id, quantity_on_hand
-            `;
-          } else if (lotNo.startsWith("WH-")) {
-            const shortId = lotNo.replace(/^WH-/, "");
-            updatedBalances = await sql`
-              UPDATE public.product_inventory_balances
-              SET quantity_on_hand = GREATEST(0, quantity_on_hand - ${soldQty}),
-                  updated_at = ${now}
-              WHERE id::text LIKE ${shortId + '%'}
-              RETURNING id, product_id, warehouse_id, quantity_on_hand
-            `;
-          }
+      for (const line of stockLines) {
+        const soldQty = line.soldQty;
+        const lotNo = line.lotNo;
+        const lotId = line.lotId;
+        const saleSource = line.saleSource;
+        if (!(soldQty > 0)) continue;
 
-          if (updatedBalances.length > 0) {
-            const b = updatedBalances[0];
+        // One transaction per line: the on-hand decrement and its stock_movements row are written together or not at all.
+        await withLocalPg((db) => db.begin(async (sql: any) => {
+          // the line's own source decides; a warehouse id alone only counts when the line names no source
+          const isWarehouseLine = lotNo.startsWith("WH-") || saleSource === "warehouse" || (saleSource === "" && Boolean(line.warehouseId));
+          if (isWarehouseLine) {
+            let updatedBalances: any[] = [];
+            // quantity_available is a Postgres GENERATED ALWAYS AS (quantity_on_hand -
+            // quantity_reserved) STORED column (see supabase/production-schema.sql) —
+            // it recomputes itself the instant quantity_on_hand changes and cannot be
+            // assigned directly; Postgres rejects any UPDATE that tries to SET it.
+            if (lotId) {
+              updatedBalances = await sql`
+                UPDATE public.product_inventory_balances
+                SET quantity_on_hand = GREATEST(0, quantity_on_hand - ${soldQty}),
+                    updated_at = ${now}
+                WHERE id = ${lotId}::uuid
+                RETURNING id, product_id, warehouse_id, quantity_on_hand
+              `;
+            } else if (lotNo.startsWith("WH-")) {
+              const shortId = lotNo.replace(/^WH-/, "");
+              updatedBalances = await sql`
+                UPDATE public.product_inventory_balances
+                SET quantity_on_hand = GREATEST(0, quantity_on_hand - ${soldQty}),
+                    updated_at = ${now}
+                WHERE id::text LIKE ${shortId + '%'}
+                RETURNING id, product_id, warehouse_id, quantity_on_hand
+              `;
+            }
+
+            if (updatedBalances.length > 0) {
+              const b = updatedBalances[0];
+              await sql`
+                INSERT INTO public.stock_movements (
+                  movement_type,
+                  goods_id,
+                  warehouse_id,
+                  country_id,
+                  city_branch_id,
+                  quantity,
+                  reference_no,
+                  notes,
+                  movement_date,
+                  created_by,
+                  created_at,
+                  updated_at
+                ) VALUES (
+                  'STOCK_OUT',
+                  ${b.product_id},
+                  ${b.warehouse_id},
+                  ${orderRow.country_id ?? null},
+                  ${orderRow.city_branch_id ?? null},
+                  ${soldQty},
+                  ${referenceNo},
+                  ${'Sales Booking Posting - Bill: ' + (referenceNo || 'Direct')},
+                  ${now},
+                  ${session.userId ? sql`${session.userId}::uuid` : null},
+                  ${now},
+                  ${now}
+                )
+              `;
+            }
+          } else if (lotNo.startsWith("LP-") || saleSource === "local") {
+            if (lotId) {
+              await sql`
+                UPDATE public.local_purchases
+                SET numbers = GREATEST(0, numbers - ${soldQty}),
+                    status = CASE WHEN (numbers - ${soldQty}) <= 0 THEN 'sold' ELSE status END,
+                    updated_at = ${now}
+                WHERE id = ${lotId}::uuid
+              `;
+            } else {
+              const shortId = lotNo.replace(/^LP-/, "");
+              await sql`
+                UPDATE public.local_purchases
+                SET numbers = GREATEST(0, numbers - ${soldQty}),
+                    status = CASE WHEN (numbers - ${soldQty}) <= 0 THEN 'sold' ELSE status END,
+                    updated_at = ${now}
+                WHERE id::text LIKE ${shortId + '%'} OR lot_no = ${lotNo}
+              `;
+            }
+          } else if (saleSource === "in_transit" || lotNo.startsWith("PLR-")) {
+            const cleanPlrNo = lotNo.split("#")[0];
             await sql`
-              INSERT INTO public.stock_movements (
-                movement_type,
-                product_id,
-                warehouse_id,
-                country_id,
-                city_branch_id,
-                quantity,
-                reference_no,
-                notes,
-                movement_date,
-                created_by,
-                created_at,
-                updated_at
-              ) VALUES (
-                'STOCK_OUT',
-                ${b.product_id},
-                ${b.warehouse_id},
-                ${orderRow.country_id ?? null},
-                ${orderRow.city_branch_id ?? null},
-                ${soldQty},
-                ${referenceNo},
-                ${'Sales Booking Posting - Bill: ' + (referenceNo || 'Direct')},
-                ${now},
-                ${session.userId ? sql`${session.userId}::uuid` : null},
-                ${now},
-                ${now}
-              )
+              UPDATE public.purchase_loading_records
+              SET loaded_quantity = GREATEST(0, loaded_quantity - ${soldQty}),
+                  updated_at = ${now}
+              WHERE loading_record_no = ${cleanPlrNo}
             `;
           }
-        } else if (lotNo.startsWith("LP-") || form.saleSource === "local") {
-          if (lotId) {
-            await sql`
-              UPDATE public.local_purchases
-              SET numbers = GREATEST(0, numbers - ${soldQty}),
-                  status = CASE WHEN (numbers - ${soldQty}) <= 0 THEN 'sold' ELSE status END,
-                  updated_at = ${now}
-              WHERE id = ${lotId}::uuid
-            `;
-          } else {
-            const shortId = lotNo.replace(/^LP-/, "");
-            await sql`
-              UPDATE public.local_purchases
-              SET numbers = GREATEST(0, numbers - ${soldQty}),
-                  status = CASE WHEN (numbers - ${soldQty}) <= 0 THEN 'sold' ELSE status END,
-                  updated_at = ${now}
-              WHERE id::text LIKE ${shortId + '%'} OR lot_no = ${lotNo}
-            `;
-          }
-        } else if (form.saleSource === "in_transit" || lotNo.startsWith("PLR-")) {
-          const cleanPlrNo = lotNo.split("#")[0];
-          await sql`
-            UPDATE public.purchase_loading_records
-            SET loaded_quantity = GREATEST(0, loaded_quantity - ${soldQty}),
-                updated_at = ${now}
-            WHERE loading_record_no = ${cleanPlrNo}
-          `;
-        }
-      });
+        }));
+      }
 
       stockDeductionAudit = {
         deducted: true,
         deductedAt: now,
         deductedBy: session.userId,
-        soldQty,
-        lotNo,
-        lotId
+        soldQty: stockLines.reduce((s, l) => s + (l.soldQty > 0 ? l.soldQty : 0), 0),
+        lotNo: stockLines.map((l) => l.lotNo).join(","),
+        lotId: null,
+        lines: stockLines.map((l) => ({ lotNo: l.lotNo, lotId: l.lotId, qty: l.soldQty, source: l.saleSource })),
       };
     }
 

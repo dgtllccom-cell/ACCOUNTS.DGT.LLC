@@ -542,6 +542,10 @@ export async function getBookedQuantities(lotNos: string[], excludeOrderId: stri
            sum(CASE WHEN ge->>'qtyNo' ~ '^[0-9]+([.][0-9]+)?$' THEN (ge->>'qtyNo')::numeric ELSE 0 END) AS qty
     FROM so, jsonb_array_elements(CASE WHEN jsonb_typeof(so.fd->'goodsEntries') = 'array' THEN so.fd->'goodsEntries' ELSE '[]'::jsonb END) ge
     WHERE coalesce(ge->>'stockLotNo', ge->>'lotNo', '') = ANY(${refs}::text[])
+      -- a posted sale from warehouse / local / in-transit stock has already left the physical balance at transfer
+      -- (transfer sets form.stockDeducted), so counting it here too would subtract it twice
+      AND NOT (coalesce(ge->>'saleSource', ge->>'stockSource', '') IN ('warehouse', 'local', 'in_transit')
+               AND coalesce(so.fd->'form'->>'stockDeducted', '') = 'true')
     GROUP BY 1
   `) as unknown as Array<{ lot_no: string; qty: string }>);
   for (const r of rows ?? []) out.set(r.lot_no, n(r.qty));
