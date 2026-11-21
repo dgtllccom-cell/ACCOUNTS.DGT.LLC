@@ -28,9 +28,10 @@ function mockFetch() {
 // the save round-trip and the A4 viewer can take over 1 s on a loaded CI runner
 const WAIT = { timeout: 5000 };
 describe("PurchaseBookingReportScreen", { timeout: 20000 }, () => {
-  it("renders the saved booking and View opens the full-screen A4 report", async () => {
+  it("renders the saved booking and View opens the two-page A4 contract document", async () => {
     const fetchImpl = mockFetch();
-    render(<PurchaseBookingReportScreen orderId={ORDER.id} fetchImpl={fetchImpl as any} lang="en" />);
+    const brandingLoader = vi.fn(async () => ({ entityName: "Test Trading LLC", address: "Deira, Dubai", phone: "+971 4 000 0000" }));
+    render(<PurchaseBookingReportScreen orderId={ORDER.id} fetchImpl={fetchImpl as any} brandingLoader={brandingLoader} lang="en" />);
     await screen.findByText("BLACK MAFTA", {}, WAIT);
     expect(screen.getAllByTestId("goods-rate")[0].textContent).toBe("÷ 77.2");
     expect(screen.getAllByTestId("goods-final")[0].textContent).toBe("262,305.70");
@@ -39,15 +40,20 @@ describe("PurchaseBookingReportScreen", { timeout: 20000 }, () => {
     fireEvent.click(screen.getByTestId("report-view"));
     const view = await screen.findByTestId("purchase-booking-report-view", {}, WAIT);
     expect(view.getAttribute("role")).toBe("dialog");
-    const page = within(view);
-    expect(page.getAllByText("AE-001-0005").length).toBeGreaterThan(0);
-    expect(page.getAllByTestId("goods-rate")[0].textContent).toBe("÷ 77.2");
-    expect(page.getByTestId("report-print")).toBeTruthy();
-    // the A4 copy prints remarks as text, not editable boxes
-    expect(view.querySelectorAll("textarea").length).toBe(0);
+    const frame = await within(view).findByTestId("purchase-booking-contract-frame", {}, WAIT);
+    const html = frame.getAttribute("srcdoc") || "";
+    expect(html.match(/<section class="page/g)?.length).toBe(2);
+    expect(html).toContain("Purchase Contract");
+    expect(html).toContain("Contract Report &amp; Annexure");
+    expect(html).toContain("Test Trading LLC");
+    expect(html).toContain("÷ 77.2");
+    expect(html).toContain("AED 262,305.70");
+    expect(html).toContain("AE-001-0005");
+    expect(brandingLoader).toHaveBeenCalled();
+    expect((within(view).getByTestId("report-print") as HTMLButtonElement).disabled).toBe(false);
 
     fireEvent.keyDown(window, { key: "Escape" });
-    await waitFor(() => expect(screen.queryByTestId("purchase-booking-report-view")).toBeNull());
+    await waitFor(() => expect(screen.queryByTestId("purchase-booking-report-view")).toBeNull(), WAIT);
   });
 
   it("a remarks Save PATCHes only formData with that one field changed", async () => {

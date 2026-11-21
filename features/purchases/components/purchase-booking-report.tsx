@@ -16,7 +16,7 @@
  * print modal (printDomFragmentViaModal) in the active language with the right dir.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   Building2,
@@ -41,6 +41,10 @@ import { A4DocumentViewer } from "@/components/ui/a4-document-viewer";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { printStore } from "@/lib/store/print-store";
+import { resolveDocumentBranding, type BrandingScope } from "@/lib/reports/resolve-document-branding";
+import { renderBookingContractHtml, type ContractBranding } from "@/lib/purchases/booking-contract-html";
 import {
   buildPurchaseBookingReport,
   remarkPatchBody,
@@ -50,7 +54,6 @@ import {
 
 type AnyRec = Record<string, any>;
 const RTL = new Set(["ur", "ar", "fa", "ps"]);
-export const BOOKING_REPORT_PRINT_ID = "purchase-booking-report-a4";
 
 const DASH = "—";
 const fmt = (n: number | null | undefined, digits = 2) =>
@@ -454,11 +457,69 @@ export function PurchaseBookingReportBody({ data, lang, mode = "screen", onSaveR
   );
 }
 
-/* ---------------------------------------------------------------- View (full-screen A4) */
+/* ---------------------------------------------------------------- View (full-screen A4, two pages) */
 
-export function PurchaseBookingReportViewer({ isOpen, onClose, data, lang: langProp }: { isOpen: boolean; onClose: () => void; data: BookingReportData; lang?: string }) {
+export type BrandingLoader = (scope: BrandingScope, lang: SupportedLanguage) => Promise<ContractBranding | null>;
+
+/**
+ * View = the booking as the two-page company document (page 1 Purchase Contract, page 2 Contract Report & Annexure),
+ * centred A4 in the full-screen viewer. The SAME html is handed to the shared print modal, so Print / Save as PDF
+ * matches the screen exactly, in the selected language and direction.
+ */
+export function PurchaseBookingReportViewer({
+  isOpen,
+  onClose,
+  data,
+  lang: langProp,
+  scope,
+  brandingLoader,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  data: BookingReportData;
+  lang?: string;
+  scope?: BrandingScope | null;
+  brandingLoader?: BrandingLoader;
+}) {
   const lang = useLang(langProp);
-  const title = `${t(lang, "pbrep.title", "Purchase Booking Report")}${data.bookingNo ? ` — ${data.bookingNo}` : ""}`;
+  const [html, setHtml] = useState<string | null>(null);
+  const [height, setHeight] = useState(2260);
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  const observerRef = useRef<ResizeObserver | null>(null);
+  const title = `${t(lang, "pbdoc.title_contract", "Purchase Contract")}${data.bookingNo ? ` — ${data.bookingNo}` : ""}`;
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let alive = true;
+    setHtml(null);
+    (async () => {
+      let branding: ContractBranding | null = null;
+      try {
+        branding = await (brandingLoader ?? resolveDocumentBranding)(scope || {}, lang as SupportedLanguage);
+      } catch {
+        branding = null; // no profile configured: the document simply has no company header
+      }
+      const doc = renderBookingContractHtml(data, branding, lang);
+      if (alive) setHtml(doc);
+    })();
+    return () => { alive = false; };
+  }, [isOpen, data, lang, scope, brandingLoader]);
+
+  // the frame grows to the document's height, so the viewer scrolls both pages (no inner scrollbar)
+  const fitHeight = () => {
+    const doc = frameRef.current?.contentDocument;
+    if (!doc?.documentElement) return;
+    const measure = () => setHeight(Math.max(1123, doc.documentElement.scrollHeight));
+    measure();
+    observerRef.current?.disconnect();
+    if (typeof ResizeObserver !== "undefined") {
+      observerRef.current = new ResizeObserver(measure);
+      observerRef.current.observe(doc.documentElement);
+    }
+    (doc as any).fonts?.ready?.then?.(measure).catch?.(() => {});
+  };
+  useEffect(() => () => observerRef.current?.disconnect(), []);
+
   return (
     <A4DocumentViewer
       isOpen={isOpen}
@@ -466,25 +527,36 @@ export function PurchaseBookingReportViewer({ isOpen, onClose, data, lang: langP
       title={title}
       icon={<FileText className="h-4 w-4 text-sky-600" />}
       fit="page"
+      bodyClassName="!p-0"
       testId="purchase-booking-report-view"
       actions={
         <button
           type="button"
           data-testid="report-print"
-          onClick={() => {
-            void import("@/lib/reports/print-dom-fragment").then((m) => {
-              if (!m.printDomFragmentViaModal(BOOKING_REPORT_PRINT_ID, title, { lang, orientation: "portrait" })) window.print();
-            });
-          }}
-          className="inline-flex h-8 items-center gap-1 rounded-lg bg-sky-600 px-3 text-xs font-bold text-white hover:bg-sky-700"
+          disabled={!html}
+          onClick={() => { if (html) printStore.openPrint(html, title, { lang }); }}
+          className="inline-flex h-8 items-center gap-1 rounded-lg bg-sky-600 px-3 text-xs font-bold text-white hover:bg-sky-700 disabled:opacity-50"
         >
           <Printer className="h-3.5 w-3.5" /> {t(lang, "common.print", "Print")}
         </button>
       }
     >
-      <div id={BOOKING_REPORT_PRINT_ID} dir={RTL.has(lang) ? "rtl" : "ltr"} lang={lang} data-printable-document="">
-        <PurchaseBookingReportBody data={data} lang={lang} mode="document" />
-      </div>
+      {!html ? (
+        <div className="flex items-center justify-center gap-2 p-16 text-sm font-semibold text-slate-500">
+          <Loader2 className="h-4 w-4 animate-spin" /> {t(lang, "common.loading", "Loading...")}
+        </div>
+      ) : (
+        <iframe
+          ref={frameRef}
+          title={title}
+          srcDoc={html}
+          sandbox="allow-same-origin"
+          onLoad={fitHeight}
+          className="block w-full border-0 bg-white"
+          style={{ height }}
+          data-testid="purchase-booking-contract-frame"
+        />
+      )}
     </A4DocumentViewer>
   );
 }
@@ -511,6 +583,8 @@ export interface PurchaseBookingReportScreenProps {
   reloadToken?: unknown;
   /** test seam */
   fetchImpl?: typeof fetch;
+  /** test seam: company branding for the View document (default: the country / branch branding profile) */
+  brandingLoader?: BrandingLoader;
 }
 
 export function PurchaseBookingReportScreen({
@@ -527,6 +601,7 @@ export function PurchaseBookingReportScreen({
   saving,
   reloadToken,
   fetchImpl,
+  brandingLoader,
 }: PurchaseBookingReportScreenProps) {
   const lang = useLang(langProp);
   const isRtl = RTL.has(lang);
@@ -559,6 +634,17 @@ export function PurchaseBookingReportScreen({
 
   const source = orderId ? record : draftRecord ?? null;
   const data = useMemo(() => buildPurchaseBookingReport(source, { userName, userRole }), [source, userName, userRole]);
+  const fdForm = (source?.form_data && typeof source.form_data === "object" ? source.form_data.form : null) || {};
+  const scopeIds = [
+    source?.country_id || fdForm.countryId || "",
+    source?.country_branch_id || fdForm.countryBranchId || "",
+    source?.city_branch_id || fdForm.cityBranchId || "",
+  ];
+  const brandingScope = useMemo<BrandingScope>(
+    () => ({ countryId: scopeIds[0] || null, countryBranchId: scopeIds[1] || null, cityBranchId: scopeIds[2] || null, branchName: data.branch.name || null }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [scopeIds[0], scopeIds[1], scopeIds[2], data.branch.name],
+  );
 
   const saveRemark = useCallback(async (kind: BookingReportRemarkKind, value: string) => {
     if (!orderId || !doFetch) throw new Error("not saved");
@@ -651,7 +737,7 @@ export function PurchaseBookingReportScreen({
         </>
       )}
 
-      <PurchaseBookingReportViewer isOpen={viewOpen} onClose={() => setViewOpen(false)} data={data} lang={lang} />
+      <PurchaseBookingReportViewer isOpen={viewOpen} onClose={() => setViewOpen(false)} data={data} lang={lang} scope={brandingScope} brandingLoader={brandingLoader} />
     </div>
   );
 }

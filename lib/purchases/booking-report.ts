@@ -40,6 +40,8 @@ export interface BookingReportLine {
   op: FxOperator;
   rateLabel: string;
   finalAmount: number;
+  /** weight per package (kg) as saved, e.g. 50.25 */
+  packWeight: number | null;
 }
 
 export interface BookingReportAccount {
@@ -55,6 +57,9 @@ export interface BookingReportData {
   billNo: string;
   contractNo: string;
   pcNumber: string;
+  /** the bill's saved serial (country, else branch) */
+  serialNo: string;
+  invoiceDate: string;
   status: BookingReportStatus;
   paymentType: string;
   shipType: string;
@@ -62,13 +67,16 @@ export interface BookingReportData {
   branch: { name: string; code: string; type: string; parent: string; userName: string; userRole: string };
   purchaseAccount: BookingReportAccount;
   salesAccount: BookingReportAccount;
+  /** the supplier party (Cr account) as saved on the bill — the seller on a purchase contract */
+  seller: { name: string; company: string; phone: string; email: string; address: string; country: string };
+  qualityReport: string;
   currency: string;
   baseCurrency: string;
   rate: number | null;
   op: FxOperator;
   rateLabel: string;
   lines: BookingReportLine[];
-  totals: { qty: number | null; unit: string; grossMt: number | null; netMt: number | null; amount: number; finalAmount: number };
+  totals: { items: number; qty: number | null; unit: string; grossMt: number | null; netMt: number | null; amount: number; finalAmount: number };
   payment: {
     advancePercent: number | null;
     advanceAmount: number | null;
@@ -76,8 +84,11 @@ export interface BookingReportData {
     balanceAmount: number | null;
     balanceFinal: number | null;
     status: string;
+    advanceDate: string;
+    finalPaymentDate: string;
+    details: string;
   };
-  loading: { fromCountry: string; fromPort: string; date: string; shippingLine: string };
+  loading: { fromCountry: string; fromPort: string; date: string; shippingLine: string; vesselName: string; voyageNo: string };
   receiving: { toCountry: string; toPort: string; date: string; finalDestination: string; shippingLine: string };
   remarks: Record<BookingReportRemarkKind, string>;
   /** posted / transferred: amounts, accounts and remarks are read-only (see bookingRemarksEditable) */
@@ -166,6 +177,7 @@ export function buildPurchaseBookingReport(
       op: lineOp,
       rateLabel: formatRateWithOperator(lineRate, lineOp),
       finalAmount: round2(lineRate ? toBaseAmount(amount, lineRate, lineOp) : amount),
+      packWeight: num(g.qtyKgs ?? g.unitWeight),
     };
   });
 
@@ -184,6 +196,7 @@ export function buildPurchaseBookingReport(
   const advanceFinal = advancePercent !== null ? round2((finalAmount * advancePercent) / 100) : null;
 
   const accounts = billAccounts("purchase_order", r);
+  const workflow: AnyRec = fd.workflow && typeof fd.workflow === "object" ? fd.workflow : {};
   const remarks = Object.fromEntries(
     (Object.keys(BOOKING_REPORT_REMARK_FIELDS) as BookingReportRemarkKind[]).map((k) => [k, str(form[BOOKING_REPORT_REMARK_FIELDS[k]])]),
   ) as Record<BookingReportRemarkKind, string>;
@@ -195,6 +208,8 @@ export function buildPurchaseBookingReport(
     billNo: first(form.billNo, r.bill_no),
     contractNo: first(r.purchase_contract_no, form.purchaseContractNo),
     pcNumber: first(form.pcNumber, form.pcNo),
+    serialNo: first(workflow.countrySerialNo, r.country_transaction_serial_number, workflow.branchSerialNo, r.branch_transaction_serial_number),
+    invoiceDate: first(form.invoiceDate, form.billDate),
     status: normalizeBookingStatus(r),
     paymentType: first(form.paymentType),
     shipType: first(form.shipmentType, form.shipType, form.shippingMode),
@@ -209,6 +224,15 @@ export function buildPurchaseBookingReport(
     },
     purchaseAccount: { code: accounts.debit.code, name: accounts.debit.name, company: first(form.purchaseCompanyName) },
     salesAccount: { code: accounts.credit.code, name: accounts.credit.name, company: first(form.salesCompanyName) },
+    seller: {
+      name: accounts.credit.name,
+      company: first(form.salesCompanyName),
+      phone: first(form.salesAccountMobile, form.salesAccountWhatsapp),
+      email: first(form.salesAccountEmail),
+      address: first(form.salesAccountAddress),
+      country: first(form.salesAccountCountry),
+    },
+    qualityReport: first(form.qualityReport),
     currency,
     baseCurrency,
     rate,
@@ -216,6 +240,7 @@ export function buildPurchaseBookingReport(
     rateLabel: formatRateWithOperator(rate, op),
     lines,
     totals: {
+      items: lines.length,
       qty,
       unit: first(goods[0]?.qtyName, goods[0]?.unitName),
       grossMt: grossKg !== null ? grossKg / 1000 : null,
@@ -230,12 +255,17 @@ export function buildPurchaseBookingReport(
       balanceAmount: advanceAmount !== null ? round2(amount - advanceAmount) : null,
       balanceFinal: advanceFinal !== null ? round2(finalAmount - advanceFinal) : null,
       status: first(r.payment_status).toLowerCase(),
+      advanceDate: first(form.advancePaymentDate),
+      finalPaymentDate: first(form.paymentDate),
+      details: first(form.paymentDaysAndMethodDetails),
     },
     loading: {
       fromCountry: first(form.loadingCountry),
       fromPort: first(form.loadingPort, form.loadingLocation, form.loadingBorder),
       date: first(form.loadingDate),
       shippingLine: first(form.shippingLine, form.shippingLineName, form.transportAgent),
+      vesselName: first(form.vesselName, form.airlineName),
+      voyageNo: first(form.voyageNo, form.voyageNumber, form.flightNo),
     },
     receiving: {
       toCountry: first(form.receivedCountry, form.receivingCountry),
