@@ -139,7 +139,7 @@ table{border-collapse:collapse;width:100%}
 .p2 .bh{font-size:12.5px;letter-spacing:0}.p2 .bh .ic{width:38px;font-size:20px}.p2 .bh .tx{padding:6px 10px}
 .p2 .kv td{padding:3px 10px;font-size:12px}.p2 .hdr .logo{width:90px;height:90px}.p2 .co{font-size:26px}
 .p2 .title h1{font-size:30px}
-.p2 .kv td{padding:2px 10px}.p2 .rem{margin:6px 10px 8px}.p2 .rem h4{padding:2px 10px;font-size:13px}.p2 .rem p{font-size:11.5px;line-height:1.4;min-height:28px;padding:4px 10px}
+.p2 .kv td{padding:2px 10px;border-bottom:0}.p2 .rem{margin:6px 10px 8px}.p2 .rem h4{padding:2px 10px;font-size:13px}.p2 .rem p{font-size:11.5px;line-height:1.4;min-height:28px;padding:4px 10px}
 .p2 .narr p{min-height:96px;font-size:12.5px}.p2 .box{margin-bottom:6px}.p2 .g2{gap:8px}.p2 .strip{padding:3px 0;margin-bottom:8px}
 .p2 .sig td{padding:1px 8px}.p2 .stampbox{height:72px}.p2 .decl{padding:5px 14px;font-size:12px}.p2 .hdr{padding-bottom:4px}
 ${lang === "ur" ? ".p2{font-size:11.5px}.p2 .rem p{line-height:1.6}.p2 .kv td,.p2 .sig td{line-height:1.4;padding-top:1px;padding-bottom:1px}.p2 .rem h4{font-size:12px;padding:1px 10px;line-height:1.7}.p2 .rem p{min-height:30px;padding:3px 10px}.p2 .narr p{min-height:60px}.p2 .stampbox{height:64px}.p2 .decl{line-height:1.75;padding:4px 14px}.p2 .strip small{line-height:1.6}.p2 .title{padding:4px 20px}" : ""}
