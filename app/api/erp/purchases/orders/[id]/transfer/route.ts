@@ -7,7 +7,9 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getDbUrl } from "@/lib/db/local-postgres";
+import { getDbUrl, withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 import { isPurchaseBookingTransferLocked, resolvePurchaseBookingTransferDestination } from "@/lib/services/purchase-booking-transfer-routing";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
 import { transferPurchaseBookingViaLocalPg } from "@/lib/services/purchase-booking-transfer-local-pg";
@@ -591,6 +593,57 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       await releaseIdempotencyLock(idempotencyKey, tenantHash);
     }
     console.error("PURCHASE_TRANSFER_TO_PAYMENT_ERROR:", error);
+    return handleApiError(error);
+  }
+}
+
+/**
+ * GET /api/erp/purchases/orders/[id]/transfer
+ * Read-only preview of the Ledger Transfer: the DR/CR ledgers, amounts, rate and whether the bill can be posted.
+ * It writes nothing. The POST above performs the posting, and only after the user confirms this preview.
+ */
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await requireErpSession();
+    const params = paramsSchema.parse(await context.params);
+    if (!getDbUrl()) {
+      throw new ApiClientError("Ledger Transfer preview needs the database connection.", { status: 503, code: "DB_UNAVAILABLE" });
+    }
+    // Scope check on the bill's own country and branch, before anything is read for preview.
+    const scopeRows = await withLocalPg((sql) => sql`
+      select country_id, country_branch_id, city_branch_id
+      from purchase_orders
+      where id = ${params.id}::uuid and deleted_at is null
+      limit 1
+    `);
+    const scopeRow = (scopeRows ?? [])[0];
+    if (!scopeRow) {
+      throw new ApiClientError("Purchase booking was not found.", { status: 404, code: "NOT_FOUND" });
+    }
+    authorizeApiScope(session, {
+      resource: "purchases",
+      action: "read",
+      countryId: scopeRow.country_id,
+      countryBranchId: scopeRow.country_branch_id,
+      cityBranchId: scopeRow.city_branch_id
+    });
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    const preview = await transferPurchaseBookingViaLocalPg({
+      session,
+      orderId: params.id,
+      body: {},
+      dryRun: true
+    });
+    // Ledger names are user data (classified as transliterate in translatable-fields): show them in the viewer's language.
+    const ledgerRows = [preview.debit, preview.credit].filter(Boolean) as { id: string; code: string | null; name: string | null }[];
+    if (ledgerRows.length) {
+      const localized = await localizeRecordFields(ledgerRows.map((l) => ({ ...l })), "ledgers", ["name"], lang);
+      const byId = new Map(localized.map((l) => [l.id, l]));
+      preview.debit = preview.debit ? { ...preview.debit, name: byId.get(preview.debit.id)?.name ?? preview.debit.name } : null;
+      preview.credit = preview.credit ? { ...preview.credit, name: byId.get(preview.credit.id)?.name ?? preview.credit.name } : null;
+    }
+    return apiOk({ ...preview, lang });
+  } catch (error) {
     return handleApiError(error);
   }
 }
