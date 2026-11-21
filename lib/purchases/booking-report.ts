@@ -288,3 +288,68 @@ export function remarkPatchBody(savedRecord: AnyRec, kind: BookingReportRemarkKi
   const form = fd.form && typeof fd.form === "object" ? fd.form : {};
   return { formData: { ...fd, form: { ...form, [BOOKING_REPORT_REMARK_FIELDS[kind]]: value } } };
 }
+
+/* ------------------------------------------------------------------ suggested reports */
+
+/** a translator: (key, English template) → template in the active language; {name} placeholders are filled with data */
+export type ReportTranslator = (key: string, fallback: string) => string;
+
+const D = "—";
+const money = (n: number | null | undefined) =>
+  n === null || n === undefined || !Number.isFinite(Number(n)) ? D : Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const qtyFmt = (n: number | null | undefined, digits = 3) =>
+  n === null || n === undefined || !Number.isFinite(Number(n)) ? D : Number(n).toLocaleString("en-US", { minimumFractionDigits: digits === 3 ? 0 : digits, maximumFractionDigits: digits });
+const val = (v: unknown) => (v === null || v === undefined || String(v).trim() === "" ? D : String(v).trim());
+const fill = (tpl: string, vars: Record<string, string>) => tpl.replace(/\{(\w+)\}/g, (_, k) => (k in vars ? vars[k] : `{${k}}`));
+
+/**
+ * A draft written report for each of the four boxes, built ONLY from the bill's saved values (a missing value is
+ * "—"). The sentence is translated; names, codes, places, dates and amounts are data and stay as saved. The user
+ * reviews and saves it — nothing is saved automatically.
+ */
+export function suggestedRemarks(data: BookingReportData, tr: ReportTranslator): Record<BookingReportRemarkKind, string> {
+  const goods = data.lines.map((l) => l.goodsName).filter(Boolean).join(", ");
+  const unit = val(data.totals.unit);
+  const rate = data.rateLabel || D;
+  const statusWord = data.payment.status ? data.payment.status.charAt(0).toUpperCase() + data.payment.status.slice(1) : D;
+  const vars: Record<string, string> = {
+    qty: qtyFmt(data.totals.qty),
+    unit,
+    goods: val(goods),
+    items: String(data.totals.items || 0),
+    fromPort: val(data.loading.fromPort),
+    fromCountry: val(data.loading.fromCountry),
+    loadDate: val(data.loading.date),
+    toPort: val(data.receiving.toPort),
+    toCountry: val(data.receiving.toCountry),
+    recvDate: val(data.receiving.date),
+    ship: val(data.shipType),
+    paymentType: val(data.paymentType),
+    amount: money(data.totals.amount),
+    cur: val(data.currency),
+    rate,
+    final: money(data.totals.finalAmount),
+    base: val(data.baseCurrency),
+    pct: data.payment.advancePercent === null ? D : String(data.payment.advancePercent),
+    adv: money(data.payment.advanceFinal),
+    advDate: val(data.payment.advanceDate),
+    bal: money(data.payment.balanceFinal),
+    finalDate: val(data.payment.finalPaymentDate),
+    status: statusWord,
+    gross: qtyFmt(data.totals.grossMt, 3),
+    net: qtyFmt(data.totals.netMt, 3),
+    quality: val(data.qualityReport),
+    no: val(data.bookingNo),
+    date: val(data.bookingDate),
+    drCode: val(data.purchaseAccount.code),
+    drName: val(data.purchaseAccount.name),
+    crCode: val(data.salesAccount.code),
+    crName: val(data.salesAccount.name),
+  };
+  return {
+    loading: fill(tr("pbrep.sug_loading", "{qty} {unit} {goods} — loading from {fromPort}, {fromCountry} on {loadDate}; receiving at {toPort}, {toCountry} on {recvDate}. Ship type: {ship}."), vars),
+    payment: fill(tr("pbrep.sug_payment", "Payment type {paymentType}. Total {amount} {cur} {rate} = {final} {base}. Advance {pct}% = {adv} {base} by {advDate}; balance {bal} {base} due {finalDate}. Status: {status}."), vars),
+    quantity: fill(tr("pbrep.sug_quantity", "{items} item(s), {qty} {unit}; gross {gross} MT, net {net} MT; quality: {quality}."), vars),
+    journal: fill(tr("pbrep.sug_journal", "Purchase booking {no} dated {date} — Dr {drCode} {drName} / Cr {crCode} {crName}, {final} {base} ({amount} {cur} {rate})."), vars),
+  };
+}

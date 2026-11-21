@@ -48,6 +48,7 @@ import { renderBookingContractHtml, type ContractBranding } from "@/lib/purchase
 import {
   buildPurchaseBookingReport,
   remarkPatchBody,
+  suggestedRemarks,
   type BookingReportData,
   type BookingReportRemarkKind,
 } from "@/lib/purchases/booking-report";
@@ -156,7 +157,10 @@ function SelectLike({ label, value }: { label: string; value: string }) {
 type RemarkProps = {
   kind: BookingReportRemarkKind;
   label: string;
+  /** the report saved on the bill ("" when none) */
   value: string;
+  /** a draft written from the bill's own figures (suggestedRemarks) — shown when nothing is saved yet */
+  suggestion?: string;
   document: boolean;
   editable: boolean;
   onSave?: (kind: BookingReportRemarkKind, value: string) => Promise<void>;
@@ -164,46 +168,107 @@ type RemarkProps = {
   rows?: number;
 };
 
-function RemarkBox({ kind, label, value, document, editable, onSave, lang, rows = 2 }: RemarkProps) {
-  const [draft, setDraft] = useState(value);
+function RemarkBox({ kind, label, value, suggestion = "", document, editable, onSave, lang, rows = 2 }: RemarkProps) {
+  const saved = value.trim();
+  // nothing saved yet: start from the auto draft so one click on Save keeps it
+  const initial = saved ? value : suggestion;
+  const [draft, setDraft] = useState(initial);
+  const [editing, setEditing] = useState(!saved);
   const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  useEffect(() => { setDraft(value); }, [value]);
+  useEffect(() => { setDraft(saved ? value : suggestion); setEditing(!saved); }, [value, suggestion, saved]);
+
+  const header = (
+    <div className="flex items-center justify-between gap-2">
+      <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-slate-500">
+        <Pin className="h-3 w-3 text-rose-500" /> {label}
+      </span>
+      {saved ? (
+        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-800">
+          {t(lang, "pbrep.remark_saved_badge", "Saved report")}
+        </span>
+      ) : suggestion ? (
+        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-700 ring-1 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-800">
+          {t(lang, "pbrep.remark_auto_badge", "Auto draft")}
+        </span>
+      ) : null}
+    </div>
+  );
 
   if (document) {
+    const text = saved ? value : suggestion;
     return (
       <div className="mt-auto space-y-1 border-t border-dashed border-slate-200 pt-2">
-        <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-slate-500"><Pin className="h-3 w-3" /> {label}</div>
-        <p className="min-h-[1.25rem] whitespace-pre-wrap text-[11px] font-medium text-slate-800">{value || DASH}</p>
+        {header}
+        <p className="min-h-[1.25rem] whitespace-pre-wrap border-s-2 border-slate-300 ps-2 text-[11px] font-medium leading-relaxed text-slate-800">{text || DASH}</p>
       </div>
     );
   }
-  const dirty = draft !== value;
+
+  // a saved report reads as a written note; Edit opens it again
+  if (saved && !editing) {
+    return (
+      <div className="mt-auto space-y-1.5 border-t border-dashed border-slate-200 pt-2 dark:border-slate-700" data-testid={`remark-card-${kind}`}>
+        {header}
+        <p className="whitespace-pre-wrap rounded-lg border border-slate-200 border-s-4 border-s-emerald-500 bg-white p-2.5 text-[12px] font-medium leading-relaxed text-slate-800 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+          {value}
+        </p>
+        <div className="flex items-center justify-end gap-2">
+          {state === "saved" && <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-700"><CheckCircle2 className="h-3 w-3" /> {t(lang, "pbrep.remark_saved", "Saved")}</span>}
+          {editable && (
+            <button
+              type="button"
+              data-testid={`remark-edit-${kind}`}
+              onClick={() => { setEditing(true); setState("idle"); }}
+              className="inline-flex h-7 items-center gap-1 rounded-md border border-slate-300 bg-white px-3 text-[11px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+            >
+              {t(lang, "common.edit", "Edit")}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const dirty = draft.trim() !== saved;
   return (
     <div className="mt-auto space-y-1 border-t border-dashed border-slate-200 pt-2 dark:border-slate-700">
-      <label htmlFor={`pbrep-remark-${kind}`} className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-slate-500">
-        <Pin className="h-3 w-3 text-rose-500" /> {label}
-      </label>
+      <label htmlFor={`pbrep-remark-${kind}`} className="block">{header}</label>
       <textarea
         id={`pbrep-remark-${kind}`}
         data-testid={`remark-${kind}`}
         value={draft}
-        rows={rows}
+        rows={Math.max(rows, 3)}
         disabled={!editable || state === "saving"}
         onChange={(e) => { setDraft(e.target.value); setState("idle"); }}
         placeholder={t(lang, "pbrep.remark_ph", "Type remarks here…")}
-        className="w-full resize-y rounded-lg border border-slate-200 bg-slate-50/60 p-2 text-[11px] font-medium text-slate-900 outline-none focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+        className={cn(
+          "w-full resize-y rounded-lg border p-2 text-[11px] font-medium leading-relaxed text-slate-900 outline-none focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100",
+          !saved && suggestion && draft === suggestion ? "border-amber-200 bg-amber-50/40" : "border-slate-200 bg-slate-50/60"
+        )}
       />
+      {!saved && suggestion && draft === suggestion && (
+        <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-300">{t(lang, "pbrep.remark_auto_hint", "Written from this bill's figures — check it, change anything, then Save.")}</p>
+      )}
       <div className="flex items-center justify-end gap-2">
         {state === "saved" && <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-700"><CheckCircle2 className="h-3 w-3" /> {t(lang, "pbrep.remark_saved", "Saved")}</span>}
         {state === "error" && <span role="alert" className="text-[10px] font-bold text-rose-600">{t(lang, "pbrep.remark_save_failed", "Could not save. Please try again.")}</span>}
+        {saved && editable && (
+          <button
+            type="button"
+            onClick={() => { setDraft(value); setEditing(false); setState("idle"); }}
+            className="inline-flex h-7 items-center rounded-md px-2 text-[11px] font-bold text-slate-500 hover:text-slate-800"
+          >
+            {t(lang, "common.cancel", "Cancel")}
+          </button>
+        )}
         <button
           type="button"
           data-testid={`remark-save-${kind}`}
-          disabled={!editable || !dirty || state === "saving" || !onSave}
+          disabled={!editable || !dirty || !draft.trim() || state === "saving" || !onSave}
           onClick={async () => {
             if (!onSave) return;
             setState("saving");
-            try { await onSave(kind, draft); setState("saved"); } catch { setState("error"); }
+            try { await onSave(kind, draft.trim()); setState("saved"); setEditing(false); } catch { setState("error"); }
           }}
           className="inline-flex h-7 items-center gap-1 rounded-md bg-emerald-600 px-3 text-[11px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
         >
@@ -231,8 +296,10 @@ export function PurchaseBookingReportBody({ data, lang, mode = "screen", onSaveR
   const base = data.baseCurrency || DASH;
   const statusLabel = t(lang, `pbrep.status_${data.status}`, data.status.toUpperCase());
   const payStatus = data.payment.status || "pending";
+  // a draft written report per box from this bill's own figures (shown when nothing is saved)
+  const suggestions = useMemo(() => suggestedRemarks(data, (k, fb) => t(lang, k as never, fb)), [data, lang]);
   const remark = (kind: BookingReportRemarkKind, label: string, rows?: number) => (
-    <RemarkBox kind={kind} label={label} value={data.remarks[kind]} document={doc} editable={editable} onSave={onSaveRemark} lang={lang} rows={rows} />
+    <RemarkBox kind={kind} label={label} value={data.remarks[kind]} suggestion={suggestions[kind]} document={doc} editable={editable} onSave={onSaveRemark} lang={lang} rows={rows} />
   );
   const accountCard = (kind: "purchase" | "sales") => {
     const a = kind === "purchase" ? data.purchaseAccount : data.salesAccount;
@@ -499,7 +566,12 @@ export function PurchaseBookingReportViewer({
       } catch {
         branding = null; // no profile configured: the document simply has no company header
       }
-      const doc = renderBookingContractHtml(data, branding, lang);
+      // a box with no saved report prints its auto draft (written from this bill's figures), so the View shows all four reports
+      const drafts = suggestedRemarks(data, (k, fb) => t(lang, k as never, fb));
+      const remarks = Object.fromEntries(
+        (Object.keys(data.remarks) as BookingReportRemarkKind[]).map((k) => [k, data.remarks[k]?.trim() ? data.remarks[k] : drafts[k]]),
+      ) as BookingReportData["remarks"];
+      const doc = renderBookingContractHtml({ ...data, remarks }, branding, lang);
       if (alive) setHtml(doc);
     })();
     return () => { alive = false; };

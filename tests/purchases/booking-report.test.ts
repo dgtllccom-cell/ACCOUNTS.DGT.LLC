@@ -4,6 +4,7 @@ import {
   bookingRemarksEditable,
   formatRateWithOperator,
   remarkPatchBody,
+  suggestedRemarks,
 } from "@/lib/purchases/booking-report";
 
 // AE-001-0005 as saved (amounts, rate, operator, weights read from the row on 21 Nov 2026; party names generalised)
@@ -138,5 +139,26 @@ describe("remarks", () => {
     expect(bookingRemarksEditable({ ...AE0005, ledger_posting_status: "posted", is_edited_since_transfer: true })).toBe(false);
     expect(bookingRemarksEditable({ ...AE0005, ledger_posting_status: "transferred" })).toBe(false);
     expect(buildPurchaseBookingReport({ ...AE0005, ledger_posting_status: "transferred" }).locked).toBe(true);
+  });
+});
+
+describe("suggested reports (auto drafts)", () => {
+  const en = (_k: string, fb: string) => fb;
+  it("AE-001-0005: written from the bill's own figures, with the ÷ operator", () => {
+    const s = suggestedRemarks(buildPurchaseBookingReport(AE0005), en);
+    expect(s.payment).toContain("20,250,000.00 PKR ÷ 77.2 = 262,305.70 AED");
+    expect(s.payment).not.toContain("1,563,300,000");
+    expect(s.journal).toContain("Dr ACC-000006");
+    expect(s.journal).toContain("Cr ACC-000010");
+    expect(s.quantity).toContain("BAGS");
+    expect(s.loading).toContain("BLACK MAFTA");
+  });
+  it("a value the bill does not carry is shown as —, never invented", () => {
+    const r = buildPurchaseBookingReport({ ...AE0005, form_data: { ...AE0005.form_data, form: { ...AE0005.form_data.form, loadingPort: "", loadingLocation: "", loadingBorder: "" } } });
+    expect(suggestedRemarks(r, en).loading).toContain("loading from —");
+  });
+  it("the sentence follows the active language; data stays as saved", () => {
+    const ur = (k: string, fb: string) => (k === "pbrep.sug_journal" ? "پرچیز بکنگ {no} — ڈیبٹ {drCode}" : fb);
+    expect(suggestedRemarks(buildPurchaseBookingReport(AE0005), ur).journal).toBe("پرچیز بکنگ AE-001-0005 — ڈیبٹ ACC-000006");
   });
 });

@@ -12967,6 +12967,13 @@ export type UiKey =
   | "sales.stk_panel_sub"
   | "sales.stk_cancel"
   | "sales.stk_source_warehouse"
+  | "pbrep.sug_loading"
+  | "pbrep.sug_payment"
+  | "pbrep.sug_quantity"
+  | "pbrep.sug_journal"
+  | "pbrep.remark_saved_badge"
+  | "pbrep.remark_auto_badge"
+  | "pbrep.remark_auto_hint"
   | "idv.acc_purchase"
   | "idv.acc_supplier"
   | "idv.acc_customer"
@@ -20530,6 +20537,13 @@ const en: Dict = {
   "idv.acc_supplier": "Sales / Supplier Account (Cr)",
   "idv.acc_customer": "Customer Account (Dr)",
   "idv.acc_sales": "Sales Account (Cr)",
+  "pbrep.sug_loading": "{qty} {unit} {goods} — loading from {fromPort}, {fromCountry} on {loadDate}; receiving at {toPort}, {toCountry} on {recvDate}. Ship type: {ship}.",
+  "pbrep.sug_payment": "Payment type {paymentType}. Total {amount} {cur} {rate} = {final} {base}. Advance {pct}% = {adv} {base} by {advDate}; balance {bal} {base} due {finalDate}. Status: {status}.",
+  "pbrep.sug_quantity": "{items} item(s), {qty} {unit}; gross {gross} MT, net {net} MT; quality: {quality}.",
+  "pbrep.sug_journal": "Purchase booking {no} dated {date} — Dr {drCode} {drName} / Cr {crCode} {crName}, {final} {base} ({amount} {cur} {rate}).",
+  "pbrep.remark_saved_badge": "Saved report",
+  "pbrep.remark_auto_badge": "Auto draft",
+  "pbrep.remark_auto_hint": "Written from this bill's figures — check it, change anything, then Save.",
   "pterv2.not_found": "This purchase booking was not found.",
   "pterv2.flow_step1": "1. PO Booking Created",
   "pterv2.flow_step2": "2. Audit & Branch Verification",
@@ -41602,6 +41616,13 @@ const ur: Dict = {
   "idv.acc_supplier": "سیلز / سپلائر اکاؤنٹ (Cr)",
   "idv.acc_customer": "کسٹمر اکاؤنٹ (Dr)",
   "idv.acc_sales": "سیلز اکاؤنٹ (Cr)",
+  "pbrep.sug_loading": "{qty} {unit} {goods} — لوڈنگ {fromPort}، {fromCountry} سے {loadDate} کو؛ وصولی {toPort}، {toCountry} پر {recvDate} کو۔ شپ ٹائپ: {ship}۔",
+  "pbrep.sug_payment": "ادائیگی کی قسم {paymentType}۔ کل {amount} {cur} {rate} = {final} {base}۔ ایڈوانس {pct}% = {adv} {base}، تاریخ {advDate}؛ بقایا {bal} {base}، آخری تاریخ {finalDate}۔ حالت: {status}۔",
+  "pbrep.sug_quantity": "{items} آئٹم، {qty} {unit}؛ مجموعی وزن {gross} MT، خالص وزن {net} MT؛ کوالٹی: {quality}۔",
+  "pbrep.sug_journal": "پرچیز بکنگ {no} بتاریخ {date} — ڈیبٹ {drCode} {drName} / کریڈٹ {crCode} {crName}، {final} {base} ({amount} {cur} {rate})۔",
+  "pbrep.remark_saved_badge": "محفوظ رپورٹ",
+  "pbrep.remark_auto_badge": "خودکار مسودہ",
+  "pbrep.remark_auto_hint": "یہ اس بِل کے اعداد سے لکھا گیا ہے — چیک کریں، جو بدلنا ہو بدلیں، پھر Save کریں۔",
   "pterv2.not_found": "یہ پرچیز بکنگ نہیں ملی۔",
   "pterv2.flow_step1": "1۔ پرچیز آرڈر بکنگ درج کی گئی",
   "pterv2.flow_step2": "2۔ برانچ آڈٹ و تصدیق مکمل",
@@ -68414,6 +68435,13 @@ const ar: Dict = {
   "idv.acc_supplier": "حساب المبيعات / المورّد (دائن)",
   "idv.acc_customer": "حساب العميل (مدين)",
   "idv.acc_sales": "حساب المبيعات (دائن)",
+  "pbrep.sug_loading": "{qty} {unit} {goods} — التحميل من {fromPort}، {fromCountry} بتاريخ {loadDate}؛ الاستلام في {toPort}، {toCountry} بتاريخ {recvDate}. نوع الشحن: {ship}.",
+  "pbrep.sug_payment": "نوع الدفع {paymentType}. الإجمالي {amount} {cur} {rate} = {final} {base}. الدفعة المقدمة {pct}% = {adv} {base} بتاريخ {advDate}؛ الرصيد {bal} {base} مستحق في {finalDate}. الحالة: {status}.",
+  "pbrep.sug_quantity": "{items} صنف، {qty} {unit}؛ الوزن الإجمالي {gross} طن، الصافي {net} طن؛ الجودة: {quality}.",
+  "pbrep.sug_journal": "حجز الشراء {no} بتاريخ {date} — مدين {drCode} {drName} / دائن {crCode} {crName}، {final} {base} ({amount} {cur} {rate}).",
+  "pbrep.remark_saved_badge": "تقرير محفوظ",
+  "pbrep.remark_auto_badge": "مسودة تلقائية",
+  "pbrep.remark_auto_hint": "مكتوب من أرقام هذه الفاتورة — راجعه وعدّل ما تريد ثم احفظ.",
   "pterv2.not_found": "لم يتم العثور على حجز الشراء هذا.",
   "pterv2.flow_step1": "1. إنشاء حجز أمر الشراء",
   "pterv2.flow_step2": "2. التدقيق والتحقق من الفرع",
@@ -95278,6 +95306,13 @@ const fa: Dict = {
   "idv.acc_supplier": "حساب فروش / تأمین‌کننده (بستانکار)",
   "idv.acc_customer": "حساب مشتری (بدهکار)",
   "idv.acc_sales": "حساب فروش (بستانکار)",
+  "pbrep.sug_loading": "{qty} {unit} {goods} — بارگیری از {fromPort}، {fromCountry} در تاریخ {loadDate}؛ تحویل در {toPort}، {toCountry} در تاریخ {recvDate}. نوع حمل: {ship}.",
+  "pbrep.sug_payment": "نوع پرداخت {paymentType}. جمع {amount} {cur} {rate} = {final} {base}. پیش‌پرداخت {pct}% = {adv} {base} تا {advDate}؛ مانده {bal} {base} سررسید {finalDate}. وضعیت: {status}.",
+  "pbrep.sug_quantity": "{items} قلم، {qty} {unit}؛ وزن ناخالص {gross} تن، خالص {net} تن؛ کیفیت: {quality}.",
+  "pbrep.sug_journal": "رزرو خرید {no} به تاریخ {date} — بدهکار {drCode} {drName} / بستانکار {crCode} {crName}، {final} {base} ({amount} {cur} {rate}).",
+  "pbrep.remark_saved_badge": "گزارش ذخیره‌شده",
+  "pbrep.remark_auto_badge": "پیش‌نویس خودکار",
+  "pbrep.remark_auto_hint": "از ارقام همین بل نوشته شده — بررسی کنید، هرچه لازم است تغییر دهید، سپس ذخیره کنید.",
   "pterv2.not_found": "این رزرو خرید پیدا نشد.",
   "pterv2.flow_step1": "1. ایجاد رزرو سفارش خرید",
   "pterv2.flow_step2": "2. حسابرسی و تایید شعبه",
@@ -122141,6 +122176,13 @@ const ps: Dict = {
   "idv.acc_supplier": "د پلور / عرضه‌کوونکي حساب (Cr)",
   "idv.acc_customer": "د پیرودونکي حساب (Dr)",
   "idv.acc_sales": "د پلور حساب (Cr)",
+  "pbrep.sug_loading": "{qty} {unit} {goods} — بارول له {fromPort}، {fromCountry} په {loadDate}؛ ترلاسه کول په {toPort}، {toCountry} کې په {recvDate}. د لېږد ډول: {ship}.",
+  "pbrep.sug_payment": "د تادیې ډول {paymentType}. ټول {amount} {cur} {rate} = {final} {base}. مخکې تادیه {pct}% = {adv} {base} تر {advDate}؛ پاتې {bal} {base} د {finalDate} تر نېټې. حالت: {status}.",
+  "pbrep.sug_quantity": "{items} توکي، {qty} {unit}؛ ټول وزن {gross} MT، خالص {net} MT؛ کیفیت: {quality}.",
+  "pbrep.sug_journal": "د پېرود بکنګ {no} په نېټه {date} — ډیبټ {drCode} {drName} / کریډټ {crCode} {crName}، {final} {base} ({amount} {cur} {rate}).",
+  "pbrep.remark_saved_badge": "خوندي شوی راپور",
+  "pbrep.remark_auto_badge": "اتومات مسوده",
+  "pbrep.remark_auto_hint": "د همدې بل له شمېرو لیکل شوی — وګورئ، هر څه چې بدلول غواړئ بدل یې کړئ، بیا یې خوندي کړئ.",
   "pterv2.not_found": "دا د پیرود بکنګ ونه موندل شو.",
   "pterv2.flow_step1": "1. د پیرود امر راجستر شو",
   "pterv2.flow_step2": "2. د څانګې پلټنه او تصدیق",
