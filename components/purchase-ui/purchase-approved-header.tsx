@@ -107,29 +107,33 @@ export interface PurchaseApprovedHeaderProps {
   /** the page's EXISTING controls (search, filters, date, refresh, more-actions, New) — compose with the Pap* helpers below */
   toolbar?: ReactNode;
   langProp?: string | null;
+  /** when true, suppresses the dgt-pa-head block (for pages using their own top toolbar) */
+  hideHead?: boolean;
 }
 
 const Go = () => <span className="dgt-pa-go" aria-hidden="true"><ChevronRight /></span>;
 const Bars = () => <span className="dgt-pa-bars" aria-hidden="true"><span /><span /><span /></span>;
 
-export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule, scopeLabel, summary, stages, countries, advanceCards, toolbar, langProp }: PurchaseApprovedHeaderProps) {
+export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule, scopeLabel, summary, stages, countries, advanceCards, toolbar, langProp, hideHead }: PurchaseApprovedHeaderProps) {
   const s = useErpScreen("pap", langProp);
   const title = titleOverride ?? s.t(TITLE_KEY[page], "Purchase");
   const stageIcon = (tone: PapStageRow["tone"]) => (tone === "green" ? "✓" : tone === "red" ? "◎" : tone === "blue" ? "▵" : "☰");
   return (
     <section className="dgt-pa" dir={s.dir} data-dgt-page={page} aria-label={title}>
-      <div className="dgt-pa-head">
-        <div className="dgt-pa-title-icon" aria-hidden="true"><FileText /></div>
-        <div className="dgt-pa-titles">
-          <h1>{title}</h1>
-          <div className="dgt-pa-crumbs">
-            <span>{s.t("dashboard", "Dashboard")}</span><ChevronRight aria-hidden="true" />
-            <span>{crumbModule ?? s.t("purchase", "Purchase")}</span><ChevronRight aria-hidden="true" />
-            <span>{title}</span>
+      {!hideHead && (
+        <div className="dgt-pa-head">
+          <div className="dgt-pa-title-icon" aria-hidden="true"><FileText /></div>
+          <div className="dgt-pa-titles">
+            <h1>{title}</h1>
+            <div className="dgt-pa-crumbs">
+              <span>{s.t("dashboard", "Dashboard")}</span><ChevronRight aria-hidden="true" />
+              <span>{crumbModule ?? s.t("purchase", "Purchase")}</span><ChevronRight aria-hidden="true" />
+              <span>{title}</span>
+            </div>
           </div>
+          {toolbar ? <div className="dgt-pa-toolbar">{toolbar}</div> : null}
         </div>
-        {toolbar ? <div className="dgt-pa-toolbar">{toolbar}</div> : null}
-      </div>
+      )}
 
       <div className="dgt-pa-cards">
         {advanceCards ? (

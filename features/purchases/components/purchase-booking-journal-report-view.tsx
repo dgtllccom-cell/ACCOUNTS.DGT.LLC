@@ -1036,6 +1036,136 @@ function BranchFilterRow({
   );
 }
 
+function AccountsPopover({
+  report,
+  purchaseAccCode,
+  purchaseAccName,
+  salesAccCode,
+  salesAccName,
+  totalAmtFc,
+  totalAmtLc,
+  finalCur,
+  exRate,
+  rowTextColor,
+  lang,
+}: {
+  report: any;
+  purchaseAccCode: string;
+  purchaseAccName: string;
+  salesAccCode: string;
+  salesAccName: string;
+  totalAmtFc: number;
+  totalAmtLc: number;
+  finalCur: string;
+  exRate: number;
+  rowTextColor: string;
+  lang: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const popoverRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleDown = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleDown);
+    return () => document.removeEventListener("mousedown", handleDown);
+  }, [open]);
+
+  const currency = report.currency || "USD";
+
+  return (
+    <div
+      ref={popoverRef}
+      className="relative group inline-block max-w-[220px]"
+      onClick={(e) => {
+        e.stopPropagation();
+        setOpen((v) => !v);
+      }}
+    >
+      <div className="flex flex-col gap-0.5 cursor-pointer">
+        <div className="truncate text-slate-900 dark:text-slate-100 font-bold flex items-center">
+          <span className="text-[9px] uppercase font-bold text-blue-600 bg-blue-50 dark:bg-blue-950 px-1 py-0.2 rounded mr-1">DR</span>
+          <span className="font-mono text-[10px] text-slate-600 dark:text-slate-400 mr-1">{purchaseAccCode}</span>
+          <span className="truncate">{purchaseAccName}</span>
+        </div>
+        <div className="truncate text-slate-700 dark:text-slate-300 font-semibold flex items-center">
+          <span className="text-[9px] uppercase font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-1 py-0.2 rounded mr-1">CR</span>
+          <span className="font-mono text-[10px] text-slate-600 dark:text-slate-400 mr-1">{salesAccCode}</span>
+          <span className="truncate">{salesAccName}</span>
+        </div>
+      </div>
+
+      {/* Popover on hover or click */}
+      <div
+        className={cn(
+          "absolute left-0 top-full z-50 mt-1.5 w-72 rounded-xl border border-slate-200 bg-white p-3 text-[11px] shadow-2xl transition-all dark:border-slate-800 dark:bg-slate-900",
+          open ? "block" : "hidden group-hover:block"
+        )}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 mb-2.5">
+          <span className="font-black text-slate-900 dark:text-slate-100 uppercase tracking-wide text-[10px]">
+            {translateHeader(lang, "POSTING DETAILS")}
+          </span>
+          <span className="text-[9px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded">
+            {report.purchaseBookingOrderNumber || "PB-BOOKING"}
+          </span>
+        </div>
+
+        {/* Debit Leg */}
+        <div className="mb-2 rounded-lg bg-blue-50/70 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 p-2 space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-1 font-black text-blue-700 dark:text-blue-400 text-[10px]">
+              <span className="px-1 py-0.2 rounded bg-blue-600 text-white text-[9px]">DR</span>
+              {translateHeader(lang, "DEBIT ACCOUNT")}
+            </span>
+            <span className="text-[9px] font-semibold text-slate-500">{translateHeader(lang, "PURCHASE")}</span>
+          </div>
+          <div className="font-bold text-slate-900 dark:text-slate-100 truncate" title={purchaseAccName}>
+            {purchaseAccName}
+          </div>
+          <div className="flex items-center justify-between font-mono text-[10px] text-slate-600 dark:text-slate-400">
+            <span>{purchaseAccCode}</span>
+            <span className="font-bold text-blue-700 dark:text-blue-300" dir="ltr">{currency} {formatMoney(totalAmtFc)}</span>
+          </div>
+        </div>
+
+        {/* Credit Leg */}
+        <div className="mb-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/60 p-2 space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-1 font-black text-emerald-700 dark:text-emerald-400 text-[10px]">
+              <span className="px-1 py-0.2 rounded bg-emerald-600 text-white text-[9px]">CR</span>
+              {translateHeader(lang, "CREDIT ACCOUNT")}
+            </span>
+            <span className="text-[9px] font-semibold text-slate-500">{translateHeader(lang, "SUPPLIER")}</span>
+          </div>
+          <div className="font-bold text-slate-900 dark:text-slate-100 truncate" title={salesAccName}>
+            {salesAccName}
+          </div>
+          <div className="flex items-center justify-between font-mono text-[10px] text-slate-600 dark:text-slate-400">
+            <span>{salesAccCode}</span>
+            <span className="font-bold text-emerald-700 dark:text-emerald-300" dir="ltr">{currency} {formatMoney(totalAmtFc)}</span>
+          </div>
+        </div>
+
+        {/* Local Settlement Summary */}
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px]">
+          <span className="text-slate-500 font-medium">
+            {translateHeader(lang, "RATE")}: <strong className="text-slate-700 dark:text-slate-300 font-mono">{exRate}</strong>
+          </span>
+          <span className="font-mono font-black text-emerald-600 dark:text-emerald-400" dir="ltr">
+            {finalCur} {formatMoney(totalAmtLc)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ReportActions({ rows }: { rows: PurchaseReport[] }) {
   const lang = useActiveLanguage();
   const erpScope = useErpScope();
@@ -2212,7 +2342,7 @@ export function PurchaseBookingJournalReportView({
   const dashboardSummary = useMemo(() => getDashboardSummaryData(registerRows, session), [registerRows, session]);
 
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} className="space-y-6 animate-in fade-in duration-200">
+    <div dir={isRtl ? "rtl" : "ltr"} data-page-chrome={layout === "approved" ? "true" : undefined} className="w-full space-y-3 animate-in fade-in duration-200">
 
       {/* Portals for Top Navigation Strip */}
       {layout !== "approved" && titleSlot && createPortal(
@@ -2333,52 +2463,83 @@ export function PurchaseBookingJournalReportView({
 
       {layout === "approved" && (
       <>
-      {/* Approved Purchase header: title + page toolbar + the three approved cards (yellow / blue / green). The toolbar wraps the page's
-          EXISTING controls and handlers; the register table below is untouched except for a CSS-only skin. */}
-      <BookingApprovedHeader
-        rows={headerRows}
-        usdRates={dailyUsdRates}
-        scopeCountry={filters.country || undefined}
-        onCountryOpen={lockedCountryName ? undefined : (name) => setFilters((prev) => ({ ...prev, country: name }))}
-        toolbar={
-          <>
-            <PapSearch
+      {/* ══ CONSOLIDATED TOP WHITE TOOLBAR ("WHITE PATTI") ══ */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
+        {/* Left: Back button + Title & Subtitle */}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined" && window.history.length > 1) {
+                router.back();
+              } else {
+                router.push("/dashboard/purchase/purchase-order");
+              }
+            }}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-slate-100 hover:text-slate-900 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          >
+            <span>←</span>
+            <span>{t(activeLang, "common.back", "Back")}</span>
+          </button>
+          <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
+          <div>
+            <h1 className="text-base font-black tracking-tight text-slate-950 dark:text-slate-100 sm:text-lg">
+              {t(activeLang, "pb_register.title", "Purchase Booking Details")}
+            </h1>
+            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+              {t(activeLang, "pb_register.subtitle", "Wholesaler / Import Export / Container Trading")}
+            </p>
+          </div>
+        </div>
+
+        {/* Right: Search, Filters, Date range, Reset & Refresh, View Switcher, Actions, New Booking */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Search */}
+          <div className="relative">
+            <input
               value={searchText}
-              onChange={setSearchText}
+              onChange={(e) => setSearchText(e.target.value)}
               placeholder={t(activeLang, "pb_register.search_placeholder", "Search booking, supplier, branch...")}
+              className="h-8 w-44 rounded-xl border border-slate-200 bg-slate-50/80 pl-8 pr-3 text-[11px] font-semibold text-slate-800 shadow-2xs outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-100 dark:focus:bg-slate-900 sm:w-52"
             />
-            <PapFilters label={t(activeLang, "pap.filters", "Filters")} badge={[filters.country, filters.branch, filters.status].filter(Boolean).length || undefined}>
-              <select
-                disabled={!!lockedCountryName}
-                value={filters.country}
-                onChange={(e) => setFilters((prev) => ({ ...prev, country: e.target.value }))}
-                aria-label={t(activeLang, "pb_register.select_country_all", "Select Country (All)")}
-              >
-                <option value="">{t(activeLang, "pb_register.select_country_all", "Select Country (All)")}</option>
-                {countries.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <select
-                disabled={!!lockedBranchName}
-                value={filters.branch}
-                onChange={(e) => setFilters((prev) => ({ ...prev, branch: e.target.value }))}
-                aria-label={t(activeLang, "pb_register.select_branch_all", "Select Branch (All)")}
-              >
-                <option value="">{t(activeLang, "pb_register.select_branch_all", "Select Branch (All)")}</option>
-                {branches.map((b) => <option key={b} value={b}>{b}</option>)}
-              </select>
-              <select
-                value={filters.status}
-                onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
-                aria-label={t(activeLang, "pb_register.select_status_all", "Select Status (All)")}
-              >
-                <option value="">{t(activeLang, "pb_register.select_status_all", "Select Status (All)")}</option>
-                <option value="Draft">{t(activeLang, "pb_register.status_draft", "Draft")}</option>
-                <option value="Accepted">{t(activeLang, "pb_register.status_accepted", "Accepted")}</option>
-                <option value="Transferred">{t(activeLang, "pb_register.status_transferred", "Transferred")}</option>
-                <option value="Completed">{t(activeLang, "pb_register.status_completed", "Completed")}</option>
-              </select>
-            </PapFilters>
-            <div className="dgt-pa-date">
+            <Search className="pointer-events-none absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+          </div>
+
+          {/* Filters */}
+          <PapFilters label={t(activeLang, "pap.filters", "Filters")} badge={[filters.country, filters.branch, filters.status].filter(Boolean).length || undefined}>
+            <select
+              disabled={!!lockedCountryName}
+              value={filters.country}
+              onChange={(e) => setFilters((prev) => ({ ...prev, country: e.target.value }))}
+              aria-label={t(activeLang, "pb_register.select_country_all", "Select Country (All)")}
+            >
+              <option value="">{t(activeLang, "pb_register.select_country_all", "Select Country (All)")}</option>
+              {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select
+              disabled={!!lockedBranchName}
+              value={filters.branch}
+              onChange={(e) => setFilters((prev) => ({ ...prev, branch: e.target.value }))}
+              aria-label={t(activeLang, "pb_register.select_branch_all", "Select Branch (All)")}
+            >
+              <option value="">{t(activeLang, "pb_register.select_branch_all", "Select Branch (All)")}</option>
+              {branches.map((b) => <option key={b} value={b}>{b}</option>)}
+            </select>
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
+              aria-label={t(activeLang, "pb_register.select_status_all", "Select Status (All)")}
+            >
+              <option value="">{t(activeLang, "pb_register.select_status_all", "Select Status (All)")}</option>
+              <option value="Draft">{t(activeLang, "pb_register.status_draft", "Draft")}</option>
+              <option value="Accepted">{t(activeLang, "pb_register.status_accepted", "Accepted")}</option>
+              <option value="Transferred">{t(activeLang, "pb_register.status_transferred", "Transferred")}</option>
+              <option value="Completed">{t(activeLang, "pb_register.status_completed", "Completed")}</option>
+            </select>
+          </PapFilters>
+
+          {/* Date Picker */}
+          <div className="dgt-pa-date">
             <ErpDatePicker
               mode="range"
               lang={activeLang}
@@ -2386,49 +2547,96 @@ export function PurchaseBookingJournalReportView({
               value={{ from: filters.fromDate || null, to: filters.toDate || null }}
               onApply={(v) => setFilters((previous: any) => ({ ...previous, fromDate: v.from ?? "", toDate: v.to ?? "" }))}
             />
-            </div>
-            <PapRefresh
-              title={t(activeLang, "pb_register.reset_refresh", "Reset & Refresh")}
-              spinning={loading}
-              onClick={() => {
-                setSearchText("");
-                setFilters((previous) => ({
-                  ...previous,
-                  supplier: "",
-                  branch: "",
-                  country: "",
-                  status: "",
-                  currency: "",
-                  bookingNo: "",
-                  containerNo: "",
-                  blNo: "",
-                  confirmationStatus: "",
-                  financialSupplier: "",
-                  financialCurrency: "",
-                  draftStatus: "",
-                  fromDate: "",
-                  toDate: ""
-                }));
-                void loadReport();
-              }}
-            />
-            {/* Print / Excel / CSV: the page's existing three-dot menu (same exportCsv / printPurchaseBookingRegister handlers) */}
-            <ReportActions rows={registerRows} />
+          </div>
+
+          {/* Reset & Refresh */}
+          <PapRefresh
+            title={t(activeLang, "pb_register.reset_refresh", "Reset & Refresh")}
+            spinning={loading}
+            onClick={() => {
+              setSearchText("");
+              setFilters((previous) => ({
+                ...previous,
+                supplier: "",
+                branch: "",
+                country: "",
+                status: "",
+                currency: "",
+                bookingNo: "",
+                containerNo: "",
+                blNo: "",
+                confirmationStatus: "",
+                financialSupplier: "",
+                financialCurrency: "",
+                draftStatus: "",
+                fromDate: "",
+                toDate: ""
+              }));
+              void loadReport();
+            }}
+          />
+
+          {/* View Mode Switcher: Standard (13) / Detailed (16) */}
+          <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50/80 p-0.5 dark:border-slate-700 dark:bg-slate-800">
             <button
               type="button"
-              className="dgt-pa-ctrl dgt-pa-primary"
-              onClick={() => {
-                if (onNewBooking) {
-                  onNewBooking();
-                } else {
-                  router.push("/dashboard/purchase/new-purchase-booking-order");
-                }
-              }}
+              onClick={() => handleViewModeChange("standard")}
+              className={cn(
+                "rounded-lg px-2.5 py-1 text-[11px] font-black transition",
+                tableViewMode === "standard"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+              )}
             >
-              <Plus aria-hidden="true" /> {t(activeLang, "pb_register.new_booking", "New Booking")}
+              {t(activeLang, "pb_register.standard_register_13", "Standard (13)")}
             </button>
-          </>
-        }
+            <button
+              type="button"
+              onClick={() => handleViewModeChange("detailed")}
+              className={cn(
+                "rounded-lg px-2.5 py-1 text-[11px] font-black transition",
+                tableViewMode === "detailed"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+              )}
+            >
+              {t(activeLang, "pb_register.detailed_audit_register_41", "Detailed (16)")}
+            </button>
+          </div>
+
+          {/* Report Actions (Print / Excel / CSV) */}
+          <ReportActions rows={registerRows} />
+
+          {/* New Booking Button */}
+          <button
+            type="button"
+            className="inline-flex h-8 items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 text-[11px] font-black text-white shadow-xs transition hover:bg-blue-700 active:scale-95"
+            onClick={() => {
+              if (onNewBooking) {
+                onNewBooking();
+              } else {
+                router.push("/dashboard/purchase/new-purchase-booking-order");
+              }
+            }}
+          >
+            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>{t(activeLang, "pb_register.new_booking", "New Booking")}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Role-scoped Approved Purchase Summary Cards (Yellow summary · Blue status list · Role-specific Card 3) */}
+      <BookingApprovedHeader
+        rows={headerRows}
+        usdRates={dailyUsdRates}
+        scopeCountry={filters.country || undefined}
+        onCountryOpen={lockedCountryName ? undefined : (name) => setFilters((prev) => ({ ...prev, country: name }))}
+        session={session}
+        isSuperAdmin={isSuperAdmin}
+        isCountryAdmin={isCountryAdmin}
+        isBranchAdmin={isBranchAdmin}
+        erpScope={erpScope}
+        hideHead={true}
       />
       </>
       )}
@@ -2913,15 +3121,14 @@ export function PurchaseBookingJournalReportView({
                 { label: t(activeLang, "pbjr.sec_product", "Product Information"), span: 4, cls: "bg-[#143657] text-white border-b border-slate-800 border-r border-slate-700" },
                 { label: t(activeLang, "pbjr.sec_financial", "Financial Information"), span: 3, cls: "bg-[#0f2942] text-white border-b border-slate-800 border-r border-slate-700" },
                 { label: t(activeLang, "pbjr.sec_route_loading", "Route & Loading"), span: 3, cls: "bg-[#143657] text-white border-b border-slate-800 border-r border-slate-700" },
-                { label: t(activeLang, "common.status", "Status"), span: 1, cls: "bg-[#0f2942] text-white border-b border-slate-800 border-r border-slate-700" },
                 { label: t(activeLang, "pbjr.sec_actions", "Actions"), span: 1, cls: "bg-[#143657] text-white border-b border-slate-800" },
               ]}
               headers={[
                 "SR.", "ENTRY / SERIAL NO.", "DATE", "COUNTRY / BRANCH", "ACCOUNTS (DR / CR)",
                 "GOODS (BRAND / SIZE)", "ORIGIN", "QTY (UNIT)", "WEIGHT (KG)",
-                "RATE / PRICE", "TOTAL / FINAL AMOUNT", "PAYMENT CONDITION",
+                "RATE / PRICE", "TOTAL / FINAL AMOUNT", "PAYMENT & STATUS",
                 "LOADING (CTY / PORT)", "RECEIVING (CTY / PORT)", "DATES (LOAD / RCV)",
-                "STATUS", "ACTIONS"
+                "ACTIONS"
               ]}
             >
               {registerRows.map((report, index) => {
@@ -3017,18 +3224,19 @@ export function PurchaseBookingJournalReportView({
 
                     {/* 5. ACCOUNTS (DR / CR) */}
                     <Td className={cn("text-[11px]", rowTextColor)}>
-                      <div className="flex flex-col gap-0.5 max-w-[220px]" title={`DR: ${purchaseAccCode} - ${purchaseAccName}\nCR: ${salesAccCode} - ${salesAccName}`}>
-                        <div className="truncate text-slate-900 dark:text-slate-100 font-bold flex items-center">
-                          <span className="text-[9px] uppercase font-bold text-blue-600 bg-blue-50 dark:bg-blue-950 px-1 py-0.2 rounded mr-1">DR</span>
-                          <span className="font-mono text-[10px] text-slate-600 dark:text-slate-400 mr-1">{purchaseAccCode}</span>
-                          <span className="truncate">{purchaseAccName}</span>
-                        </div>
-                        <div className="truncate text-slate-700 dark:text-slate-300 font-semibold flex items-center">
-                          <span className="text-[9px] uppercase font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-1 py-0.2 rounded mr-1">CR</span>
-                          <span className="font-mono text-[10px] text-slate-600 dark:text-slate-400 mr-1">{salesAccCode}</span>
-                          <span className="truncate">{salesAccName}</span>
-                        </div>
-                      </div>
+                      <AccountsPopover
+                        report={report}
+                        purchaseAccCode={purchaseAccCode}
+                        purchaseAccName={purchaseAccName}
+                        salesAccCode={salesAccCode}
+                        salesAccName={salesAccName}
+                        totalAmtFc={totalAmtFc}
+                        totalAmtLc={totalAmtLc}
+                        finalCur={finalCur}
+                        exRate={exRate}
+                        rowTextColor={rowTextColor}
+                        lang={activeLang}
+                      />
                     </Td>
 
                     {/* 6. GOODS (BRAND / SIZE) */}
@@ -3054,9 +3262,9 @@ export function PurchaseBookingJournalReportView({
 
                     {/* 9. WEIGHT (KG) */}
                     <Td right className={cn("font-mono text-[11px]", rowTextColor)}>
-                      <div className="flex flex-col items-end">
-                        <span className="font-bold text-slate-800 dark:text-slate-200">G.WT: {formatNumber(report.totalGrossWeight || 0)} KG</span>
-                        <span className="text-[10px] text-slate-500">N.WT: {formatNumber(report.totalNetWeight || 0)} KG</span>
+                      <div className="flex flex-col items-end leading-tight">
+                        <span className="font-bold text-slate-900 dark:text-slate-100">{formatNumber(report.totalGrossWeight || 0)} KG</span>
+                        <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">{formatNumber(report.totalNetWeight || 0)} KG</span>
                       </div>
                     </Td>
 
@@ -3073,8 +3281,20 @@ export function PurchaseBookingJournalReportView({
                       </div>
                     </Td>
 
-                    {/* 12. PAYMENT CONDITION */}
-                    <Td className={cn("text-[11px]", rowTextColor)}>{translateValue(activeLang, payCondition)}</Td>
+                    {/* 12. PAYMENT & STATUS */}
+                    <Td center className={cn("text-[11px]", rowTextColor)}>
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          {translateValue(activeLang, payCondition)}
+                        </span>
+                        <span className={cn(
+                          "rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider",
+                          !isPosted ? "bg-red-100 text-red-700 border border-red-300 dark:bg-red-950 dark:text-red-300 dark:border-red-800" : "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+                        )}>
+                          {!isPosted ? t(activeLang, "pb_register.status_no_pending", "PENDING") : t(activeLang, "pb_register.status_yes_transferred", "TRANSFERRED")}
+                        </span>
+                      </div>
+                    </Td>
 
                     {/* 13. LOADING (CTY / PORT) */}
                     <Td className={cn("text-[11px]", rowTextColor)}>
@@ -3100,14 +3320,7 @@ export function PurchaseBookingJournalReportView({
                       </div>
                     </Td>
 
-                    {/* 16. STATUS */}
-                    <Td center>
-                      <span className={cn("rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider", !isPosted ? "bg-red-100 text-red-700 border border-red-300" : "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900")}>
-                        {!isPosted ? t(activeLang, "pb_register.status_no_pending", "PENDING") : t(activeLang, "pb_register.status_yes_transferred", "TRANSFERRED")}
-                      </span>
-                    </Td>
-
-                    {/* 17. ACTIONS */}
+                    {/* 16. ACTIONS */}
                     <Td center onClick={(e) => e.stopPropagation()}>
                       <UnifiedActionMenu
                         align="right"
