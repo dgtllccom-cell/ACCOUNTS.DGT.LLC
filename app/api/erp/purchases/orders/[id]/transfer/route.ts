@@ -8,6 +8,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getDbUrl, withLocalPg } from "@/lib/db/local-postgres";
+import type { LedgerTransferPreview } from "@/lib/purchases/ledger-transfer-preview";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
 import { isPurchaseBookingTransferLocked, resolvePurchaseBookingTransferDestination } from "@/lib/services/purchase-booking-transfer-routing";
@@ -628,12 +629,13 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       cityBranchId: scopeRow.city_branch_id
     });
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
-    const preview = await transferPurchaseBookingViaLocalPg({
+    // The dry run returns only the preview shape (the write path is not taken), so type it as the preview here.
+    const preview: LedgerTransferPreview = await transferPurchaseBookingViaLocalPg({
       session,
       orderId: params.id,
       body: {},
       dryRun: true
-    });
+    }) as LedgerTransferPreview;
     // Ledger names are user data (classified as transliterate in translatable-fields): show them in the viewer's language.
     const ledgerRows = [preview.debit, preview.credit].filter(Boolean) as { id: string; code: string | null; name: string | null }[];
     if (ledgerRows.length) {
