@@ -36,6 +36,11 @@ const money = (n: number | null | undefined, digits = 2) =>
   n === null || n === undefined || !Number.isFinite(Number(n))
     ? DASH
     : Number(n).toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+/** saved ISO date (2026-11-20) printed as 20/11/2026, as on the company contract; anything else as saved */
+const dmy = (v: unknown) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v ?? "").trim());
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : val(v);
+};
 const qty = (n: number | null | undefined) => (n === null || n === undefined ? DASH : Number(n).toLocaleString("en-US", { maximumFractionDigits: 3 }));
 /** a business value (number, code, currency, date) always reads left-to-right, also inside an RTL page */
 const ltr = (html: string) => `<bdi dir="ltr">${html}</bdi>`;
@@ -84,7 +89,7 @@ body{font-family:${body};color:#14213d;-webkit-print-color-adjust:exact;print-co
 .contact span{display:inline-flex;align-items:center;gap:5px}.contact svg{color:#c9a227}
 .contact .sep{color:#c9a227}
 .title{display:flex;align-items:center;gap:16px;background:#0d2c5a;border:2px solid #c9a227;border-radius:10px;padding:8px 20px;margin:4px 0 9px;color:#fff}
-.title h1{flex:1;margin:0;text-align:center;font-family:Georgia,'Times New Roman',serif;font-size:38px;white-space:nowrap;letter-spacing:1px;font-weight:700;line-height:1.15}
+.title h1{flex:1;margin:0;text-align:center;font-family:Georgia,'Times New Roman',serif;font-size:38px;text-transform:uppercase;white-space:nowrap;letter-spacing:1px;font-weight:700;line-height:1.15}
 .title .pg{border-inline-start:2px solid rgba(255,255,255,.7);padding-inline-start:16px;text-align:center;font-size:12px;font-weight:700;line-height:1.35;text-transform:uppercase}
 .title .pg b{display:block;color:#e2b93b}
 .grid2{display:grid;grid-template-columns:1.45fr 1fr;gap:10px}
@@ -123,7 +128,8 @@ table{border-collapse:collapse;width:100%}
 .rem{margin:8px 10px 10px;border:1px solid #d8e0ec;border-radius:6px;overflow:hidden}
 .rem h4{margin:0;padding:4px 10px;background:#e8eef7;color:#0d2c5a;font-size:13.5px}
 .rem p{margin:0;padding:5px 10px;min-height:38px;white-space:pre-wrap;font-size:12.5px}
-.narr p{min-height:120px;padding:12px}
+.narr p{min-height:120px;padding:14px 18px;display:flex;align-items:center;font-size:13.5px;line-height:1.6}
+.price{font-size:15px}
 .decl{padding:8px 14px;font-size:12.5px}
 .sig td{padding:3px 8px;font-size:12px}
 .sig .ln{border-bottom:1px solid #8a96a8;width:100%;display:inline-block;min-height:16px}
@@ -132,8 +138,11 @@ table{border-collapse:collapse;width:100%}
 .num{font-family:Arial,sans-serif}
 .p2 .bh{font-size:12.5px;letter-spacing:0}.p2 .bh .ic{width:38px;font-size:20px}.p2 .bh .tx{padding:6px 10px}
 .p2 .kv td{padding:3px 10px;font-size:12px}.p2 .hdr .logo{width:90px;height:90px}.p2 .co{font-size:26px}
-.p2 .title h1{font-size:32px}
-${lang === "ur" ? ".p2 .kv td,.p2 .sig td{line-height:1.5;padding-top:2px;padding-bottom:2px}.p2 .rem h4{font-size:12px;padding:1px 10px;line-height:1.7}.p2 .rem p{min-height:30px;padding:3px 10px}.p2 .narr p{min-height:80px}.p2 .decl{line-height:1.75;padding:4px 14px}.p2 .strip small{line-height:1.6}.p2 .title{padding:4px 20px}" : ""}
+.p2 .title h1{font-size:30px}
+.p2 .kv td{padding:2px 10px}.p2 .rem{margin:6px 10px 8px}.p2 .rem h4{padding:2px 10px;font-size:13px}.p2 .rem p{font-size:11.5px;line-height:1.4;min-height:28px;padding:4px 10px}
+.p2 .narr p{min-height:96px;font-size:12.5px}.p2 .box{margin-bottom:6px}.p2 .g2{gap:8px}.p2 .strip{padding:3px 0;margin-bottom:8px}
+.p2 .sig td{padding:1px 8px}.p2 .stampbox{height:72px}.p2 .decl{padding:5px 14px;font-size:12px}.p2 .hdr{padding-bottom:4px}
+${lang === "ur" ? ".p2{font-size:11.5px}.p2 .rem p{line-height:1.6}.p2 .kv td,.p2 .sig td{line-height:1.4;padding-top:1px;padding-bottom:1px}.p2 .rem h4{font-size:12px;padding:1px 10px;line-height:1.7}.p2 .rem p{min-height:30px;padding:3px 10px}.p2 .narr p{min-height:60px}.p2 .stampbox{height:64px}.p2 .decl{line-height:1.75;padding:4px 14px}.p2 .strip small{line-height:1.6}.p2 .title{padding:4px 20px}" : ""}
 @media print{html,body{background:#fff}.page{margin:0}}
 @media screen and (max-width:820px){html,body{background:#fff}}
 `;
@@ -210,7 +219,7 @@ export function renderBookingContractHtml(data: BookingReportData, branding: Con
             <td class="spec"><b>${val(l.goodsName)}</b>${spec.map((x) => `<div>${x}</div>`).join("")}</td>
             <td class="num">${ltr(`${qty(l.qty)} ${esc(l.unit)}`)}</td>
             <td>${packing || DASH}</td>
-            <td>${terms ? `<div>${terms}</div>` : ""}<div class="amt num">${ltr(`${esc(cur)} ${money(l.price)}`)}</div></td>
+            <td>${terms ? `<div>${terms}</div>` : ""}<div class="amt num price">${ltr(`${esc(cur)} ${money(l.price)}${l.priceBasis ? ` / ${esc(l.priceBasis)}` : ""}`)}</div></td>
             <td class="amt num">${ltr(`${esc(cur)} ${money(l.amount)}`)}</td>
           </tr>`;
         })
@@ -227,7 +236,10 @@ export function renderBookingContractHtml(data: BookingReportData, branding: Con
   const route = [data.loading.fromPort || data.loading.fromCountry, data.receiving.toPort || data.receiving.toCountry].filter(Boolean).join(" → ");
   const shipTerms = [data.shipType, data.loadingType, route].filter(Boolean);
   if (shipTerms.length) termsRows.push([L("shipment_terms", "Shipment Terms"), shipTerms.map((x) => `<bdi>${esc(x)}</bdi>`).join(" — ")]);
-  if (data.qualityReport) termsRows.push([L("quality_packing", "Quality & Packing"), esc(data.qualityReport)]);
+  const first = data.lines[0];
+  const packing = first ? [first.unit, first.packWeight ? `${qty(first.packWeight)} ${L("kg_each", "kg each")}` : ""].filter(Boolean).join(" · ") : "";
+  const quality = [data.qualityReport, packing].filter(Boolean);
+  if (quality.length) termsRows.push([L("quality_packing", "Quality & Packing"), quality.map((x) => `<bdi>${esc(x)}</bdi>`).join(" — ")]);
 
   const page1 = `
   <section class="page" data-page="1">${corners}${watermark}
@@ -241,9 +253,9 @@ export function renderBookingContractHtml(data: BookingReportData, branding: Con
       <div class="box">${boxHead(ICON.doc, L("contract_details", "Contract Details"))}
         <table class="kv lines">
           ${kvRow(L("contract_no", "Contract No."), ltr(val(data.contractNo)))}
-          ${kvRow(L("date", "Date"), ltr(val(data.bookingDate)))}
+          ${kvRow(L("date", "Date"), ltr(dmy(data.bookingDate)))}
           ${kvRow(L("invoice_no", "Invoice No."), ltr(val(data.billNo)))}
-          ${kvRow(L("invoice_date", "Invoice Date"), ltr(val(data.invoiceDate || data.bookingDate)))}
+          ${kvRow(L("invoice_date", "Invoice Date"), ltr(dmy(data.invoiceDate || data.bookingDate)))}
           ${kvRow(L("booking_no", "Booking No."), ltr(val(data.bookingNo)))}
           ${kvRow(L("serial_no", "Serial No."), ltr(val(data.serialNo)))}
         </table>
@@ -289,14 +301,13 @@ export function renderBookingContractHtml(data: BookingReportData, branding: Con
       <div><small>${esc(L("invoice_no", "Invoice No."))}</small><span>${ltr(val(data.billNo))}</span></div>
       <div><small>${esc(L("booking_no", "Booking No."))}</small><span>${ltr(val(data.bookingNo))}</span></div>
       <div><small>${esc(L("serial_no", "Serial No."))}</small><span>${ltr(val(data.serialNo))}</span></div>
-      <div><small>${esc(L("date", "Date"))}</small><span>${ltr(val(data.bookingDate))}</span></div>
+      <div><small>${esc(L("date", "Date"))}</small><span>${ltr(dmy(data.bookingDate))}</span></div>
     </div>
     <div class="g2 z">
       ${step(1, L("step1", "Step 1 — Loading & Shipping Report"), [
         [L("loading_country", "Loading Country"), val(data.loading.fromCountry)],
         [L("loading_port", "Loading Port"), val(data.loading.fromPort)],
-        [L("loading_date", "Loading Date"), ltr(val(data.loading.date))],
-        [L("receiving_port", "Receiving Port"), val(data.receiving.toPort)],
+        [L("loading_date", "Loading Date"), ltr(dmy(data.loading.date))],
         [L("shipping_line", "Shipping Line"), val(data.loading.shippingLine)],
         [L("vessel_name", "Vessel Name"), val(data.loading.vesselName)],
         [L("voyage_no", "Voyage No."), ltr(val(data.loading.voyageNo))],
@@ -304,8 +315,8 @@ export function renderBookingContractHtml(data: BookingReportData, branding: Con
       ${step(2, L("step2", "Step 2 — Goods Summary Report"), [
         [L("total_items", "Total Items"), ltr(String(data.totals.items))],
         [L("total_quantity", "Total Quantity"), ltr(`${qty(data.totals.qty)} ${esc(data.totals.unit)}`)],
-        [L("total_gross", "Total Gross Weight"), ltr(`${money(data.totals.grossMt, 3)} MT`)],
-        [L("total_net", "Total Net Weight"), ltr(`${money(data.totals.netMt, 3)} MT`)],
+        [L("total_gross", "Total Gross Weight"), (data.totals.grossMt === null ? DASH : ltr(`${money(data.totals.grossMt * 1000)} KG`))],
+        [L("total_net", "Total Net Weight"), (data.totals.netMt === null ? DASH : ltr(`${money(data.totals.netMt * 1000)} KG`))],
         [`${L("total_amount", "Total Amount")} (${cur || DASH})`, ltr(`<b>${money(data.totals.amount)}</b>`)],
         [L("exchange_rate", "Exchange Rate"), `<b>${ltr(val(data.rateLabel))}</b>`],
         [`${L("final_amount", "Final Amount")} (${base || DASH})`, ltr(`<b>${money(data.totals.finalAmount)}</b>`)],
@@ -314,8 +325,8 @@ export function renderBookingContractHtml(data: BookingReportData, branding: Con
         [L("payment_type", "Payment Type"), val(data.paymentType)],
         [L("advance_percent", "Advance Percentage"), data.payment.advancePercent === null ? DASH : ltr(`${data.payment.advancePercent} %`)],
         [L("advance_amount", "Advance Amount"), m(data.payment.advanceFinal, base)],
-        [L("advance_date", "Advance Date"), ltr(val(data.payment.advanceDate))],
-        [L("final_payment_date", "Final Payment Date"), ltr(val(data.payment.finalPaymentDate))],
+        [L("advance_date", "Advance Date"), ltr(dmy(data.payment.advanceDate))],
+        [L("final_payment_date", "Final Payment Date"), ltr(dmy(data.payment.finalPaymentDate))],
         [L("final_payment_amount", "Final Payment Amount"), m(data.payment.balanceFinal, base)],
         [L("settlement_currency", "Settlement Currency"), ltr(val(base))],
         [L("total_payment", "Total Payment"), `<b>${m(data.totals.finalAmount, base)}</b>`],
