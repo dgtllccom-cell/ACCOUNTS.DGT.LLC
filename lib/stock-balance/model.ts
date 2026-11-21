@@ -30,6 +30,7 @@ export function proportional(weight: number, part: number, qty: number): number 
 export interface BalanceEntry {
   entryId: string;
   lotNo: string;
+  lotName?: string;
   entryNo: number;
   lotEntryLabel: string;
   goodsName: string;
