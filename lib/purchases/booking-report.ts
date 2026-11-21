@@ -42,6 +42,8 @@ export interface BookingReportLine {
   finalAmount: number;
   /** weight per package (kg) as saved, e.g. 50.25 */
   packWeight: number | null;
+  /** what the unit price is per, from the saved price / divide type: "40 KG", "KG", "BAGS"; "" when not saved */
+  priceBasis: string;
 }
 
 export interface BookingReportAccount {
@@ -103,6 +105,20 @@ const num = (v: unknown): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/** "P/KGs" priced per divideWeight kg (AE-001-0005: 7,500 PKR per 40 kg); a per-unit price is per its unit */
+export function priceBasisOf(g: AnyRec): string {
+  const priceType = str(g.priceType).toLowerCase();
+  const divideType = str(g.divideType).toLowerCase();
+  const w = num(g.divideWeight);
+  if (priceType.includes("kg") || divideType.includes("kg")) {
+    if (w && w > 0 && w !== 1) return `${w.toLocaleString("en-US", { maximumFractionDigits: 3 })} KG`;
+    return "KG";
+  }
+  if (priceType.includes("ton") || priceType.includes("mt")) return "MT";
+  if (priceType) return str(g.qtyName || g.unitName);
+  return "";
+}
 
 export function parseFormData(record: AnyRec | null | undefined): AnyRec {
   let fd: unknown = record?.form_data;
@@ -178,6 +194,7 @@ export function buildPurchaseBookingReport(
       rateLabel: formatRateWithOperator(lineRate, lineOp),
       finalAmount: round2(lineRate ? toBaseAmount(amount, lineRate, lineOp) : amount),
       packWeight: num(g.qtyKgs ?? g.unitWeight),
+      priceBasis: priceBasisOf(g),
     };
   });
 
