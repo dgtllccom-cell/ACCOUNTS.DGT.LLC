@@ -6,6 +6,7 @@ import { authorizeApiScope, recordInSessionScope } from "@/lib/api/scope-middlew
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { getRequestLanguage } from "@/lib/i18n/server";
+import { isGlobalSession } from "@/lib/permissions/middleware";
 import { loadBalance } from "@/lib/services/stock-balance-report-service";
 import { buildDestinationGroups, buildPurchaseRows, destinationTotals, type RawLaneLoad, type RawTransfer } from "@/lib/stock/purchase-movements";
 import { loadTotals, normalizeBalanceRow, normalizeLoadRow, registerTotals } from "@/lib/stock/warehouse-register";
@@ -121,7 +122,16 @@ export async function GET(request: NextRequest) {
     const purchases = buildPurchaseRows(bills, scopedLoads as unknown as RawLaneLoad[], db.transfers as unknown as RawTransfer[], dates);
     const destinations = buildDestinationGroups(purchases);
 
+    const isSuperAdmin = (session.roles ?? []).includes("super_admin") || isGlobalSession(session);
+    const isCountryAdmin = (session.roles ?? []).includes("country_admin");
+    const role: "super_admin" | "country_admin" | "branch_admin" = isSuperAdmin
+      ? "super_admin"
+      : isCountryAdmin
+      ? "country_admin"
+      : "branch_admin";
+
     return apiOk({
+      role,
       rows: balances,
       totals: registerTotals(balances),
       loads,
