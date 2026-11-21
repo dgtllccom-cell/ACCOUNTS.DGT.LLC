@@ -542,14 +542,21 @@ export function LocalPurchaseDestinationQueueView({
     filteredPurchases.forEach((p) => {
       const cName = p.countryName || p.country_name || session?.countryName || "—";
       const bName = p.branchName || p.branch_name || session?.branchName || "—";
+      // the bill's own currency first; the country name only as a fallback ("United Arab Emirates" never contained "UAE",
+      // so UAE bills were totalled as PKR)
+      const cUp = String(cName).toUpperCase();
       const curr =
+        (p as any).purchase_currency ||
+        (p as any).purchaseCurrency ||
         p.localCurrency ||
         p.local_currency ||
-        (cName.toUpperCase().includes("UAE")
+        (cUp.includes("UAE") || cUp.includes("UNITED ARAB EMIRATES") || cUp.includes("EMIRATES")
           ? "AED"
-          : cName.toUpperCase().includes("AFG")
+          : cUp.includes("AFG")
           ? "AFN"
-          : "PKR");
+          : cUp.includes("PAK")
+          ? "PKR"
+          : "—");
       const cost = Number(
         p.finalCost || p.final_cost || p.purchaseCost || p.purchase_cost || 0
       );
@@ -680,20 +687,23 @@ export function LocalPurchaseDestinationQueueView({
     () => ({
       totalRecords: purchases.length,
       draftCount: 0,
-      acceptedCount: pendingPurchases.length,
-      transferredCount: completedPurchases.length,
+      // Every bill in this queue is already Transferred & Posted (the queue lists posted bills only); "Completed" means
+      // the stage itself (loaded / moved to warehouse / exported) is done. A freshly transferred bill therefore counts as
+      // Transferred, never as "Accepted (Not Transferred)".
+      acceptedCount: 0,
+      transferredCount: pendingPurchases.length + completedPurchases.length,
       completedCount: completedPurchases.length,
       currency: "AED",
       totalAmount: grandTotalPurchase,
-      acceptedAmount: pendingAmount,
-      transferredAmount: completedAmount,
+      acceptedAmount: 0,
+      transferredAmount: pendingAmount + completedAmount,
       completedAmount: completedAmount,
       totalBranches: Math.max(branches.length, 1),
       activeBranches: Math.max(branches.length, 1),
       inactiveBranches: 0,
       thisMonthCreated: grandTotalEntries,
       thisMonthAmount: grandTotalPurchase,
-      thisMonthTransferred: completedPurchases.length,
+      thisMonthTransferred: pendingPurchases.length + completedPurchases.length,
       thisMonthCompleted: completedPurchases.length,
       quickInfo: {
         currency: "AED",
