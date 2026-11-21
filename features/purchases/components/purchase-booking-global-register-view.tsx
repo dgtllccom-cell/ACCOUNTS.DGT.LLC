@@ -40,6 +40,7 @@ import { cn } from "@/lib/utils";
 import { InvoiceDocumentView } from "@/components/invoices/invoice-document-view";
 import { OpenFullBillModal } from "@/components/invoices/open-full-bill-modal";
 import { PurchaseOrderWizard } from "@/features/purchases/components/purchase-order-wizard.jsx";
+import { BookingLedgerTransferDialog } from "@/features/purchases/components/booking-ledger-transfer-dialog";
 
 interface PurchaseBookingGlobalRegisterViewProps {
   session: any;
@@ -88,6 +89,8 @@ export function PurchaseBookingGlobalRegisterView({
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const [activeRowMenuId, setActiveRowMenuId] = useState<string | null>(null);
   const [activeAccountPopupId, setActiveAccountPopupId] = useState<string | null>(null);
+  // Ledger Transfer (DR/CR posting) — a separate step from Booking Save and from Loading Transfer
+  const [ledgerTransferOrderId, setLedgerTransferOrderId] = useState<string | null>(null);
 
   // Filters
   const [filterDateFrom, setFilterDateFrom] = useState<string>("");
@@ -1347,12 +1350,12 @@ export function PurchaseBookingGlobalRegisterView({
                         {isTransferred ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-950 text-white border border-slate-800 dark:bg-white dark:text-slate-950 dark:border-slate-200 shadow-xs">
                             <CheckCircle2 className="h-3 w-3 text-emerald-400 dark:text-emerald-600" />
-                            <span>{tr("Transferred")}</span>
+                            <span>{tr("LEDGER POSTED")}</span>
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 shadow-xs">
                             <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
-                            <span>{tr("Awaiting Transfer")}</span>
+                            <span>{tr("LEDGER PENDING")}</span>
                           </span>
                         )}
                       </td>
@@ -1416,7 +1419,22 @@ export function PurchaseBookingGlobalRegisterView({
                                 <span>{tr("PAYMENT ENTRY")}</span>
                               </button>
 
-                              {/* 4. Transfer Bill to Lane */}
+                              {/* 4a. Ledger Transfer: the DR/CR posting, previewed then confirmed. Once posted it cannot be posted again. */}
+                              <button
+                                type="button"
+                                disabled={isTransferred}
+                                onClick={() => {
+                                  if (isTransferred) return;
+                                  setLedgerTransferOrderId(String(r.id));
+                                  setActiveRowMenuId(null);
+                                }}
+                                className="w-full px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                                <span>{isTransferred ? tr("LEDGER POSTED") : tr("LEDGER TRANSFER")}</span>
+                              </button>
+
+                              {/* 4b. Loading Transfer: moves the bill to the loading lane. Separate from Ledger Transfer. */}
                               <button
                                 type="button"
                                 onClick={() => {
@@ -1426,7 +1444,7 @@ export function PurchaseBookingGlobalRegisterView({
                                 className="w-full px-2.5 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-semibold flex items-center gap-2 cursor-pointer"
                               >
                                 <ArrowRight className="h-3.5 w-3.5 text-blue-600" />
-                                <span>{tr("TRANSFER BILL")}</span>
+                                <span>{tr("LOADING TRANSFER")}</span>
                               </button>
 
                               <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
@@ -1670,6 +1688,16 @@ export function PurchaseBookingGlobalRegisterView({
           lang={lang as any}
         />
       )}
+
+      {/* ── Ledger Transfer (preview, then confirm) ── */}
+      <BookingLedgerTransferDialog
+        orderId={ledgerTransferOrderId || ""}
+        open={Boolean(ledgerTransferOrderId)}
+        onClose={() => setLedgerTransferOrderId(null)}
+        onPosted={() => { void loadData(); }}
+        tr={(k: string) => tr(k)}
+        isRtl={isRtl}
+      />
 
     </div>
   );

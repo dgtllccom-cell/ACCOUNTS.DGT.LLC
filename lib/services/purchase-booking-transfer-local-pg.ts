@@ -5,6 +5,7 @@ import { ApiClientError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers } from "@/lib/services/posting-verification";
 import { resolvePurchaseBookingTransferDestination } from "@/lib/services/purchase-booking-transfer-routing";
+import { buildLedgerTransferPreview } from "@/lib/purchases/ledger-transfer-preview";
 
 function money(value: unknown) {
   const numeric = Number(String(value ?? 0).replace(/,/g, ""));
@@ -102,8 +103,10 @@ export async function transferPurchaseBookingViaLocalPg(input: {
   session: Pick<ErpSession, "userId" | "fullName" | "email">;
   orderId: string;
   body: any;
+  /** Preview only: resolve the DR/CR ledgers, amounts and FX, and return the posting plan. Writes NOTHING. */
+  dryRun?: boolean;
 }) {
-  const { session, orderId, body } = input;
+  const { session, orderId, body, dryRun = false } = input;
   return await withLocalPg(async (sql) => {
     return await sql.begin(async (tx) => {
       await tx`
@@ -197,7 +200,8 @@ export async function transferPurchaseBookingViaLocalPg(input: {
       const effectiveCountryBranchId = orderRow.country_branch_id || debitAccountObj?.country_branch_id || creditAccountObj?.country_branch_id || null;
       const effectiveCityBranchId = orderRow.city_branch_id || debitAccountObj?.city_branch_id || creditAccountObj?.city_branch_id || null;
 
-      if ((!orderRow.country_branch_id && effectiveCountryBranchId) || (!orderRow.city_branch_id && effectiveCityBranchId)) {
+      // A preview must not change the bill: the scope back-fill below is a write, so it runs only for a real transfer.
+      if (!dryRun && ((!orderRow.country_branch_id && effectiveCountryBranchId) || (!orderRow.city_branch_id && effectiveCityBranchId))) {
         await tx`
           update purchase_orders
           set country_id = coalesce(country_id, ${effectiveCountryId}::uuid),
@@ -255,6 +259,25 @@ export async function transferPurchaseBookingViaLocalPg(input: {
           `Transfer stopped — nothing was posted: ${totalPurchaseAmount} ${billCurrency} ${fxOp === "/" ? "÷" : "×"} ${savedRate} = ${fxCheck.computedBase.toFixed(2)}, ` +
           `but the bill's saved total is ${Number(fxCheck.savedBase).toFixed(2)}. Correct the bill's rate / amount before transferring.`;
         throw new ApiClientError(reason, { status: 409, code: "POSTING_STOPPED", details: { posting: plannedPosting(reason) } });
+      }
+
+      if (dryRun) {
+        // Read-only preview: the exact DR/CR and amounts a real transfer would post. Nothing below this line runs.
+        return buildLedgerTransferPreview({
+          billNo: systemBillNumber,
+          paymentType: form.paymentType ?? null,
+          currency: billCurrency,
+          operator: fxOp,
+          rate: savedRate,
+          originalAmount: totalPurchaseAmount,
+          baseAmount: fxCheck.computedBase,
+          savedBase: fxCheck.savedBase,
+          debitAccount: debitAccountObj,
+          creditAccount: creditAccountObj,
+          existingPayment: existingPayment
+            ? { id: String(existingPayment.id), roznamchaEntryId: existingPayment.roznamcha_entry_id ?? null }
+            : null,
+        });
       }
 
       let paymentId: string | null = null;
