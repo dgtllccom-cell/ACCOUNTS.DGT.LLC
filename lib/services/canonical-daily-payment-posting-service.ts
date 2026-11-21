@@ -1,6 +1,8 @@
 import { withLocalPg } from "../db/local-postgres";
 import { allocateFormSerials } from "./form-serials";
 import { assertDistinctBookingLedgers, assertBalancedPostedLines, assertPostedRoznamchaTrace } from "./posting-verification";
+import { billFxOperator } from "@/lib/purchases/fx-operator";
+import { resolveDailyPaymentConversion } from "@/lib/purchases/daily-payment-conversion";
 
 export type PaymentScopeType = "purchase" | "sales";
 export type PaymentOrderType = "purchase_booking" | "local_purchase" | "sales_booking" | "local_sales";
@@ -182,6 +184,8 @@ export async function postCanonicalDailyPayment(
     let currentRemaining = 0;
     let orderTotal = 0;
     let billIdentifier = "";
+    // The purchase booking's saved operator ("*" or "/"); it decides how the amount converts to the base currency.
+    let bookingFxOperator: "*" | "/" = "*";
 
     if (targetType === "purchase_booking") {
       const pRows = await sql`
@@ -193,6 +197,7 @@ export async function postCanonicalDailyPayment(
       `;
       if (!pRows.length) throw new Error("Purchase Order not found.");
       const p = pRows[0];
+      bookingFxOperator = billFxOperator(p.form_data);
       orderCountryId = p.country_id;
       orderCountryBranchId = p.country_branch_id;
       orderCityBranchId = p.city_branch_id;
@@ -252,11 +257,14 @@ export async function postCanonicalDailyPayment(
     // If UAE AED-to-AED payment: exchange rate is 1.
     // If transaction currency matches country functional base currency: exchange rate is 1.
     // Convert only once: never apply double conversion.
-    const isSameCurrency = currencyCode.toUpperCase() === baseCurrency;
-    const effectiveExchangeRate = isSameCurrency ? 1 : (Number(exchangeRate) > 0 ? Number(exchangeRate) : 1);
-    const baseCurrencyAmount = isSameCurrency
-      ? amount
-      : Math.round(amount * effectiveExchangeRate * 10000) / 10000;
+    // A "/" purchase booking (PKR per AED) divides by its rate; every other case multiplies (see lib/purchases/daily-payment-conversion.ts).
+    const { isSameCurrency, effectiveExchangeRate, baseCurrencyAmount } = resolveDailyPaymentConversion({
+      amount,
+      currencyCode,
+      baseCurrency,
+      exchangeRate,
+      operator: targetType === "purchase_booking" ? bookingFxOperator : "*",
+    });
 
     // Build consolidated narration
     const fullNarration = [
