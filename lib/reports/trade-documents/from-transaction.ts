@@ -144,6 +144,8 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
   const seller: TradeParty = {
     // A sale is issued by the selling company chosen on the booking; branding is the fallback.
     name: (isSales ? (pick(form, "salesCompanyName") || companyNameOrNull(opts.branding)) : supplier) || undefined,
+    accountCode: isSales ? pick(form, "salesAccountNo") : (pick(form, "purchaseAccountNo") || pick(rec, "purchase_account_number")),
+    accountName: isSales ? pick(form, "salesAccountName") : (pick(form, "purchaseAccountName") || supplier),
     address: isSales ? opts.branding.address : pick(form, "supplierAddress"),
     phone: isSales ? opts.branding.phone : pick(form, "supplierMobile", "supplierContact", "purchaseContact"),
     email: isSales ? opts.branding.email : pick(form, "supplierEmail"),
@@ -151,7 +153,9 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
     country: isSales ? opts.branding.countryName : pick(form, "loadingCountry", "supplierCountry"),
   };
   const buyer: TradeParty = {
-    name: (isSales ? customer : companyNameOrNull(opts.branding)) || undefined,
+    name: (isSales ? customer : (pick(form, "salesAccountName", "customerName") || companyNameOrNull(opts.branding))) || undefined,
+    accountCode: isSales ? pick(form, "customerAccountNo") : (pick(form, "salesAccountNo") || pick(rec, "sales_account_number")),
+    accountName: isSales ? customer : (pick(form, "salesAccountName") || pick(rec, "sales_account_name") || pick(form, "customerName")),
     address: isSales ? pick(form, "customerAddress", "deliveryAddress") : opts.branding.address,
     phone: isSales ? pick(form, "customerContact", "customerMobile") : opts.branding.phone,
     email: isSales ? pick(form, "customerEmail") : opts.branding.email,

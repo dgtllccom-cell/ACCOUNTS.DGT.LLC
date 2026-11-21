@@ -17,6 +17,8 @@ export type TradeScope = "international" | "local";
 
 export type TradeParty = {
   name?: string | null;
+  accountCode?: string | null;
+  accountName?: string | null;
   address?: string | null;
   phone?: string | null;
   email?: string | null;

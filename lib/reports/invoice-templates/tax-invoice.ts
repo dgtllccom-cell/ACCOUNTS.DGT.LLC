@@ -157,11 +157,12 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
     .meta td.mk { font-size: 8pt; font-weight: 700; }
     .meta td.mv { font-size: 9pt; text-align: left; }
     .sec { font-weight: 700; font-size: 8pt; text-transform: uppercase; }
-    .goods-wrap { flex: 1 1 auto; display: flex; flex-direction: column; margin-top: 4px; }
-    table.goods { width: 100%; height: 100%; flex: 1 1 auto; border-collapse: collapse; font-size: 8pt; }
-    table.goods th, table.goods td { border: 1px solid #000; padding: 3px 3px; vertical-align: middle; }
-    table.goods th { font-size: 6.8pt; font-weight: 700; text-align: center; text-transform: uppercase; }
-    table.goods td.r { text-align: right; } table.goods td.c { text-align: center; } table.goods td.b { font-weight: 700; }
+    .goods-wrap { display: block; margin-top: 5px; }
+    table.goods { width: 100%; border-collapse: collapse; font-size: 8pt; }
+    table.goods th, table.goods td { border: 1px solid #000; padding: 4px 4px; vertical-align: middle; color: #000; }
+    table.goods th { font-size: 7pt; font-weight: 800; text-align: center; text-transform: uppercase; background: #f8fafc; }
+    table.goods td { font-weight: 600; color: #000; }
+    table.goods td.r { text-align: right; } table.goods td.c { text-align: center; } table.goods td.b { font-weight: 800; }
     .lbl { font-size: 6.5pt; font-weight: 700; }
     .sm { font-size: 7pt; font-weight: 700; }
     table.tot { border-collapse: collapse; width: 100%; font-size: 8.5pt; }
@@ -198,7 +199,7 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
           </div>
         </div>
         <div class="centerlogo"></div>
-        <div class="rightblock"><div class="corner">TAX INVOICE</div></div>
+        <div class="rightblock"><div class="corner">${input.docType === "tax_invoice" ? "TAX INVOICE" : ""}</div></div>
       </div>
 
       <table class="frame" style="margin-top:4px">
@@ -211,12 +212,13 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
           <td style="width:50%">
             <div class="sec">Shipper:</div>
             <div class="v"><b>${dash(shipperName)}</b></div>
+            ${seller.accountCode || seller.accountName ? `<div class="v" style="font-size:8pt;color:#1e3a8a;font-weight:700">A/C: ${esc([seller.accountCode, seller.accountName && seller.accountName !== shipperName ? seller.accountName : null].filter(Boolean).join(" — "))}</div>` : ""}
             ${isReal(shipperAddress) ? `<div class="v">${esc(shipperAddress)}</div>` : ""}
             ${isReal(shipperEmail) ? `<div class="v">EMAIL: ${esc(shipperEmail)}</div>` : ""}
           </td>
           <td colspan="2" style="padding:0">
             <table class="meta" style="width:100%;border-collapse:collapse">
-              <tr><td class="mk" style="width:50%">Tax Invoice No:</td><td class="mv">${dash(input.docNo)}</td><td class="mk">Date:</td><td class="mv">${dmy(input.docDate)}</td></tr>
+              <tr><td class="mk" style="width:50%">${input.docType === "tax_invoice" ? "Tax Invoice No:" : "Invoice / Bill No:"}</td><td class="mv">${dash(input.docNo)}</td><td class="mk">Date:</td><td class="mv">${dmy(input.docDate)}</td></tr>
               <tr><td class="mk">Invoice No:</td><td class="mv">${dash(input.referenceNos?.invoice)}</td><td class="mk">Invoice Date:</td><td class="mv">${dmy(input.docDate)}</td></tr>
             </table>
           </td>
@@ -225,6 +227,7 @@ export function renderTaxInvoice(input: TradeDocumentInput, flags: InvoiceTempla
           <td style="width:50%">
             <div class="sec">Consignee (Notify Party):</div>
             <div class="v"><b>${dash(buyer.name)}</b></div>
+            ${buyer.accountCode || buyer.accountName ? `<div class="v" style="font-size:8pt;color:#1e3a8a;font-weight:700">A/C: ${esc([buyer.accountCode, buyer.accountName && buyer.accountName !== buyer.name ? buyer.accountName : null].filter(Boolean).join(" — "))}</div>` : ""}
             ${isReal(buyer.address) ? `<div class="v">${esc(buyer.address)}</div>` : ""}
             ${isReal(buyer.phone) ? `<div class="v">TEL: ${esc(buyer.phone)}</div>` : ""}
             ${isReal(buyer.email) ? `<div class="v">EMAIL: ${esc(buyer.email)}</div>` : ""}

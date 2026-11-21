@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  ArrowLeft,
   ShoppingCart,
   Crown,
   ChevronDown,
@@ -221,10 +222,11 @@ export function PurchaseBookingGlobalRegisterView({
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const bNo = String(r.purchaseBookingOrderNumber || r.purchase_order_no || r.billNumber || "").toLowerCase();
-        const sName = String(r.supplierName || "").toLowerCase();
+        const sName = String(r.supplierName || r.purchaseAccountName || "").toLowerCase();
+        const bName = String(r.buyerName || r.salesAccountName || "").toLowerCase();
         const gName = String(r.productName || r.goodsDescription || "").toLowerCase();
         const origin = String(r.form_data?.form?.originCountry || r.form_data?.goodsEntries?.[0]?.origin || "").toLowerCase();
-        if (!bNo.includes(q) && !sName.includes(q) && !gName.includes(q) && !origin.includes(q)) {
+        if (!bNo.includes(q) && !sName.includes(q) && !bName.includes(q) && !gName.includes(q) && !origin.includes(q)) {
           return false;
         }
       }
@@ -640,220 +642,238 @@ export function PurchaseBookingGlobalRegisterView({
   }
 
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} className={cn("w-full space-y-3 p-2 sm:p-3 text-slate-900 dark:text-slate-100", isFullScreen && "fixed inset-0 z-50 overflow-y-auto bg-slate-50 dark:bg-slate-950 p-4")}>
+    <div dir={isRtl ? "rtl" : "ltr"} data-page-chrome="true" className={cn("w-full space-y-3 p-2 sm:p-3 text-slate-900 dark:text-slate-100", isFullScreen && "fixed inset-0 z-50 overflow-y-auto bg-slate-50 dark:bg-slate-950 p-4")}>
       
-      {/* ── 1. Page Title & Breadcrumb Header ── */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5">
-        <div className="flex flex-wrap items-center gap-2.5">
+      {/* ── 1. Consolidated Top Control Bar ("White Patti") ── */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border border-slate-200/90 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+        {/* Left: Back button + Icon + Title + Super Admin View badge + Breadcrumb */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200 transition cursor-pointer"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>{tr("Back")}</span>
+          </button>
+
           <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-            <ShoppingCart className="h-5 w-5" aria-hidden="true" />
+            <ShoppingCart className="h-4 w-4" aria-hidden="true" />
           </div>
-          <h1 className="text-xl font-black tracking-tight text-[#1e3a8a] dark:text-blue-400">
-            {tr("Purchase Booking (Global & Country Wise)")}
-          </h1>
-          <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-[#eff6ff] px-2.5 py-0.5 text-xs font-bold text-[#1d4ed8] dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">
-            <Crown className="h-3 w-3" aria-hidden="true" />
-            {tr("Super Admin View")}
-          </span>
+
+          <div className="flex items-center gap-2">
+            <h1 className="text-base font-black tracking-tight text-[#1e3a8a] dark:text-blue-400 sm:text-lg">
+              {tr("Purchase Booking (Global & Country Wise)")}
+            </h1>
+            <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-[#eff6ff] px-2 py-0.5 text-[10px] font-bold text-[#1d4ed8] dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">
+              <Crown className="h-3 w-3" aria-hidden="true" />
+              {tr("Super Admin View")}
+            </span>
+          </div>
+
+          <nav aria-label="breadcrumb" className="hidden xl:flex items-center text-[11px] font-semibold text-slate-400 ms-1">
+            <span>/</span>
+            <span className="mx-1 text-slate-500">{tr("Purchase & Trade")}</span>
+            <span>/</span>
+            <span className="mx-1 font-bold text-slate-700 dark:text-slate-300">{tr("Purchase Booking")}</span>
+          </nav>
         </div>
 
-        <nav aria-label="breadcrumb" className="text-xs font-semibold text-slate-500">
-          <span className="hover:text-slate-700">{tr("Dashboard")}</span>
-          <span className="mx-1.5 text-slate-400">/</span>
-          <span className="hover:text-slate-700">{tr("Purchase & Trade")}</span>
-          <span className="mx-1.5 text-slate-400">/</span>
-          <span className="font-bold text-slate-800 dark:text-slate-200">{tr("Purchase Booking")}</span>
-        </nav>
+        {/* Right: Reports dropdown, Filter, Search, + New Booking, Apply & ⋮ Menu */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Reports Dropdown Button */}
+          <div className="relative" ref={reportsRef}>
+            <button
+              type="button"
+              onClick={() => setReportsOpen((v) => !v)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-3 py-1.5 text-xs font-bold shadow-xs transition cursor-pointer"
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5" />
+              <span>{tr("Reports")}</span>
+              <ChevronDown className="h-3.5 w-3.5 opacity-80" />
+            </button>
+
+            {reportsOpen && (
+              <div className="absolute start-0 top-full mt-1.5 z-40 w-60 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in-50 zoom-in-95">
+                <button
+                  type="button"
+                  onClick={() => { setReportsOpen(false); }}
+                  className="w-full flex items-center gap-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 px-3 py-2 text-xs font-bold text-blue-700 dark:text-blue-300"
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  <span>{tr("Purchase Booking")}</span>
+                  <Check className="ms-auto h-3.5 w-3.5 text-blue-600" />
+                </button>
+                <a
+                  href="/dashboard/purchase/purchase-booking-journal-report"
+                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                >
+                  <BookOpen className="h-4 w-4 text-slate-400" />
+                  <span>{tr("Purchase Booking Journal")}</span>
+                </a>
+                <a
+                  href="/dashboard/purchase/stock/report"
+                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                >
+                  <Scale className="h-4 w-4 text-slate-400" />
+                  <span>{tr("Weight Report")}</span>
+                </a>
+                <a
+                  href="/dashboard/purchase/purchase-payments"
+                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                >
+                  <CreditCard className="h-4 w-4 text-slate-400" />
+                  <span>{tr("Payment Report")}</span>
+                </a>
+                <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                <a
+                  href="/dashboard/purchase/finalized-purchase-orders"
+                  className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                >
+                  <span className="flex items-center gap-2.5">
+                    <Grid className="h-4 w-4 text-slate-400" />
+                    <span>{tr("More Reports")}</span>
+                  </span>
+                  <ChevronDown className="-rotate-90 h-3 w-3 text-slate-400" />
+                </a>
+              </div>
+            )}
+          </div>
+
+          {/* Filter Button */}
+          <button
+            type="button"
+            onClick={() => setFilterModalOpen((v) => !v)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-3 py-1.5 text-xs font-bold shadow-xs transition cursor-pointer"
+          >
+            <Filter className="h-3.5 w-3.5" />
+            <span>{tr("Filter")}</span>
+            <ChevronDown className="h-3.5 w-3.5 opacity-80" />
+          </button>
+
+          {/* Search Box */}
+          <div className="relative">
+            <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={tr("Search bills, parties...")}
+              className="h-8 w-40 sm:w-52 rounded-lg border border-slate-200 bg-white ps-8 pe-3 text-xs text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            />
+          </div>
+
+          {/* New Booking quick action */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsFormMode(true);
+              router.push("/dashboard/purchase/new-purchase-booking-order?mode=new");
+            }}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-bold shadow-xs transition cursor-pointer"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>+ {tr("New Booking")}</span>
+          </button>
+
+          {/* Apply button */}
+          <button
+            type="button"
+            onClick={() => loadData()}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-3 py-1.5 text-xs font-bold shadow-xs transition cursor-pointer"
+          >
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            <span>{tr("Apply")}</span>
+          </button>
+
+          {/* Action Menu (3-dots) */}
+          <div className="relative" ref={actionsRef}>
+            <button
+              type="button"
+              onClick={() => setActionsOpen((v) => !v)}
+              className="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-slate-250 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition cursor-pointer"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </button>
+
+            {actionsOpen && (
+              <div className="absolute end-0 top-full mt-1.5 z-40 w-52 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in-50 zoom-in-95">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsFullScreen((v) => !v);
+                    setActionsOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                >
+                  <Maximize2 className="h-4 w-4 text-slate-400" />
+                  <span>{isFullScreen ? tr("Exit Full View") : tr("Full Page View")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.print();
+                    setActionsOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                >
+                  <Printer className="h-4 w-4 text-slate-400" />
+                  <span>{tr("Print (Full Page)")}</span>
+                </button>
+                <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleExportCsv();
+                    setActionsOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                >
+                  <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                  <span>{tr("Export Excel")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.print();
+                    setActionsOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                >
+                  <FileText className="h-4 w-4 text-red-500" />
+                  <span>{tr("Export PDF")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleExportCsv();
+                    setActionsOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                >
+                  <Download className="h-4 w-4 text-slate-500" />
+                  <span>{tr("Export CSV")}</span>
+                </button>
+                <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetFilters();
+                    setActionsOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                >
+                  <RotateCcw className="h-4 w-4 text-amber-500" />
+                  <span>{tr("Reset Filters")}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* ── 2. Top Summary & Report Navigation Section (Matches Target UI Mockup 100%) ── */}
       <div className="rounded-2xl border border-blue-200/80 bg-[#f8faff] p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900/60 space-y-2.5">
-        {/* Top Control Bar inside container */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          {/* Left: Reports & Filter Buttons */}
-          <div className="flex items-center gap-2">
-            {/* Reports Dropdown Button */}
-            <div className="relative" ref={reportsRef}>
-              <button
-                type="button"
-                onClick={() => setReportsOpen((v) => !v)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-3.5 py-1.5 text-xs font-bold shadow-xs transition cursor-pointer"
-              >
-                <FileSpreadsheet className="h-3.5 w-3.5" />
-                <span>{tr("Reports")}</span>
-                <ChevronDown className="h-3.5 w-3.5 opacity-80" />
-              </button>
-
-              {reportsOpen && (
-                <div className="absolute start-0 top-full mt-1.5 z-40 w-60 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in-50 zoom-in-95">
-                  <button
-                    type="button"
-                    onClick={() => { setReportsOpen(false); }}
-                    className="w-full flex items-center gap-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 px-3 py-2 text-xs font-bold text-blue-700 dark:text-blue-300"
-                  >
-                    <ShoppingCart className="h-4 w-4" />
-                    <span>{tr("Purchase Booking")}</span>
-                    <Check className="ms-auto h-3.5 w-3.5 text-blue-600" />
-                  </button>
-                  <a
-                    href="/dashboard/purchase/purchase-booking-journal-report"
-                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                  >
-                    <BookOpen className="h-4 w-4 text-slate-400" />
-                    <span>{tr("Purchase Booking Journal")}</span>
-                  </a>
-                  <a
-                    href="/dashboard/purchase/stock/report"
-                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                  >
-                    <Scale className="h-4 w-4 text-slate-400" />
-                    <span>{tr("Weight Report")}</span>
-                  </a>
-                  <a
-                    href="/dashboard/purchase/purchase-payments"
-                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                  >
-                    <CreditCard className="h-4 w-4 text-slate-400" />
-                    <span>{tr("Payment Report")}</span>
-                  </a>
-                  <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
-                  <a
-                    href="/dashboard/purchase/finalized-purchase-orders"
-                    className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <Grid className="h-4 w-4 text-slate-400" />
-                      <span>{tr("More Reports")}</span>
-                    </span>
-                    <ChevronDown className="-rotate-90 h-3 w-3 text-slate-400" />
-                  </a>
-                </div>
-              )}
-            </div>
-
-            <span className="text-slate-300 dark:text-slate-700 font-bold select-none">|</span>
-
-            {/* Filter Button */}
-            <button
-              type="button"
-              onClick={() => setFilterModalOpen((v) => !v)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-3.5 py-1.5 text-xs font-bold shadow-xs transition cursor-pointer"
-            >
-              <Filter className="h-3.5 w-3.5" />
-              <span>{tr("Filter")}</span>
-              <ChevronDown className="h-3.5 w-3.5 opacity-80" />
-            </button>
-          </div>
-
-          {/* Right side: + New Booking, Apply & ⋮ Menu */}
-          <div className="flex items-center gap-2">
-            {/* New Booking quick action */}
-            <button
-              type="button"
-              onClick={() => {
-                setIsFormMode(true);
-                router.push("/dashboard/purchase/new-purchase-booking-order?mode=new");
-              }}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-bold shadow-xs transition cursor-pointer"
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>+ {tr("New Booking")}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => loadData()}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-3.5 py-1.5 text-xs font-bold shadow-xs transition cursor-pointer"
-            >
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              <span>{tr("Apply")}</span>
-            </button>
-
-            {/* Action Menu (3-dots) */}
-            <div className="relative" ref={actionsRef}>
-              <button
-                type="button"
-                onClick={() => setActionsOpen((v) => !v)}
-                className="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-slate-250 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition cursor-pointer"
-              >
-                <MoreVertical className="h-4 w-4" />
-              </button>
-
-              {actionsOpen && (
-                <div className="absolute end-0 top-full mt-1.5 z-40 w-52 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in-50 zoom-in-95">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsFullScreen((v) => !v);
-                      setActionsOpen(false);
-                    }}
-                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                  >
-                    <Maximize2 className="h-4 w-4 text-slate-400" />
-                    <span>{isFullScreen ? tr("Exit Full View") : tr("Full Page View")}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      window.print();
-                      setActionsOpen(false);
-                    }}
-                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                  >
-                    <Printer className="h-4 w-4 text-slate-400" />
-                    <span>{tr("Print (Full Page)")}</span>
-                  </button>
-                  <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleExportCsv();
-                      setActionsOpen(false);
-                    }}
-                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                  >
-                    <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
-                    <span>{tr("Export Excel")}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      window.print();
-                      setActionsOpen(false);
-                    }}
-                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                  >
-                    <FileText className="h-4 w-4 text-red-500" />
-                    <span>{tr("Export PDF")}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleExportCsv();
-                      setActionsOpen(false);
-                    }}
-                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                  >
-                    <Download className="h-4 w-4 text-slate-500" />
-                    <span>{tr("Export CSV")}</span>
-                  </button>
-                  <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      resetFilters();
-                      setActionsOpen(false);
-                    }}
-                    className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
-                  >
-                    <RotateCcw className="h-4 w-4 text-amber-500" />
-                    <span>{tr("Reset Filters")}</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
 
         {/* 4 Columns Side-by-Side: Reports Nav + 3 Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 items-stretch">
@@ -1078,9 +1098,9 @@ export function PurchaseBookingGlobalRegisterView({
           </span>
         </div>
 
-        {/* 14-Column Table */}
+        {/* 13-Column Table */}
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1600px] border-collapse text-left text-xs">
+          <table className="w-full min-w-[1500px] border-collapse text-left text-xs">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-extrabold text-[11px] uppercase border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
                 <th className="py-2.5 px-2 text-center w-8 border-r border-slate-200 dark:border-slate-700">#</th>
@@ -1098,24 +1118,23 @@ export function PurchaseBookingGlobalRegisterView({
                   <div>{tr("Purchase")}</div>
                   <div className="text-[10px] text-slate-500 font-mono font-normal">{tr("Final")}</div>
                 </th>
-                <th className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-700">{tr("Payment Action")}</th>
+                <th className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-700">{tr("Payment / Status")}</th>
                 <th className="py-2.5 px-3 text-center border-r border-slate-200 dark:border-slate-700">{tr("Loading")}</th>
                 <th className="py-2.5 px-3 text-center border-r border-slate-200 dark:border-slate-700">{tr("Receiving")}</th>
-                <th className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-700">{tr("Transfer Status")}</th>
                 <th className="py-2.5 px-2 text-center w-12">{tr("Actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
               {loading ? (
                 <tr>
-                  <td colSpan={14} className="py-12 text-center text-slate-400">
+                  <td colSpan={13} className="py-12 text-center text-slate-400">
                     <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-600" />
                     <span>{tr("Loading purchase booking orders...")}</span>
                   </td>
                 </tr>
               ) : sortedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={14} className="py-12 text-center text-slate-400">
+                  <td colSpan={13} className="py-12 text-center text-slate-400">
                     {tr("No purchase booking records found.")}
                   </td>
                 </tr>
@@ -1168,6 +1187,11 @@ export function PurchaseBookingGlobalRegisterView({
                   const isTransferred = isBillTransferred(r);
                   const rowKey = r.id || `booking-row-${i}`;
 
+                  // 4 Scoped Serial Numbers
+                  const superSerialNo = (r as any).super_admin_serial_number || form.superAdminSerialNo || (r as any).superAdminSerial || `GBL-${String(r.id || "").slice(0, 6).toUpperCase()}`;
+                  const countrySerialNo = (r as any).country_transaction_serial_number || form.countrySerialNo || (r as any).countrySerial || `${shortenCountry(countryName).replace(/[^A-Za-z0-9]/g, "").slice(0, 3).toUpperCase()}-${String(i + 1).padStart(6, "0")}`;
+                  const branchSerialNo = (r as any).branch_transaction_serial_number || form.branchSerialNo || (r as any).branchSerial || `${String(mainBranch).replace(/[^A-Za-z0-9]/g, "").slice(0, 3).toUpperCase()}-${String(i + 1).padStart(6, "0")}`;
+
                   return (
                     <tr key={rowKey} className="hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors">
                       {/* 1. # */}
@@ -1175,19 +1199,47 @@ export function PurchaseBookingGlobalRegisterView({
                         {i + 1}
                       </td>
 
-                      {/* 2. Bill No. / Date */}
-                      <td className="py-2 px-3 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedRow(r);
-                            setDrawerOpen(true);
-                          }}
-                          className="font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 hover:underline block text-start font-mono text-xs cursor-pointer"
-                        >
-                          {billNo}
-                        </button>
-                        <div className="text-[10px] text-slate-500 font-mono">{billDate}</div>
+                      {/* 2. Bill No. / Date (with 4-serial numbers speech bubble popover) */}
+                      <td className="py-2 px-3 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap relative group" data-serial-popup="true">
+                        <div className="relative inline-block">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedRow(r);
+                              setDrawerOpen(true);
+                            }}
+                            className="font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 hover:underline block text-start font-mono text-xs cursor-pointer"
+                          >
+                            {billNo}
+                          </button>
+
+                          {/* Speech Bubble Popover with 4 Serial Numbers */}
+                          <div className="hidden group-hover:block absolute start-0 top-full mt-1.5 z-40 w-64 rounded-xl border border-slate-200 bg-white p-2.5 shadow-xl dark:border-slate-700 dark:bg-slate-900 text-start text-xs pointer-events-none">
+                            <div className="absolute -top-1.5 start-4 w-3 h-3 bg-white dark:bg-slate-900 border-t border-l border-slate-200 dark:border-slate-700 rotate-45" />
+                            <div className="font-bold border-b border-slate-100 dark:border-slate-800 pb-1 mb-1.5 text-[10px] text-slate-500 uppercase tracking-wider">
+                              {tr("Serial Information")}
+                            </div>
+                            <div className="space-y-1 text-[11px]">
+                              <div className="flex justify-between">
+                                <span className="text-slate-500">{tr("Super Admin")}:</span>
+                                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{superSerialNo}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-500">{tr("Country")}:</span>
+                                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{countrySerialNo}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-500">{tr("Branch")}:</span>
+                                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{branchSerialNo}</span>
+                              </div>
+                              <div className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-1">
+                                <span className="text-slate-500 font-semibold">{tr("Entry/Bill")}:</span>
+                                <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{billNo}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-[11px] font-bold text-slate-800 dark:text-slate-200 font-mono mt-0.5">{billDate}</div>
                       </td>
 
                       {/* 3. Location: Country, Main Branch, City Branch on 3 short lines (no exchange rate) */}
@@ -1282,9 +1334,14 @@ export function PurchaseBookingGlobalRegisterView({
                         )}
                       </td>
 
-                      {/* 6. Qty (Unit) */}
-                      <td className="py-2 px-2 text-center border-r border-slate-100 dark:border-slate-800 whitespace-nowrap font-mono font-bold text-slate-900 dark:text-slate-100">
-                        {fmtInt(qty)} {unit}
+                      {/* 6. Qty (Unit): Stacked Quantity on top, Unit below */}
+                      <td className="py-2 px-2 text-center border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
+                        <div className="font-bold text-slate-900 dark:text-slate-100 font-mono text-xs">
+                          {fmtInt(qty)}
+                        </div>
+                        <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">
+                          {unit || "—"}
+                        </div>
                       </td>
 
                       {/* 7. Gross Wt Net Wt (Kg) */}
@@ -1310,12 +1367,25 @@ export function PurchaseBookingGlobalRegisterView({
                         </div>
                       </td>
 
-                      {/* 10. Payment Action: Route & Terms together */}
+                      {/* 10. Payment / Status: Consolidated */}
                       <td className="py-2 px-2.5 text-center border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
                         <div className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
                           <span className="font-extrabold">{pAction.mode}</span>
                           <span className="opacity-60">—</span>
                           <span>{pAction.terms}</span>
+                        </div>
+                        <div className="mt-1">
+                          {isTransferred ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-950 text-white border border-slate-800 dark:bg-white dark:text-slate-950 dark:border-slate-200 shadow-2xs">
+                              <CheckCircle2 className="h-2.5 w-2.5 text-emerald-400 dark:text-emerald-600" />
+                              <span>{tr("LEDGER POSTED")}</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 shadow-2xs">
+                              <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
+                              <span>{tr("LEDGER PENDING")}</span>
+                            </span>
+                          )}
                         </div>
                       </td>
 
@@ -1345,22 +1415,7 @@ export function PurchaseBookingGlobalRegisterView({
                         </div>
                       </td>
 
-                      {/* 13. Transfer Status: immediately before ⋮ */}
-                      <td className="py-2 px-2.5 text-center border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
-                        {isTransferred ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-950 text-white border border-slate-800 dark:bg-white dark:text-slate-950 dark:border-slate-200 shadow-xs">
-                            <CheckCircle2 className="h-3 w-3 text-emerald-400 dark:text-emerald-600" />
-                            <span>{tr("LEDGER POSTED")}</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 shadow-xs">
-                            <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
-                            <span>{tr("LEDGER PENDING")}</span>
-                          </span>
-                        )}
-                      </td>
-
-                      {/* 14. Actions: Only ⋮ menu with View inside */}
+                      {/* 13. Actions: Only ⋮ menu with View inside */}
                       <td className="py-2 px-2 text-center whitespace-nowrap">
                         <div className="relative inline-block text-center" data-row-menu="true">
                           <button
@@ -1471,32 +1526,6 @@ export function PurchaseBookingGlobalRegisterView({
                 })
               )}
             </tbody>
-            {filteredRows.length > 0 && (
-              <tfoot className="bg-[#fef9c3] dark:bg-amber-950/60 font-black text-xs text-slate-900 dark:text-slate-100 border-t-2 border-amber-300 dark:border-amber-700">
-                <tr>
-                  <td colSpan={5} className="py-2.5 px-3 font-extrabold text-start border-r border-amber-200 dark:border-amber-900">
-                    {tr("Total")} ({filteredRows.length} {tr("Bills")})
-                  </td>
-                  <td className="py-2.5 px-2 text-center font-mono font-black border-r border-amber-200 dark:border-amber-900">
-                    {fmtInt(tableTotals.totalQty)}
-                  </td>
-                  <td className="py-2.5 px-3 text-right font-mono font-black border-r border-amber-200 dark:border-amber-900">
-                    <div>{fmt(tableTotals.totalGrossKg)}</div>
-                    <div className="text-[10px] text-slate-600 dark:text-slate-400 font-normal">{fmt(tableTotals.totalNetKg)}</div>
-                  </td>
-                  <td className="py-2.5 px-2.5 text-center border-r border-amber-200 dark:border-amber-900 text-slate-400 font-mono">—</td>
-                  <td className="py-2.5 px-2.5 text-right font-mono font-black border-r border-amber-200 dark:border-amber-900">
-                    <div className="text-slate-900 dark:text-slate-100">USD {fmt(tableTotals.totalPurchUSD)}</div>
-                    <div className="text-red-600 dark:text-red-400 text-[10px]">AED {fmt(tableTotals.totalFinalAED)}</div>
-                  </td>
-                  <td className="py-2.5 px-2.5 text-center border-r border-amber-200 dark:border-amber-900 text-slate-400 font-mono">—</td>
-                  <td className="py-2.5 px-3 text-center border-r border-amber-200 dark:border-amber-900 text-slate-400 font-mono">—</td>
-                  <td className="py-2.5 px-3 text-center border-r border-amber-200 dark:border-amber-900 text-slate-400 font-mono">—</td>
-                  <td className="py-2.5 px-2.5 text-center border-r border-amber-200 dark:border-amber-900 text-slate-400 font-mono">—</td>
-                  <td className="py-2.5 px-2 text-center text-slate-400 font-mono">—</td>
-                </tr>
-              </tfoot>
-            )}
           </table>
         </div>
 
