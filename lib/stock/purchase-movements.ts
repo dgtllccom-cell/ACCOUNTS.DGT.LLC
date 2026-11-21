@@ -87,12 +87,19 @@ export type EntryRow = {
   brand: string;
   size: string;
   lot: string;
+  lotName: string;
+  lotNo: string;
   qty: number;
   unit: string;
   gross: number;
   net: number;
+  loadedQty: number;
+  loadedGross: number;
+  loadedNet: number;
   destination: string;
   remaining: number;
+  remainingGross: number;
+  remainingNet: number;
   status: string;
 };
 
@@ -113,12 +120,20 @@ export type PurchaseRow = {
     branch: string;
     entry: string;
   };
+  buyerAccount: { name: string; number: string };
+  supplierAccount: { name: string; number: string };
   goodsNames: string[];
   unit: string;
   qty: number;
   gross: number;
   net: number;
+  loadedQty: number;
+  loadedGross: number;
+  loadedNet: number;
+  loadingDate: string;
   remaining: number;
+  remainingGross: number;
+  remainingNet: number;
   entries: EntryRow[];
   movements: Movement[];
 };
@@ -289,9 +304,19 @@ export function buildPurchaseRows(
     const laneOfEntry = (e: Entry) =>
       b.type === "booking" ? billLanes.find((l) => l.source_id === e.loadingRecordId) : billLanes[0];
 
+    const billLoadedQty = billLanes.reduce((s, l) => s + num(l.loaded_quantity), 0);
+    const billLoadedGross = billLanes.reduce((s, l) => s + num(l.gross_weight), 0);
+    const billLoadedNet = billLanes.reduce((s, l) => s + num(l.net_weight), 0);
+    const billLoadingDates = billLanes.map((l) => dateOnly(l.loading_date)).filter(Boolean).sort().reverse();
+    const billLatestLoadingDate = billLoadingDates[0] || "";
+
     const entries: EntryRow[] = b.entries.map((e) => {
       const lane = laneOfEntry(e);
       const loadingDate = (e.loadingRecordId && loadingDates[e.loadingRecordId]) || (lane ? dateOnly(lane.loading_date) : "");
+      const loadedQty = lane ? num(lane.loaded_quantity) : (b.type === "local" ? e.purchased.qty : 0);
+      const loadedGross = lane ? num(lane.gross_weight) : (b.type === "local" ? e.purchased.gross : 0);
+      const loadedNet = lane ? num(lane.net_weight) : (b.type === "local" ? e.purchased.net : 0);
+
       return {
         id: e.entryId,
         entryNo: `Entry ${e.entryNo}`,
@@ -300,12 +325,19 @@ export function buildPurchaseRows(
         brand: orDash(e.brand),
         size: orDash(e.size),
         lot: orDash(e.lotNo),
+        lotName: orDash(e.lotName || e.lotNo),
+        lotNo: orDash(e.lotRef || e.lotNo),
         qty: e.purchased.qty,
         unit: e.unit,
         gross: e.purchased.gross,
         net: e.purchased.net,
+        loadedQty,
+        loadedGross,
+        loadedNet,
         destination: str(e.warehouseName) || (lane ? laneDestination(lane) : DASH),
         remaining: e.remaining.qty,
+        remainingGross: e.remaining.gross,
+        remainingNet: e.remaining.net,
         status: e.status,
       };
     });
@@ -335,12 +367,26 @@ export function buildPurchaseRows(
         branch: str(b.serials?.branch) || DASH,
         entry: str(b.serials?.entry) || DASH,
       },
+      buyerAccount: {
+        name: str(b.buyerAccountName) || (b.type === "local" ? "Local Purchase" : DASH),
+        number: str(b.buyerAccountNo),
+      },
+      supplierAccount: {
+        name: str(b.supplierAccountName || b.purchaseAccountName) || DASH,
+        number: str(b.supplierAccountNo || b.purchaseAccountDetails),
+      },
       goodsNames: [...new Set(b.entries.map((e) => e.goodsName).filter(Boolean))],
       unit: units.length === 1 ? units[0] : "",
       qty: b.totals.purchased.qty,
       gross: b.totals.purchased.gross,
       net: b.totals.purchased.net,
+      loadedQty: b.type === "local" ? b.totals.purchased.qty : billLoadedQty,
+      loadedGross: b.type === "local" ? b.totals.purchased.gross : billLoadedGross,
+      loadedNet: b.type === "local" ? b.totals.purchased.net : billLoadedNet,
+      loadingDate: billLatestLoadingDate || (entries[0]?.loadingDate ?? ""),
       remaining: b.totals.remaining.qty,
+      remainingGross: b.totals.remaining.gross,
+      remainingNet: b.totals.remaining.net,
       entries,
       movements,
     };

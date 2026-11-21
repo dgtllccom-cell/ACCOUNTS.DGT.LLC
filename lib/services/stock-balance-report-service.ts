@@ -135,6 +135,10 @@ export interface BalanceBill {
   date: string | null;
   purchaseAccountName: string;
   purchaseAccountDetails: string;
+  buyerAccountName?: string;
+  buyerAccountNo?: string;
+  supplierAccountName?: string;
+  supplierAccountNo?: string;
   companyId: string | null;
   companyName: string;
   countryId: string | null;
@@ -457,7 +461,7 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
       const entryNo = (lotCounter.get(lotNo) ?? 0) + 1; lotCounter.set(lotNo, entryNo);
       const purchased: Weighted = { qty: q4(qty), gross: proportional(ex.gross, qty, line.booked), net: proportional(ex.net, qty, line.booked) };
       const e: BalanceEntry = {
-        entryId: `po:${po.id}::${lotNo}::${line.lineKey}`, lotNo, entryNo, lotEntryLabel: entryLabel(lotNo, entryNo), goodsName: line.goodsName, goodsId: line.goodsId, brand: line.brand, size: line.size,
+        entryId: `po:${po.id}::${lotNo}::${line.lineKey}`, lotNo, lotName: lotNameById.get(o.loadingRecordId ?? "") || lotNo, entryNo, lotEntryLabel: entryLabel(lotNo, entryNo), goodsName: line.goodsName, goodsId: line.goodsId, brand: line.brand, size: line.size,
         origin: ex.origin, unit: normalizeUnit(line.unit), purchased, sold: zero(), transferred: zero(), adjusted: zero(), reservedQty: 0, inTransitQty: 0, remaining: purchased,
         unitPrice: money ? ex.unitPrice : null, amount: money && ex.amount != null && line.booked > EPS ? q4((ex.amount * qty) / line.booked) : null, currency: ex.currency || currency,
         warehouseId: null, warehouseName: null, loadingRecordId: null, lotRef: null, status: "available", treatment: { received: 0, treated: 0, loss: 0, pending: 0 }, ...o,
@@ -515,10 +519,18 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
       });
     }
     const manual = str(form.manualBillNumber || form.billNo || po.purchase_contract_no);
-    const acctName = str(form.salesAccountName || form.supplierName || form.purchaseAccountName);
+    const purchaserAcct = str(form.purchaserAccountName || form.buyerAccountName || form.purchaserName || form.buyerName || form.customerAccountName || form.customerName);
+    const purchaserNo = str(form.purchaserAccountNo || form.buyerAccountNo || form.customerAccountNo);
+    const supplierAcct = str(form.salesAccountName || form.supplierName || form.supplierAccountName || form.purchaseAccountName || form.sellerName);
+    const supplierNo = str(form.salesAccountNo || form.supplierAccountNo || form.purchaseAccountNo);
+    const acctName = supplierAcct || purchaserAcct;
     const bill: BalanceBill = {
       id: po.id, type: "booking", billNo: str(po.purchase_order_no) || "-", manualBillNo: manual && manual !== po.purchase_order_no ? manual : "", date: dateOnly(form.purchaseDate || form.receiptDate || po.created_at),
       purchaseAccountName: acctName, purchaseAccountDetails: [str(form.salesAccountNo || form.purchaseAccountNo), str(form.supplierAddress), str(form.supplierPhone)].filter(Boolean).join(" · "),
+      buyerAccountName: purchaserAcct,
+      buyerAccountNo: purchaserNo,
+      supplierAccountName: supplierAcct,
+      supplierAccountNo: supplierNo,
       companyId: po.company_id ?? null, companyName: po.company_id ? companyName.get(po.company_id) ?? "" : "", countryId: po.country_id, countryName: po.country_name || "", countryCode: po.country_code || "",
       countryBranchId: po.country_branch_id, cityBranchId: po.city_branch_id, cityName: po.city_name || "", branchName: po.city_name || po.country_branch_name || "",
       mainBranchCode: str(po.country_branch_code), cityBranchCode: str(po.city_branch_code),
@@ -558,7 +570,7 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
       const branchOut = transfers.filter((t: any) => t.purpose === "export_dgt_branch" && ["in_transit", "completed", "confirmed"].includes(t.status)).reduce((a: number, t: any) => a + num(t.qty), 0);
       const purchased = w(qty);
       const e: BalanceEntry = {
-        entryId: `lp:${lp.id}::${lotNo}::${str(lot.line_key) || String(entryNo)}`, lotNo, entryNo, lotEntryLabel: entryLabel(lotNo, entryNo), goodsName: str(lot.goods_name), goodsId: lot.goods_id ?? null,
+        entryId: `lp:${lp.id}::${lotNo}::${str(lot.line_key) || String(entryNo)}`, lotNo, lotName: str(lot.lot_name || lot.lot_ref || lotNo), entryNo, lotEntryLabel: entryLabel(lotNo, entryNo), goodsName: str(lot.goods_name), goodsId: lot.goods_id ?? null,
         brand: str(lot.brand) === "-" ? "" : str(lot.brand), size: str(lot.size) === "-" ? "" : str(lot.size), origin: str(lot.origin) || str(lp.origin_country_name), unit: normalizeUnit(str(lot.unit_name || lp.quantity_name)), purchased, sold: w(soldQty), transferred: w(branchOut),
         adjusted: zero(), reservedQty: sumState("reserved"), inTransitQty: sumState("in_transit", "loading"), remaining: purchased, unitPrice: money && lot.unit_cost != null ? num(lot.unit_cost) : null,
         amount: money && lot.original_cost != null ? num(lot.original_cost) : null, currency: str(lot.currency_code) || currency,
@@ -583,9 +595,18 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
     }
     const systemNo = localPurchaseBillNo(lp);
     const contractRef = localPurchaseContractRef(lp);
+    const lpPurchaserAcct = str(lp.buyer_account_name || lp.purchaser_account_name || lp.buyer_name || "");
+    const lpPurchaserNo = str(lp.buyer_account_no || lp.purchaser_account_no || "");
+    const lpSupplierAcct = str(lp.supplier_name);
+    const lpSupplierNo = str(lp.purchase_account_no || lp.supplier_account_no || "");
     const bill: BalanceBill = {
       id: lp.id, type: "local", billNo: systemNo, manualBillNo: (str(lp.manual_bill_no) && str(lp.manual_bill_no) !== systemNo ? str(lp.manual_bill_no) : "") || contractRef, date: dateOnly(lp.created_at),
-      purchaseAccountName: str(lp.supplier_name), purchaseAccountDetails: str(lp.purchase_account_no), companyId: lp.company_id ?? null, companyName: lp.company_id ? companyName.get(lp.company_id) ?? "" : "",
+      purchaseAccountName: lpSupplierAcct, purchaseAccountDetails: lpSupplierNo,
+      buyerAccountName: lpPurchaserAcct,
+      buyerAccountNo: lpPurchaserNo,
+      supplierAccountName: lpSupplierAcct,
+      supplierAccountNo: lpSupplierNo,
+      companyId: lp.company_id ?? null, companyName: lp.company_id ? companyName.get(lp.company_id) ?? "" : "",
       countryId: lp.country_id, countryName: lp.country_name || "", countryCode: lp.country_code || "", countryBranchId: lp.country_branch_id, cityBranchId: lp.city_branch_id, cityName: lp.city_name || "",
       branchName: lp.city_name || lp.country_branch_name || "", mainBranchCode: str(lp.country_branch_code), cityBranchCode: str(lp.city_branch_code),
       branchFullLabel: branchLabelOf(lp.country_branch_name, lp.country_branch_code, lp.city_name, lp.city_branch_code),
