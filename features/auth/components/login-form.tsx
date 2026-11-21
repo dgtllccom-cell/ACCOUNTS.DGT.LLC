@@ -182,12 +182,12 @@ export function LoginForm({
         </div>
 
         {/* Title */}
-        <h1 className="text-2xl sm:text-[26px] font-black tracking-tight text-slate-900 dark:text-white mt-5">
+        <h1 className={`text-2xl sm:text-[26px] font-black text-slate-900 dark:text-white mt-5 ${lang === "ur" ? "leading-[1.8]" : isRtl ? "leading-[1.5]" : "tracking-tight"}`}>
           {t.brandTitle}
         </h1>
 
         {/* Subtitle */}
-        <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 mb-8">
+        <p className={`text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 mb-8 ${lang === "ur" ? "mt-3 leading-[1.9]" : isRtl ? "mt-2 leading-[1.6]" : "mt-1"}`}>
           {t.brandSubtitle}
         </p>
       </div>
