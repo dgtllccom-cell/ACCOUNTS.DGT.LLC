@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import { PurchaseApprovedHeader, type PapCountryRow, type PapStageRow } from "@/components/purchase-ui/purchase-approved-header";
+import { PurchaseApprovedHeader, type PapCountryRow, type PapStageRow, type ScopeUserInfo } from "@/components/purchase-ui/purchase-approved-header";
 import { countryLabel } from "@/lib/purchase-ui/country-name";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { fmtInt, fmtMoney, fmtPct, unitFor, valueIn } from "@/lib/purchase-ui/money-unit";
@@ -35,9 +35,29 @@ const amountOf = (r: Report) => Number(r.totalPurchaseAmount || r.purchaseAmount
 const curOf = (r: Report) => String(r.currency || r.form_data?.form?.currencyType || "USD").toUpperCase();
 
 export function BookingApprovedHeader({
-  rows, usdRates, scopeCountry, toolbar, onCountryOpen,
+  rows,
+  usdRates,
+  scopeCountry,
+  toolbar,
+  onCountryOpen,
+  session,
+  isSuperAdmin,
+  isCountryAdmin,
+  isBranchAdmin,
+  erpScope,
+  hideHead = true,
 }: {
-  rows: Report[]; usdRates: Record<string, number>; scopeCountry?: string; toolbar: ReactNode; onCountryOpen?: (country: string) => void;
+  rows: Report[];
+  usdRates: Record<string, number>;
+  scopeCountry?: string;
+  toolbar?: ReactNode;
+  onCountryOpen?: (country: string) => void;
+  session?: any;
+  isSuperAdmin?: boolean;
+  isCountryAdmin?: boolean;
+  isBranchAdmin?: boolean;
+  erpScope?: any;
+  hideHead?: boolean;
 }) {
   const s = useErpScreen("pap");
   const m = useMemo(() => {
@@ -54,7 +74,17 @@ export function BookingApprovedHeader({
     const countries = Array.from(countryMap.entries())
       .map(([name, list]) => { const u = unitFor(list, curOf, amountOf, rateOf); return { name, list, text: fmtMoney(u, valueIn(u, list, curOf, amountOf, rateOf)) }; })
       .sort((a, b) => b.list.length - a.list.length);
-    return { by, unit, total, confirmed, pending, pct, countries };
+
+    const branchMap = new Map<string, Report[]>();
+    rows.forEach((r) => {
+      const k = String(r.branchName || r.cityBranchName || r.mainBranchName || "—");
+      (branchMap.get(k) ?? branchMap.set(k, []).get(k)!).push(r);
+    });
+    const branches = Array.from(branchMap.entries())
+      .map(([name, list]) => { const u = unitFor(list, curOf, amountOf, rateOf); return { name, list, text: fmtMoney(u, valueIn(u, list, curOf, amountOf, rateOf)) }; })
+      .sort((a, b) => b.list.length - a.list.length);
+
+    return { by, unit, total, confirmed, pending, pct, countries, branches };
   }, [rows, usdRates]);
 
   const only = m.countries.length === 1 && m.countries[0].name !== "—" ? m.countries[0].name : "";
@@ -71,10 +101,23 @@ export function BookingApprovedHeader({
     key: c.name, name: countryLabel(c.name, s.t), value: c.text, count: fmtInt(c.list.length),
     onClick: onCountryOpen && c.name !== "—" ? () => onCountryOpen(c.name) : undefined,
   }));
+  const branchRows: PapCountryRow[] = m.branches.map((b) => ({
+    key: b.name, name: b.name, value: b.text, count: fmtInt(b.list.length),
+  }));
+
+  const branchScopeInfo: ScopeUserInfo | undefined = isBranchAdmin ? {
+    countryCode: erpScope?.countryName || session?.scopes?.summary?.countryName || (rows[0]?.countryName ?? "UAE"),
+    branchCode: erpScope?.branchDisplayName || session?.scopes?.summary?.branchDisplayName || (rows[0]?.branchName ?? "Dubai City Branch"),
+    userCode: session?.user?.id ? session.user.id.slice(0, 8).toUpperCase() : (erpScope?.userId ? erpScope.userId.slice(0, 8).toUpperCase() : "USR-001"),
+    userName: erpScope?.userName || session?.user?.fullName || "Branch Admin",
+    role: (erpScope?.role || session?.roles?.[0] || "BRANCH ADMIN").replace(/_/g, " ").toUpperCase(),
+  } : undefined;
+
   return (
     <PurchaseApprovedHeader
       page="booking-details"
       toolbar={toolbar}
+      hideHead={hideHead}
       summary={{
         title: `${s.t("bookingSummary", "Booking Details Summary")} (${scope})`,
         subtitle: s.t("originalRegister", "Original ERP register"),
@@ -85,7 +128,28 @@ export function BookingApprovedHeader({
         ],
       }}
       stages={{ title: `${s.t("bookingStatus", "Booking Status")} (${scope})`, subtitle: s.t("currentPeriod", "Current period"), rows: stageRows }}
-      countries={{ title: `${s.t("countries", "Countries")} (${countryRows.length})`, subtitle: scope, rows: countryRows, emptyLabel: "—" }}
+      countries={
+        isBranchAdmin
+          ? {
+              title: s.t("branch", "Branch Scope"),
+              subtitle: scope,
+              rows: [],
+              branchScopeInfo,
+            }
+          : isCountryAdmin
+          ? {
+              title: `${s.t("allBranches", "Branches")} (${branchRows.length})`,
+              subtitle: scope,
+              rows: branchRows,
+              emptyLabel: "—",
+            }
+          : {
+              title: `${s.t("countries", "Countries")} (${countryRows.length})`,
+              subtitle: scope,
+              rows: countryRows,
+              emptyLabel: "—",
+            }
+      }
     />
   );
 }
