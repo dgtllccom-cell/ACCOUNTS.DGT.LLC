@@ -15,13 +15,13 @@ export default async function ShippingLineTrackingPage({
   const canReadLoads = hasRolePermission(session, "purchases", "read") || hasRolePermission(session, "purchase_logistics", "read");
   return (
     <div className="p-3 sm:p-5">
-      {canReadLoads && <PurchaseLoadTracking laneId={params.purchaseLaneId} />}
       <CanonicalShipmentTrackingView
         domain="shipping"
         initialShipmentId={params.id || null}
         initialStatus={params.status || "all"}
         initialTab={(params.tab as any) || "all"}
         initialQuery={params.q || ""}
+        topSlot={canReadLoads ? <PurchaseLoadTracking laneId={params.purchaseLaneId} embedded /> : null}
       />
     </div>
   );
