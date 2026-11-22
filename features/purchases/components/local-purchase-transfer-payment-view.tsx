@@ -43,6 +43,12 @@ import {
   resolveLocalPurchaseDestination,
   type LocalPurchaseDestinationStage,
 } from "@/lib/purchases/local-purchase-destination";
+import {
+  localPurchasePaymentHref,
+  localPurchasePaymentRoute,
+  verifiedPaidOnBill,
+} from "@/lib/purchases/local-purchase-payment-routing";
+import { localPurchaseBillNo } from "@/lib/purchases/local-purchase-number";
 
 const DESTINATION_ACTION_KEY: Record<LocalPurchaseDestinationStage, string> = {
   loading: "lp.dest_send_loading",
@@ -65,12 +71,14 @@ export interface LocalPurchaseTransferPaymentViewProps {
   countries?: any[];
 }
 
-type PaymentOptionCategory = "invoice" | "credit" | "final" | "cash";
+type PaymentOptionCategory = "advance" | "invoice" | "credit" | "final" | "cash";
 
 interface ResolvedPaymentMeta {
   category: PaymentOptionCategory;
   optionLabel: string;
+  optionKey: string;
   destinationLabel: string;
+  destinationKey: string;
   pillClass: string;
   totalPayment: number;
   actualPaid: number;
@@ -156,107 +164,32 @@ function formatMoneyAmount(currency: string, amount: number): string {
   })}`;
 }
 
+const PAYMENT_PILL_CLASS: Record<PaymentOptionCategory, string> = {
+  advance: "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/50 dark:text-violet-300 dark:border-violet-800",
+  invoice: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800",
+  final: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800",
+  credit: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800",
+  cash: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800",
+};
+
 function resolvePaymentMeta(row: any): ResolvedPaymentMeta {
   const totalPayment = Math.max(0, toNum(row.final_cost ?? row.finalCost ?? row.purchase_cost ?? row.purchaseCost));
-  const rawMode = String(row.payment_mode ?? row.paymentMode ?? "Cash").trim();
-  const modeLower = rawMode.toLowerCase();
-  const latestKind = String(row.latest_payment_kind || "").toLowerCase();
-  const statusLower = String(row.status || row.bill_status || "draft").toLowerCase();
-  const isPosted = ["posted", "transferred", "completed", "paid"].includes(statusLower);
-
-  // Determine actual posted paid amount (never treat a bill transfer or credit allocation as paid money)
-  let actualPaid = 0;
-  if (row.paid_amount !== undefined && row.paid_amount !== null) {
-    actualPaid = Math.min(totalPayment, Math.max(0, toNum(row.paid_amount)));
-  } else if (toNum(row.posted_payment_count) > 0) {
-    actualPaid = Math.min(totalPayment, Math.max(0, toNum(row.posted_paid_amount)));
-  } else if (modeLower.includes("credit")) {
-    actualPaid = 0;
-  } else if (
-    modeLower.includes("advance") ||
-    modeLower.includes("invoice") ||
-    modeLower.includes("final") ||
-    modeLower.includes("remaining")
-  ) {
-    const advAmt = Math.max(0, toNum(row.advance_amount ?? row.advanceAmount));
-    actualPaid = isPosted && advAmt > 0 ? Math.min(totalPayment, advAmt) : 0;
-  } else if (modeLower.includes("cash") || modeLower.includes("bank") || modeLower.includes("hawala")) {
-    actualPaid = isPosted && Boolean(row.roznamcha_entry_id) ? totalPayment : 0;
-  }
-
+  // The saved condition picks the payment workflow (one table: lib/purchases/local-purchase-payment-routing.ts). Advance and
+  // Invoice are different workflows and are never grouped.
+  const route = localPurchasePaymentRoute(row.payment_mode ?? row.paymentMode ?? "Cash");
+  // Paid = ledger-verified POSTED payments only. The booking transfer (roznamcha_entry_id, DR purchase / CR payable) is not a
+  // payment, and the saved condition text or advance_amount never marks a bill as paid.
+  const actualPaid = Math.min(totalPayment, verifiedPaidOnBill(row).paid);
   const balance = Math.max(0, totalPayment - actualPaid);
-
-  // Classify option & destination
-  if (modeLower.includes("credit") || latestKind === "credit") {
-    return {
-      category: "credit",
-      optionLabel: "Credit",
-      destinationLabel: "Credit Payment",
-      pillClass: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800",
-      totalPayment,
-      actualPaid,
-      balance,
-    };
-  }
-
-  if (
-    modeLower.includes("final") ||
-    modeLower.includes("remaining") ||
-    latestKind === "remaining" ||
-    latestKind === "final"
-  ) {
-    return {
-      category: "final",
-      optionLabel: "Final Payment",
-      destinationLabel: "Final Payment",
-      pillClass: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800",
-      totalPayment,
-      actualPaid,
-      balance,
-    };
-  }
-
-  if (modeLower.includes("advance") || modeLower.includes("invoice") || latestKind === "advance") {
-    return {
-      category: "invoice",
-      optionLabel: "Invoice Payment",
-      destinationLabel: "Invoice Payment",
-      pillClass: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800",
-      totalPayment,
-      actualPaid,
-      balance,
-    };
-  }
-
-  if (modeLower.includes("bank")) {
-    return {
-      category: "cash",
-      optionLabel: "Bank Transfer",
-      destinationLabel: "Bank / Cheque Roznamcha",
-      pillClass: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800",
-      totalPayment,
-      actualPaid,
-      balance,
-    };
-  }
-
-  if (modeLower.includes("hawala")) {
-    return {
-      category: "cash",
-      optionLabel: "Hawala / Transfer",
-      destinationLabel: "Hawala Roznamcha",
-      pillClass: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800",
-      totalPayment,
-      actualPaid,
-      balance,
-    };
-  }
-
+  const category: PaymentOptionCategory =
+    route.category === "bank" || route.category === "hawala" ? "cash" : route.category;
   return {
-    category: "cash",
-    optionLabel: "Cash",
-    destinationLabel: "Cash Roznamcha",
-    pillClass: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800",
+    category,
+    optionLabel: route.optionFallback,
+    optionKey: route.optionKey,
+    destinationLabel: route.destinationFallback,
+    destinationKey: route.destinationKey,
+    pillClass: PAYMENT_PILL_CLASS[category],
     totalPayment,
     actualPaid,
     balance,
@@ -1110,9 +1043,9 @@ export function LocalPurchaseTransferPaymentView({
           <div className="lp-print-grid-4 lp-print-block grid grid-cols-4 gap-3 text-xs border-t border-slate-200 pt-3 min-w-0">
             <div>
               <div className="text-slate-500 font-semibold">{tr("Payment Option")}</div>
-              <div className="font-black">{printingBill._paymentMeta.optionLabel}</div>
+              <div className="font-black">{tGlobal(printingBill._paymentMeta.optionKey, printingBill._paymentMeta.optionLabel)}</div>
               <div className="text-[11px] text-slate-600">
-                {tr("Destination")}: {printingBill._paymentMeta.destinationLabel}
+                {tr("Destination")}: {tGlobal(printingBill._paymentMeta.destinationKey, printingBill._paymentMeta.destinationLabel)}
               </div>
             </div>
             <div>
@@ -1257,6 +1190,7 @@ export function LocalPurchaseTransferPaymentView({
                     className="w-full h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 text-xs font-semibold"
                   >
                     <option value="all">{tr("All Payment Options")}</option>
+                    <option value="advance">{tr("Advance Payment")}</option>
                     <option value="invoice">{tr("Invoice Payment")}</option>
                     <option value="final">{tr("Final Payment")}</option>
                     <option value="credit">{tr("Credit")}</option>
@@ -1972,12 +1906,12 @@ export function LocalPurchaseTransferPaymentView({
                               row._paymentMeta.pillClass
                             )}
                           >
-                            {tr(row._paymentMeta.optionLabel)}
+                            {tGlobal(row._paymentMeta.optionKey, row._paymentMeta.optionLabel)}
                           </span>
                           <span className="text-[9.5px] text-slate-500 dark:text-slate-400 mt-0.5">
                             {tr("Destination")}:{" "}
                             <strong className="text-slate-700 dark:text-slate-200">
-                              {tr(row._paymentMeta.destinationLabel)}
+                              {tGlobal(row._paymentMeta.destinationKey, row._paymentMeta.destinationLabel)}
                             </strong>
                           </span>
                         </div>
@@ -2076,6 +2010,26 @@ export function LocalPurchaseTransferPaymentView({
                               <Printer className="h-3.5 w-3.5 text-blue-600" />
                               <span>{tr("Print A4")}</span>
                             </button>
+
+                            {(() => {
+                              // Payment: opens the workflow for the bill's saved condition (Advance, Invoice, Final, Credit, or the
+                              // Cash / Bank roznamcha). Opening it posts nothing; only that workflow's Confirm & Post creates a payment.
+                              if (!["posted", "transferred", "paid", "completed"].includes(String(row.status || "").toLowerCase())) return null;
+                              const payRoute = localPurchasePaymentRoute(row.payment_mode ?? row.paymentMode ?? "Cash");
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenRowMenuId(null);
+                                    router.push(localPurchasePaymentHref(payRoute, localPurchaseBillNo(row)));
+                                  }}
+                                  className="w-full px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
+                                >
+                                  <CreditCard className="h-3.5 w-3.5 text-violet-600" />
+                                  <span>{tGlobal("lp.pay_action", "Payment")}</span>
+                                </button>
+                              );
+                            })()}
 
                             {(() => {
                               // Route to the queue the bill was booked for (shipping_mode); the other
@@ -2304,10 +2258,10 @@ export function LocalPurchaseTransferPaymentView({
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-3">
                   <div className="text-[10px] font-bold uppercase text-slate-400">{tr("Payment Option")}</div>
                   <div className="font-black text-slate-900 dark:text-white mt-1">
-                    {tr(viewingBill._paymentMeta.optionLabel)}
+                    {tGlobal(viewingBill._paymentMeta.optionKey, viewingBill._paymentMeta.optionLabel)}
                   </div>
                   <div className="text-[11px] text-slate-500 mt-0.5">
-                    {tr("Destination")}: {tr(viewingBill._paymentMeta.destinationLabel)}
+                    {tr("Destination")}: {tGlobal(viewingBill._paymentMeta.destinationKey, viewingBill._paymentMeta.destinationLabel)}
                   </div>
                 </div>
                 <div className="rounded-xl border border-blue-200 bg-blue-50/50 dark:bg-blue-950/30 p-3">

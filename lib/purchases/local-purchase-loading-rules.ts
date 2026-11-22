@@ -5,30 +5,51 @@
  * Eligibility must also be checked on the server against current posted
  * payments under a DB transaction before saving a physical loading entry.
  */
-export type LocalPurchasePaymentMode = "advance" | "cash" | "credit" | "unknown";
+import { classifyLocalPurchaseCondition } from "@/lib/purchases/local-purchase-payment-routing";
 
+export type LocalPurchasePaymentMode = "advance" | "cash" | "credit" | "invoice" | "final" | "unknown";
+
+/** Loading gate class of a saved condition. Cash, Bank and Hawala are all paid in cash, so they share one gate. */
 export function classifyLocalPurchasePaymentMode(mode: string | null | undefined): LocalPurchasePaymentMode {
-  const normalized = String(mode ?? "").trim().toLowerCase();
-  if (normalized.includes("advance")) return "advance";
-  if (normalized.includes("cash") || normalized.includes("bank") || normalized.includes("hawala")) return "cash";
-  if (normalized.includes("credit")) return "credit";
+  const category = classifyLocalPurchaseCondition(mode);
+  if (category === "advance") return "advance";
+  if (category === "cash" || category === "bank" || category === "hawala") return "cash";
+  if (category === "credit") return "credit";
+  if (category === "invoice") return "invoice";
+  if (category === "final") return "final";
   return "unknown";
 }
 
 export type LoadingPaymentEligibility = {
   purchaseStatus: string;
   mode: string | null | undefined;
+  /** Advance required before loading (the booked advance, not the advance paid so far). */
   requiredAdvance: number;
+  /** Ledger-verified advance actually paid (posted advance payments only). */
   postedAdvance: number;
+  /** Cash / Bank: at least one ledger-verified posted payment exists. The booking transfer never counts. */
   cashPaymentPosted?: boolean;
   creditApproved?: boolean;
+  /** Invoice: the bill's total payable and the verified total paid. Invoice bills pay in full before they load. */
+  totalPayable?: number;
+  verifiedPaidTotal?: number;
 };
 
 export type LoadingEligibilityResult = {
   allowed: boolean;
-  reason: "READY" | "NOT_POSTED" | "ADVANCE_PENDING" | "CASH_PENDING" | "CREDIT_NOT_APPROVED" | "UNKNOWN_MODE";
+  reason: "READY" | "NOT_POSTED" | "ADVANCE_PENDING" | "CASH_PENDING" | "CREDIT_NOT_APPROVED" | "INVOICE_PENDING" | "UNKNOWN_MODE";
   advanceOutstanding: number;
 };
+
+/**
+ * Credit approval for loading. The approval record is the Transfer & Post review: it posts the purchase booking (status posted, with a
+ * posted Roznamcha entry). No credit-limit or credit-approval table exists for purchases, so a missing booking means not approved.
+ * A bill that is already loading is never failed retroactively by this check (its first entry was allowed under the same rule).
+ */
+export function isCreditApprovedForLoading(input: { purchaseStatus: string; bookingPosted: boolean; alreadyLoading: boolean }): boolean {
+  if (input.alreadyLoading) return true;
+  return input.purchaseStatus.trim().toLowerCase() === "posted" && input.bookingPosted;
+}
 
 const validMoney = (n: number) => Number.isFinite(n) && n >= 0;
 
@@ -36,6 +57,10 @@ const validMoney = (n: number) => Number.isFinite(n) && n >= 0;
  * Only posted bills qualify. Never infer actual paid money from a GL purchase
  * posting or a user-entered advance amount: postedAdvance is the amount of
  * individually posted supplier payments in the SAME purchase currency.
+ *
+ * Gate by condition: Credit loads without an advance; Final loads straight away (its payment settles after loading);
+ * Advance loads only once the booked advance is fully paid; Invoice loads only once the bill is paid in full;
+ * Cash / Bank / Hawala load once a ledger-verified payment exists. Unknown conditions fail closed.
  */
 export function checkLocalPurchaseLoadingEligibility(input: LoadingPaymentEligibility): LoadingEligibilityResult {
   const required = validMoney(input.requiredAdvance) ? input.requiredAdvance : Infinity;
@@ -53,6 +78,14 @@ export function checkLocalPurchaseLoadingEligibility(input: LoadingPaymentEligib
       return { allowed: Boolean(input.cashPaymentPosted), reason: input.cashPaymentPosted ? "READY" : "CASH_PENDING", advanceOutstanding };
     case "credit":
       return { allowed: Boolean(input.creditApproved), reason: input.creditApproved ? "READY" : "CREDIT_NOT_APPROVED", advanceOutstanding };
+    case "invoice": {
+      const total = validMoney(input.totalPayable ?? NaN) ? Number(input.totalPayable) : Infinity;
+      const verified = validMoney(input.verifiedPaidTotal ?? NaN) ? Number(input.verifiedPaidTotal) : 0;
+      const ready = Number.isFinite(total) && verified + 0.01 >= total;
+      return { allowed: ready, reason: ready ? "READY" : "INVOICE_PENDING", advanceOutstanding };
+    }
+    case "final":
+      return { allowed: true, reason: "READY", advanceOutstanding };
     default:
       return { allowed: false, reason: "UNKNOWN_MODE", advanceOutstanding };
   }

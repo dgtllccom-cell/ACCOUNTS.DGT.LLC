@@ -7,8 +7,9 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { acquireIdempotencyLock, buildReplayedResponse, commitIdempotencySuccess, releaseIdempotencyLock } from "@/lib/api/idempotency";
 import { z } from "zod";
-import { checkLocalPurchaseLoadingEligibility, remainingLocalPurchaseQuantity } from "@/lib/purchases/local-purchase-loading-rules";
+import { checkLocalPurchaseLoadingEligibility, isCreditApprovedForLoading, remainingLocalPurchaseQuantity } from "@/lib/purchases/local-purchase-loading-rules";
 import { localPurchaseHasWarehouse, parseLoadingDetails } from "@/lib/purchases/local-purchase-destination";
+import { requiredAdvanceForBill, totalPayableForBill } from "@/lib/purchases/local-purchase-payment-routing";
 
 /**
  * POST /api/erp/purchases/local-purchase/destination-stage
@@ -114,27 +115,47 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // Payment eligibility check for loading
+        // Payment eligibility for loading. Counts ledger-verified POSTED payments only (the same rule as the Payment journal and the
+        // Transfer register). The booking transfer (roznamcha_entry_id set by Transfer & Post) is a purchase, never a payment.
         if (stage === "loading") {
           const payAgg = await tx`
             select
-              coalesce(sum(amount) filter (where status = 'posted'), 0)::numeric as posted_paid_amount,
-              count(*) filter (where status = 'posted')::int as posted_payment_count
-            from public.purchase_order_payments
-            where local_purchase_id = ${purchaseId}::uuid
-              and deleted_at is null
-              and kind != 'booking';
+              coalesce(sum(p.amount) filter (where p.kind = 'advance'), 0)::numeric as verified_advance,
+              coalesce(sum(p.amount) filter (where p.kind <> 'advance'), 0)::numeric as verified_other,
+              count(*)::int as verified_count
+            from public.purchase_order_payments p
+            where p.local_purchase_id = ${purchaseId}::uuid
+              and p.deleted_at is null
+              and p.status = 'posted'
+              and p.kind <> 'booking'
+              and p.posted_to_journal = true
+              and p.roznamcha_entry_id is not null
+              and p.debit_ledger_id is not null
+              and p.credit_ledger_id is not null;
           `;
-          const postedPaid = Math.max(0, Number(payAgg[0]?.posted_paid_amount ?? 0));
-          const postedCount = Number(payAgg[0]?.posted_payment_count ?? 0);
-          const advanceRequired = Number(purchase.advance_amount ?? 0);
+          const verifiedAdvance = Math.max(0, Number(payAgg[0]?.verified_advance ?? 0));
+          const verifiedOther = Math.max(0, Number(payAgg[0]?.verified_other ?? 0));
+          const verifiedCount = Number(payAgg[0]?.verified_count ?? 0);
+          // Credit approval = the Transfer & Post booking is posted (its Roznamcha entry exists and is posted). A bill that is
+          // already loading is never failed retroactively by this check. The advance check below is never skipped.
+          const bookingRows = purchase.roznamcha_entry_id
+            ? await tx`select status from public.roznamcha_entries where id = ${purchase.roznamcha_entry_id}::uuid and deleted_at is null limit 1`
+            : [];
+          const alreadyLoading = Boolean(purchase.loading_completed_at) || ["partial", "completed"].includes(String(purchase.loading_status || "")) ||
+            parseLoadingDetails(purchase.loading_details).entries?.some?.((e: any) => Number(e?.loadedQuantity ?? 0) > 0) === true;
           const elig = checkLocalPurchaseLoadingEligibility({
             purchaseStatus: purchase.status,
             mode: purchase.payment_mode,
-            requiredAdvance: advanceRequired,
-            postedAdvance: postedPaid,
-            cashPaymentPosted: Boolean(purchase.roznamcha_entry_id) || postedCount > 0,
-            creditApproved: true,
+            requiredAdvance: requiredAdvanceForBill(purchase),
+            postedAdvance: verifiedAdvance,
+            cashPaymentPosted: verifiedCount > 0,
+            creditApproved: isCreditApprovedForLoading({
+              purchaseStatus: purchase.status,
+              bookingPosted: String(bookingRows[0]?.status || "") === "posted",
+              alreadyLoading,
+            }),
+            totalPayable: totalPayableForBill(purchase),
+            verifiedPaidTotal: verifiedAdvance + verifiedOther,
           });
 
           if (!elig.allowed) {

@@ -15,6 +15,7 @@ import { withKeyedLock } from "@/lib/db/keyed-lock";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
+import { allowedPaymentKindsForCondition } from "@/lib/purchases/local-purchase-payment-routing";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
@@ -430,6 +431,17 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     }
 
     const orderRow = order as any;
+    // A Local Purchase is paid only through the workflow its saved condition routes to (Credit page = credit, Advance page =
+    // advance, Remaining/Invoice/Cash/Bank = remaining). Any other kind is an incorrect route and is refused.
+    if (orderRow.order_type === "local_purchase") {
+      const allowedKinds = allowedPaymentKindsForCondition(orderRow.payment_mode);
+      if (!allowedKinds.includes(body.kind)) {
+        throw new ApiClientError(
+          `This bill's payment condition is '${orderRow.payment_mode || "Cash"}'. Pay it from its own workflow (${allowedKinds.join(" / ") || "none"}), not '${body.kind}'.`,
+          { status: 409, code: "WRONG_PAYMENT_WORKFLOW" },
+        );
+      }
+    }
     // many bookings hold form_data as a JSON string inside the jsonb column — read it as an object so the payment condition,
     // advance percent and booked quantity below are the real ones
     orderRow.form_data = parseJsonish(orderRow.form_data);
@@ -468,6 +480,26 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       remainingDuePur = Number(orderRow.remaining_due);
     } else {
       remainingDuePur = Math.max(0, orderTotalPur - advancePaidPur - remainingPaidPur - creditAmountPur);
+    }
+    if (orderRow.order_type === "local_purchase") {
+      // The stored remaining_balance column is not reduced by a Cash / Bank / Invoice / Final payment, so the balance read from it
+      // stayed at the full amount and the same balance could be paid twice. For a Local Purchase the balance is also the total less
+      // the ledger-verified posted payments in the purchase currency (the register and the loading gate use the same rows). Read
+      // inside the payment lock; the lower of the two values is used, so this never relaxes the existing check.
+      const [verified] = await withLocalPg((sql) => sql`
+        select coalesce(sum(p.amount), 0)::float8 as paid
+        from public.purchase_order_payments p
+        where p.local_purchase_id = ${params.id}::uuid
+          and p.deleted_at is null
+          and p.status = 'posted'
+          and p.kind <> 'booking'
+          and p.currency_code = ${orderCcy}
+          and p.posted_to_journal = true
+          and p.roznamcha_entry_id is not null
+          and p.debit_ledger_id is not null
+          and p.credit_ledger_id is not null
+      `) as any[];
+      remainingDuePur = Math.min(remainingDuePur, Math.max(0, orderTotalPur - Number(verified?.paid ?? 0)));
     }
 
     const goodsEntries = Array.isArray(orderRow.form_data?.goodsEntries) ? orderRow.form_data.goodsEntries : [];
