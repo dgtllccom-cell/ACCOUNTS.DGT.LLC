@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { issueForSalesOrder } from "@/lib/services/stock-journal-service";
-import { assertReservationsReady, finalizeForOrder, usesManagedLots } from "@/lib/sales/managed-lot-sales";
+import { assertReservationsReady, usesManagedLots } from "@/lib/sales/managed-lot-sales";
+import { finalizeSaleStock } from "@/lib/services/goods-transfer-service";
 import { z } from "zod";
 import { ApiClientError, apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
@@ -309,138 +310,148 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       claimedOrderId = params.id;
     }
 
-    const { data: paymentId, error: rpcError } = await supabase.rpc("post_sales_booking_transfer", {
-      p_actor_id: session.userId,
-      p_sales_order_id: params.id,
-      p_payment_kind: paymentRoute.paymentKind,
-      p_entry_date: new Date().toISOString().slice(0, 10),
-      p_amount: totalSalesAmount,
-      p_currency_code: orderRow.currency_code || form.currencyType || "USD",
-      p_exchange_rate: orderRow.exchange_rate || form.exchangeRate || 1,
-      p_debit_ledger_id: debitLedgerId,
-      p_credit_ledger_id: creditLedgerId,
-      p_reference_no: referenceNo,
-      p_narration: postingNarration || null
-    });
-
-    if (rpcError) {
-      throw new Error(rpcError.message);
-    }
-    paymentPosted = true;
-    await withLocalPg(async (sql) => {
-      await sql`
-        update sales_orders set form_data = coalesce(form_data, '{}'::jsonb) || jsonb_build_object(
-          'workflow', coalesce(form_data->'workflow', '{}'::jsonb) || jsonb_build_object('transferPostedPaymentId', ${String(paymentId)}::text)
-        ) where id = ${params.id}
+    // ONE database transaction for the posting AND its stock: the payment, roznamcha, ledger lines, stock deduction and the
+    // order status are written together or not at all. A stock refusal posts nothing; a posting refusal moves no stock.
+    const core = await withLocalPg((db) => db.begin(async (tx: any) => {
+      const pg = (fn: (sql: any) => Promise<any>) => fn(tx);
+      const rpcRows = await tx`
+        select public.post_sales_booking_transfer(
+          ${session.userId}::uuid,
+          ${params.id}::uuid,
+          ${paymentRoute.paymentKind}::text,
+          ${new Date().toISOString().slice(0, 10)}::date,
+          ${totalSalesAmount}::numeric,
+          ${String(orderRow.currency_code || form.currencyType || "USD")}::text,
+          ${Number(orderRow.exchange_rate || form.exchangeRate || 1)}::numeric,
+          ${debitLedgerId}::uuid,
+          ${creditLedgerId}::uuid,
+          ${referenceNo}::text,
+          ${postingNarration || null}::text
+        ) as payment_id
       `;
-    });
+      const paymentId = rpcRows[0]?.payment_id ? String(rpcRows[0].payment_id) : null;
+      if (!paymentId) throw new Error("Sales posting did not return a payment id.");
+      await pg(async (sql) => {
+        await sql`
+          update sales_orders set form_data = coalesce(form_data, '{}'::jsonb) || jsonb_build_object(
+            'workflow', coalesce(form_data->'workflow', '{}'::jsonb) || jsonb_build_object('transferPostedPaymentId', ${String(paymentId)}::text)
+          ) where id = ${params.id}
+        `;
+      });
 
-    // sales_order_payments reads can hit the same RLS gap as sales_orders under the temp-session
-    // bootstrap login; try direct-Postgres first.
-    const viaPgPayment = await withLocalPg(async (sql) => {
-      const rows = await sql`select id, roznamcha_entry_id from sales_order_payments where id = ${paymentId as string} limit 1`;
-      return rows[0] ?? null;
-    });
-    const paymentRecord = (viaPgPayment ?? await requireSupabaseData(
-      supabase
-        .from("sales_order_payments")
-        .select("id, roznamcha_entry_id")
-        .eq("id", paymentId as string)
-        .maybeSingle()
-    )) as any;
-    if (!paymentRecord) {
-      throw new Error("Sales order payment record not found after posting.");
-    }
+      // sales_order_payments reads can hit the same RLS gap as sales_orders under the temp-session
+      // bootstrap login; try direct-Postgres first.
+      const viaPgPayment = await pg(async (sql) => {
+        const rows = await sql`select id, roznamcha_entry_id from sales_order_payments where id = ${paymentId as string} limit 1`;
+        return rows[0] ?? null;
+      });
+      const paymentRecord = (viaPgPayment ?? await requireSupabaseData(
+        supabase
+          .from("sales_order_payments")
+          .select("id, roznamcha_entry_id")
+          .eq("id", paymentId as string)
+          .maybeSingle()
+      )) as any;
+      if (!paymentRecord) {
+        throw new Error("Sales order payment record not found after posting.");
+      }
 
-    let rozType = "super_admin";
-    if (orderRow.city_branch_id) rozType = "branch";
-    else if (orderRow.country_branch_id || orderRow.country_id) rozType = "country";
+      let rozType = "super_admin";
+      if (orderRow.city_branch_id) rozType = "branch";
+      else if (orderRow.country_branch_id || orderRow.country_id) rozType = "country";
 
-    const adminSupabase = createSupabaseAdminClient() as any;
-    await adminSupabase.from("roznamcha_entries").update({
-      country_id: orderRow.country_id || null,
-      country_branch_id: orderRow.country_branch_id || null,
-      city_branch_id: orderRow.city_branch_id || null,
-      type: rozType,
-      entry_category: "business",
-      operational_domain: "business" // a Business entry must never stay unclassified (Shipping logins would see it)
-    }).eq("id", paymentRecord.roznamcha_entry_id);
+      await tx`
+        update public.roznamcha_entries set
+          country_id = ${orderRow.country_id || null}::uuid,
+          country_branch_id = ${orderRow.country_branch_id || null}::uuid,
+          city_branch_id = ${orderRow.city_branch_id || null}::uuid,
+          type = ${rozType}::roznamcha_type,
+          entry_category = 'business',
+          operational_domain = 'business'
+        where id = ${paymentRecord.roznamcha_entry_id}::uuid
+      `;
 
-    const viaPgLines = await withLocalPg(async (sql) => {
-      return await sql`select ledger_id, debit, credit from roznamcha_lines where roznamcha_entry_id = ${paymentRecord.roznamcha_entry_id}`;
-    });
-    const postedLines = (viaPgLines && viaPgLines.length > 0 ? viaPgLines : await requireSupabaseData(
-      supabase
-        .from("roznamcha_lines")
-        .select("ledger_id, debit, credit")
-        .eq("roznamcha_entry_id", paymentRecord.roznamcha_entry_id)
-    )) as any[];
+      const viaPgLines = await pg(async (sql) => {
+        return await sql`select ledger_id, debit, credit from roznamcha_lines where roznamcha_entry_id = ${paymentRecord.roznamcha_entry_id}`;
+      });
+      const postedLines = (viaPgLines && viaPgLines.length > 0 ? viaPgLines : await requireSupabaseData(
+        supabase
+          .from("roznamcha_lines")
+          .select("ledger_id, debit, credit")
+          .eq("roznamcha_entry_id", paymentRecord.roznamcha_entry_id)
+      )) as any[];
 
-    const exRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
-    // Internal posting-integrity assertion tag (developer diagnostics only, embedded in an
-    // exception message if these checks ever fail — not user-facing UI copy).
-    const postingAssertionLabel = "Sales booking";
-    assertDistinctBookingLedgers(debitLedgerId, creditLedgerId, postingAssertionLabel);
-    assertBalancedPostedLines({
-      label: postingAssertionLabel,
-      lines: postedLines,
-      expectedDebitLedgerId: debitLedgerId,
-      expectedCreditLedgerId: creditLedgerId,
-      expectedAmount: totalSalesAmount,
-      expectedExchangeRate: exRate
-    });
+      const exRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
+      // Internal posting-integrity assertion tag (developer diagnostics only, embedded in an
+      // exception message if these checks ever fail — not user-facing UI copy).
+      const postingAssertionLabel = "Sales booking";
+      assertDistinctBookingLedgers(debitLedgerId, creditLedgerId, postingAssertionLabel);
+      assertBalancedPostedLines({
+        label: postingAssertionLabel,
+        lines: postedLines,
+        expectedDebitLedgerId: debitLedgerId,
+        expectedCreditLedgerId: creditLedgerId,
+        expectedAmount: totalSalesAmount,
+        expectedExchangeRate: exRate
+      });
 
-    const journalColumns = "id, status, posted_at, country_id, country_branch_id, city_branch_id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number";
-    const viaPgJournal = await withLocalPg(async (sql) => {
-      const rows = await sql`select ${sql.unsafe(journalColumns)} from roznamcha_entries where id = ${paymentRecord.roznamcha_entry_id} limit 1`;
-      return rows[0] ?? null;
-    });
-    const journalRecord = (viaPgJournal ?? await requireSupabaseData(
-      supabase
-        .from("roznamcha_entries")
-        .select(journalColumns)
-        .eq("id", paymentRecord.roznamcha_entry_id)
-        .maybeSingle()
-    )) as any;
+      const journalColumns = "id, status, posted_at, country_id, country_branch_id, city_branch_id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number";
+      const viaPgJournal = await pg(async (sql) => {
+        const rows = await sql`select ${sql.unsafe(journalColumns)} from roznamcha_entries where id = ${paymentRecord.roznamcha_entry_id} limit 1`;
+        return rows[0] ?? null;
+      });
+      const journalRecord = (viaPgJournal ?? await requireSupabaseData(
+        supabase
+          .from("roznamcha_entries")
+          .select(journalColumns)
+          .eq("id", paymentRecord.roznamcha_entry_id)
+          .maybeSingle()
+      )) as any;
 
-    assertPostedRoznamchaTrace({
-      label: postingAssertionLabel,
-      entry: journalRecord
-    });
+      assertPostedRoznamchaTrace({
+        label: postingAssertionLabel,
+        entry: journalRecord
+      });
 
-    const isCreditSales = paymentRoute.paymentKind === "credit" || String(form.paymentType || form.paymentCondition || "").toLowerCase().includes("credit");
-    const existingPaid = isCreditSales ? 0 : Number(orderRow.paid_amount || 0);
-    const newRemainingSales = isCreditSales ? totalSalesAmount : Math.max(0, totalSalesAmount - existingPaid);
-    const salesPaymentStatus = isCreditSales ? "pending" : (newRemainingSales <= 0.01 && existingPaid > 0 ? "completed" : (existingPaid > 0 ? "partial" : "pending"));
+      const isCreditSales = paymentRoute.paymentKind === "credit" || String(form.paymentType || form.paymentCondition || "").toLowerCase().includes("credit");
+      const existingPaid = isCreditSales ? 0 : Number(orderRow.paid_amount || 0);
+      const newRemainingSales = isCreditSales ? totalSalesAmount : Math.max(0, totalSalesAmount - existingPaid);
+      const salesPaymentStatus = isCreditSales ? "pending" : (newRemainingSales <= 0.01 && existingPaid > 0 ? "completed" : (existingPaid > 0 ? "partial" : "pending"));
 
-    // Stock deduction handling for Stock Sale vs Endorse Sale
-    const saleType = String(form.saleType || form.saleSource || "").toLowerCase();
-    const isEndorse = saleType === "endorse" || Boolean(form.isEndorseSale);
-    const isStockSale = saleType === "stock" || (!isEndorse && (Boolean(form.stockLotNo) || Boolean(form.selectedLotId)));
-    const alreadyDeducted = Boolean(formData.stockDeducted || form.stockDeducted || orderRow.stock_deducted);
+      // Stock deduction handling for Stock Sale vs Endorse Sale
+      const saleType = String(form.saleType || form.saleSource || "").toLowerCase();
+      const isEndorse = saleType === "endorse" || Boolean(form.isEndorseSale);
+      // Stock lines the wizard saved from warehouse / local / in-transit stock. The wizard clears the form-level pick
+      // (stockLotNo / selectedLotId / warehouseId / qtyNo) after every line, so the deduction must read each goods line.
+      const LEGACY_STOCK_SOURCES = ["warehouse", "local", "in_transit"];
+      const legacyStockLines: any[] = (Array.isArray(formData?.goodsEntries) ? formData.goodsEntries : []).filter((g: any) => {
+        if (!g || g.managedLotId) return false;
+        const lot = String(g.stockLotNo || g.lotNo || "").trim();
+        const src = String(g.saleSource || g.stockSource || "").toLowerCase();
+        return Boolean(lot) && (LEGACY_STOCK_SOURCES.includes(src) || /^(WH-|LP-|PLR-)/.test(lot));
+      });
+      const isStockSale = saleType === "stock" || (!isEndorse && (Boolean(form.stockLotNo) || Boolean(form.selectedLotId) || legacyStockLines.length > 0));
+      const alreadyDeducted = Boolean(formData.stockDeducted || form.stockDeducted || orderRow.stock_deducted);
 
-    let stockDeductionAudit: any = null;
+      let stockDeductionAudit: any = null;
 
-    // Goods picked from managed lots: the reservation is deducted exactly once here (reserved -> sold / exported).
-    const managedDeduction = usesManagedLots(formData);
-    if (managedDeduction) {
-      const finalized = await finalizeForOrder({ salesOrderId: params.id, salesOrderNo: orderRow.sales_order_no ?? null, userId: session.userId });
-      stockDeductionAudit = {
-        deducted: true,
-        managedLots: true,
-        deductedAt: now,
-        deductedBy: session.userId,
-        transfers: finalized.map((f: any) => ({ transferNo: f.transfer_no, lotId: f.lot_id, qty: Number(f.qty), purpose: f.purpose })),
-      };
-    }
+      // Goods picked from managed lots: the reservation is deducted exactly once here (reserved -> sold / exported).
+      const managedDeduction = usesManagedLots(formData);
+      if (managedDeduction) {
+        const finalized = await finalizeSaleStock(tx, { salesOrderId: params.id, salesOrderNo: orderRow.sales_order_no ?? null, userId: session.userId });
+        stockDeductionAudit = {
+          deducted: true,
+          managedLots: true,
+          deductedAt: now,
+          deductedBy: session.userId,
+          transfers: finalized.map((f: any) => ({ transferNo: f.transfer_no, lotId: f.lot_id, qty: Number(f.qty), purpose: f.purpose })),
+        };
+      }
 
-    // Stock Journal: confirmed allocations linked to THIS sales booking leave the warehouse exactly once, here (Goods Issue / Delivery).
-    // Reserved stock is hidden from the normal warehouse sale source (quantity_available), so it can never be deducted twice.
-    // A failure here never blocks the posting that already happened — the allocation simply stays "confirmed" and can be issued from the Stock Journal.
-    try {
-      const journalIssued = await withLocalPg((sql) =>
-        sql.begin((tx: any) => issueForSalesOrder(tx, { salesOrderId: params.id, salesOrderNo: orderRow.sales_order_no ?? null, userId: session.userId }))
-      );
+      // Stock Journal: confirmed allocations linked to THIS sales booking leave the warehouse exactly once, here (Goods Issue / Delivery).
+      // Reserved stock is hidden from the normal warehouse sale source (quantity_available), so it can never be deducted twice.
+      // Inside this transaction a refusal rolls back the posting too: nothing is posted without its stock.
+      const journalIssued = await issueForSalesOrder(tx, { salesOrderId: params.id, salesOrderNo: orderRow.sales_order_no ?? null, userId: session.userId });
       if (journalIssued && journalIssued.length > 0) {
         stockDeductionAudit = {
           ...(stockDeductionAudit ?? {}),
@@ -451,189 +462,218 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
           journalTransfers: journalIssued.map((t: any) => ({ transferNo: t.transfer_no, qty: Number(t.quantity), destination: t.destination_type })),
         };
       }
-    } catch (journalErr) {
-      console.warn("[sales-transfer] Stock Journal issue skipped:", journalErr instanceof Error ? journalErr.message : journalErr);
-    }
 
-    if (isStockSale && !alreadyDeducted && !managedDeduction) {
-      const soldQty = Number(form.qtyNo || form.quantity || 1);
-      const lotNo = String(form.stockLotNo || form.allotName || "").trim();
-      const lotId = form.selectedLotId ? String(form.selectedLotId).trim() : null;
+      if (isStockSale && !alreadyDeducted && !managedDeduction) {
+        // Legacy stock: one deduction per saved goods line (its own lot, quantity and source). A booking that carries no goods-line
+        // stock falls back to the form-level pick, as before.
+        const stockLines = legacyStockLines.length > 0
+          ? legacyStockLines.map((g: any) => ({
+              soldQty: Number(g.qtyNo ?? g.quantity ?? 0),
+              lotNo: String(g.stockLotNo || g.lotNo || "").trim(),
+              lotId: g.selectedLotId ? String(g.selectedLotId).trim() : null,
+              saleSource: String(g.saleSource || g.stockSource || "").toLowerCase(),
+              warehouseId: g.warehouseId || null,
+            }))
+          : [{
+              soldQty: Number(form.qtyNo || form.quantity || 1),
+              lotNo: String(form.stockLotNo || form.allotName || "").trim(),
+              lotId: form.selectedLotId ? String(form.selectedLotId).trim() : null,
+              saleSource: String(form.saleSource || "").toLowerCase(),
+              warehouseId: form.warehouseId || null,
+            }];
 
-      await withLocalPg(async (sql) => {
-        if (lotNo.startsWith("WH-") || form.saleSource === "warehouse" || form.warehouseId) {
-          let updatedBalances: any[] = [];
-          // quantity_available is a Postgres GENERATED ALWAYS AS (quantity_on_hand -
-          // quantity_reserved) STORED column (see supabase/production-schema.sql) —
-          // it recomputes itself the instant quantity_on_hand changes and cannot be
-          // assigned directly; Postgres rejects any UPDATE that tries to SET it.
-          if (lotId) {
-            updatedBalances = await sql`
-              UPDATE public.product_inventory_balances
-              SET quantity_on_hand = GREATEST(0, quantity_on_hand - ${soldQty}),
-                  updated_at = ${now}
-              WHERE id = ${lotId}::uuid
-              RETURNING id, product_id, warehouse_id, quantity_on_hand
-            `;
-          } else if (lotNo.startsWith("WH-")) {
-            const shortId = lotNo.replace(/^WH-/, "");
-            updatedBalances = await sql`
-              UPDATE public.product_inventory_balances
-              SET quantity_on_hand = GREATEST(0, quantity_on_hand - ${soldQty}),
-                  updated_at = ${now}
-              WHERE id::text LIKE ${shortId + '%'}
-              RETURNING id, product_id, warehouse_id, quantity_on_hand
-            `;
-          }
+        for (const line of stockLines) {
+          const soldQty = line.soldQty;
+          const lotNo = line.lotNo;
+          const lotId = line.lotId;
+          const saleSource = line.saleSource;
+          if (!(soldQty > 0)) continue;
 
-          if (updatedBalances.length > 0) {
-            const b = updatedBalances[0];
-            await sql`
-              INSERT INTO public.stock_movements (
-                movement_type,
-                product_id,
-                warehouse_id,
-                country_id,
-                city_branch_id,
-                quantity,
-                reference_no,
-                notes,
-                movement_date,
-                created_by,
-                created_at,
-                updated_at
-              ) VALUES (
-                'STOCK_OUT',
-                ${b.product_id},
-                ${b.warehouse_id},
-                ${orderRow.country_id ?? null},
-                ${orderRow.city_branch_id ?? null},
-                ${soldQty},
-                ${referenceNo},
-                ${'Sales Booking Posting - Bill: ' + (referenceNo || 'Direct')},
-                ${now},
-                ${session.userId ? sql`${session.userId}::uuid` : null},
-                ${now},
-                ${now}
-              )
-            `;
-          }
-        } else if (lotNo.startsWith("LP-") || form.saleSource === "local") {
-          if (lotId) {
-            await sql`
-              UPDATE public.local_purchases
-              SET numbers = GREATEST(0, numbers - ${soldQty}),
-                  status = CASE WHEN (numbers - ${soldQty}) <= 0 THEN 'sold' ELSE status END,
-                  updated_at = ${now}
-              WHERE id = ${lotId}::uuid
-            `;
-          } else {
-            const shortId = lotNo.replace(/^LP-/, "");
-            await sql`
-              UPDATE public.local_purchases
-              SET numbers = GREATEST(0, numbers - ${soldQty}),
-                  status = CASE WHEN (numbers - ${soldQty}) <= 0 THEN 'sold' ELSE status END,
-                  updated_at = ${now}
-              WHERE id::text LIKE ${shortId + '%'} OR lot_no = ${lotNo}
-            `;
-          }
-        } else if (form.saleSource === "in_transit" || lotNo.startsWith("PLR-")) {
-          const cleanPlrNo = lotNo.split("#")[0];
-          await sql`
-            UPDATE public.purchase_loading_records
-            SET loaded_quantity = GREATEST(0, loaded_quantity - ${soldQty}),
-                updated_at = ${now}
-            WHERE loading_record_no = ${cleanPlrNo}
-          `;
+          // One transaction per line: the on-hand decrement and its stock_movements row are written together or not at all.
+          await pg(async (sql: any) => {
+            // the line's own source decides; a warehouse id alone only counts when the line names no source
+            const isWarehouseLine = lotNo.startsWith("WH-") || saleSource === "warehouse" || (saleSource === "" && Boolean(line.warehouseId));
+            if (isWarehouseLine) {
+              let updatedBalances: any[] = [];
+              // quantity_available is a Postgres GENERATED ALWAYS AS (quantity_on_hand -
+              // quantity_reserved) STORED column (see supabase/production-schema.sql) —
+              // it recomputes itself the instant quantity_on_hand changes and cannot be
+              // assigned directly; Postgres rejects any UPDATE that tries to SET it.
+              if (lotId) {
+                updatedBalances = await sql`
+                  UPDATE public.product_inventory_balances
+                  SET quantity_on_hand = GREATEST(0, quantity_on_hand - ${soldQty}),
+                      updated_at = ${now}
+                  WHERE id = ${lotId}::uuid
+                  RETURNING id, product_id, warehouse_id, quantity_on_hand
+                `;
+              } else if (lotNo.startsWith("WH-")) {
+                const shortId = lotNo.replace(/^WH-/, "");
+                updatedBalances = await sql`
+                  UPDATE public.product_inventory_balances
+                  SET quantity_on_hand = GREATEST(0, quantity_on_hand - ${soldQty}),
+                      updated_at = ${now}
+                  WHERE id::text LIKE ${shortId + '%'}
+                  RETURNING id, product_id, warehouse_id, quantity_on_hand
+                `;
+              }
+
+              if (updatedBalances.length > 0) {
+                const b = updatedBalances[0];
+                await sql`
+                  INSERT INTO public.stock_movements (
+                    movement_type,
+                    goods_id,
+                    warehouse_id,
+                    country_id,
+                    city_branch_id,
+                    quantity,
+                    reference_no,
+                    notes,
+                    movement_date,
+                    created_by,
+                    created_at,
+                    updated_at
+                  ) VALUES (
+                    'STOCK_OUT',
+                    ${b.product_id},
+                    ${b.warehouse_id},
+                    ${orderRow.country_id ?? null},
+                    ${orderRow.city_branch_id ?? null},
+                    ${soldQty},
+                    ${referenceNo},
+                    ${'Sales Booking Posting - Bill: ' + (referenceNo || 'Direct')},
+                    ${now},
+                    ${session.userId ? sql`${session.userId}::uuid` : null},
+                    ${now},
+                    ${now}
+                  )
+                `;
+              }
+            } else if (lotNo.startsWith("LP-") || saleSource === "local") {
+              if (lotId) {
+                await sql`
+                  UPDATE public.local_purchases
+                  SET numbers = GREATEST(0, numbers - ${soldQty}),
+                      status = CASE WHEN (numbers - ${soldQty}) <= 0 THEN 'sold' ELSE status END,
+                      updated_at = ${now}
+                  WHERE id = ${lotId}::uuid
+                `;
+              } else {
+                const shortId = lotNo.replace(/^LP-/, "");
+                await sql`
+                  UPDATE public.local_purchases
+                  SET numbers = GREATEST(0, numbers - ${soldQty}),
+                      status = CASE WHEN (numbers - ${soldQty}) <= 0 THEN 'sold' ELSE status END,
+                      updated_at = ${now}
+                  WHERE id::text LIKE ${shortId + '%'} OR lot_no = ${lotNo}
+                `;
+              }
+            } else if (saleSource === "in_transit" || lotNo.startsWith("PLR-")) {
+              const cleanPlrNo = lotNo.split("#")[0];
+              await sql`
+                UPDATE public.purchase_loading_records
+                SET loaded_quantity = GREATEST(0, loaded_quantity - ${soldQty}),
+                    updated_at = ${now}
+                WHERE loading_record_no = ${cleanPlrNo}
+              `;
+            }
+          });
         }
-      });
 
-      stockDeductionAudit = {
-        deducted: true,
-        deductedAt: now,
-        deductedBy: session.userId,
-        soldQty,
-        lotNo,
-        lotId
-      };
-    }
-
-    const patch = {
-      ledger_posting_status: "posted",
-      payment_status: salesPaymentStatus,
-      paid_amount: existingPaid,
-      remaining_amount: newRemainingSales,
-      updated_at: now,
-      form_data: {
-        ...updatedFormData,
-        stockDeducted: (isStockSale || managedDeduction) ? true : (alreadyDeducted ? true : false),
-        isEndorseSale: isEndorse,
-        stockDeductionAudit: stockDeductionAudit || formData.stockDeductionAudit || null,
-        endorseFulfillment: isEndorse ? {
-          saleQty: Number(form.qtyNo || form.quantity || 0),
-          purchasedQty: Number(form.endorseQtyPurchased || 0),
-          allocatedQty: Number(form.endorseQtyAllocated || 0),
-          outstandingQty: Math.max(0, Number(form.qtyNo || form.quantity || 0) - Number(form.endorseQtyAllocated || 0)),
-          linkedLotNo: form.endorseLinkedLotNo || null
-        } : (formData.endorseFulfillment || null),
-        form: {
-          ...updatedFormData.form,
-          stockDeducted: isStockSale ? true : (alreadyDeducted ? true : false),
-          isEndorseSale: isEndorse,
-          ...(isCreditSales ? { advancePercent: 0, advanceAmount: 0 } : {})
-        },
-        workflow: {
-          ...updatedFormData.workflow,
-          journalStatus: "posted",
-          ledgerStatus: "posted",
-          paymentKind: paymentRoute.paymentKind,
-          paymentStatus: salesPaymentStatus,
-          lastPaymentId: paymentId,
-          lastRoznamchaEntryId: paymentRecord.roznamcha_entry_id,
-          lastPaymentPostedAt: now
-        },
-        lastPaymentTrace: {
-          paymentId,
-          roznamchaEntryId: paymentRecord.roznamcha_entry_id,
-          debitLedgerId: debitLedgerId,
-          creditLedgerId: creditLedgerId,
-          paymentKind: paymentRoute.paymentKind,
-          superAdminSerialNumber: journalRecord.super_admin_serial_number,
-          countryTransactionSerialNumber: journalRecord.country_transaction_serial_number,
-          branchTransactionSerialNumber: journalRecord.branch_transaction_serial_number,
-          systemBillNumber,
-          manualBillNumber,
-          partyName,
-          referenceNo,
-          narration: postingNarration
-        }
+        stockDeductionAudit = {
+          deducted: true,
+          deductedAt: now,
+          deductedBy: session.userId,
+          soldQty: stockLines.reduce((s, l) => s + (l.soldQty > 0 ? l.soldQty : 0), 0),
+          lotNo: stockLines.map((l) => l.lotNo).join(","),
+          lotId: null,
+          lines: stockLines.map((l) => ({ lotNo: l.lotNo, lotId: l.lotId, qty: l.soldQty, source: l.saleSource })),
+        };
       }
-    };
 
-    // Same RLS bypass as the read above — sales_orders writes are blocked under the temp-session
-    // bootstrap login just like reads are.
-    const viaPgUpdate = await withLocalPg(async (sql) => {
-      const rows = await sql`
-        update sales_orders set
-          ledger_posting_status = ${patch.ledger_posting_status},
-          payment_status = ${patch.payment_status},
-          paid_amount = ${patch.paid_amount},
-          remaining_amount = ${patch.remaining_amount},
-          updated_at = ${patch.updated_at},
-          form_data = ${sql.json(patch.form_data as any)}
-        where id = ${params.id}
-        returning id, sales_order_no, sales_contract_no, ledger_posting_status, payment_status
-      `;
-      return rows[0] ?? null;
-    });
-    const updatedOrder = (viaPgUpdate ?? await requireSupabaseData(
-      supabase
-        .from("sales_orders")
-        .update(patch)
-        .eq("id", params.id)
-        .select("id, sales_order_no, sales_contract_no, ledger_posting_status, payment_status")
-        .maybeSingle()
-    )) as any;
+      const patch = {
+        ledger_posting_status: "posted",
+        payment_status: salesPaymentStatus,
+        paid_amount: existingPaid,
+        remaining_amount: newRemainingSales,
+        updated_at: now,
+        form_data: {
+          ...updatedFormData,
+          stockDeducted: (isStockSale || managedDeduction) ? true : (alreadyDeducted ? true : false),
+          isEndorseSale: isEndorse,
+          stockDeductionAudit: stockDeductionAudit || formData.stockDeductionAudit || null,
+          endorseFulfillment: isEndorse ? {
+            saleQty: Number(form.qtyNo || form.quantity || 0),
+            purchasedQty: Number(form.endorseQtyPurchased || 0),
+            allocatedQty: Number(form.endorseQtyAllocated || 0),
+            outstandingQty: Math.max(0, Number(form.qtyNo || form.quantity || 0) - Number(form.endorseQtyAllocated || 0)),
+            linkedLotNo: form.endorseLinkedLotNo || null
+          } : (formData.endorseFulfillment || null),
+          form: {
+            ...updatedFormData.form,
+            stockDeducted: isStockSale ? true : (alreadyDeducted ? true : false),
+            isEndorseSale: isEndorse,
+            ...(isCreditSales ? { advancePercent: 0, advanceAmount: 0 } : {})
+          },
+          workflow: {
+            ...updatedFormData.workflow,
+            journalStatus: "posted",
+            ledgerStatus: "posted",
+            paymentKind: paymentRoute.paymentKind,
+            paymentStatus: salesPaymentStatus,
+            lastPaymentId: paymentId,
+            lastRoznamchaEntryId: paymentRecord.roznamcha_entry_id,
+            lastPaymentPostedAt: now
+          },
+          lastPaymentTrace: {
+            paymentId,
+            roznamchaEntryId: paymentRecord.roznamcha_entry_id,
+            debitLedgerId: debitLedgerId,
+            creditLedgerId: creditLedgerId,
+            paymentKind: paymentRoute.paymentKind,
+            superAdminSerialNumber: journalRecord.super_admin_serial_number,
+            countryTransactionSerialNumber: journalRecord.country_transaction_serial_number,
+            branchTransactionSerialNumber: journalRecord.branch_transaction_serial_number,
+            systemBillNumber,
+            manualBillNumber,
+            partyName,
+            referenceNo,
+            narration: postingNarration
+          }
+        }
+      };
+
+      // Same RLS bypass as the read above — sales_orders writes are blocked under the temp-session
+      // bootstrap login just like reads are.
+      const viaPgUpdate = await pg(async (sql) => {
+        const rows = await sql`
+          update sales_orders set
+            ledger_posting_status = ${patch.ledger_posting_status},
+            payment_status = ${patch.payment_status},
+            paid_amount = ${patch.paid_amount},
+            remaining_amount = ${patch.remaining_amount},
+            updated_at = ${patch.updated_at},
+            form_data = ${sql.json(patch.form_data as any)}
+          where id = ${params.id}
+          returning id, sales_order_no, sales_contract_no, ledger_posting_status, payment_status
+        `;
+        return rows[0] ?? null;
+      });
+      const updatedOrder = (viaPgUpdate ?? await requireSupabaseData(
+        supabase
+          .from("sales_orders")
+          .update(patch)
+          .eq("id", params.id)
+          .select("id, sales_order_no, sales_contract_no, ledger_posting_status, payment_status")
+          .maybeSingle()
+      )) as any;
+
+    return { paymentId, updatedOrder, patch, existingPaid, newRemainingSales, salesPaymentStatus };
+    }));
+    paymentPosted = true;
+    if (!core) throw new Error("The sales transfer did not complete.");
+    const { updatedOrder, patch, existingPaid, newRemainingSales, salesPaymentStatus } = core;
 
     await writeAuditLog({
       action: "transfer_to_sales_payment",

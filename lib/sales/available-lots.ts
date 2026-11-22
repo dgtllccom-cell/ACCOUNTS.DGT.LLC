@@ -17,8 +17,8 @@ import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 /** warehouse_all = managed lots + warehouse balances + local purchases; export_all = loaded / on-route goods + endorsed stock (one request each for the Select Stock panel) */
-export type SaleSource = "booking" | "in_transit" | "local" | "warehouse" | "endorse" | "stock" | "lot" | "warehouse_all" | "export_all";
-export const SALE_SOURCES: SaleSource[] = ["booking", "in_transit", "local", "warehouse", "endorse", "stock", "lot", "warehouse_all", "export_all"];
+export type SaleSource = "booking" | "in_transit" | "local" | "warehouse" | "endorse" | "stock" | "lot" | "warehouse_all" | "export_all" | "journal";
+export const SALE_SOURCES: SaleSource[] = ["booking", "in_transit", "local", "warehouse", "endorse", "stock", "lot", "warehouse_all", "export_all", "journal"];
 
 export interface AvailableLot {
   id?: string;
@@ -300,6 +300,56 @@ export async function listAvailableLots(
       }
     };
 
+    // Stock Journal: confirmed allocations that are not yet reserved by a booking. A booking that picks one splits the sold
+    // quantity off it and reserves it (journal-sale-lots.ts); the rest stays listed with the remaining quantity.
+    const fetchJournalLots = async () => {
+      const rows = (await sql`
+        SELECT jt.id, jt.transfer_no, jt.quantity, jt.unit, jt.goods_id, jt.warehouse_id, jt.destination_type, jt.country_id, jt.city_branch_id,
+               g.goods_name, g.chs_code, w.warehouse_name, w.warehouse_code, cb.name as branch_name
+        FROM public.journal_stock_transfers jt
+        LEFT JOIN public.goods g ON g.id = jt.goods_id
+        LEFT JOIN public.warehouses w ON w.id = jt.warehouse_id
+        LEFT JOIN public.city_branches cb ON cb.id = jt.city_branch_id
+        WHERE ${scopeClauseFor(sql, session, "jt")} AND jt.deleted_at IS NULL AND g.deleted_at IS NULL
+          AND jt.status = 'confirmed' AND jt.quantity > 0
+          AND jt.destination_type IN ('warehouse', 'local_sales')
+          AND ((jt.reserved = false AND jt.sales_order_id IS NULL)
+               ${opts.excludeOrderId ? sql`OR jt.sales_order_id = ${opts.excludeOrderId}::uuid` : sql``})
+        ORDER BY jt.confirmed_at ASC, jt.transfer_no
+        LIMIT ${limit}
+      `) as unknown as any[];
+      for (const r of rows) {
+        out.push({
+          id: r.id,
+          lotNo: r.transfer_no,
+          source: "journal",
+          goodsId: r.goods_id ?? null,
+          goodsName: r.goods_name ?? "",
+          brand: "",
+          size: "",
+          origin: "",
+          hsCode: r.chs_code ?? "",
+          qtyName: r.unit && r.unit !== "KG" ? r.unit : "BAGS",
+          availableQty: n(r.quantity),
+          qtyKgs: 0,
+          emptyKgs: 0,
+          netWeight: 0,
+          location: r.warehouse_name || "Stock Journal",
+          branchName: r.branch_name || "",
+          branchId: r.city_branch_id ?? null,
+          warehouseName: r.warehouse_name || "Stock Journal",
+          warehouseId: r.warehouse_id ?? null,
+          countryId: r.country_id ?? null,
+          stockRef: r.transfer_no,
+          containerNo: null,
+          currencyType: "USD",
+          exchangeRate: 1,
+          coursePrice: 0,
+          status: "Confirmed stock",
+        });
+      }
+    };
+
     const fetchManagedLots = async () => {
       const rows = (await sql`
         SELECT l.id AS lot_id, l.lot_ref, l.goods_id, l.goods_name, l.brand, l.size, l.origin, l.unit_name, l.net_weight_kg, l.qty_purchased,
@@ -401,7 +451,9 @@ export async function listAvailableLots(
       }
     };
 
-    if (source === "lot") {
+    if (source === "journal") {
+      await fetchJournalLots();
+    } else if (source === "lot") {
       await fetchManagedLots();
     } else if (source === "warehouse_all") {
       await fetchManagedLots();
@@ -542,6 +594,12 @@ export async function getBookedQuantities(lotNos: string[], excludeOrderId: stri
            sum(CASE WHEN ge->>'qtyNo' ~ '^[0-9]+([.][0-9]+)?$' THEN (ge->>'qtyNo')::numeric ELSE 0 END) AS qty
     FROM so, jsonb_array_elements(CASE WHEN jsonb_typeof(so.fd->'goodsEntries') = 'array' THEN so.fd->'goodsEntries' ELSE '[]'::jsonb END) ge
     WHERE coalesce(ge->>'stockLotNo', ge->>'lotNo', '') = ANY(${refs}::text[])
+      -- Stock Journal lines are held by their own reservation (journal-sale-lots.ts), never counted here as well
+      AND coalesce(ge->>'saleSource', ge->>'stockSource', '') <> 'journal'
+      -- a posted sale from warehouse / local / in-transit stock has already left the physical balance at transfer
+      -- (transfer sets form.stockDeducted), so counting it here too would subtract it twice
+      AND NOT (coalesce(ge->>'saleSource', ge->>'stockSource', '') IN ('warehouse', 'local', 'in_transit')
+               AND coalesce(so.fd->'form'->>'stockDeducted', '') = 'true')
     GROUP BY 1
   `) as unknown as Array<{ lot_no: string; qty: string }>);
   for (const r of rows ?? []) out.set(r.lot_no, n(r.qty));
@@ -553,7 +611,8 @@ async function attachSoldQuantities(lots: AvailableLot[], excludeOrderId: string
   return lots.map((lot) => {
     const sold = booked.get(lot.lotNo) ?? 0;
     // managed lots: the reservation has already moved the quantity out of "available", so it is not subtracted a second time
-    const netted = lot.source === "lot";
+    // managed lots and Stock Journal lots are already net of their reservations
+    const netted = lot.source === "lot" || lot.source === "journal";
     const remaining = netted ? lot.availableQty : Math.max(0, lot.availableQty - sold);
     const total = netted ? lot.availableQty + sold : lot.availableQty;
     return { ...lot, totalQty: total, totalWeight: totalWeightOf(lot, total), soldQty: sold, remainingQty: remaining, availableQty: remaining };

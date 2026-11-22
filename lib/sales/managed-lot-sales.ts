@@ -15,6 +15,7 @@ import {
   syncSaleReservations,
   type SaleEntry,
 } from "@/lib/services/goods-transfer-service";
+import { journalSaleLinesOf, releaseJournalLinksForOrder, syncJournalLinksForOrder } from "@/lib/sales/journal-sale-lots";
 
 export type ManagedSale = { mode: "local" | "export"; entries: SaleEntry[] };
 
@@ -49,25 +50,39 @@ export async function reserveForOrder(o: {
 }) {
   const next = extractManagedEntries(o.formData);
   const hadManaged = o.previousFormData ? usesManagedLots(o.previousFormData) : false;
-  if (next.entries.length === 0 && !hadManaged) return [];
+  const hasJournal = journalSaleLinesOf(o.formData).length > 0;
+  const hadJournal = o.previousFormData ? journalSaleLinesOf(o.previousFormData).length > 0 : false;
+  if (next.entries.length === 0 && !hadManaged && !hasJournal && !hadJournal) return [];
+  // managed lots and Stock Journal lots are reserved in ONE transaction: a refusal of either saves nothing
   const out = await withLocalPg((sql) =>
-    sql.begin((tx) =>
-      syncSaleReservations(tx, {
-        salesOrderId: o.salesOrderId,
-        salesOrderNo: o.salesOrderNo,
-        mode: next.mode,
-        countryId: o.countryId,
-        entries: next.entries,
-        userId: o.userId,
-      }),
-    ),
+    sql.begin(async (tx) => {
+      const reservations =
+        next.entries.length > 0 || hadManaged
+          ? await syncSaleReservations(tx, {
+              salesOrderId: o.salesOrderId,
+              salesOrderNo: o.salesOrderNo,
+              mode: next.mode,
+              countryId: o.countryId,
+              entries: next.entries,
+              userId: o.userId,
+            })
+          : [];
+      await syncJournalLinksForOrder(tx, { salesOrderId: o.salesOrderId, salesOrderNo: o.salesOrderNo, formData: o.formData });
+      return reservations;
+    }),
   );
   return out ?? [];
 }
 
 export async function releaseForOrder(o: { salesOrderId: string; formData: any; userId: string | null; reason: string }) {
-  if (!usesManagedLots(o.formData)) return 0;
-  const n = await withLocalPg((sql) => sql.begin((tx) => releaseSaleReservations(tx, o.salesOrderId, o.reason, o.userId)));
+  const managed = usesManagedLots(o.formData);
+  const n = await withLocalPg((sql) =>
+    sql.begin(async (tx) => {
+      const released = managed ? Number((await releaseSaleReservations(tx, o.salesOrderId, o.reason, o.userId)) ?? 0) : 0;
+      const journal = await releaseJournalLinksForOrder(tx, o.salesOrderId);
+      return released + journal;
+    }),
+  );
   return n ?? 0;
 }
 

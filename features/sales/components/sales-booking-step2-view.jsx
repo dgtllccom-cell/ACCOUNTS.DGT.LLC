@@ -129,6 +129,8 @@ export function SalesBookingStep2({
       stockLotNo: lot.lotNo || "",
       allotName: lot.lotNo || "",
       selectedLotId: lot.id || "",
+      journalTransferId: lot.source === "journal" ? (lot.id || "") : "",
+      stockSource: lot.source || group,
       managedLotId: lot.lotId || "",
       managedWarehouseId: lot.warehouseId || "",
       managedRack: lot.rackBin || "",
@@ -215,6 +217,7 @@ export function SalesBookingStep2({
       lotNo: selectedLotRef,
       lotId: form.managedLotId || "",
       saleSource: form.saleSource || stockGroup,
+      journalTransferId: form.journalTransferId || "",
       stockGroup,
       lotAvailableQty: availableQty,
       warehouse: form.warehouseName || "",
@@ -235,7 +238,7 @@ export function SalesBookingStep2({
     // clear the entry so the next item starts empty (pressing Add again cannot add the same line twice)
     setForm((p) => ({
       ...p,
-      goodsId: "", goodsName: "", hsCode: "", stockLotNo: "", allotName: "", selectedLotId: "", managedLotId: "",
+      goodsId: "", goodsName: "", hsCode: "", stockLotNo: "", allotName: "", selectedLotId: "", managedLotId: "", journalTransferId: "",
       brand: "", size: "", grade: "", qualityReport: "", origin: "", qtyNo: 0, coursePrice: 0, freightIca: 0,
       qtyKgs: 0, emptyKgs: 0, totalBoxes: 0, packType: "", itemType: "", stackWeight: "", lotAvailableQty: 0,
       warehouseId: "", warehouseName: ""
@@ -252,6 +255,7 @@ export function SalesBookingStep2({
       goodsName: item.goodsName || item.productName,
       hsCode: item.hsCode,
       stockLotNo: item.itemId || item.lotNo,
+      journalTransferId: item.journalTransferId || "",
       brand: item.brand,
       size: item.size,
       grade: item.grade,
