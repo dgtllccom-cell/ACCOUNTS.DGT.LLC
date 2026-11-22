@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Pencil, Plus, X } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,16 +35,21 @@ type CategoryForm = {
 
 const EMPTY_FORM: CategoryForm = { id: null, name: "", code: "", domain: "business", description: "", isActive: true };
 
-/** POST/PATCH through fetch (not apiFetch) so the HTTP status (409 duplicate, 403 forbidden) is visible. */
-async function sendJson(method: "POST" | "PATCH", url: string, payload: unknown) {
+/** POST/PATCH/DELETE through fetch (not apiFetch) so the HTTP status and error code (409 duplicate or in use, 403 forbidden) are visible. */
+async function sendJson(method: "POST" | "PATCH" | "DELETE", url: string, payload?: unknown) {
   const res = await fetch(url, {
     method,
     credentials: "include",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(payload)
+    headers: payload === undefined ? undefined : { "content-type": "application/json" },
+    body: payload === undefined ? undefined : JSON.stringify(payload)
   });
-  const body = (await res.json().catch(() => null)) as { ok?: boolean; error?: { message?: string } } | null;
-  return { ok: res.ok && body?.ok === true, status: res.status, message: body?.error?.message ?? "" };
+  const body = (await res.json().catch(() => null)) as { ok?: boolean; error?: { message?: string; code?: string } } | null;
+  return {
+    ok: res.ok && body?.ok === true,
+    status: res.status,
+    message: body?.error?.message ?? "",
+    code: body?.error?.code ?? ""
+  };
 }
 
 export function AccountCategoriesSettings() {
@@ -52,7 +57,7 @@ export function AccountCategoriesSettings() {
   const tt = (key: string, fallback: string) => t(lang, key, fallback);
   const isRtl = isRtlLanguage(lang);
   const scope = useErpScope();
-  // Editing and adding are super-admin only. Everyone else who can open this page gets a read-only list.
+  // Adding, editing and deleting are super-admin only (the API enforces the same rule). Everyone else gets a read-only list.
   const canEdit = !scope.loading && scope.isSuperAdmin;
 
   const [rows, setRows] = useState<CategoryRow[]>([]);
@@ -62,6 +67,9 @@ export function AccountCategoriesSettings() {
   const [form, setForm] = useState<CategoryForm | null>(null);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+  const [pendingDelete, setPendingDelete] = useState<CategoryRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   async function loadRows() {
     setLoading(true);
@@ -139,6 +147,48 @@ export function AccountCategoriesSettings() {
       setFormError(tt("acctcat.save_failed", "Could not save the category."));
     } finally {
       setSaving(false);
+    }
+  }
+
+  function openDelete(row: CategoryRow) {
+    setNotice("");
+    setFormError("");
+    setDeleteError("");
+    setPendingDelete(row);
+  }
+
+  /** Every refusal the server can return is shown to the user; nothing is dropped silently. */
+  function deleteErrorText(code: string, status: number) {
+    if (code === "CATEGORY_IN_USE") {
+      return tt("acctcat.delete_in_use", "This category is used by existing accounts, so it cannot be deleted. Keep the category.");
+    }
+    if (code === "SYSTEM_CATEGORY") {
+      return tt("acctcat.delete_system", "System default categories cannot be deleted.");
+    }
+    if (status === 403) {
+      return tt("acctcat.delete_forbidden", "Only super admins can delete categories.");
+    }
+    return tt("acctcat.delete_failed", "Could not delete the category.");
+  }
+
+  async function handleDelete() {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const res = await sendJson("DELETE", `/api/erp/account-categories/${pendingDelete.id}`);
+      if (!res.ok) {
+        setDeleteError(deleteErrorText(res.code, res.status));
+        return;
+      }
+      setPendingDelete(null);
+      setNotice(tt("acctcat.deleted", "Category deleted."));
+      await loadRows();
+    } catch (err) {
+      console.error("Failed to delete account category:", err);
+      setDeleteError(tt("acctcat.delete_failed", "Could not delete the category."));
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -231,20 +281,33 @@ export function AccountCategoriesSettings() {
                       </td>
                       <td className="px-3 py-2 text-end">
                         {canEdit && (
-                          <button
-                            type="button"
-                            onClick={() => openEdit(row)}
-                            aria-label={tt("acctcat.edit_title", "Edit Category")}
-                            title={tt("acctcat.edit_title", "Edit Category")}
-                            className={cn(
-                              "inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100",
-                              row.code === "S" && row.operational_domain === "business"
-                                ? "bg-red-600 text-white hover:bg-red-700 hover:text-white dark:bg-red-600"
-                                : "text-slate-600 dark:text-slate-400"
-                            )}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
+                          <div className="inline-flex items-center justify-end gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => openEdit(row)}
+                              aria-label={`${tt("common.edit", "Edit")}: ${row.name}`}
+                              className={cn(
+                                "h-8 px-3 text-xs",
+                                row.code === "S" && row.operational_domain === "business"
+                                  ? "border-red-600 bg-red-600 text-white hover:bg-red-700 hover:text-white"
+                                  : "text-slate-700 dark:text-slate-200"
+                              )}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                              {tt("common.edit", "Edit")}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => openDelete(row)}
+                              aria-label={`${tt("common.delete", "Delete")}: ${row.name}`}
+                              className="h-8 border-rose-300 px-3 text-xs text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/40"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              {tt("common.delete", "Delete")}
+                            </Button>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -351,6 +414,37 @@ export function AccountCategoriesSettings() {
               </Button>
             </div>
           </form>
+        </div>
+      )}
+
+      {pendingDelete && (
+        <div role="dialog" aria-modal="true" aria-labelledby="acctcat-delete-title" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md space-y-4 rounded-xl bg-white p-5 shadow-xl dark:bg-slate-900">
+            <h2 id="acctcat-delete-title" className="text-lg font-bold text-rose-700 dark:text-rose-300">
+              {tt("acctcat.delete_title", "Delete category?")}
+            </h2>
+            <div className="space-y-1">
+              <p className="font-semibold text-slate-900 dark:text-slate-100">{pendingDelete.name}</p>
+              {pendingDelete.code && <p className="font-mono text-xs text-slate-500 dark:text-slate-400">{pendingDelete.code}</p>}
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              {tt("acctcat.delete_body", "This hides the category from this list and from the New Account form. Nothing is erased, and the action is recorded in the audit log.")}
+            </p>
+            {deleteError && (
+              <div role="alert" className="rounded-md border border-rose-200 bg-rose-50 p-2 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
+                {deleteError}
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setPendingDelete(null)} disabled={deleting}>
+                {tt("common.cancel", "Cancel")}
+              </Button>
+              <Button type="button" variant="destructive" onClick={handleDelete} disabled={deleting}>
+                {deleting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {tt("common.delete", "Delete")}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
