@@ -70,7 +70,7 @@ export function PurchaseLoadTracking({ laneId, lang, embedded = false }: { laneI
           </p>
         </div>
       ) : (
-        <div className={cn("overflow-x-auto", embedded && "max-h-80 overflow-y-auto overscroll-contain")}>
+        <div className={cn("hidden overflow-x-auto md:block", embedded && "max-h-80 overflow-y-auto overscroll-contain")}>
           <table className="w-full min-w-[900px] text-start text-sm">
             <thead className={cn(embedded && "sticky top-0 z-10 bg-background")}>
               <tr className="border-b border-border/60 bg-muted/40">
@@ -120,6 +120,51 @@ export function PurchaseLoadTracking({ laneId, lang, embedded = false }: { laneI
           </table>
         </div>
       )}
+      {!loading && !error && rows.length > 0 ? (
+        <ul className="max-h-96 divide-y divide-border/40 overflow-y-auto md:hidden" aria-label={s.tGlobal("log.seg_tracking", "Tracking")}>
+          {rows.map((r) => (
+            <li key={r.id} className="space-y-2 px-3 py-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="truncate font-mono text-xs font-semibold">{r.purchase_ref_no}</div>
+                  <div className="truncate font-mono text-[11px] text-muted-foreground">
+                    {r.loading_batch_no ? `${r.loading_batch_no} · ` : ""}
+                    {r.loading_record_no || "—"}
+                  </div>
+                </div>
+                <span className="shrink-0 rounded-full border border-amber-300/70 bg-amber-500/10 px-2 py-0.5 text-[11px] font-bold text-amber-800 dark:text-amber-300">
+                  {s.t(`st_${r.lane_status}`, r.lane_status)}
+                </span>
+              </div>
+              <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                <div className="min-w-0">
+                  <dt className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{s.tGlobal("purchase.loading_date_label", "Loading Date")}</dt>
+                  <dd className="font-mono tabular-nums">{String(r.loaded_at || r.created_at || "").slice(0, 10)}</dd>
+                </div>
+                <div className="min-w-0">
+                  <dt className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{s.t("col_qty", "Loaded Qty")}</dt>
+                  <dd className="font-semibold tabular-nums">{Number(r.loaded_quantity || 0).toLocaleString()} {r.unit}</dd>
+                </div>
+                <div className="min-w-0">
+                  <dt className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{s.t("col_container", "Container")}</dt>
+                  <dd className="truncate font-mono">{r.container_number || "—"}</dd>
+                </div>
+                <div className="min-w-0">
+                  <dt className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{s.t("col_bl", "BL no.")}</dt>
+                  <dd className="truncate font-mono">{r.bl_number || "—"}</dd>
+                </div>
+              </dl>
+              <Link
+                className="inline-flex items-center gap-1 rounded-lg bg-blue-500/10 px-2.5 py-1 text-xs font-bold text-blue-700 transition-colors hover:bg-blue-500/15 dark:text-blue-300"
+                href={`/dashboard/purchase/purchase-transit-lane?focus=${encodeURIComponent(r.id)}`}
+              >
+                {s.t("act_details", "Details")}
+                <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </section>
   );
 }
