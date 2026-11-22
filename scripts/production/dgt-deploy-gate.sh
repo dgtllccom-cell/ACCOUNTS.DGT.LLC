@@ -67,8 +67,16 @@ if [ -n "$BACKUP_CMD" ]; then
   log "backup ok: $BACKUP_FILE ($(wc -c < "$BACKUP_FILE") bytes)"
 fi
 
-# consume the approval BEFORE building, so a crash can never allow a silent second run
-tmp="$(mktemp)"; sed 's/^used=.*/used=yes/' "$APPROVAL_FILE" > "$tmp"; grep -q '^used=' "$tmp" || echo "used=yes" >> "$tmp"; cat "$tmp" > "$APPROVAL_FILE"; rm -f "$tmp"
+# The approval must still be the one this run started with: an approval written while the backup ran (another person or
+# script) would otherwise be consumed in its place and the build guard would refuse the tree we are about to check out.
+now_sha=""; now_expires=""; now_by=""; now_used=""
+[ -f "$APPROVAL_FILE" ] && while IFS='=' read -r k v; do case "$k" in sha) now_sha="$v";; expires) now_expires="$v";; approved_by) now_by="$v";; used) now_used="$v";; esac; done < "$APPROVAL_FILE"
+if [ "$now_sha" != "$sha" ] || [ "$now_expires" != "$expires" ] || [ "$now_by" != "$approved_by" ] || [ "$now_used" != "no" ]; then
+  die "the approval was replaced during this deployment (now ${now_sha:-none} by ${now_by:-?}) — stopped before changing the live tree. Make sure nobody else is deploying, then approve again."
+fi
+
+# consume the approval BEFORE building, so a crash can never allow a silent second run (written from this run's own values)
+( umask 077; printf 'sha=%s\nexpires=%s\nmigrations=%s\napproved_by=%s\nused=yes\n' "$sha" "$expires" "$migrations" "$approved_by" > "$APPROVAL_FILE" )
 
 DGT_DEPLOY_GATE=1 git reset --hard "$sha" >/dev/null   # DGT_DEPLOY_GATE lets the live-checkout ref lock (ref-lock-hook.sh) accept this one move
 log "building $sha"
