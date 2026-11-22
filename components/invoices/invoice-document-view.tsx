@@ -124,7 +124,17 @@ export function InvoiceDocumentView({ isOpen, onClose, title, source, record, sc
         // a purchase invoice's supplier is the Cr party — never our own purchase office (often saved in supplierName)
         const savedSupplier = source === "local_purchase" ? record?.supplier_name : (record?.form_data?.form?.supplierName ?? record?.supplier_name);
         const supplier = source === "sales_order" ? "" : purchaseSupplierName(accounts, savedSupplier);
-        const overrides = supplier && supplier !== String(savedSupplier || "") ? { seller: { name: supplier } } : undefined;
+        const overrides: any = {
+          seller: {
+            ...(supplier ? { name: supplier } : {}),
+            accountCode: source === "sales_order" ? accounts.credit.code : accounts.credit.code || accounts.debit.code,
+            accountName: source === "sales_order" ? accounts.credit.name : accounts.credit.name || accounts.debit.name,
+          },
+          buyer: {
+            accountCode: source === "sales_order" ? accounts.debit.code : accounts.debit.code || accounts.credit.code,
+            accountName: source === "sales_order" ? accounts.debit.name : accounts.debit.name || accounts.credit.name,
+          },
+        };
         const input = mapRecordToInvoice(source, record, { docType: type, lang, branding, bank, orientation: "portrait", autoPrint: false, configuredTaxName, overrides });
         const flags: InvoiceTemplateFlags = { ...DEFAULT_TEMPLATE_FLAGS, showLogo: def.showLogo, showBankDetails: def.showBankDetails, showTerms: def.showTerms };
         let colorId: string | null = null;
