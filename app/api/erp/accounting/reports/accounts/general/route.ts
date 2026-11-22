@@ -56,14 +56,23 @@ function buildSerialLevels(
     branch_serial?: string | null;
     country_serial?: string | null;
     super_admin_serial?: string | null;
+    branch_serial_number?: string | null;
+    country_serial_number?: string | null;
+    account_serial_number?: number | string | null;
+    branch_code?: string | null;
   },
   visible: Set<number>
 ): SerialLevel[] {
+  const acctNum = account.account_number || account.code || "-";
+  const brSerial = account.branch_serial || account.branch_serial_number || (account.branch_code ? `${account.branch_code}-${acctNum}` : "-");
+  const ctSerial = account.country_serial || account.country_serial_number || "-";
+  const saSerial = account.super_admin_serial || (acctNum !== "-" ? `GBL-${acctNum}` : "-");
+
   const all: SerialLevel[] = [
-    { level: 1, key: "account", value: account.account_number || account.code || "-" },
-    { level: 2, key: "branch", value: account.branch_serial || "-" },
-    { level: 3, key: "country", value: account.country_serial || "-" },
-    { level: 4, key: "super_admin", value: account.super_admin_serial || "-" },
+    { level: 1, key: "account", value: acctNum },
+    { level: 2, key: "branch", value: brSerial },
+    { level: 3, key: "country", value: ctSerial },
+    { level: 4, key: "super_admin", value: saSerial },
   ];
   return all.filter((item) => visible.has(item.level));
 }
@@ -420,12 +429,18 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
         bank.branch_name as bank_branch_name,
         bank.account_number as bank_account_number,
         bank.phone as bank_phone,
-        bank.email as bank_email
+        bank.email as bank_email,
+        ea.category as ea_category,
+        ea.category_id as ea_category_id,
+        ac.name as category_name,
+        ac.code as category_code,
+        ac.account_type as category_account_type
       from public.enterprise_accounts ea
       left join public.profiles creator on creator.id = ea.created_by
       left join public.countries c on c.id = ea.country_id
       left join public.country_branches cb on cb.id = ea.country_branch_id
       left join public.city_branches cib on cib.id = ea.city_branch_id
+      left join public.account_categories ac on ac.id = ea.category_id or (ea.category_id is null and upper(ac.code) = upper(ea.category))
       left join lateral (
         select l.id, l.code, l.name, l.currency, l.is_active
         from public.ledgers l
@@ -668,6 +683,7 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
         countrySerialNumber: account.country_serial_number ?? "-",
         branchSerialNumber: account.branch_serial_number ?? "-",
         manualReferenceNumber: account.manual_reference_number ?? null,
+        serialLevels: buildSerialLevels(account, visibleSerialLevelsFor(session)),
         accountName: account.name ?? "-",
         journalCode: account.ledger_code ?? account.code ?? "-",
         ledgerId: account.ledger_id ?? null,
@@ -691,8 +707,9 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
         cityName: account.city_name ?? "-",
         cityCode: account.city_code ?? "-",
         currency: account.currency ?? "-",
-        accountCategory: titleCase(account.kind ?? "account"),
-        subType: isCountryAccount ? "Inter-Country Clearing" : account.is_control_account ? "Control Account" : "Normal Account",
+        accountCategory: account.category_name || (account.ea_category ? String(account.ea_category) : null) || titleCase(account.kind ?? "account") || "General",
+        categoryCode: account.category_code || account.ea_category || "-",
+        subType: account.category_account_type || (isCountryAccount ? "Inter-Country Clearing" : account.is_control_account ? "Control Account" : "Business Account"),
         isCountryAccount,
         status: account.status ?? "active",
         createdAt: account.creation_date || account.created_at,
@@ -916,7 +933,7 @@ export async function GET(request: NextRequest) {
     let accountQuery = supabase
       .from("enterprise_accounts")
       .select(
-        "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, super_admin_serial, country_serial, branch_serial, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, created_by, created_at, updated_at"
+        "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, super_admin_serial, country_serial, branch_serial, creation_date, branch_code, branch_account_sequence, name, kind, category, category_id, currency, opening_balance, current_balance, status, is_control_account, contacts, created_by, created_at, updated_at"
       )
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
@@ -965,7 +982,7 @@ export async function GET(request: NextRequest) {
       const { data: coreCountryData } = await supabase
         .from("enterprise_accounts")
         .select(
-          "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, super_admin_serial, country_serial, branch_serial, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, created_at, updated_at"
+          "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, super_admin_serial, country_serial, branch_serial, creation_date, branch_code, branch_account_sequence, name, kind, category, category_id, currency, opening_balance, current_balance, status, is_control_account, contacts, created_by, created_at, updated_at"
         )
         .is("deleted_at", null)
         .in("code", ALLOWED_COUNTRY_ACCOUNT_CODES)
@@ -1123,7 +1140,7 @@ export async function GET(request: NextRequest) {
     const bankIds = [...new Set(accountRows.map((row) => row.bank_id).filter((value): value is string => Boolean(value)))];
     const creatorIds = [...new Set(accountRows.map((row: any) => row.created_by).filter((value: any): value is string => Boolean(value)))];
 
-    const [countriesRes, countryBranchesRes, cityBranchesRes, companyRes, customersRes, companiesListRes, banksListRes, creatorsRes] = await Promise.all([
+    const [countriesRes, countryBranchesRes, cityBranchesRes, companyRes, customersRes, companiesListRes, banksListRes, creatorsRes, categoriesRes] = await Promise.all([
       fetchInChunks(countryIds, 150, async (chunk) => supabase.from("countries").select("id, name, iso2, currency_code").in("id", chunk)),
       fetchInChunks(countryBranchIds, 150, async (chunk) => supabase.from("country_branches").select("id, country_id, name, code, local_currency, status").in("id", chunk)),
       fetchInChunks(cityBranchIds, 150, async (chunk) => supabase.from("city_branches").select("id, country_id, country_branch_id, city_name, name, code, local_currency, status").in("id", chunk)),
@@ -1132,6 +1149,7 @@ export async function GET(request: NextRequest) {
       fetchInChunks(companyIds, 150, async (chunk) => supabase.from("companies").select("id, name, legal_name").in("id", chunk)),
       fetchInChunks(bankIds, 150, async (chunk) => supabase.from("banks").select("id, bank_name, branch_name, account_number, phone, email").in("id", chunk)),
       fetchInChunks(creatorIds, 150, async (chunk) => supabase.from("profiles").select("id, full_name, user_code").in("id", chunk)),
+      supabase.from("account_categories").select("id, code, name, description, account_type")
     ]);
 
     if (countriesRes.error) throw new Error(countriesRes.error.message);
@@ -1140,6 +1158,9 @@ export async function GET(request: NextRequest) {
     if (companyRes.error) throw new Error(companyRes.error.message);
     if (customersRes.error) throw new Error(customersRes.error.message);
     if (creatorsRes.error) throw new Error(creatorsRes.error.message);
+
+    const categoryLookup = new Map(((categoriesRes.data ?? []) as any[]).map((row) => [row.id, row]));
+    const categoryCodeLookup = new Map(((categoriesRes.data ?? []) as any[]).map((row) => [String(row.code || "").toUpperCase(), row]));
 
     const countries = (countriesRes.data ?? []) as Array<{ id: string; name: string; iso2: string | null; currency_code: string }>;
     const countryBranches = (countryBranchesRes.data ?? []) as Array<{
@@ -1326,13 +1347,17 @@ export async function GET(request: NextRequest) {
         (account as any).company_owner_name ||
         linkedComp?.owner_name ||
         linkedComp?.contact_person ||
-        profile?.full_name ||
         "-";
       const warehouseVal = findContact("warehouse") || "-";
       const bankVal = linkedBnk?.bank_name || "-";
-      // Linked company name (raw); localized as a batch below (companies table) via the
-      // central resolver so linked company names follow the same policy as account names.
-      const companyVal = linkedComp?.name || company?.name || profile?.full_name || "-";
+      // Linked company name (raw); only genuine linked company or '-'
+      const companyVal = linkedComp?.name || linkedComp?.legal_name || (account as any).company_name || "-";
+
+      const catId = (account as any).category_id;
+      const rawCat = (account as any).category;
+      const catObj = catId ? categoryLookup.get(catId) : rawCat ? categoryCodeLookup.get(String(rawCat).toUpperCase()) : null;
+      const resolvedCategory = catObj?.name || (rawCat ? String(rawCat) : null) || titleCase(account.kind) || "General";
+      const resolvedSubType = catObj?.account_type || (ALLOWED_COUNTRY_ACCOUNT_CODES.includes((account.code ?? "").toUpperCase()) ? "Inter-Country Clearing" : account.is_control_account ? "Control Account" : "Business Account");
 
       return {
         accountId: account.id,
@@ -1374,8 +1399,9 @@ export async function GET(request: NextRequest) {
         cityName: translatedCityName,
         cityCode: cityBranch?.code ?? "-",
         currency: account.currency,
-        accountCategory: titleCase(account.kind),
-        subType: ALLOWED_COUNTRY_ACCOUNT_CODES.includes((account.code ?? "").toUpperCase()) ? "Inter-Country Clearing" : account.is_control_account ? "Control Account" : "Normal Account",
+        accountCategory: resolvedCategory,
+        categoryCode: catObj?.code || (rawCat ? String(rawCat) : "-"),
+        subType: resolvedSubType,
         isCountryAccount: ALLOWED_COUNTRY_ACCOUNT_CODES.includes((account.code ?? "").toUpperCase()),
         status: account.status,
         createdAt: account.creation_date || account.created_at,
