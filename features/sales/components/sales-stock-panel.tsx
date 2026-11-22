@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Building2, CheckCircle2, FileText, Loader2, Package, Plane, Search, X } from "lucide-react";
+import { Building2, CheckCircle2, ClipboardCheck, FileText, Loader2, Package, Plane, Search, X } from "lucide-react";
 import { t as tUi } from "@/lib/i18n/ui";
 import { rtlLanguages } from "@/lib/i18n/languages";
 import type { AvailableLot, LotDeduction } from "@/lib/sales/available-lots";
@@ -14,11 +14,12 @@ import type { AvailableLot, LotDeduction } from "@/lib/sales/available-lots";
  *   4. confirm — the caller fills the Goods Entry form from the chosen lot.
  * Data is the existing /api/erp/sales/available-lots resolver (real inventory, scoped to the caller). Nothing here is demo data.
  */
-export type StockGroupId = "warehouse" | "booking" | "export";
+export type StockGroupId = "warehouse" | "booking" | "export" | "journal";
 const GROUPS: Array<{ id: StockGroupId; sources: string[]; icon: typeof Building2; accent: string }> = [
   { id: "warehouse", sources: ["warehouse_all"], icon: Building2, accent: "text-blue-600" },
   { id: "booking", sources: ["booking"], icon: FileText, accent: "text-amber-600" },
-  { id: "export", sources: ["export_all"], icon: Plane, accent: "text-sky-600" }
+  { id: "export", sources: ["export_all"], icon: Plane, accent: "text-sky-600" },
+  { id: "journal", sources: ["journal"], icon: ClipboardCheck, accent: "text-emerald-600" }
 ];
 
 type GroupState = { status: "idle" | "loading" | "ok" | "denied" | "error"; lots: AvailableLot[] };
@@ -46,7 +47,8 @@ export function SalesStockPanel({
   const [state, setState] = useState<Record<StockGroupId, GroupState>>({
     warehouse: { status: "idle", lots: [] },
     booking: { status: "idle", lots: [] },
-    export: { status: "idle", lots: [] }
+    export: { status: "idle", lots: [] },
+    journal: { status: "idle", lots: [] }
   });
   const [search, setSearch] = useState("");
   const [selectedKey, setSelectedKey] = useState("");
@@ -83,7 +85,7 @@ export function SalesStockPanel({
     setGroup(initialGroup);
     setSearch("");
     setSelectedKey("");
-    setState({ warehouse: { status: "idle", lots: [] }, booking: { status: "idle", lots: [] }, export: { status: "idle", lots: [] } });
+    setState({ warehouse: { status: "idle", lots: [] }, booking: { status: "idle", lots: [] }, export: { status: "idle", lots: [] }, journal: { status: "idle", lots: [] } });
     void load(initialGroup);
   }, [open, initialGroup, load]);
 
@@ -110,13 +112,15 @@ export function SalesStockPanel({
   }, [selected, history]);
 
   if (!open) return null;
-  const labelOf = (g: StockGroupId) => (g === "warehouse" ? tt("source_warehouse", "Warehouse Stock") : g === "booking" ? tt("source_booking", "Booking Stock") : tt("source_export", "Export Stock"));
+  const labelOf = (g: StockGroupId) => (g === "warehouse" ? tt("source_warehouse", "Warehouse Stock") : g === "booking" ? tt("source_booking", "Booking Stock") : g === "journal" ? tt("source_journal", "Confirmed Stock") : tt("source_export", "Export Stock"));
   const hintOf = (g: StockGroupId) =>
     g === "warehouse"
       ? tt("source_warehouse_hint", "Goods in your warehouses, managed lots and local purchases")
       : g === "booking"
         ? tt("source_booking_hint", "Purchase-booked goods not yet loaded")
-        : tt("source_export_hint", "Goods already loaded and on the way, and endorsed stock");
+        : g === "journal"
+          ? tt("source_journal_hint", "Stock confirmed in the Stock Journal. The sold quantity is reserved and issued once.")
+          : tt("source_export_hint", "Goods already loaded and on the way, and endorsed stock");
   const sel = selected;
   const selHistory = sel ? history[keyOf(sel)] : undefined;
   const soldOut = !!sel && (sel.remainingQty ?? sel.availableQty) <= 0;

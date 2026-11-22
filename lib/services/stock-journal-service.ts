@@ -1332,3 +1332,13 @@ export async function getStockHistory(session: ErpSession, q: { sourceType: "pur
   return data;
 }
 
+// ── Sales booking links (lib/sales/journal-sale-lots.ts) ──
+// A Sales booking reserves the quantity it sells from a confirmed allocation with the same reservation the Stock Journal
+// uses for Export / Direct Sale, and the Stock Journal issues it at final billing (issueForSalesOrder).
+export async function reserveJournalStockForSale(tx: Tx, goodsId: string, warehouseId: string, qty: number, delta: 1 | -1) {
+  return reserve(tx, goodsId, warehouseId, qty, delta);
+}
+
+export async function nextJournalTransferNo(tx: Tx) {
+  return nextTransferNo(tx);
+}
