@@ -77,6 +77,7 @@ type AccountGeneralReportRow = {
   cityCode: string;
   currency: string;
   accountCategory: string;
+  categoryCode?: string;
   subType: string;
   status: string;
   createdAt: string;
@@ -276,6 +277,32 @@ function downloadTextFile(filename: string, contents: string, mime = "text/plain
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function getCategoryBadgeClass(category?: string | null) {
+  const cat = (category || "").toLowerCase();
+  if (cat.includes("customer") || cat.includes("client") || cat.includes("debtor")) {
+    return "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800";
+  }
+  if (cat.includes("supplier") || cat.includes("vendor") || cat.includes("creditor")) {
+    return "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800";
+  }
+  if (cat.includes("bank") || cat.includes("cash")) {
+    return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800";
+  }
+  if (cat.includes("expense")) {
+    return "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800";
+  }
+  if (cat.includes("asset")) {
+    return "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800";
+  }
+  if (cat.includes("liabilit")) {
+    return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800";
+  }
+  if (cat.includes("income") || cat.includes("revenue") || cat.includes("sale")) {
+    return "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800";
+  }
+  return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
 }
 
 const SERIAL_LEVEL_LABEL_KEYS = {
@@ -615,6 +642,8 @@ export function AccountGeneralReportView({
   const [toDate, setToDate] = useState("");
   const [dashboardScope, setDashboardScope] = useState<AccountDashboardScope>("super_admin");
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(initialAccountId ?? null);
+  const [detailModalAccount, setDetailModalAccount] = useState<AccountGeneralReportRow | null>(null);
+  const [detailModalCompany, setDetailModalCompany] = useState<AccountGeneralReportRow | null>(null);
   const [accountToDelete, setAccountToDelete] = useState<AccountGeneralReportRow | null>(null);
   const [actionsPortal, setActionsPortal] = useState<HTMLElement | null>(null);
 
@@ -2147,7 +2176,7 @@ export function AccountGeneralReportView({
                 <thead className="sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 shadow-xs">
                   <tr>
                     {[
-                      { label: "MASTER REFERENCE & ACCOUNT OVERVIEW", span: 2, cls: "bg-slate-900 text-white dark:bg-slate-950 dark:text-slate-100 border-r border-slate-700 dark:border-slate-800" },
+                      { label: "MASTER REFERENCE & ACCOUNT OVERVIEW", span: 4, cls: "bg-slate-900 text-white dark:bg-slate-950 dark:text-slate-100 border-r border-slate-700 dark:border-slate-800" },
                       { label: "BRANCH & LOCATION", span: 2, cls: "bg-indigo-900 text-white dark:bg-indigo-950 dark:text-indigo-200 border-r border-indigo-800 dark:border-indigo-800" },
                       { label: "COMPANY & MASTER LINKS", span: 4, cls: "bg-purple-900 text-white dark:bg-purple-950 dark:text-purple-200 border-r border-purple-800 dark:border-purple-800" },
                       { label: "CONTACT DETAILS", span: 1, cls: "bg-emerald-800 text-white dark:bg-emerald-950 dark:text-emerald-200 border-r border-emerald-700 dark:border-emerald-800" },
@@ -2167,6 +2196,8 @@ export function AccountGeneralReportView({
                     {[
                       { label: "ACCOUNT NO.", align: "text-center", width: "min-w-[130px]" },
                       { label: "ACCOUNT NAME", align: "text-left", width: "min-w-[210px]" },
+                      { label: "CATEGORY", align: "text-center", width: "min-w-[120px]" },
+                      { label: "SUB TYPE", align: "text-center", width: "min-w-[130px]" },
                       { label: "COUNTRY", align: "text-center", width: "min-w-[130px]" },
                       { label: "BRANCH & CREATED BY", align: "text-left", width: "min-w-[190px]" },
                       { label: "COMPANY", align: "text-center", width: "min-w-[90px]" },
@@ -2194,7 +2225,7 @@ export function AccountGeneralReportView({
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
                   {loading ? (
                     <tr>
-                      <td colSpan={12} className="px-5 py-12 text-center text-sm text-slate-500 font-medium">
+                      <td colSpan={14} className="px-5 py-12 text-center text-sm text-slate-500 font-medium">
                         <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-500" />
                         {t(lang, "acct.agrv_loading_accounts_registry", "Loading accounts registry...")}
                       </td>
@@ -2216,53 +2247,136 @@ export function AccountGeneralReportView({
                             highlighted && "!bg-emerald-50 dark:!bg-emerald-950/30"
                           )}
                         >
-                          {/* 1. Account No. */}
+                          {/* 1. Account No. (with 4-serial speech bubble popover) */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
-                            <details className="relative inline-block" data-serial-popover onClick={(e) => e.stopPropagation()}>
+                            <details className="relative inline-block text-left" data-serial-popover onClick={(e) => e.stopPropagation()}>
                               <summary className="list-none cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-mono font-black text-[11px] shadow-2xs group-hover:border-blue-400 dark:group-hover:border-blue-600 transition-colors whitespace-nowrap [&::-webkit-details-marker]:hidden">
                                 <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
                                 <span>{row.accountCode}</span>
                               </summary>
-                              {row.serialLevels && row.serialLevels.length > 0 ? (
-                                <div className="absolute start-0 z-30 mt-1 min-w-[15rem] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 shadow-xl text-start font-mono text-[11px] text-slate-700 dark:text-slate-200">
-                                  <div className="mb-1.5 font-sans font-black uppercase tracking-wider text-slate-500">{t(lang, "acct.serial_breakdown_title", "Account number levels")}</div>
-                                  {row.serialLevels.map((item) => (
-                                    <div key={item.key} className="flex items-center justify-between gap-4 py-0.5">
-                                      <span className="font-sans text-slate-500">{item.level}. {t(lang, SERIAL_LEVEL_LABEL_KEYS[item.key], item.key)}</span>
-                                      <span className="font-black break-all">{item.value}</span>
-                                    </div>
-                                  ))}
+                              <div className="absolute start-0 z-40 mt-1.5 w-64 rounded-xl border border-blue-200 bg-white p-3 shadow-2xl dark:border-slate-700 dark:bg-slate-900 text-start font-mono text-[11px] text-slate-700 dark:text-slate-200 animate-in fade-in zoom-in-95">
+                                <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-slate-100 dark:border-slate-800 font-sans">
+                                  <span className="font-black text-[11px] uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
+                                    <Landmark className="h-3 w-3" />
+                                    {t(lang, "acct.serial_breakdown_title", "4-Serial Number Levels")}
+                                  </span>
+                                  <span className="text-[10px] text-slate-400 font-mono font-bold">L1-L4</span>
                                 </div>
-                              ) : null}
+                                <div className="space-y-1.5 font-sans">
+                                  <div className="flex items-center justify-between gap-2 p-1.5 rounded-lg bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50">
+                                    <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300">1. {tr("GLOBAL SERIAL") || "Global Serial"}:</span>
+                                    <span className="font-mono font-black text-indigo-900 dark:text-indigo-200 text-[11px]">{row.serialLevels?.find(s => s.key === "super_admin")?.value || `GBL-${row.accountCode}`}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between gap-2 p-1.5 rounded-lg bg-teal-50/60 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900/50">
+                                    <span className="text-[10px] font-bold text-teal-700 dark:text-teal-300">2. {tr("COUNTRY SERIAL") || "Country Serial"}:</span>
+                                    <span className="font-mono font-black text-teal-900 dark:text-teal-200 text-[11px]">{row.countrySerialNumber && row.countrySerialNumber !== "-" ? row.countrySerialNumber : (row.serialLevels?.find(s => s.key === "country")?.value || "-")}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between gap-2 p-1.5 rounded-lg bg-purple-50/60 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-900/50">
+                                    <span className="text-[10px] font-bold text-purple-700 dark:text-purple-300">3. {tr("BRANCH SERIAL") || "Branch Serial"}:</span>
+                                    <span className="font-mono font-black text-purple-900 dark:text-purple-200 text-[11px]">{row.branchSerialNumber && row.branchSerialNumber !== "-" ? row.branchSerialNumber : (row.serialLevels?.find(s => s.key === "branch")?.value || "-")}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between gap-2 p-1.5 rounded-lg bg-blue-50/60 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50">
+                                    <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300">4. {tr("ACCOUNT NO.") || "Account No"}:</span>
+                                    <span className="font-mono font-black text-blue-900 dark:text-blue-200 text-[11px]">{row.accountCode} {row.manualReferenceNumber ? `[${row.manualReferenceNumber}]` : ""}</span>
+                                  </div>
+                                </div>
+                              </div>
                             </details>
                             {row.manualReferenceNumber ? (
-                              <div className="mt-0.5 font-mono text-[11px] font-medium text-slate-400 dark:text-slate-500">{row.manualReferenceNumber}</div>
+                              <div className="mt-0.5 font-mono text-[10px] font-medium text-slate-400 dark:text-slate-500">{row.manualReferenceNumber}</div>
                             ) : null}
                           </td>
 
-                          {/* 2. Account Name */}
+                          {/* 2. Account Name (with message-style detail popover & click modal) */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
-                            <div className="flex flex-col">
+                            <div
+                              className="group/name relative inline-block cursor-pointer text-left"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDetailModalAccount(row);
+                              }}
+                            >
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="font-bold text-[11.5px] text-slate-900 dark:text-slate-100 leading-snug">
+                                <span className="font-bold text-[11.5px] text-blue-700 dark:text-blue-400 group-hover/name:underline underline-offset-2 flex items-center gap-1 leading-snug">
                                   <SavedText value={localizeName(row.accountName, lang)} lang={lang} kind="name" />
+                                  <Eye className="h-3 w-3 text-slate-400 group-hover/name:text-blue-600 transition-colors opacity-0 group-hover/name:opacity-100" />
                                 </span>
                                 {isCountryAccountRow(row) && (
-                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300 font-mono font-bold text-[11px] uppercase tracking-wider">
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300 font-mono font-bold text-[10px] uppercase tracking-wider">
                                     <Globe className="h-2.5 w-2.5" />
                                     {tr("INTER-COUNTRY")}
                                   </span>
                                 )}
                               </div>
                               {row.journalCode && row.journalCode !== "-" ? (
-                                <span className="text-[11px] font-mono font-medium text-slate-400 dark:text-slate-500 mt-0.5">
+                                <span className="text-[10px] font-mono font-medium text-slate-400 dark:text-slate-500 mt-0.5 block">
                                   {row.journalCode}
                                 </span>
                               ) : null}
+
+                              {/* Message-style speech-bubble popover on hover */}
+                              <div className="pointer-events-none opacity-0 group-hover/name:opacity-100 group-hover/name:pointer-events-auto transition-all duration-200 absolute start-0 top-full z-40 mt-1.5 w-72 rounded-xl border border-blue-200 bg-white p-3 shadow-2xl dark:border-slate-700 dark:bg-slate-900 text-start font-sans text-xs text-slate-800 dark:text-slate-100">
+                                <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-slate-100 dark:border-slate-800">
+                                  <div className="flex items-center gap-1.5">
+                                    <MessageCircle className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                                    <span className="font-black text-[11px] uppercase tracking-wider text-blue-700 dark:text-blue-400">{tr("ACCOUNT DETAILS")}</span>
+                                  </div>
+                                  <span className="text-[10px] font-mono text-slate-400">{row.accountCode}</span>
+                                </div>
+                                <div className="space-y-1.5 text-[11px]">
+                                  <div className="font-bold text-slate-900 dark:text-white text-xs">{localizeName(row.accountName, lang)}</div>
+                                  <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
+                                    <span className="text-slate-400">{tr("CATEGORY")}:</span>
+                                    <span className="font-semibold">{row.accountCategory || "General"}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
+                                    <span className="text-slate-400">{tr("SUB TYPE")}:</span>
+                                    <span className="font-semibold">{row.subType || "Business Account"}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
+                                    <span className="text-slate-400">{tr("BALANCE") || "Balance"}:</span>
+                                    <span className={cn("font-bold font-mono", row.currentBalance < 0 ? "text-rose-600" : "text-emerald-600")}>
+                                      {row.currency} {fmtNumber(row.currentBalance)}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
+                                    <span className="text-slate-400">{tr("LOCATION") || "Location"}:</span>
+                                    <span className="font-semibold">{localizeTerm(row.countryName, lang)} • {row.branchName}</span>
+                                  </div>
+                                </div>
+                                <div className="mt-2.5 pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] text-blue-600 dark:text-blue-400 font-bold">
+                                  <span>{t(lang, "common.view_details", "View Details")}</span>
+                                  <ChevronRight className="h-3 w-3" />
+                                </div>
+                              </div>
                             </div>
                           </td>
 
-                          {/* 3. Country */}
+                          {/* 3. Category */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
+                            <div className="inline-flex flex-col items-center gap-0.5">
+                              <span className={cn(
+                                "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold border shadow-2xs whitespace-nowrap",
+                                getCategoryBadgeClass(row.accountCategory)
+                              )}>
+                                {row.accountCategory || "General"}
+                              </span>
+                              {row.categoryCode && row.categoryCode !== "-" && (
+                                <span className="font-mono text-[9.5px] font-bold text-slate-400 dark:text-slate-500 uppercase">
+                                  {row.categoryCode}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* 4. Sub Type */}
+                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[10.5px] font-medium whitespace-nowrap">
+                              {row.subType || "Business Account"}
+                            </span>
+                          </td>
+
+                          {/* 5. Country */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             <div className="inline-flex flex-col items-center gap-0.5">
                               <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-[11px] font-bold shadow-2xs whitespace-nowrap">
@@ -2277,20 +2391,29 @@ export function AccountGeneralReportView({
                             </div>
                           </td>
 
-                          {/* 4. Branch & Created By */}
+                          {/* 6. Branch & Created By */}
                           <td className="px-3 py-2 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
-                            <div className="flex flex-col gap-1">
+                            <div className="flex flex-col gap-0.5">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="font-bold text-[11px] text-slate-900 dark:text-slate-100">
-                                  {localizeName(row.branchName || "—", lang)}
+                                  {localizeName(row.cityBranchName || row.branchName || "—", lang)}
                                 </span>
-                                {row.branchCode && row.branchCode !== "—" && (
-                                  <span className="inline-block px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 font-mono font-bold text-[11px] text-indigo-700 dark:text-indigo-300">
+                                {(row.cityCode && row.cityCode !== "-") ? (
+                                  <span className="inline-block px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 font-mono font-bold text-[10px] text-indigo-700 dark:text-indigo-300">
+                                    {row.cityCode}
+                                  </span>
+                                ) : (row.branchCode && row.branchCode !== "—") ? (
+                                  <span className="inline-block px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 font-mono font-bold text-[10px] text-indigo-700 dark:text-indigo-300">
                                     {row.branchCode}
                                   </span>
-                                )}
+                                ) : null}
                               </div>
-                              <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                              {row.mainBranchName && row.mainBranchName !== (row.cityBranchName || row.branchName) && (
+                                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                                  {localizeName(row.mainBranchName, lang)}
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                                 <User className="h-2.5 w-2.5 text-blue-500 shrink-0" />
                                 <span>{tr("By:")}</span>
                                 <span className="font-bold text-slate-700 dark:text-slate-300">
@@ -2300,27 +2423,71 @@ export function AccountGeneralReportView({
                             </div>
                           </td>
 
-                          {/* 5. Company (Yes/No) */}
+                          {/* 7. Company (Yes/No with popover & modal) */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
-                            {row.companyName && row.companyName !== "-" ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 text-[11px] font-black uppercase whitespace-nowrap">
-                                {t(lang, "common.yes", "Yes")}
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 text-[11px] font-black uppercase whitespace-nowrap">
-                                {t(lang, "common.no", "No")}
-                              </span>
-                            )}
+                            <div 
+                              className="group/comp relative inline-block cursor-pointer text-center"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (row.companyName && row.companyName !== "-") {
+                                  setDetailModalCompany(row);
+                                }
+                              }}
+                            >
+                              {row.companyName && row.companyName !== "-" ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 text-[11px] font-black uppercase whitespace-nowrap hover:scale-105 transition-transform">
+                                  <Building2 className="h-2.5 w-2.5 text-emerald-600" />
+                                  {t(lang, "common.yes", "Yes")}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 text-[11px] font-black uppercase whitespace-nowrap">
+                                  {t(lang, "common.no", "No")}
+                                </span>
+                              )}
+
+                              {/* Speech bubble popover on hover if company is linked */}
+                              {row.companyName && row.companyName !== "-" && (
+                                <div className="pointer-events-none opacity-0 group-hover/comp:opacity-100 group-hover/comp:pointer-events-auto transition-all duration-200 absolute start-1/2 -translate-x-1/2 top-full z-40 mt-1.5 w-60 rounded-xl border border-emerald-200 bg-white p-3 shadow-2xl dark:border-slate-700 dark:bg-slate-900 text-start font-sans text-xs text-slate-800 dark:text-slate-100">
+                                  <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-slate-100 dark:border-slate-800">
+                                    <span className="font-black text-[11px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                                      <Building2 className="h-3 w-3" />
+                                      {tr("COMPANY DETAILS")}
+                                    </span>
+                                    <span className="text-[10px] font-mono text-emerald-600 font-bold">{t(lang, "common.yes", "Yes")}</span>
+                                  </div>
+                                  <div className="space-y-1.5 text-[11px]">
+                                    <div>
+                                      <span className="text-slate-400 block text-[10px] uppercase">{tr("COMPANY")}:</span>
+                                      <span className="font-bold text-slate-900 dark:text-white">{localizeName(row.companyName, lang)}</span>
+                                    </div>
+                                    {(row.companyOwner || row.ownerName) && (
+                                      <div>
+                                        <span className="text-slate-400 block text-[10px] uppercase">{tr("Owner / Contact")}:</span>
+                                        <span className="font-semibold text-slate-700 dark:text-slate-300">{row.companyOwner || row.ownerName}</span>
+                                      </div>
+                                    )}
+                                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-100 dark:border-slate-800">
+                                      <span className="text-slate-400">{tr("CURRENCY")}:</span>
+                                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{row.currency}</span>
+                                    </div>
+                                  </div>
+                                  <div className="mt-2 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] text-emerald-600 font-bold">
+                                    <span>{t(lang, "common.view_details", "View Details")}</span>
+                                    <ChevronRight className="h-3 w-3" />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </td>
 
-                          {/* 6. Linked Companies */}
+                          {/* 8. Linked Companies (Strictly genuine company name or '—', never Super Admin) */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
                             <span className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] block truncate max-w-[160px]">
-                              {row.companyName ? localizeName(row.companyName, lang) : "—"}
+                              {row.companyName && row.companyName !== "-" ? localizeName(row.companyName, lang) : "—"}
                             </span>
                           </td>
 
-                          {/* 7. Bank (clickable -> existing Bank Registry) */}
+                          {/* 9. Bank (clickable -> existing Bank Registry) */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
                             {row.bankName && row.bankName !== "-" ? (
                               <button
@@ -2337,7 +2504,7 @@ export function AccountGeneralReportView({
                             )}
                           </td>
 
-                          {/* 8. Warehouse (Yes/No) */}
+                          {/* 10. Warehouse (Yes/No) */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             {row.warehouseName && row.warehouseName !== "-" ? (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800 text-[11px] font-black uppercase whitespace-nowrap">
@@ -2350,19 +2517,19 @@ export function AccountGeneralReportView({
                             )}
                           </td>
 
-                          {/* 9. Contacts */}
+                          {/* 11. Contacts */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             <ContactIconPopup row={row} />
                           </td>
 
-                          {/* 10. Currency */}
+                          {/* 12. Currency */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             <span className="inline-block px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono font-black text-[11px] text-slate-700 dark:text-slate-300 whitespace-nowrap">
                               {row.currency}
                             </span>
                           </td>
 
-                          {/* 11. Status */}
+                          {/* 13. Status */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             <span className={cn(
                               "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wide border shadow-2xs",
@@ -2375,20 +2542,18 @@ export function AccountGeneralReportView({
                             </span>
                           </td>
 
-                          {/* 12. Actions */}
+                          {/* 14. Actions */}
                           <td className="px-3 py-2.5 text-center align-middle" onClick={(e) => e.stopPropagation()}>
                             <AccountRowActionsMenu
                               row={row}
                               lang={lang}
                               disabled={loadingDeleting}
                               onView={() => {
-                                if (showProfilePanel) setSelectedAccountId(row.accountId);
-                                else router.push(`/dashboard/accounts/view?accountId=${row.accountId}` as Route);
+                                setDetailModalAccount(row);
                               }}
                               onEdit={() => router.push(`/dashboard/accounts/setup?accountId=${row.accountId}` as Route)}
                               onOpenAccount={() => {
-                                if (showProfilePanel) setSelectedAccountId(row.accountId);
-                                else router.push(`/dashboard/accounts/view?accountId=${row.accountId}` as Route);
+                                setDetailModalAccount(row);
                               }}
                               onOpenLedger={() => {
                                 if (row.ledgerId) router.push(`/dashboard/ledger/general-report?ledgerId=${row.ledgerId}` as Route);
@@ -2405,7 +2570,7 @@ export function AccountGeneralReportView({
                     })
                   ) : (
                     <tr>
-                      <td colSpan={12} className="px-5 py-12 text-center text-sm text-slate-500">
+                      <td colSpan={14} className="px-5 py-12 text-center text-sm text-slate-500">
                         {tr("NO ACCOUNTS MATCH THE SELECTED FILTERS")}
                       </td>
                     </tr>
@@ -2413,7 +2578,7 @@ export function AccountGeneralReportView({
                 </tbody>
                 <tfoot className="sticky bottom-0 z-10 bg-slate-100/95 dark:bg-slate-900/95 border-t-2 border-slate-300 dark:border-slate-700 backdrop-blur-xs font-bold text-[11px] text-slate-800 dark:text-slate-200 shadow-md">
                   <tr>
-                    <td colSpan={12} className="px-4 py-2.5 text-left uppercase tracking-wider font-extrabold text-slate-700 dark:text-slate-300">
+                    <td colSpan={14} className="px-4 py-2.5 text-left uppercase tracking-wider font-extrabold text-slate-700 dark:text-slate-300">
                       <div className="flex items-center gap-3">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-[11px] font-black whitespace-nowrap">
                           {sortedRows.length} {sortedRows.length === 1 ? tr("ACCOUNT") : tr("TOTAL ACCOUNTS")}
@@ -2688,6 +2853,229 @@ export function AccountGeneralReportView({
                   {tr("Apply Filters")}
                 </Button>
               </div>
+            </div>
+          </div>
+        </SimpleModal>
+      )}
+
+      {/* Account Details Modal */}
+      {detailModalAccount && (
+        <SimpleModal
+          isOpen={Boolean(detailModalAccount)}
+          onClose={() => setDetailModalAccount(null)}
+          title={`${tr("ACCOUNT DETAILS")}: ${detailModalAccount.accountCode} - ${detailModalAccount.accountName}`}
+          maxWidth="max-w-2xl"
+        >
+          <div className="space-y-4 text-xs">
+            {/* Top Banner with Badges */}
+            <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                  {detailModalAccount.currency || "AED"}
+                </div>
+                <div>
+                  <h4 className="font-black text-sm text-slate-900 dark:text-white">{detailModalAccount.accountName}</h4>
+                  <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500">
+                    <span>{detailModalAccount.accountCode}</span>
+                    {detailModalAccount.manualReferenceNumber && <span>• Ref: {detailModalAccount.manualReferenceNumber}</span>}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-bold border", getCategoryBadgeClass(detailModalAccount.accountCategory))}>
+                  {detailModalAccount.accountCategory}
+                </span>
+                <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-bold border", detailModalAccount.status === "active" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-600 border-slate-200")}>
+                  {detailModalAccount.status === "active" ? t(lang, "god.active", "Active") : t(lang, "god.inactive", "Inactive")}
+                </span>
+              </div>
+            </div>
+
+            {/* Grid of Details */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Box 1: Classification & Scopes */}
+              <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2">
+                <div className="font-black text-[11px] uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Building2 className="h-3 w-3 text-blue-500" />
+                  {tr("CLASSIFICATION & SCOPE") || "Classification & Scope"}
+                </div>
+                <div className="space-y-1 text-[11px]">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">{tr("CATEGORY")}:</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{detailModalAccount.accountCategory} ({detailModalAccount.categoryCode || "-"})</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">{tr("SUB TYPE")}:</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{detailModalAccount.subType}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">{tr("COUNTRY") || "Country"}:</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{getFlag(detailModalAccount.countryName)} {localizeTerm(detailModalAccount.countryName, lang)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">{tr("BRANCH") || "Branch"}:</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{detailModalAccount.cityBranchName || detailModalAccount.branchName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">{tr("By:") || "Created By"}:</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{detailModalAccount.creatorName || detailModalAccount.createdBy || "Super Admin"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Box 2: Financial Balances */}
+              <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2">
+                <div className="font-black text-[11px] uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Coins className="h-3 w-3 text-emerald-500" />
+                  {tr("FINANCIAL BALANCES") || "Financial Balances"}
+                </div>
+                <div className="space-y-1 text-[11px]">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">{t(lang, "acct.opening_balance", "Opening Balance")}:</span>
+                    <span className="font-mono font-bold">{detailModalAccount.currency} {fmtNumber(detailModalAccount.openingBalance)}</span>
+                  </div>
+                  <div className="flex justify-between text-rose-600">
+                    <span>{tr("DR:") || "Debit"}:</span>
+                    <span className="font-mono font-bold">{fmtNumber(detailModalAccount.debitTotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-emerald-600">
+                    <span>{tr("CR:") || "Credit"}:</span>
+                    <span className="font-mono font-bold">{fmtNumber(detailModalAccount.creditTotal)}</span>
+                  </div>
+                  <div className="flex justify-between pt-1 border-t border-slate-100 dark:border-slate-800 font-bold">
+                    <span>{tr("CURRENT BALANCE") || "Current Balance"}:</span>
+                    <span className={cn("font-mono text-sm", detailModalAccount.currentBalance < 0 ? "text-rose-600" : "text-blue-600")}>
+                      {detailModalAccount.currency} {fmtNumber(detailModalAccount.currentBalance)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Box 3: 4-Serial Numbers */}
+            <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 space-y-2">
+              <div className="font-black text-[11px] uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <Landmark className="h-3 w-3 text-indigo-500" />
+                {t(lang, "acct.serial_breakdown_title", "4-Serial Number Levels")}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-center">
+                <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] text-slate-400 font-sans block">{tr("GLOBAL SERIAL") || "1. Global"}</span>
+                  <span className="font-black text-indigo-700 dark:text-indigo-300 text-xs">{detailModalAccount.serialLevels?.find(s => s.key === "super_admin")?.value || `GBL-${detailModalAccount.accountCode}`}</span>
+                </div>
+                <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] text-slate-400 font-sans block">{tr("COUNTRY SERIAL") || "2. Country"}</span>
+                  <span className="font-black text-teal-700 dark:text-teal-300 text-xs">{detailModalAccount.countrySerialNumber && detailModalAccount.countrySerialNumber !== "-" ? detailModalAccount.countrySerialNumber : (detailModalAccount.serialLevels?.find(s => s.key === "country")?.value || "-")}</span>
+                </div>
+                <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] text-slate-400 font-sans block">{tr("BRANCH SERIAL") || "3. Branch"}</span>
+                  <span className="font-black text-purple-700 dark:text-purple-300 text-xs">{detailModalAccount.branchSerialNumber && detailModalAccount.branchSerialNumber !== "-" ? detailModalAccount.branchSerialNumber : (detailModalAccount.serialLevels?.find(s => s.key === "branch")?.value || "-")}</span>
+                </div>
+                <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] text-slate-400 font-sans block">{tr("ACCOUNT NO.") || "4. Account"}</span>
+                  <span className="font-black text-blue-700 dark:text-blue-300 text-xs">{detailModalAccount.accountCode}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                {detailModalAccount.ledgerId && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      router.push(`/dashboard/ledger/general-report?ledgerId=${detailModalAccount.ledgerId}` as Route);
+                    }}
+                    className="text-xs font-bold gap-1 cursor-pointer"
+                  >
+                    <FileSpreadsheet className="h-3.5 w-3.5 text-blue-600" />
+                    {tr("Open Ledger") || "Open Ledger"}
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    router.push(`/dashboard/accounts/setup?accountId=${detailModalAccount.accountId}` as Route);
+                  }}
+                  className="text-xs font-bold gap-1 cursor-pointer"
+                >
+                  <PencilLine className="h-3.5 w-3.5 text-amber-600" />
+                  {tr("Edit Account") || "Edit Account"}
+                </Button>
+              </div>
+              <Button
+                type="button"
+                onClick={() => setDetailModalAccount(null)}
+                className="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-bold px-4 cursor-pointer"
+              >
+                {tr("Cancel") || "Close"}
+              </Button>
+            </div>
+          </div>
+        </SimpleModal>
+      )}
+
+      {/* Company Details Modal */}
+      {detailModalCompany && (
+        <SimpleModal
+          isOpen={Boolean(detailModalCompany)}
+          onClose={() => setDetailModalCompany(null)}
+          title={`${tr("COMPANY DETAILS")}: ${detailModalCompany.companyName}`}
+          maxWidth="max-w-lg"
+        >
+          <div className="space-y-4 text-xs">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+              <div className="h-10 w-10 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <div>
+                <h4 className="font-black text-sm text-emerald-950 dark:text-emerald-100">{detailModalCompany.companyName}</h4>
+                <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-medium">
+                  {tr("Associated with Account") || "Associated with Account"}: <span className="font-mono font-bold">{detailModalCompany.accountCode}</span>
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2">
+              <div className="space-y-1.5 text-[11px]">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">{tr("COMPANY")}:</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{detailModalCompany.companyName}</span>
+                </div>
+                {(detailModalCompany.companyOwner || detailModalCompany.ownerName) && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">{tr("Owner / Contact") || "Owner"}:</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{detailModalCompany.companyOwner || detailModalCompany.ownerName}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-slate-400">{tr("COUNTRY") || "Country"}:</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{getFlag(detailModalCompany.countryName)} {localizeTerm(detailModalCompany.countryName, lang)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">{tr("CURRENCY")}:</span>
+                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{detailModalCompany.currency}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">{tr("STATUS")}:</span>
+                  <span className="font-bold text-emerald-600 uppercase">{tr("ACTIVE")}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
+              <Button
+                type="button"
+                onClick={() => setDetailModalCompany(null)}
+                className="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-bold px-4 cursor-pointer"
+              >
+                {tr("Cancel") || "Close"}
+              </Button>
             </div>
           </div>
         </SimpleModal>
