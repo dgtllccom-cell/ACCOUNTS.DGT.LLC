@@ -35,14 +35,15 @@ export function LoginShowcasePanel({ lang: propLang }: { lang?: SupportedLanguag
       {/* Hero Showcase Content */}
       <div className="relative z-10 w-full max-w-xl mx-auto px-8 lg:px-12 py-16 flex flex-col justify-center">
         {/* Main Headline */}
-        {/* Nastaliq (Urdu) stacks letters vertically: at leading 1.2 its lines overlapped. RTL scripts also lose tight tracking. */}
+        {/* Nastaliq (Urdu) stacks letters vertically: at leading 1.2 its lines overlapped. RTL scripts also lose tight tracking.
+            Arbitrary sizes on purpose: sm:text-4xl would also set a line-height and override leading-* from sm up (PS/FA/AR overlapped). */}
         <h1
           className={`font-black text-white drop-shadow-lg ${
             lang === "ur"
               ? "text-[28px] sm:text-[34px] lg:text-[38px] leading-[2.05]"
               : isRtl
-                ? "text-3xl sm:text-4xl lg:text-[40px] leading-[1.55]"
-                : "text-3xl sm:text-4xl lg:text-[42px] leading-[1.2] tracking-tight"
+                ? "text-[1.875rem] sm:text-[2.25rem] lg:text-[40px] leading-[1.6]"
+                : "text-[1.875rem] sm:text-[2.25rem] lg:text-[42px] leading-[1.2] tracking-tight"
           }`}
         >
           {t.heroTitle}
@@ -56,10 +57,10 @@ export function LoginShowcasePanel({ lang: propLang }: { lang?: SupportedLanguag
               <Globe className="h-6 w-6 text-blue-300 group-hover:text-blue-200 transition-colors" />
             </div>
             <div className="pt-0.5">
-              <h2 className={`text-base sm:text-lg font-bold text-white ${lang === "ur" ? "leading-[1.9]" : isRtl ? "leading-[1.6]" : "tracking-wide"}`}>
+              <h2 className={`text-base sm:text-[1.125rem] font-bold text-white ${lang === "ur" ? "leading-[1.9]" : isRtl ? "leading-[1.6]" : "tracking-wide"}`}>
                 {t.featMultiCountryTitle}
               </h2>
-              <p className={`text-xs sm:text-sm font-medium text-slate-300/85 ${lang === "ur" ? "leading-[2] mt-1" : "leading-relaxed mt-0.5"}`}>
+              <p className={`text-xs sm:text-[0.875rem] font-medium text-slate-300/85 ${lang === "ur" ? "leading-[2] mt-1" : "leading-relaxed mt-0.5"}`}>
                 {t.featMultiCountryDesc}
               </p>
             </div>
@@ -71,10 +72,10 @@ export function LoginShowcasePanel({ lang: propLang }: { lang?: SupportedLanguag
               <Users className="h-6 w-6 text-blue-300 group-hover:text-blue-200 transition-colors" />
             </div>
             <div className="pt-0.5">
-              <h2 className={`text-base sm:text-lg font-bold text-white ${lang === "ur" ? "leading-[1.9]" : isRtl ? "leading-[1.6]" : "tracking-wide"}`}>
+              <h2 className={`text-base sm:text-[1.125rem] font-bold text-white ${lang === "ur" ? "leading-[1.9]" : isRtl ? "leading-[1.6]" : "tracking-wide"}`}>
                 {t.featRoleAccessTitle}
               </h2>
-              <p className={`text-xs sm:text-sm font-medium text-slate-300/85 ${lang === "ur" ? "leading-[2] mt-1" : "leading-relaxed mt-0.5"}`}>
+              <p className={`text-xs sm:text-[0.875rem] font-medium text-slate-300/85 ${lang === "ur" ? "leading-[2] mt-1" : "leading-relaxed mt-0.5"}`}>
                 {t.featRoleAccessDesc}
               </p>
             </div>
@@ -86,10 +87,10 @@ export function LoginShowcasePanel({ lang: propLang }: { lang?: SupportedLanguag
               <Languages className="h-6 w-6 text-blue-300 group-hover:text-blue-200 transition-colors" />
             </div>
             <div className="pt-0.5">
-              <h2 className={`text-base sm:text-lg font-bold text-white ${lang === "ur" ? "leading-[1.9]" : isRtl ? "leading-[1.6]" : "tracking-wide"}`}>
+              <h2 className={`text-base sm:text-[1.125rem] font-bold text-white ${lang === "ur" ? "leading-[1.9]" : isRtl ? "leading-[1.6]" : "tracking-wide"}`}>
                 {t.featLanguagesTitle}
               </h2>
-              <p className={`text-xs sm:text-sm font-medium text-slate-300/85 ${lang === "ur" ? "leading-[2] mt-1" : "leading-relaxed mt-0.5"}`}>
+              <p className={`text-xs sm:text-[0.875rem] font-medium text-slate-300/85 ${lang === "ur" ? "leading-[2] mt-1" : "leading-relaxed mt-0.5"}`}>
                 {t.featLanguagesDesc}
               </p>
             </div>
