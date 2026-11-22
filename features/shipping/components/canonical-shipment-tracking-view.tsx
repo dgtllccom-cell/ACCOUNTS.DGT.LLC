@@ -19,8 +19,9 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   Search, Ship, Truck, Train, Plane, Anchor, MapPin, CircleDot, Boxes, Plus, RefreshCw, ChevronRight, ChevronLeft,
-  FileText, AlertCircle, Building2, Layers, X, Eye, Filter, Navigation, Activity, ArrowRight, Download, Clock,
+  FileText, AlertCircle, Building2, Layers, X, Eye, Navigation, Activity, ArrowRight, Download, Clock, CheckCircle2,
 } from "lucide-react";
+import { TrackingFilterDropdown, trackingStageIcon } from "./tracking-filter-dropdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -83,6 +84,8 @@ interface CanonicalShipmentTrackingViewProps {
   initialQuery?: string;
   title?: string;
   description?: string;
+  /** Rendered inside the top hero, under the title and actions (e.g. the Loading · Tracking panel). */
+  topSlot?: React.ReactNode;
 }
 
 const DASH = "—";
@@ -168,6 +171,7 @@ export function CanonicalShipmentTrackingView({
   initialQuery = "",
   title,
   description,
+  topSlot,
 }: CanonicalShipmentTrackingViewProps) {
   const s = useErpScreen("shtrk");
 
@@ -191,7 +195,6 @@ export function CanonicalShipmentTrackingView({
   const [searchQuery, setSearchQuery] = useState(initialQuery || "");
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery || "");
   const [searchField, setSearchField] = useState<SearchField>("all");
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [modeFilter, setModeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState(initialStatus || "all");
   const [viewTab, setViewTab] = useState<"all" | "containers" | "shipments" | "trucks">(initialTab || "all");
@@ -515,7 +518,7 @@ export function CanonicalShipmentTrackingView({
     const body = (
       <>
         <div className="flex items-center justify-between gap-2">
-          <span className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-lg sm:h-8 sm:w-8", opts.tone)}>{opts.icon}</span>
+          <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-1 ring-inset ring-white/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_8px_14px_-8px_rgba(15,23,42,0.55)] sm:h-10 sm:w-10", opts.tone)}>{opts.icon}</span>
           <span className="font-mono text-xl font-black leading-none sm:text-2xl tabular-nums text-foreground" dir="ltr">{summaryLoading && !summary ? <span className="inline-block h-6 w-10 animate-pulse rounded bg-muted" /> : opts.value}</span>
         </div>
         <div className="mt-2 min-w-0">
@@ -525,9 +528,10 @@ export function CanonicalShipmentTrackingView({
       </>
     );
     const cls = cn(
-      "block w-full min-w-0 rounded-xl border bg-card p-2.5 text-start shadow-sm transition-colors sm:p-3",
-      opts.active ? "border-primary ring-1 ring-primary/40" : "border-border/70",
-      opts.onClick && "hover:border-primary/50 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      "block w-full min-w-0 rounded-2xl border bg-gradient-to-b from-card to-muted/40 p-3 text-start transition-all duration-200 sm:p-4",
+      "shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_2px_0_rgba(15,23,42,0.05),0_14px_26px_-16px_rgba(15,23,42,0.5)]",
+      opts.active ? "border-blue-500/70 ring-2 ring-blue-500/25" : "border-border/70",
+      opts.onClick && "cursor-pointer hover:-translate-y-0.5 hover:border-blue-500/50 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_4px_0_rgba(15,23,42,0.05),0_20px_34px_-16px_rgba(37,99,235,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     );
     return opts.onClick ? (
       <button key={opts.key} type="button" onClick={opts.onClick} aria-pressed={opts.active} className={cls}>{body}</button>
@@ -535,22 +539,6 @@ export function CanonicalShipmentTrackingView({
       <div key={opts.key} className={cls}>{body}</div>
     );
   };
-
-  const chip = (label: React.ReactNode, active: boolean, onClick: () => void, key: string, extra?: React.ReactNode) => (
-    <button
-      key={key}
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        "inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        active ? "border-primary bg-primary text-primary-foreground" : "border-border/70 bg-background text-muted-foreground hover:text-foreground hover:bg-muted/40"
-      )}
-    >
-      {label}
-      {extra}
-    </button>
-  );
 
   const detailRow = (label: string, value: React.ReactNode, mono = false) => (
     <div key={label} className="min-w-0">
@@ -958,8 +946,11 @@ export function CanonicalShipmentTrackingView({
   );
 
   const emptyState = (
-    <div data-shtrk-empty className="px-4 py-14 text-center">
-      <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-muted"><Ship className="h-7 w-7 text-muted-foreground/60" /></span>
+    <div data-shtrk-empty className="px-4 py-16 text-center">
+      <span className="relative mx-auto mb-4 grid h-20 w-20 place-items-center">
+        <span aria-hidden="true" className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-500/25 to-indigo-500/5 blur-md" />
+        <span className="relative grid h-16 w-16 place-items-center rounded-2xl border border-white/60 bg-gradient-to-b from-background to-muted shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_18px_30px_-14px_rgba(37,99,235,0.45)]"><Ship className="h-8 w-8 text-blue-600 dark:text-blue-300" /></span>
+      </span>
       <p className="text-sm font-bold text-foreground">{s.t("no_records", "No tracking records found.")}</p>
       {(searchQuery || activeFilterCount > 0) && (
         <>
@@ -1064,10 +1055,13 @@ export function CanonicalShipmentTrackingView({
 
   return (
     <div className="min-w-0 space-y-4" dir={s.dir} data-shtrk-root>
-      <header className="flex flex-wrap items-start justify-between gap-3">
+      <header className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-card via-card to-blue-500/5 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_30px_60px_-30px_rgba(15,23,42,0.4)] sm:p-5 dark:to-blue-500/10">
+        <div aria-hidden="true" className="pointer-events-none absolute -end-24 -top-28 h-80 w-80 rounded-full bg-blue-500/20 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute -start-20 -bottom-24 h-64 w-64 rounded-full bg-cyan-400/15 blur-3xl" />
+        <div className="relative flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="flex items-center gap-2.5 text-xl font-black tracking-tight text-foreground sm:text-2xl">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Anchor className="h-5 w-5" /></span>
+          <h1 className="flex items-center gap-3 text-xl font-black tracking-tight text-foreground sm:text-3xl">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_14px_24px_-10px_rgba(37,99,235,0.7)]"><Anchor className="h-6 w-6" /></span>
             <span className="min-w-0">{title || s.t("title", "Container & Vessel Tracking")}</span>
           </h1>
           <p className="mt-1.5 max-w-3xl text-sm text-muted-foreground">{description || s.t("subtitle", "Track shipments, containers and vessels in real-time with complete journey details.")}</p>
@@ -1079,8 +1073,8 @@ export function CanonicalShipmentTrackingView({
             </div>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" variant="outline" onClick={() => { void loadSummary(); void loadList(); if (selectedOrderId) void loadDetail(selectedOrderId); }} className="h-10 gap-1.5 text-xs sm:h-9">
+        <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border/60 bg-background/70 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_8px_18px_-12px_rgba(15,23,42,0.4)] backdrop-blur">
+          <Button type="button" variant="outline" onClick={() => { void loadSummary(); void loadList(); if (selectedOrderId) void loadDetail(selectedOrderId); }} className="h-10 gap-1.5 rounded-xl text-xs font-bold sm:h-9">
             <RefreshCw className={cn("h-3.5 w-3.5", (listLoading || summaryLoading) && "animate-spin")} />
             {s.t("refresh", "Refresh")}
           </Button>
@@ -1109,91 +1103,122 @@ export function CanonicalShipmentTrackingView({
             ]}
             orientation="landscape"
             variant="outline"
-            className="h-10 sm:h-9"
+            className="h-10 rounded-xl text-xs font-bold sm:h-9"
           />
-          <Button type="button" variant="outline" onClick={() => void exportCsv()} className="h-10 gap-1.5 text-xs sm:h-9">
+          <Button type="button" onClick={() => void exportCsv()} className="h-10 gap-1.5 rounded-xl bg-gradient-to-b from-blue-500 to-blue-700 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_10px_20px_-8px_rgba(37,99,235,0.8)] hover:from-blue-500 hover:to-blue-800 sm:h-9">
             <Download className="h-3.5 w-3.5" />
             {s.t("export_csv", "Export CSV")}
           </Button>
         </div>
+        </div>
+        <div className="relative mt-4">
+        <section aria-label={s.t("card_summary", "Shipment & Container Summary")}>
+          <div className="grid grid-cols-3 gap-2 sm:gap-2.5 xl:grid-cols-6">
+            {kpiTile({ key: "total", label: s.t("lbl_total_shipments", "Total Shipments"), value: sm?.totalShipments ?? 0, icon: <Boxes className="h-4 w-4 text-slate-600 dark:text-slate-300" />, tone: "bg-slate-500/10", onClick: () => { setStatusFilter("all"); setModeFilter("all"); setViewTab("all"); }, active: statusFilter === "all" && modeFilter === "all", sub: `${s.t("lbl_total_containers", "Total Containers")}: ${sm?.totalContainers ?? 0}` })}
+            {kpiTile({ key: "transit", label: s.t("lbl_in_transit", "In Transit"), value: sm?.inTransit ?? 0, icon: <Navigation className="h-4 w-4 text-blue-600 dark:text-blue-400" />, tone: "bg-blue-500/10" })}
+            {kpiTile({ key: "arrived", label: s.t("st_destination_review", "Arrived"), value: sm?.arrived ?? 0, icon: <Anchor className="h-4 w-4 text-teal-600 dark:text-teal-400" />, tone: "bg-teal-500/10", onClick: () => setStatusFilter("destination_review"), active: statusFilter === "destination_review" })}
+            {kpiTile({ key: "delivered", label: s.t("st_completed", "Delivered"), value: sm?.delivered ?? 0, icon: <CircleDot className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />, tone: "bg-emerald-500/10", onClick: () => setStatusFilter("completed"), active: statusFilter === "completed" })}
+            {kpiTile({ key: "pending", label: s.t("lbl_pending", "Pending"), value: sm?.pending ?? 0, icon: <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" />, tone: "bg-orange-500/10", onClick: () => setStatusFilter("booking"), active: statusFilter === "booking" })}
+            {kpiTile({ key: "delayed", label: s.t("lbl_delayed", "Delayed / Pending"), value: summary?.trackingStatus.delayedPending ?? 0, icon: <AlertCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" />, tone: "bg-rose-500/10", onClick: () => setStatusFilter("delayed"), active: statusFilter === "delayed" })}
+          </div>
+          <p className="mt-1.5 text-[11px] text-muted-foreground">{s.t("kpi_hint", "Tap a figure to filter the list.")}</p>
+        </section>
+
+        </div>
+        {topSlot ? <div className="relative mt-4">{topSlot}</div> : null}
       </header>
 
       {toast && (
         <div role="status" className={cn("rounded-lg border px-3 py-2 text-xs font-semibold", toast.kind === "ok" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-700")}>{toast.text}</div>
       )}
 
-      <section aria-label={s.t("card_summary", "Shipment & Container Summary")}>
-        <div className="grid grid-cols-3 gap-2 sm:gap-2.5 xl:grid-cols-6">
-          {kpiTile({ key: "total", label: s.t("lbl_total_shipments", "Total Shipments"), value: sm?.totalShipments ?? 0, icon: <Boxes className="h-4 w-4 text-slate-600 dark:text-slate-300" />, tone: "bg-slate-500/10", onClick: () => { setStatusFilter("all"); setModeFilter("all"); setViewTab("all"); }, active: statusFilter === "all" && modeFilter === "all", sub: `${s.t("lbl_total_containers", "Total Containers")}: ${sm?.totalContainers ?? 0}` })}
-          {kpiTile({ key: "transit", label: s.t("lbl_in_transit", "In Transit"), value: sm?.inTransit ?? 0, icon: <Navigation className="h-4 w-4 text-blue-600 dark:text-blue-400" />, tone: "bg-blue-500/10" })}
-          {kpiTile({ key: "arrived", label: s.t("st_destination_review", "Arrived"), value: sm?.arrived ?? 0, icon: <Anchor className="h-4 w-4 text-teal-600 dark:text-teal-400" />, tone: "bg-teal-500/10", onClick: () => setStatusFilter("destination_review"), active: statusFilter === "destination_review" })}
-          {kpiTile({ key: "delivered", label: s.t("st_completed", "Delivered"), value: sm?.delivered ?? 0, icon: <CircleDot className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />, tone: "bg-emerald-500/10", onClick: () => setStatusFilter("completed"), active: statusFilter === "completed" })}
-          {kpiTile({ key: "pending", label: s.t("lbl_pending", "Pending"), value: sm?.pending ?? 0, icon: <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" />, tone: "bg-orange-500/10", onClick: () => setStatusFilter("booking"), active: statusFilter === "booking" })}
-          {kpiTile({ key: "delayed", label: s.t("lbl_delayed", "Delayed / Pending"), value: summary?.trackingStatus.delayedPending ?? 0, icon: <AlertCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" />, tone: "bg-rose-500/10", onClick: () => setStatusFilter("delayed"), active: statusFilter === "delayed" })}
-        </div>
-        <p className="mt-1.5 text-[11px] text-muted-foreground">{s.t("kpi_hint", "Tap a figure to filter the list.")}</p>
-      </section>
-
-      <section className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
-        <div className="space-y-3 border-b border-border/60 p-3 sm:p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex min-w-0 items-center gap-2">
-              <Ship className="h-4 w-4 shrink-0 text-primary" />
-              <h2 className="text-sm font-black text-foreground">{s.t("list_title", "Shipment & Container Tracking List")}</h2>
-              <span className="rounded-full bg-muted px-2 py-0.5 font-mono text-[11px] font-bold text-muted-foreground whitespace-nowrap" dir="ltr" aria-label={s.t("total_records", "Total Records")}>{totalRows}</span>
+      <section className="min-w-0 rounded-3xl border border-border/70 bg-card shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_24px_48px_-32px_rgba(15,23,42,0.45)]">
+        <div className="space-y-4 border-b border-border/60 p-3 sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_8px_16px_-8px_rgba(37,99,235,0.7)]"><Ship className="h-4 w-4" /></span>
+              <h2 className="text-sm font-black text-foreground sm:text-base">{s.t("list_title", "Shipment & Container Tracking List")}</h2>
+              <span className="rounded-full bg-blue-500/10 px-2.5 py-0.5 font-mono text-[11px] font-bold tabular-nums text-blue-700 whitespace-nowrap dark:text-blue-300" dir="ltr" aria-label={s.t("total_records", "Total Records")}>{totalRows}</span>
             </div>
-            <div role="tablist" aria-label={s.t("list_views", "List views")} className="flex items-center gap-0.5 rounded-lg bg-muted/50 p-0.5 text-xs">
-              {(["all", "containers", "shipments", "trucks"] as const).map((tab) => (
-                <button key={tab} type="button" role="tab" aria-selected={viewTab === tab} onClick={() => setViewTab(tab)} className={cn("min-h-9 rounded-md px-2.5 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", viewTab === tab ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
-                  {s.t(`view_${tab}`, tab === "all" ? "All" : tab.charAt(0).toUpperCase() + tab.slice(1))}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <select aria-label={s.t("search_field", "Search in")} value={searchField} onChange={(e) => setSearchField(e.target.value as SearchField)} className="h-11 rounded-xl border border-border/70 bg-background px-2.5 text-xs font-semibold sm:h-10">
-              {SEARCH_FIELDS.map((f) => (<option key={f} value={f}>{s.t(`field_${f}`, f === "all" ? "All fields" : f)}</option>))}
-            </select>
-            <div className="relative min-w-[12rem] flex-1">
-              <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label={s.t("search_field", "Search in")}
-                placeholder={s.t("search_ph", "Search by Shipment No, BL, Container, Vessel, Voyage, Customer, Shipping Line...")}
-                className="h-11 rounded-xl bg-background ps-9 pe-9 text-sm sm:h-10"
+            <div className="w-full sm:w-60 sm:shrink-0">
+              <TrackingFilterDropdown<"all" | "containers" | "shipments" | "trucks">
+                label={s.t("list_views", "List views")}
+                ariaLabel={s.t("list_views", "List views")}
+                value={viewTab}
+                onChange={setViewTab}
+                fallbackIcon={<Layers className="h-4 w-4" />}
+                options={[
+                  { value: "all", label: s.t("view_all", "All"), icon: <Layers className="h-4 w-4" />, count: totalRows },
+                  { value: "containers", label: s.t("view_containers", "Containers"), icon: <Boxes className="h-4 w-4" /> },
+                  { value: "shipments", label: s.t("view_shipments", "Shipments"), icon: <Ship className="h-4 w-4" /> },
+                  { value: "trucks", label: s.t("view_trucks", "Trucks"), icon: <Truck className="h-4 w-4" /> },
+                ]}
               />
-              {searchQuery && (
-                <button type="button" onClick={() => setSearchQuery("")} aria-label={s.t("clear_search", "Clear search")} className="absolute end-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
-                  <X className="h-4 w-4" />
-                </button>
-              )}
             </div>
-            <Button type="button" variant={filtersOpen ? "default" : "outline"} aria-expanded={filtersOpen} onClick={() => setFiltersOpen(!filtersOpen)} className="h-11 gap-1.5 rounded-xl text-xs sm:h-10 md:hidden">
-              <Filter className="h-4 w-4" />
-              {s.t("filters", "Filters")}
-              {activeFilterCount > 0 && <Badge className="ms-0.5 flex h-4 w-4 items-center justify-center rounded-full p-0 text-[11px] leading-none">{activeFilterCount}</Badge>}
-            </Button>
           </div>
 
-          <div className={cn("space-y-2", filtersOpen ? "block" : "hidden", "md:block")}>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="me-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{s.t("col_mode", "Mode")}</span>
-              {chip(s.t("all", "All"), modeFilter === "all", () => setModeFilter("all"), "mode-all")}
-              {MODES.map((m) => chip(<>{modeIcon(m, "h-3.5 w-3.5")}{modeLabel(m)}</>, modeFilter === m, () => setModeFilter(m), `mode-${m}`, <span className="font-mono text-[11px] opacity-80" dir="ltr">{modeCounts[m] ?? 0}</span>))}
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+            <div className="w-full lg:w-56 lg:shrink-0">
+              <TrackingFilterDropdown<SearchField>
+                label={s.t("search_field", "Search in")}
+                ariaLabel={s.t("search_field", "Search in")}
+                value={searchField}
+                onChange={setSearchField}
+                fallbackIcon={<Search className="h-4 w-4" />}
+                options={SEARCH_FIELDS.map((f) => ({ value: f, label: s.t(`field_${f}`, f === "all" ? "All fields" : f), icon: <Search className="h-4 w-4" /> }))}
+              />
             </div>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="me-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{s.t("col_status", "Status")}</span>
-              {chip(s.t("all", "All"), statusFilter === "all", () => setStatusFilter("all"), "st-all")}
-              {STATUSES.map((v) => chip(statusLabel(v), statusFilter === v, () => setStatusFilter(v), `st-${v}`))}
-              {activeFilterCount > 0 && (
-                <button type="button" onClick={() => { setModeFilter("all"); setStatusFilter("all"); }} className="ms-auto inline-flex min-h-9 items-center gap-1 px-2 text-xs font-semibold text-muted-foreground hover:text-destructive">
+            <div className="min-w-0 flex-1">
+              <div className="relative">
+                <Search className="pointer-events-none absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-600 dark:text-blue-300" />
+                <Input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  aria-label={s.t("search_field", "Search in")}
+                  placeholder={s.t("search_ph", "Search by Shipment No, BL, Container, Vessel, Voyage, Customer, Shipping Line...")}
+                  className="h-12 rounded-2xl border-border/70 bg-background/90 ps-11 pe-11 text-sm font-medium shadow-[inset_0_2px_4px_rgba(15,23,42,0.06)] sm:h-12"
+                />
+                {searchQuery && (
+                  <button type="button" onClick={() => setSearchQuery("")} aria-label={s.t("clear_search", "Clear search")} className="absolute end-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground">
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+            <TrackingFilterDropdown<"all" | (typeof MODES)[number]>
+              label={s.t("col_mode", "Mode")}
+              ariaLabel={s.t("col_mode", "Mode")}
+              value={modeFilter as "all" | (typeof MODES)[number]}
+              onChange={setModeFilter}
+              fallbackIcon={<Ship className="h-4 w-4" />}
+              options={[
+                { value: "all", label: s.t("all", "All"), icon: <Layers className="h-4 w-4" />, count: sm?.totalShipments ?? 0 },
+                ...MODES.map((m) => ({ value: m, label: modeLabel(m), icon: modeIcon(m, "h-4 w-4"), count: modeCounts[m] ?? 0 })),
+              ]}
+            />
+            <TrackingFilterDropdown<"all" | (typeof STATUSES)[number]>
+              label={s.t("col_status", "Status")}
+              ariaLabel={s.t("col_status", "Status")}
+              value={statusFilter as "all" | (typeof STATUSES)[number]}
+              onChange={setStatusFilter}
+              fallbackIcon={<Clock className="h-4 w-4" />}
+              options={[
+                { value: "all", label: s.t("all", "All"), icon: <Layers className="h-4 w-4" />, count: sm?.totalShipments ?? 0 },
+                ...STATUSES.map((v) => ({ value: v, label: statusLabel(v), icon: trackingStageIcon(v) })),
+              ]}
+            />
+            {activeFilterCount > 0 ? (
+              <div className="flex items-end">
+                <button type="button" onClick={() => { setModeFilter("all"); setStatusFilter("all"); }} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-rose-500/30 bg-rose-500/5 px-4 text-xs font-bold text-rose-700 transition-colors hover:bg-rose-500/10 dark:text-rose-300 xl:w-auto">
                   <X className="h-3.5 w-3.5" /> {s.t("clear_filters", "Clear filters")}
+                  <Badge className="flex h-5 min-w-5 items-center justify-center rounded-full p-0 text-[11px] leading-none">{activeFilterCount}</Badge>
                 </button>
-              )}
-            </div>
+              </div>
+            ) : null}
           </div>
         </div>
 

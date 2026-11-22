@@ -38,6 +38,7 @@ import { translateHeader } from "@/lib/i18n/table-headers";
 import { cn } from "@/lib/utils";
 import { deriveLocalPurchasePostingState } from "@/lib/services/local-purchase-posting-state";
 import {
+  localPurchaseDestinationChangeBlocker,
   localPurchaseDestinationHref,
   resolveLocalPurchaseDestination,
   type LocalPurchaseDestinationStage,
@@ -395,6 +396,27 @@ export function LocalPurchaseTransferPaymentView({
   useEffect(() => {
     fetchBills();
   }, [fetchBills]);
+
+  // Moves a posted bill to another queue. Only the destination changes (no money is posted); the server enforces the lock rules.
+  const [destinationBusyId, setDestinationBusyId] = useState<string | null>(null);
+  async function changeBillDestination(row: any, stage: LocalPurchaseDestinationStage) {
+    if (!window.confirm(tGlobal("lp.dest_change_confirm", "Move this bill to another queue? No money is posted; only the queue changes."))) return;
+    setDestinationBusyId(String(row.id));
+    try {
+      const res = await fetch(`/api/erp/purchases/local-purchase/${encodeURIComponent(String(row.id))}/destination`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stage }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) throw new Error(json?.error?.message || "Could not change the destination.");
+      await fetchBills();
+    } catch (e: any) {
+      window.alert(e?.message || "Could not change the destination.");
+    } finally {
+      setDestinationBusyId(null);
+    }
+  }
 
   // Close popovers on outside click
   useEffect(() => {
@@ -2081,6 +2103,32 @@ export function LocalPurchaseTransferPaymentView({
                                   <span>{tGlobal(DESTINATION_ACTION_KEY[stage], DESTINATION_ACTION_FALLBACK[stage])}</span>
                                 </button>
                               );
+                            })()}
+
+                            {/* Other queues this bill can still move to (only while no goods have moved for its current destination) */}
+                            {(() => {
+                              const current = resolveLocalPurchaseDestination(row);
+                              if (!current) return null;
+                              return (["loading", "warehouse_transfer", "export"] as LocalPurchaseDestinationStage[])
+                                .filter((s) => s !== current && localPurchaseDestinationChangeBlocker(row, s) === null)
+                                .map((s) => {
+                                  const Icon = s === "warehouse_transfer" ? Warehouse : Truck;
+                                  return (
+                                    <button
+                                      key={`move-${s}`}
+                                      type="button"
+                                      disabled={destinationBusyId === String(row.id)}
+                                      onClick={() => {
+                                        setOpenRowMenuId(null);
+                                        void changeBillDestination(row, s);
+                                      }}
+                                      className="w-full px-3 py-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                                    >
+                                      <Icon className="h-3.5 w-3.5 text-amber-600" />
+                                      <span>{tGlobal(DESTINATION_ACTION_KEY[s], DESTINATION_ACTION_FALLBACK[s])}</span>
+                                    </button>
+                                  );
+                                });
                             })()}
                           </div>
                         )}

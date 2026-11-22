@@ -70,6 +70,7 @@ export type UiKey =
   | "lp.queue_step"
   | "lp.queue_failed"
   | "lp.queue_load_failed"
+  | "lp.dest_change_confirm"
   | "lp.queue_pending"
   | "lp.queue_post"
   | "lp.queue_posting"
@@ -20000,6 +20001,7 @@ const en: Dict = {
   "lp.dest_send_loading": "Transfer to Loading",
   "lp.dest_send_warehouse": "Transfer to Warehouse",
   "lp.dest_send_export": "Transfer to Export",
+  "lp.dest_change_confirm": "Move this bill to another queue? No money is posted; only the queue changes.",
   "lp.dest_wrong_queue_loading": "was booked for Loading by Truck, so it is listed in the Loading queue, not here.",
   "lp.dest_wrong_queue_warehouse_transfer": "was booked for Warehouse Transfer, so it is listed in the Warehouse Transfer queue, not here.",
   "lp.dest_wrong_queue_export": "was booked for Export Shipment, so it is listed in the Export queue, not here.",
@@ -42118,6 +42120,7 @@ const ur: Dict = {
   "lp.dest_send_loading": "لوڈنگ میں منتقل کریں",
   "lp.dest_send_warehouse": "گودام میں منتقل کریں",
   "lp.dest_send_export": "ایکسپورٹ میں منتقل کریں",
+  "lp.dest_change_confirm": "اس بل کو کسی اور قطار میں منتقل کریں؟ کوئی رقم پوسٹ نہیں ہوگی، صرف قطار بدلے گی۔",
   "lp.dest_wrong_queue_loading": "ٹرک لوڈنگ کے لیے بک کیا گیا تھا، اس لیے یہ لوڈنگ قطار میں ہے، یہاں نہیں۔",
   "lp.dest_wrong_queue_warehouse_transfer": "گودام منتقلی کے لیے بک کیا گیا تھا، اس لیے یہ گودام منتقلی قطار میں ہے، یہاں نہیں۔",
   "lp.dest_wrong_queue_export": "ایکسپورٹ شپمنٹ کے لیے بک کیا گیا تھا، اس لیے یہ ایکسپورٹ قطار میں ہے، یہاں نہیں۔",
@@ -68937,6 +68940,7 @@ const ar: Dict = {
   "lp.dest_send_loading": "تحويل إلى التحميل",
   "lp.dest_send_warehouse": "تحويل إلى المستودع",
   "lp.dest_send_export": "تحويل إلى التصدير",
+  "lp.dest_change_confirm": "هل تريد نقل هذه الفاتورة إلى قائمة أخرى؟ لن يُرحَّل أي مبلغ، وتتغير القائمة فقط.",
   "lp.dest_wrong_queue_loading": "حُجزت للتحميل بالشاحنة، لذا تظهر في قائمة التحميل وليس هنا.",
   "lp.dest_wrong_queue_warehouse_transfer": "حُجزت للنقل إلى المستودع، لذا تظهر في قائمة نقل المستودع وليس هنا.",
   "lp.dest_wrong_queue_export": "حُجزت لشحنة التصدير، لذا تظهر في قائمة التصدير وليس هنا.",
@@ -95808,6 +95812,7 @@ const fa: Dict = {
   "lp.dest_send_loading": "انتقال به بارگیری",
   "lp.dest_send_warehouse": "انتقال به انبار",
   "lp.dest_send_export": "انتقال به صادرات",
+  "lp.dest_change_confirm": "آیا این صورتحساب به صف دیگری منتقل شود؟ هیچ مبلغی ثبت نمی‌شود و فقط صف تغییر می‌کند.",
   "lp.dest_wrong_queue_loading": "برای بارگیری با کامیون ثبت شده است، بنابراین در صف بارگیری است، نه اینجا.",
   "lp.dest_wrong_queue_warehouse_transfer": "برای انتقال به انبار ثبت شده است، بنابراین در صف انتقال انبار است، نه اینجا.",
   "lp.dest_wrong_queue_export": "برای محموله صادراتی ثبت شده است، بنابراین در صف صادرات است، نه اینجا.",
@@ -122678,6 +122683,7 @@ const ps: Dict = {
   "lp.dest_send_loading": "بارولو ته لیږد",
   "lp.dest_send_warehouse": "ګودام ته لیږد",
   "lp.dest_send_export": "صادراتو ته لیږد",
+  "lp.dest_change_confirm": "ایا دا بل بلې کتار ته ولیږل شي؟ هېڅ پیسې نه ثبتیږي، یوازې کتار بدلیږي.",
   "lp.dest_wrong_queue_loading": "د ټرک د بارولو لپاره بک شوی و، نو د بارولو په لیکه کې دی، دلته نه.",
   "lp.dest_wrong_queue_warehouse_transfer": "د ګودام د لیږد لپاره بک شوی و، نو د ګودام د لیږد په لیکه کې دی، دلته نه.",
   "lp.dest_wrong_queue_export": "د صادراتي بار لپاره بک شوی و، نو د صادراتو په لیکه کې دی، دلته نه.",
