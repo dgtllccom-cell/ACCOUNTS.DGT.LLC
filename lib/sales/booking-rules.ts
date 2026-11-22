@@ -9,7 +9,7 @@ import { ApiClientError } from "@/lib/api/response";
 import { listAvailableLots, type SaleSource } from "@/lib/sales/available-lots";
 import { resolveBookingRate, stockBalance } from "@/lib/sales/sales-goods-model";
 
-const SOURCES: SaleSource[] = ["warehouse", "booking", "in_transit", "endorse", "local"];
+const SOURCES: SaleSource[] = ["warehouse", "booking", "in_transit", "endorse", "local", "journal"];
 const num = (v: unknown) => {
   const x = Number(String(v ?? "").replace(/,/g, ""));
   return Number.isFinite(x) ? x : 0;
@@ -38,7 +38,7 @@ export async function assertSalesWithinStock(
   const wanted = new Map<string, { source: SaleSource; lotNo: string; qty: number; name: string }>();
   for (const g of goods) {
     const lotNo = String(g?.stockLotNo ?? "").trim();
-    const source = String(g?.stockSource ?? "").trim() as SaleSource;
+    const source = String(g?.stockSource || (g?.saleSource === "journal" ? "journal" : "")).trim() as SaleSource;
     if (!lotNo || g?.managedLotId || !SOURCES.includes(source)) continue;
     const key = `${source}|${lotNo}`;
     const prev = wanted.get(key);

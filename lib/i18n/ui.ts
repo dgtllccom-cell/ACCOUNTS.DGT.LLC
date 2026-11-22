@@ -13002,6 +13002,8 @@ export type UiKey =
   | "sales.stk_source_warehouse_hint"
   | "sales.stk_source_booking_hint"
   | "sales.stk_source_export_hint"
+  | "sales.stk_source_journal_hint"
+  | "sales.stk_source_journal"
   | "sales.stk_search_ph"
   | "sales.stk_loading"
   | "sales.stk_denied"
@@ -39855,6 +39857,8 @@ const en: Dict = {
   "sales.stk_source_warehouse_hint": "Goods in your warehouses, managed lots and local purchases",
   "sales.stk_source_booking_hint": "Purchase-booked goods not yet loaded",
   "sales.stk_source_export_hint": "Goods already loaded and on the way, and endorsed stock",
+  "sales.stk_source_journal_hint": "Stock confirmed in the Stock Journal. The sold quantity is reserved and issued once.",
+  "sales.stk_source_journal": "Confirmed Stock",
   "sales.stk_search_ph": "Search goods, lot, origin, brand, warehouse…",
   "sales.stk_loading": "Loading stock…",
   "sales.stk_denied": "Your role cannot see stock for this source.",
@@ -66725,6 +66729,8 @@ const ur: Dict = {
   "sales.stk_source_warehouse_hint": "آپ کے گوداموں، منظم لاٹس اور مقامی خریداری میں موجود مال",
   "sales.stk_source_booking_hint": "خریداری بکنگ کا مال جو ابھی لوڈ نہیں ہوا",
   "sales.stk_source_export_hint": "لوڈ ہو کر راستے میں موجود مال اور توثیق شدہ اسٹاک",
+  "sales.stk_source_journal_hint": "اسٹاک جرنل میں تصدیق شدہ اسٹاک۔ فروخت شدہ مقدار محفوظ ہوتی ہے اور ایک بار نکلتی ہے۔",
+  "sales.stk_source_journal": "تصدیق شدہ اسٹاک",
   "sales.stk_search_ph": "مال، لاٹ، ملک، برانڈ، گودام تلاش کریں…",
   "sales.stk_loading": "اسٹاک لوڈ ہو رہا ہے…",
   "sales.stk_denied": "آپ کا کردار اس ذریعے کا اسٹاک نہیں دیکھ سکتا۔",
@@ -93596,6 +93602,8 @@ const ar: Dict = {
   "sales.stk_source_warehouse_hint": "البضائع في مستودعاتك والدفعات المُدارة والمشتريات المحلية",
   "sales.stk_source_booking_hint": "بضائع محجوزة بالشراء لم تُحمَّل بعد",
   "sales.stk_source_export_hint": "بضائع محمّلة وفي الطريق، والمخزون المُظهَّر",
+  "sales.stk_source_journal_hint": "مخزون مؤكد في دفتر المخزون. الكمية المباعة تُحجز وتُصرف مرة واحدة.",
+  "sales.stk_source_journal": "المخزون المؤكد",
   "sales.stk_search_ph": "ابحث عن بضاعة أو دفعة أو منشأ أو علامة أو مستودع…",
   "sales.stk_loading": "جارٍ تحميل المخزون…",
   "sales.stk_denied": "دورك لا يسمح برؤية مخزون هذا المصدر.",
@@ -120466,6 +120474,8 @@ const fa: Dict = {
   "sales.stk_source_warehouse_hint": "کالاهای انبارها، لات‌های مدیریت‌شده و خرید محلی",
   "sales.stk_source_booking_hint": "کالاهای رزروشده خرید که هنوز بارگیری نشده‌اند",
   "sales.stk_source_export_hint": "کالاهای بارگیری‌شده و در مسیر و موجودی پشت‌نویسی‌شده",
+  "sales.stk_source_journal_hint": "موجودی تأییدشده در دفتر موجودی. مقدار فروخته‌شده رزرو و یک‌بار خارج می‌شود.",
+  "sales.stk_source_journal": "موجودی تأییدشده",
   "sales.stk_search_ph": "جستجوی کالا، لات، مبدأ، برند، انبار…",
   "sales.stk_loading": "در حال بارگذاری موجودی…",
   "sales.stk_denied": "نقش شما نمی‌تواند موجودی این منبع را ببیند.",
@@ -147343,6 +147353,8 @@ const ps: Dict = {
   "sales.stk_source_warehouse_hint": "ستاسو په ګودامونو، اداره شویو لاټونو او ځایي پیرودونو کې توکي",
   "sales.stk_source_booking_hint": "د پیرود بکینګ توکي چې لا نه دي بار شوي",
   "sales.stk_source_export_hint": "بار شوي او په لار کې توکي، او تایید شوې ذخیره",
+  "sales.stk_source_journal_hint": "د سټاک ژورنال کې تایید شوی سټاک. پلورل شوې اندازه ساتل کېږي او یوځل وزل کېږي.",
+  "sales.stk_source_journal": "تایید شوی ذخیره",
   "sales.stk_search_ph": "توکي، لاټ، اصلیت، برانډ، ګودام ولټوئ…",
   "sales.stk_loading": "ذخیره بارېږي…",
   "sales.stk_denied": "ستاسو رول د دې سرچینې ذخیره نشي لیدلی.",
