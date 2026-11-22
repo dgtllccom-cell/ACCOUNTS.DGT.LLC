@@ -1055,7 +1055,7 @@ export function CanonicalShipmentTrackingView({
 
   return (
     <div className="min-w-0 space-y-4" dir={s.dir} data-shtrk-root>
-      <header className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-card via-card to-blue-500/5 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_30px_60px_-30px_rgba(15,23,42,0.4)] sm:p-6 dark:to-blue-500/10">
+      <header className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-card via-card to-blue-500/5 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_30px_60px_-30px_rgba(15,23,42,0.4)] sm:p-5 dark:to-blue-500/10">
         <div aria-hidden="true" className="pointer-events-none absolute -end-24 -top-28 h-80 w-80 rounded-full bg-blue-500/20 blur-3xl" />
         <div aria-hidden="true" className="pointer-events-none absolute -start-20 -bottom-24 h-64 w-64 rounded-full bg-cyan-400/15 blur-3xl" />
         <div className="relative flex flex-wrap items-start justify-between gap-4">
@@ -1111,24 +1111,26 @@ export function CanonicalShipmentTrackingView({
           </Button>
         </div>
         </div>
-        {topSlot ? <div className="relative mt-5">{topSlot}</div> : null}
+        <div className="relative mt-4">
+        <section aria-label={s.t("card_summary", "Shipment & Container Summary")}>
+          <div className="grid grid-cols-3 gap-2 sm:gap-2.5 xl:grid-cols-6">
+            {kpiTile({ key: "total", label: s.t("lbl_total_shipments", "Total Shipments"), value: sm?.totalShipments ?? 0, icon: <Boxes className="h-4 w-4 text-slate-600 dark:text-slate-300" />, tone: "bg-slate-500/10", onClick: () => { setStatusFilter("all"); setModeFilter("all"); setViewTab("all"); }, active: statusFilter === "all" && modeFilter === "all", sub: `${s.t("lbl_total_containers", "Total Containers")}: ${sm?.totalContainers ?? 0}` })}
+            {kpiTile({ key: "transit", label: s.t("lbl_in_transit", "In Transit"), value: sm?.inTransit ?? 0, icon: <Navigation className="h-4 w-4 text-blue-600 dark:text-blue-400" />, tone: "bg-blue-500/10" })}
+            {kpiTile({ key: "arrived", label: s.t("st_destination_review", "Arrived"), value: sm?.arrived ?? 0, icon: <Anchor className="h-4 w-4 text-teal-600 dark:text-teal-400" />, tone: "bg-teal-500/10", onClick: () => setStatusFilter("destination_review"), active: statusFilter === "destination_review" })}
+            {kpiTile({ key: "delivered", label: s.t("st_completed", "Delivered"), value: sm?.delivered ?? 0, icon: <CircleDot className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />, tone: "bg-emerald-500/10", onClick: () => setStatusFilter("completed"), active: statusFilter === "completed" })}
+            {kpiTile({ key: "pending", label: s.t("lbl_pending", "Pending"), value: sm?.pending ?? 0, icon: <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" />, tone: "bg-orange-500/10", onClick: () => setStatusFilter("booking"), active: statusFilter === "booking" })}
+            {kpiTile({ key: "delayed", label: s.t("lbl_delayed", "Delayed / Pending"), value: summary?.trackingStatus.delayedPending ?? 0, icon: <AlertCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" />, tone: "bg-rose-500/10", onClick: () => setStatusFilter("delayed"), active: statusFilter === "delayed" })}
+          </div>
+          <p className="mt-1.5 text-[11px] text-muted-foreground">{s.t("kpi_hint", "Tap a figure to filter the list.")}</p>
+        </section>
+
+        </div>
+        {topSlot ? <div className="relative mt-4">{topSlot}</div> : null}
       </header>
 
       {toast && (
         <div role="status" className={cn("rounded-lg border px-3 py-2 text-xs font-semibold", toast.kind === "ok" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-700")}>{toast.text}</div>
       )}
-
-      <section aria-label={s.t("card_summary", "Shipment & Container Summary")}>
-        <div className="grid grid-cols-3 gap-2 sm:gap-2.5 xl:grid-cols-6">
-          {kpiTile({ key: "total", label: s.t("lbl_total_shipments", "Total Shipments"), value: sm?.totalShipments ?? 0, icon: <Boxes className="h-4 w-4 text-slate-600 dark:text-slate-300" />, tone: "bg-slate-500/10", onClick: () => { setStatusFilter("all"); setModeFilter("all"); setViewTab("all"); }, active: statusFilter === "all" && modeFilter === "all", sub: `${s.t("lbl_total_containers", "Total Containers")}: ${sm?.totalContainers ?? 0}` })}
-          {kpiTile({ key: "transit", label: s.t("lbl_in_transit", "In Transit"), value: sm?.inTransit ?? 0, icon: <Navigation className="h-4 w-4 text-blue-600 dark:text-blue-400" />, tone: "bg-blue-500/10" })}
-          {kpiTile({ key: "arrived", label: s.t("st_destination_review", "Arrived"), value: sm?.arrived ?? 0, icon: <Anchor className="h-4 w-4 text-teal-600 dark:text-teal-400" />, tone: "bg-teal-500/10", onClick: () => setStatusFilter("destination_review"), active: statusFilter === "destination_review" })}
-          {kpiTile({ key: "delivered", label: s.t("st_completed", "Delivered"), value: sm?.delivered ?? 0, icon: <CircleDot className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />, tone: "bg-emerald-500/10", onClick: () => setStatusFilter("completed"), active: statusFilter === "completed" })}
-          {kpiTile({ key: "pending", label: s.t("lbl_pending", "Pending"), value: sm?.pending ?? 0, icon: <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" />, tone: "bg-orange-500/10", onClick: () => setStatusFilter("booking"), active: statusFilter === "booking" })}
-          {kpiTile({ key: "delayed", label: s.t("lbl_delayed", "Delayed / Pending"), value: summary?.trackingStatus.delayedPending ?? 0, icon: <AlertCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" />, tone: "bg-rose-500/10", onClick: () => setStatusFilter("delayed"), active: statusFilter === "delayed" })}
-        </div>
-        <p className="mt-1.5 text-[11px] text-muted-foreground">{s.t("kpi_hint", "Tap a figure to filter the list.")}</p>
-      </section>
 
       <section className="min-w-0 rounded-3xl border border-border/70 bg-card shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_24px_48px_-32px_rgba(15,23,42,0.45)]">
         <div className="space-y-4 border-b border-border/60 p-3 sm:p-5">
@@ -1138,18 +1140,20 @@ export function CanonicalShipmentTrackingView({
               <h2 className="text-sm font-black text-foreground sm:text-base">{s.t("list_title", "Shipment & Container Tracking List")}</h2>
               <span className="rounded-full bg-blue-500/10 px-2.5 py-0.5 font-mono text-[11px] font-bold tabular-nums text-blue-700 whitespace-nowrap dark:text-blue-300" dir="ltr" aria-label={s.t("total_records", "Total Records")}>{totalRows}</span>
             </div>
-            <div role="tablist" aria-label={s.t("list_views", "List views")} className="flex flex-wrap items-center gap-1 rounded-2xl border border-border/60 bg-muted/50 p-1 shadow-inner">
-              {([
-                { tab: "all", icon: <Layers className="h-3.5 w-3.5" /> },
-                { tab: "containers", icon: <Boxes className="h-3.5 w-3.5" /> },
-                { tab: "shipments", icon: <Ship className="h-3.5 w-3.5" /> },
-                { tab: "trucks", icon: <Truck className="h-3.5 w-3.5" /> },
-              ] as const).map(({ tab, icon }) => (
-                <button key={tab} type="button" role="tab" aria-selected={viewTab === tab} onClick={() => setViewTab(tab)} className={cn("inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", viewTab === tab ? "bg-gradient-to-b from-blue-500 to-blue-700 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_8px_14px_-8px_rgba(37,99,235,0.8)]" : "text-muted-foreground hover:bg-background hover:text-foreground")}>
-                  {icon}
-                  {s.t(`view_${tab}`, tab === "all" ? "All" : tab.charAt(0).toUpperCase() + tab.slice(1))}
-                </button>
-              ))}
+            <div className="w-full sm:w-60 sm:shrink-0">
+              <TrackingFilterDropdown<"all" | "containers" | "shipments" | "trucks">
+                label={s.t("list_views", "List views")}
+                ariaLabel={s.t("list_views", "List views")}
+                value={viewTab}
+                onChange={setViewTab}
+                fallbackIcon={<Layers className="h-4 w-4" />}
+                options={[
+                  { value: "all", label: s.t("view_all", "All"), icon: <Layers className="h-4 w-4" />, count: totalRows },
+                  { value: "containers", label: s.t("view_containers", "Containers"), icon: <Boxes className="h-4 w-4" /> },
+                  { value: "shipments", label: s.t("view_shipments", "Shipments"), icon: <Ship className="h-4 w-4" /> },
+                  { value: "trucks", label: s.t("view_trucks", "Trucks"), icon: <Truck className="h-4 w-4" /> },
+                ]}
+              />
             </div>
           </div>
 
