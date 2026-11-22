@@ -8,6 +8,7 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 import { acquireIdempotencyLock, buildReplayedResponse, commitIdempotencySuccess, releaseIdempotencyLock } from "@/lib/api/idempotency";
 import { z } from "zod";
 import { checkLocalPurchaseLoadingEligibility, remainingLocalPurchaseQuantity } from "@/lib/purchases/local-purchase-loading-rules";
+import { localPurchaseHasWarehouse, parseLoadingDetails } from "@/lib/purchases/local-purchase-destination";
 
 /**
  * POST /api/erp/purchases/local-purchase/destination-stage
@@ -150,6 +151,14 @@ export async function POST(request: NextRequest) {
           if (String(purchase.warehouse_transfer_status || "") === "completed") {
             throw new ApiClientError("This warehouse transfer stage has already been marked complete.", { status: 409, code: "ALREADY_COMPLETED" });
           }
+          // A warehouse transfer needs a warehouse on the bill. Without one, completing the stage moved nothing and hid the bill
+          // from both the Warehouse and Loading queues.
+          if (!localPurchaseHasWarehouse(purchase)) {
+            throw new ApiClientError(
+              "This bill has no warehouse recorded, so the warehouse transfer cannot be marked complete. Change its destination first, or record the warehouse.",
+              { status: 422, code: "WAREHOUSE_REQUIRED" }
+            );
+          }
           updatedRows = await tx`
             update public.local_purchases
             set warehouse_transfer_status = 'completed',
@@ -160,9 +169,9 @@ export async function POST(request: NextRequest) {
             returning *;
           `;
         } else if (stage === "loading") {
-          const loadingDetails = (typeof purchase.loading_details === "object" && purchase.loading_details !== null)
-            ? { ...purchase.loading_details }
-            : {};
+          // Rows written by older code hold loading_details as a JSON string: parse it, or the earlier entries are lost
+          // and the whole quantity looks loadable again.
+          const loadingDetails = parseLoadingDetails(purchase.loading_details);
           const existingEntries: any[] = Array.isArray(loadingDetails.entries) ? [...loadingDetails.entries] : [];
 
           const bookedQty = Number(purchase.numbers ?? purchase.quantity_kgs ?? 0);
@@ -242,7 +251,7 @@ export async function POST(request: NextRequest) {
             set loading_status = ${newStatus},
                 loading_completed_at = ${newStatus === "completed" ? nowIso : null},
                 loading_completed_by = ${newStatus === "completed" ? session.userId : null}::uuid,
-                loading_details = ${JSON.stringify(loadingDetails)}::jsonb,
+                loading_details = ${tx.json(loadingDetails)},
                 truck_no = ${truck},
                 driver_name = ${driver},
                 loading_date = ${entryDate},
