@@ -26,9 +26,11 @@ export function SalesBookingCurrencyFields({ form, lang, onChange, readOnly = fa
   const displayRate = rate.ok ? (rate.operator === "/" ? "÷ " : "× ") + rate.rate : "—";
 
   return (
-    <div className="grid grid-cols-2 gap-2 rounded-lg border border-indigo-100 bg-indigo-50/70 p-2 dark:border-indigo-900 dark:bg-indigo-950/40">
-      <CurrencySelect title={tr("Purchase Currency")} value={goods ? form.goodsPurchaseCurrency || purchase : purchase}
-        disabled={readOnly} onChange={value => onChange(goods ? "goodsPurchaseCurrency" : "purchaseCurrency", value)} />
+    <div className={`grid ${goods ? "grid-cols-2" : "grid-cols-1"} gap-2 rounded-lg border border-indigo-100 bg-indigo-50/70 p-2 dark:border-indigo-900 dark:bg-indigo-950/40`}>
+      {goods && (
+        <CurrencySelect title={tr("Purchase Currency")} value={form.goodsPurchaseCurrency || purchase}
+          disabled={readOnly} onChange={value => onChange("goodsPurchaseCurrency", value)} />
+      )}
       {goods ? (
         <label className={label}><span>{tr("Sales Currency")}</span><input className={field} value={sales} readOnly /></label>
       ) : (
@@ -41,9 +43,9 @@ export function SalesBookingCurrencyFields({ form, lang, onChange, readOnly = fa
           <label htmlFor="sales-booking-exchange-rate" className={label}>{tr("Exchange Rate")}</label>
           <div className="mt-1 flex gap-1" dir="ltr">
             <input id="sales-booking-exchange-rate" type="number" inputMode="decimal" min="0.00000001" step="any"
-              className={field} value={rate.sameCurrency ? 1 : form.exchangeRate ?? ""} readOnly={readOnly || rate.sameCurrency}
+              className={`${field} flex-1`} value={rate.sameCurrency ? 1 : form.exchangeRate ?? ""} readOnly={readOnly || rate.sameCurrency}
               onChange={event => onChange("exchangeRate", event.target.value === "" ? "" : Number(event.target.value))} />
-            <select aria-label={tr("Exchange Rate Type")} className={field + " w-10 shrink-0"} value={rate.sameCurrency ? "*" : form.operator || "*"}
+            <select aria-label={tr("Exchange Rate Type")} className={`${field} w-12 shrink-0 px-1`} value={rate.sameCurrency ? "*" : form.operator || "*"}
               disabled={readOnly || rate.sameCurrency} onChange={event => onChange("operator", event.target.value)}>
               <option value="*">×</option><option value="/">÷</option>
             </select>
