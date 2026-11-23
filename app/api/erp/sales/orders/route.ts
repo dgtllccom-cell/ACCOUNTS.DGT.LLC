@@ -14,7 +14,7 @@ import postgres from "postgres";
 import { normalizeLanguage, saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 import { localizeRecordNames, trustedTranslationMap } from "@/lib/i18n/localize-records";
 import { salesOrderTranslationFields } from "@/lib/i18n/sales-order-translations";
-import { assertBookingCurrency, assertSalesWithinStock } from "@/lib/sales/booking-rules";
+import { assertBookingCurrency, assertConfiguredSalesSettlement, assertSalesWithinStock, resolveSalesCountryCurrency } from "@/lib/sales/booking-rules";
 
 
 async function attachSalesOrderTranslations(rows: any[]) {
@@ -131,16 +131,6 @@ async function nextTransactionSerial(admin: any, scopeType: string, scopeKey: st
   });
   if (error) throw new Error(error.message);
   return data as string;
-}
-
-async function resolveCountryCurrency(supabase: any, countryId: string | null | undefined, fallback = "USD") {
-  if (!countryId) return fallback;
-  const { data } = await supabase
-    .from("countries")
-    .select("currency_code")
-    .eq("id", countryId)
-    .maybeSingle();
-  return data?.currency_code || fallback;
 }
 
 async function resolveEffectiveScope(input: {
@@ -346,7 +336,8 @@ export async function POST(request: NextRequest) {
     if (body.customerLedgerId) {
       await validateLedgerCountryScope(session, body.customerLedgerId, effective.countryId, admin);
     }
-    const recordCurrencyCode = await resolveCountryCurrency(admin, effective.countryId, body.currencyCode);
+    const recordCurrencyCode = await resolveSalesCountryCurrency(admin, effective.countryId, body.currencyCode);
+    assertConfiguredSalesSettlement(body.formData, recordCurrencyCode);
 
     const superAdminSerialNumber = await nextTransactionSerial(admin, "global", "global", "SA");
 

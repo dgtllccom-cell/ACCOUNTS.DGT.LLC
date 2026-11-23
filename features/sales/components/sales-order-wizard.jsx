@@ -57,6 +57,7 @@ import { TradeDocumentCenter } from "@/features/reports/components/trade-documen
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
 import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
 import { SalesBookingJournalReportView } from "./sales-booking-journal-report-view";
+import { convertedSalesAmount, getBookingCurrencies } from "@/lib/sales/booking-currencies";
 import { SalesBookingStep1 } from "./sales-booking-step1";
 import { SalesBookingStep2 } from "./sales-booking-step2";
 import { SalesBookingStep3 } from "./sales-booking-step3";
@@ -597,9 +598,9 @@ export function SalesOrderWizard({ session }) {
       emptyKgs: lot.emptyKgs || prev.emptyKgs,
       netWeight: lot.netWeight || prev.netWeight,
       // A sale never inherits the lot's PURCHASE rate/currency: the user enters the sale rate and currency.
-      currencyType: managed ? prev.currencyType : (lot.currencyType || prev.currencyType),
-      salesCurrency: managed ? prev.salesCurrency : (lot.currencyType || prev.salesCurrency),
-      exchangeRate: managed ? prev.exchangeRate : (lot.exchangeRate || prev.exchangeRate),
+      currencyType: managed || prev.bookingCurrencyConfigured ? prev.currencyType : (lot.currencyType || prev.currencyType),
+      salesCurrency: managed || prev.bookingCurrencyConfigured ? prev.salesCurrency : (lot.currencyType || prev.salesCurrency),
+      exchangeRate: managed || prev.bookingCurrencyConfigured ? prev.exchangeRate : (lot.exchangeRate || prev.exchangeRate),
       coursePrice: managed ? 0 : (lot.coursePrice || prev.coursePrice),
       manualTotalAmount: "",
       manualFinalAmount: ""
@@ -1028,6 +1029,25 @@ export function SalesOrderWizard({ session }) {
     }
     return ports;
   }, [dbReceivedPorts, form.receivingCountry, form.receivedCountry, form.destinationCountry, form.shippingMode]);
+
+  const updateBookingCurrency = (key, value) => {
+    const next = { ...form, [key]: value, bookingCurrencyConfigured: true };
+    if (key === "salesCurrency") next.currencyType = value;
+    if (key === "secondaryCurrency") next.paymentCurrency = value;
+    setForm(next);
+    if (key === "purchaseCurrency") return;
+    const { sales, final, rate } = getBookingCurrencies(next);
+    if (!rate.ok) return;
+    setGoodsEntries(rows => rows.map(row => ({
+      ...row,
+      currencyType: sales,
+      salesCurrency: sales,
+      secondaryCurrency: final,
+      exchangeRate: rate.rate,
+      op: rate.operator,
+      finalAmount: convertedSalesAmount(Number(row.totalAmount || 0), rate),
+    })));
+  };
 
   const reportTotals = useMemo(() => {
     const totalGross = goodsEntries.reduce((sum, item) => sum + Number(item.grossWeight || 0), 0);
@@ -1772,7 +1792,10 @@ export function SalesOrderWizard({ session }) {
   };
 
   const buildSalesOrderPayload = (salesStatus = "Draft", customOrderNo = null) => {
-    const usdRate = Number(form.exchangeRate || 1);
+    const currencies = getBookingCurrencies(form);
+    const usdRate = form.bookingCurrencyConfigured && currencies.rate.ok
+      ? (currencies.rate.operator === "/" ? 1 / currencies.rate.rate : currencies.rate.rate)
+      : Number(form.exchangeRate || 1);
 
     const customerAccount = dbAccounts.find(acc => acc.accountCode === form.customerAccountNo);
     const salesAccount = dbAccounts.find(acc => acc.accountCode === form.salesAccountNo);
@@ -1800,7 +1823,7 @@ export function SalesOrderWizard({ session }) {
       customerNumber: customerAccount?.customerNumber || null,
       quantity: reportTotals.totalQty || 0,
       totalWeight: reportTotals.totalNet || 0,
-      currencyCode: form.salesCurrency || "USD",
+      currencyCode: currencies.sales || "USD",
       exchangeRate: usdRate,
       orderTotal: reportTotals.grandFinal || reportTotals.grandPrimaryFinal || 0,
       // Mirrors purchase-order-wizard.jsx: orderTotal above is already converted to the
@@ -3842,8 +3865,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   goodsEntries={goodsEntries}
                   setGoodsEntries={setGoodsEntries}
                   lang={lang}
+                  onCurrencyChange={updateBookingCurrency}
+                  currencyReadOnly={isTransferred}
                   onNext={() => {
                     if (!validateStep1Ownership()) return;
+                    if (form.bookingCurrencyConfigured && !getBookingCurrencies(form).rate.ok) {
+                      setSaveMessage(t(lang, "purchase.exchange_rate", "Exchange Rate"));
+                      return;
+                    }
                     setActiveTab("goods");
                   }}
                   onEditItem={handleEditGoodsEntry}

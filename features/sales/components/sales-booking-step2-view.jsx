@@ -6,16 +6,17 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
-  Edit3,
-  Trash2,
   AlertTriangle,
   Building2,
   CheckCircle2,
   Layers
 } from "lucide-react";
+import { SalesBookingCurrencyFields, SalesBookingCurrencyPreview } from "./sales-booking-currencies";
+import { convertedSalesAmount, getBookingCurrencies } from "@/lib/sales/booking-currencies";
 import { t as tUi } from "@/lib/i18n/ui";
 import { Button } from "@/components/ui/button";
-import { SalesBookingUpperCards } from "./sales-booking-upper-cards";
+import { translateHeader } from "@/lib/i18n/table-headers";
+import { SalesBookingGoodsReport } from "./sales-booking-goods-report";
 import { SalesStockPanel } from "./sales-stock-panel";
 
 // Stock sources a sale can take goods from (the same groups as the Select Stock panel, /api/erp/sales/available-lots):
@@ -35,10 +36,7 @@ export function SalesBookingStep2({
   setGoodsEntries,
   lang = "en",
   onNext,
-  onBack,
-  availableLots = [],
-  dbCompanies = [],
-  dbAccounts = []
+  onBack
 }) {
   const [stockModalOpen, setStockModalOpen] = useState(false);
   const [stockGroup, setStockGroup] = useState(() => (["warehouse", "booking", "export"].includes(form.stockGroup) ? form.stockGroup : "warehouse"));
@@ -57,6 +55,10 @@ export function SalesBookingStep2({
   const quality = form.qualityReport || "";
   const qtyName = form.qtyName || "";
   const qtyNo = Number(form.qtyNo || 0);
+  const qtyKgs = Number(form.qtyKgs) || 0;
+  const emptyKgs = Number(form.emptyKgs) || 0;
+  const calculatedGross = qtyNo * qtyKgs;
+  const calculatedNet = Math.max(0, calculatedGross - qtyNo * emptyKgs);
   const unitPrice = Number(form.coursePrice || 0);
   const freightIca = Number(form.freightIca || 0);
   const itemType = form.itemType || "";
@@ -65,6 +67,7 @@ export function SalesBookingStep2({
   const totalBoxes = Number(form.totalBoxes || 0);
   const availableQty = Number(form.lotAvailableQty || 0);
   const selectedLotRef = form.stockLotNo || "";
+  const currencies = getBookingCurrencies(form);
 
   // Validate stock: check if quantity exceeds available balance
   const isOverStock = selectedLotRef && availableQty > 0 && qtyNo > availableQty;
@@ -177,13 +180,12 @@ export function SalesBookingStep2({
       return;
     }
 
-    const qtyKgs = Number(form.qtyKgs) || 0;
-    const emptyKgs = Number(form.emptyKgs) || 0;
-    const calculatedGross = qtyNo * qtyKgs;
-    const calculatedNet = Math.max(0, calculatedGross - qtyNo * emptyKgs);
     const calculatedAmount = qtyNo * unitPrice;
-    const exRate = Number(form.exchangeRate) || 1;
-    const finalAmt = (form.operator === "/" ? calculatedAmount / exRate : calculatedAmount * exRate);
+    const finalAmt = convertedSalesAmount(calculatedAmount, currencies.rate);
+    if (finalAmt === null && currencies.sales && currencies.final) {
+      setStockError(tUi(lang, "purchase.exchange_rate", "Exchange Rate"));
+      return;
+    }
 
     const newItem = {
       goodsId: form.goodsId || null,
@@ -209,8 +211,13 @@ export function SalesBookingStep2({
       packType: packType,
       totalBoxes: totalBoxes,
       totalAmount: calculatedAmount,
-      finalAmount: finalAmt,
-      exchangeRate: exRate,
+      finalAmount: finalAmt ?? calculatedAmount,
+      exchangeRate: currencies.rate.ok ? currencies.rate.rate : 1,
+      op: currencies.rate.operator,
+      purchaseCurrency: form.goodsPurchaseCurrency || currencies.purchase,
+      currencyType: currencies.sales,
+      salesCurrency: currencies.sales,
+      secondaryCurrency: currencies.final,
       grossWeight: calculatedGross,
       netWeight: calculatedNet,
       origin: form.origin || "",
@@ -230,18 +237,22 @@ export function SalesBookingStep2({
         copy[editingIndex] = newItem;
         return copy;
       });
-      setEditingIndex(null);
     } else {
       setGoodsEntries((prev) => [...prev, newItem]);
     }
 
-    // clear the entry so the next item starts empty (pressing Add again cannot add the same line twice)
+    clearEntry();
+  };
+
+  const clearEntry = () => {
+    setEditingIndex(null);
+    setSuggestOpen(false);
     setForm((p) => ({
       ...p,
       goodsId: "", goodsName: "", hsCode: "", stockLotNo: "", allotName: "", selectedLotId: "", managedLotId: "", journalTransferId: "",
       brand: "", size: "", grade: "", qualityReport: "", origin: "", qtyNo: 0, coursePrice: 0, freightIca: 0,
       qtyKgs: 0, emptyKgs: 0, totalBoxes: 0, packType: "", itemType: "", stackWeight: "", lotAvailableQty: 0,
-      warehouseId: "", warehouseName: ""
+      warehouseId: "", warehouseName: "", goodsPurchaseCurrency: ""
     }));
     setStockError("");
   };
@@ -255,6 +266,7 @@ export function SalesBookingStep2({
       goodsName: item.goodsName || item.productName,
       hsCode: item.hsCode,
       stockLotNo: item.itemId || item.lotNo,
+      goodsPurchaseCurrency: item.purchaseCurrency || "",
       journalTransferId: item.journalTransferId || "",
       brand: item.brand,
       size: item.size,
@@ -276,16 +288,19 @@ export function SalesBookingStep2({
     }));
   };
 
-  const totalAmount = goodsEntries.reduce((sum, item) => sum + (Number(item.totalAmount || item.finalAmount || 0)), 0);
-
+  const tr = label => translateHeader(lang, label);
+  const number = (value, digits = 3) => value == null || value === "" || !Number.isFinite(Number(value))
+    ? "—"
+    : Number(value).toLocaleString(lang, { maximumFractionDigits: digits });
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start animate-in fade-in duration-200">
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(300px,1fr)_minmax(0,2.2fr)] gap-3 items-start animate-in fade-in duration-200">
+      <SalesBookingCurrencyPreview form={form} lang={lang} goods amount={qtyNo * unitPrice} className="ms-auto w-full max-w-sm lg:hidden" />
       {/* LEFT COLUMN: GOODS ENTRY DETAILS FORM */}
-      <div className="lg:col-span-5 min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-          <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <Package className="w-4 h-4 text-blue-600" />
-            {tUi(lang, "sales.goods_entry_details", "GOODS ENTRY DETAILS")}
+      <div className="min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
+        <div className="flex items-center justify-between gap-2 rounded-lg bg-blue-900 px-3 py-2 text-white">
+          <h3 className="text-sm font-bold flex items-center gap-2">
+            <Package className="w-4 h-4" />
+            {tr("Goods Entry Details")}
           </h3>
           {selectedLotRef && (
             <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-mono whitespace-nowrap">
@@ -296,9 +311,15 @@ export function SalesBookingStep2({
 
         {/* 1. STOCK SOURCE * — first choose where the goods come from */}
         <div className="space-y-1" data-testid="sales-stock-source">
-          <label className="block text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-            {tUi(lang, "sales.s2_stock_source", "Stock")} <span className="text-red-500">*</span>
-          </label>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-bold uppercase text-slate-700 dark:text-slate-300">
+              {tUi(lang, "sales.s2_stock_source", "Stock")} <span className="text-red-500">*</span>
+            </span>
+            <Button type="button" onClick={handleOpenStockModal} className="h-8 bg-blue-600 px-2 text-xs text-white">
+              <Search className="h-3.5 w-3.5" aria-hidden="true" />
+              {tr("Open Stock")}
+            </Button>
+          </div>
           <div className="grid grid-cols-3 gap-1.5">
             {STOCK_GROUPS.map((g) => {
               const Icon = g.icon;
@@ -341,14 +362,6 @@ export function SalesBookingStep2({
               className="w-full h-9 ps-3 pe-8 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
               data-testid="sales-item-search"
             />
-            <button
-              type="button"
-              onClick={handleOpenStockModal}
-              className="absolute end-2 top-2 p-1 text-slate-400 hover:text-blue-600"
-              title={tUi(lang, "sales.stk_select_stock", "Select Stock")}
-            >
-              <Search className="w-3.5 h-3.5" />
-            </button>
             {suggestOpen && (
               <div className="absolute start-0 top-10 w-full max-h-64 overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 p-1" data-testid="sales-item-suggestions">
                 {groupState.status === "loading" ? (
@@ -511,6 +524,19 @@ export function SalesBookingStep2({
           </div>
         </div>
 
+        <dl className="grid grid-cols-2 gap-2 text-xs">
+          {[["Total Net Weight", calculatedNet], ["Total Gross Weight", calculatedGross]].map(([label, value]) => (
+            <div key={label} className="rounded-lg bg-blue-50 p-2 text-blue-950 dark:bg-blue-950 dark:text-blue-100">
+              <dt>{tr(label)}</dt>
+              <dd className="font-bold"><bdi>{number(value)} kg</bdi></dd>
+            </div>
+          ))}
+        </dl>
+
+        <SalesBookingCurrencyPreview form={form} lang={lang} goods amount={qtyNo * unitPrice} className="hidden lg:block" />
+        <SalesBookingCurrencyFields form={form} lang={lang} goods
+          onChange={(key, value) => setForm(previous => ({ ...previous, [key]: value }))} />
+
         {/* Unit Price & Freight / ICA */}
         <div className="grid grid-cols-2 gap-2.5">
           <div className="space-y-1">
@@ -621,19 +647,19 @@ export function SalesBookingStep2({
           </div>
         )}
 
-        {/* Add Item Button */}
-        <Button
-          type="button"
-          disabled={isOverStock}
-          onClick={handleAddOrUpdateItem}
-          className="w-full h-9 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs rounded-xl flex items-center justify-center gap-1.5 transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          {editingIndex !== null ? "Update Goods Item" : "Add Goods Item to Table"}
-        </Button>
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" onClick={clearEntry} className="h-9 text-xs">
+            {tr("Clear")}
+          </Button>
+          <Button type="button" disabled={isOverStock} onClick={handleAddOrUpdateItem}
+            className="flex-1 h-9 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs">
+            <Plus className="w-4 h-4" />
+            {editingIndex !== null ? tr("Update Goods Item") : tr("Add Goods Item to Table")}
+          </Button>
+        </div>
 
         {/* Bottom Back / Next Buttons */}
-        <div className="flex items-center gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
           <Button
             type="button"
             variant="outline"
@@ -641,121 +667,30 @@ export function SalesBookingStep2({
             className="flex-1 h-9 border-slate-300 text-slate-700 dark:text-slate-200 text-xs font-bold"
           >
             <ChevronLeft className="w-4 h-4 rtl:rotate-180 mr-1" />
-            Back
+            {tr("Back")}
           </Button>
           <Button
             type="button"
             onClick={onNext}
             className="flex-1 h-9 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-md uppercase tracking-wider"
           >
-            Next
+            {tr("Next")}
             <ChevronRight className="w-4 h-4 rtl:rotate-180 ml-1" />
           </Button>
         </div>
       </div>
 
-      {/* RIGHT COLUMN: CUSTOMER ACCOUNT (DR) + GOODS ITEMS TABLE */}
-      <div className="lg:col-span-7 min-w-0 space-y-4">
-        {/* Customer Account (DR) & Company Details Card */}
-        <SalesBookingUpperCards
-          form={form}
-          setForm={setForm}
-          lang={lang}
-          dbCompanies={dbCompanies}
-          dbAccounts={dbAccounts}
-          mode="customer"
-          showBadges={false}
-        />
-
-        {/* Goods Items Table */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <Package className="w-4 h-4 text-blue-600" />
-              {tUi(lang, "sales.goods_items", "GOODS ITEMS")}
-            </h3>
-            <span className="text-[11px] font-bold text-slate-500 font-mono">
-              {goodsEntries.length} Items Added
-            </span>
-          </div>
-
-          <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
-            <table className="w-full text-xs text-left border-collapse">
-              <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
-                <tr>
-                  <th className="p-2.5 w-10 text-center">#</th>
-                  <th className="p-2.5">Product Name</th>
-                  <th className="p-2.5">HS Code</th>
-                  <th className="p-2.5 text-center">Unit</th>
-                  <th className="p-2.5 text-right">Quantity</th>
-                  <th className="p-2.5 text-right">Unit Price</th>
-                  <th className="p-2.5 text-right">Amount</th>
-                  <th className="p-2.5 text-center w-20">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {goodsEntries.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="p-2.5 text-center font-mono text-[11px] text-slate-400">{idx + 1}</td>
-                    <td className="p-2.5 font-bold text-slate-900 dark:text-slate-100">{item.goodsName || item.productName}</td>
-                    <td className="p-2.5 font-mono text-slate-500">{item.hsCode}</td>
-                    <td className="p-2.5 text-center font-semibold text-slate-600 dark:text-slate-400">{item.qtyName || item.unit}</td>
-                    <td className="p-2.5 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
-                      {Number(item.qtyNo || item.quantity || 0).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}
-                    </td>
-                    <td className="p-2.5 text-right font-mono text-slate-600 dark:text-slate-400">
-                      {Number(item.coursePrice || item.unitPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
-                    <td className="p-2.5 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
-                      {Number(item.totalAmount || item.finalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
-                    <td className="p-2.5 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleEditEntry(idx)}
-                          className="p-1 rounded-md bg-sky-50 hover:bg-sky-100 text-sky-700 transition-colors"
-                          title="Edit"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setGoodsEntries(prev => prev.filter((_, i) => i !== idx))}
-                          className="p-1 rounded-md bg-red-50 hover:bg-red-100 text-red-600 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {goodsEntries.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="p-6 text-center text-slate-400 text-xs italic">
-                      No goods added yet. Fill the Goods Entry form on the left or select stock.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-              {goodsEntries.length > 0 && (
-                <tfoot className="bg-slate-50 dark:bg-slate-950 font-black border-t-2 border-slate-200 dark:border-slate-800">
-                  <tr>
-                    <td colSpan={6} className="p-2.5 text-right text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                      Total
-                    </td>
-                    <td className="p-2.5 text-right font-mono text-sm text-blue-700 dark:text-blue-400">
-                      {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
-                    <td></td>
-                  </tr>
-                </tfoot>
-              )}
-            </table>
-          </div>
-        </div>
-      </div>
+      <SalesBookingGoodsReport
+        form={form}
+        goodsEntries={goodsEntries}
+        lang={lang}
+        onEdit={handleEditEntry}
+        onDelete={index => {
+          setGoodsEntries(previous => previous.filter((_, i) => i !== index));
+          if (editingIndex === index) clearEntry();
+          else if (editingIndex != null && editingIndex > index) setEditingIndex(editingIndex - 1);
+        }}
+      />
 
       {/* Stock Selection Modal */}
       <SalesStockPanel
