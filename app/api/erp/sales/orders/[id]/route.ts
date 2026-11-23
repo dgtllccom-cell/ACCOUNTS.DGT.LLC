@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { releaseForOrder, reserveForOrder } from "@/lib/sales/managed-lot-sales";
 import { z } from "zod";
-import { apiOk, handleApiError } from "@/lib/api/response";
+import { ApiClientError, apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { t } from "@/lib/i18n/ui";
@@ -11,7 +11,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { supportedLanguageSchema } from "@/lib/api/erp-validation";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 import { salesOrderTranslationFields } from "@/lib/i18n/sales-order-translations";
-import { assertBookingCurrency, assertSalesWithinStock } from "@/lib/sales/booking-rules";
+import { assertBookingCurrency, assertConfiguredSalesSettlement, assertSalesWithinStock, resolveSalesCountryCurrency } from "@/lib/sales/booking-rules";
 import { trustedTranslationMap } from "@/lib/i18n/localize-records";
 import { getDbUrl, withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 
@@ -157,6 +157,18 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       cityBranchId: (before as any).city_branch_id
     });
 
+    const configuredCurrencies = (body.formData as any)?.form?.bookingCurrencyConfigured === true;
+    let settlementCurrency: string | undefined;
+    if (configuredCurrencies) {
+      if (["posted", "transferred"].includes(String(before.ledger_posting_status ?? "").toLowerCase())
+        || Number(before.paid_amount) > 0 || before.form_data?.workflow?.transferClaimAt) {
+        throw new ApiClientError(t(session.preferredLanguage, "so.already_transferred_readonly", "This Sales Order is read-only."),
+          { status: 409, code: "SALES_BOOKING_EDIT_LOCKED" });
+      }
+      settlementCurrency = await resolveSalesCountryCurrency(createSupabaseAdminClient(), body.countryId ?? before.country_id, before.currency_name || before.currency_code);
+      assertConfiguredSalesSettlement(body.formData, settlementCurrency!);
+    }
+
     if ((body as any).formData) {
       assertBookingCurrency((body as any).formData);
       await assertSalesWithinStock(session, (body as any).formData, { excludeOrderId: params.id });
@@ -185,7 +197,14 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (body.productSummary !== undefined) patch.product_summary = body.productSummary;
     if (body.quantity !== undefined) patch.quantity = body.quantity;
     if (body.totalWeight !== undefined) patch.total_weight = body.totalWeight;
-    if (body.currencyCode !== undefined) patch.currency_code = body.currencyCode;
+    if (configuredCurrencies) {
+      patch.currency_code = settlementCurrency;
+      patch.currency_name = settlementCurrency;
+      if (body.currencyCode !== undefined) patch.original_currency_code = body.currencyCode;
+      if (body.orderTotal !== undefined || body.totalGoodsLocal !== undefined) {
+        patch.base_currency_amount = body.totalGoodsLocal ?? body.orderTotal;
+      }
+    } else if (body.currencyCode !== undefined) patch.currency_code = body.currencyCode;
     if (body.exchangeRate !== undefined) patch.exchange_rate = body.exchangeRate;
     if (body.orderTotal !== undefined) patch.order_total = body.orderTotal;
     if (body.totalGoodsOriginal !== undefined) patch.total_goods_original = body.totalGoodsOriginal;

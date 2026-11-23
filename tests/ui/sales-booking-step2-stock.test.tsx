@@ -12,7 +12,7 @@ const walnutLot = {
 const fetched: string[] = [];
 
 function Harness() {
-  const [form, setForm] = React.useState<any>({ exchangeRate: 1, operator: "*" });
+  const [form, setForm] = React.useState<any>({ salesCurrency: "USD", secondaryCurrency: "AED", exchangeRate: 3.673, operator: "*" });
   const [goods, setGoods] = React.useState<any[]>([]);
   return <SalesBookingStep2 form={form} setForm={setForm} goodsEntries={goods} setGoodsEntries={setGoods} lang="en" onNext={() => {}} onBack={() => {}} />;
 }
@@ -47,6 +47,32 @@ describe("Sales Booking step 2 — stock first, then item search", () => {
     render(<Harness />);
     fireEvent.click(screen.getByText("Booking Stock"));
     await vi.waitFor(() => expect(fetched.some((u) => u.includes("source=booking"))).toBe(true));
+  });
+
+  it("shows the lot and both currency amounts without a totals row", async () => {
+    render(<Harness />);
+    const search = screen.getByTestId("sales-item-search");
+    fireEvent.focus(search);
+    fireEvent.change(search, { target: { value: "wal" } });
+    fireEvent.click(await within(await screen.findByTestId("sales-item-suggestions")).findByText("Walnut Kernels"));
+
+    const form = screen.getByRole("heading", { name: /goods entry details/i }).parentElement!.parentElement!;
+    const numberInput = (label: RegExp) => within(form).getAllByRole("spinbutton").find(
+      input => label.test(input.closest("div")?.querySelector("label")?.textContent ?? "")
+    )!;
+    fireEvent.change(numberInput(/quantity/i), { target: { value: "100" } });
+    fireEvent.change(numberInput(/^unit price$/i), { target: { value: "12.5" } });
+    fireEvent.click(within(form).getByRole("button", { name: "Add Goods Item to Table" }));
+
+    const table = screen.getByRole("table");
+    const row = within(table).getByText("Walnut Kernels").closest("tr")!;
+    expect(within(row).getByText("LOT-WAL-001")).toBeTruthy();
+    expect(within(row).getByText("USD 1,250.00")).toBeTruthy();
+    expect(within(row).getByText("× 3.673")).toBeTruthy();
+    expect(within(row).getByText("AED 4,591.25")).toBeTruthy();
+    expect(table.querySelector("tfoot")).toBeNull();
+    const summary = screen.getByRole("heading", { name: "Summary Totals" }).closest("section")!;
+    expect(within(summary).getByText("AED 4,591.25")).toBeTruthy();
   });
 
   it("the same lot cannot be added twice", async () => {
