@@ -23,7 +23,7 @@ import { getBookingCurrencies } from "@/lib/sales/booking-currencies";
 import { VoiceFormFill } from "@/components/voice-form-fill";
 import { AccountDetailsModal } from "./account-details-modal";
 import { SearchSelect } from "@/components/ui/search-select";
-import { SalesBookingCurrencyFields, SalesBookingCurrencyPreview } from "./sales-booking-currencies";
+import { SalesBookingCurrencyFields } from "./sales-booking-currencies";
 import { CustomerAccountCard } from "@/components/erp/customer-account-card";
 
 export function SalesBookingStep1({
@@ -166,7 +166,6 @@ export function SalesBookingStep1({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[minmax(290px,340px)_minmax(0,1fr)] gap-3 items-start animate-in fade-in duration-200">
-      <SalesBookingCurrencyPreview form={form} lang={lang} className="ms-auto w-full max-w-sm lg:hidden" />
       {/* Booking form */}
       <div className="lg:col-start-1 lg:row-start-1 min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3.5">
         <div className="border-b border-slate-100 dark:border-slate-800 pb-2">
@@ -346,7 +345,6 @@ export function SalesBookingStep1({
         </div>
 
         <SalesBookingCurrencyFields form={form} lang={lang} onChange={onCurrencyChange ?? ((key, value) => setForm(previous => ({ ...previous, [key]: value })))} readOnly={currencyReadOnly} />
-        <SalesBookingCurrencyPreview form={form} lang={lang} className="hidden lg:block" />
 
         {/* Invoice / Payment Select & Ship Option (2 inline) */}
         <div className="grid grid-cols-2 gap-2.5">
