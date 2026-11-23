@@ -94,6 +94,15 @@ export function PostingDetailsPanel({
           </dl>
         )}
 
+        {posting?.adjustment && (
+          <p className="rounded-lg bg-slate-50 p-2 text-[11px] dark:bg-slate-800">
+            {t(lang, "purchase.booking_adjusted_posting", "Net posting after adjustment")}
+            <span className="block font-mono" dir="ltr">
+              {posting.adjustment.serial} · {money(posting.adjustment.delta)} {posting.adjustment.currency}
+            </span>
+          </p>
+        )}
+
         {!posted && reason && (
           <p className="rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-[11px] font-semibold text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200 break-words" data-testid="posting-details-reason">
             {reason}

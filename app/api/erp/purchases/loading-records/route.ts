@@ -13,6 +13,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { ApiClientError } from "@/lib/api/response";
 import { resolvePurchaseAmounts, resolvePurchaseLoadingSummary, validatePurchaseLoadingEntries, resolveLoadingEligibility, resolvePaymentCondition } from "@/lib/services/purchase-calculation-service";
+import { billFxOperator, effectiveFxRate } from "@/lib/purchases/fx-operator";
 import { paidForLoadingGate, verifiedPaid } from "@/lib/purchases/loaded-payable";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
@@ -425,7 +426,7 @@ export async function GET(request: NextRequest) {
             // which is in the payment currency and includes booking / unposted rows).
             const orderCcy = String(po.currency_code || "USD").toUpperCase();
             const baseCcy = String(po.countries?.currency || orderCcy).toUpperCase();
-            const rateToBase = orderCcy === baseCcy ? 1 : Number(po.exchange_rate) > 0 ? Number(po.exchange_rate) : 1;
+            const rateToBase = orderCcy === baseCcy ? 1 : effectiveFxRate(Number(po.exchange_rate), billFxOperator(po.form_data));
             const totalPaidFC = paidForLoadingGate(resolvePaymentCondition(po as any), verifiedPaid(payments, orderCcy, rateToBase));
 
             // ── Loading Eligibility Gate ──
@@ -620,7 +621,7 @@ export async function POST(request: NextRequest) {
           `;
           const gateCcy = String(po.currency_code || "USD").toUpperCase();
           const gateBase = String(po.base_currency || gateCcy).toUpperCase();
-          const gateRateToBase = gateCcy === gateBase ? 1 : Number(po.exchange_rate) > 0 ? Number(po.exchange_rate) : 1;
+          const gateRateToBase = gateCcy === gateBase ? 1 : effectiveFxRate(Number(po.exchange_rate), billFxOperator(po.form_data));
           const verified = verifiedPaid(payRows as any, gateCcy, gateRateToBase);
           const totalPaidFC = paidForLoadingGate(resolvePaymentCondition(po as any), verified);
 

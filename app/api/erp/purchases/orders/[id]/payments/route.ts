@@ -1,3 +1,4 @@
+import { billFxOperator, effectiveFxRate } from "@/lib/purchases/fx-operator";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiCreated, apiOk, apiError, handleApiError, ApiClientError } from "@/lib/api/response";
@@ -436,15 +437,13 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     const form = orderRow.form_data?.form || {};
 
     // Currency model (see 20261001_multicurrency_purchase_payment_fix.sql):
-    //  - order_total / advance_paid / remaining_paid / credit_amount / remaining_due
-    //    are all in the PURCHASE currency (orderRow.currency_code).
+    //  - order_total is in base currency. Paid totals and remaining_due are in purchase currency.
     //  - orderRate = base-currency units per 1 purchase-currency unit.
     //  - body.exchangeRate = base-currency units per 1 body.currencyCode unit
     //    (the historical FX rate for this payment).
     // All balance validation below is done in the PURCHASE currency.
     const orderCcy = (orderRow.currency_code || orderRow.purchase_currency || "USD").toUpperCase();
-    let orderRate = Number(orderRow.exchange_rate || 0);
-    if (orderRate <= 0) orderRate = Number(form.exchangeRate || 1) || 1;
+    const orderRate = effectiveFxRate(Number(orderRow.exchange_rate || form.exchangeRate || 1), billFxOperator(orderRow.form_data));
     const bodyCcy = (body.currencyCode || orderCcy).toUpperCase();
     let bodyRate = Number(body.exchangeRate || 0);
     if (bodyRate <= 0) bodyRate = bodyCcy === orderCcy ? orderRate : 1;
@@ -458,7 +457,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     // NOT in the purchase currency despite this function's own long-standing comment
     // above. total_goods_original/total_goods_usd hold the true purchase-currency total.
     const orderTotalPur = Number(orderRow.total_goods_original || orderRow.total_goods_usd || 0) ||
-      (orderRate > 1 ? Number(orderRow.order_total || 0) / orderRate : Number(orderRow.order_total || 0));
+      Number(orderRow.order_total || 0) / orderRate;
     const advancePaidPur = Number(orderRow.advance_paid || 0);
     const remainingPaidPur = Number(orderRow.remaining_paid || 0);
     const creditAmountPur = Number(orderRow.credit_amount || 0);
