@@ -3162,6 +3162,12 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     const draft = draftFilter.trim().toLowerCase();
     const urlOrderNo = getInitialPurchaseOrderNo();
     return orders.filter((row) => {
+      const bookingWorkflow = row.form_data?.workflow;
+      const queuedKind = bookingWorkflow?.paymentKind;
+      const queuedStep = bookingWorkflow?.currentStep;
+      if (queuedKind === "invoice" && queuedStep === "sales_invoice" && activeMode !== "final") return false;
+      if (queuedKind === "advance" && queuedStep === "sales_advance_payment"
+        && activeMode !== "advance" && activeMode !== "advance_completed" && activeMode !== "final") return false;
       if (urlOrderNo && row.sales_order_no === urlOrderNo) return true;
       const postingStatus = row.ledger_posting_status?.toLowerCase();
       const workflowTransferStatus = row.form_data?.workflow?.transferStatus?.toLowerCase();

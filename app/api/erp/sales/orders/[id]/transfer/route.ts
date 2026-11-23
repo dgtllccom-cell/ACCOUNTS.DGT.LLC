@@ -119,7 +119,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const formData = orderRow.form_data || {};
     const form = formData.form || {};
     const workflow = formData.workflow || {};
-    const paymentRoute = resolveSalesBookingPaymentRoute(body?.paymentKind ?? body?.paymentType ?? form.paymentType ?? "Advance Payment");
+    const paymentRoute = resolveSalesBookingPaymentRoute(form.paymentType || form.paymentCondition || body?.paymentType || body?.paymentKind);
 
     const alreadyTransferred =
       orderRow.ledger_posting_status === "transferred" ||
@@ -129,6 +129,49 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     if (alreadyTransferred && !orderRow.is_edited_since_transfer) {
       throw new ApiClientError("This booking has already been transferred to Sales Transfer Payment and cannot be transferred again.", { status: 409, code: "ALREADY_TRANSFERRED" });
+    }
+
+    // The Sales wizard's own form state names this field customerAccountNo, not
+    // purchaseAccountNo (that name is only correct in the Purchase wizard's own
+    // form_data, which this check was originally copied from) — checking the
+    // wrong name meant this validation failed on every real Sales transfer.
+    if (!form.customerAccountNo) {
+      throw new Error("Customer Account is required before transfer to payment.");
+    }
+    if (!form.salesAccountNo) {
+      throw new Error("Sales Account is required before transfer to payment.");
+    }
+
+    // Moving into the Invoice or Advance queue is an operational handoff. Only the
+    // payment endpoint posts receipts, with the actual amount entered by the cashier.
+    if (paymentRoute.paymentKind === "invoice" || paymentRoute.paymentKind === "advance") {
+      const now = new Date().toISOString();
+      const invoice = paymentRoute.paymentKind === "invoice";
+      const currentStep = invoice ? "sales_invoice" : "sales_advance_payment";
+      const nextWorkflow = { ...workflow, transferStatus: "transferred", paymentKind: paymentRoute.paymentKind,
+        currentStep, invoiceStatus: invoice ? "pending" : workflow.invoiceStatus,
+        transferredAt: now, transferredBy: session.userId };
+      const row = await withLocalPg(async sql => {
+        const [saved] = await sql`UPDATE public.sales_orders SET
+          sales_status = ${invoice ? "Confirmed" : "Pending"},
+          form_data = jsonb_set(coalesce(form_data, '{}'::jsonb), '{workflow}', ${JSON.stringify(nextWorkflow)}::jsonb),
+          workflow_state = coalesce(workflow_state, '{}'::jsonb) || ${JSON.stringify(nextWorkflow)}::jsonb,
+          updated_at = now()
+          WHERE id = ${params.id} AND deleted_at IS NULL AND updated_at::text = ${orderRow.edit_version}
+            AND coalesce(ledger_posting_status, '') NOT IN ('posted','transferred')
+            AND coalesce(form_data->'workflow'->>'transferStatus', '') <> 'transferred'
+            AND coalesce(form_data->'workflow'->>'transferClaimAt', '') = ''
+          RETURNING id, sales_order_no, ledger_posting_status, payment_status`;
+        return saved ?? null;
+      });
+      if (!row) throw new ApiClientError("This booking has changed or has already been transferred.", {
+        status: 409, code: "SALES_BOOKING_CHANGED"
+      });
+      const response = { success: true, salesOrderId: row.id, salesOrderNo: row.sales_order_no,
+        paymentKind: paymentRoute.paymentKind, paymentStatus: row.payment_status,
+        ledgerPostingStatus: row.ledger_posting_status, currentStep };
+      if (idempotencyKey && tenantHash) await commitIdempotencySuccess(idempotencyKey, tenantHash, 200, response);
+      return apiOk(response);
     }
 
     // Pass the saved original amount and its effective multiplier exactly once.
@@ -147,17 +190,6 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       throw new ApiClientError("The saved sales amount and exchange rate do not match the final amount.", {
         status: 409, code: "SALES_BOOKING_FX_MISMATCH"
       });
-    }
-
-    // The Sales wizard's own form state names this field customerAccountNo, not
-    // purchaseAccountNo (that name is only correct in the Purchase wizard's own
-    // form_data, which this check was originally copied from) — checking the
-    // wrong name meant this validation failed on every real Sales transfer.
-    if (!form.customerAccountNo) {
-      throw new Error("Customer Account is required before transfer to payment.");
-    }
-    if (!form.salesAccountNo) {
-      throw new Error("Sales Account is required before transfer to payment.");
     }
 
     const systemBillNumber = String(orderRow.sales_order_no || form.salesOrderNo || "").trim();

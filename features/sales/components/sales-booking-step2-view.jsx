@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Layers
 } from "lucide-react";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { t as tUi } from "@/lib/i18n/ui";
 import { Button } from "@/components/ui/button";
 import { SalesBookingUpperCards } from "./sales-booking-upper-cards";
@@ -63,11 +64,11 @@ export function SalesBookingStep2({
   const stackWeight = form.stackWeight || "";
   const packType = form.packType || "";
   const totalBoxes = Number(form.totalBoxes || 0);
-  const availableQty = Number(form.lotAvailableQty || 0);
+  const availableQty = form.lotAvailableQty == null ? null : Math.max(0, Number(form.lotAvailableQty) || 0);
   const selectedLotRef = form.stockLotNo || "";
 
   // Validate stock: check if quantity exceeds available balance
-  const isOverStock = selectedLotRef && availableQty > 0 && qtyNo > availableQty;
+  const isOverStock = Boolean(selectedLotRef && availableQty !== null && qtyNo > availableQty);
 
   // Real stock records of one source group (loaded once per group; no demo rows)
   const loadGroup = useCallback(async (group) => {
@@ -137,7 +138,7 @@ export function SalesBookingStep2({
       managedLabel: lot.placeLabel || "",
       lotRef: lot.lotRef || lot.stockRef || "",
       lotPurchaseId: lot.purchaseId || "",
-      lotUnitCost: Number(lot.landedUnitCost ?? lot.unitCost ?? 0),
+      lotUnitCost: Number(lot.unitCost ?? 0),
       lotCostCurrency: lot.costCurrency || lot.currencyType || "",
       brand: lot.brand || "",
       size: lot.size || "",
@@ -216,6 +217,15 @@ export function SalesBookingStep2({
       origin: form.origin || "",
       lotNo: selectedLotRef,
       lotId: form.managedLotId || "",
+      managedLotId: form.managedLotId || "",
+      managedWarehouseId: form.managedWarehouseId || "",
+      managedRack: form.managedRack || "",
+      managedLabel: form.managedLabel || "",
+      lotPurchaseId: form.lotPurchaseId || "",
+      lotUnitCost: form.lotUnitCost ?? null,
+      lotCostCurrency: form.lotCostCurrency || "",
+      stockLotNo: selectedLotRef,
+      stockSource: form.stockSource || "",
       saleSource: form.saleSource || stockGroup,
       journalTransferId: form.journalTransferId || "",
       stockGroup,
@@ -240,8 +250,8 @@ export function SalesBookingStep2({
       ...p,
       goodsId: "", goodsName: "", hsCode: "", stockLotNo: "", allotName: "", selectedLotId: "", managedLotId: "", journalTransferId: "",
       brand: "", size: "", grade: "", qualityReport: "", origin: "", qtyNo: 0, coursePrice: 0, freightIca: 0,
-      qtyKgs: 0, emptyKgs: 0, totalBoxes: 0, packType: "", itemType: "", stackWeight: "", lotAvailableQty: 0,
-      warehouseId: "", warehouseName: ""
+      qtyKgs: 0, emptyKgs: 0, totalBoxes: 0, packType: "", itemType: "", stackWeight: "", lotAvailableQty: null,
+      warehouseId: "", warehouseName: "", stockSource: "", managedWarehouseId: "", managedRack: "", managedLabel: "", lotPurchaseId: "", lotUnitCost: null, lotCostCurrency: ""
     }));
     setStockError("");
   };
@@ -254,7 +264,16 @@ export function SalesBookingStep2({
       ...prev,
       goodsName: item.goodsName || item.productName,
       hsCode: item.hsCode,
-      stockLotNo: item.itemId || item.lotNo,
+      stockLotNo: item.stockLotNo || item.itemId || item.lotNo,
+      managedLotId: item.managedLotId || item.lotId || "",
+      managedWarehouseId: item.managedWarehouseId || item.warehouseId || "",
+      managedRack: item.managedRack || "",
+      managedLabel: item.managedLabel || "",
+      lotPurchaseId: item.lotPurchaseId || "",
+      lotUnitCost: item.lotUnitCost ?? null,
+      lotCostCurrency: item.lotCostCurrency || "",
+      stockSource: item.stockSource || item.saleSource || "",
+      saleSource: item.saleSource || "",
       journalTransferId: item.journalTransferId || "",
       brand: item.brand,
       size: item.size,
@@ -268,7 +287,7 @@ export function SalesBookingStep2({
       stackWeight: item.stackWeight,
       packType: item.packType,
       totalBoxes: item.totalBoxes,
-      lotAvailableQty: item.lotAvailableQty || 0,
+      lotAvailableQty: item.lotAvailableQty ?? null,
       qtyKgs: item.qtyKgs || 0,
       emptyKgs: item.emptyKgs || 0,
       origin: item.origin || "",
@@ -332,7 +351,7 @@ export function SalesBookingStep2({
               onChange={(e) => {
                 const v = e.target.value;
                 // typing a new name drops the previously picked stock record
-                setForm((p) => ({ ...p, goodsName: v, stockLotNo: "", allotName: "", selectedLotId: "", managedLotId: "", lotAvailableQty: 0 }));
+                setForm((p) => ({ ...p, goodsName: v, stockLotNo: "", allotName: "", selectedLotId: "", managedLotId: "", journalTransferId: "", stockSource: "", lotAvailableQty: null }));
                 setSuggestOpen(true);
               }}
               onFocus={() => setSuggestOpen(true)}
@@ -376,9 +395,11 @@ export function SalesBookingStep2({
               </div>
             )}
           </div>
-          {availableQty > 0 && selectedLotRef && (
+          {availableQty !== null && selectedLotRef && (
             <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
-              {tUi(lang, "sales.stk_col_remaining", "Remaining")}: {availableQty.toLocaleString(undefined, { maximumFractionDigits: 3 })} {qtyName}
+              <bdi>{selectedLotRef}</bdi> · {tUi(lang, "sales.stk_col_remaining", "Remaining")}: <bdi>{availableQty.toLocaleString(lang, { maximumFractionDigits: 3 })} {qtyName}</bdi>
+              {" · "}{tUi(lang, "common.quantity", "Quantity")}: <bdi>{qtyNo.toLocaleString(lang)} {qtyName}</bdi>
+              {" · "}{translateHeader(lang, "Available after sale")}: <bdi>{Math.max(0, availableQty - qtyNo).toLocaleString(lang, { maximumFractionDigits: 3 })} {qtyName}</bdi>
             </p>
           )}
         </div>
@@ -610,7 +631,7 @@ export function SalesBookingStep2({
           <div className="p-2.5 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 flex items-center gap-2 text-[11px] font-bold">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>
-              Cannot sell more than available stock! Max available: <b>{availableQty.toLocaleString()} {qtyName}</b>.
+              Cannot sell more than available stock! Max available: <b>{(availableQty ?? 0).toLocaleString(lang)} {qtyName}</b>.
             </span>
           </div>
         )}

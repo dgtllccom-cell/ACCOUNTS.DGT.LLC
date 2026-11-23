@@ -53,7 +53,7 @@ const MODULES = ["purchase_booking", "sales_booking", "local_purchase", "local_s
 const fmt = (n?: number | null) => (n == null ? "0.00" : Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 const fmtD = (d?: string | null) => (d ? String(d).slice(0, 10) : "");
 
-export function BusinessEditInvoiceView({ lang: langProp }: { lang?: string }) {
+export function BusinessEditInvoiceView({ lang: langProp, initialBillNo }: { lang?: string; initialBillNo?: string }) {
   const s = useErpScreen("bei", langProp);
   const [rows, setRows] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +74,7 @@ export function BusinessEditInvoiceView({ lang: langProp }: { lang?: string }) {
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [showPicker, setShowPicker] = useState(false);
+  const [showPicker, setShowPicker] = useState(Boolean(initialBillNo));
   const [openId, setOpenId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -645,18 +645,18 @@ export function BusinessEditInvoiceView({ lang: langProp }: { lang?: string }) {
 
       </div>
 
-      {showPicker && <BillPicker s={s} onClose={() => setShowPicker(false)} onCreated={(id) => { setShowPicker(false); setOpenId(id); void load(); }} />}
+      {showPicker && <BillPicker s={s} initialBillNo={initialBillNo} onClose={() => setShowPicker(false)} onCreated={(id) => { setShowPicker(false); setOpenId(id); void load(); }} />}
       {openId && <InvoiceEditor s={s} id={openId} onClose={() => { setOpenId(null); void load(); }} />}
     </div>
   );
 }
 
 /* ── bill picker ─────────────────────────────────────────────────────────── */
-function BillPicker({ s, onClose, onCreated }: { s: Screen; onClose: () => void; onCreated: (id: string) => void }) {
+function BillPicker({ s, onClose, onCreated, initialBillNo }: { s: Screen; initialBillNo?: string; onClose: () => void; onCreated: (id: string) => void }) {
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
   const [moduleFilter, setModuleFilter] = useState("all");
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(initialBillNo ?? "");
   const [docType, setDocType] = useState<string>("commercial_invoice");
   const [creating, setCreating] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);

@@ -11,6 +11,7 @@ import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { authorize, ErpPermissionError } from "@/lib/permissions/middleware";
 import type { ErpSession } from "@/lib/auth/session";
+import { resolveSalesBookingPaymentRoute, salesBookingLoadingStatus } from "@/lib/services/sales-booking-routing";
 import { billFxOperator } from "@/lib/purchases/fx-operator";
 import { isSalesBookingEditLocked } from "@/lib/sales/booking-edit-state";
 
@@ -68,7 +69,7 @@ function currencyCode(value: unknown) {
   return /^[A-Z]{3}$/.test(code) ? code : null;
 }
 
-function normalizeOrder(row: any, session: ErpSession, localPurchases: Map<string, any>) {
+function normalizeOrder(row: any, session: ErpSession, localPurchases: Map<string, any>, finalizedInvoices: Set<string>) {
   const data = row.form_data ?? {};
   const form = data.form ?? {};
   const totals = data.totals ?? {};
@@ -129,6 +130,16 @@ function normalizeOrder(row: any, session: ErpSession, localPurchases: Map<strin
     }
   }
 
+  const paymentType = form.paymentType || form.paymentCondition || row.workflow_state?.paymentKind;
+  const awaitingPurchasedGoods = form.isEndorseSale === true || form.saleType === "endorse" || data.isEndorseSale === true;
+  const needsPurchaseLot = awaitingPurchasedGoods && (!goods.length || goods.some(item =>
+    !(item.managedLotId || item.journalTransferId || item.stockLotNo) || !(Number(item.qtyNo ?? item.quantity) > 0)));
+  const loadingStatus = salesBookingLoadingStatus({
+    paymentType, ledgerStatus: row.ledger_posting_status, workflow: data.workflow,
+    invoiceFinalized: finalizedInvoices.has(row.id), paidAmount: row.paid_amount,
+    billAmount: salesAmount ?? finalAmount, advancePercent: form.advancePercent, needsPurchaseLot,
+  });
+
   return {
     id: row.id,
     sales_order_no: row.sales_order_no ?? "-",
@@ -171,6 +182,8 @@ function normalizeOrder(row: any, session: ErpSession, localPurchases: Map<strin
     finalCurrency: finalCur,
     exchange_rate: savedAmount(row.exchange_rate ?? form.exchangeRate),
     canEdit,
+    bookingPaymentKind: resolveSalesBookingPaymentRoute(paymentType).paymentKind,
+    loadingStatus,
     exchangeRateOperator: billFxOperator(data),
     status: row.sales_status ?? "Draft",
     isTransferred: ["transferred", "finalized", "completed", "posted"].includes(String(row.sales_status ?? "").toLowerCase())
@@ -369,7 +382,31 @@ export async function GET(request: NextRequest) {
         localPurchases = new Map((result.data ?? []).map(row => [row.id, row]));
       }
     }
-    let normalized = (data ?? []).map(row => normalizeOrder(row, session, localPurchases));
+    const invoiceOrders = (data ?? []).filter(row => {
+      const form = row.form_data?.form;
+      return resolveSalesBookingPaymentRoute(form?.paymentType || form?.paymentCondition || row.workflow_state?.paymentKind).paymentKind === "invoice";
+    }).map(row => row.id);
+    let finalizedInvoices = new Set<string>();
+    if (invoiceOrders.length) {
+      const invoices = await withLocalPg(sql => sql`
+        SELECT DISTINCT source_id FROM public.business_edit_invoices
+        WHERE source_id = ANY(${invoiceOrders}::uuid[]) AND source_table = 'sales_orders'
+          AND txn_kind = 'sales' AND status = 'finalized' AND deleted_at IS NULL
+          AND doc_type IN ('commercial_invoice', 'export_invoice', 'tax_invoice')
+      `);
+      if (invoices) {
+        finalizedInvoices = new Set(invoices.map(invoice => String(invoice.source_id)));
+      } else {
+        const invoiceQuery = (createSupabaseAdminClient() as any).from("business_edit_invoices").select("source_id")
+          .in("source_id", invoiceOrders).eq("source_table", "sales_orders").eq("txn_kind", "sales")
+          .eq("status", "finalized").is("deleted_at", null)
+          .in("doc_type", ["commercial_invoice", "export_invoice", "tax_invoice"]);
+        const result = await withTimeout<any>(invoiceQuery, "finalized sales invoices");
+        if (result.error) throw new Error(result.error.message);
+        finalizedInvoices = new Set((result.data ?? []).map(row => String(row.source_id)));
+      }
+    }
+    let normalized = (data ?? []).map(row => normalizeOrder(row, session, localPurchases, finalizedInvoices));
 
     // Resolve customerName into the active language — record_translations was written keyed
     // by the DB column name "customer_name" (see the POST handler), but normalizeOrder()

@@ -59,6 +59,7 @@ export function SalesBookingGlobalRegisterView({
   const router = useRouter();
   const searchParams = useSearchParams();
   const modeParam = searchParams.get("mode");
+  const loadingQueue = searchParams.get("queue") === "loading";
   const sourceParam = searchParams.get("source") || initialSource || "";
   const idParam =
     searchParams.get("salesOrderId") ||
@@ -172,6 +173,7 @@ export function SalesBookingGlobalRegisterView({
   const filteredRows = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return reports.filter((r) => {
+      if (loadingQueue && r.loadingStatus !== "ready") return false;
       if (localScopeFilter === "local" && !isRowLocalSale(r)) return false;
       if (filterCountry !== "all" && r.countryName !== filterCountry) return false;
       if (filterStatus !== "all") {
@@ -207,7 +209,7 @@ export function SalesBookingGlobalRegisterView({
       }
       return true;
     });
-  }, [reports, localScopeFilter, isRowLocalSale, filterCountry, filterStatus, isRowTransferred, searchQuery]);
+  }, [reports, loadingQueue, localScopeFilter, isRowLocalSale, filterCountry, filterStatus, isRowTransferred, searchQuery]);
 
   // Awaiting transfer in red at top, transferred in black at bottom (matching Purchase Booking)
   const sortedRows = useMemo(() => {
@@ -324,6 +326,11 @@ export function SalesBookingGlobalRegisterView({
     ? "/dashboard/sales/new-sales-booking-order?source=local"
     : "/dashboard/sales/new-sales-booking-order";
 
+  const loadingQueueUrl = `${baseRegisterUrl}${isLocalSalesPage ? "&" : "?"}queue=loading`;
+  const loadingLabel = (status: string) => ({
+    ready: "Ready for Loading", awaiting_lot: "Awaiting stock lot",
+    awaiting_invoice: "Awaiting finalized invoice", awaiting_advance: "Awaiting advance receipt",
+  })[status];
   const openNewEntry = () => {
     const nextUrl = isLocalSalesPage
       ? "/dashboard/sales/new-sales-booking-order?source=local&mode=new"
@@ -553,6 +560,11 @@ export function SalesBookingGlobalRegisterView({
             )}
           </div>
 
+          <button type="button" aria-pressed={loadingQueue} onClick={() => router.push((loadingQueue ? baseRegisterUrl : loadingQueueUrl) as any)}
+            className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold dark:border-slate-700">
+            {tr(loadingQueue ? "Sales Booking" : "Sales Loading")}
+          </button>
+
           {/* Search */}
           <div className="relative">
             <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
@@ -781,7 +793,7 @@ export function SalesBookingGlobalRegisterView({
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className={cn("flex items-center justify-between px-4 py-2.5 text-white", accentHeaderBg)}>
           <div className="text-xs font-black uppercase tracking-wider">
-            {isLocalSalesPage
+            {loadingQueue ? tr("Sales Loading") : isLocalSalesPage
               ? tr("LOCAL SALES LIST (ALL COUNTRIES)")
               : tr("SALES BOOKING LIST (ALL COUNTRIES)")}
           </div>
@@ -842,7 +854,8 @@ export function SalesBookingGlobalRegisterView({
               ) : (
                 sortedRows.map((r, idx) => {
                   const transferred = isRowTransferred(r);
-                  const rowColorCls = transferred
+                  const pendingLot = r.loadingStatus === "awaiting_lot";
+                  const rowColorCls = transferred && !pendingLot
                     ? "text-slate-900 dark:text-slate-100"
                     : "text-rose-700 dark:text-rose-400 bg-rose-50/30 dark:bg-rose-950/10";
                   const salesAmt = r.totalSalesAmount ?? r.salesAmount;
@@ -942,6 +955,11 @@ export function SalesBookingGlobalRegisterView({
                             <Clock className="h-3 w-3" />
                             {tr("AWAITING TRANSFER")}
                           </span>
+                        )}
+                        {loadingLabel(String(r.loadingStatus)) && (
+                          <div className={cn("mt-1 text-[10px] font-bold", pendingLot && "text-rose-700 dark:text-rose-300")}>
+                            {tr(loadingLabel(String(r.loadingStatus))!)}
+                          </div>
                         )}
                       </td>
                       <td className="px-3 py-2.5 text-center">

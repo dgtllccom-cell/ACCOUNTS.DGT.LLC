@@ -460,6 +460,7 @@ export async function setStatus(session: ErpSession, id: string, status: "draft"
   if (!canManageBusinessEditInvoice(session) && status !== "draft") {
     throw new ApiClientError("Only a manager can finalize or void a document.", { status: 403, code: "FORBIDDEN" });
   }
+  await getInvoice(session, id, { original: true });
   await withLocalPg(async (sql) => {
     const r = (await sql`update public.business_edit_invoices set status = ${status} where id = ${id}::uuid and deleted_at is null returning id`) as any[];
     if (!r.length) throw new ApiClientError("Invoice not found.", { status: 404, code: "NOT_FOUND" });

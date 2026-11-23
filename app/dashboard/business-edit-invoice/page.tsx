@@ -8,9 +8,12 @@ import { t } from "@/lib/i18n/ui";
 export const metadata: Metadata = { title: "Business Edit Invoice" };
 export const dynamic = "force-dynamic";
 
-export default async function BusinessEditInvoicePage() {
+export default async function BusinessEditInvoicePage({ searchParams }: {
+  searchParams?: Promise<{ billNo?: string }>;
+}) {
   const session = await requireErpSession();
   const lang = await getRequestLanguage();
+  const billNo = (await searchParams)?.billNo?.slice(0, 140);
   if (!canUseBusinessEditInvoice(session)) {
     return (
       <div className="p-8 text-sm text-slate-500">
@@ -20,7 +23,7 @@ export default async function BusinessEditInvoicePage() {
   }
   return (
     <div className="w-full px-3 sm:px-6 lg:px-8 py-4">
-      <BusinessEditInvoiceView lang={lang} />
+      <BusinessEditInvoiceView lang={lang} initialBillNo={billNo} />
     </div>
   );
 }

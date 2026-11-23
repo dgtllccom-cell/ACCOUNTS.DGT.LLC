@@ -55,7 +55,7 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
-import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
+import { buildSalesBookingPaymentUrl, resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
 import { SalesBookingJournalReportView } from "./sales-booking-journal-report-view";
 import { SalesBookingStep1 } from "./sales-booking-step1";
 import { SalesBookingStep2 } from "./sales-booking-step2";
@@ -1887,6 +1887,8 @@ export function SalesOrderWizard({ session }) {
   };
 
   const handleTransfer = async () => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setSavingOrder(true);
     setSaveMessage("");
     try {
@@ -1906,6 +1908,12 @@ export function SalesOrderWizard({ session }) {
       const returnedOrderId = payload.data?.salesOrderId || savedOrderId || payload.data?.id;
       const returnedOrderNo = payload.data?.salesOrderNo || savedOrderNo || form.salesOrderNo;
 
+      setSavedOrderId(returnedOrderId || "");
+      setSavedOrderNo(returnedOrderNo);
+      if (payload.data?.order?.updated_at) {
+        setLoadedOrderRow(previous => ({ ...previous, updatedAt: payload.data.order.updated_at }));
+      }
+
       if (returnedOrderId) {
         const transferResponse = await fetch(`/api/erp/sales/orders/${returnedOrderId}/transfer`, {
           method: "POST",
@@ -1921,21 +1929,20 @@ export function SalesOrderWizard({ session }) {
         }
       }
 
-      setSavedOrderId(returnedOrderId || "");
-      setSavedOrderNo(returnedOrderNo);
       if (returnedOrderId && intake.draft) await intake.consume(String(returnedOrderId));
-      setSaveMessage(`Transferred Sales Order ${returnedOrderNo} to Journal / Payment and ledger posting.`);
+      setSaveMessage(t(lang, "sales.transferred_status_word", "Transferred"));
       setTransferredData(payload.data || { salesOrderNo: returnedOrderNo });
       setIsTransferred(true);
       setRegisterRefreshKey((key) => key + 1);
 
-      window.location.href = `${paymentRoute.path}?salesOrderNo=${encodeURIComponent(returnedOrderNo)}`;
+      window.location.href = buildSalesBookingPaymentUrl(paymentRoute, returnedOrderNo);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error saving order.";
       setSaveMessage(msg);
       alert(msg);
     } finally {
       setSavingOrder(false);
+      isSubmittingRef.current = false;
     }
   };
 

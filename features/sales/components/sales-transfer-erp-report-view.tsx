@@ -28,7 +28,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { Th } from "@/components/ui/translated-th";
 import { deriveSalesBookingPostingState } from "@/lib/services/sales-booking-posting-state";
-import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
+import { buildSalesBookingPaymentUrl, resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
 import { fetchBranding, brandingName } from "@/lib/branding/client";
 
 /* ─────────────────────── helpers ─────────────────────── */
@@ -295,11 +295,15 @@ function getCurrencySymbol(c: string) {
       if (!res.ok || !json.ok) {
         throw new Error(json?.error?.message || json?.error || t(lang, "sales.ster_err_transfer_payment", "Failed to process transfer payment."));
       }
-      setTransferSuccess("✅ Booking Transfer successfully posted! Supplier ledger and inventory balances have been automatically updated.");
+      if (paymentRoute.paymentKind === "invoice" || paymentRoute.paymentKind === "advance") {
+        window.location.href = buildSalesBookingPaymentUrl(paymentRoute, json.data?.salesOrderNo || d.salesBookingOrderNumber || "");
+        return;
+      }
+      setTransferSuccess(t(lang, "sales.transferred_status_word", "Transferred"));
       
       setReportData((prev: any) => ({
         ...prev,
-        ledger_posting_status: "posted",
+        ledger_posting_status: json.data?.ledgerPostingStatus ?? prev?.ledger_posting_status,
         payment_status: json.data?.paymentStatus || "pending",
         payment_kind: json.data?.paymentKind || paymentRoute.paymentKind,
         advance_paid: 0,
