@@ -26,7 +26,7 @@ export function SalesBookingCurrencyFields({ form, lang, onChange, readOnly = fa
   const displayRate = rate.ok ? (rate.operator === "/" ? "÷ " : "× ") + rate.rate : "—";
 
   return (
-    <div className={`grid ${goods ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-3"} gap-2 rounded-lg border border-indigo-100 bg-indigo-50/70 p-2 dark:border-indigo-900 dark:bg-indigo-950/40`}>
+    <div className={`grid ${goods ? "grid-cols-2" : "grid-cols-1"} gap-2 rounded-lg border border-indigo-100 bg-indigo-50/70 p-2 dark:border-indigo-900 dark:bg-indigo-950/40`}>
       {goods && (
         <CurrencySelect title={tr("Purchase Currency")} value={form.goodsPurchaseCurrency || purchase}
           disabled={readOnly} onChange={value => onChange("goodsPurchaseCurrency", value)} />
@@ -43,9 +43,9 @@ export function SalesBookingCurrencyFields({ form, lang, onChange, readOnly = fa
           <label htmlFor="sales-booking-exchange-rate" className={label}>{tr("Exchange Rate")}</label>
           <div className="mt-1 flex gap-1" dir="ltr">
             <input id="sales-booking-exchange-rate" type="number" inputMode="decimal" min="0.00000001" step="any"
-              className={field} value={rate.sameCurrency ? 1 : form.exchangeRate ?? ""} readOnly={readOnly || rate.sameCurrency}
+              className={`${field} flex-1`} value={rate.sameCurrency ? 1 : form.exchangeRate ?? ""} readOnly={readOnly || rate.sameCurrency}
               onChange={event => onChange("exchangeRate", event.target.value === "" ? "" : Number(event.target.value))} />
-            <select aria-label={tr("Exchange Rate Type")} className={field + " w-10 shrink-0"} value={rate.sameCurrency ? "*" : form.operator || "*"}
+            <select aria-label={tr("Exchange Rate Type")} className={`${field} w-12 shrink-0 px-1`} value={rate.sameCurrency ? "*" : form.operator || "*"}
               disabled={readOnly || rate.sameCurrency} onChange={event => onChange("operator", event.target.value)}>
               <option value="*">×</option><option value="/">÷</option>
             </select>
@@ -66,11 +66,11 @@ export function SalesBookingCurrencyPreview({ form, lang, amount, goods = false,
   const { purchase, sales, rate, final } = getBookingCurrencies(form);
   const converted = amount == null ? null : convertedSalesAmount(amount, rate);
   const values = [
+    ["Purchase Currency", goods ? form.goodsPurchaseCurrency || purchase : purchase],
     ["Sales Currency", sales],
     ["Exchange Rate", rate.ok ? `${rate.operator === "/" ? "÷" : "×"} ${rate.rate}` : "—"],
     ["Final Currency", final],
   ];
-  if (goods) values.unshift(["Purchase Currency", form.goodsPurchaseCurrency || purchase]);
   if (converted != null) values.push(["Final Amount", `${final} ${converted.toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`]);
   return (
     <aside className={`sticky top-2 z-10 rounded-lg border border-indigo-100 bg-white p-2 shadow-sm dark:border-indigo-900 dark:bg-slate-900 ${className}`}>
