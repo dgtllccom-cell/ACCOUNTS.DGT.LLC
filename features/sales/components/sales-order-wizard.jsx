@@ -1685,6 +1685,7 @@ export function SalesOrderWizard({ session }) {
             orderTotal: soData.order_total ?? null,
             purchaseOrderId: soData.purchase_order_id || null,
             createdAt: soData.created_at || null,
+            updatedAt: soData.updated_at || null,
             billNo: loadedForm.billNo || "",
             originalCurrencyCode: soData.original_currency_code || null,
           });
@@ -1781,6 +1782,7 @@ export function SalesOrderWizard({ session }) {
       originalLanguage: ["en", "ur", "ar", "fa", "ps"].includes(document.documentElement.lang)
         ? document.documentElement.lang
         : "en",
+      expectedUpdatedAt: savedOrderId ? loadedOrderRow?.updatedAt || undefined : undefined,
       countryId: form.countryId || null,
       countryBranchId: form.countryBranchId || null,
       cityBranchId: form.cityBranchId || null,
@@ -1856,6 +1858,9 @@ export function SalesOrderWizard({ session }) {
       const returnedOrderNo = payload.data?.salesOrderNo || savedOrderNo || form.salesOrderNo;
       setSavedOrderId(returnedOrderId || "");
       setSavedOrderNo(returnedOrderNo);
+      if (payload.data?.order?.updated_at) {
+        setLoadedOrderRow(previous => ({ ...previous, updatedAt: payload.data.order.updated_at }));
+      }
       if (returnedOrderId && intake.draft) await intake.consume(String(returnedOrderId));
       setSaveMessage(`Successfully saved Sales Order: ${returnedOrderNo}.`);
       setRegisterRefreshKey((key) => key + 1);
@@ -1863,7 +1868,11 @@ export function SalesOrderWizard({ session }) {
       if (shouldClose) {
         setIsFormOpen(false);
         handleReset();
-        if (searchParams.get("id") || searchParams.get("salesOrderNo")) {
+        if (searchParams.get("salesOrderId")) {
+          router.push(searchParams.get("source") === "local"
+            ? "/dashboard/sales/new-sales-booking-order?source=local"
+            : "/dashboard/sales/new-sales-booking-order");
+        } else if (searchParams.get("id") || searchParams.get("salesOrderNo")) {
           router.push("/dashboard/sales/sales-booking-journal-report");
         }
       }

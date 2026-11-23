@@ -7,6 +7,7 @@
  *   - final billing / dispatch       → deducts the reservation once (reserved → sold / exported)
  * Orders that never touched a managed lot are untouched (no extra queries beyond a form_data check).
  */
+import type { TransactionSql } from "postgres";
 import { ApiClientError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import {
@@ -39,38 +40,40 @@ export function usesManagedLots(formData: any) {
   return extractManagedEntries(formData).entries.length > 0;
 }
 
-/** Make the order's reservations match its committed goods lines. */
-export async function reserveForOrder(o: {
+type OrderReservation = {
   salesOrderId: string;
   salesOrderNo: string | null;
   formData: any;
   previousFormData?: any;
   countryId: string | null;
   userId: string | null;
-}) {
+};
+
+export function usesStockReservations(formData: any) {
+  return usesManagedLots(formData) || journalSaleLinesOf(formData).length > 0;
+}
+
+/** Make the order's reservations match its committed goods lines in the caller's transaction. */
+export async function reserveForOrderInTransaction(tx: TransactionSql, o: OrderReservation) {
+  if (!usesStockReservations(o.formData) && !usesStockReservations(o.previousFormData)) return [];
   const next = extractManagedEntries(o.formData);
-  const hadManaged = o.previousFormData ? usesManagedLots(o.previousFormData) : false;
-  const hasJournal = journalSaleLinesOf(o.formData).length > 0;
-  const hadJournal = o.previousFormData ? journalSaleLinesOf(o.previousFormData).length > 0 : false;
-  if (next.entries.length === 0 && !hadManaged && !hasJournal && !hadJournal) return [];
-  // managed lots and Stock Journal lots are reserved in ONE transaction: a refusal of either saves nothing
-  const out = await withLocalPg((sql) =>
-    sql.begin(async (tx) => {
-      const reservations =
-        next.entries.length > 0 || hadManaged
-          ? await syncSaleReservations(tx, {
-              salesOrderId: o.salesOrderId,
-              salesOrderNo: o.salesOrderNo,
-              mode: next.mode,
-              countryId: o.countryId,
-              entries: next.entries,
-              userId: o.userId,
-            })
-          : [];
-      await syncJournalLinksForOrder(tx, { salesOrderId: o.salesOrderId, salesOrderNo: o.salesOrderNo, formData: o.formData });
-      return reservations;
-    }),
-  );
+  const reservations = next.entries.length > 0 || usesManagedLots(o.previousFormData)
+    ? await syncSaleReservations(tx, {
+        salesOrderId: o.salesOrderId,
+        salesOrderNo: o.salesOrderNo,
+        mode: next.mode,
+        countryId: o.countryId,
+        entries: next.entries,
+        userId: o.userId,
+      })
+    : [];
+  await syncJournalLinksForOrder(tx, { salesOrderId: o.salesOrderId, salesOrderNo: o.salesOrderNo, formData: o.formData });
+  return reservations;
+}
+
+export async function reserveForOrder(o: OrderReservation) {
+  if (!usesStockReservations(o.formData) && !usesStockReservations(o.previousFormData)) return [];
+  const out = await withLocalPg(sql => sql.begin(tx => reserveForOrderInTransaction(tx, o)));
   return out ?? [];
 }
 

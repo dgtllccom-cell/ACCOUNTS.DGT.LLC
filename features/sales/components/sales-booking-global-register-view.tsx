@@ -10,6 +10,8 @@ import {
   FileSpreadsheet,
   Printer,
   Eye,
+  MoreVertical,
+  Pencil,
   Search,
   RefreshCw,
   Sparkles,
@@ -25,7 +27,14 @@ import { cn } from "@/lib/utils";
 import { apiGet } from "@/lib/api/client";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { EntryMethodSelector } from "@/features/document-intelligence/components/entry-method-selector";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SalesOrderWizard } from "@/features/sales/components/sales-order-wizard.jsx";
+
+function nameAndCode(name?: string, code?: string) {
+  return [name, code].filter(value => value && value !== "-").join(" · ") || "—";
+}
 
 interface SalesBookingGlobalRegisterViewProps {
   session: any;
@@ -76,6 +85,7 @@ export function SalesBookingGlobalRegisterView({
   }, [modeParam, idParam, lotParam]);
 
   // Register data
+  const [reviewRow, setReviewRow] = useState<any>(null);
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
@@ -128,12 +138,13 @@ export function SalesBookingGlobalRegisterView({
 
   const isRowLocalSale = useCallback((r: any) => {
     const form = r?.form_data?.form || {};
-    const src = String(form.saleSource || "").toLowerCase();
-    const sm = String(form.saleMode || "").toLowerCase();
-    return src === "local" || sm === "local";
+    const src = String(form.saleSource || r?.form_data?.saleSource || "").toLowerCase();
+    const mode = String(form.saleMode || r?.form_data?.saleMode || "").toLowerCase();
+    return mode !== "export" && (src === "local" || mode === "local");
   }, []);
 
   const isRowTransferred = useCallback((r: any) => {
+    if (typeof r?.isTransferred === "boolean") return r.isTransferred;
     const form = r?.form_data?.form || {};
     const wf = r?.workflowState || r?.workflow_state || {};
     const st = String(r?.status || "").toLowerCase();
@@ -177,6 +188,16 @@ export function SalesBookingGlobalRegisterView({
           r.productName,
           r.goodsDescription,
           r.countryName,
+          r.countryCode,
+          r.countryMainBranchName,
+          r.countryMainBranchCode,
+          r.cityBranchName,
+          r.cityBranchCode,
+          r.purchaseAccountName,
+          r.purchaseAccountNumber,
+          r.superAdminSerialNo,
+          r.countrySerialNo,
+          r.branchSerialNo,
           r.branchName,
         ]
           .filter(Boolean)
@@ -204,9 +225,7 @@ export function SalesBookingGlobalRegisterView({
   // Summary metrics
   const summary = useMemo(() => {
     let totalBills = filteredRows.length;
-    let totalSales = 0;
-    let totalPaid = 0;
-    let totalRemaining = 0;
+    const money = new Map<string, { sales: number; paid: number; remaining: number }>();
     let completed = 0;
     let partial = 0;
     let pending = 0;
@@ -215,13 +234,17 @@ export function SalesBookingGlobalRegisterView({
     let totalNet = 0;
 
     filteredRows.forEach((r) => {
-      const amt = Number(r.totalSalesAmount || r.salesAmount || 0);
+      const amt = Number(r.finalAmount ?? 0);
       const paid = Number(r.paid_amount || 0);
       const rem = r.remaining_amount != null ? Number(r.remaining_amount) : Math.max(0, amt - paid);
 
-      totalSales += amt;
-      totalPaid += paid;
-      totalRemaining += rem;
+      if (r.finalCurrency) {
+        const entry = money.get(r.finalCurrency) ?? { sales: 0, paid: 0, remaining: 0 };
+        entry.sales += amt;
+        entry.paid += paid;
+        entry.remaining += rem;
+        money.set(r.finalCurrency, entry);
+      }
       totalQty += Number(r.quantity || 0);
       totalGross += Number(r.totalGrossWeight || r.totalWeight || 0);
       totalNet += Number(r.totalNetWeight || r.totalWeight || 0);
@@ -237,9 +260,7 @@ export function SalesBookingGlobalRegisterView({
 
     return {
       totalBills,
-      totalSales,
-      totalPaid,
-      totalRemaining,
+      money,
       completed,
       completedPct: totalBills > 0 ? ((completed / totalBills) * 100).toFixed(1) : "0.0",
       partial,
@@ -258,10 +279,10 @@ export function SalesBookingGlobalRegisterView({
       { country: string; currency: string; bills: number; salesAmount: number; paidAmount: number }
     >();
     filteredRows.forEach((r) => {
-      const rawCountry = String(r.countryName || "UAE").trim();
-      const country = rawCountry.toLowerCase().includes("united arab emirates") ? "UAE" : rawCountry;
-      const currency = String(r.finalCurrency || r.currency || "AED").toUpperCase();
-      const entry = map.get(country) || {
+      const country = r.countryName && r.countryName !== "-" ? r.countryName : "—";
+      const currency = r.finalCurrency || "—";
+      const key = `${country}:${currency}`;
+      const entry = map.get(key) || {
         country,
         currency,
         bills: 0,
@@ -269,15 +290,15 @@ export function SalesBookingGlobalRegisterView({
         paidAmount: 0,
       };
       entry.bills += 1;
-      entry.salesAmount += Number(r.finalAmount || r.totalSalesAmount || r.salesAmount || 0);
+      entry.salesAmount += Number(r.finalAmount ?? 0);
       entry.paidAmount += Number(r.paid_amount || 0);
-      map.set(country, entry);
+      map.set(key, entry);
     });
     return Array.from(map.values()).sort((a, b) => b.bills - a.bills);
   }, [filteredRows]);
 
   const fmt = (n: number) =>
-    Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    Number(n || 0).toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const formatDashDate = (val: any) => {
     if (!val) return "—";
@@ -318,6 +339,24 @@ export function SalesBookingGlobalRegisterView({
     setIsFormMode(true);
     router.push(nextUrl as any);
   };
+
+  const displayAmount = (amount: number | null | undefined, currency: string | null | undefined) =>
+    amount == null || !currency ? "—" : `${currency} ${fmt(amount)}`;
+  const purchaseAmountLabel = (row: any) => row.purchaseAmounts?.length
+    ? row.purchaseAmounts.map(({ amount, currency }: { amount: number; currency: string }) => displayAmount(amount, currency)).join(" / ")
+    : displayAmount(row.purchaseAmount, row.purchaseCurrency);
+  const purchaseAccountLabel = (row: any) => row.localPurchaseAccounts?.length
+    ? row.localPurchaseAccounts.map(({ name, code }: { name: string; code: string }) => nameAndCode(name, code)).join(" / ")
+    : nameAndCode(row.purchaseAccountName, row.purchaseAccountNumber);
+  const rateLabel = (row: any) => {
+    if (!(row.exchange_rate > 0) || !row.currency || !row.finalCurrency) return "—";
+    const rate = Number(row.exchange_rate).toLocaleString(lang, { maximumFractionDigits: 8 });
+    if (row.currency === row.finalCurrency) return rate;
+    const operator = row.exchangeRateOperator === "/" ? "÷" : "×";
+    return `${row.currency} ${operator} ${rate} → ${row.finalCurrency}`;
+  };
+  const combinedAmounts = (field: "sales" | "paid" | "remaining") =>
+    Array.from(summary.money, ([currency, amounts]) => <bdi key={currency} className="block">{displayAmount(amounts[field], currency)}</bdi>);
 
   const exitFormMode = () => {
     setIsFormMode(false);
@@ -618,15 +657,15 @@ export function SalesBookingGlobalRegisterView({
             </div>
             <div className="flex items-center justify-between">
               <span className="text-slate-500">{tr("Total Sales")}</span>
-              <span className="font-black text-blue-700 dark:text-blue-400">{fmt(summary.totalSales)}</span>
+              <span className="font-black text-blue-700 dark:text-blue-400">{combinedAmounts("sales")}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-slate-500">{tr("Total Paid")}</span>
-              <span className="font-bold text-emerald-700 dark:text-emerald-400">{fmt(summary.totalPaid)}</span>
+              <span className="font-bold text-emerald-700 dark:text-emerald-400">{combinedAmounts("paid")}</span>
             </div>
             <div className="mt-1.5 flex items-center justify-between rounded-lg bg-amber-50 px-2.5 py-1.5 dark:bg-amber-950/40">
               <span className="font-bold text-amber-900 dark:text-amber-300">{tr("Balance (Remaining)")}</span>
-              <span className="font-black text-amber-900 dark:text-amber-300">{fmt(summary.totalRemaining)}</span>
+              <span className="font-black text-amber-900 dark:text-amber-300">{combinedAmounts("remaining")}</span>
             </div>
           </div>
         </div>
@@ -693,7 +732,7 @@ export function SalesBookingGlobalRegisterView({
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {countryMetrics.map((cm) => (
-                    <tr key={cm.country}>
+                    <tr key={`${cm.country}:${cm.currency}`}>
                       <td className="py-1.5 font-bold">
                         {getCountryFlag(cm.country)} {cm.country}
                       </td>
@@ -710,6 +749,33 @@ export function SalesBookingGlobalRegisterView({
           )}
         </div>
       </div>
+
+      <Dialog open={Boolean(reviewRow)} onOpenChange={open => { if (!open) setReviewRow(null); }}>
+        {reviewRow && (
+          <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-h-[85dvh] w-[calc(100%-1.5rem)] overflow-y-auto rounded-xl">
+            <DialogTitle>{tr("Sales Booking Invoice")} · <bdi>{reviewRow.salesBookingOrderNumber}</bdi></DialogTitle>
+            <dl className="grid gap-2 text-sm">
+              {[
+                ["Customer", nameAndCode(reviewRow.customerName, reviewRow.customerAccountNumber)],
+                ["Sales Account", nameAndCode(reviewRow.salesAccountName, reviewRow.salesAccountNumber)],
+                ["Purchase Account", purchaseAccountLabel(reviewRow)],
+                ["Goods / Description", reviewRow.goodsDescription],
+                ["Quantity", reviewRow.quantity == null ? "—" : `${reviewRow.quantity} ${reviewRow.unit === "-" ? "" : reviewRow.unit}`],
+                ["Gross Weight", reviewRow.totalGrossWeight == null ? "—" : fmt(reviewRow.totalGrossWeight)],
+                ["Net Weight", reviewRow.totalNetWeight == null ? "—" : fmt(reviewRow.totalNetWeight)],
+                ["Purchase Amount", purchaseAmountLabel(reviewRow)],
+                ["Sales Amount", displayAmount(reviewRow.totalSalesAmount, reviewRow.currency)],
+                ["Exchange Rate", rateLabel(reviewRow)],
+                ["Final Amount", displayAmount(reviewRow.finalAmount, reviewRow.finalCurrency)],
+              ].map(([label, value]) => (
+                <div key={label} className="grid grid-cols-[2fr_3fr] gap-2">
+                  <dt className="font-bold">{tr(label)}</dt><dd className="break-words"><bdi>{value || "—"}</bdi></dd>
+                </div>
+              ))}
+            </dl>
+          </DialogContent>
+        )}
+      </Dialog>
 
       {/* 3. Main Register Table */}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -736,12 +802,12 @@ export function SalesBookingGlobalRegisterView({
               <tr>
                 <th className="px-3 py-2.5 text-center w-10">#</th>
                 <th className="px-3 py-2.5 text-start">{tr("BILL NO. / DATE")}</th>
-                <th className="px-3 py-2.5 text-start">{tr("LOCATION")}</th>
-                <th className="px-3 py-2.5 text-start">{tr("CUSTOMER / ACCOUNT")}</th>
+                <th className="px-3 py-2.5 text-start">{tr("Country / Main Branch / City Branch")}</th>
+                <th className="px-3 py-2.5 text-start">{tr("Customer / Sales & Purchase Accounts")}</th>
                 <th className="px-3 py-2.5 text-start">{tr("GOODS NAME (BRAND / SIZE)")}</th>
                 <th className="px-3 py-2.5 text-end">{tr("QTY (UNIT)")}</th>
                 <th className="px-3 py-2.5 text-end">{tr("WEIGHT (KG)")}</th>
-                <th className="px-3 py-2.5 text-end">{tr("SALES AMOUNT")}</th>
+                <th className="px-3 py-2.5 text-end">{tr("Amounts / Exchange Rate")}</th>
                 <th className="px-3 py-2.5 text-center">{tr("PAYMENT")}</th>
                 <th className="px-3 py-2.5 text-center">{tr("TRANSFER STATUS")}</th>
                 <th className="px-3 py-2.5 text-center">{tr("ACTIONS")}</th>
@@ -779,8 +845,7 @@ export function SalesBookingGlobalRegisterView({
                   const rowColorCls = transferred
                     ? "text-slate-900 dark:text-slate-100"
                     : "text-rose-700 dark:text-rose-400 bg-rose-50/30 dark:bg-rose-950/10";
-                  const salesAmt = Number(r.totalSalesAmount || r.salesAmount || 0);
-                  const finalAmt = Number(r.finalAmount || salesAmt);
+                  const salesAmt = r.totalSalesAmount ?? r.salesAmount;
                   const isLocal = isRowLocalSale(r);
 
                   return (
@@ -795,36 +860,47 @@ export function SalesBookingGlobalRegisterView({
                         {idx + 1}
                       </td>
                       <td className="px-3 py-2.5">
-                        <button
-                          type="button"
-                          onClick={() => openEditOrder(r.id)}
-                          className="font-mono text-xs font-black text-blue-700 hover:underline dark:text-blue-400 cursor-pointer block text-start"
-                        >
-                          {r.salesBookingOrderNumber || r.sales_order_no || "—"}
-                        </button>
-                        <div className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1.5">
-                          <span>{formatDashDate(r.salesDate || r.bookingDate || r.createdAt)}</span>
-                          {isLocal && (
-                            <span className="rounded bg-amber-100 px-1.5 py-0.2 text-[9px] font-black text-amber-800">
-                              LOCAL
-                            </span>
-                          )}
-                        </div>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button type="button" className="block whitespace-nowrap text-start font-mono text-xs font-black text-blue-700 hover:underline dark:text-blue-400">
+                              <bdi>{r.salesBookingOrderNumber || r.sales_order_no || "—"}</bdi>
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent dir={isRtl ? "rtl" : "ltr"} align="start" className="max-w-[calc(100vw-1rem)] space-y-2 p-3 text-xs">
+                            <div className="font-black">{tr("Bill serial numbers")}</div>
+                            <dl className="space-y-1.5">
+                              {[
+                                ["Super Admin", r.superAdminSerialNo],
+                                ["Country Admin", r.countrySerialNo],
+                                ["Country Main Branch", r.countryMainBranchSerialNo],
+                                ["City Branch", r.cityBranchSerialNo],
+                                ["Original bill number", r.systemBillNumber],
+                              ].map(([label, value]) => (
+                                <div key={label} className="flex justify-between gap-2">
+                                  <dt>{tr(label)}</dt><dd className="break-all text-end font-mono font-bold"><bdi>{value && value !== "-" ? value : "—"}</bdi></dd>
+                                </div>
+                              ))}
+                            </dl>
+                          </PopoverContent>
+                        </Popover>
+                        <div className="mt-0.5 whitespace-nowrap text-[10px] text-slate-500">{formatDashDate(r.salesDate || r.bookingDate || r.createdAt)}</div>
+                        <div className="text-[10px] font-bold">{isLocal ? tr("Local Sales") : (r.form_data?.form?.saleMode || r.form_data?.saleMode) === "export" ? tr("Export Sales") : tr("Sales Booking")}</div>
                       </td>
-                      <td className="px-3 py-2.5">
-                        <div className="font-bold">
-                          {getCountryFlag(r.countryName)} {r.countryName || "—"}
-                        </div>
-                        <div className="text-[10px] text-slate-500">
-                          {r.branchName || "—"}
-                          {r.cityName && r.cityName !== "-" ? ` · ${r.cityName}` : ""}
-                        </div>
+                      <td className="px-3 py-2.5 min-w-36">
+                        <div className="font-bold">{nameAndCode(r.countryName, r.countryCode)}</div>
+                        <div className="text-[10px] text-slate-500">{tr("Country Main Branch")} · <bdi>{nameAndCode(r.countryMainBranchName, r.countryMainBranchCode)}</bdi></div>
+                        <div className="text-[10px] text-slate-500">{tr("City Branch")} · <bdi>{nameAndCode(r.cityBranchName, r.cityBranchCode)}</bdi></div>
                       </td>
-                      <td className="px-3 py-2.5">
-                        <div className="font-bold">{r.customerName || "—"}</div>
-                        {r.salesAccountName && r.salesAccountName !== "-" && (
-                          <div className="text-[10px] text-slate-500">{r.salesAccountName}</div>
-                        )}
+                      <td className="px-3 py-2.5 min-w-36 max-w-52">
+                        {[
+                          ["Customer", r.customerName, r.customerAccountNumber],
+                          ["Sales Account", r.salesAccountName, r.salesAccountNumber],
+                          ["Purchase Account", purchaseAccountLabel(r), undefined],
+                        ].map(([label, name, code]) => (
+                          <div key={label} title={nameAndCode(name, code)} className="truncate text-[10px]">
+                            <span className="text-slate-500">{tr(label)} · </span><bdi className="font-bold">{nameAndCode(name, code)}</bdi>
+                          </div>
+                        ))}
                       </td>
                       <td className="px-3 py-2.5 max-w-[240px]">
                         <div className="font-bold truncate" title={r.productName || r.goodsDescription}>
@@ -837,24 +913,18 @@ export function SalesBookingGlobalRegisterView({
                         )}
                       </td>
                       <td className="px-3 py-2.5 text-end font-mono font-bold">
-                        {Number(r.quantity || 0).toLocaleString()}{" "}
-                        <span className="text-[10px] font-normal text-slate-500">{r.unit || ""}</span>
+                        {r.quantity == null ? "—" : Number(r.quantity).toLocaleString(lang)}{" "}
+                        <span className="text-[10px] font-normal text-slate-500">{r.unit !== "-" ? r.unit : ""}</span>
                       </td>
-                      <td className="px-3 py-2.5 text-end font-mono">
-                        <div className="font-bold">{fmt(Number(r.totalGrossWeight || r.totalWeight || 0))}</div>
-                        <div className="text-[10px] text-slate-500">
-                          Net: {fmt(Number(r.totalNetWeight || r.totalWeight || 0))}
-                        </div>
+                      <td className="px-3 py-2.5 text-end font-mono whitespace-nowrap">
+                        <div>{tr("Gross Weight")} · <bdi>{r.totalGrossWeight == null ? "—" : fmt(r.totalGrossWeight)}</bdi></div>
+                        <div className="text-[10px] text-slate-500">{tr("Net Weight")} · <bdi>{r.totalNetWeight == null ? "—" : fmt(r.totalNetWeight)}</bdi></div>
                       </td>
-                      <td className="px-3 py-2.5 text-end font-mono">
-                        <div className="font-black">
-                          {r.currency || "USD"} {fmt(salesAmt)}
-                        </div>
-                        {r.finalCurrency && r.finalCurrency !== r.currency && (
-                          <div className="text-[10px] text-slate-500">
-                            {r.finalCurrency} {fmt(finalAmt)}
-                          </div>
-                        )}
+                      <td className="px-3 py-2.5 text-end whitespace-nowrap text-[10px]">
+                        <div>{tr("Purchase Amount")} · <bdi className="font-mono">{purchaseAmountLabel(r)}</bdi></div>
+                        <div>{tr("Sales Amount")} · <bdi className="font-mono">{displayAmount(salesAmt, r.currency)}</bdi></div>
+                        <div>{tr("Exchange Rate")} · <bdi dir="ltr" className="font-mono">{rateLabel(r)}</bdi></div>
+                        <div className="font-black">{tr("Final Amount")} · <bdi className="font-mono">{displayAmount(r.finalAmount, r.finalCurrency)}</bdi></div>
                       </td>
                       <td className="px-3 py-2.5 text-center">
                         <span className="inline-block rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
@@ -876,17 +946,23 @@ export function SalesBookingGlobalRegisterView({
                       </td>
                       <td className="px-3 py-2.5 text-center">
                         <div className="inline-flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => openEditOrder(r.id)}
-                            title={tr("Open / Edit")}
-                            className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
+                          {r.canEdit === true && (
+                            <button type="button" onClick={() => openEditOrder(r.id)} className="inline-flex min-h-8 items-center gap-1 rounded-md border border-slate-200 px-2 font-bold hover:bg-blue-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                              <Pencil className="h-3.5 w-3.5" aria-hidden="true" />{tr("Edit")}
+                            </button>
+                          )}
+                          <DropdownMenu.Root dir={isRtl ? "rtl" : "ltr"}>
+                            <DropdownMenu.Trigger asChild>
+                              <button type="button" aria-label={tr("Actions")} className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 hover:bg-blue-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                                <MoreVertical className="h-4 w-4" aria-hidden="true" />
+                              </button>
+                            </DropdownMenu.Trigger>
+                            <DropdownMenu.Portal>
+                              <DropdownMenu.Content style={{ direction: isRtl ? "rtl" : "ltr" }} align="end" sideOffset={4} className="z-50 min-w-36 rounded-lg border bg-background p-1 text-xs shadow-lg">
+                                <DropdownMenu.Item onSelect={() => setReviewRow(r)} className="flex cursor-pointer items-center gap-2 rounded px-2 py-2 outline-none data-[highlighted]:bg-accent">
+                                  <Eye className="h-3.5 w-3.5" aria-hidden="true" />{tr("View")}
+                                </DropdownMenu.Item>
+                                <DropdownMenu.Item onSelect={() => {
                               openUniversalPrintReport({
                                 title: tr("Sales Booking Invoice"),
                                 subtitle: `${tr("SO Ref")}: ${r.salesBookingOrderNumber || "-"}`,
@@ -909,7 +985,7 @@ export function SalesBookingGlobalRegisterView({
                                   departmentOrBranch: r.branchName || "-",
                                 },
                                 kpis: [
-                                  { label: tr("Total Amount"), value: salesAmt, color: "blue" },
+                                  { label: tr("Total Amount"), value: displayAmount(salesAmt, r.currency), color: "blue" },
                                   { label: tr("Quantity"), value: `${Number(r.quantity || 0).toLocaleString()} ${r.unit || ""}`, color: "emerald" },
                                   { label: tr("Status"), value: r.status || "PENDING", color: "amber" },
                                 ],
@@ -922,17 +998,17 @@ export function SalesBookingGlobalRegisterView({
                                   {
                                     item: r.goodsDescription || r.productName || "-",
                                     qty: `${Number(r.quantity || 0).toLocaleString()} ${r.unit || ""}`,
-                                    amount: salesAmt,
+                                    amount: salesAmt ?? "",
                                   },
                                 ],
                                 autoPrint: false,
                               });
-                            }}
-                            title={tr("Print Invoice")}
-                            className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
-                          >
-                            <Printer className="h-3.5 w-3.5" />
-                          </button>
+                                }} className="flex cursor-pointer items-center gap-2 rounded px-2 py-2 outline-none data-[highlighted]:bg-accent">
+                                  <Printer className="h-3.5 w-3.5" aria-hidden="true" />{tr("Print Invoice")}
+                                </DropdownMenu.Item>
+                              </DropdownMenu.Content>
+                            </DropdownMenu.Portal>
+                          </DropdownMenu.Root>
                         </div>
                       </td>
                     </tr>
@@ -953,7 +1029,12 @@ export function SalesBookingGlobalRegisterView({
                     {fmt(summary.totalGross)}
                   </td>
                   <td className="px-3 py-2.5 text-end font-mono">
-                    {fmt(summary.totalSales)}
+                    {Object.entries(sortedRows.reduce<Record<string, number>>((totals, row) => {
+                      if (row.currency && row.totalSalesAmount != null) {
+                        totals[row.currency] = (totals[row.currency] ?? 0) + row.totalSalesAmount;
+                      }
+                      return totals;
+                    }, {})).map(([currency, total]) => <bdi key={currency} className="block">{displayAmount(total, currency)}</bdi>)}
                   </td>
                   <td colSpan={3} />
                 </tr>

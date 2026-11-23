@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { releaseForOrder, reserveForOrder } from "@/lib/sales/managed-lot-sales";
+import { releaseForOrder, reserveForOrderInTransaction, usesStockReservations } from "@/lib/sales/managed-lot-sales";
 import { z } from "zod";
-import { apiOk, handleApiError } from "@/lib/api/response";
+import { ApiClientError, apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { t } from "@/lib/i18n/ui";
@@ -13,6 +13,8 @@ import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterpr
 import { salesOrderTranslationFields } from "@/lib/i18n/sales-order-translations";
 import { assertBookingCurrency, assertSalesWithinStock } from "@/lib/sales/booking-rules";
 import { trustedTranslationMap } from "@/lib/i18n/localize-records";
+import { isSalesBookingEditLocked } from "@/lib/sales/booking-edit-state";
+import { validateAccountCountryScope, validateLedgerCountryScope } from "@/lib/api/country-scope-validator";
 import { getDbUrl, withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 
 const paramsSchema = z.object({
@@ -20,6 +22,7 @@ const paramsSchema = z.object({
 });
 
 const salesOrderUpdateSchema = z.object({
+  expectedUpdatedAt: z.string().datetime({ offset: true }).optional(),
   countryId: uuidSchema.optional(),
   countryBranchId: uuidSchema.optional(),
   cityBranchId: uuidSchema.optional(),
@@ -62,7 +65,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const params = paramsSchema.parse(await context.params);
 
     const supabase = await createApiSupabaseClient();
-    const row = await requireSupabaseData(
+    const viaPgOrder = await withReadPg(async sql => {
+      const [order] = await sql`SELECT * FROM public.sales_orders WHERE id = ${params.id} AND deleted_at IS NULL`;
+      return order ?? null;
+    });
+    const row = viaPgOrder ?? await requireSupabaseData(
       supabase
         .from("sales_orders")
         .select("*")
@@ -124,7 +131,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const supabase = (await createApiSupabaseClient()) as any;
     const viaPgBefore = getDbUrl()
       ? await withReadPg(async (sql) => {
-          const rows = await sql`select * from public.sales_orders where id = ${params.id} and deleted_at is null limit 1`;
+          const rows = await sql`select *, updated_at::text as edit_version from public.sales_orders where id = ${params.id} and deleted_at is null limit 1`;
           return rows?.[0] ?? null;
         })
       : null;
@@ -143,19 +150,42 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       return NextResponse.json({ ok: false, error: { message: t(session.preferredLanguage, "so.not_found", "Sales order not found") } }, { status: 404 });
     }
 
-    // Sales Order becomes read-only after transfer
-    const currentStatus = String((before as any).sales_status || "").toLowerCase();
-    if (currentStatus === "transferred" || currentStatus === "finalized" || currentStatus === "completed") {
-      return NextResponse.json({ ok: false, error: { message: t(session.preferredLanguage, "so.already_transferred_readonly", "This Sales Order has already been transferred and is read-only.") } }, { status: 400 });
-    }
-
     authorizeApiScope(session, {
       resource: "sales",
       action: "update",
-      countryId: (before as any).country_id,
-      countryBranchId: (before as any).country_branch_id,
-      cityBranchId: (before as any).city_branch_id
+      countryId: before.country_id,
+      countryBranchId: before.country_branch_id,
+      cityBranchId: before.city_branch_id
     });
+
+    const lockedError = () => new ApiClientError(
+      t(session.preferredLanguage, "so.already_transferred_readonly", "This Sales Order has already been transferred and is read-only."),
+      { status: 409, code: "SALES_BOOKING_EDIT_LOCKED" }
+    );
+    const versionError = () => new ApiClientError("This sales booking has changed. Reload it before editing.", {
+      status: 409, code: "SALES_BOOKING_CHANGED"
+    });
+    if (isSalesBookingEditLocked(before)) throw lockedError();
+    if (body.expectedUpdatedAt && Date.parse(body.expectedUpdatedAt) !== new Date(before.updated_at).getTime()) {
+      throw versionError();
+    }
+    if (body.salesOrderNo !== undefined && body.salesOrderNo !== before.sales_order_no) {
+      throw new ApiClientError("The original sales booking number cannot be changed.", { status: 400, code: "SALES_BILL_NUMBER_IMMUTABLE" });
+    }
+
+    const nextCountryId = body.countryId ?? before.country_id;
+    authorizeApiScope(session, {
+      resource: "sales", action: "update", countryId: nextCountryId,
+      countryBranchId: body.countryBranchId ?? before.country_branch_id,
+      cityBranchId: body.cityBranchId ?? before.city_branch_id,
+    });
+    const nextAccountId = body.customerAccountId === undefined ? before.customer_account_id : body.customerAccountId;
+    const nextLedgerId = body.customerLedgerId === undefined ? before.customer_ledger_id : body.customerLedgerId;
+    if (nextCountryId !== before.country_id || nextAccountId !== before.customer_account_id || nextLedgerId !== before.customer_ledger_id) {
+      const admin = createSupabaseAdminClient();
+      if (nextAccountId) await validateAccountCountryScope(session, nextAccountId, nextCountryId, admin);
+      if (nextLedgerId) await validateLedgerCountryScope(session, nextLedgerId, nextCountryId, admin);
+    }
 
     if ((body as any).formData) {
       assertBookingCurrency((body as any).formData);
@@ -175,7 +205,6 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (body.customerAccountId !== undefined) patch.customer_account_id = body.customerAccountId;
     if (body.customerLedgerId !== undefined) patch.customer_ledger_id = body.customerLedgerId;
     if (body.purchaseOrderId !== undefined) patch.purchase_order_id = body.purchaseOrderId;
-    if (body.salesOrderNo !== undefined) patch.sales_order_no = body.salesOrderNo;
     if (body.salesContractNo !== undefined) patch.sales_contract_no = body.salesContractNo;
     if (body.orderDate !== undefined) patch.order_date = body.orderDate;
     if (body.customerName !== undefined) patch.customer_name = body.customerName;
@@ -185,12 +214,15 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (body.productSummary !== undefined) patch.product_summary = body.productSummary;
     if (body.quantity !== undefined) patch.quantity = body.quantity;
     if (body.totalWeight !== undefined) patch.total_weight = body.totalWeight;
-    if (body.currencyCode !== undefined) patch.currency_code = body.currencyCode;
+    if (body.currencyCode !== undefined) patch.original_currency_code = body.currencyCode;
     if (body.exchangeRate !== undefined) patch.exchange_rate = body.exchangeRate;
     if (body.orderTotal !== undefined) patch.order_total = body.orderTotal;
     if (body.totalGoodsOriginal !== undefined) patch.total_goods_original = body.totalGoodsOriginal;
     if (body.totalGoodsLocal !== undefined) patch.total_goods_local = body.totalGoodsLocal;
     if (body.totalGoodsUsd !== undefined) patch.total_goods_usd = body.totalGoodsUsd;
+    if (body.totalGoodsLocal !== undefined || body.orderTotal !== undefined) {
+      patch.base_currency_amount = body.totalGoodsLocal ?? body.orderTotal;
+    }
     if (body.paidAmount !== undefined) patch.paid_amount = body.paidAmount;
     if (body.remainingAmount !== undefined) patch.remaining_amount = body.remainingAmount;
     
@@ -247,47 +279,52 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       };
     }
 
-    // Keep the stock reservation in step with the committed goods lines BEFORE saving the new form data, so a
-    // line that cannot be reserved (not enough available quantity) rejects the save instead of overselling.
-    if (patch.form_data !== undefined && Array.isArray((patch.form_data as any)?.goodsEntries)) {
-      await reserveForOrder({
-        salesOrderId: params.id,
-        salesOrderNo: (patch.sales_order_no as string | undefined) ?? (before as any).sales_order_no ?? null,
-        formData: patch.form_data,
-        previousFormData: (before as any).form_data,
-        countryId: (patch.country_id as string | undefined) ?? (before as any).country_id ?? null,
-        userId: session.userId,
-      });
-    }
-
-    // Direct-pg fast path first (same technique already used for Purchase's
-    // equivalent save endpoint — measured 56-60s through the Supabase client
-    // in this environment vs a few seconds direct; RETURNING * preserves the
-    // exact same "full updated row" shape the Supabase .select().single() call
-    // below produced, since `updated` is both returned to the client and used
-    // in the audit log's `after` field). Falls back to the Supabase client
-    // when DATABASE_URL/local pg isn't available — no behavior change.
-    let updated: any;
-    const viaPgUpdate = await withLocalPg(async (sql) => {
-      const rows = await sql`UPDATE public.sales_orders SET ${sql(patch as any)} WHERE id = ${params.id} RETURNING *`;
-      return rows[0] ?? null;
-    });
-    if (viaPgUpdate) {
-      updated = viaPgUpdate;
-    } else {
+    const viaPgUpdate = await withLocalPg(db => db.begin(async tx => {
+      const [current] = await tx`SELECT *, updated_at::text AS edit_version FROM public.sales_orders
+        WHERE id = ${params.id} AND deleted_at IS NULL FOR UPDATE`;
+      if (!current || current.edit_version !== before.edit_version) throw versionError();
+      if (isSalesBookingEditLocked(current)) throw lockedError();
+      const [dependencies] = await tx`
+        SELECT
+          EXISTS (SELECT 1 FROM public.sales_order_payments WHERE sales_order_id = ${params.id} AND deleted_at IS NULL)
+          OR EXISTS (SELECT 1 FROM public.journal_stock_transfers WHERE sales_order_id = ${params.id} AND deleted_at IS NULL AND status = 'issued')
+          OR EXISTS (SELECT 1 FROM public.goods_transfers WHERE sales_order_id = ${params.id} AND purpose IN ('local_sale', 'export_customer') AND status = 'completed')
+          AS locked`;
+      if (dependencies.locked) throw lockedError();
+      if (patch.form_data !== undefined || nextCountryId !== before.country_id) {
+        await reserveForOrderInTransaction(tx, {
+          salesOrderId: params.id,
+          salesOrderNo: current.sales_order_no,
+          formData: patch.form_data ?? current.form_data,
+          previousFormData: current.form_data,
+          countryId: nextCountryId,
+          userId: session.userId,
+        });
+      }
+      const [saved] = await tx`UPDATE public.sales_orders SET ${tx(patch)} WHERE id = ${params.id} RETURNING *`;
+      return saved;
+    }));
+    let updated: any = viaPgUpdate;
+    if (!updated) {
+      if (usesStockReservations(before.form_data) || usesStockReservations(patch.form_data)) {
+        throw new ApiClientError("The stock reservation service is unavailable.", { status: 503, code: "STOCK_RESERVATION_UNAVAILABLE" });
+      }
       const { data, error } = await supabase
         .from("sales_orders")
         .update(patch)
         .eq("id", params.id)
+        .eq("updated_at", before.updated_at)
+        .is("deleted_at", null)
         .select()
-        .single();
+        .maybeSingle();
       if (error) throw error;
+      if (!data) throw versionError();
       updated = data;
     }
 
     if (body.formData !== undefined || body.customerName !== undefined || body.productSummary !== undefined) {
       try {
-      const effectiveFormData = body.formData ?? (before as any).form_data ?? {};
+      const effectiveFormData = updated.form_data ?? {};
       const originalLanguage = body.originalLanguage ?? (effectiveFormData as any).translationOriginalLanguage ?? "en";
       const fields = salesOrderTranslationFields({
         formData: effectiveFormData,
@@ -307,7 +344,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         translations: Object.fromEntries(translationResults.map((result) => [result.fieldName, result.translations])),
         translationStatus,
         translationOriginalLanguage: originalLanguage
-      } }).eq("id", params.id);
+      } }).eq("id", params.id).eq("updated_at", updated.updated_at);
       } catch (translationError) {
         console.warn("Sales-order translations remain pending after update persistence failure:", translationError);
       }

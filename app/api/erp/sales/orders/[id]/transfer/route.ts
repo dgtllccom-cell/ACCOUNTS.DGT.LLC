@@ -1,3 +1,4 @@
+import { billFxOperator, checkPostingAgainstSaved, effectiveFxRate } from "@/lib/purchases/fx-operator";
 import { NextRequest } from "next/server";
 import { issueForSalesOrder } from "@/lib/services/stock-journal-service";
 import { assertReservationsReady, usesManagedLots } from "@/lib/sales/managed-lot-sales";
@@ -89,9 +90,9 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     // Supabase-client read below silently returns null even for orders that exist. Try a
     // direct-Postgres read first (bypasses RLS via DATABASE_URL); fall back to the Supabase-client
     // path only when DATABASE_URL isn't configured.
-    const orderColumns = "id, country_id, country_branch_id, city_branch_id, order_total, total_goods_original, total_goods_local, total_goods_usd, currency_code, exchange_rate, sales_order_no, sales_contract_no, form_data, ledger_posting_status, payment_status, is_edited_since_transfer";
+    const orderColumns = "id, country_id, country_branch_id, city_branch_id, order_total, total_goods_original, total_goods_local, total_goods_usd, currency_code, original_currency_code, exchange_rate, sales_order_no, sales_contract_no, form_data, ledger_posting_status, payment_status, is_edited_since_transfer, updated_at";
     const viaPgOrder = await withLocalPg(async (sql) => {
-      const rows = await sql`select ${sql.unsafe(orderColumns)} from sales_orders where id = ${params.id} and deleted_at is null limit 1`;
+      const rows = await sql`select ${sql.unsafe(orderColumns)}, updated_at::text as edit_version from sales_orders where id = ${params.id} and deleted_at is null limit 1`;
       return rows[0] ?? null;
     });
     const order = viaPgOrder ?? await requireSupabaseData(
@@ -130,25 +131,22 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       throw new ApiClientError("This booking has already been transferred to Sales Transfer Payment and cannot be transferred again.", { status: 409, code: "ALREADY_TRANSFERRED" });
     }
 
-    // post_sales_order_payment expects p_amount in the order's OWN currency
-    // (currency_code) and converts to the base currency exactly once. order_total /
-    // totals.grandFinal are already converted to the local/base currency by the booking
-    // wizard — passing either as p_amount here, alongside currency_code (still the
-    // ORIGINAL currency), would double the conversion (the same bug already fixed on
-    // the Purchase Order side). total_goods_original/total_goods_usd hold the true
-    // original-currency total the wizard saves alongside order_total.
-    const rawOriginalTotal = String(orderRow.total_goods_original || orderRow.total_goods_usd || "").replace(/,/g, "");
-    let totalSalesAmount = Number(rawOriginalTotal);
-    if (!Number.isFinite(totalSalesAmount) || totalSalesAmount <= 0) {
-      // Legacy order predating total_goods_original: un-convert order_total by the
-      // order's own exchange rate.
-      const rawTotal = String(orderRow.order_total || formData.totals?.grandFinal || "0").replace(/,/g, "");
-      const legacyTotal = Number(rawTotal);
-      const legacyRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
-      totalSalesAmount = legacyRate > 1 ? legacyTotal / legacyRate : legacyTotal;
-    }
+    // Pass the saved original amount and its effective multiplier exactly once.
+    const originalCurrency = String(orderRow.original_currency_code || form.salesCurrency || form.currencyType || orderRow.currency_code || "USD").trim().split(/\s+/)[0].toUpperCase();
+    const baseCurrency = String(form.secondaryCurrency || orderRow.currency_code || originalCurrency).trim().split(/\s+/)[0].toUpperCase();
+    const savedRate = Number(orderRow.exchange_rate || form.exchangeRate || 1);
+    const operator = billFxOperator(formData);
+    const postingRate = originalCurrency === baseCurrency ? 1 : effectiveFxRate(savedRate, operator);
+    const savedBase = Number(orderRow.order_total ?? formData.totals?.grandFinal);
+    const savedOriginal = Number(orderRow.total_goods_original || formData.totals?.grandPrimaryFinal || orderRow.total_goods_usd);
+    const totalSalesAmount = savedOriginal > 0 ? savedOriginal : savedBase / postingRate;
     if (!Number.isFinite(totalSalesAmount) || totalSalesAmount <= 0) {
       throw new Error("Sales order total must be a valid number greater than zero to transfer.");
+    }
+    if (!checkPostingAgainstSaved({ original: totalSalesAmount, rate: postingRate, op: "*", savedBase }).ok) {
+      throw new ApiClientError("The saved sales amount and exchange rate do not match the final amount.", {
+        status: 409, code: "SALES_BOOKING_FX_MISMATCH"
+      });
     }
 
     // The Sales wizard's own form state names this field customerAccountNo, not
@@ -217,7 +215,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         countryId: orderRow.country_id,
         countryBranchId: orderRow.country_branch_id,
         cityBranchId: orderRow.city_branch_id,
-        currencyCode: orderRow.currency_code || form.currencyType || "USD",
+        currencyCode: originalCurrency,
         exchangeRate: orderRow.exchange_rate || form.exchangeRate || 1,
         amount: totalSalesAmount,
         purchaseAccountNo: form.purchaseAccountNo,
@@ -270,7 +268,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const postingNarration = [
       goodsAuditRemark,
       body?.remarks?.trim() ? "Notes: " + body.remarks.trim() : null,
-      "Transfer Currency: " + (orderRow.currency_code || form.currencyType || "USD"),
+      "Transfer Currency: " + originalCurrency,
       "Exchange Rate: " + (orderRow.exchange_rate || form.exchangeRate || 1),
       "Amount: " + totalSalesAmount
     ].filter(Boolean).join(" | ");
@@ -283,10 +281,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const claimRows = await withLocalPg(async (sql) => {
       const rows = await sql`
         update sales_orders set
+          updated_at = now(),
           form_data = coalesce(form_data, '{}'::jsonb) || jsonb_build_object(
             'workflow', coalesce(form_data->'workflow', '{}'::jsonb) || jsonb_build_object('transferClaimAt', now()::text)
           )
         where id = ${params.id} and deleted_at is null
+          and updated_at::text = ${orderRow.edit_version}
           and (
             is_edited_since_transfer is true
             or (
@@ -321,8 +321,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
           ${paymentRoute.paymentKind}::text,
           ${new Date().toISOString().slice(0, 10)}::date,
           ${totalSalesAmount}::numeric,
-          ${String(orderRow.currency_code || form.currencyType || "USD")}::text,
-          ${Number(orderRow.exchange_rate || form.exchangeRate || 1)}::numeric,
+          ${originalCurrency}::text,
+          ${postingRate}::numeric,
           ${debitLedgerId}::uuid,
           ${creditLedgerId}::uuid,
           ${referenceNo}::text,
