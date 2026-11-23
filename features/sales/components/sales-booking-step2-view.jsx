@@ -13,6 +13,8 @@ import {
   CheckCircle2,
   Layers
 } from "lucide-react";
+import { SalesBookingCurrencyFields, SalesBookingCurrencyPreview } from "./sales-booking-currencies";
+import { convertedSalesAmount, getBookingCurrencies } from "@/lib/sales/booking-currencies";
 import { t as tUi } from "@/lib/i18n/ui";
 import { Button } from "@/components/ui/button";
 import { SalesBookingUpperCards } from "./sales-booking-upper-cards";
@@ -65,6 +67,7 @@ export function SalesBookingStep2({
   const totalBoxes = Number(form.totalBoxes || 0);
   const availableQty = Number(form.lotAvailableQty || 0);
   const selectedLotRef = form.stockLotNo || "";
+  const currencies = getBookingCurrencies(form);
 
   // Validate stock: check if quantity exceeds available balance
   const isOverStock = selectedLotRef && availableQty > 0 && qtyNo > availableQty;
@@ -182,8 +185,11 @@ export function SalesBookingStep2({
     const calculatedGross = qtyNo * qtyKgs;
     const calculatedNet = Math.max(0, calculatedGross - qtyNo * emptyKgs);
     const calculatedAmount = qtyNo * unitPrice;
-    const exRate = Number(form.exchangeRate) || 1;
-    const finalAmt = (form.operator === "/" ? calculatedAmount / exRate : calculatedAmount * exRate);
+    const finalAmt = convertedSalesAmount(calculatedAmount, currencies.rate);
+    if (finalAmt === null && currencies.sales && currencies.final) {
+      setStockError(tUi(lang, "purchase.exchange_rate", "Exchange Rate"));
+      return;
+    }
 
     const newItem = {
       goodsId: form.goodsId || null,
@@ -209,8 +215,13 @@ export function SalesBookingStep2({
       packType: packType,
       totalBoxes: totalBoxes,
       totalAmount: calculatedAmount,
-      finalAmount: finalAmt,
-      exchangeRate: exRate,
+      finalAmount: finalAmt ?? calculatedAmount,
+      exchangeRate: currencies.rate.ok ? currencies.rate.rate : 1,
+      op: currencies.rate.operator,
+      purchaseCurrency: form.goodsPurchaseCurrency || currencies.purchase,
+      currencyType: currencies.sales,
+      salesCurrency: currencies.sales,
+      secondaryCurrency: currencies.final,
       grossWeight: calculatedGross,
       netWeight: calculatedNet,
       origin: form.origin || "",
@@ -241,7 +252,7 @@ export function SalesBookingStep2({
       goodsId: "", goodsName: "", hsCode: "", stockLotNo: "", allotName: "", selectedLotId: "", managedLotId: "", journalTransferId: "",
       brand: "", size: "", grade: "", qualityReport: "", origin: "", qtyNo: 0, coursePrice: 0, freightIca: 0,
       qtyKgs: 0, emptyKgs: 0, totalBoxes: 0, packType: "", itemType: "", stackWeight: "", lotAvailableQty: 0,
-      warehouseId: "", warehouseName: ""
+      warehouseId: "", warehouseName: "", goodsPurchaseCurrency: ""
     }));
     setStockError("");
   };
@@ -255,6 +266,7 @@ export function SalesBookingStep2({
       goodsName: item.goodsName || item.productName,
       hsCode: item.hsCode,
       stockLotNo: item.itemId || item.lotNo,
+      goodsPurchaseCurrency: item.purchaseCurrency || "",
       journalTransferId: item.journalTransferId || "",
       brand: item.brand,
       size: item.size,
@@ -280,6 +292,7 @@ export function SalesBookingStep2({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start animate-in fade-in duration-200">
+      <SalesBookingCurrencyPreview form={form} lang={lang} goods amount={qtyNo * unitPrice} className="ms-auto w-full max-w-sm lg:hidden" />
       {/* LEFT COLUMN: GOODS ENTRY DETAILS FORM */}
       <div className="lg:col-span-5 min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
@@ -511,6 +524,9 @@ export function SalesBookingStep2({
           </div>
         </div>
 
+        <SalesBookingCurrencyFields form={form} lang={lang} goods
+          onChange={(key, value) => setForm(previous => ({ ...previous, [key]: value }))} />
+
         {/* Unit Price & Freight / ICA */}
         <div className="grid grid-cols-2 gap-2.5">
           <div className="space-y-1">
@@ -656,6 +672,7 @@ export function SalesBookingStep2({
 
       {/* RIGHT COLUMN: CUSTOMER ACCOUNT (DR) + GOODS ITEMS TABLE */}
       <div className="lg:col-span-7 min-w-0 space-y-4">
+        <SalesBookingCurrencyPreview form={form} lang={lang} goods amount={qtyNo * unitPrice} className="hidden ms-auto w-44 lg:block" />
         {/* Customer Account (DR) & Company Details Card */}
         <SalesBookingUpperCards
           form={form}
