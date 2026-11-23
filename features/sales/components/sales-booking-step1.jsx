@@ -165,10 +165,10 @@ export function SalesBookingStep1({
   ];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(290px,340px)] gap-3 items-start animate-in fade-in duration-200">
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(290px,340px)_minmax(0,1fr)] gap-3 items-start animate-in fade-in duration-200">
       <SalesBookingCurrencyPreview form={form} lang={lang} className="ms-auto w-full max-w-sm lg:hidden" />
       {/* Booking form */}
-      <div className="lg:col-start-2 lg:row-start-1 min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3.5">
+      <div className="lg:col-start-1 lg:row-start-1 min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3.5">
         <div className="border-b border-slate-100 dark:border-slate-800 pb-2">
           <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <Building2 className="w-4 h-4 text-blue-600" />
@@ -429,7 +429,7 @@ export function SalesBookingStep1({
         </Button>
       </div>
 
-      <div className="lg:col-start-1 lg:row-start-1 min-w-0 space-y-3">
+      <div className="lg:col-start-2 lg:row-start-1 min-w-0 space-y-3">
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
           {cards.map(({ title, Icon, color, rows }) => (
             <section key={title} className={`min-w-0 rounded-xl p-3 ${color}`}>

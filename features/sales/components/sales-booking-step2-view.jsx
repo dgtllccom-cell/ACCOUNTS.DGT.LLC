@@ -11,13 +11,16 @@ import {
   AlertTriangle,
   Building2,
   CheckCircle2,
-  Layers
+  Layers,
+  Truck,
+  UserRound,
+  BarChart3
 } from "lucide-react";
 import { SalesBookingCurrencyFields, SalesBookingCurrencyPreview } from "./sales-booking-currencies";
 import { convertedSalesAmount, getBookingCurrencies } from "@/lib/sales/booking-currencies";
 import { t as tUi } from "@/lib/i18n/ui";
 import { Button } from "@/components/ui/button";
-import { SalesBookingUpperCards } from "./sales-booking-upper-cards";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { SalesStockPanel } from "./sales-stock-panel";
 
 // Stock sources a sale can take goods from (the same groups as the Select Stock panel, /api/erp/sales/available-lots):
@@ -37,10 +40,7 @@ export function SalesBookingStep2({
   setGoodsEntries,
   lang = "en",
   onNext,
-  onBack,
-  availableLots = [],
-  dbCompanies = [],
-  dbAccounts = []
+  onBack
 }) {
   const [stockModalOpen, setStockModalOpen] = useState(false);
   const [stockGroup, setStockGroup] = useState(() => (["warehouse", "booking", "export"].includes(form.stockGroup) ? form.stockGroup : "warehouse"));
@@ -59,6 +59,10 @@ export function SalesBookingStep2({
   const quality = form.qualityReport || "";
   const qtyName = form.qtyName || "";
   const qtyNo = Number(form.qtyNo || 0);
+  const qtyKgs = Number(form.qtyKgs) || 0;
+  const emptyKgs = Number(form.emptyKgs) || 0;
+  const calculatedGross = qtyNo * qtyKgs;
+  const calculatedNet = Math.max(0, calculatedGross - qtyNo * emptyKgs);
   const unitPrice = Number(form.coursePrice || 0);
   const freightIca = Number(form.freightIca || 0);
   const itemType = form.itemType || "";
@@ -180,10 +184,6 @@ export function SalesBookingStep2({
       return;
     }
 
-    const qtyKgs = Number(form.qtyKgs) || 0;
-    const emptyKgs = Number(form.emptyKgs) || 0;
-    const calculatedGross = qtyNo * qtyKgs;
-    const calculatedNet = Math.max(0, calculatedGross - qtyNo * emptyKgs);
     const calculatedAmount = qtyNo * unitPrice;
     const finalAmt = convertedSalesAmount(calculatedAmount, currencies.rate);
     if (finalAmt === null && currencies.sales && currencies.final) {
@@ -241,12 +241,16 @@ export function SalesBookingStep2({
         copy[editingIndex] = newItem;
         return copy;
       });
-      setEditingIndex(null);
     } else {
       setGoodsEntries((prev) => [...prev, newItem]);
     }
 
-    // clear the entry so the next item starts empty (pressing Add again cannot add the same line twice)
+    clearEntry();
+  };
+
+  const clearEntry = () => {
+    setEditingIndex(null);
+    setSuggestOpen(false);
     setForm((p) => ({
       ...p,
       goodsId: "", goodsName: "", hsCode: "", stockLotNo: "", allotName: "", selectedLotId: "", managedLotId: "", journalTransferId: "",
@@ -288,17 +292,61 @@ export function SalesBookingStep2({
     }));
   };
 
-  const totalAmount = goodsEntries.reduce((sum, item) => sum + (Number(item.totalAmount || item.finalAmount || 0)), 0);
+  const tr = label => translateHeader(lang, label);
+  const number = (value, digits = 3) => value == null || value === "" || !Number.isFinite(Number(value))
+    ? "—"
+    : Number(value).toLocaleString(lang, { maximumFractionDigits: digits });
+  const amount = (value, currency) => value == null || value === ""
+    ? "—"
+    : [currency, Number(value).toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })].filter(Boolean).join(" ");
+  const rateText = (rate, operator) => Number(rate) > 0 ? `${operator === "/" ? "÷" : "×"} ${rate}` : "—";
+  const volume = item => {
+    const value = item.cbm ?? item.volumeCbm ?? String(item.stackWeight ?? "").match(/(\d+(?:\.\d+)?)\s*(?:cbm\b|m³)/i)?.[1];
+    return value == null || value === "" ? null : Number(value);
+  };
+  const total = key => goodsEntries.reduce((sum, item) => sum + Number(item[key] ?? 0), 0);
+  const quantityByUnit = new Map();
+  const salesByCurrency = new Map();
+  const finalByCurrency = new Map();
+  for (const item of goodsEntries) {
+    const unit = item.qtyName || item.unit || "";
+    quantityByUnit.set(unit, (quantityByUnit.get(unit) || 0) + Number(item.qtyNo ?? item.quantity ?? 0));
+    if (item.totalAmount != null) {
+      const currency = item.salesCurrency || item.currencyType || currencies.sales;
+      salesByCurrency.set(currency, (salesByCurrency.get(currency) || 0) + Number(item.totalAmount));
+    }
+    if (item.finalAmount != null) {
+      const currency = item.secondaryCurrency || currencies.final;
+      finalByCurrency.set(currency, (finalByCurrency.get(currency) || 0) + Number(item.finalAmount));
+    }
+  }
+  const summarizeAmounts = values => Array.from(values, ([currency, value]) => amount(value, currency)).join(" · ");
+  const volumes = goodsEntries.map(volume).filter(Number.isFinite);
+  const cards = [
+    { title: "Booking / Branch Details", Icon: Building2, color: "bg-blue-50 text-blue-950 dark:bg-blue-950 dark:text-blue-100",
+      rows: [["Booking No", form.salesOrderNo], ["Booking Date", form.salesDate], ["Branch", form.branchName || form.branchCode], ["Country", form.branchCountry]] },
+    { title: "Loading Details", Icon: Truck, color: "bg-amber-50 text-amber-950 dark:bg-amber-950 dark:text-amber-100",
+      rows: [["Loading Type", form.shippingMode || form.shipmentType], ["Loading Port", form.salesPortOfLoading || form.loadingPort],
+        ["Destination", form.receivingPort || form.salesPortOfDischarge || form.receivingCountry], ["Loading Date", form.loadingDate]] },
+    { title: "Sales Account", Icon: UserRound, color: "bg-emerald-50 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-100",
+      rows: [["Customer Account (DR)", form.customerAccountName || form.customerAccountNo], ["Sales Account (CR)", form.salesAccountName || form.salesAccountNo],
+        ["Sales Currency", currencies.sales], ["Exchange Rate", rateText(currencies.rate.rate, currencies.rate.operator)]] },
+    { title: "Summary Totals", Icon: BarChart3, color: "bg-violet-50 text-violet-950 dark:bg-violet-950 dark:text-violet-100",
+      rows: [["Total Qty", Array.from(quantityByUnit, ([unit, value]) => `${number(value)} ${unit}`.trim()).join(" · ")],
+        ["Net Weight", `${number(total("netWeight"))} kg`], ["Gross Weight", `${number(total("grossWeight"))} kg`],
+        ["CBM", volumes.length === goodsEntries.length && volumes.length > 0 ? number(volumes.reduce((sum, value) => sum + value, 0)) : "—"],
+        ["Sales Amount", summarizeAmounts(salesByCurrency)], ["Final Amount", summarizeAmounts(finalByCurrency)]] },
+  ];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start animate-in fade-in duration-200">
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(300px,1fr)_minmax(0,2.2fr)] gap-3 items-start animate-in fade-in duration-200">
       <SalesBookingCurrencyPreview form={form} lang={lang} goods amount={qtyNo * unitPrice} className="ms-auto w-full max-w-sm lg:hidden" />
       {/* LEFT COLUMN: GOODS ENTRY DETAILS FORM */}
-      <div className="lg:col-span-5 min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-          <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <Package className="w-4 h-4 text-blue-600" />
-            {tUi(lang, "sales.goods_entry_details", "GOODS ENTRY DETAILS")}
+      <div className="min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
+        <div className="flex items-center justify-between gap-2 rounded-lg bg-blue-900 px-3 py-2 text-white">
+          <h3 className="text-sm font-bold flex items-center gap-2">
+            <Package className="w-4 h-4" />
+            {tr("Goods Entry Details")}
           </h3>
           {selectedLotRef && (
             <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-mono whitespace-nowrap">
@@ -309,9 +357,15 @@ export function SalesBookingStep2({
 
         {/* 1. STOCK SOURCE * — first choose where the goods come from */}
         <div className="space-y-1" data-testid="sales-stock-source">
-          <label className="block text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-            {tUi(lang, "sales.s2_stock_source", "Stock")} <span className="text-red-500">*</span>
-          </label>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-bold uppercase text-slate-700 dark:text-slate-300">
+              {tUi(lang, "sales.s2_stock_source", "Stock")} <span className="text-red-500">*</span>
+            </span>
+            <Button type="button" onClick={handleOpenStockModal} className="h-8 bg-blue-600 px-2 text-xs text-white">
+              <Search className="h-3.5 w-3.5" aria-hidden="true" />
+              {tr("Open Stock")}
+            </Button>
+          </div>
           <div className="grid grid-cols-3 gap-1.5">
             {STOCK_GROUPS.map((g) => {
               const Icon = g.icon;
@@ -354,14 +408,6 @@ export function SalesBookingStep2({
               className="w-full h-9 ps-3 pe-8 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
               data-testid="sales-item-search"
             />
-            <button
-              type="button"
-              onClick={handleOpenStockModal}
-              className="absolute end-2 top-2 p-1 text-slate-400 hover:text-blue-600"
-              title={tUi(lang, "sales.stk_select_stock", "Select Stock")}
-            >
-              <Search className="w-3.5 h-3.5" />
-            </button>
             {suggestOpen && (
               <div className="absolute start-0 top-10 w-full max-h-64 overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 p-1" data-testid="sales-item-suggestions">
                 {groupState.status === "loading" ? (
@@ -524,6 +570,16 @@ export function SalesBookingStep2({
           </div>
         </div>
 
+        <dl className="grid grid-cols-2 gap-2 text-xs">
+          {[["Total Net Weight", calculatedNet], ["Total Gross Weight", calculatedGross]].map(([label, value]) => (
+            <div key={label} className="rounded-lg bg-blue-50 p-2 text-blue-950 dark:bg-blue-950 dark:text-blue-100">
+              <dt>{tr(label)}</dt>
+              <dd className="font-bold"><bdi>{number(value)} kg</bdi></dd>
+            </div>
+          ))}
+        </dl>
+
+        <SalesBookingCurrencyPreview form={form} lang={lang} goods amount={qtyNo * unitPrice} className="hidden lg:block" />
         <SalesBookingCurrencyFields form={form} lang={lang} goods
           onChange={(key, value) => setForm(previous => ({ ...previous, [key]: value }))} />
 
@@ -637,19 +693,19 @@ export function SalesBookingStep2({
           </div>
         )}
 
-        {/* Add Item Button */}
-        <Button
-          type="button"
-          disabled={isOverStock}
-          onClick={handleAddOrUpdateItem}
-          className="w-full h-9 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs rounded-xl flex items-center justify-center gap-1.5 transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          {editingIndex !== null ? "Update Goods Item" : "Add Goods Item to Table"}
-        </Button>
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" onClick={clearEntry} className="h-9 text-xs">
+            {tr("Clear")}
+          </Button>
+          <Button type="button" disabled={isOverStock} onClick={handleAddOrUpdateItem}
+            className="flex-1 h-9 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs">
+            <Plus className="w-4 h-4" />
+            {editingIndex !== null ? tr("Update Goods Item") : tr("Add Goods Item to Table")}
+          </Button>
+        </div>
 
         {/* Bottom Back / Next Buttons */}
-        <div className="flex items-center gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
           <Button
             type="button"
             variant="outline"
@@ -657,92 +713,82 @@ export function SalesBookingStep2({
             className="flex-1 h-9 border-slate-300 text-slate-700 dark:text-slate-200 text-xs font-bold"
           >
             <ChevronLeft className="w-4 h-4 rtl:rotate-180 mr-1" />
-            Back
+            {tr("Back")}
           </Button>
           <Button
             type="button"
             onClick={onNext}
             className="flex-1 h-9 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-md uppercase tracking-wider"
           >
-            Next
+            {tr("Next")}
             <ChevronRight className="w-4 h-4 rtl:rotate-180 ml-1" />
           </Button>
         </div>
       </div>
 
-      {/* RIGHT COLUMN: CUSTOMER ACCOUNT (DR) + GOODS ITEMS TABLE */}
-      <div className="lg:col-span-7 min-w-0 space-y-4">
-        <SalesBookingCurrencyPreview form={form} lang={lang} goods amount={qtyNo * unitPrice} className="hidden ms-auto w-44 lg:block" />
-        {/* Customer Account (DR) & Company Details Card */}
-        <SalesBookingUpperCards
-          form={form}
-          setForm={setForm}
-          lang={lang}
-          dbCompanies={dbCompanies}
-          dbAccounts={dbAccounts}
-          mode="customer"
-          showBadges={false}
-        />
+      <div className="min-w-0 space-y-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          {cards.map(({ title, Icon, color, rows }) => (
+            <section key={title} className={`min-w-0 rounded-xl p-3 ${color}`}>
+              <h3 className="mb-2 flex gap-1.5 text-xs font-bold">
+                <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />{tr(title)}
+              </h3>
+              <dl className="space-y-1.5 text-[11px]">
+                {rows.map(([label, value]) => (
+                  <div key={label} className="flex items-start justify-between gap-2">
+                    <dt className="min-w-0 break-words">{tr(label)}</dt>
+                    <dd className="min-w-0 break-words text-end font-semibold"><bdi>{value || "—"}</bdi></dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          ))}
+        </div>
 
-        {/* Goods Items Table */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <Package className="w-4 h-4 text-blue-600" />
-              {tUi(lang, "sales.goods_items", "GOODS ITEMS")}
-            </h3>
-            <span className="text-[11px] font-bold text-slate-500 font-mono">
-              {goodsEntries.length} Items Added
-            </span>
-          </div>
-
-          <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
-            <table className="w-full text-xs text-left border-collapse">
-              <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
-                <tr>
-                  <th className="p-2.5 w-10 text-center">#</th>
-                  <th className="p-2.5">Product Name</th>
-                  <th className="p-2.5">HS Code</th>
-                  <th className="p-2.5 text-center">Unit</th>
-                  <th className="p-2.5 text-right">Quantity</th>
-                  <th className="p-2.5 text-right">Unit Price</th>
-                  <th className="p-2.5 text-right">Amount</th>
-                  <th className="p-2.5 text-center w-20">Action</th>
+        <section className="min-w-0 space-y-2 rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <h3 className="flex items-center gap-2 rounded-lg bg-blue-50 px-2.5 py-2 text-sm font-bold text-blue-950 dark:bg-blue-950 dark:text-blue-100">
+            <Package className="h-4 w-4 shrink-0" aria-hidden="true" />
+            {tr("Goods and Lotwise Report")}
+          </h3>
+          <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
+            <table className="w-full border-collapse text-start text-xs">
+              <thead className="bg-blue-50 text-blue-950 dark:bg-blue-950 dark:text-blue-100">
+                <tr className="text-start">
+                  <th scope="col" className="px-2 py-2">#</th>
+                  {["Goods Name", "HS Code", "Lot / Item ID", "Quantity", "Net Weight", "Gross Weight", "CBM",
+                    "Unit Price", "Sales Amount", "Exchange Rate", "Final Amount", "Action"].map(label => (
+                    <th key={label} scope="col" className="whitespace-nowrap px-2 py-2 text-start">{tr(label)}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {goodsEntries.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="p-2.5 text-center font-mono text-[11px] text-slate-400">{idx + 1}</td>
-                    <td className="p-2.5 font-bold text-slate-900 dark:text-slate-100">{item.goodsName || item.productName}</td>
-                    <td className="p-2.5 font-mono text-slate-500">{item.hsCode}</td>
-                    <td className="p-2.5 text-center font-semibold text-slate-600 dark:text-slate-400">{item.qtyName || item.unit}</td>
-                    <td className="p-2.5 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
-                      {Number(item.qtyNo || item.quantity || 0).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}
-                    </td>
-                    <td className="p-2.5 text-right font-mono text-slate-600 dark:text-slate-400">
-                      {Number(item.coursePrice || item.unitPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
-                    <td className="p-2.5 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
-                      {Number(item.totalAmount || item.finalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
-                    <td className="p-2.5 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleEditEntry(idx)}
-                          className="p-1 rounded-md bg-sky-50 hover:bg-sky-100 text-sky-700 transition-colors"
-                          title="Edit"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
+                {goodsEntries.map((item, index) => (
+                  <tr key={index} className="hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <td className="px-2 py-2 text-center">{index + 1}</td>
+                    <td className="px-2 py-2 font-semibold">{item.goodsName || item.productName}</td>
+                    <td className="whitespace-nowrap px-2 py-2"><bdi>{item.hsCode || "—"}</bdi></td>
+                    <td className="whitespace-nowrap px-2 py-2"><bdi>{item.lotNo || item.itemId || "—"}</bdi></td>
+                    <td className="whitespace-nowrap px-2 py-2"><bdi>{number(item.qtyNo ?? item.quantity)} {item.qtyName || item.unit}</bdi></td>
+                    <td className="whitespace-nowrap px-2 py-2"><bdi>{number(item.netWeight)}{item.netWeight == null ? "" : " kg"}</bdi></td>
+                    <td className="whitespace-nowrap px-2 py-2"><bdi>{number(item.grossWeight)}{item.grossWeight == null ? "" : " kg"}</bdi></td>
+                    <td className="whitespace-nowrap px-2 py-2"><bdi>{number(volume(item))}</bdi></td>
+                    <td className="whitespace-nowrap px-2 py-2"><bdi>{amount(item.coursePrice ?? item.unitPrice, item.salesCurrency || item.currencyType || currencies.sales)}</bdi></td>
+                    <td className="whitespace-nowrap px-2 py-2"><bdi>{amount(item.totalAmount, item.salesCurrency || item.currencyType || currencies.sales)}</bdi></td>
+                    <td className="whitespace-nowrap px-2 py-2"><bdi>{rateText(item.exchangeRate, item.op || item.operator)}</bdi></td>
+                    <td className="whitespace-nowrap px-2 py-2 font-semibold"><bdi>{amount(item.finalAmount, item.secondaryCurrency || currencies.final)}</bdi></td>
+                    <td className="px-2 py-2">
+                      <div className="flex gap-1">
+                        <button type="button" onClick={() => handleEditEntry(index)}
+                          className="rounded bg-sky-50 p-1 text-sky-700 hover:bg-sky-100" aria-label={tr("Edit")}>
+                          <Edit3 className="h-3.5 w-3.5" aria-hidden="true" />
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => setGoodsEntries(prev => prev.filter((_, i) => i !== idx))}
-                          className="p-1 rounded-md bg-red-50 hover:bg-red-100 text-red-600 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
+                        <button type="button" onClick={() => {
+                          setGoodsEntries(previous => previous.filter((_, i) => i !== index));
+                          if (editingIndex === index) clearEntry();
+                          else if (editingIndex != null && editingIndex > index) setEditingIndex(editingIndex - 1);
+                        }}
+                          className="rounded bg-red-50 p-1 text-red-600 hover:bg-red-100" aria-label={tr("Delete")}>
+                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                         </button>
                       </div>
                     </td>
@@ -750,28 +796,13 @@ export function SalesBookingStep2({
                 ))}
                 {goodsEntries.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="p-6 text-center text-slate-400 text-xs italic">
-                      No goods added yet. Fill the Goods Entry form on the left or select stock.
-                    </td>
+                    <td colSpan={13} className="p-6 text-center text-slate-500">{tr("No goods entered")}</td>
                   </tr>
                 )}
               </tbody>
-              {goodsEntries.length > 0 && (
-                <tfoot className="bg-slate-50 dark:bg-slate-950 font-black border-t-2 border-slate-200 dark:border-slate-800">
-                  <tr>
-                    <td colSpan={6} className="p-2.5 text-right text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                      Total
-                    </td>
-                    <td className="p-2.5 text-right font-mono text-sm text-blue-700 dark:text-blue-400">
-                      {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
-                    <td></td>
-                  </tr>
-                </tfoot>
-              )}
             </table>
           </div>
-        </div>
+        </section>
       </div>
 
       {/* Stock Selection Modal */}
