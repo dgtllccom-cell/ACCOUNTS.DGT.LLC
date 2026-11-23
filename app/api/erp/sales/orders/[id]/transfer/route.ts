@@ -1,4 +1,3 @@
-import { convertedSalesAmount, getBookingCurrencies } from "@/lib/sales/booking-currencies";
 import { NextRequest } from "next/server";
 import { issueForSalesOrder } from "@/lib/services/stock-journal-service";
 import { assertReservationsReady, usesManagedLots } from "@/lib/sales/managed-lot-sales";
@@ -152,21 +151,6 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       throw new Error("Sales order total must be a valid number greater than zero to transfer.");
     }
 
-    let postingCurrency = String(orderRow.currency_code || form.currencyType || "USD");
-    let postingRate = Number(orderRow.exchange_rate || form.exchangeRate || 1);
-    if (form.bookingCurrencyConfigured === true) {
-      const currency = getBookingCurrencies(form);
-      const converted = convertedSalesAmount(totalSalesAmount, currency.rate);
-      if (currency.final !== String(orderRow.currency_code ?? "").toUpperCase() || converted == null
-        || Math.abs(converted - Number(orderRow.order_total)) > 0.01) {
-        throw new ApiClientError("Sales amount, final currency and exchange rate do not match this booking.", {
-          status: 409, code: "SALES_BOOKING_FX_MISMATCH"
-        });
-      }
-      postingCurrency = currency.sales;
-      postingRate = currency.rate.operator === "/" ? 1 / currency.rate.rate : currency.rate.rate;
-    }
-
     // The Sales wizard's own form state names this field customerAccountNo, not
     // purchaseAccountNo (that name is only correct in the Purchase wizard's own
     // form_data, which this check was originally copied from) — checking the
@@ -233,7 +217,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         countryId: orderRow.country_id,
         countryBranchId: orderRow.country_branch_id,
         cityBranchId: orderRow.city_branch_id,
-        currencyCode: postingCurrency,
+        currencyCode: orderRow.currency_code || form.currencyType || "USD",
         exchangeRate: orderRow.exchange_rate || form.exchangeRate || 1,
         amount: totalSalesAmount,
         purchaseAccountNo: form.purchaseAccountNo,
@@ -286,8 +270,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const postingNarration = [
       goodsAuditRemark,
       body?.remarks?.trim() ? "Notes: " + body.remarks.trim() : null,
-      "Transfer Currency: " + postingCurrency,
-      "Exchange Rate: " + postingRate,
+      "Transfer Currency: " + (orderRow.currency_code || form.currencyType || "USD"),
+      "Exchange Rate: " + (orderRow.exchange_rate || form.exchangeRate || 1),
       "Amount: " + totalSalesAmount
     ].filter(Boolean).join(" | ");
 
@@ -337,8 +321,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
           ${paymentRoute.paymentKind}::text,
           ${new Date().toISOString().slice(0, 10)}::date,
           ${totalSalesAmount}::numeric,
-          ${postingCurrency}::text,
-          ${postingRate}::numeric,
+          ${String(orderRow.currency_code || form.currencyType || "USD")}::text,
+          ${Number(orderRow.exchange_rate || form.exchangeRate || 1)}::numeric,
           ${debitLedgerId}::uuid,
           ${creditLedgerId}::uuid,
           ${referenceNo}::text,
@@ -407,8 +391,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         lines: postedLines,
         expectedDebitLedgerId: debitLedgerId,
         expectedCreditLedgerId: creditLedgerId,
-        expectedAmount: form.bookingCurrencyConfigured === true ? Number(orderRow.order_total) : totalSalesAmount,
-        expectedBaseAmount: form.bookingCurrencyConfigured === true ? Number(orderRow.order_total) : undefined,
+        expectedAmount: totalSalesAmount,
         expectedExchangeRate: exRate
       });
 

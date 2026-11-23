@@ -7,7 +7,6 @@
 import type { ErpSession } from "@/lib/auth/session";
 import { ApiClientError } from "@/lib/api/response";
 import { listAvailableLots, type SaleSource } from "@/lib/sales/available-lots";
-import { getBookingCurrencies } from "@/lib/sales/booking-currencies";
 import { resolveBookingRate, stockBalance } from "@/lib/sales/sales-goods-model";
 
 const SOURCES: SaleSource[] = ["warehouse", "booking", "in_transit", "endorse", "local", "journal"];
@@ -16,26 +15,9 @@ const num = (v: unknown) => {
   return Number.isFinite(x) ? x : 0;
 };
 
-export async function resolveSalesCountryCurrency(supabase: any, countryId: string | null | undefined, fallback = "USD") {
-  if (!countryId) return fallback;
-  const { data } = await supabase.from("countries").select("currency_code").eq("id", countryId).maybeSingle();
-  return data?.currency_code || fallback;
-}
-
-export function assertConfiguredSalesSettlement(formData: any, countryCurrency: string) {
-  if (formData?.form?.bookingCurrencyConfigured !== true) return;
-  const { final, rate } = getBookingCurrencies(formData.form);
-  if (final.toUpperCase() !== countryCurrency.toUpperCase()) {
-    throw new ApiClientError(`Final Currency must match the accounting currency (${countryCurrency}) of the selected country.`, {
-      status: 422, code: "SALES_SETTLEMENT_CURRENCY_MISMATCH"
-    });
-  }
-  if (!rate.ok) throw new ApiClientError("Enter a valid Sales Currency and Exchange Rate.", { status: 422, code: "EXCHANGE_RATE_REQUIRED" });
-}
-
 export function assertBookingCurrency(formData: any): void {
   const form = (formData && typeof formData === "object" ? formData.form : null) ?? {};
-  const invoice = String((form.bookingCurrencyConfigured ? form.salesCurrency : form.currencyType ?? form.salesCurrency) ?? "").trim();
+  const invoice = String(form.currencyType ?? form.salesCurrency ?? "").trim();
   const settlement = String(form.secondaryCurrency ?? "").trim();
   if (!invoice || !settlement) return; // older drafts carry no pair; the wizard enforces it for new bookings
   const rate = resolveBookingRate({ invoiceCurrency: invoice, settlementCurrency: settlement, exchangeRate: form.exchangeRate, operator: form.operator });

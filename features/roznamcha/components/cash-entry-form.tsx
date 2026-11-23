@@ -2031,13 +2031,11 @@ export function CashEntryForm({
     if (paymentType === "bank") {
       const bName = typeDetails.bankName || "";
       const method = typeDetails.method || typeDetails.transferType || "";
-      const refNo = typeDetails.receiptNumber || typeDetails.refNo || typeDetails.transferReferenceNumber || referenceNo || "";
+      const refNo = typeDetails.receiptNumber || typeDetails.refNo || typeDetails.transferReferenceNumber || "";
       const payDate = typeDetails.payDate || entryDate;
       const formattedDate = payDate ? payDate.split("-").reverse().join("/") : "";
       const attachment = attachmentFile?.name || typeDetails.bankAttachmentName || "";
-
-      if (!bName && !method && !refNo && !attachment) return "";
-
+      
       const parts = [
         bName && `Bank: ${bName}`,
         method && `Transfer: ${method}`,
@@ -2045,7 +2043,7 @@ export function CashEntryForm({
         formattedDate && `Date: ${formattedDate}`,
         attachment && `Attachment: ${attachment}`
       ].filter(Boolean);
-
+      
       return parts.length ? `Bank Details: ${parts.join(" | ")}` : "";
     }
     if (paymentType === "cash") {
@@ -2092,7 +2090,7 @@ export function CashEntryForm({
       return parts.length ? `Invoice/Business Details: ${parts.join(" | ")}` : "";
     }
     return "";
-  }, [paymentType, typeDetails, entryDate, attachmentFile, referenceNo]);
+  }, [paymentType, typeDetails, entryDate, attachmentFile]);
 
   // Sync category details directly to remarks textarea dynamically
   useEffect(() => {
@@ -4328,11 +4326,60 @@ export function CashEntryForm({
                 </div>
               </section>
 
-              {/* ── 3. PARTY DETAILS / DYNAMIC DETAILS ── */}
+              {/* ── 3. ROZNAMCHA REGISTER SETUP ── */}
+              <section className="rounded-xl border border-slate-200/80 p-2.5 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs">
+                <div className="mb-2 flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-100">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-xs">3</span>
+                  <Layers className="h-4 w-4 text-blue-600 dark:text-blue-400 stroke-[2.2]" />
+                  <span>{tr("cef.register_type", "Roznamcha Register Setup")}</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Register Type */}
+                  <div>
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                      {tr("cef.register_type", "Register Type")} <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Layers className="pointer-events-none absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                      <select
+                        value={roznamchaType}
+                        onChange={(e) => setRoznamchaType(e.target.value)}
+                        className="h-8 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-8 pr-6 text-[11px] font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                      >
+                        <option value="Cash Register">{tr("cef.opt_cash", "Cash Register")}</option>
+                        <option value="Cash Book No.">{tr("cj.mOptCashBook", "Cash Book No.")}</option>
+                        <option value="Roznamcha Book No.">{tr("cj.mOptRozBook", "Roznamcha Book No.")}</option>
+                        <option value="Receipt No.">{tr("cj.mOptReceiptNo", "Receipt No.")}</option>
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                    </div>
+                  </div>
+
+                  {/* Register No. */}
+                  <div>
+                    <label className="mb-0.5 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                      {tr("cef.register_no", "Register No.")} <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="flex h-8 rounded-lg border border-slate-200 bg-white overflow-hidden dark:border-slate-700 dark:bg-slate-950 focus-within:border-blue-500">
+                      <span className="flex items-center bg-slate-100 dark:bg-slate-800 px-2.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
+                        RZ-
+                      </span>
+                      <input
+                        value={roznamchaNumber.replace(/^RZ-?/i, "")}
+                        onChange={(e) => setRoznamchaNumber(e.target.value)}
+                        placeholder="000134"
+                        className="w-full bg-transparent px-2.5 font-mono text-[11px] font-bold text-slate-800 outline-none dark:text-slate-100"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* ── 4. PARTY DETAILS / DYNAMIC DETAILS ── */}
               <section className="rounded-xl border border-slate-200/80 p-2.5 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs">
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-1.5">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-100">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-xs">3</span>
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-xs">4</span>
                     <Users className="h-4 w-4 text-blue-600 dark:text-blue-400 stroke-[2.2]" />
                     <span>
                       {paymentType === "bank"
@@ -4587,11 +4634,11 @@ export function CashEntryForm({
                 )}
               </section>
 
-              {/* ── 4. AMOUNT & POSTING ── */}
+              {/* ── 5. AMOUNT & POSTING ── */}
               <section className="rounded-xl border border-slate-200/80 p-2.5 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs">
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-1.5">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-100">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-xs">4</span>
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-xs">5</span>
                     <Coins className="h-4 w-4 text-blue-600 dark:text-blue-400 stroke-[2.2]" />
                     <span>{tr("cef.amount_posting", "Amount & Posting")}</span>
                   </div>
@@ -4606,8 +4653,8 @@ export function CashEntryForm({
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-center">
                   {/* Left inputs */}
                   <div className="md:col-span-8 space-y-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
-                      <div className={isLocalCurrency ? "sm:col-span-5" : "sm:col-span-6"}>
+                    <div className={cn("grid gap-2 items-end", isLocalCurrency ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2 sm:grid-cols-3")}>
+                      <div>
                         <label className="mb-0.5 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                           {isLocalCurrency ? `${tr("cj.mAmount", "Amount")} (${targetAccountCurrency.toUpperCase()})` : `${tr("cj.mQuantity", "Quantity (Foreign Amount)")} (${normalizedCurrency})`} <span className="text-rose-500">*</span>
                         </label>
@@ -4618,13 +4665,13 @@ export function CashEntryForm({
                             value={calcAmount}
                             onChange={(e) => setCalcAmount(e.target.value)}
                             placeholder="0.00"
-                            className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2 font-mono text-[12px] font-bold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                            className="h-8 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2 font-mono text-[12px] font-bold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                           />
                         </div>
                       </div>
 
                       {!isLocalCurrency && (
-                        <div className="sm:col-span-6">
+                        <div>
                           <label className="mb-0.5 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                             {calcOp === "mul" ? "×" : "÷"} {tr("cj.mRate", "Transaction Rate")} <span className="text-rose-500">*</span>
                           </label>
@@ -4635,43 +4682,43 @@ export function CashEntryForm({
                             readOnly={approvedRateForEntry}
                             placeholder="0.0000"
                             className={cn(
-                              "h-9 w-full rounded-lg border px-2 font-mono text-[12px] font-bold outline-none focus:border-blue-500 dark:text-slate-100",
+                              "h-8 w-full rounded-lg border px-2 font-mono text-[12px] font-bold outline-none focus:border-blue-500 dark:text-slate-100",
                               approvedRateForEntry ? "border-emerald-200 bg-emerald-50/60 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/30" : "border-slate-200 bg-white text-slate-800 dark:border-slate-700 dark:bg-slate-950"
                             )}
                           />
                         </div>
                       )}
 
-                      <div className={isLocalCurrency ? "sm:col-span-7" : "sm:col-span-12"}>
+                      <div>
                         <label className="mb-0.5 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                           {tr("cef.posting_side", "Posting Side")} <span className="text-rose-500">*</span>
                         </label>
-                        <div className="grid grid-cols-2 gap-1.5 p-1 rounded-lg border border-slate-200 bg-slate-100/80 dark:border-slate-700 dark:bg-slate-950/70 h-9">
+                        <div className="grid grid-cols-2 gap-1.5 p-0.5 rounded-lg border border-slate-200 bg-slate-100/70 dark:border-slate-700 dark:bg-slate-950/70 h-8">
                           <button
                             type="button"
                             onClick={() => setPaymentMode("DEBIT")}
                             className={cn(
-                              "flex items-center justify-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer",
+                              "flex items-center justify-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer",
                               paymentMode === "DEBIT"
                                 ? "bg-sky-600 text-white shadow-xs dark:bg-sky-500"
                                 : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
                             )}
                           >
-                            <span className={cn("h-2 w-2 rounded-full shrink-0", paymentMode === "DEBIT" ? "bg-white" : "bg-slate-300 dark:bg-slate-600")} />
-                            <span className="truncate">{tr("cef.debit_dr", "Debit (DR)")}</span>
+                            <span className={cn("h-2 w-2 rounded-full", paymentMode === "DEBIT" ? "bg-white" : "bg-slate-300 dark:bg-slate-600")} />
+                            <span>{tr("cef.debit_dr", "Debit (DR)")}</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => setPaymentMode("CREDIT")}
                             className={cn(
-                              "flex items-center justify-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer",
+                              "flex items-center justify-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer",
                               paymentMode === "CREDIT"
                                 ? "bg-emerald-600 text-white shadow-xs dark:bg-emerald-500"
                                 : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
                             )}
                           >
-                            <span className={cn("h-2 w-2 rounded-full shrink-0", paymentMode === "CREDIT" ? "bg-white" : "bg-slate-300 dark:bg-slate-600")} />
-                            <span className="truncate">{tr("cef.credit_cr", "Credit (CR)")}</span>
+                            <span className={cn("h-2 w-2 rounded-full", paymentMode === "CREDIT" ? "bg-white" : "bg-slate-300 dark:bg-slate-600")} />
+                            <span>{tr("cef.credit_cr", "Credit (CR)")}</span>
                           </button>
                         </div>
                       </div>
@@ -4717,10 +4764,10 @@ export function CashEntryForm({
                 </div>
               </section>
 
-              {/* ── 5. REMARKS ── */}
+              {/* ── 6. REMARKS ── */}
               <section className="rounded-xl border border-slate-200/80 p-2.5 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs">
                 <div className="mb-2 flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-100">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-xs">5</span>
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-xs">6</span>
                   <Pencil className="h-4 w-4 text-blue-600 dark:text-blue-400 stroke-[2.2]" />
                   <span>{tr("rvp.remarks", "Remarks")}</span>
                 </div>

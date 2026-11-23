@@ -11,19 +11,14 @@ import {
   Mic,
   Pin,
   Sparkles,
-  Truck,
-  UserRound,
-  BarChart3,
   Eye
 } from "lucide-react";
 import { t as tUi } from "@/lib/i18n/ui";
 import { Button } from "@/components/ui/button";
-import { translateHeader } from "@/lib/i18n/table-headers";
-import { getBookingCurrencies } from "@/lib/sales/booking-currencies";
+import { SalesBookingUpperCards } from "./sales-booking-upper-cards";
 import { VoiceFormFill } from "@/components/voice-form-fill";
 import { AccountDetailsModal } from "./account-details-modal";
 import { SearchSelect } from "@/components/ui/search-select";
-import { SalesBookingCurrencyFields, SalesBookingCurrencyPreview } from "./sales-booking-currencies";
 import { CustomerAccountCard } from "@/components/erp/customer-account-card";
 
 export function SalesBookingStep1({
@@ -34,9 +29,8 @@ export function SalesBookingStep1({
   lang = "en",
   onNext,
   onEditItem,
-  onCurrencyChange,
-  currencyReadOnly = false,
   dbAccounts = [],
+  dbCompanies = [],
   applyAccountMaster,
   formatAccountDisplayLabel
 }) {
@@ -136,39 +130,12 @@ export function SalesBookingStep1({
   });
 
   // Calculate totals
-  const tr = key => translateHeader(lang, key);
-  const number = (value, digits = 3) => Number(value ?? 0).toLocaleString(lang, {
-    minimumFractionDigits: digits, maximumFractionDigits: digits,
-  });
-  const { sales, final, rate } = getBookingCurrencies(form);
-  const units = [...new Set(goodsEntries.map(item => item.qtyName || item.unit || "").filter(Boolean))];
-  const quantity = units.length > 1 ? units.map(unit => {
-    const total = goodsEntries.filter(item => (item.qtyName || item.unit) === unit)
-      .reduce((sum, item) => sum + Number(item.qtyNo ?? item.quantity ?? 0), 0);
-    return `${number(total)} ${unit}`;
-  }).join(" · ") : `${number(goodsEntries.reduce((sum, item) => sum + Number(item.qtyNo ?? item.quantity ?? 0), 0))} ${units[0] || ""}`.trim();
-  const sum = key => goodsEntries.reduce((total, item) => total + Number(item[key] ?? 0), 0);
-  const cards = [
-    { title: "Booking / Branch Details", Icon: Building2, color: "bg-sky-50 text-sky-900 dark:bg-sky-950 dark:text-sky-100",
-      rows: [["Branch", form.branchName || form.cityBranchName || form.branchCode], ["Country", form.countryName || form.branchCountry],
-        ["Booking No", form.salesOrderNo], ["Booking Date", form.salesDate]] },
-    { title: "Loading Details", Icon: Truck, color: "bg-emerald-50 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-100",
-      rows: [["Loading Type", form.loadingMode || form.shipmentType || form.shippingMode],
-        ["Origin", form.loadingCountry || form.origin], ["Loading Port", form.salesPortOfLoading || form.loadingPort],
-        ["Loading Date", form.loadingDate]] },
-    { title: "Sales Account", Icon: UserRound, color: "bg-orange-50 text-orange-900 dark:bg-orange-950 dark:text-orange-100",
-      rows: [["Account Code", form.salesAccountNo], ["Account Name", form.salesAccountName],
-        ["Country", selectedSalesAccObj?.countryName || form.salesAccountCountry], ["Account Type", form.salesAccountKind || selectedSalesAccObj?.kind]] },
-    { title: "Summary Totals", Icon: BarChart3, color: "bg-indigo-50 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100",
-      rows: [["Total Qty", quantity], ["Gross Weight", `${number(sum("grossWeight"))} KG`],
-        ["Net Weight", `${number(sum("netWeight"))} KG`], ["Final Amount", final ? `${final} ${number(sum("finalAmount"), 2)}` : "—"]] },
-  ];
+  const totalAmount = goodsEntries.reduce((sum, item) => sum + (Number(item.totalAmount || item.finalAmount || 0)), 0);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[minmax(290px,340px)_minmax(0,1fr)] gap-3 items-start animate-in fade-in duration-200">
-      <SalesBookingCurrencyPreview form={form} lang={lang} className="ms-auto w-full max-w-sm lg:hidden" />
-      {/* Booking form */}
-      <div className="lg:col-start-1 lg:row-start-1 min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3.5">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start animate-in fade-in duration-200">
+      {/* LEFT COLUMN: SALES BOOKING / BILL INFO FORM */}
+      <div className="lg:col-span-4 min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3.5">
         <div className="border-b border-slate-100 dark:border-slate-800 pb-2">
           <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <Building2 className="w-4 h-4 text-blue-600" />
@@ -345,9 +312,6 @@ export function SalesBookingStep1({
           </div>
         </div>
 
-        <SalesBookingCurrencyFields form={form} lang={lang} onChange={onCurrencyChange ?? ((key, value) => setForm(previous => ({ ...previous, [key]: value })))} readOnly={currencyReadOnly} />
-        <SalesBookingCurrencyPreview form={form} lang={lang} className="hidden lg:block" />
-
         {/* Invoice / Payment Select & Ship Option (2 inline) */}
         <div className="grid grid-cols-2 gap-2.5">
           <div className="space-y-1">
@@ -429,24 +393,18 @@ export function SalesBookingStep1({
         </Button>
       </div>
 
-      <div className="lg:col-start-2 lg:row-start-1 min-w-0 space-y-3">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
-          {cards.map(({ title, Icon, color, rows }) => (
-            <section key={title} className={`min-w-0 rounded-xl p-3 ${color}`}>
-              <h3 className="mb-2 flex items-center gap-1.5 text-xs font-bold">
-                <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />{tr(title)}
-              </h3>
-              <dl className="space-y-1.5 text-[11px]">
-                {rows.map(([name, value]) => (
-                  <div key={name} className="flex items-start justify-between gap-2">
-                    <dt className="min-w-0 break-words">{tr(name)}</dt>
-                    <dd className="min-w-0 break-words text-end font-semibold"><bdi>{value || "—"}</bdi></dd>
-                  </div>
-                ))}
-              </dl>
-            </section>
-          ))}
-        </div>
+      {/* RIGHT COLUMN: UPPER 3 CARDS + GOODS ITEMS TABLE */}
+      <div className="lg:col-span-8 min-w-0 space-y-4">
+        {/* Upper 3 Cards */}
+        <SalesBookingUpperCards
+          form={form}
+          setForm={setForm}
+          lang={lang}
+          dbCompanies={dbCompanies}
+          dbAccounts={dbAccounts}
+          mode="all"
+          showBadges={false}
+        />
 
         {/* Compact Goods Items Table */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
@@ -455,24 +413,23 @@ export function SalesBookingStep1({
               <Package className="w-4 h-4 text-blue-600" />
               {tUi(lang, "sales.goods_items", "GOODS ITEMS")}
             </h3>
+            <span className="text-[11px] font-bold text-slate-500 font-mono">
+              {goodsEntries.length} Items
+            </span>
           </div>
 
           <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
-            <table className="w-full text-xs text-start border-collapse">
-              <thead className="bg-blue-800 text-white text-[11px] font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+            <table className="w-full text-xs text-left border-collapse">
+              <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
                 <tr>
                   <th className="p-2.5 w-10 text-center">#</th>
-                  <th className="p-2.5">{tr("Product Name")}</th>
-                  <th className="p-2.5">{tr("HS Code")}</th>
-                  <th className="p-2.5 text-center">{tr("Unit")}</th>
-                  <th className="p-2.5 text-end">{tr("Quantity")}</th>
-                  <th className="p-2.5 text-end">{tr("Gross Weight")} (KG)</th>
-                  <th className="p-2.5 text-end">{tr("Net Weight")} (KG)</th>
-                  <th className="p-2.5 text-end">{tr("Unit Price")}</th>
-                  <th className="p-2.5 text-end whitespace-nowrap">{tr("Amount")} <bdi>{sales}</bdi></th>
-                  <th className="p-2.5 text-end whitespace-nowrap">{tr("Exchange Rate")}</th>
-                  <th className="p-2.5 text-end whitespace-nowrap">{tr("Final Amount")} <bdi>{final}</bdi></th>
-                  <th className="p-2.5 text-center w-20">{tr("Action")}</th>
+                  <th className="p-2.5">Product Name</th>
+                  <th className="p-2.5">HS Code</th>
+                  <th className="p-2.5 text-center">Unit</th>
+                  <th className="p-2.5 text-right">Quantity</th>
+                  <th className="p-2.5 text-right">Unit Price</th>
+                  <th className="p-2.5 text-right">Amount</th>
+                  <th className="p-2.5 text-center w-20">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -482,22 +439,14 @@ export function SalesBookingStep1({
                     <td className="p-2.5 font-bold text-slate-900 dark:text-slate-100">{item.goodsName || item.productName}</td>
                     <td className="p-2.5 font-mono text-slate-500">{item.hsCode}</td>
                     <td className="p-2.5 text-center font-semibold text-slate-600 dark:text-slate-400">{item.qtyName || item.unit}</td>
-                    <td className="p-2.5 text-end font-mono font-bold text-slate-900 dark:text-slate-100">
+                    <td className="p-2.5 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
                       {Number(item.qtyNo || item.quantity || 0).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}
                     </td>
-                    <td className="p-2.5 text-end tabular-nums">{item.grossWeight == null ? "—" : number(item.grossWeight)}</td>
-                    <td className="p-2.5 text-end tabular-nums">{item.netWeight == null ? "—" : number(item.netWeight)}</td>
-                    <td className="p-2.5 text-end font-mono text-slate-600 dark:text-slate-400">
+                    <td className="p-2.5 text-right font-mono text-slate-600 dark:text-slate-400">
                       {Number(item.coursePrice || item.unitPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td className="p-2.5 text-end font-mono font-bold text-slate-900 dark:text-slate-100">
-                      {item.totalAmount == null ? "—" : number(item.totalAmount, 2)}
-                    </td>
-                    <td className="p-2.5 text-end font-mono whitespace-nowrap">
-                      <bdi>{Number(item.exchangeRate) > 0 ? `${item.op === "/" || item.operator === "/" ? "÷" : "×"} ${item.exchangeRate}` : rate.ok ? `${rate.operator === "/" ? "÷" : "×"} ${rate.rate}` : "—"}</bdi>
-                    </td>
-                    <td className="p-2.5 text-end whitespace-nowrap font-mono font-bold text-emerald-700 dark:text-emerald-300">
-                      {item.finalAmount == null ? "—" : number(item.finalAmount, 2)}
+                    <td className="p-2.5 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
+                      {Number(item.totalAmount || item.finalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="p-2.5 text-center">
                       <div className="flex items-center justify-center gap-1">
@@ -505,7 +454,7 @@ export function SalesBookingStep1({
                           type="button"
                           onClick={() => onEditItem && onEditItem(idx)}
                           className="p-1 rounded-md bg-sky-50 hover:bg-sky-100 text-sky-700 transition-colors"
-                          title={tr("Edit")}
+                          title="Edit"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
@@ -513,7 +462,7 @@ export function SalesBookingStep1({
                           type="button"
                           onClick={() => setGoodsEntries(prev => prev.filter((_, i) => i !== idx))}
                           className="p-1 rounded-md bg-red-50 hover:bg-red-100 text-red-600 transition-colors"
-                          title={tr("Delete")}
+                          title="Delete"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -523,12 +472,25 @@ export function SalesBookingStep1({
                 ))}
                 {goodsEntries.length === 0 && (
                   <tr>
-                    <td colSpan={12} className="p-6 text-center text-slate-400 text-xs italic">
-                      {tr("No goods entered")}
+                    <td colSpan={8} className="p-6 text-center text-slate-400 text-xs italic">
+                      No items added yet. Click Next to add goods entries.
                     </td>
                   </tr>
                 )}
               </tbody>
+              {goodsEntries.length > 0 && (
+                <tfoot className="bg-slate-50 dark:bg-slate-950 font-black border-t-2 border-slate-200 dark:border-slate-800">
+                  <tr>
+                    <td colSpan={6} className="p-2.5 text-right text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                      Total
+                    </td>
+                    <td className="p-2.5 text-right font-mono text-sm text-blue-700 dark:text-blue-400">
+                      {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              )}
             </table>
           </div>
         </div>
