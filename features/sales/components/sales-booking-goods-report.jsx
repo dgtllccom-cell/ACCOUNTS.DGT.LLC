@@ -5,7 +5,7 @@ import { BarChart3, Building2, Edit3, Package, Trash2, Truck, UserRound } from "
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { getBookingCurrencies } from "@/lib/sales/booking-currencies";
 
-export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDelete }) {
+export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDelete, overviewCards, showOrigin = false }) {
   const currencies = getBookingCurrencies(form);
   const tr = label => translateHeader(lang, label);
   const number = (value, digits = 3) => value == null || value === "" || !Number.isFinite(Number(value))
@@ -37,7 +37,7 @@ export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDe
   }
   const summarizeAmounts = values => Array.from(values, ([currency, value]) => amount(value, currency)).join(" · ");
   const volumes = goodsEntries.map(volume).filter(Number.isFinite);
-  const cards = [
+  const cards = overviewCards ?? [
     { title: "Booking / Branch Details", Icon: Building2, color: "bg-blue-50 text-blue-950 dark:bg-blue-950 dark:text-blue-100",
       rows: [["Booking No", form.salesOrderNo], ["Booking Date", form.salesDate], ["Branch", form.branchName || form.branchCode], ["Country", form.branchCountry]] },
     { title: "Loading Details", Icon: Truck, color: "bg-amber-50 text-amber-950 dark:bg-amber-950 dark:text-amber-100",
@@ -52,6 +52,8 @@ export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDe
         ["CBM", volumes.length === goodsEntries.length && volumes.length > 0 ? number(volumes.reduce((sum, value) => sum + value, 0)) : "—"],
         ["Sales Amount", summarizeAmounts(salesByCurrency)], ["Final Amount", summarizeAmounts(finalByCurrency)]] },
   ];
+
+  const hasActions = Boolean(onEdit || onDelete);
 
   return (
   <div className="min-w-0 space-y-3">
@@ -83,8 +85,8 @@ export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDe
           <thead className="bg-blue-50 text-blue-950 dark:bg-blue-950 dark:text-blue-100">
             <tr className="text-start">
               <th scope="col" className="px-2 py-2">#</th>
-              {["Goods Name", "HS Code", "Lot / Item ID", "Quantity", "Net Weight", "Gross Weight", "CBM",
-                "Unit Price", "Sales Amount", "Exchange Rate", "Final Amount", "Action"].map(label => (
+              {["Goods Name", "HS Code", "Lot / Item ID", ...(showOrigin ? ["Origin"] : []), "Quantity", "Net Weight", "Gross Weight", "CBM",
+                "Unit Price", "Sales Amount", "Exchange Rate", "Final Amount", ...(hasActions ? ["Action"] : [])].map(label => (
                 <th key={label} scope="col" className="whitespace-nowrap px-2 py-2 text-start">{tr(label)}</th>
               ))}
             </tr>
@@ -96,6 +98,7 @@ export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDe
                 <td className="px-2 py-2 font-semibold">{item.goodsName || item.productName}</td>
                 <td className="whitespace-nowrap px-2 py-2"><bdi>{item.hsCode || "—"}</bdi></td>
                 <td className="whitespace-nowrap px-2 py-2"><bdi>{item.lotNo || item.itemId || "—"}</bdi></td>
+                {showOrigin && <td className="whitespace-nowrap px-2 py-2">{item.origin || "—"}</td>}
                 <td className="whitespace-nowrap px-2 py-2"><bdi>{number(item.qtyNo ?? item.quantity)} {item.qtyName || item.unit}</bdi></td>
                 <td className="whitespace-nowrap px-2 py-2"><bdi>{number(item.netWeight)}{item.netWeight == null ? "" : " kg"}</bdi></td>
                 <td className="whitespace-nowrap px-2 py-2"><bdi>{number(item.grossWeight)}{item.grossWeight == null ? "" : " kg"}</bdi></td>
@@ -104,7 +107,7 @@ export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDe
                 <td className="whitespace-nowrap px-2 py-2"><bdi>{amount(item.totalAmount, item.salesCurrency || item.currencyType || currencies.sales)}</bdi></td>
                 <td className="whitespace-nowrap px-2 py-2"><bdi>{rateText(item.exchangeRate, item.op || item.operator)}</bdi></td>
                 <td className="whitespace-nowrap px-2 py-2 font-semibold"><bdi>{amount(item.finalAmount, item.secondaryCurrency || currencies.final)}</bdi></td>
-                <td className="px-2 py-2">
+                {hasActions && <td className="px-2 py-2">
                   <div className="flex gap-1">
                     {onEdit && <button type="button" onClick={() => onEdit(index)}
                       className="rounded bg-sky-50 p-1 text-sky-700 hover:bg-sky-100" aria-label={tr("Edit")}>
@@ -115,12 +118,12 @@ export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDe
                       <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                     </button>}
                   </div>
-                </td>
+                </td>}
               </tr>
             ))}
             {goodsEntries.length === 0 && (
               <tr>
-                <td colSpan={13} className="p-6 text-center text-slate-500">{tr("No goods entered")}</td>
+                <td colSpan={12 + Number(showOrigin) + Number(hasActions)} className="p-6 text-center text-slate-500">{tr("No goods entered")}</td>
               </tr>
             )}
           </tbody>
