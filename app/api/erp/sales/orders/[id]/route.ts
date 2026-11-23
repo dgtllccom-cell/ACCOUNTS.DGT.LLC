@@ -23,9 +23,9 @@ const paramsSchema = z.object({
 
 const salesOrderUpdateSchema = z.object({
   expectedUpdatedAt: z.string().datetime({ offset: true }).optional(),
-  countryId: uuidSchema.optional(),
-  countryBranchId: uuidSchema.optional(),
-  cityBranchId: uuidSchema.optional(),
+  countryId: uuidSchema.nullable().optional(),
+  countryBranchId: uuidSchema.nullable().optional(),
+  cityBranchId: uuidSchema.nullable().optional(),
   destCountryId: uuidSchema.optional().nullable(),
   destCountryBranchId: uuidSchema.optional().nullable(),
   destCityBranchId: uuidSchema.optional().nullable(),
@@ -173,15 +173,20 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       throw new ApiClientError("The original sales booking number cannot be changed.", { status: 400, code: "SALES_BILL_NUMBER_IMMUTABLE" });
     }
 
-    const nextCountryId = body.countryId ?? before.country_id;
-    authorizeApiScope(session, {
-      resource: "sales", action: "update", countryId: nextCountryId,
-      countryBranchId: body.countryBranchId ?? before.country_branch_id,
-      cityBranchId: body.cityBranchId ?? before.city_branch_id,
-    });
+    const ownership = [
+      [body.countryId, before.country_id],
+      [body.countryBranchId, before.country_branch_id],
+      [body.cityBranchId, before.city_branch_id],
+    ];
+    if (ownership.some(([incoming, saved]) => incoming !== undefined && incoming !== (saved ?? null))) {
+      throw new ApiClientError("The issuing country and branches cannot be changed on an existing sales booking.", {
+        status: 400, code: "SALES_BILL_SCOPE_IMMUTABLE"
+      });
+    }
+    const nextCountryId = before.country_id;
     const nextAccountId = body.customerAccountId === undefined ? before.customer_account_id : body.customerAccountId;
     const nextLedgerId = body.customerLedgerId === undefined ? before.customer_ledger_id : body.customerLedgerId;
-    if (nextCountryId !== before.country_id || nextAccountId !== before.customer_account_id || nextLedgerId !== before.customer_ledger_id) {
+    if (nextAccountId !== before.customer_account_id || nextLedgerId !== before.customer_ledger_id) {
       const admin = createSupabaseAdminClient();
       if (nextAccountId) await validateAccountCountryScope(session, nextAccountId, nextCountryId, admin);
       if (nextLedgerId) await validateLedgerCountryScope(session, nextLedgerId, nextCountryId, admin);
@@ -196,9 +201,6 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       updated_at: new Date().toISOString()
     };
 
-    if (body.countryId !== undefined) patch.country_id = body.countryId;
-    if (body.countryBranchId !== undefined) patch.country_branch_id = body.countryBranchId;
-    if (body.cityBranchId !== undefined) patch.city_branch_id = body.cityBranchId;
     if (body.destCountryId !== undefined) patch.dest_country_id = body.destCountryId;
     if (body.destCountryBranchId !== undefined) patch.dest_country_branch_id = body.destCountryBranchId;
     if (body.destCityBranchId !== undefined) patch.dest_city_branch_id = body.destCityBranchId;
@@ -291,7 +293,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
           OR EXISTS (SELECT 1 FROM public.goods_transfers WHERE sales_order_id = ${params.id} AND purpose IN ('local_sale', 'export_customer') AND status = 'completed')
           AS locked`;
       if (dependencies.locked) throw lockedError();
-      if (patch.form_data !== undefined || nextCountryId !== before.country_id) {
+      if (patch.form_data !== undefined) {
         await reserveForOrderInTransaction(tx, {
           salesOrderId: params.id,
           salesOrderNo: current.sales_order_no,

@@ -1690,9 +1690,9 @@ export function SalesOrderWizard({ session }) {
             originalCurrencyCode: soData.original_currency_code || null,
           });
 
-          const mergedCountryId = loadedForm.countryId || soData.country_id || soData.countryId || "";
-          const mergedCountryBranchId = loadedForm.countryBranchId || soData.country_branch_id || soData.countryBranchId || soData.branch_id || soData.branchId || "";
-          const mergedCityBranchId = loadedForm.cityBranchId || soData.city_branch_id || soData.cityBranchId || "";
+          const mergedCountryId = soData.country_id || soData.countryId || loadedForm.countryId || "";
+          const mergedCountryBranchId = soData.country_branch_id || soData.countryBranchId || soData.branch_id || soData.branchId || loadedForm.countryBranchId || "";
+          const mergedCityBranchId = soData.city_branch_id ?? soData.cityBranchId ?? (orderId ? "" : loadedForm.cityBranchId || "");
 
           setForm((prev) => {
             const next = { ...prev };

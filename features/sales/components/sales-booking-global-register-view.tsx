@@ -928,7 +928,7 @@ export function SalesBookingGlobalRegisterView({
                       </td>
                       <td className="px-3 py-2.5 text-center">
                         <span className="inline-block rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                          {r.paymentStatus || "Pending"}
+                          {tr(r.paymentStatus || "Pending")}
                         </span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
