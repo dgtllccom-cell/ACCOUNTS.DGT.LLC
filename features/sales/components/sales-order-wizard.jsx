@@ -1906,6 +1906,8 @@ export function SalesOrderWizard({ session }) {
   };
 
   const handleTransfer = async () => {
+    if (isSubmittingRef.current || isTransferred) return;
+    isSubmittingRef.current = true;
     setSavingOrder(true);
     setSaveMessage("");
     try {
@@ -1925,7 +1927,11 @@ export function SalesOrderWizard({ session }) {
       const returnedOrderId = payload.data?.salesOrderId || savedOrderId || payload.data?.id;
       const returnedOrderNo = payload.data?.salesOrderNo || savedOrderNo || form.salesOrderNo;
 
-      if (returnedOrderId) {
+      if (!returnedOrderId) throw new Error(t(lang, "sales.err_sales_order_save", "Sales order failed to save."));
+      setSavedOrderId(returnedOrderId);
+      setSavedOrderNo(returnedOrderNo);
+      if (returnedOrderNo) setForm(previous => ({ ...previous, salesOrderNo: returnedOrderNo }));
+      {
         const transferResponse = await fetch(`/api/erp/sales/orders/${returnedOrderId}/transfer`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1948,13 +1954,14 @@ export function SalesOrderWizard({ session }) {
       setIsTransferred(true);
       setRegisterRefreshKey((key) => key + 1);
 
-      window.location.href = `${paymentRoute.path}?salesOrderNo=${encodeURIComponent(returnedOrderNo)}`;
+      router.push(`/dashboard/sales/sales-order/view?id=${encodeURIComponent(returnedOrderId)}&transfer=1`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error saving order.";
       setSaveMessage(msg);
       alert(msg);
     } finally {
       setSavingOrder(false);
+      isSubmittingRef.current = false;
     }
   };
 
