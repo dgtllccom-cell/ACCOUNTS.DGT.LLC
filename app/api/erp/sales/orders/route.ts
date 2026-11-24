@@ -199,7 +199,11 @@ export async function GET(request: NextRequest) {
     // below silently returns zero rows even for orders that exist. Try a direct-Postgres
     // read first (bypasses RLS via DATABASE_URL); fall back to the Supabase-client path
     // only when DATABASE_URL isn't configured.
-    const limit = Math.min(Number(params.get("limit") || 100), 200);
+    const requestedLimit = Number(params.get("limit") || 100);
+    const limit = Number.isSafeInteger(requestedLimit) ? Math.max(1, Math.min(requestedLimit, 200)) : 100;
+    const requestedOffset = Number(params.get("offset") || 0);
+    const offset = Number.isSafeInteger(requestedOffset) ? Math.max(0, requestedOffset) : 0;
+    const transferredOnly = params.get("transferred") === "1";
     const rawTerm = params.get("q") ? String(params.get("q")).replace(/[%_]/g, "") : null;
     const viaPg = await withLocalPg(async (sql) => {
       const cityIds = !session.isSuperAdmin ? session.cityBranchIds : [];
@@ -209,6 +213,7 @@ export async function GET(request: NextRequest) {
         select *
         from public.sales_orders
         where deleted_at is null
+          and (${transferredOnly ? sql`ledger_posting_status in ('posted', 'transferred')` : sql`true`})
           and (${rawTerm ? sql`(
                 sales_order_no ilike ${"%" + rawTerm + "%"}
                 or account_number ilike ${"%" + rawTerm + "%"}
@@ -232,15 +237,39 @@ export async function GET(request: NextRequest) {
             : !session.isSuperAdmin
             ? sql`country_id = any(${countryIds.length ? countryIds : ["00000000-0000-0000-0000-000000000000"]})`
             : sql`true`})
-        order by created_at desc
-        limit ${limit}
+        order by created_at desc, id desc
+        limit ${limit} offset ${offset}
       `;
     });
 
     const lang = normalizeLanguage(params.get("lang"), "en");
 
     if (viaPg) {
-      const resolved = await localizeRecordNames(viaPg as any[], "sales_orders", "customer_name", lang);
+      const sourceRows = viaPg as any[];
+      if (transferredOnly) {
+        const receiptOrders = sourceRows.filter(row => row.form_data?.transferTrace?.paymentId).map(row => row.id);
+        if (receiptOrders.length > 0) {
+          const summaries = await withLocalPg(sql => sql`
+            select p.sales_order_id,
+                   coalesce(sum(p.received) filter (where p.payment_kind = 'advance'), 0) as advance,
+                   coalesce(sum(p.received), 0) as received
+            from (
+              select o.id as sales_order_id, p.payment_kind,
+                     case when upper(p.currency_code) = upper(o.currency_code) then p.amount else p.base_currency_amount end as received
+              from sales_orders o
+              left join sales_order_payments p on p.sales_order_id = o.id
+                and p.status = 'posted' and p.deleted_at is null
+                and p.payment_kind <> 'booking'
+                and p.id::text <> o.form_data->'transferTrace'->>'paymentId'
+              where o.id = any(${receiptOrders}::uuid[])
+            ) p
+            group by p.sales_order_id
+          `);
+          const byOrder = new Map((summaries ?? []).map(row => [row.sales_order_id, row]));
+          for (const row of sourceRows) row.transferReceiptSummary = byOrder.get(row.id);
+        }
+      }
+      const resolved = await localizeRecordNames(sourceRows, "sales_orders", "customer_name", lang);
       return apiOk({ salesOrders: resolved });
     }
 
@@ -250,7 +279,8 @@ export async function GET(request: NextRequest) {
       .select("*")
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
-      .limit(limit);
+      .order("id", { ascending: false });
+    if (transferredOnly) query = query.in("ledger_posting_status", ["posted", "transferred"]);
 
     if (rawTerm) {
       query = query.or(`sales_order_no.ilike."%${rawTerm}%",account_number.ilike."%${rawTerm}%",manual_reference_number.ilike."%${rawTerm}%",customer_number.ilike."%${rawTerm}%",customer_name.ilike."%${rawTerm}%",super_admin_serial_number.ilike."%${rawTerm}%",country_transaction_serial_number.ilike."%${rawTerm}%",branch_transaction_serial_number.ilike."%${rawTerm}%"`);
@@ -262,7 +292,7 @@ export async function GET(request: NextRequest) {
     else if (countryId) query = query.eq("country_id", countryId);
     else if (!session.isSuperAdmin) query = query.in("country_id", session.countryIds.length ? session.countryIds : ["00000000-0000-0000-0000-000000000000"]);
 
-    const fallbackRows = await requireSupabaseData(query);
+    const fallbackRows = await requireSupabaseData(query.range(offset, offset + limit - 1));
     const resolvedFallback = await localizeRecordNames((fallbackRows ?? []) as any[], "sales_orders", "customer_name", lang);
     return apiOk({ salesOrders: resolvedFallback });
   } catch (error) {
