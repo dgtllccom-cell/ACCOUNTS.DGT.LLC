@@ -35,3 +35,47 @@ it("opens the booking preview independently and prevents a second transfer in th
   fireEvent.click(transferred);
   expect(transfer).toHaveBeenCalledTimes(1);
 });
+
+it("opens the transfer report before posting and displays confirmed journal details after posting", () => {
+  const post = vi.fn().mockResolvedValue(undefined);
+  const props = {
+    form: { salesOrderNo: "SB-42", customerAccountName: "Customer DR", salesAccountName: "Sales CR" },
+    onConfirmTransfer: post,
+    useTransferReport: true,
+  };
+  const { rerender } = render(<SalesBookingStep5 {...props} />);
+  fireEvent.click(screen.getByRole("button", { name: "Sales Transfer Payment" }));
+  const report = screen.getByRole("dialog", { name: "Sales Booking Transfer Verification Report" });
+  expect(within(report).getAllByText("Awaiting Transfer").length).toBeGreaterThan(0);
+  expect(post).not.toHaveBeenCalled();
+  fireEvent.click(within(report).getByRole("button", { name: "Transfer / Post" }));
+  expect(post).toHaveBeenCalledTimes(1);
+
+  rerender(<SalesBookingStep5 {...props} isTransferred transferConfirmation={{
+    ledgerPostingStatus: "posted",
+    salesOrderNo: "SB-42",
+    transferVerification: {
+      journalId: "journal-42", voucherNo: "VR-42", debitSerial: "DR-42", creditSerial: "CR-42",
+      debitAmount: 100, creditAmount: 100, debitCurrency: "AED", creditCurrency: "AED",
+    },
+  }} />);
+  expect(within(report).getAllByText("Transferred / Completed")).toHaveLength(2);
+  expect(within(report).getByRole("link", { name: "VR-42" }).getAttribute("href")).toContain("entryId=journal-42");
+  expect(within(report).queryByRole("button", { name: "Transfer / Post" })).toBeNull();
+});
+
+it("opens a read-only two-page Sales Booking preview with its document actions", () => {
+  const post = vi.fn();
+  render(<SalesBookingStep5 form={{ salesOrderNo: "SB-42", branchCompanyName: "QA Trading" }}
+    onConfirmTransfer={post} useTransferReport />);
+  fireEvent.click(screen.getByRole("button", { name: "View" }));
+  const view = within(screen.getByRole("dialog", { name: "Sales Booking – View / PDF Preview" }));
+  expect(view.getByRole("heading", { name: "Sales Contract / Booking Report" })).toBeTruthy();
+  expect(view.getByRole("heading", { name: "Contract Report & Annexure" })).toBeTruthy();
+  expect(view.getAllByText("QA Trading")).toHaveLength(2);
+  for (const action of ["Print", "Download PDF", "Invoice", "Email", "WhatsApp"]) {
+    expect(view.getByRole("button", { name: action })).toBeTruthy();
+  }
+  expect(view.queryByRole("button", { name: "Transfer / Post" })).toBeNull();
+  expect(post).not.toHaveBeenCalled();
+});
