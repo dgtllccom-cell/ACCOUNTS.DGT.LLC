@@ -5,14 +5,14 @@ import { translateHeader } from "@/lib/i18n/table-headers";
 import { convertedSalesAmount, getBookingCurrencies } from "@/lib/sales/booking-currencies";
 
 const currencyOptions = ["AED", "USD", "EUR", "GBP", "PKR", "AFN", "INR", "CNY", "SAR"];
-const field = "w-full min-w-0 h-8 rounded-md border border-slate-200 bg-white px-2 text-base text-slate-900 sm:text-xs dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100";
+const field = "min-w-0 h-8 rounded-md border border-slate-200 bg-white px-2 text-base text-slate-900 sm:text-xs dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100";
 const label = "block space-y-1 text-[10px] font-bold uppercase leading-tight text-slate-600 dark:text-slate-300";
 
 function CurrencySelect({ title, value, onChange, disabled }) {
   return (
     <label className={label}>
       <span>{title}</span>
-      <select className={field} value={value} disabled={disabled} onChange={event => onChange(event.target.value)}>
+      <select className={`${field} w-full`} value={value} disabled={disabled} onChange={event => onChange(event.target.value)}>
         <option value="">—</option>
         {[...new Set([...currencyOptions, value].filter(Boolean))].map(code => <option key={code}>{code}</option>)}
       </select>
@@ -32,20 +32,20 @@ export function SalesBookingCurrencyFields({ form, lang, onChange, readOnly = fa
           disabled={readOnly} onChange={value => onChange("goodsPurchaseCurrency", value)} />
       )}
       {goods ? (
-        <label className={label}><span>{tr("Sales Currency")}</span><input className={field} value={sales} readOnly /></label>
+        <label className={label}><span>{tr("Sales Currency")}</span><input className={`${field} w-full`} value={sales} readOnly /></label>
       ) : (
         <CurrencySelect title={tr("Sales Currency")} value={sales} disabled={readOnly} onChange={value => onChange("salesCurrency", value)} />
       )}
       {goods ? (
-        <label className={label}><span>{tr("Exchange Rate")}</span><input className={field} dir="ltr" value={displayRate} readOnly /></label>
+        <label className={label}><span>{tr("Exchange Rate")}</span><input className={`${field} w-full`} dir="ltr" value={displayRate} readOnly /></label>
       ) : (
         <div className="min-w-0">
-          <label htmlFor="sales-booking-exchange-rate" className={label}>{tr("Exchange Rate")}</label>
-          <div className="mt-1 flex gap-1" dir="ltr">
+          <label htmlFor="sales-booking-exchange-rate" className={label}>{tr("Exchange Rate")} <bdi className="font-normal">{sales} → {final}</bdi></label>
+          <div className="mt-1 grid grid-cols-2 gap-2" dir="ltr">
             <input id="sales-booking-exchange-rate" type="number" inputMode="decimal" min="0.00000001" step="any"
-              className={`${field} flex-1`} value={rate.sameCurrency ? 1 : form.exchangeRate ?? ""} readOnly={readOnly || rate.sameCurrency}
+              className={`${field} w-full`} value={rate.sameCurrency ? 1 : form.exchangeRate ?? ""} readOnly={readOnly || rate.sameCurrency}
               onChange={event => onChange("exchangeRate", event.target.value === "" ? "" : Number(event.target.value))} />
-            <select aria-label={tr("Exchange Rate Type")} className={`${field} w-12 shrink-0 px-1`} value={rate.sameCurrency ? "*" : form.operator || "*"}
+            <select aria-label={tr("Exchange Rate Type")} className={`${field} w-full border-amber-200 bg-amber-50 px-1`} value={rate.sameCurrency ? "*" : form.operator || "*"}
               disabled={readOnly || rate.sameCurrency} onChange={event => onChange("operator", event.target.value)}>
               <option value="*">×</option><option value="/">÷</option>
             </select>
@@ -53,7 +53,7 @@ export function SalesBookingCurrencyFields({ form, lang, onChange, readOnly = fa
         </div>
       )}
       {goods ? (
-        <label className={label}><span>{tr("Final Currency")}</span><input className={field} value={final} readOnly /></label>
+        <label className={label}><span>{tr("Final Currency")}</span><input className={`${field} w-full`} value={final} readOnly /></label>
       ) : (
         <CurrencySelect title={tr("Final Currency")} value={final} disabled={readOnly} onChange={value => onChange("secondaryCurrency", value)} />
       )}

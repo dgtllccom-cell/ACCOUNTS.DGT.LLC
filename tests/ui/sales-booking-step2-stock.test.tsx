@@ -52,7 +52,9 @@ describe("Sales Booking step 2 — stock first, then item search", () => {
     ["Confirmed Stock", "journal", "journal"],
   ])("opens the stock picker directly at %s", async (label, group, source) => {
     render(<Harness />);
-    fireEvent.click(within(screen.getByTestId("sales-stock-source")).getByRole("button", { name: label }));
+    const sourceSelect = within(screen.getByTestId("sales-stock-source")).getByRole("combobox", { name: "Stock" });
+    expect(within(sourceSelect).getByRole("option", { name: label, hidden: true, selected: false })).toBeTruthy();
+    fireEvent.change(sourceSelect, { target: { value: group } });
     const picker = screen.getByRole("dialog", { name: "Select Stock to Sell" });
     expect(within(picker).getByTestId(`stock-source-${group}`).getAttribute("aria-pressed")).toBe("true");
     if (group === "warehouse") {

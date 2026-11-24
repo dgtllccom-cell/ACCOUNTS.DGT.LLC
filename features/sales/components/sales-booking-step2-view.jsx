@@ -7,9 +7,7 @@ import {
   ChevronRight,
   Plus,
   AlertTriangle,
-  Building2,
   CheckCircle2,
-  Layers
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { convertedSalesAmount, getBookingCurrencies } from "@/lib/sales/booking-currencies";
@@ -23,12 +21,14 @@ import { SalesStockPanel } from "./sales-stock-panel";
 //   warehouse = Goods Transfer Journal lots + warehouse balances (Receiving / Confirm Stock) + Local Purchase
 //   booking   = Purchase Booking lines not yet loaded
 //   export    = Loading Booking goods on the way (in transit) + endorsed stock
+const stockGroupLabel = (lang, id) => id === "endorse" ? tUi(lang, "ppe.kind_endorsement", "Endorsement") : tUi(lang, `sales.stk_source_${id}`, id);
+
 const STOCK_GROUPS = [
-  { id: "warehouse", sources: ["warehouse_all"], icon: Building2 },
-  { id: "booking", sources: ["booking"], icon: Package },
-  { id: "export", sources: ["export_all"], icon: Layers },
-  { id: "endorse", sources: ["endorse"], icon: Layers },
-  { id: "journal", sources: ["journal"], icon: Package }
+  { id: "warehouse", sources: ["warehouse_all"] },
+  { id: "booking", sources: ["booking"] },
+  { id: "export", sources: ["export_all"] },
+  { id: "endorse", sources: ["endorse"] },
+  { id: "journal", sources: ["journal"] }
 ];
 
 export function SalesBookingStep2({
@@ -321,24 +321,17 @@ export function SalesBookingStep2({
               {tr("Open Stock")}
             </Button>
           </div>
-          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-            {STOCK_GROUPS.map((g) => {
-              const Icon = g.icon;
-              const active = stockGroup === g.id;
-              return (
-                <button
-                  key={g.id}
-                  type="button"
-                  onClick={() => openStock(g.id)}
-                  aria-pressed={active}
-                  className={`h-9 px-2 rounded-lg border text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors ${active ? "bg-emerald-600 border-emerald-600 text-white" : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:border-emerald-400"}`}
-                >
-                  <Icon className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">{g.id === "endorse" ? tUi(lang, "ppe.kind_endorsement", "Endorsement") : tUi(lang, `sales.stk_source_${g.id}`, g.id)}</span>
-                </button>
-              );
-            })}
-          </div>
+          <select
+            aria-label={tUi(lang, "sales.s2_stock_source", "Stock")}
+            value={pickerGroup || ""}
+            onChange={(event) => { if (event.target.value) openStock(event.target.value); }}
+            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-950"
+          >
+            <option value="" disabled>{stockGroupLabel(lang, stockGroup)}</option>
+            {STOCK_GROUPS.map(({ id }) => (
+              <option key={id} value={id}>{stockGroupLabel(lang, id)}</option>
+            ))}
+          </select>
           <p className="text-[10px] text-slate-500 dark:text-slate-400">{stockGroup === "endorse" ? tUi(lang, "ppe.kind_endorsement", "Endorsement") : tUi(lang, `sales.stk_source_${stockGroup}_hint`, "")}</p>
         </div>
 

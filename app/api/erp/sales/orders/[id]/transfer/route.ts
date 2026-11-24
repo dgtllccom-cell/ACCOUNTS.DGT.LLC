@@ -388,12 +388,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       `;
 
       const viaPgLines = await pg(async (sql) => {
-        return await sql`select ledger_id, debit, credit from roznamcha_lines where roznamcha_entry_id = ${paymentRecord.roznamcha_entry_id}`;
+        return await sql`select ledger_id, debit, credit, currency, entry_serial_number from roznamcha_lines where roznamcha_entry_id = ${paymentRecord.roznamcha_entry_id}`;
       });
       const postedLines = (viaPgLines && viaPgLines.length > 0 ? viaPgLines : await requireSupabaseData(
         supabase
           .from("roznamcha_lines")
-          .select("ledger_id, debit, credit")
+          .select("ledger_id, debit, credit, currency, entry_serial_number")
           .eq("roznamcha_entry_id", paymentRecord.roznamcha_entry_id)
       )) as any[];
 
@@ -412,7 +412,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         expectedExchangeRate: exRate
       });
 
-      const journalColumns = "id, status, posted_at, country_id, country_branch_id, city_branch_id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number";
+      const journalColumns = "id, voucher_no, status, posted_at, country_id, country_branch_id, city_branch_id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number";
       const viaPgJournal = await pg(async (sql) => {
         const rows = await sql`select ${sql.unsafe(journalColumns)} from roznamcha_entries where id = ${paymentRecord.roznamcha_entry_id} limit 1`;
         return rows[0] ?? null;
@@ -609,6 +609,21 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         };
       }
 
+      const debitLine = postedLines.find((line) => line.ledger_id === debitLedgerId && Number(line.debit) > 0);
+      const creditLine = postedLines.find((line) => line.ledger_id === creditLedgerId && Number(line.credit) > 0);
+      const transferVerification = {
+        journalId: journalRecord.id,
+        voucherNo: journalRecord.voucher_no,
+        debitSerial: debitLine?.entry_serial_number,
+        creditSerial: creditLine?.entry_serial_number,
+        debitAmount: debitLine?.debit,
+        creditAmount: creditLine?.credit,
+        debitCurrency: debitLine?.currency,
+        creditCurrency: creditLine?.currency,
+        postedAt: journalRecord.posted_at ?? now,
+        userName: updatedFormData.form.transferAudit.userName,
+      };
+
       const patch = {
         ledger_posting_status: "posted",
         payment_status: salesPaymentStatus,
@@ -617,6 +632,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         updated_at: now,
         form_data: {
           ...updatedFormData,
+          transferVerification,
           stockDeducted: (isStockSale || managedDeduction) ? true : (alreadyDeducted ? true : false),
           isEndorseSale: isEndorse,
           stockDeductionAudit: stockDeductionAudit || formData.stockDeductionAudit || null,
@@ -713,7 +729,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       paymentStatus: salesPaymentStatus,
       paymentKind: paymentRoute.paymentKind,
       paidAmount: existingPaid,
-      remainingAmount: newRemainingSales
+      remainingAmount: newRemainingSales,
+      transferVerification: patch.form_data.transferVerification,
     };
 
     if (idempotencyKey && tenantHash) {
