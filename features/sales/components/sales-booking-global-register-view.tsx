@@ -23,14 +23,19 @@ import {
   Clock,
   Store,
   MoreVertical,
+  ArrowRightLeft,
 } from "lucide-react";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { cn } from "@/lib/utils";
-import { apiGet } from "@/lib/api/client";
+import { apiGet, apiPost } from "@/lib/api/client";
 import { InvoiceDocumentView } from "@/components/invoices/invoice-document-view";
 import { EntryMethodSelector } from "@/features/document-intelligence/components/entry-method-selector";
 import { SalesOrderWizard } from "@/features/sales/components/sales-order-wizard.jsx";
+
+import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
+// @ts-expect-error JSX view module
+import { SalesBookingTransferReport } from "./sales-booking-transfer-report.jsx";
 
 interface SalesBookingGlobalRegisterViewProps {
   session: any;
@@ -90,6 +95,31 @@ export function SalesBookingGlobalRegisterView({
   const [activeRowMenuId, setActiveRowMenuId] = useState<string | null>(null);
   const [invoiceRow, setInvoiceRow] = useState<any | null>(null);
 
+  const [review, setReview] = useState<{ id: string; allowPost: boolean } | null>(null);
+  const [reviewOrder, setReviewOrder] = useState<any>(null);
+  const [reviewConfirmation, setReviewConfirmation] = useState<any>(null);
+  const [reviewError, setReviewError] = useState("");
+  const [reviewBusy, setReviewBusy] = useState(false);
+  const postingReview = useRef(false);
+
+  useEffect(() => {
+    if (!review) return;
+    let current = true;
+    apiGet<{ order: any }>(`/api/erp/sales/orders/${encodeURIComponent(review.id)}`)
+      .then(({ order }) => { if (current) setReviewOrder(order); })
+      .catch((error: Error) => { if (current) setReviewError(error.message); })
+      .finally(() => { if (current) setReviewBusy(false); });
+    return () => { current = false; };
+  }, [review]);
+
+  const openReview = (id: string, allowPost: boolean) => {
+    setReviewOrder(null);
+    setReviewConfirmation(null);
+    setReviewError("");
+    setReviewBusy(true);
+    setReview({ id, allowPost });
+  };
+
   // Pagination (replaces bottom yellow total bar per owner design standard)
   const [pageSize, setPageSize] = useState<number>(25);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -146,6 +176,23 @@ export function SalesBookingGlobalRegisterView({
       void loadReports();
     }
   }, [isFormMode, loadReports]);
+
+  const postReviewedOrder = async () => {
+    if (!review?.allowPost || !reviewOrder || postingReview.current) return;
+    postingReview.current = true;
+    setReviewBusy(true);
+    setReviewError("");
+    try {
+      const result = await apiPost<unknown>(`/api/erp/sales/orders/${encodeURIComponent(review.id)}/transfer`, {});
+      setReviewConfirmation(result);
+      void loadReports();
+    } catch (error) {
+      setReviewError(error instanceof Error ? error.message : tr("Transfer failed."));
+    } finally {
+      postingReview.current = false;
+      setReviewBusy(false);
+    }
+  };
 
   const isRowLocalSale = useCallback((r: any) => {
     const form = r?.form_data?.form || {};
@@ -488,7 +535,7 @@ export function SalesBookingGlobalRegisterView({
           skipGate={Boolean(idParam) || Boolean(lotParam)}
           onCancel={exitFormMode}
         >
-          <SalesOrderWizard session={session} />
+          <SalesOrderWizard session={session} useSalesBookingTransferReport={!isLocalSalesPage} />
         </EntryMethodSelector>
       </div>
     );
@@ -823,6 +870,7 @@ export function SalesBookingGlobalRegisterView({
         <div className="overflow-x-auto">
           <table className="min-w-full text-xs">
             <thead className="bg-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-700 border-b border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700">
+              {isLocalSalesPage ? (
               <tr>
                 <th className="px-2.5 py-2.5 text-center w-10">#</th>
                 <th className="px-3 py-2.5 text-start">{tr("BILL NO. / DATE")}</th>
@@ -835,17 +883,25 @@ export function SalesBookingGlobalRegisterView({
                 <th className="px-3 py-2.5 text-center">{tr("PAYMENT / STATUS")}</th>
                 <th className="px-2.5 py-2.5 text-center">{tr("ACTIONS")}</th>
               </tr>
+              ) : (
+                <tr>
+                  {["#", "Sales Booking No. / Date", "Location", "User Name (Posted By)", "Purchase DR (Acc. No. / Name)", "Sales CR (Acc. No. / Name)", "Goods Name (Brand / Size)", "Lot Name", "Qty (Unit)", "Weight (KG) Gross / Net", "Exchange Rate", "Amount (Sales / Final)", "Payment Type", "Loading Country / Port", "Received Country / Port", "Dates (Loading / Received)", "Actions"].map((label, index) => (
+                    <th key={label} scope="col" className={cn("min-w-14 px-2 py-2 text-start leading-tight", index === 13 && "bg-sky-100 text-sky-950", index === 14 && "bg-emerald-100 text-emerald-950", index === 15 && "bg-violet-100 text-violet-950")}>{tr(label)}</th>
+                  ))}
+                </tr>
+              )}
+
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={10} className="px-4 py-12 text-center text-slate-400 font-semibold">
+                  <td colSpan={isLocalSalesPage ? 10 : 17} className="px-4 py-12 text-center text-slate-400 font-semibold">
                     {tr("Loading sales register...")}
                   </td>
                 </tr>
               ) : paginatedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-4 py-12 text-center">
+                  <td colSpan={isLocalSalesPage ? 10 : 17} className="px-4 py-12 text-center">
                     <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
                       {isLocalSalesPage ? tr("No local sales bills found yet.") : tr("No sales booking bills found yet.")}
                     </p>
@@ -880,6 +936,65 @@ export function SalesBookingGlobalRegisterView({
                   const goods0 = r.form_data?.goodsEntries?.[0] || r.form_data?.form || {};
                   const brand = goods0.brand || "";
                   const size = goods0.size || "";
+
+                  if (!isLocalSalesPage) {
+                    const form = r.form_data?.form || {};
+                    const goods = Array.isArray(r.form_data?.goodsEntries) ? r.form_data.goodsEntries : [];
+                    const lots = [...new Set(goods.map((item: any) => item.stockLotNo || item.lotNo).filter(Boolean))];
+                    const payment = String(form.paymentType || r.paymentType || "");
+                    const advance = /advance/i.test(payment);
+                    const paymentLabel = advance && Number(form.advancePercent) > 0
+                      ? `${tr("Advance")} (${Number(form.advancePercent)}%)` : tr(advance ? "Advance" : payment || "—");
+                    const cell = "border-e border-slate-100 px-2 py-1.5 align-middle dark:border-slate-800";
+                    const stacked = (top: React.ReactNode, bottom: React.ReactNode) => <>
+                      <div className="font-bold">{top || "—"}</div><div className="text-[10px] text-slate-600 dark:text-slate-300">{bottom || "—"}</div>
+                    </>;
+                    return (
+                      <tr key={rowKey} className="text-[11px] leading-tight hover:bg-blue-50/50 dark:hover:bg-slate-800/50">
+                        <td className={cn(cell, "text-center")}>{rowNum}</td>
+                        <td className={cn(cell, "whitespace-nowrap font-mono")}>
+                          {stacked(<button type="button" className="text-blue-700 hover:underline dark:text-blue-400" onClick={() => openEditOrder(r.id)}>{billNo}</button>, formatDashDate(r.salesDate || r.bookingDate || r.createdAt))}
+                        </td>
+                        <td className={cell}>{stacked(form.mainBranchName || r.countryName, r.branchName || form.branchName)}</td>
+                        <td className={cell}>{form.transferAudit?.userName || r.postedByName || r.createdByName || form.createdByName || "—"}</td>
+                        <td className={cell}>{stacked(form.customerAccountNo, form.customerAccountName || r.customerName)}</td>
+                        <td className={cell}>{stacked(form.salesAccountNo || r.salesAccountNumber, form.salesAccountName || r.salesAccountName)}</td>
+                        <td className={cell}>{stacked(r.productName || goods0.goodsName, [brand, size, goods0.hsCode].filter(Boolean).join(" · "))}</td>
+                        <td className={cn(cell, "font-mono")}>{lots.join(", ") || goods0.stockLotNo || goods0.lotNo || "—"}</td>
+                        <td className={cn(cell, "whitespace-nowrap text-end tabular-nums")}>{stacked(Number(r.quantity || 0).toLocaleString(lang), r.unit)}</td>
+                        <td className={cn(cell, "whitespace-nowrap text-end tabular-nums")}>{stacked(`G ${fmt(Number(r.totalGrossWeight ?? r.totalWeight ?? 0))}`, `N ${fmt(Number(r.totalNetWeight ?? r.totalWeight ?? 0))}`)}</td>
+                        <td className={cn(cell, "whitespace-nowrap font-mono")}><bdi>{form.exchangeRate || r.exchange_rate ? `${form.operator === "/" ? "÷ " : ""}${form.exchangeRate || r.exchange_rate}` : "—"}</bdi></td>
+                        <td className={cn(cell, "whitespace-nowrap text-end tabular-nums")}>{stacked(`${r.currency || form.salesCurrency || "—"} ${fmt(salesAmt)}`, `${r.finalCurrency || form.secondaryCurrency || r.currency || "—"} ${fmt(r.finalAmount == null ? finalAmt : Number(r.finalAmount))}`)}</td>
+                        <td className={cell}><span className={cn("inline-block rounded-md px-1.5 py-1 text-center font-bold", advance ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-900")}>{paymentLabel}</span></td>
+                        <td className={cn(cell, "bg-sky-50 dark:bg-sky-950/40")}>{stacked(form.loadingCountry, form.loadingPort)}</td>
+                        <td className={cn(cell, "bg-emerald-50 dark:bg-emerald-950/40")}>{stacked(form.receivedCountry || form.receivingCountry, form.receivedPort || form.receivingPort)}</td>
+                        <td className={cn(cell, "whitespace-nowrap bg-violet-50 dark:bg-violet-950/40")}>{stacked(formatDashDate(form.loadingDate), formatDashDate(form.receivedDate || form.receivingDate))}</td>
+                        <td className={cn(cell, "text-center")}>
+                          <ViewportActionMenu
+                            ariaLabel={`${tr("Actions")} ${billNo}`}
+                            align={isRtl ? "left" : "right"}
+                            buttonClassName="inline-flex h-7 w-7 items-center justify-center rounded-full border hover:bg-slate-100 dark:hover:bg-slate-700"
+                            menuClassName="w-40 text-xs"
+                            trigger={<MoreVertical className="h-4 w-4" />}
+                          >
+                            {(close) => (
+                              <>
+                                <button type="button" className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-start font-bold text-blue-700 hover:bg-blue-50 disabled:opacity-50 dark:text-blue-400 dark:hover:bg-slate-800"
+                                  disabled={Boolean(form.transferAudit) || r.form_data?.workflow?.transferStatus === "transferred" || !r.id}
+                                  onClick={() => { close(); openReview(r.id, true); }}>
+                                  <ArrowRightLeft className="h-4 w-4" />{tr("Transfer / Post")}
+                                </button>
+                                <button type="button" className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-start font-bold hover:bg-slate-100 disabled:opacity-50 dark:hover:bg-slate-800"
+                                  disabled={!r.id} onClick={() => { close(); openReview(r.id, false); }}>
+                                  <Eye className="h-4 w-4" />{tr("View")}
+                                </button>
+                              </>
+                            )}
+                          </ViewportActionMenu>
+                        </td>
+                      </tr>
+                    );
+                  }
 
                   return (
                     <tr
@@ -1195,6 +1310,12 @@ export function SalesBookingGlobalRegisterView({
       </div>
 
       {/* Full A4 Sales Invoice View Modal */}
+      {review && <SalesBookingTransferReport
+        open onClose={() => setReview(null)} lang={lang} order={reviewOrder ?? undefined}
+        form={reviewOrder?.form_data?.form} goods={Array.isArray(reviewOrder?.form_data?.goodsEntries) ? reviewOrder.form_data.goodsEntries : []}
+        confirmation={reviewConfirmation} busy={reviewBusy} error={reviewError}
+        onPost={review.allowPost && reviewOrder ? postReviewedOrder : undefined}
+      />}
       {invoiceRow && (
         <InvoiceDocumentView
           isOpen={Boolean(invoiceRow)}

@@ -446,7 +446,7 @@ function LightStatusBadge({ status }) {
   );
 }
 
-export function SalesOrderWizard({ session }) {
+export function SalesOrderWizard({ session, useSalesBookingTransferReport = false }) {
   const lang = useActiveLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -1905,7 +1905,9 @@ export function SalesOrderWizard({ session }) {
     }
   };
 
-  const handleTransfer = async () => {
+  const handleTransfer = async ({ stayInReport = false } = {}) => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setSavingOrder(true);
     setSaveMessage("");
     try {
@@ -1925,36 +1927,39 @@ export function SalesOrderWizard({ session }) {
       const returnedOrderId = payload.data?.salesOrderId || savedOrderId || payload.data?.id;
       const returnedOrderNo = payload.data?.salesOrderNo || savedOrderNo || form.salesOrderNo;
 
-      if (returnedOrderId) {
-        const transferResponse = await fetch(`/api/erp/sales/orders/${returnedOrderId}/transfer`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            paymentKind: paymentRoute.paymentKind,
-            paymentType: form.paymentType || paymentRoute.paymentLabel
-          })
-        });
-        const transferPayloadData = await transferResponse.json().catch(() => ({}));
-        if (!transferResponse.ok || !transferPayloadData.ok) {
-          throw new Error(transferPayloadData?.error?.message || transferPayloadData?.error || t(lang, "purchase.wiz_err_roznamcha_transfer", "Roznamcha/Ledger Transfer failed."));
-        }
-      }
-
-      setSavedOrderId(returnedOrderId || "");
+      if (!returnedOrderId) throw new Error("The saved booking ID is missing.");
+      setSavedOrderId(returnedOrderId);
       setSavedOrderNo(returnedOrderNo);
-      if (returnedOrderId && intake.draft) await intake.consume(String(returnedOrderId));
+      const transferResponse = await fetch(`/api/erp/sales/orders/${returnedOrderId}/transfer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paymentKind: paymentRoute.paymentKind,
+          paymentType: form.paymentType || paymentRoute.paymentLabel
+        })
+      });
+      const transferPayloadData = await transferResponse.json().catch(() => ({}));
+      if (!transferResponse.ok || !transferPayloadData.ok) {
+        throw new Error(transferPayloadData?.error?.message || transferPayloadData?.error || t(lang, "purchase.wiz_err_roznamcha_transfer", "Roznamcha/Ledger Transfer failed."));
+      }
+      const confirmation = transferPayloadData.data;
+
       setSaveMessage(`Transferred Sales Order ${returnedOrderNo} to Journal / Payment and ledger posting.`);
-      setTransferredData(payload.data || { salesOrderNo: returnedOrderNo });
+      setTransferredData(confirmation);
       setIsTransferred(true);
       setRegisterRefreshKey((key) => key + 1);
 
-      window.location.href = `${paymentRoute.path}?salesOrderNo=${encodeURIComponent(returnedOrderNo)}`;
+      if (intake.draft) await intake.consume(String(returnedOrderId)).catch(() => undefined);
+      if (!stayInReport) window.location.href = `${paymentRoute.path}?salesOrderNo=${encodeURIComponent(returnedOrderNo)}`;
+      return confirmation;
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error saving order.";
       setSaveMessage(msg);
+      if (stayInReport) throw err;
       alert(msg);
     } finally {
       setSavingOrder(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -3615,7 +3620,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             </div>
           )}
 
-          {activeTab === "report" && isMounted && document.getElementById("erp-page-actions-slot") && createPortal(
+          {activeTab === "report" && !useSalesBookingTransferReport && isMounted && document.getElementById("erp-page-actions-slot") && createPortal(
             <>
               {!isTransferred && (
                 <div className="flex gap-2">
@@ -3960,7 +3965,9 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   lang={lang}
                   onBack={() => setActiveTab("review")}
                   onSaveDraft={() => handleSaveSalesOrder(false)}
-                  onConfirmTransfer={handleTransfer}
+                  onConfirmTransfer={useSalesBookingTransferReport ? () => handleTransfer({ stayInReport: true }) : handleTransfer}
+                  transferConfirmation={transferredData}
+                  useTransferReport={useSalesBookingTransferReport}
                   onPrint={() => {
                     import("@/lib/reports/print-dom-fragment").then((m) => {
                       if (!m.printDomFragmentViaModal("sales-booking-voucher-root", t(lang, "purchase.print_document_btn", "Print Voucher"), { lang })) {

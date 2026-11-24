@@ -6,12 +6,15 @@ import { Button } from "@/components/ui/button";
 import { t as tUi } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { printDomFragmentViaModal } from "@/lib/reports/print-dom-fragment";
+import { SalesBookingTransferReport } from "./sales-booking-transfer-report";
 import { SalesBookingContract } from "./sales-booking-contract";
 
 export function SalesBookingStep5({
   form, goodsEntries = [], lang = "en", onBack, onSaveDraft, onPreviewPdf,
-  onTransfer, onConfirmTransfer, isTransferred = false, savingOrder = false,
+  onTransfer, onConfirmTransfer, transferConfirmation, useTransferReport = false, isTransferred = false, savingOrder = false,
 }) {
+  const [transferReview, setTransferReview] = useState(false);
+  const [transferError, setTransferError] = useState("");
   const [viewOpen, setViewOpen] = useState(false);
   const [showConversion, setShowConversion] = useState(true);
   const tr = label => translateHeader(lang, label);
@@ -20,6 +23,18 @@ export function SalesBookingStep5({
   const status = isTransferred
     ? tUi(lang, "sales.transferred_status_word", "Transferred")
     : tUi(lang, "sales.pending_transfer_status_word", "Pending Transfer");
+  const openTransferReview = () => {
+    setTransferError("");
+    setTransferReview(true);
+  };
+  const confirmTransfer = async () => {
+    setTransferError("");
+    try {
+      await transfer();
+    } catch (error) {
+      setTransferError(error.message);
+    }
+  };
   const preview = () => {
     setViewOpen(true);
     onPreviewPdf?.();
@@ -46,7 +61,7 @@ export function SalesBookingStep5({
               <Eye className="h-4 w-4" aria-hidden="true" />{tUi(lang, "common.view", "View")}
             </Button>
           </div>
-          <Button type="button" className="w-full" disabled={!transfer || savingOrder || isTransferred} onClick={transfer}>
+          <Button type="button" className="w-full" disabled={!transfer || savingOrder || isTransferred} onClick={useTransferReport ? openTransferReview : transfer}>
             <ArrowRightLeft className="h-4 w-4" aria-hidden="true" />
             {isTransferred ? status : tUi(lang, "nav.sales_transfer_payment", "Sales Transfer Payment")}
           </Button>
@@ -56,6 +71,10 @@ export function SalesBookingStep5({
           </div>
         </div>
       </section>
+      {useTransferReport && <SalesBookingTransferReport
+        open={transferReview} onClose={() => setTransferReview(false)} form={form} goods={goodsEntries}
+        confirmation={transferConfirmation} busy={savingOrder} lang={lang} error={transferError} onPost={confirmTransfer}
+      />}
       <section className="min-w-0 rounded-xl border bg-card">
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-t-xl bg-blue-50 p-3 dark:bg-slate-800">
           <h3 className="text-sm font-bold">{tr("Sales Contract")}</h3>
