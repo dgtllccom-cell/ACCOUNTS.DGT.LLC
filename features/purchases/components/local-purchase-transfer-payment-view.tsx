@@ -929,7 +929,8 @@ export function LocalPurchaseTransferPaymentView({
   return (
     <div
       dir={isRtl ? "rtl" : "ltr"}
-      className="min-h-screen bg-[#f4f7fb] dark:bg-slate-950 p-3 sm:p-5 space-y-4 text-slate-900 dark:text-slate-100"
+      data-page-chrome="true"
+      className="min-h-screen bg-[#f4f7fb] dark:bg-slate-950 p-3 sm:p-4 space-y-3 text-slate-900 dark:text-slate-100"
     >
       {/* ── Print-Only Compact A4 Bill Sheet (hides dashboard navigation when printing a bill) ── */}
       {documentBill ? (<TradeDocumentCenter open onClose={() => setDocumentBill(null)} txnKind="purchase" source="local_purchase" record={documentBill} companyId={documentBill.company_id ?? null} scope={{ countryId: documentBill.country_id ?? null, countryBranchId: documentBill.country_branch_id ?? null, cityBranchId: documentBill.city_branch_id ?? null }} />) : null}
@@ -1072,16 +1073,24 @@ export function LocalPurchaseTransferPaymentView({
       )}
 
       {/* ── Top Page Header Bar ── */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 px-4 py-3.5 shadow-2xs flex flex-wrap items-center justify-between gap-3 print:hidden">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-white shadow-sm shrink-0">
-            <FileText className="h-5 w-5" />
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 px-4 py-3 shadow-2xs flex flex-wrap items-center justify-between gap-3 print:hidden">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200 transition cursor-pointer shrink-0"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>{tr("Back")}</span>
+          </button>
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-white shadow-sm shrink-0">
+            <FileText className="h-4.5 w-4.5" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight truncate">
-              {tr("Local Purchase Transfer Page")}
+            <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight truncate">
+              {tr("Local Purchase Payment Transfer")}
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
               {tr("Transferred purchase bills and payment tracking")}
             </p>
           </div>
@@ -1585,13 +1594,13 @@ export function LocalPurchaseTransferPaymentView({
                       setSelectedCountryId(c.id);
                       setSelectedBranchId("all");
                     }}
-                    className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-emerald-50/80 dark:hover:bg-slate-700/60 text-xs transition cursor-pointer"
+                    className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg hover:bg-emerald-50/80 dark:hover:bg-slate-700/60 text-xs transition cursor-pointer"
                   >
-                    <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
                       <span className="font-mono font-black text-slate-700 dark:text-slate-200 w-5 text-left shrink-0">
                         {c.code}
                       </span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">
+                      <span className="font-semibold text-slate-800 dark:text-slate-100 truncate" title={c.name}>
                         {c.name}
                       </span>
                     </div>
@@ -1874,18 +1883,23 @@ export function LocalPurchaseTransferPaymentView({
                         )}
                       </td>
 
-                      {/* 7. Qty (Unit) combined */}
-                      <td className="py-2.5 px-2 text-center font-mono font-bold text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap">
-                        {row._qty.toLocaleString("en-US")} {row._unit}
+                      {/* 7. Qty stacked on top, Unit underneath */}
+                      <td className="py-2 px-2 text-center font-mono whitespace-nowrap">
+                        <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                          {row._qty.toLocaleString("en-US")}
+                        </div>
+                        <div className="text-[10px] font-semibold uppercase text-slate-500 dark:text-slate-400">
+                          {row._unit}
+                        </div>
                       </td>
 
-                      {/* 8. Gross / Net Weight (kg) combined */}
-                      <td className="py-2.5 px-2 text-end font-mono whitespace-nowrap">
+                      {/* 8. Gross / Net Weight (kg) stacked cleanly */}
+                      <td className="py-2 px-2 text-end font-mono whitespace-nowrap">
                         <div className="font-bold text-slate-800 dark:text-slate-200 text-xs">
-                          G.W. {row._grossKg.toLocaleString("en-US")} kg
+                          {row._grossKg.toLocaleString("en-US")}
                         </div>
                         <div className="text-[10px] text-slate-500 font-semibold mt-0.5">
-                          N.W. {row._netKg.toLocaleString("en-US")} kg
+                          {row._netKg.toLocaleString("en-US")}
                         </div>
                       </td>
 

@@ -419,7 +419,7 @@ export default function WarehouseStockRegisterPage() {
   const emptyText = t("NO STOCK IN WAREHOUSES YET");
 
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} className="w-full space-y-3 p-3 md:p-4">
+    <div dir={isRtl ? "rtl" : "ltr"} data-page-chrome="true" className="w-full space-y-3 p-3 md:p-4">
       {/* ══ CONSOLIDATED TOP WHITE TOOLBAR ══ */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 shadow-2xs">
         {/* Left: Back button + Title & Subtitle */}
