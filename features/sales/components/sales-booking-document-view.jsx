@@ -49,7 +49,7 @@ export function SalesBookingDocumentView({ open, onClose, onInvoice, order = {},
   const section = (heading, rows) => <DocumentSection title={tr(heading)} rows={rows.map(([label, value]) => [tr(label), value === "" ? null : value])} />;
   const refs = [["Contract No.", form.salesContractNo || order.sales_contract_no], ["Invoice No.", form.invoiceNo || form.billNo], ["Booking No.", booking], ["Serial No.", order.branch_transaction_serial_number || form.bookingSerials?.branchTransactionSerialNumber], ["Date", form.salesDate || order.order_date]];
   const header = heading => (
-    <header className="space-y-2 text-center">
+    <div className="space-y-2 text-center">
       <div className="border-b-2 border-blue-900 pb-2">
         <div className="text-xl font-black text-blue-950">{pad(company)}</div>
         <div className="font-bold">{pad(form.branchName || order.branch_name)}</div>
@@ -59,7 +59,7 @@ export function SalesBookingDocumentView({ open, onClose, onInvoice, order = {},
       <dl className="grid grid-cols-5 divide-x rounded border border-blue-200 bg-blue-50 p-1">
         {refs.map(([label, value]) => <div key={label} className="break-words px-1"><dt className="font-semibold">{tr(label)}</dt><dd className="font-bold"><bdi>{pad(value)}</bdi></dd></div>)}
       </dl>
-    </header>
+    </div>
   );
   const footer = page => <footer className="flex justify-between border-t border-blue-900 pt-2 text-[10px] font-semibold"><span>{tr("Sales Booking Report")}</span><span>{tr("Page")} {page} / 2</span></footer>;
   const box = "min-w-0 space-y-3 rounded bg-white p-4 text-[11px] leading-snug text-slate-900 shadow-md";
@@ -86,6 +86,8 @@ export function SalesBookingDocumentView({ open, onClose, onInvoice, order = {},
   const exportPdf = async share => {
     if (!pages.current || exporting) return;
     setExportError("");
+    const whatsappWindow = share === "whatsapp" ? window.open("", "_blank") : null;
+    if (whatsappWindow) whatsappWindow.opener = null;
     setExporting(true);
     const clone = document.createElement("div");
     clone.dir = dir;
@@ -103,8 +105,13 @@ export function SalesBookingDocumentView({ open, onClose, onInvoice, order = {},
       }).from(clone).save();
       const message = encodeURIComponent(`${tr("Sales Booking Report")} ${booking || ""}\n${tr("Attach the downloaded PDF.")}`);
       if (share === "email") window.location.href = `mailto:?subject=${encodeURIComponent(booking || tr("Sales Booking"))}&body=${message}`;
-      if (share === "whatsapp") window.open(`https://wa.me/?text=${message}`, "_blank", "noopener,noreferrer");
+      if (share === "whatsapp") {
+        const whatsappUrl = `https://wa.me/?text=${message}`;
+        if (whatsappWindow) whatsappWindow.location.href = whatsappUrl;
+        else window.location.href = whatsappUrl;
+      }
     } catch {
+      whatsappWindow?.close();
       setExportError(tr("PDF generation failed. Please use Print to save the PDF."));
     } finally {
       setExporting(false);
