@@ -11,7 +11,7 @@ import {
   CheckCircle2,
   Layers
 } from "lucide-react";
-import { SalesBookingCurrencyFields, SalesBookingCurrencyPreview } from "./sales-booking-currencies";
+import { createPortal } from "react-dom";
 import { convertedSalesAmount, getBookingCurrencies } from "@/lib/sales/booking-currencies";
 import { t as tUi } from "@/lib/i18n/ui";
 import { Button } from "@/components/ui/button";
@@ -300,7 +300,6 @@ export function SalesBookingStep2({
     : Number(value).toLocaleString(lang, { maximumFractionDigits: digits });
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[minmax(300px,1fr)_minmax(0,2.2fr)] gap-3 items-start animate-in fade-in duration-200">
-      <SalesBookingCurrencyPreview form={form} lang={lang} goods amount={qtyNo * unitPrice} className="ms-auto w-full max-w-sm lg:hidden" />
       {/* LEFT COLUMN: GOODS ENTRY DETAILS FORM */}
       <div className="min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
         <div className="flex items-center justify-between gap-2 rounded-lg bg-blue-900 px-3 py-2 text-white">
@@ -539,10 +538,6 @@ export function SalesBookingStep2({
           ))}
         </dl>
 
-        <SalesBookingCurrencyPreview form={form} lang={lang} goods amount={qtyNo * unitPrice} className="hidden lg:block" />
-        <SalesBookingCurrencyFields form={form} lang={lang} goods
-          onChange={(key, value) => setForm(previous => ({ ...previous, [key]: value }))} />
-
         {/* Unit Price & Freight / ICA */}
         <div className="grid grid-cols-2 gap-2.5">
           <div className="space-y-1">
@@ -690,6 +685,7 @@ export function SalesBookingStep2({
         form={form}
         goodsEntries={goodsEntries}
         lang={lang}
+        hideRate
         onEdit={handleEditEntry}
         onDelete={index => {
           setGoodsEntries(previous => previous.filter((_, i) => i !== index));
@@ -699,7 +695,7 @@ export function SalesBookingStep2({
       />
 
       {/* Stock Selection Modal */}
-      <SalesStockPanel
+      {stockModalOpen && createPortal(<SalesStockPanel
         open={stockModalOpen}
         onClose={() => setStockModalOpen(false)}
         onConfirm={(lot, group) => {
@@ -709,7 +705,7 @@ export function SalesBookingStep2({
         }}
         initialGroup={stockGroup}
         lang={lang}
-      />
+      />, document.body)}
     </div>
   );
 }
