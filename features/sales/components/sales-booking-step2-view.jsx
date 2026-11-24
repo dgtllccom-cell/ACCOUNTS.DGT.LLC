@@ -140,6 +140,8 @@ export function SalesBookingStep2({
       managedLabel: lot.placeLabel || "",
       lotRef: lot.lotRef || lot.stockRef || "",
       lotPurchaseId: lot.purchaseId || "",
+      lotPurchaseAccountName: lot.purchaseAccountName || "",
+      lotPurchaseAccountNo: lot.purchaseAccountNo || "",
       lotUnitCost: Number(lot.landedUnitCost ?? lot.unitCost ?? 0),
       lotCostCurrency: lot.costCurrency || lot.currencyType || "",
       brand: lot.brand || "",
@@ -222,6 +224,8 @@ export function SalesBookingStep2({
       netWeight: calculatedNet,
       origin: form.origin || "",
       lotNo: selectedLotRef,
+      purchaseAccountName: selectedLotRef ? form.lotPurchaseAccountName || "" : "",
+      purchaseAccountNo: selectedLotRef ? form.lotPurchaseAccountNo || "" : "",
       lotId: form.managedLotId || "",
       saleSource: form.saleSource || stockGroup,
       journalTransferId: form.journalTransferId || "",
@@ -252,7 +256,7 @@ export function SalesBookingStep2({
       goodsId: "", goodsName: "", hsCode: "", stockLotNo: "", allotName: "", selectedLotId: "", managedLotId: "", journalTransferId: "",
       brand: "", size: "", grade: "", qualityReport: "", origin: "", qtyNo: 0, coursePrice: 0, freightIca: 0,
       qtyKgs: 0, emptyKgs: 0, totalBoxes: 0, packType: "", itemType: "", stackWeight: "", lotAvailableQty: 0,
-      warehouseId: "", warehouseName: "", goodsPurchaseCurrency: ""
+      warehouseId: "", warehouseName: "", goodsPurchaseCurrency: "", lotPurchaseAccountName: "", lotPurchaseAccountNo: ""
     }));
     setStockError("");
   };
@@ -266,6 +270,8 @@ export function SalesBookingStep2({
       goodsName: item.goodsName || item.productName,
       hsCode: item.hsCode,
       stockLotNo: item.itemId || item.lotNo,
+      lotPurchaseAccountName: item.purchaseAccountName || "",
+      lotPurchaseAccountNo: item.purchaseAccountNo || "",
       goodsPurchaseCurrency: item.purchaseCurrency || "",
       journalTransferId: item.journalTransferId || "",
       brand: item.brand,
