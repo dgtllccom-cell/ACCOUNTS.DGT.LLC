@@ -5,6 +5,8 @@ import { Building2, CheckCircle2, ClipboardCheck, FileText, Loader2, Package, Pl
 import { t as tUi } from "@/lib/i18n/ui";
 import { rtlLanguages } from "@/lib/i18n/languages";
 import type { AvailableLot, LotDeduction } from "@/lib/sales/available-lots";
+// @ts-expect-error JSX view module
+import { SoldStockHistory } from "./sold-stock-history.jsx";
 
 /**
  * Select Stock — a real selection panel, not a dropdown:
@@ -52,7 +54,8 @@ export function SalesStockPanel({
   });
   const [search, setSearch] = useState("");
   const [selectedKey, setSelectedKey] = useState("");
-  const [history, setHistory] = useState<Record<string, LotDeduction[] | "loading">>({});
+  const [history, setHistory] = useState<Record<string, LotDeduction[] | "loading" | "error">>({});
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const load = useCallback(
     async (id: StockGroupId) => {
@@ -85,6 +88,7 @@ export function SalesStockPanel({
     setGroup(initialGroup);
     setSearch("");
     setSelectedKey("");
+    setHistoryOpen(false);
     setState({ warehouse: { status: "idle", lots: [] }, booking: { status: "idle", lots: [] }, export: { status: "idle", lots: [] }, journal: { status: "idle", lots: [] } });
     void load(initialGroup);
   }, [open, initialGroup, load]);
@@ -106,9 +110,12 @@ export function SalesStockPanel({
     const k = keyOf(selected);
     setHistory((p) => ({ ...p, [k]: "loading" }));
     fetch(`/api/erp/sales/available-lots?deductionsFor=${encodeURIComponent(selected.lotNo)}`, { credentials: "same-origin" })
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error("Stock history could not be read");
+        return r.json();
+      })
       .then((j) => setHistory((p) => ({ ...p, [k]: (j?.data?.deductions ?? []) as LotDeduction[] })))
-      .catch(() => setHistory((p) => ({ ...p, [k]: [] })));
+      .catch(() => setHistory((p) => ({ ...p, [k]: "error" })));
   }, [selected, history]);
 
   if (!open) return null;
@@ -132,13 +139,16 @@ export function SalesStockPanel({
         <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-800">
           <div className="min-w-0">
             <h3 className="truncate text-sm font-black uppercase tracking-wide text-slate-900 dark:text-slate-100">{tt("panel_title", "Select Stock to Sell")}</h3>
-            <p className="truncate text-[11px] text-slate-500">{tt("panel_sub", "Choose a source, open a lot to inspect it, then confirm.")}</p>
+            <p className="truncate text-[11px] text-slate-500">{historyOpen ? tt("d_history", "Earlier bookings from this lot") : tt("panel_sub", "Choose a source, open a lot to inspect it, then confirm.")}</p>
           </div>
           <button type="button" onClick={onClose} aria-label={tt("cancel", "Cancel")} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" data-testid="stock-panel-close">
             <X className="h-5 w-5" />
           </button>
         </div>
 
+        {historyOpen && sel ? <SoldStockHistory lot={sel} deductions={Array.isArray(selHistory) ? selHistory : []}
+          loading={selHistory == null || selHistory === "loading"} failed={selHistory === "error"}
+          lang={lang} onBack={() => setHistoryOpen(false)} /> : <>
         {/* body: sources | lots | details */}
         <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[200px_minmax(0,1fr)_320px] lg:overflow-hidden">
           {/* 1. sources */}
@@ -229,7 +239,14 @@ export function SalesStockPanel({
                           <td className="px-2 py-2">{l.size || "—"}</td>
                           <td className="px-2 py-2 tabular-nums">{fmt(l.totalQty ?? l.availableQty)} {l.qtyName}</td>
                           <td className="px-2 py-2 tabular-nums">{l.totalWeight ? `${fmt(l.totalWeight, 2)} KG` : "—"}</td>
-                          <td className="px-2 py-2 tabular-nums">{fmt(l.soldQty ?? 0)}</td>
+                          <td className="px-2 py-2 tabular-nums">
+                            <button type="button" aria-label={`${tt("col_sold", "Sold Quantity")} — ${l.lotNo}`}
+                              className="rounded px-1 font-semibold text-blue-700 underline dark:text-blue-300"
+                              onKeyDown={event => event.stopPropagation()}
+                              onClick={event => { event.stopPropagation(); setSelectedKey(k); setHistoryOpen(true); }}>
+                              {fmt(l.soldQty ?? 0)}
+                            </button>
+                          </td>
                           <td className={`px-2 py-2 font-black tabular-nums ${remaining > 0 ? "text-emerald-700 dark:text-emerald-400" : "text-red-600"}`}>{fmt(remaining)}</td>
                         </tr>
                       );
@@ -292,6 +309,8 @@ export function SalesStockPanel({
                   <div className="mb-1 text-[10px] font-black uppercase text-slate-500">{tt("d_history", "Earlier bookings from this lot")}</div>
                   {selHistory === "loading" || selHistory === undefined ? (
                     <div className="text-slate-400">…</div>
+                  ) : selHistory === "error" ? (
+                    <p role="alert">{tt("load_error", "Stock could not be loaded. Try again.")}</p>
                   ) : selHistory.length === 0 ? (
                     <p className="text-slate-500">{tt("d_no_history", "No other booking has taken stock from this lot.")}</p>
                   ) : (
@@ -327,6 +346,7 @@ export function SalesStockPanel({
             {tt("confirm", "Confirm — sell from this lot")}
           </button>
         </div>
+        </>}
       </div>
     </div>
   );
