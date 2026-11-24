@@ -141,7 +141,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       const paymentRows = await sql`
         select
           p.id, p.sales_order_id, p.payment_kind, p.payment_date, p.amount, p.currency_code, p.exchange_rate,
-          p.roznamcha_entry_id, p.status, p.remarks, p.created_at,
+          p.roznamcha_entry_id, p.status, p.remarks, p.created_at, p.base_currency_amount,
           case when re.id is not null then jsonb_build_object(
             'id', re.id,
             'super_admin_serial_number', re.super_admin_serial_number,
