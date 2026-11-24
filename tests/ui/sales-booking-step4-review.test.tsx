@@ -12,14 +12,27 @@ it("reviews lot amounts in their currencies and saves the four reports through t
     const [form, setForm] = React.useState({
       salesCurrency: "USD", secondaryCurrency: "AED", exchangeRate: 3.673, advancePercent: 10,
       loadingPort: "Test loading port", receivedPort: "Test receiving port", salesOrderNo: "SB-TEST",
+      bookingSerials: { superAdminSerialNumber: "SA-TEST" },
+      customerAccountName: "Test customer", salesAccountName: "Test sales account",
     });
     return <SalesBookingStep4 form={form} setForm={setForm} onSaveDraft={() => saveDraft(form)}
       goodsEntries={[{ goodsName: "Test item", lotNo: "TEST-LOT", origin: "UAE", totalAmount: 1250,
-        finalAmount: 4591.25, salesCurrency: "USD", secondaryCurrency: "AED", exchangeRate: 3.673 }]} />;
+        purchaseAccountName: "Test purchase account", finalAmount: 4591.25, salesCurrency: "USD", secondaryCurrency: "AED", exchangeRate: 3.673 }]} />;
   }
   render(<Review />);
 
+  const headings = screen.getAllByRole("heading", { level: 3 }).map(heading => heading.textContent);
+  expect(headings.slice(1, 5)).toEqual([
+    "Sales Booking", "Branch Details", "Sales Account Details", "Customer / Purchase Account",
+  ]);
+  expect(screen.getByText("SA-TEST")).toBeTruthy();
+  expect(screen.getByText("Test sales account")).toBeTruthy();
+  expect(screen.getByText("Test customer")).toBeTruthy();
+  expect(screen.getByText("Test purchase account")).toBeTruthy();
+
   const table = screen.getByRole("table");
+  expect(within(table).getAllByRole("columnheader").slice(-4).map(header => header.textContent))
+    .toEqual(["Unit Price", "Total Sales Amount", "Exchange Rate", "Final Amount"]);
   expect(within(table).getByText("TEST-LOT")).toBeTruthy();
   expect(within(table).getByText("AED 4,591.25")).toBeTruthy();
   expect(table.querySelector("tfoot")).toBeNull();

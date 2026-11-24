@@ -1,9 +1,44 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { Ship, Globe2, CreditCard, ChevronLeft, ChevronRight } from "lucide-react";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { Button } from "@/components/ui/button";
 import { SalesBookingGoodsReport } from "./sales-booking-goods-report";
+
+function ShippingOption({ id, label, value, options, onChange, tr }) {
+  const [adding, setAdding] = useState(false);
+  const [name, setName] = useState("");
+  const values = [...new Set([...options, value].filter(Boolean))];
+  return (
+    <div className="min-w-0 space-y-1">
+      <label htmlFor={id} className="block text-[11px] font-bold">{label}</label>
+      <select id={id} className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-950"
+        value={value || ""} onChange={event => {
+          if (event.target.value === "__new_shipping_option__") {
+            setName("");
+            setAdding(true);
+          } else {
+            setAdding(false);
+            onChange(event.target.value);
+          }
+        }}>
+        <option value="">—</option>
+        {values.map(option => <option key={option} value={option}>{tr(option)}</option>)}
+        <option value="__new_shipping_option__">+ {tr("New")}</option>
+      </select>
+      {adding && (
+        <div className="flex flex-wrap gap-1">
+          <input aria-label={label} value={name} onChange={event => setName(event.target.value)}
+            className="h-8 min-w-0 flex-1 rounded border px-2 text-xs dark:bg-slate-950" />
+          <Button type="button" size="sm" disabled={!name.trim()} onClick={() => {
+            onChange(name.trim());
+            setAdding(false);
+          }}>{tr("Save")}</Button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function SalesBookingStep3({
   form,
@@ -80,35 +115,8 @@ export function SalesBookingStep3({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+            <div className="space-y-1">
               <div className="space-y-1">
-                <label htmlFor="sales-booking-vessel-name" className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  {tr("Vessel Name")}
-                </label>
-                <input
-                  type="text"
-                  id="sales-booking-vessel-name"
-                  value={form.vesselName || ""}
-                  onChange={(e) => setForm((p) => ({ ...p, vesselName: e.target.value }))}
-                  placeholder="Select or enter vessel"
-                  className="w-full h-8 px-2.5 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label htmlFor="sales-booking-voyage-no" className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  {tr("Voyage No")}
-                </label>
-                <input
-                  type="text"
-                  id="sales-booking-voyage-no"
-                  value={form.voyageNo || ""}
-                  onChange={(e) => setForm((p) => ({ ...p, voyageNo: e.target.value }))}
-                  placeholder="e.g. VY1234"
-                  className="w-full h-8 px-2.5 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-mono"
-                />
-              </div>
-              <div className="col-span-2 space-y-1 sm:col-span-1">
                 <label htmlFor="sales-booking-bl-no" className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   {tr("Bill of Lading")} (B/L)
                 </label>
@@ -260,37 +268,14 @@ export function SalesBookingStep3({
               </div>
             </div>
 
-            {/* Container Number & Transport Type */}
             <div className="grid grid-cols-2 gap-2.5">
-              <div className="space-y-1">
-                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  Container Number
-                </label>
-                <input
-                  type="text"
-                  value={form.containerNumbers || form.containerNumber || ""}
-                  onChange={(e) => setForm((p) => ({ ...p, containerNumbers: e.target.value, containerNumber: e.target.value }))}
-                  placeholder="e.g. MSKU1234567"
-                  className="w-full h-8 px-2.5 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-mono"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  Transport Type
-                </label>
-                <select
-                  value={form.transportType || "40 FT Container"}
-                  onChange={(e) => setForm((p) => ({ ...p, transportType: e.target.value }))}
-                  className="w-full h-8 px-2 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
-                >
-                  <option value="40 FT Container">40 FT Container</option>
-                  <option value="20 FT Container">20 FT Container</option>
-                  <option value="40 FT Reefer">40 FT Reefer</option>
-                  <option value="Bulk Cargo">Bulk Cargo</option>
-                  <option value="Flatbed Truck">Flatbed Truck</option>
-                </select>
-              </div>
+              <ShippingOption id="sales-booking-loading-type" label={tr("Loading Type")} tr={tr}
+                value={form.loadingType} options={["Container", "Bulk Cargo", "Flatbed Truck"]}
+                onChange={loadingType => setForm(previous => ({ ...previous, loadingType }))} />
+              <ShippingOption id="sales-booking-container-type" label={tr("Container Type")} tr={tr}
+                value={form.containerType || (/^\d+ FT/i.test(form.transportType || "") ? form.transportType : "")}
+                options={["20 FT Dry", "40 FT Dry", "40 FT Reefer"]}
+                onChange={containerType => setForm(previous => ({ ...previous, containerType }))} />
             </div>
           </div>
 

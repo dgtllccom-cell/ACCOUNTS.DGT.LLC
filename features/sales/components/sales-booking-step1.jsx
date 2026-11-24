@@ -1,29 +1,14 @@
 "use client";
-import React, { useState, useRef } from "react";
-import {
-  Building2,
-  Search,
-  ChevronRight,
-  Package,
-  Edit3,
-  Trash2,
-  Mic,
-  Pin,
-  Sparkles,
-  Truck,
-  UserRound,
-  BarChart3,
-  Eye
-} from "lucide-react";
+import React from "react";
+import { Building2, ChevronRight, Package, Edit3, Trash2, Sparkles } from "lucide-react";
 import { t as tUi } from "@/lib/i18n/ui";
 import { Button } from "@/components/ui/button";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { getBookingCurrencies } from "@/lib/sales/booking-currencies";
 import { VoiceFormFill } from "@/components/voice-form-fill";
-import { AccountDetailsModal } from "./account-details-modal";
 import { SearchSelect } from "@/components/ui/search-select";
 import { SalesBookingCurrencyFields } from "./sales-booking-currencies";
-import { CustomerAccountCard } from "@/components/erp/customer-account-card";
+import { SalesBookingSummaryCards } from "./sales-booking-goods-report";
 
 export function SalesBookingStep1({
   form,
@@ -36,54 +21,8 @@ export function SalesBookingStep1({
   onCurrencyChange,
   currencyReadOnly = false,
   dbAccounts = [],
-  applyAccountMaster,
-  formatAccountDisplayLabel
+  applyAccountMaster
 }) {
-  const [customerSearch, setCustomerSearch] = useState("");
-  const [customerOpen, setCustomerOpen] = useState(false);
-  const [salesSearch, setSalesSearch] = useState("");
-  const [salesOpen, setSalesOpen] = useState(false);
-  const [viewModalAccount, setViewModalAccount] = useState(null);
-  const [viewModalType, setViewModalType] = useState("customer");
-
-  const handleOpenAccountDetails = (type) => {
-    if (type === "sales") {
-      const code = String(form.salesAccountNo || "").trim().toLowerCase();
-      const acc = dbAccounts.find((a) => (a.accountCode || a.code || "").trim().toLowerCase() === code) || {
-        accountCode: form.salesAccountNo || "SA-001",
-        accountName: form.salesAccountName || "Global Trading LLC",
-        cityBranchName: form.salesAccountBranch || form.branchName || "Main Branch",
-        kind: form.salesAccountKind || "General Trading",
-        currency: form.salesCurrency || "AED",
-        companyName: form.salesCompanyName || form.salesAccountName,
-        address: form.salesCompanyAddress || "Office 101, Business Bay, Dubai, UAE",
-        licenseNo: form.salesLicenseNo || "TRN1234567890",
-        gstTrn: form.salesGstTrn || "100123456789003",
-        currentBalance: form.salesAccountCurrentBalance ?? 0,
-        manualReferenceNumber: form.salesAccountManualReferenceNumber ?? ""
-      };
-      setViewModalAccount(acc);
-      setViewModalType("sales");
-    } else {
-      const code = String(form.customerAccountNo || "").trim().toLowerCase();
-      const acc = dbAccounts.find((a) => (a.accountCode || a.code || "").trim().toLowerCase() === code) || {
-        accountCode: form.customerAccountNo || "CU-001",
-        accountName: form.customerAccountName || "Al Noor Imports",
-        cityBranchName: form.customerAccountBranch || form.branchName || "Main Branch",
-        kind: form.customerAccountKind || "Import & Export",
-        currency: form.customerAccountCurrency || form.salesCurrency || "AED",
-        companyName: form.customerCompanyName || form.customerAccountName,
-        address: form.customerCompanyAddress || "Warehouse 5, Jebel Ali, Dubai, UAE",
-        licenseNo: form.customerLicenseNo || "TRN0987654321",
-        gstTrn: form.customerGstTrn || "100987654321003",
-        currentBalance: form.customerAccountCurrentBalance ?? 0,
-        manualReferenceNumber: form.customerAccountManualReferenceNumber ?? ""
-      };
-      setViewModalAccount(acc);
-      setViewModalType("customer");
-    }
-  };
-
   const accountOptions = React.useMemo(() => {
     return (dbAccounts || []).map((acc) => ({
       value: acc.accountCode || acc.code || acc.id,
@@ -103,65 +42,11 @@ export function SalesBookingStep1({
     }));
   }, [dbAccounts]);
 
-  const selectedCustomerAccObj = React.useMemo(() => {
-    return dbAccounts.find((a) => (a.accountCode || a.code || a.id) === form.customerAccountNo);
-  }, [dbAccounts, form.customerAccountNo]);
-
-  const selectedSalesAccObj = React.useMemo(() => {
-    return dbAccounts.find((a) => (a.accountCode || a.code || a.id) === form.salesAccountNo);
-  }, [dbAccounts, form.salesAccountNo]);
-
-  // Filter accounts
-  const filteredCustomerAccounts = dbAccounts.filter((acc) => {
-    if (!customerSearch.trim()) return true;
-    const q = customerSearch.toLowerCase();
-    return (
-      (acc.accountName || "").toLowerCase().includes(q) ||
-      (acc.accountCode || "").toLowerCase().includes(q) ||
-      (acc.cityBranchName || "").toLowerCase().includes(q) ||
-      (acc.manualReferenceNumber || "").toLowerCase().includes(q)
-    );
-  });
-
-  const filteredSalesAccounts = dbAccounts.filter((acc) => {
-    if (!salesSearch.trim()) return true;
-    const q = salesSearch.toLowerCase();
-    return (
-      (acc.accountName || "").toLowerCase().includes(q) ||
-      (acc.accountCode || "").toLowerCase().includes(q) ||
-      (acc.cityBranchName || "").toLowerCase().includes(q) ||
-      (acc.manualReferenceNumber || "").toLowerCase().includes(q)
-    );
-  });
-
-  // Calculate totals
   const tr = key => translateHeader(lang, key);
   const number = (value, digits = 3) => Number(value ?? 0).toLocaleString(lang, {
     minimumFractionDigits: digits, maximumFractionDigits: digits,
   });
   const { sales, final, rate } = getBookingCurrencies(form);
-  const units = [...new Set(goodsEntries.map(item => item.qtyName || item.unit || "").filter(Boolean))];
-  const quantity = units.length > 1 ? units.map(unit => {
-    const total = goodsEntries.filter(item => (item.qtyName || item.unit) === unit)
-      .reduce((sum, item) => sum + Number(item.qtyNo ?? item.quantity ?? 0), 0);
-    return `${number(total)} ${unit}`;
-  }).join(" · ") : `${number(goodsEntries.reduce((sum, item) => sum + Number(item.qtyNo ?? item.quantity ?? 0), 0))} ${units[0] || ""}`.trim();
-  const sum = key => goodsEntries.reduce((total, item) => total + Number(item[key] ?? 0), 0);
-  const cards = [
-    { title: "Booking / Branch Details", Icon: Building2, color: "bg-sky-50 text-sky-900 dark:bg-sky-950 dark:text-sky-100",
-      rows: [["Branch", form.branchName || form.cityBranchName || form.branchCode], ["Country", form.countryName || form.branchCountry],
-        ["Booking No", form.salesOrderNo], ["Booking Date", form.salesDate]] },
-    { title: "Loading Details", Icon: Truck, color: "bg-emerald-50 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-100",
-      rows: [["Loading Type", form.loadingMode || form.shipmentType || form.shippingMode],
-        ["Origin", form.loadingCountry || form.origin], ["Loading Port", form.salesPortOfLoading || form.loadingPort],
-        ["Loading Date", form.loadingDate]] },
-    { title: "Sales Account", Icon: UserRound, color: "bg-orange-50 text-orange-900 dark:bg-orange-950 dark:text-orange-100",
-      rows: [["Account Code", form.salesAccountNo], ["Account Name", form.salesAccountName],
-        ["Country", selectedSalesAccObj?.countryName || form.salesAccountCountry], ["Account Type", form.salesAccountKind || selectedSalesAccObj?.kind]] },
-    { title: "Summary Totals", Icon: BarChart3, color: "bg-indigo-50 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100",
-      rows: [["Total Qty", quantity], ["Gross Weight", `${number(sum("grossWeight"))} KG`],
-        ["Net Weight", `${number(sum("netWeight"))} KG`], ["Final Amount", final ? `${final} ${number(sum("finalAmount"), 2)}` : "—"]] },
-  ];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[minmax(290px,340px)_minmax(0,1fr)] gap-3 items-start animate-in fade-in duration-200">
@@ -231,7 +116,7 @@ export function SalesBookingStep1({
                   customerGstTrn: acc.gstTrn || prev.customerGstTrn,
                 }));
               } else {
-                setForm(prev => ({ ...prev, customerAccountNo: "", customerAccountName: "" }));
+                setForm(prev => ({ ...prev, customerAccountNo: "", customerAccountName: "", customerAccountId: null, customerAccountLedgerId: null, customerId: null, customerName: "" }));
               }
             }}
             options={accountOptions}
@@ -239,25 +124,6 @@ export function SalesBookingStep1({
             accountCards
             clearable
           />
-          {form.customerAccountNo && (
-            <div className="mt-2">
-              <CustomerAccountCard
-                account={{
-                  id: selectedCustomerAccObj?.id || form.customerAccountNo,
-                  name: form.customerAccountName || selectedCustomerAccObj?.accountName || form.customerAccountNo,
-                  code: form.customerAccountNo,
-                  companyName: form.customerCompanyName,
-                  category: form.customerAccountKind,
-                  city: form.customerAccountBranch,
-                  address: form.customerCompanyAddress,
-                  status: "Active"
-                }}
-                onEdit={() => handleOpenAccountDetails("customer")}
-                onClear={() => setForm(prev => ({ ...prev, customerAccountNo: "", customerAccountName: "" }))}
-                selected
-              />
-            </div>
-          )}
         </div>
 
         {/* Sales Account (CR) * */}
@@ -277,6 +143,7 @@ export function SalesBookingStep1({
                   ...prev,
                   salesAccountNo: acc.accountCode || acc.code || "",
                   salesAccountName: acc.accountName || acc.name || "",
+                  salesAccountCountry: acc.countryName || "",
                   salesAccountBranch: acc.cityBranchName || acc.branchName || prev.branchName || "",
                   salesAccountKind: acc.kind || acc.businessName || prev.salesAccountKind || "Income / Revenue",
                   salesCompanyName: acc.companyName || acc.name || prev.salesCompanyName,
@@ -285,7 +152,7 @@ export function SalesBookingStep1({
                   salesGstTrn: acc.gstTrn || prev.salesGstTrn,
                 }));
               } else {
-                setForm(prev => ({ ...prev, salesAccountNo: "", salesAccountName: "" }));
+                setForm(prev => ({ ...prev, salesAccountNo: "", salesAccountName: "", salesAccountLedgerId: null, salesAccountCountry: "" }));
               }
             }}
             options={accountOptions}
@@ -293,25 +160,6 @@ export function SalesBookingStep1({
             accountCards
             clearable
           />
-          {form.salesAccountNo && (
-            <div className="mt-2">
-              <CustomerAccountCard
-                account={{
-                  id: selectedSalesAccObj?.id || form.salesAccountNo,
-                  name: form.salesAccountName || selectedSalesAccObj?.accountName || form.salesAccountNo,
-                  code: form.salesAccountNo,
-                  companyName: form.salesCompanyName,
-                  category: form.salesAccountKind,
-                  city: form.salesAccountBranch,
-                  address: form.salesCompanyAddress,
-                  status: "Active"
-                }}
-                onEdit={() => handleOpenAccountDetails("sales")}
-                onClear={() => setForm(prev => ({ ...prev, salesAccountNo: "", salesAccountName: "" }))}
-                selected
-              />
-            </div>
-          )}
         </div>
 
         <SalesBookingCurrencyFields form={form} lang={lang} onChange={onCurrencyChange ?? ((key, value) => setForm(previous => ({ ...previous, [key]: value })))} readOnly={currencyReadOnly} />
@@ -398,23 +246,7 @@ export function SalesBookingStep1({
       </div>
 
       <div className="lg:col-start-2 lg:row-start-1 min-w-0 space-y-3">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
-          {cards.map(({ title, Icon, color, rows }) => (
-            <section key={title} className={`min-w-0 rounded-xl p-3 ${color}`}>
-              <h3 className="mb-2 flex items-center gap-1.5 text-xs font-bold">
-                <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />{tr(title)}
-              </h3>
-              <dl className="space-y-1.5 text-[11px]">
-                {rows.map(([name, value]) => (
-                  <div key={name} className="flex items-start justify-between gap-2">
-                    <dt className="min-w-0 break-words">{tr(name)}</dt>
-                    <dd className="min-w-0 break-words text-end font-semibold"><bdi>{value || "—"}</bdi></dd>
-                  </div>
-                ))}
-              </dl>
-            </section>
-          ))}
-        </div>
+        <SalesBookingSummaryCards form={form} goodsEntries={goodsEntries} lang={lang} />
 
         {/* Compact Goods Items Table */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
@@ -437,9 +269,9 @@ export function SalesBookingStep1({
                   <th className="p-2.5 text-end">{tr("Gross Weight")} (KG)</th>
                   <th className="p-2.5 text-end">{tr("Net Weight")} (KG)</th>
                   <th className="p-2.5 text-end">{tr("Unit Price")}</th>
-                  <th className="p-2.5 text-end whitespace-nowrap">{tr("Amount")} <bdi>{sales}</bdi></th>
+                  <th className="p-2.5 text-end whitespace-nowrap">{tr("Total Sales Amount")}</th>
                   <th className="p-2.5 text-end whitespace-nowrap">{tr("Exchange Rate")}</th>
-                  <th className="p-2.5 text-end whitespace-nowrap">{tr("Final Amount")} <bdi>{final}</bdi></th>
+                  <th className="p-2.5 text-end whitespace-nowrap">{tr("Final Amount")}</th>
                   <th className="p-2.5 text-center w-20">{tr("Action")}</th>
                 </tr>
               </thead>
@@ -456,16 +288,16 @@ export function SalesBookingStep1({
                     <td className="p-2.5 text-end tabular-nums">{item.grossWeight == null ? "—" : number(item.grossWeight)}</td>
                     <td className="p-2.5 text-end tabular-nums">{item.netWeight == null ? "—" : number(item.netWeight)}</td>
                     <td className="p-2.5 text-end font-mono text-slate-600 dark:text-slate-400">
-                      {Number(item.coursePrice || item.unitPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <bdi>{item.coursePrice == null && item.unitPrice == null ? "—" : `${item.salesCurrency || item.currencyType || sales} ${number(item.coursePrice ?? item.unitPrice, 2)}`.trim()}</bdi>
                     </td>
                     <td className="p-2.5 text-end font-mono font-bold text-slate-900 dark:text-slate-100">
-                      {item.totalAmount == null ? "—" : number(item.totalAmount, 2)}
+                      <bdi>{item.totalAmount == null ? "—" : `${item.salesCurrency || item.currencyType || sales} ${number(item.totalAmount, 2)}`.trim()}</bdi>
                     </td>
                     <td className="p-2.5 text-end font-mono whitespace-nowrap">
                       <bdi>{Number(item.exchangeRate) > 0 ? `${item.op === "/" || item.operator === "/" ? "÷" : "×"} ${item.exchangeRate}` : rate.ok ? `${rate.operator === "/" ? "÷" : "×"} ${rate.rate}` : "—"}</bdi>
                     </td>
                     <td className="p-2.5 text-end whitespace-nowrap font-mono font-bold text-emerald-700 dark:text-emerald-300">
-                      {item.finalAmount == null ? "—" : number(item.finalAmount, 2)}
+                      <bdi>{item.finalAmount == null ? "—" : `${item.secondaryCurrency || final} ${number(item.finalAmount, 2)}`.trim()}</bdi>
                     </td>
                     <td className="p-2.5 text-center">
                       <div className="flex items-center justify-center gap-1">
@@ -502,14 +334,6 @@ export function SalesBookingStep1({
         </div>
       </div>
 
-      {/* Account Details Modal */}
-      <AccountDetailsModal
-        isOpen={!!viewModalAccount}
-        onClose={() => setViewModalAccount(null)}
-        account={viewModalAccount}
-        accountType={viewModalType}
-        lang={lang}
-      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { SalesBookingStep2 } from "@/features/sales/components/sales-booking-step2";
 
 const walnutLot = {
+  purchaseAccountName: "Walnut supplier", purchaseAccountNo: "PUR-WAL",
   id: "lot-1", lotNo: "LOT-WAL-001", source: "lot", goodsId: "g1", goodsName: "Walnut Kernels", brand: "Chaman Gold", size: "Light",
   origin: "Afghanistan", hsCode: "080232", qtyName: "BAGS", availableQty: 500, remainingQty: 500, qtyKgs: 50, emptyKgs: 0.2,
   netWeight: 0, location: "Rack A", warehouseName: "Dubai WH", stockRef: "LP-0001", containerNo: null, currencyType: "AED", exchangeRate: 1, coursePrice: 0, status: "ok",
@@ -49,6 +50,17 @@ describe("Sales Booking step 2 — stock first, then item search", () => {
     await vi.waitFor(() => expect(fetched.some((u) => u.includes("source=booking"))).toBe(true));
   });
 
+  it("opens the stock picker as an overlay outside the booking form", async () => {
+    const { container } = render(<Harness />);
+    fireEvent.click(screen.getByRole("button", { name: "Open Stock" }));
+    const picker = screen.getByRole("dialog", { name: "Select Stock to Sell" });
+    expect(picker.parentElement).toBe(document.body);
+    expect(container.contains(picker)).toBe(false);
+    expect(await within(picker).findByText("Walnut Kernels")).toBeTruthy();
+    fireEvent.click(within(picker).getByTestId("stock-panel-close"));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
   it("shows the lot and both currency amounts without a totals row", async () => {
     render(<Harness />);
     const search = screen.getByTestId("sales-item-search");
@@ -68,11 +80,14 @@ describe("Sales Booking step 2 — stock first, then item search", () => {
     const row = within(table).getByText("Walnut Kernels").closest("tr")!;
     expect(within(row).getByText("LOT-WAL-001")).toBeTruthy();
     expect(within(row).getByText("USD 1,250.00")).toBeTruthy();
-    expect(within(row).getByText("× 3.673")).toBeTruthy();
+    expect(screen.queryByText(/exchange rate/i)).toBeNull();
+    expect(screen.queryByText(/sales currency/i)).toBeNull();
     expect(within(row).getByText("AED 4,591.25")).toBeTruthy();
     expect(table.querySelector("tfoot")).toBeNull();
-    const summary = screen.getByRole("heading", { name: "Summary Totals" }).closest("section")!;
-    expect(within(summary).getByText("AED 4,591.25")).toBeTruthy();
+    const accounts = screen.getByRole("heading", { name: "Customer / Purchase Account" }).closest("section")!;
+    expect(within(accounts).getByText("Walnut supplier")).toBeTruthy();
+    expect(within(accounts).getByText("PUR-WAL")).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Summary Totals" })).toBeNull();
   });
 
   it("the same lot cannot be added twice", async () => {
