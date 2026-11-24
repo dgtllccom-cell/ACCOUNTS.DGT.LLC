@@ -90,7 +90,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     // Supabase-client read below silently returns null even for orders that exist. Try a
     // direct-Postgres read first (bypasses RLS via DATABASE_URL); fall back to the Supabase-client
     // path only when DATABASE_URL isn't configured.
-    const orderColumns = "id, country_id, country_branch_id, city_branch_id, order_total, total_goods_original, total_goods_local, total_goods_usd, currency_code, exchange_rate, sales_order_no, sales_contract_no, form_data, ledger_posting_status, payment_status, is_edited_since_transfer";
+    const orderColumns = "id, country_id, country_branch_id, city_branch_id, customer_account_id, customer_ledger_id, order_total, total_goods_original, total_goods_local, total_goods_usd, currency_code, exchange_rate, sales_order_no, sales_contract_no, form_data, ledger_posting_status, payment_status, is_edited_since_transfer";
     const viaPgOrder = await withLocalPg(async (sql) => {
       const rows = await sql`select ${sql.unsafe(orderColumns)} from sales_orders where id = ${params.id} and deleted_at is null limit 1`;
       return rows[0] ?? null;
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       workflow.transferStatus === "transferred" ||
       Boolean(form.transferAudit);
 
-    if (alreadyTransferred && !orderRow.is_edited_since_transfer) {
+    if (alreadyTransferred) {
       throw new ApiClientError("This booking has already been transferred to Sales Transfer Payment and cannot be transferred again.", { status: 409, code: "ALREADY_TRANSFERRED" });
     }
 
@@ -154,6 +154,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     let postingCurrency = String(orderRow.currency_code || form.currencyType || "USD");
     let postingRate = Number(orderRow.exchange_rate || form.exchangeRate || 1);
+    let postingAmount = totalSalesAmount;
+    let settlement = null;
     if (form.bookingCurrencyConfigured === true) {
       const currency = getBookingCurrencies(form);
       const converted = convertedSalesAmount(totalSalesAmount, currency.rate);
@@ -163,8 +165,19 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
           status: 409, code: "SALES_BOOKING_FX_MISMATCH"
         });
       }
-      postingCurrency = currency.sales;
-      postingRate = currency.rate.operator === "/" ? 1 / currency.rate.rate : currency.rate.rate;
+      // Configured bookings are validated against the country's accounting currency
+      // on save. Post the already converted amount, without converting it twice.
+      postingCurrency = currency.final;
+      postingAmount = Number(orderRow.order_total);
+      postingRate = 1;
+      settlement = {
+        originalCurrency: currency.sales,
+        originalAmount: totalSalesAmount,
+        finalCurrency: postingCurrency,
+        finalAmount: postingAmount,
+        exchangeRate: currency.rate.rate,
+        operator: currency.rate.operator,
+      };
     }
 
     // The Sales wizard's own form state names this field customerAccountNo, not
@@ -235,7 +248,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         cityBranchId: orderRow.city_branch_id,
         currencyCode: postingCurrency,
         exchangeRate: orderRow.exchange_rate || form.exchangeRate || 1,
-        amount: totalSalesAmount,
+        amount: postingAmount,
+        settlement,
         purchaseAccountNo: form.purchaseAccountNo,
         salesAccountNo: form.salesAccountNo,
         transferredAt: now,
@@ -287,15 +301,15 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       goodsAuditRemark,
       body?.remarks?.trim() ? "Notes: " + body.remarks.trim() : null,
       "Transfer Currency: " + postingCurrency,
-      "Exchange Rate: " + postingRate,
-      "Amount: " + totalSalesAmount
+      settlement ? `Original: ${settlement.originalAmount} ${settlement.originalCurrency} ${settlement.operator} ${settlement.exchangeRate}` : "Exchange Rate: " + postingRate,
+      "Amount: " + postingAmount
     ].filter(Boolean).join(" | ");
 
     // EXACTLY-ONCE GUARD (database-level). The status check above reads a snapshot; two requests that both pass it would both post.
     // This single conditional UPDATE is atomic in Postgres: only ONE request can take the claim for an order that is not yet
     // transferred; every other request gets 0 rows and is refused with 409. A claim older than 3 minutes (crashed request that never
     // posted) can be taken again; once the payment is posted the order carries transferPostedPaymentId and can never be claimed again
-    // until the final status update (re-transfer after an edit is still allowed through is_edited_since_transfer).
+    // until the final status update. Correcting a posted booking must not repost the whole sale.
     const claimRows = await withLocalPg(async (sql) => {
       const rows = await sql`
         update sales_orders set
@@ -303,13 +317,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
             'workflow', coalesce(form_data->'workflow', '{}'::jsonb) || jsonb_build_object('transferClaimAt', now()::text)
           )
         where id = ${params.id} and deleted_at is null
-          and (
-            is_edited_since_transfer is true
-            or (
-              coalesce(ledger_posting_status, '') not in ('transferred', 'posted')
-              and coalesce(form_data->'workflow'->>'transferStatus', '') <> 'transferred'
-            )
-          )
+          and coalesce(ledger_posting_status, '') not in ('transferred', 'posted')
+          and coalesce(form_data->'workflow'->>'transferStatus', '') <> 'transferred'
           and coalesce(form_data->'workflow'->>'transferPostedPaymentId', '') = ''
           and (
             coalesce(form_data->'workflow'->>'transferClaimAt', '') = ''
@@ -330,13 +339,15 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     // order status are written together or not at all. A stock refusal posts nothing; a posting refusal moves no stock.
     const core = await withLocalPg((db) => db.begin(async (tx: any) => {
       const pg = (fn: (sql: any) => Promise<any>) => fn(tx);
+      const balances = await tx`select paid_amount from sales_orders where id = ${params.id}::uuid for update`;
+      const existingPaid = Number(balances[0]?.paid_amount || 0);
       const rpcRows = await tx`
         select public.post_sales_booking_transfer(
           ${session.userId}::uuid,
           ${params.id}::uuid,
           ${paymentRoute.paymentKind}::text,
           ${new Date().toISOString().slice(0, 10)}::date,
-          ${totalSalesAmount}::numeric,
+          ${postingAmount}::numeric,
           ${postingCurrency}::text,
           ${postingRate}::numeric,
           ${debitLedgerId}::uuid,
@@ -388,12 +399,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       `;
 
       const viaPgLines = await pg(async (sql) => {
-        return await sql`select ledger_id, debit, credit from roznamcha_lines where roznamcha_entry_id = ${paymentRecord.roznamcha_entry_id}`;
+        return await sql`select ledger_id, debit, credit, currency from roznamcha_lines where roznamcha_entry_id = ${paymentRecord.roznamcha_entry_id}`;
       });
       const postedLines = (viaPgLines && viaPgLines.length > 0 ? viaPgLines : await requireSupabaseData(
         supabase
           .from("roznamcha_lines")
-          .select("ledger_id, debit, credit")
+          .select("ledger_id, debit, credit, currency")
           .eq("roznamcha_entry_id", paymentRecord.roznamcha_entry_id)
       )) as any[];
 
@@ -411,8 +422,11 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         expectedBaseAmount: form.bookingCurrencyConfigured === true ? Number(orderRow.order_total) : undefined,
         expectedExchangeRate: exRate
       });
+      if (settlement && postedLines.some(line => String(line.currency || "").toUpperCase() !== settlement.finalCurrency)) {
+        throw new Error("Posted Roznamcha currency does not match the approved Sales Booking final currency.");
+      }
 
-      const journalColumns = "id, status, posted_at, country_id, country_branch_id, city_branch_id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number";
+      const journalColumns = "id, status, posted_at, country_id, country_branch_id, city_branch_id, journal_no, voucher_no, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number";
       const viaPgJournal = await pg(async (sql) => {
         const rows = await sql`select ${sql.unsafe(journalColumns)} from roznamcha_entries where id = ${paymentRecord.roznamcha_entry_id} limit 1`;
         return rows[0] ?? null;
@@ -430,10 +444,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         entry: journalRecord
       });
 
-      const isCreditSales = paymentRoute.paymentKind === "credit" || String(form.paymentType || form.paymentCondition || "").toLowerCase().includes("credit");
-      const existingPaid = isCreditSales ? 0 : Number(orderRow.paid_amount || 0);
-      const newRemainingSales = isCreditSales ? totalSalesAmount : Math.max(0, totalSalesAmount - existingPaid);
-      const salesPaymentStatus = isCreditSales ? "pending" : (newRemainingSales <= 0.01 && existingPaid > 0 ? "completed" : (existingPaid > 0 ? "partial" : "pending"));
+      const newRemainingSales = Math.max(0, totalSalesAmount - existingPaid);
+      const salesPaymentStatus = newRemainingSales <= 0.01 && existingPaid > 0 ? "completed" : existingPaid > 0 ? "partial" : "pending";
 
       // Stock deduction handling for Stock Sale vs Endorse Sale
       const saleType = String(form.saleType || form.saleSource || "").toLowerCase();
@@ -630,8 +642,19 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
           form: {
             ...updatedFormData.form,
             stockDeducted: isStockSale ? true : (alreadyDeducted ? true : false),
-            isEndorseSale: isEndorse,
-            ...(isCreditSales ? { advancePercent: 0, advanceAmount: 0 } : {})
+            isEndorseSale: isEndorse
+          },
+          transferTrace: {
+            ...updatedFormData.transferTrace,
+            paymentId,
+            roznamchaEntryId: journalRecord.id,
+            journalNo: journalRecord.journal_no,
+            voucherNo: journalRecord.voucher_no,
+            debitLedgerId,
+            creditLedgerId,
+            lines: postedLines.map(line => ({
+              ledgerId: line.ledger_id, debit: line.debit, credit: line.credit, currency: line.currency,
+            })),
           },
           workflow: {
             ...updatedFormData.workflow,
