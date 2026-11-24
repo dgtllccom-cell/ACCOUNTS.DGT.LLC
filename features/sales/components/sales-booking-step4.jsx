@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Building2, CreditCard, Download, FileText, Package, Printer, Save, Ship, Truck, Users } from "lucide-react";
+import { CreditCard, Download, FileText, Package, Printer, Save, Truck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { getBookingCurrencies } from "@/lib/sales/booking-currencies";
@@ -41,33 +41,22 @@ export function SalesBookingStep4({ form, setForm, goodsEntries = [], lang = "en
   const salesValue = salesAmounts.get(sales);
   const advance = plannedAdvance == null || salesValue == null ? null : salesValue * plannedAdvance / 100;
 
-  const overview = [
-    { title: "Branch Info", Icon: Building2, color: "bg-blue-50 text-blue-950 dark:bg-blue-950 dark:text-blue-100",
-      rows: [["Branch", form.branchName || form.branchCode], ["Country", form.branchCountry]] },
-    { title: "Shipping", Icon: Ship, color: "bg-emerald-50 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-100",
-      rows: [["Loading Type", form.shippingMode || form.shipmentType], ["Vessel Name", form.vesselName], ["Loading Date", form.loadingDate]] },
-    { title: "Currency & Rate", Icon: CreditCard, color: "bg-orange-50 text-orange-950 dark:bg-orange-950 dark:text-orange-100",
-      rows: [["Sales Currency", sales], ["Final Currency", final], ["Exchange Rate", fx]] },
-    { title: "Account / Party", Icon: Users, color: "bg-violet-50 text-violet-950 dark:bg-violet-950 dark:text-violet-100",
-      rows: [["Customer Account (DR)", form.customerAccountName || form.customerAccountNo],
-        ["Sales Account (CR)", form.salesAccountName || form.salesAccountNo]] },
-  ];
   const reports = [
-    { title: "Loading & Receiving", notes: "Loading Report", field: "loadingReport", Icon: Truck, color: overview[0].color,
+    { title: "Loading & Receiving", notes: "Loading Report", field: "loadingReport", Icon: Truck, color: "bg-blue-50 text-blue-950 dark:bg-blue-950 dark:text-blue-100",
       rows: [["Loading Country", form.loadingCountry], ["Loading Port", form.loadingPort || form.salesPortOfLoading],
         ["Loading Date", form.loadingDate], ["Receiving Country", form.receivedCountry || form.receivingCountry || form.destinationCountry],
         ["Receiving Port", form.receivedPort || form.receivingPort || form.salesPortOfDischarge],
         ["Receiving Date", form.receivedDate || form.receivingDate], ["Bill of Lading", form.blNo || form.billOfLadingNo]] },
-    { title: "Payment Details", notes: "Payment Report", field: "paymentReport", Icon: CreditCard, color: overview[1].color,
+    { title: "Payment Details", notes: "Payment Report", field: "paymentReport", Icon: CreditCard, color: "bg-emerald-50 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-100",
       rows: [["Sales Amount", summarize(salesAmounts)], ["Final Amount", summarize(finalAmounts)], ["Exchange Rate", fx],
         ["Advance Amount", advance == null ? null : amount(advance, sales)],
         ["Remaining Amount", advance == null ? null : amount(salesValue - advance, sales)], ["Payment Type", form.paymentType],
         ["Payment Condition", form.paymentCondition || form.paymentTerms]] },
-    { title: "Goods Summary", notes: "Goods Report", field: "orderReportRemarks", Icon: Package, color: overview[2].color,
+    { title: "Goods Summary", notes: "Goods Report", field: "orderReportRemarks", Icon: Package, color: "bg-orange-50 text-orange-950 dark:bg-orange-950 dark:text-orange-100",
       rows: [["Total Qty", Array.from(quantities, ([unit, value]) => [number(value), unit].filter(Boolean).join(" ")).join(" · ")],
         ["Net Weight", goodsEntries.length ? `${number(netWeight)} kg` : ""], ["Gross Weight", goodsEntries.length ? `${number(grossWeight)} kg` : ""],
         ["Origin", [...new Set(goodsEntries.map(item => item.origin).filter(Boolean))].join(", ")]] },
-    { title: "Notify Party", notes: "Notify Party Report", field: "notifyPartyReport", Icon: Users, color: overview[3].color,
+    { title: "Notify Party", notes: "Notify Party Report", field: "notifyPartyReport", Icon: Users, color: "bg-violet-50 text-violet-950 dark:bg-violet-950 dark:text-violet-100",
       rows: notifyFields.map(([label, key]) => [label, form[key]]) },
   ];
   const metadata = [["Booking No", form.salesOrderNo], ["Status", tr(form.salesStatus)], ["Booking Date", form.salesDate],
@@ -110,7 +99,7 @@ export function SalesBookingStep4({ form, setForm, goodsEntries = [], lang = "en
               </div>
             ))}
           </dl>
-          <SalesBookingGoodsReport form={form} goodsEntries={goodsEntries} lang={lang} overviewCards={overview} showOrigin />
+          <SalesBookingGoodsReport form={form} goodsEntries={goodsEntries} lang={lang} showOrigin />
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
             {reports.map(({ title, notes, field, Icon, color, rows }) => (
               <section key={field} className="flex min-w-0 flex-col rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
@@ -152,7 +141,7 @@ export function SalesBookingStep4({ form, setForm, goodsEntries = [], lang = "en
                     <Button type="button" variant="outline" size="sm" onClick={() => setViewing(previous => ({ ...previous, [field]: !previous[field] }))}>
                       {tr(viewing[field] ? "Edit" : "View")}
                     </Button>
-                    <Button type="button" size="sm" onClick={onSaveDraft} className="bg-emerald-700 text-white">{tr("Save Draft")}</Button>
+                    <Button type="button" size="sm" disabled={!onSaveDraft} onClick={onSaveDraft} className="bg-emerald-700 text-white">{tr("Save Draft")}</Button>
                   </div>
                 </div>
               </section>
@@ -169,7 +158,7 @@ export function SalesBookingStep4({ form, setForm, goodsEntries = [], lang = "en
       <div className="flex flex-wrap items-center justify-between gap-2 print:hidden">
         <Button type="button" variant="outline" onClick={onBack}>{tr("Back to Step 3")}</Button>
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" onClick={onSaveDraft}><Save className="h-4 w-4" />{tr("Save Draft")}</Button>
+          <Button type="button" variant="outline" disabled={!onSaveDraft} onClick={onSaveDraft}><Save className="h-4 w-4" />{tr("Save Draft")}</Button>
           <Button type="button" variant="outline" onClick={onPrint}><Printer className="h-4 w-4" />{tr("Print")}</Button>
           <Button type="button" variant="outline" onClick={onDownloadPdf}><Download className="h-4 w-4" />{tr("Download PDF")}</Button>
           <Button type="button" onClick={onNext} className="bg-emerald-700 text-white">{tr("Next: Final Report")}</Button>
