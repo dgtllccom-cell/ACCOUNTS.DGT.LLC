@@ -61,6 +61,33 @@ describe("Sales Booking step 2 — stock first, then item search", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
+  it("opens posted sales for the lot and shows the whole selected bill", async () => {
+    const matches = [
+      { orderId: "posted-order", posted: true, reference: "SB-42", customer: "Test buyer", date: "2026-11-20", quantity: 25 },
+      { orderId: "posted-order", posted: true, reference: "SB-42", customer: "Test buyer", date: "2026-11-20", quantity: 5 },
+      { orderId: "draft-order", posted: false, reference: "SB-DRAFT", customer: "Test buyer", quantity: 99 },
+    ];
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      const data = url.includes("deductionsFor=") ? { deductions: matches }
+        : url.endsWith("/posted-order") ? { order: { sales_order_no: "SB-42", customer_name: "Test buyer", currency_code: "AED", order_total: 770,
+          form_data: { form: { salesCurrency: "USD" }, goodsEntries: [
+            { goodsName: "Walnut Kernels", lotNo: "LOT-WAL-001", qtyNo: 30, unitPrice: 6, totalAmount: 180, exchangeRate: 3.5, finalAmount: 630 },
+            { goodsName: "Other goods", lotNo: "OTHER-LOT", qtyNo: 10, unitPrice: 4, totalAmount: 40, exchangeRate: 3.5, finalAmount: 140 },
+          ] } } }
+        : { lots: [walnutLot] };
+      return { ok: true, status: 200, json: async () => ({ ok: true, data }) };
+    }));
+    render(<Harness />);
+    fireEvent.click(screen.getByRole("button", { name: "Open Stock" }));
+    const modal = screen.getByRole("dialog", { name: "Select Stock to Sell" });
+    fireEvent.click(await within(modal).findByRole("button", { name: /Sold Quantity.*LOT-WAL-001/ }));
+    expect(await within(modal).findByText("Other goods")).toBeTruthy();
+    expect(within(modal).queryByRole("button", { name: "SB-DRAFT" })).toBeNull();
+    expect(within(modal).getAllByText("30 BAGS")).toHaveLength(2);
+    expect(within(modal).getByText("770 AED")).toBeTruthy();
+    expect(within(modal).getAllByText("× 3.5")).toHaveLength(2);
+  });
+
   it("shows the lot and both currency amounts without a totals row", async () => {
     render(<Harness />);
     const search = screen.getByTestId("sales-item-search");
