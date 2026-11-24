@@ -38,6 +38,8 @@ import {
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { cn } from "@/lib/utils";
+import { billFxOperator, toBaseAmount } from "@/lib/purchases/fx-operator";
+import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 import { InvoiceDocumentView } from "@/components/invoices/invoice-document-view";
 import { OpenFullBillModal } from "@/components/invoices/open-full-bill-modal";
 import { PurchaseOrderWizard } from "@/features/purchases/components/purchase-order-wizard.jsx";
@@ -88,8 +90,6 @@ export function PurchaseBookingGlobalRegisterView({
   const [actionsOpen, setActionsOpen] = useState<boolean>(false);
   const [filterModalOpen, setFilterModalOpen] = useState<boolean>(false);
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
-  const [activeRowMenuId, setActiveRowMenuId] = useState<string | null>(null);
-  const [activeAccountPopupId, setActiveAccountPopupId] = useState<string | null>(null);
   // Ledger Transfer (DR/CR posting) — a separate step from Booking Save and from Loading Transfer
   const [ledgerTransferOrderId, setLedgerTransferOrderId] = useState<string | null>(null);
 
@@ -114,13 +114,7 @@ export function PurchaseBookingGlobalRegisterView({
       if (actionsRef.current && !actionsRef.current.contains(e.target as Node)) {
         setActionsOpen(false);
       }
-      const target = e.target as HTMLElement | null;
-      if (!target?.closest("[data-row-menu]")) {
-        setActiveRowMenuId(null);
-      }
-      if (!target?.closest("[data-account-popup]")) {
-        setActiveAccountPopupId(null);
-      }
+
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -360,9 +354,10 @@ export function PurchaseBookingGlobalRegisterView({
 
     filteredRows.forEach((r) => {
       const form = r.form_data?.form || {};
-      const exRate = Number(r.exchange_rate || form.exchangeRate || 1);
+      const exRate = Number(r.exchange_rate ?? form.exchangeRate ?? 1);
+                  const fxOperator = billFxOperator(r.form_data);
       const purchAmt = Number(r.purchaseAmount || r.totalPurchaseAmount || 0);
-      const finalAmt = r.finalAmount ? Number(r.finalAmount) : purchAmt * exRate;
+      const finalAmt = r.finalAmount == null ? toBaseAmount(purchAmt, exRate, fxOperator) : Number(r.finalAmount);
       const paidPC = Number(r.advance_paid || form.advancePaid || 0) + Number(r.remaining_paid || form.remainingPaid || 0);
       const balPC = Math.max(0, purchAmt - paidPC);
       const balFC = balPC * exRate;
@@ -575,9 +570,10 @@ export function PurchaseBookingGlobalRegisterView({
     const rows = filteredRows.map((r, i) => {
       const form = r.form_data?.form || {};
       const goods0 = r.form_data?.goodsEntries?.[0] || {};
-      const exRate = Number(r.exchange_rate || form.exchangeRate || 1);
+      const exRate = Number(r.exchange_rate ?? form.exchangeRate ?? 1);
+                  const fxOperator = billFxOperator(r.form_data);
       const purchAmt = Number(r.purchaseAmount || r.totalPurchaseAmount || 0);
-      const finalAmt = r.finalAmount ? Number(r.finalAmount) : purchAmt * exRate;
+      const finalAmt = r.finalAmount == null ? toBaseAmount(purchAmt, exRate, fxOperator) : Number(r.finalAmount);
 
       return [
         i + 1,
@@ -1050,7 +1046,7 @@ export function PurchaseBookingGlobalRegisterView({
       <div className="rounded-xl border border-slate-200/90 bg-white shadow-xs overflow-hidden dark:border-slate-800 dark:bg-slate-900">
         
         {/* Table Banner Header Bar */}
-        <div className="bg-[#1e3a8a] text-white px-4 py-2.5 flex items-center justify-between">
+        <div className="flex items-center justify-between bg-blue-800 px-4 py-2.5 text-white">
           <div className="flex items-center gap-2.5">
             <div className="flex items-center justify-center h-6 w-6 rounded-full bg-white/15 text-white">
               <BookOpen className="h-3.5 w-3.5" />
@@ -1064,56 +1060,58 @@ export function PurchaseBookingGlobalRegisterView({
           </span>
         </div>
 
-        {/* 13-Column Table */}
+        {/* Purchase Booking List */}
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1500px] border-collapse text-left text-xs">
+          <table className="w-full min-w-[1350px] border-collapse text-start text-[11px]">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-extrabold text-[11px] uppercase border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                <th className="py-2.5 px-2 text-center w-8 border-r border-slate-200 dark:border-slate-700">#</th>
-                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Bill No. / Date")}</th>
-                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Location")}</th>
-                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Accounts")}</th>
-                <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700">{tr("Goods Name (Brand / Size)")}</th>
-                <th className="py-2.5 px-2 text-center border-r border-slate-200 dark:border-slate-700">{tr("Qty (Unit)")}</th>
-                <th className="py-2.5 px-3 text-right border-r border-slate-200 dark:border-slate-700">
-                  <div>{tr("Gross Wt")}</div>
-                  <div className="text-[10px] text-slate-500 font-mono font-normal">{tr("Net Wt (Kg)")}</div>
-                </th>
-                <th className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-700">{tr("Origin")}</th>
-                <th className="py-2.5 px-2.5 text-right border-r border-slate-200 dark:border-slate-700">
-                  <div>{tr("Purchase")}</div>
-                  <div className="text-[10px] text-slate-500 font-mono font-normal">{tr("Final")}</div>
-                </th>
-                <th className="py-2.5 px-2.5 text-center border-r border-slate-200 dark:border-slate-700">{tr("Payment / Status")}</th>
-                <th className="py-2.5 px-3 text-center border-r border-slate-200 dark:border-slate-700">{tr("Loading")}</th>
-                <th className="py-2.5 px-3 text-center border-r border-slate-200 dark:border-slate-700">{tr("Receiving")}</th>
-                <th className="py-2.5 px-2 text-center w-12">{tr("Actions")}</th>
+                {[
+                  ["#", ""], ["Purchase Booking", "Bill No. / Date"], ["Location", "Branch"],
+                  ["User Name", ""], ["Purchase Account", "DR"], ["Sales Account", "CR"],
+                  ["Goods Name", "Brand / Size"], ["Lot Name", ""], ["Qty (Unit)", ""],
+                  ["Gross Wt", "Net Wt (Kg)"], ["Exchange Rate", ""], ["Amount", "Purchase / Final"],
+                  ["Payment / Status", ""], ["Loading", "Country / Port"], ["Receiving", "Country / Port"],
+                  ["Dates", "Loading / Receiving"], ["Actions", ""],
+                ].map(([label, detail], index) => (
+                  <th key={label} scope="col" className={cn(
+                    "border-e border-slate-200 px-2 py-2 text-start leading-tight dark:border-slate-700",
+                    index === 13 && "bg-sky-100 text-sky-950 dark:bg-sky-950 dark:text-sky-100",
+                    index === 14 && "bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-100",
+                    index === 15 && "bg-violet-100 text-violet-950 dark:bg-violet-950 dark:text-violet-100",
+                  )}>
+                    {tr(label)}
+                    {detail && <span className="block text-[10px] font-medium normal-case">{tr(detail)}</span>}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
               {loading ? (
                 <tr>
-                  <td colSpan={13} className="py-12 text-center text-slate-400">
+                  <td colSpan={17} className="py-12 text-center text-slate-400">
                     <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-600" />
                     <span>{tr("Loading purchase booking orders...")}</span>
                   </td>
                 </tr>
               ) : sortedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="py-12 text-center text-slate-400">
+                  <td colSpan={17} className="py-12 text-center text-slate-400">
                     {tr("No purchase booking records found.")}
                   </td>
                 </tr>
               ) : (
                 sortedRows.map((r, i) => {
                   const form = r.form_data?.form || {};
-                  const goods0 = r.form_data?.goodsEntries?.[0] || {};
+                  const goods = Array.isArray(r.form_data?.goodsEntries) ? r.form_data.goodsEntries : [];
+                  const goods0 = goods[0] || {};
+                  const lots = [...new Set(goods.map((item: any) => item.allotName || item.lotName || item.lotNo || item.stockLotNo || item.lotNumber).filter(Boolean))];
                   const billNo = r.purchaseBookingOrderNumber || r.purchase_order_no || r.billNumber || "—";
                   const billDate = formatDashDate(r.purchaseDate || r.bookingDate || r.createdAt);
                   const countryName = r.countryName || form.destinationCountry || form.branchCountry || "UAE";
                   const mainBranch = r.mainBranchName || form.mainBranch || form.countryBranch || r.branchName || "—";
                   const cityBranch = r.cityBranchName || form.cityBranch || form.subBranch || r.cityName || "—";
-                  const exRate = Number(r.exchange_rate || form.exchangeRate || 1);
+                  const exRate = Number(r.exchange_rate ?? form.exchangeRate ?? 1);
+                  const fxOperator = billFxOperator(r.form_data);
 
                   // Accounts
                   const purchaseAcc = r.purchaseAccountName && r.purchaseAccountName !== "-" ? r.purchaseAccountName : (r.supplierName || form.supplierName || "—");
@@ -1126,25 +1124,25 @@ export function PurchaseBookingGlobalRegisterView({
                   const unit = r.unit || form.qtyName || goods0.qtyName || "";
                   const grossKg = Number(r.totalGrossWeight || form.grossWeight || 0);
                   const netKg = Number(r.totalNetWeight || form.netWeight || 0);
-                  const origin = form.originCountry || goods0.origin || r.originCountry || "—";
+                  const origin = form.originCountry || goods0.origin || r.originCountry;
 
                   // Currency & Amounts
                   const purchCurr = String(r.currency || form.currencyType || "USD").toUpperCase();
                   const finalCurr = String(r.finalCurrency || form.secondaryCurrency?.split(" ")?.[0] || getCountryCurrency(countryName)).toUpperCase();
                   const purchAmt = Number(r.purchaseAmount || r.totalPurchaseAmount || 0);
-                  const finalAmt = r.finalAmount ? Number(r.finalAmount) : purchAmt * exRate;
+                  const finalAmt = r.finalAmount == null ? toBaseAmount(purchAmt, exRate, fxOperator) : Number(r.finalAmount);
 
                   // Payment Action
                   const pAction = formatPaymentAction(r);
 
                   // Loading Port & Date
-                  const rawLoadCountry = form.loadingCountry || form.originCountry || r.countryName || "";
+                  const rawLoadCountry = form.loadingCountry || form.originCountry || "";
                   const loadCountry = shortenCountry(rawLoadCountry);
                   const loadPort = form.loadingPort || form.exitPort || form.particularPort || r.loadingPort || "";
                   const loadDate = formatDashDate(form.loadingDate || form.expectedLoadingDate || r.loadingDate || r.workflow?.loadingDate || r.workflowDates?.loadingDate);
 
                   // Receiving Port & Date
-                  const rawRcvCountry = form.receivingCountry || form.destinationCountry || r.countryName || "";
+                  const rawRcvCountry = form.receivingCountry || form.receivedCountry || form.destinationCountry || "";
                   const rcvCountry = shortenCountry(rawRcvCountry);
                   const rcvPort = form.receivedPort || form.receivingPort || form.destinationPort || r.receivingPort || "";
                   const rcvDate = formatDashDate(form.receivingDate || form.receivedDate || form.arrivalDate || form.expectedReceivingDate || r.receivingDate || r.workflow?.receivingDate || r.workflowDates?.receivingDate);
@@ -1159,7 +1157,7 @@ export function PurchaseBookingGlobalRegisterView({
                   const branchSerialNo = (r as any).branch_transaction_serial_number || form.branchSerialNo || (r as any).branchSerial || `${String(mainBranch).replace(/[^A-Za-z0-9]/g, "").slice(0, 3).toUpperCase()}-${String(i + 1).padStart(6, "0")}`;
 
                   return (
-                    <tr key={rowKey} className="hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors">
+                    <tr key={rowKey} className="leading-tight transition-colors hover:bg-blue-50/40 dark:hover:bg-slate-800/50">
                       {/* 1. # */}
                       <td className="py-2 px-2 text-center text-slate-500 font-mono text-[11px] border-r border-slate-100 dark:border-slate-800">
                         {i + 1}
@@ -1222,82 +1220,28 @@ export function PurchaseBookingGlobalRegisterView({
                         </div>
                       </td>
 
-                      {/* 4. Accounts: Combined in one column with message-style popup on hover / tap */}
-                      <td className="py-2 px-3 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap relative group" data-account-popup="true">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveAccountPopupId((curr) => (curr === rowKey ? null : rowKey));
-                          }}
-                          className="text-left w-full cursor-pointer focus:outline-none"
-                        >
-                          <div className="font-bold text-slate-900 dark:text-slate-100 leading-tight truncate max-w-[150px]" title={purchaseAcc}>
-                            {purchaseAcc}
-                          </div>
-                          <div className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 mt-0.5 leading-tight truncate max-w-[150px]" title={salesAcc}>
-                            {salesAcc}
-                          </div>
-                        </button>
-
-                        {/* Message-Style Speech Bubble Popup (Hover on desktop, Tap on mobile) */}
-                        <div
-                          className={cn(
-                            "absolute start-1/2 -translate-x-1/2 bottom-full mb-2 z-40 w-72 rounded-xl border border-slate-200 bg-white p-3 shadow-2xl dark:border-slate-700 dark:bg-slate-900 text-start text-xs transition-all duration-150 pointer-events-none",
-                            (activeAccountPopupId === rowKey) ? "opacity-100 pointer-events-auto block" : "opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto hidden sm:block"
-                          )}
-                        >
-                          {/* Speech Bubble Arrow Indicator */}
-                          <div className="absolute -bottom-1.5 start-1/2 -translate-x-1/2 w-3 h-3 bg-white dark:bg-slate-900 border-b border-r border-slate-200 dark:border-slate-700 rotate-45" />
-
-                          {/* Section 1: Purchase Account */}
-                          <div className="space-y-1 pb-2 border-b border-slate-100 dark:border-slate-800">
-                            <div className="flex items-center justify-between">
-                              <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                                🏢 {tr("Purchase Account")}
-                              </span>
-                              <span className="text-[10px] font-mono text-slate-400">
-                                {r.purchaseAccountNumber || form.purchaseAccountNo || "—"}
-                              </span>
-                            </div>
-                            <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
-                              {purchaseAcc}
-                            </div>
-                            <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
-                              <span>{tr("Branch")}: {form.purchaseAccountBranch || r.branchName || "—"}</span>
-                              <span className="font-semibold text-slate-600 dark:text-slate-300">{tr("Supplier")}</span>
-                            </div>
-                          </div>
-
-                          {/* Section 2: Sales Account */}
-                          <div className="space-y-1 pt-2">
-                            <div className="flex items-center justify-between">
-                              <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                                👥 {tr("Sales Account")}
-                              </span>
-                              <span className="text-[10px] font-mono text-slate-400">
-                                {r.salesAccountNumber || form.salesAccountNo || "—"}
-                              </span>
-                            </div>
-                            <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
-                              {salesAcc}
-                            </div>
-                            <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
-                              <span>{tr("Branch")}: {form.salesAccountBranch || r.branchName || "—"}</span>
-                              <span className="font-semibold text-slate-600 dark:text-slate-300">{tr("Customer")}</span>
-                            </div>
-                          </div>
-                        </div>
+                      <td className="border-e border-slate-100 px-2 py-1.5 dark:border-slate-800">
+                        {r.createdByName || r.audit?.userName || form.userName || "—"}
                       </td>
+
+                      {[
+                        [r.purchaseAccountNumber, form.purchaseAccountNo, purchaseAcc],
+                        [r.salesAccountNumber, form.salesAccountNo, salesAcc],
+                      ].map(([number, fallbackNumber, name], index) => (
+                        <td key={index} className="border-e border-slate-100 px-2 py-1.5 dark:border-slate-800">
+                          <div className="font-mono font-bold text-blue-700 dark:text-blue-300">{number && number !== "-" ? number : fallbackNumber || "—"}</div>
+                          <div className="text-[10px] leading-tight text-slate-700 dark:text-slate-300">{name}</div>
+                        </td>
+                      ))}
 
                       {/* 5. Goods Name (Brand / Size) */}
                       <td className="py-2 px-3 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
                         <div className="font-bold text-slate-900 dark:text-slate-100">{goodsName}</div>
-                        {(brand || size) && (
-                          <div className="text-[10px] text-slate-500">
-                            {brand ? `Brand: ${brand}` : ""}{brand && size ? " | " : ""}{size ? `Size: ${size}` : ""}
-                          </div>
-                        )}
+                        {(brand || size || origin) && <div className="text-[10px] text-slate-500">{[brand, size, origin].filter(Boolean).join(" · ")}</div>}
+                      </td>
+
+                      <td className="max-w-36 break-words border-e border-slate-100 px-2 py-1.5 font-mono dark:border-slate-800">
+                        {lots.join(", ") || form.allotName || form.lotName || form.lotNo || "—"}
                       </td>
 
                       {/* 6. Qty (Unit): Stacked Quantity on top, Unit below */}
@@ -1316,21 +1260,13 @@ export function PurchaseBookingGlobalRegisterView({
                         <div className="text-[10px] text-slate-500">{fmt(netKg)}</div>
                       </td>
 
-                      {/* 8. Origin */}
-                      <td className="py-2 px-2.5 text-center border-r border-slate-100 dark:border-slate-800 whitespace-nowrap text-slate-700 dark:text-slate-300">
-                        {origin}
+                      <td className="whitespace-nowrap border-e border-slate-100 px-2 py-1.5 text-end font-mono tabular-nums dark:border-slate-800">
+                        <bdi>{fxOperator === "/" ? "÷ " : ""}{Number.isFinite(exRate) ? exRate.toLocaleString(lang, { maximumFractionDigits: 8 }) : "—"}</bdi>
                       </td>
 
-                      {/* 9. Amount (Purchase / Final) */}
-                      <td className="py-2 px-2.5 text-right border-r border-slate-100 dark:border-slate-800 whitespace-nowrap font-mono">
-                        <div className="font-bold text-[11px] text-slate-900 dark:text-slate-100">
-                          <span className="text-[10px] opacity-70 mr-1">{purchCurr}</span>
-                          {fmt(purchAmt)}
-                        </div>
-                        <div className="font-bold text-[10px] text-red-600 dark:text-red-400">
-                          <span className="text-[9px] opacity-70 mr-1">{finalCurr}</span>
-                          {fmt(finalAmt)}
-                        </div>
+                      <td className="whitespace-nowrap border-e border-slate-100 px-2 py-1.5 text-end font-mono text-[11px] font-bold tabular-nums dark:border-slate-800">
+                        <div><bdi>{purchCurr} {fmt(purchAmt)}</bdi></div>
+                        <div className="text-blue-700 dark:text-blue-300"><bdi>{finalCurr} {fmt(finalAmt)}</bdi></div>
                       </td>
 
                       {/* 10. Payment / Status: Consolidated */}
@@ -1355,56 +1291,35 @@ export function PurchaseBookingGlobalRegisterView({
                         </div>
                       </td>
 
-                      {/* 11. Loading: Country, Port, Date on 3 short lines */}
-                      <td className="py-2 px-2.5 text-center border-r border-slate-100 dark:border-slate-800 whitespace-nowrap text-xs">
-                        <div className="font-bold text-slate-900 dark:text-slate-100 leading-tight">
-                          {loadCountry || "—"}
-                        </div>
-                        <div className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 leading-tight truncate max-w-[120px] mx-auto mt-0.5">
-                          {loadPort || "—"}
-                        </div>
-                        <div className="text-[10px] text-slate-500 font-mono leading-tight mt-0.5">
-                          {loadDate}
-                        </div>
+                      <td className="border-e border-sky-100 bg-sky-50 px-2 py-1.5 dark:border-sky-900 dark:bg-sky-950/50">
+                        <div className="font-bold">{loadCountry || "—"}</div>
+                        <div className="text-[10px]">{loadPort || "—"}</div>
                       </td>
-
-                      {/* 12. Receiving: Country, Port, Date on 3 short lines */}
-                      <td className="py-2 px-2.5 text-center border-r border-slate-100 dark:border-slate-800 whitespace-nowrap text-xs">
-                        <div className="font-bold text-slate-900 dark:text-slate-100 leading-tight">
-                          {rcvCountry || "—"}
-                        </div>
-                        <div className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 leading-tight truncate max-w-[120px] mx-auto mt-0.5">
-                          {rcvPort || "—"}
-                        </div>
-                        <div className="text-[10px] text-slate-500 font-mono leading-tight mt-0.5">
-                          {rcvDate}
-                        </div>
+                      <td className="border-e border-emerald-100 bg-emerald-50 px-2 py-1.5 dark:border-emerald-900 dark:bg-emerald-950/50">
+                        <div className="font-bold">{rcvCountry || "—"}</div>
+                        <div className="text-[10px]">{rcvPort || "—"}</div>
                       </td>
-
-                      {/* 13. Actions: Only ⋮ menu with View inside */}
-                      <td className="py-2 px-2 text-center whitespace-nowrap">
-                        <div className="relative inline-block text-center" data-row-menu="true">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveRowMenuId((curr) => curr === rowKey ? null : rowKey);
-                            }}
-                            className="p-1 rounded hover:bg-slate-100 text-slate-600 dark:hover:bg-slate-800 dark:text-slate-400 cursor-pointer"
-                            title={tr("Actions")}
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </button>
-
-                          {activeRowMenuId === rowKey && (
-                            <div className="absolute end-0 top-full mt-1 z-50 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 text-start text-xs animate-in fade-in-50 zoom-in-95">
+                      <td className="whitespace-nowrap border-e border-violet-100 bg-violet-50 px-2 py-1.5 font-mono dark:border-violet-900 dark:bg-violet-950/50">
+                        <div>{loadDate}</div>
+                        <div className="text-[10px] text-slate-600 dark:text-slate-300">{rcvDate}</div>
+                      </td>
+                      <td className="px-2 py-1.5 text-center">
+                        <ViewportActionMenu
+                          ariaLabel={`${tr("Actions")} ${billNo}`}
+                          align={isRtl ? "left" : "right"}
+                          buttonClassName="inline-flex size-7 items-center justify-center rounded-full border border-slate-200 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+                          trigger={<MoreVertical className="h-4 w-4" />}
+                          menuClassName="w-48 text-xs"
+                        >
+                          {(close) => (
+                            <>
                               {/* 1. View Details */}
                               <button
                                 type="button"
                                 onClick={() => {
                                   setSelectedRow(r);
                                   setDrawerOpen(true);
-                                  setActiveRowMenuId(null);
+                                  close();
                                 }}
                                 className="w-full px-2.5 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold flex items-center gap-2 cursor-pointer"
                               >
@@ -1417,7 +1332,7 @@ export function PurchaseBookingGlobalRegisterView({
                                 type="button"
                                 onClick={() => {
                                   setFullBillRow(r);
-                                  setActiveRowMenuId(null);
+                                  close();
                                 }}
                                 className="w-full px-2.5 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold flex items-center gap-2 cursor-pointer"
                               >
@@ -1432,7 +1347,7 @@ export function PurchaseBookingGlobalRegisterView({
                                 type="button"
                                 onClick={() => {
                                   router.push(`/dashboard/journal/purchase-order-payment/advance?purchaseOrderNo=${encodeURIComponent(billNo)}`);
-                                  setActiveRowMenuId(null);
+                                  close();
                                 }}
                                 className="w-full px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-2 cursor-pointer"
                               >
@@ -1447,7 +1362,7 @@ export function PurchaseBookingGlobalRegisterView({
                                 onClick={() => {
                                   if (isTransferred) return;
                                   setLedgerTransferOrderId(String(r.id));
-                                  setActiveRowMenuId(null);
+                                  close();
                                 }}
                                 className="w-full px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                               >
@@ -1460,7 +1375,7 @@ export function PurchaseBookingGlobalRegisterView({
                                 type="button"
                                 onClick={() => {
                                   router.push(`/dashboard/purchase/purchase-transit-lane?purchaseOrderNo=${encodeURIComponent(billNo)}`);
-                                  setActiveRowMenuId(null);
+                                  close();
                                 }}
                                 className="w-full px-2.5 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-semibold flex items-center gap-2 cursor-pointer"
                               >
@@ -1476,16 +1391,16 @@ export function PurchaseBookingGlobalRegisterView({
                                 onClick={() => {
                                   setIsFormMode(true);
                                   router.push(`/dashboard/purchase/new-purchase-booking-order?id=${encodeURIComponent(r.id)}&purchaseOrderNo=${encodeURIComponent(billNo)}`);
-                                  setActiveRowMenuId(null);
+                                  close();
                                 }}
                                 className="w-full px-2.5 py-1.5 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-semibold flex items-center gap-2 cursor-pointer"
                               >
                                 <Sparkles className="h-3.5 w-3.5 text-amber-500" />
                                 <span>{tr("Edit Booking")}</span>
                               </button>
-                            </div>
+                            </>
                           )}
-                        </div>
+                        </ViewportActionMenu>
                       </td>
                     </tr>
                   );
