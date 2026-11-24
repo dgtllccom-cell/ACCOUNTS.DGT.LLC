@@ -63,3 +63,19 @@ it("opens the transfer report before posting and displays confirmed journal deta
   expect(within(report).getByRole("link", { name: "VR-42" }).getAttribute("href")).toContain("entryId=journal-42");
   expect(within(report).queryByRole("button", { name: "Transfer / Post" })).toBeNull();
 });
+
+it("opens a read-only two-page Sales Booking preview with its document actions", () => {
+  const post = vi.fn();
+  render(<SalesBookingStep5 form={{ salesOrderNo: "SB-42", branchCompanyName: "QA Trading" }}
+    onConfirmTransfer={post} useTransferReport />);
+  fireEvent.click(screen.getByRole("button", { name: "View" }));
+  const view = within(screen.getByRole("dialog", { name: "Sales Booking – View / PDF Preview" }));
+  expect(view.getByRole("heading", { name: "Sales Contract / Booking Report" })).toBeTruthy();
+  expect(view.getByRole("heading", { name: "Contract Report & Annexure" })).toBeTruthy();
+  expect(view.getAllByText("QA Trading")).toHaveLength(2);
+  for (const action of ["Print", "Download PDF", "Invoice", "Email", "WhatsApp"]) {
+    expect(view.getByRole("button", { name: action })).toBeTruthy();
+  }
+  expect(view.queryByRole("button", { name: "Transfer / Post" })).toBeNull();
+  expect(post).not.toHaveBeenCalled();
+});

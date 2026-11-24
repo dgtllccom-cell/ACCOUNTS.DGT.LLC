@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { t as tUi } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { printDomFragmentViaModal } from "@/lib/reports/print-dom-fragment";
+import { InvoiceDocumentView } from "@/components/invoices/invoice-document-view";
+import { SalesBookingDocumentView } from "./sales-booking-document-view";
 import { SalesBookingTransferReport } from "./sales-booking-transfer-report";
 import { SalesBookingContract } from "./sales-booking-contract";
 
@@ -13,6 +15,8 @@ export function SalesBookingStep5({
   form, goodsEntries = [], lang = "en", onBack, onSaveDraft, onPreviewPdf,
   onTransfer, onConfirmTransfer, transferConfirmation, useTransferReport = false, isTransferred = false, savingOrder = false,
 }) {
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [documentOpen, setDocumentOpen] = useState(false);
   const [transferReview, setTransferReview] = useState(false);
   const [transferError, setTransferError] = useState("");
   const [viewOpen, setViewOpen] = useState(false);
@@ -35,8 +39,10 @@ export function SalesBookingStep5({
       setTransferError(error.message);
     }
   };
+  const documentOrder = { sales_order_no: transferConfirmation?.salesOrderNo || form.salesOrderNo, form_data: { form, goodsEntries } };
   const preview = () => {
-    setViewOpen(true);
+    if (useTransferReport) setDocumentOpen(true);
+    else setViewOpen(true);
     onPreviewPdf?.();
   };
 
@@ -74,6 +80,17 @@ export function SalesBookingStep5({
       {useTransferReport && <SalesBookingTransferReport
         open={transferReview} onClose={() => setTransferReview(false)} form={form} goods={goodsEntries}
         confirmation={transferConfirmation} busy={savingOrder} lang={lang} error={transferError} onPost={confirmTransfer}
+        onDocument={() => { setTransferReview(false); setDocumentOpen(true); }}
+      />}
+      {useTransferReport && <SalesBookingDocumentView
+        open={documentOpen} onClose={() => setDocumentOpen(false)} lang={lang}
+        order={documentOrder}
+        onInvoice={() => { setDocumentOpen(false); setInvoiceOpen(true); }}
+      />}
+      {invoiceOpen && <InvoiceDocumentView
+        isOpen onClose={() => { setInvoiceOpen(false); setDocumentOpen(true); }} source="sales_order"
+        record={documentOrder} title={tr("Sales Booking Invoice")} companyId={form.salesCompanyId || null}
+        scope={{ countryBranchId: form.countryBranchId || null, cityBranchId: form.cityBranchId || null, countryName: form.countryName || null, branchName: form.branchName || null }}
       />}
       <section className="min-w-0 rounded-xl border bg-card">
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-t-xl bg-blue-50 p-3 dark:bg-slate-800">

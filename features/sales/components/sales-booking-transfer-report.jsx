@@ -26,7 +26,7 @@ function ReportSection({ title, entries, children, className = "", green = false
 }
 
 export function SalesBookingTransferReport({
-  open, onClose, form = {}, goods = [], order = {}, confirmation, busy = false, error, onPost, lang = "en",
+  open, onClose, form = {}, goods = [], order = {}, confirmation, busy = false, error, onPost, onDocument, lang = "en",
 }) {
   const printId = useId();
   const tr = label => translateHeader(lang, label);
@@ -70,6 +70,7 @@ export function SalesBookingTransferReport({
             {onPost && !transferred && <Button type="button" size="sm" className="bg-emerald-700 text-white hover:bg-emerald-800" disabled={busy} onClick={onPost}>
               <ArrowRightLeft aria-hidden="true" />{busy ? tr("Processing...") : tr("Transfer / Post")}
             </Button>}
+            {posted && onDocument && <Button type="button" size="sm" className="bg-emerald-700 text-white hover:bg-emerald-800" onClick={onDocument}>{tr("Sales Booking")}</Button>}
             {journalUrl && <Button asChild size="sm"><a href={journalUrl} target="_blank" rel="noreferrer">{tr("View Journal")}</a></Button>}
           </div>
         </div>

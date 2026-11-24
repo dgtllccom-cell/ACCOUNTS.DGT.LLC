@@ -36,6 +36,8 @@ import { SalesOrderWizard } from "@/features/sales/components/sales-order-wizard
 import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 // @ts-expect-error JSX view module
 import { SalesBookingTransferReport } from "./sales-booking-transfer-report.jsx";
+// @ts-expect-error JSX view module
+import { SalesBookingDocumentView } from "./sales-booking-document-view.jsx";
 
 interface SalesBookingGlobalRegisterViewProps {
   session: any;
@@ -103,14 +105,15 @@ export function SalesBookingGlobalRegisterView({
   const postingReview = useRef(false);
 
   useEffect(() => {
-    if (!review) return;
+    if (!review?.id) return;
+    const id = review.id;
     let current = true;
-    apiGet<{ order: any }>(`/api/erp/sales/orders/${encodeURIComponent(review.id)}`)
+    apiGet<{ order: any }>(`/api/erp/sales/orders/${encodeURIComponent(id)}`)
       .then(({ order }) => { if (current) setReviewOrder(order); })
       .catch((error: Error) => { if (current) setReviewError(error.message); })
       .finally(() => { if (current) setReviewBusy(false); });
     return () => { current = false; };
-  }, [review]);
+  }, [review?.id]);
 
   const openReview = (id: string, allowPost: boolean) => {
     setReviewOrder(null);
@@ -472,6 +475,7 @@ export function SalesBookingGlobalRegisterView({
 
   const selectedInvoiceRecord = useMemo(() => {
     if (!invoiceRow) return {};
+    if (invoiceRow.order_date !== undefined) return invoiceRow;
     const form = invoiceRow.form_data?.form || {};
     return {
       ...invoiceRow,
@@ -496,8 +500,8 @@ export function SalesBookingGlobalRegisterView({
     const form = invoiceRow.form_data?.form || {};
     return {
       countryId: form.countryId || null,
-      countryBranchId: invoiceRow.countryBranchId || form.countryBranchId || null,
-      cityBranchId: invoiceRow.cityBranchId || form.cityBranchId || null,
+      countryBranchId: invoiceRow.country_branch_id || invoiceRow.countryBranchId || form.countryBranchId || null,
+      cityBranchId: invoiceRow.city_branch_id || invoiceRow.cityBranchId || form.cityBranchId || null,
       countryName: invoiceRow.countryName || null,
       branchName: invoiceRow.branchName || null,
     };
@@ -1310,11 +1314,18 @@ export function SalesBookingGlobalRegisterView({
       </div>
 
       {/* Full A4 Sales Invoice View Modal */}
-      {review && <SalesBookingTransferReport
+      {review?.allowPost && <SalesBookingTransferReport
         open onClose={() => setReview(null)} lang={lang} order={reviewOrder ?? undefined}
         form={reviewOrder?.form_data?.form} goods={Array.isArray(reviewOrder?.form_data?.goodsEntries) ? reviewOrder.form_data.goodsEntries : []}
         confirmation={reviewConfirmation} busy={reviewBusy} error={reviewError}
-        onPost={review.allowPost && reviewOrder ? postReviewedOrder : undefined}
+        onPost={reviewOrder ? postReviewedOrder : undefined}
+        onDocument={reviewOrder ? () => {
+          setReview({ ...review, allowPost: false });
+        } : undefined}
+      />}
+      {review && !review.allowPost && <SalesBookingDocumentView
+        open onClose={() => setReview(null)} lang={lang} order={reviewOrder ?? undefined} busy={reviewBusy} error={reviewError}
+        onInvoice={reviewOrder ? () => { setInvoiceRow(reviewOrder); setReview(null); } : undefined}
       />}
       {invoiceRow && (
         <InvoiceDocumentView
