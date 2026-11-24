@@ -565,7 +565,12 @@ export async function POST(request: NextRequest) {
       ipAddress: request.headers.get("x-forwarded-for") ?? null
     });
 
-    const resData = { salesOrderId: (row as any).id, salesOrderNo: (row as any).sales_order_no, translationStatus };
+    const resData = {
+      salesOrderId: (row as any).id,
+      salesOrderNo: (row as any).sales_order_no,
+      bookingSerials: { superAdminSerialNumber, countryTransactionSerialNumber, branchTransactionSerialNumber },
+      translationStatus,
+    };
 
     if (idempotencyKey && tenantHash) {
       await commitIdempotencySuccess(idempotencyKey, tenantHash, 201, resData);

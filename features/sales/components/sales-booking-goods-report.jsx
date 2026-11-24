@@ -1,62 +1,32 @@
 "use client";
 
 import React from "react";
-import { BarChart3, Building2, Edit3, Package, Trash2, Truck, UserRound } from "lucide-react";
+import { Building2, Edit3, FileText, Package, Trash2, UserRound, Users } from "lucide-react";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { getBookingCurrencies } from "@/lib/sales/booking-currencies";
 
-export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDelete, overviewCards, showOrigin = false }) {
-  const currencies = getBookingCurrencies(form);
+export function SalesBookingSummaryCards({ form, goodsEntries = [], lang }) {
   const tr = label => translateHeader(lang, label);
-  const number = (value, digits = 3) => value == null || value === "" || !Number.isFinite(Number(value))
-    ? "—"
-    : Number(value).toLocaleString(lang, { maximumFractionDigits: digits });
-  const amount = (value, currency) => value == null || value === ""
-    ? "—"
-    : [currency, Number(value).toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })].filter(Boolean).join(" ");
-  const rateText = (rate, operator) => Number(rate) > 0 ? `${operator === "/" ? "÷" : "×"} ${rate}` : "—";
-  const volume = item => {
-    const value = item.cbm ?? item.volumeCbm ?? String(item.stackWeight ?? "").match(/(\d+(?:\.\d+)?)\s*(?:cbm\b|m³)/i)?.[1];
-    return value == null || value === "" ? null : Number(value);
-  };
-  const total = key => goodsEntries.reduce((sum, item) => sum + Number(item[key] ?? 0), 0);
-  const quantityByUnit = new Map();
-  const salesByCurrency = new Map();
-  const finalByCurrency = new Map();
-  for (const item of goodsEntries) {
-    const unit = item.qtyName || item.unit || "";
-    quantityByUnit.set(unit, (quantityByUnit.get(unit) || 0) + Number(item.qtyNo ?? item.quantity ?? 0));
-    if (item.totalAmount != null) {
-      const currency = item.salesCurrency || item.currencyType || currencies.sales;
-      salesByCurrency.set(currency, (salesByCurrency.get(currency) || 0) + Number(item.totalAmount));
-    }
-    if (item.finalAmount != null) {
-      const currency = item.secondaryCurrency || currencies.final;
-      finalByCurrency.set(currency, (finalByCurrency.get(currency) || 0) + Number(item.finalAmount));
-    }
-  }
-  const summarizeAmounts = values => Array.from(values, ([currency, value]) => amount(value, currency)).join(" · ");
-  const volumes = goodsEntries.map(volume).filter(Number.isFinite);
-  const cards = overviewCards ?? [
-    { title: "Booking / Branch Details", Icon: Building2, color: "bg-blue-50 text-blue-950 dark:bg-blue-950 dark:text-blue-100",
-      rows: [["Booking No", form.salesOrderNo], ["Booking Date", form.salesDate], ["Branch", form.branchName || form.branchCode], ["Country", form.branchCountry]] },
-    { title: "Loading Details", Icon: Truck, color: "bg-amber-50 text-amber-950 dark:bg-amber-950 dark:text-amber-100",
-      rows: [["Loading Type", form.shippingMode || form.shipmentType], ["Loading Port", form.salesPortOfLoading || form.loadingPort],
-        ["Destination", form.receivingPort || form.salesPortOfDischarge || form.receivingCountry], ["Loading Date", form.loadingDate]] },
-    { title: "Sales Account", Icon: UserRound, color: "bg-emerald-50 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-100",
-      rows: [["Customer Account (DR)", form.customerAccountName || form.customerAccountNo], ["Sales Account (CR)", form.salesAccountName || form.salesAccountNo],
-        ["Sales Currency", currencies.sales], ["Exchange Rate", rateText(currencies.rate.rate, currencies.rate.operator)]] },
-    { title: "Summary Totals", Icon: BarChart3, color: "bg-violet-50 text-violet-950 dark:bg-violet-950 dark:text-violet-100",
-      rows: [["Total Qty", Array.from(quantityByUnit, ([unit, value]) => `${number(value)} ${unit}`.trim()).join(" · ")],
-        ["Net Weight", `${number(total("netWeight"))} kg`], ["Gross Weight", `${number(total("grossWeight"))} kg`],
-        ["CBM", volumes.length === goodsEntries.length && volumes.length > 0 ? number(volumes.reduce((sum, value) => sum + value, 0)) : "—"],
-        ["Sales Amount", summarizeAmounts(salesByCurrency)], ["Final Amount", summarizeAmounts(finalByCurrency)]] },
+  const purchases = goodsEntries.length ? goodsEntries : [form];
+  const purchaseValues = key => [...new Set(purchases.map(item => item[key]).filter(Boolean))].join(" · ");
+  const serials = form.bookingSerials || {};
+  const cards = [
+    { title: "Booking / Branch Details", Icon: Building2, color: "bg-sky-50 text-sky-900 dark:bg-sky-950 dark:text-sky-100",
+      rows: [["Branch", form.branchName || form.cityBranchName || form.branchCode], ["Country", form.countryName || form.branchCountry],
+        ["Booking No", form.salesOrderNo], ["Booking Date", form.salesDate]] },
+    { title: "Bill Details", Icon: FileText, color: "bg-emerald-50 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-100",
+      rows: [["Bill No", form.salesOrderNo ? form.billNo || form.salesOrderNo : ""], ["Super Admin Serial", serials.superAdminSerialNumber],
+        ["Country Serial", serials.countryTransactionSerialNumber], ["Branch Serial", serials.branchTransactionSerialNumber],
+        ...((form.blNo || form.billOfLadingNo) ? [["Bill of Lading", form.blNo || form.billOfLadingNo]] : [])] },
+    { title: "Sales Account Details", Icon: UserRound, color: "bg-orange-50 text-orange-900 dark:bg-orange-950 dark:text-orange-100",
+      rows: [["Account Name", form.salesAccountName], ["Account Code", form.salesAccountNo],
+        ["Country", form.salesAccountCountry], ["Account Type", form.salesAccountNo ? form.salesAccountKind : ""]] },
+    { title: "Customer / Purchase Account", Icon: Users, color: "bg-indigo-50 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100",
+      rows: [["Customer Account (DR)", form.customerAccountName], ["Customer Account Code", form.customerAccountNo],
+        ["Purchase Account", purchaseValues("purchaseAccountName")], ["Purchase Account Code", purchaseValues("purchaseAccountNo")]] },
   ];
 
-  const hasActions = Boolean(onEdit || onDelete);
-
   return (
-  <div className="min-w-0 space-y-3">
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map(({ title, Icon, color, rows }) => (
         <section key={title} className={`min-w-0 rounded-xl p-3 ${color}`}>
@@ -74,6 +44,28 @@ export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDe
         </section>
       ))}
     </div>
+  );
+}
+
+export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDelete, showOrigin = false }) {
+  const currencies = getBookingCurrencies(form);
+  const tr = label => translateHeader(lang, label);
+  const number = (value, digits = 3) => value == null || value === "" || !Number.isFinite(Number(value))
+    ? "—"
+    : Number(value).toLocaleString(lang, { maximumFractionDigits: digits });
+  const amount = (value, currency) => value == null || value === ""
+    ? "—"
+    : [currency, Number(value).toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })].filter(Boolean).join(" ");
+  const rateText = (rate, operator) => Number(rate) > 0 ? `${operator === "/" ? "÷" : "×"} ${rate}` : "—";
+  const volume = item => {
+    const value = item.cbm ?? item.volumeCbm ?? String(item.stackWeight ?? "").match(/(\d+(?:\.\d+)?)\s*(?:cbm\b|m³)/i)?.[1];
+    return value == null || value === "" ? null : Number(value);
+  };
+  const hasActions = Boolean(onEdit || onDelete);
+
+  return (
+  <div className="min-w-0 space-y-3">
+    <SalesBookingSummaryCards form={form} goodsEntries={goodsEntries} lang={lang} />
 
     <section className="min-w-0 space-y-2 rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <h3 className="flex items-center gap-2 rounded-lg bg-blue-50 px-2.5 py-2 text-sm font-bold text-blue-950 dark:bg-blue-950 dark:text-blue-100">
@@ -86,7 +78,7 @@ export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDe
             <tr className="text-start">
               <th scope="col" className="px-2 py-2">#</th>
               {["Goods Name", "HS Code", "Lot / Item ID", ...(showOrigin ? ["Origin"] : []), "Quantity", "Net Weight", "Gross Weight", "CBM",
-                "Unit Price", "Sales Amount", "Exchange Rate", "Final Amount", ...(hasActions ? ["Action"] : [])].map(label => (
+                "Unit Price", "Total Sales Amount", "Exchange Rate", "Final Amount", ...(hasActions ? ["Action"] : [])].map(label => (
                 <th key={label} scope="col" className="whitespace-nowrap px-2 py-2 text-start">{tr(label)}</th>
               ))}
             </tr>

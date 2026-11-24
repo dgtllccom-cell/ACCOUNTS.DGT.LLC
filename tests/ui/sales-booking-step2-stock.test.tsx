@@ -5,6 +5,7 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { SalesBookingStep2 } from "@/features/sales/components/sales-booking-step2";
 
 const walnutLot = {
+  purchaseAccountName: "Walnut supplier", purchaseAccountNo: "PUR-WAL",
   id: "lot-1", lotNo: "LOT-WAL-001", source: "lot", goodsId: "g1", goodsName: "Walnut Kernels", brand: "Chaman Gold", size: "Light",
   origin: "Afghanistan", hsCode: "080232", qtyName: "BAGS", availableQty: 500, remainingQty: 500, qtyKgs: 50, emptyKgs: 0.2,
   netWeight: 0, location: "Rack A", warehouseName: "Dubai WH", stockRef: "LP-0001", containerNo: null, currencyType: "AED", exchangeRate: 1, coursePrice: 0, status: "ok",
@@ -71,8 +72,10 @@ describe("Sales Booking step 2 — stock first, then item search", () => {
     expect(within(row).getByText("× 3.673")).toBeTruthy();
     expect(within(row).getByText("AED 4,591.25")).toBeTruthy();
     expect(table.querySelector("tfoot")).toBeNull();
-    const summary = screen.getByRole("heading", { name: "Summary Totals" }).closest("section")!;
-    expect(within(summary).getByText("AED 4,591.25")).toBeTruthy();
+    const accounts = screen.getByRole("heading", { name: "Customer / Purchase Account" }).closest("section")!;
+    expect(within(accounts).getByText("Walnut supplier")).toBeTruthy();
+    expect(within(accounts).getByText("PUR-WAL")).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Summary Totals" })).toBeNull();
   });
 
   it("the same lot cannot be added twice", async () => {

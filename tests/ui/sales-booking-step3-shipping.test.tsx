@@ -6,7 +6,7 @@ import { SalesBookingStep3 } from "@/features/sales/components/sales-booking-ste
 
 afterEach(cleanup);
 
-it("keeps vessel, voyage and bill of lading separate and shows totals only above the goods table", () => {
+it("keeps vessel, voyage and bill of lading separate and shows bill details above the goods table", () => {
   const setForm = vi.fn();
   render(<SalesBookingStep3
     form={{ vesselName: "Test Vessel", voyageNo: "VY-TEST", billOfLadingNo: "BL-OLD",
@@ -30,6 +30,7 @@ it("keeps vessel, voyage and bill of lading separate and shows totals only above
   expect(table.querySelector("tfoot")).toBeNull();
   expect(within(table).getByText("LOT-TEST")).toBeTruthy();
   expect(within(table).getByText("AED 4,591.25")).toBeTruthy();
-  const summary = screen.getByRole("heading", { name: "Summary Totals" }).closest("section")!;
-  expect(within(summary).getByText("AED 4,591.25")).toBeTruthy();
+  const billDetails = screen.getByRole("heading", { name: "Bill Details" }).closest("section")!;
+  expect(within(billDetails).getByText("BL-OLD")).toBeTruthy();
+  expect(screen.queryByRole("heading", { name: "Summary Totals" })).toBeNull();
 });

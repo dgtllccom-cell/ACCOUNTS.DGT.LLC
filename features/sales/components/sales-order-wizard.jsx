@@ -1739,6 +1739,11 @@ export function SalesOrderWizard({ session }) {
               cityBranchId: mergedCityBranchId,
               salesOrderNo: soNumber,
               salesContractNo: contractNumber,
+              bookingSerials: {
+                superAdminSerialNumber: soData.super_admin_serial_number ?? rawFormData.traceability?.superAdminSerialNumber,
+                countryTransactionSerialNumber: soData.country_transaction_serial_number ?? rawFormData.traceability?.countryTransactionSerialNumber,
+                branchTransactionSerialNumber: soData.branch_transaction_serial_number ?? rawFormData.traceability?.branchTransactionSerialNumber,
+              },
             };
           });
           setScopeConfirmed(true);
@@ -1906,7 +1911,11 @@ export function SalesOrderWizard({ session }) {
       setSavedOrderNo(returnedOrderNo);
       setSavedBookingSteps(bookingSteps);
       if (returnedOrderNo) {
-        setForm((previous) => ({ ...previous, salesOrderNo: returnedOrderNo }));
+        setForm((previous) => ({
+          ...previous,
+          salesOrderNo: returnedOrderNo,
+          bookingSerials: payload.data?.bookingSerials || previous.bookingSerials,
+        }));
       }
       if (returnedOrderId && intake.draft) await intake.consume(String(returnedOrderId));
       setSaveMessage(`Successfully saved Sales Order: ${returnedOrderNo}.`);
@@ -3946,7 +3955,6 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   dbAccounts={dbAccounts}
                   dbCompanies={dbCompanies}
                   applyAccountMaster={applyAccountMaster}
-                  formatAccountDisplayLabel={formatAccountDisplayLabel}
                 />
               )}
 
