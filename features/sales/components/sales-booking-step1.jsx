@@ -3,7 +3,6 @@ import React, { useState, useRef } from "react";
 import {
   Building2,
   Search,
-  Calendar,
   ChevronRight,
   Package,
   Edit3,
@@ -313,35 +312,6 @@ export function SalesBookingStep1({
               />
             </div>
           )}
-        </div>
-
-        {/* Contract No */}
-        <div className="space-y-1">
-          <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            {tUi(lang, "sales.contract_no", "Contract No")}
-          </label>
-          <input
-            type="text"
-            value={form.salesContractNo || ""}
-            onChange={(e) => setForm((p) => ({ ...p, salesContractNo: e.target.value }))}
-            placeholder="e.g. SC-2026-001"
-            className="w-full h-9 px-3 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
-          />
-        </div>
-
-        {/* Contract / Booking Date */}
-        <div className="space-y-1">
-          <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            {tUi(lang, "sales.contract_booking_date", "Contract / Booking Date")}
-          </label>
-          <div className="relative">
-            <input
-              type="date"
-              value={form.salesDate || ""}
-              onChange={(e) => setForm((p) => ({ ...p, salesDate: e.target.value }))}
-              className="w-full h-9 px-3 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
-            />
-          </div>
         </div>
 
         <SalesBookingCurrencyFields form={form} lang={lang} onChange={onCurrencyChange ?? ((key, value) => setForm(previous => ({ ...previous, [key]: value })))} readOnly={currencyReadOnly} />
