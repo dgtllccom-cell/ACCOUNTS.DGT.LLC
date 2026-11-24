@@ -78,7 +78,8 @@ function PremiumNodeItem({
   const href = node.href ?? null;
   const isActive = href ? isPathMatch(String(href), activePath) : false;
   const branchActive = !isActive && branchHasActive(node, activePath);
-  const labelText = t(lang, node.labelKey);
+  const labelText = lang === "en" && node.labelKey === "nav.sales_transfer_payment"
+    ? "Sales Payment Transfer" : t(lang, node.labelKey);
   const isChanged = CHANGED_KEYS.has(node.key);
 
   const rowClass = cn(
