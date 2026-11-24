@@ -4153,7 +4153,7 @@ export function CashEntryForm({
                           {paymentType === "transfer" && <ArrowLeftRight className="h-3.5 w-3.5 text-blue-600 shrink-0" />}
                           <span className="truncate">
                             {paymentType === "cash" ? tr("cef.opt_cash", "Cash")
-                              : paymentType === "bank" ? tr("cef.opt_cheque", "Cheque")
+                              : paymentType === "bank" ? `${tr("td.bank_name", "Bank")} / ${tr("cef.opt_cheque", "Cheque")}`
                               : paymentType === "transfer" ? tr("cef.opt_transfer", "Transfer")
                               : tr("cef.opt_invoice", "Invoice")}
                           </span>
@@ -4206,7 +4206,7 @@ export function CashEntryForm({
                               <span className={cn("grid h-5 w-5 place-items-center rounded-md", paymentType === "bank" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400")}>
                                 <CreditCard className="h-3.5 w-3.5" />
                               </span>
-                              <span>{tr("cef.opt_cheque", "Cheque")}</span>
+                              <span>{tr("td.bank_name", "Bank")} / {tr("cef.opt_cheque", "Cheque")}</span>
                             </div>
                             {paymentType === "bank" && <Check className="h-3.5 w-3.5 text-white" />}
                           </button>
@@ -4607,7 +4607,7 @@ export function CashEntryForm({
                   {/* Left inputs */}
                   <div className="md:col-span-8 space-y-2">
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
-                      <div className={isLocalCurrency ? "sm:col-span-5" : "sm:col-span-6"}>
+                      <div className={isLocalCurrency ? "sm:col-span-4" : "sm:col-span-6"}>
                         <label className="mb-0.5 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                           {isLocalCurrency ? `${tr("cj.mAmount", "Amount")} (${targetAccountCurrency.toUpperCase()})` : `${tr("cj.mQuantity", "Quantity (Foreign Amount)")} (${normalizedCurrency})`} <span className="text-rose-500">*</span>
                         </label>
@@ -4642,7 +4642,7 @@ export function CashEntryForm({
                         </div>
                       )}
 
-                      <div className={isLocalCurrency ? "sm:col-span-7" : "sm:col-span-12"}>
+                      <div className={isLocalCurrency ? "sm:col-span-8" : "sm:col-span-12"}>
                         <label className="mb-0.5 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                           {tr("cef.posting_side", "Posting Side")} <span className="text-rose-500">*</span>
                         </label>
@@ -4651,27 +4651,27 @@ export function CashEntryForm({
                             type="button"
                             onClick={() => setPaymentMode("DEBIT")}
                             className={cn(
-                              "flex items-center justify-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer",
+                              "flex items-center justify-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer",
                               paymentMode === "DEBIT"
                                 ? "bg-sky-600 text-white shadow-xs dark:bg-sky-500"
                                 : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
                             )}
                           >
                             <span className={cn("h-2 w-2 rounded-full shrink-0", paymentMode === "DEBIT" ? "bg-white" : "bg-slate-300 dark:bg-slate-600")} />
-                            <span className="truncate">{tr("cef.debit_dr", "Debit (DR)")}</span>
+                            <span>{tr("cef.debit_dr", "Debit (DR)")}</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => setPaymentMode("CREDIT")}
                             className={cn(
-                              "flex items-center justify-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer",
+                              "flex items-center justify-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer",
                               paymentMode === "CREDIT"
                                 ? "bg-emerald-600 text-white shadow-xs dark:bg-emerald-500"
                                 : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
                             )}
                           >
                             <span className={cn("h-2 w-2 rounded-full shrink-0", paymentMode === "CREDIT" ? "bg-white" : "bg-slate-300 dark:bg-slate-600")} />
-                            <span className="truncate">{tr("cef.credit_cr", "Credit (CR)")}</span>
+                            <span>{tr("cef.credit_cr", "Credit (CR)")}</span>
                           </button>
                         </div>
                       </div>
