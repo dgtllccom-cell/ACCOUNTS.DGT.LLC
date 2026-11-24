@@ -7,9 +7,13 @@ import {
   ShoppingBag,
   Crown,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   FileSpreadsheet,
+  FileText,
   Printer,
   Eye,
+  Pencil,
   Search,
   RefreshCw,
   Sparkles,
@@ -18,12 +22,13 @@ import {
   CheckCircle2,
   Clock,
   Store,
+  MoreVertical,
 } from "lucide-react";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { cn } from "@/lib/utils";
 import { apiGet } from "@/lib/api/client";
-import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
+import { InvoiceDocumentView } from "@/components/invoices/invoice-document-view";
 import { EntryMethodSelector } from "@/features/document-intelligence/components/entry-method-selector";
 import { SalesOrderWizard } from "@/features/sales/components/sales-order-wizard.jsx";
 
@@ -80,6 +85,15 @@ export function SalesBookingGlobalRegisterView({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
 
+  // Popups & Modals
+  const [activeAccountPopupId, setActiveAccountPopupId] = useState<string | null>(null);
+  const [activeRowMenuId, setActiveRowMenuId] = useState<string | null>(null);
+  const [invoiceRow, setInvoiceRow] = useState<any | null>(null);
+
+  // Pagination (replaces bottom yellow total bar per owner design standard)
+  const [pageSize, setPageSize] = useState<number>(25);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
   // Filters
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterCountry, setFilterCountry] = useState<string>("all");
@@ -97,8 +111,15 @@ export function SalesBookingGlobalRegisterView({
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (reportsRef.current && !reportsRef.current.contains(e.target as Node)) {
+      const target = e.target as HTMLElement | null;
+      if (reportsRef.current && target && !reportsRef.current.contains(target)) {
         setReportsOpen(false);
+      }
+      if (!target?.closest("[data-sales-account-popup]")) {
+        setActiveAccountPopupId(null);
+      }
+      if (!target?.closest("[data-sales-row-menu]")) {
+        setActiveRowMenuId(null);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -110,7 +131,7 @@ export function SalesBookingGlobalRegisterView({
     setError("");
     try {
       const res = await apiGet<{ reports: any[] }>(
-        `/api/erp/sales/booking-journal-report?limit=250&lang=${encodeURIComponent(lang)}`
+        `/api/erp/sales/booking-journal-report?limit=500&lang=${encodeURIComponent(lang)}`
       );
       setReports(Array.isArray(res?.reports) ? res.reports : []);
     } catch (err: any) {
@@ -172,6 +193,9 @@ export function SalesBookingGlobalRegisterView({
         const hay = [
           r.salesBookingOrderNumber,
           r.manualBillNumber,
+          r.superAdminSerialNo,
+          r.countrySerialNo,
+          r.branchSerialNo,
           r.customerName,
           r.salesAccountName,
           r.productName,
@@ -188,6 +212,11 @@ export function SalesBookingGlobalRegisterView({
     });
   }, [reports, localScopeFilter, isRowLocalSale, filterCountry, filterStatus, isRowTransferred, searchQuery]);
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterCountry, filterStatus, localScopeFilter]);
+
   // Awaiting transfer in red at top, transferred in black at bottom (matching Purchase Booking)
   const sortedRows = useMemo(() => {
     return [...filteredRows].sort((a, b) => {
@@ -201,18 +230,21 @@ export function SalesBookingGlobalRegisterView({
     });
   }, [filteredRows, isRowTransferred]);
 
+  const totalPages = Math.max(1, Math.ceil(sortedRows.length / pageSize));
+  const paginatedRows = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return sortedRows.slice(start, start + pageSize);
+  }, [sortedRows, currentPage, pageSize]);
+
   // Summary metrics
   const summary = useMemo(() => {
-    let totalBills = filteredRows.length;
+    const totalBills = filteredRows.length;
     let totalSales = 0;
     let totalPaid = 0;
     let totalRemaining = 0;
     let completed = 0;
     let partial = 0;
     let pending = 0;
-    let totalQty = 0;
-    let totalGross = 0;
-    let totalNet = 0;
 
     filteredRows.forEach((r) => {
       const amt = Number(r.totalSalesAmount || r.salesAmount || 0);
@@ -222,9 +254,6 @@ export function SalesBookingGlobalRegisterView({
       totalSales += amt;
       totalPaid += paid;
       totalRemaining += rem;
-      totalQty += Number(r.quantity || 0);
-      totalGross += Number(r.totalGrossWeight || r.totalWeight || 0);
-      totalNet += Number(r.totalNetWeight || r.totalWeight || 0);
 
       if (isRowTransferred(r) || (amt > 0 && paid >= amt - 0.05)) {
         completed++;
@@ -246,9 +275,6 @@ export function SalesBookingGlobalRegisterView({
       partialPct: totalBills > 0 ? ((partial / totalBills) * 100).toFixed(1) : "0.0",
       pending,
       pendingPct: totalBills > 0 ? ((pending / totalBills) * 100).toFixed(1) : "0.0",
-      totalQty,
-      totalGross,
-      totalNet,
     };
   }, [filteredRows, isRowTransferred]);
 
@@ -299,6 +325,13 @@ export function SalesBookingGlobalRegisterView({
     return "🌐";
   };
 
+  const shortenCountry = (c: string) => {
+    if (!c) return "—";
+    const s = String(c).trim();
+    if (s.toLowerCase().includes("united arab emirates") || s.toLowerCase() === "emirates") return "UAE";
+    return s;
+  };
+
   const baseRegisterUrl = isLocalSalesPage
     ? "/dashboard/sales/new-sales-booking-order?source=local"
     : "/dashboard/sales/new-sales-booking-order";
@@ -332,6 +365,7 @@ export function SalesBookingGlobalRegisterView({
       "Country",
       "Branch",
       "Customer",
+      "Sales Account",
       "Goods",
       "Qty",
       "Unit",
@@ -351,6 +385,7 @@ export function SalesBookingGlobalRegisterView({
         `"${r.countryName || ""}"`,
         `"${r.branchName || ""}"`,
         `"${(r.customerName || "").replace(/"/g, '""')}"`,
+        `"${(r.salesAccountName || "").replace(/"/g, '""')}"`,
         `"${(r.productName || r.goodsDescription || "").replace(/"/g, '""')}"`,
         Number(r.quantity || 0),
         `"${r.unit || ""}"`,
@@ -374,6 +409,39 @@ export function SalesBookingGlobalRegisterView({
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+
+  const selectedInvoiceRecord = useMemo(() => {
+    if (!invoiceRow) return {};
+    const form = invoiceRow.form_data?.form || {};
+    return {
+      ...invoiceRow,
+      created_at: invoiceRow.createdAt || invoiceRow.bookingDate || null,
+      id: invoiceRow.id,
+      sales_order_no: invoiceRow.salesBookingOrderNumber || invoiceRow.sales_order_no,
+      sales_contract_no: invoiceRow.sales_contract_no,
+      currency_code: invoiceRow.currency || invoiceRow.finalCurrency,
+      exchange_rate: invoiceRow.exchange_rate,
+      country_id: form.countryId ?? null,
+      country_branch_id: invoiceRow.countryBranchId ?? form.countryBranchId ?? null,
+      city_branch_id: invoiceRow.cityBranchId ?? form.cityBranchId ?? null,
+      country_name: invoiceRow.countryName,
+      branch_name: invoiceRow.branchName,
+      customer_name: invoiceRow.customerName,
+      form_data: invoiceRow.form_data,
+    };
+  }, [invoiceRow]);
+
+  const selectedInvoiceScope = useMemo(() => {
+    if (!invoiceRow) return {};
+    const form = invoiceRow.form_data?.form || {};
+    return {
+      countryId: form.countryId || null,
+      countryBranchId: invoiceRow.countryBranchId || form.countryBranchId || null,
+      cityBranchId: invoiceRow.cityBranchId || form.cityBranchId || null,
+      countryName: invoiceRow.countryName || null,
+      branchName: invoiceRow.branchName || null,
+    };
+  }, [invoiceRow]);
 
   // ── FORM / ENTRY METHOD GATE MODE ──
   if (isFormMode) {
@@ -424,7 +492,7 @@ export function SalesBookingGlobalRegisterView({
       data-page-chrome="true"
       className="w-full max-w-[1920px] mx-auto space-y-3 p-2 sm:p-3 text-slate-900 dark:text-slate-100"
     >
-      {/* 1. Top Control Bar */}
+      {/* 1. Consolidated Top Control Bar ("White Patti") */}
       <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border border-slate-200/90 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-wrap items-center gap-2">
           <button
@@ -463,6 +531,15 @@ export function SalesBookingGlobalRegisterView({
               {tr("Super Admin View")}
             </span>
           </div>
+
+          <nav aria-label="breadcrumb" className="hidden xl:flex items-center text-[11px] font-semibold text-slate-400 ms-1">
+            <span>/</span>
+            <span className="mx-1 text-slate-500">{tr("Purchase & Trade")}</span>
+            <span>/</span>
+            <span className="mx-1 font-bold text-slate-700 dark:text-slate-300">
+              {isLocalSalesPage ? tr("Local Sales") : tr("Sales Booking")}
+            </span>
+          </nav>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -485,7 +562,7 @@ export function SalesBookingGlobalRegisterView({
                     setReportsOpen(false);
                     router.push("/dashboard/sales/sales-booking-journal-report" as any);
                   }}
-                  className="w-full text-start rounded-lg px-3 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                  className="w-full text-start rounded-lg px-3 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:text-slate-200 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   {tr("Sales Booking Journal")}
                 </button>
@@ -495,7 +572,7 @@ export function SalesBookingGlobalRegisterView({
                     setReportsOpen(false);
                     router.push("/dashboard/sales/sales-confirm" as any);
                   }}
-                  className="w-full text-start rounded-lg px-3 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                  className="w-full text-start rounded-lg px-3 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:text-slate-200 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   {tr("Confirmed Sales Orders")}
                 </button>
@@ -505,7 +582,7 @@ export function SalesBookingGlobalRegisterView({
                     setReportsOpen(false);
                     handleExportCsv();
                   }}
-                  className="w-full text-start rounded-lg px-3 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:text-slate-200 dark:hover:bg-slate-800 flex items-center gap-2"
+                  className="w-full text-start rounded-lg px-3 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:text-slate-200 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
                 >
                   <Download className="h-3.5 w-3.5" />
                   {tr("Export CSV")}
@@ -604,7 +681,7 @@ export function SalesBookingGlobalRegisterView({
         </div>
       </div>
 
-      {/* 2. KPI Summary Strip (Matching Purchase Booking 3-Card Layout) */}
+      {/* 2. KPI Summary Strip (3-Card Layout matching Purchase Booking) */}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         {/* Card 1: Sales Summary */}
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
@@ -734,29 +811,28 @@ export function SalesBookingGlobalRegisterView({
           <table className="min-w-full text-xs">
             <thead className="bg-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-700 border-b border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700">
               <tr>
-                <th className="px-3 py-2.5 text-center w-10">#</th>
+                <th className="px-2.5 py-2.5 text-center w-10">#</th>
                 <th className="px-3 py-2.5 text-start">{tr("BILL NO. / DATE")}</th>
                 <th className="px-3 py-2.5 text-start">{tr("LOCATION")}</th>
-                <th className="px-3 py-2.5 text-start">{tr("CUSTOMER / ACCOUNT")}</th>
+                <th className="px-3 py-2.5 text-start">{tr("ACCOUNTS")}</th>
                 <th className="px-3 py-2.5 text-start">{tr("GOODS NAME (BRAND / SIZE)")}</th>
-                <th className="px-3 py-2.5 text-end">{tr("QTY (UNIT)")}</th>
+                <th className="px-2.5 py-2.5 text-center">{tr("QTY (UNIT)")}</th>
                 <th className="px-3 py-2.5 text-end">{tr("WEIGHT (KG)")}</th>
                 <th className="px-3 py-2.5 text-end">{tr("SALES AMOUNT")}</th>
-                <th className="px-3 py-2.5 text-center">{tr("PAYMENT")}</th>
-                <th className="px-3 py-2.5 text-center">{tr("TRANSFER STATUS")}</th>
-                <th className="px-3 py-2.5 text-center">{tr("ACTIONS")}</th>
+                <th className="px-3 py-2.5 text-center">{tr("PAYMENT / STATUS")}</th>
+                <th className="px-2.5 py-2.5 text-center">{tr("ACTIONS")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={11} className="px-4 py-12 text-center text-slate-400 font-semibold">
+                  <td colSpan={10} className="px-4 py-12 text-center text-slate-400 font-semibold">
                     {tr("Loading sales register...")}
                   </td>
                 </tr>
-              ) : sortedRows.length === 0 ? (
+              ) : paginatedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="px-4 py-12 text-center">
+                  <td colSpan={10} className="px-4 py-12 text-center">
                     <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
                       {isLocalSalesPage ? tr("No local sales bills found yet.") : tr("No sales booking bills found yet.")}
                     </p>
@@ -774,165 +850,271 @@ export function SalesBookingGlobalRegisterView({
                   </td>
                 </tr>
               ) : (
-                sortedRows.map((r, idx) => {
+                paginatedRows.map((r, idx) => {
+                  const rowNum = (currentPage - 1) * pageSize + idx + 1;
+                  const rowKey = String(r.id || rowNum);
                   const transferred = isRowTransferred(r);
                   const rowColorCls = transferred
                     ? "text-slate-900 dark:text-slate-100"
-                    : "text-rose-700 dark:text-rose-400 bg-rose-50/30 dark:bg-rose-950/10";
+                    : "text-rose-700 dark:text-rose-400 bg-rose-50/25 dark:bg-rose-950/10";
                   const salesAmt = Number(r.totalSalesAmount || r.salesAmount || 0);
                   const finalAmt = Number(r.finalAmount || salesAmt);
                   const isLocal = isRowLocalSale(r);
+                  const billNo = r.salesBookingOrderNumber || r.sales_order_no || "—";
+                  const superSerialNo = r.superAdminSerialNo || `GBL-${billNo}`;
+                  const countrySerialNo = r.countrySerialNo || `CTY-${billNo}`;
+                  const branchSerialNo = r.branchSerialNo || `${r.branchCode && r.branchCode !== "-" ? r.branchCode : "BR"}-${billNo}`;
+                  const goods0 = r.form_data?.goodsEntries?.[0] || r.form_data?.form || {};
+                  const brand = goods0.brand || "";
+                  const size = goods0.size || "";
 
                   return (
                     <tr
-                      key={r.id}
+                      key={rowKey}
                       className={cn(
                         "hover:bg-blue-50/40 dark:hover:bg-slate-800/60 transition-colors",
                         rowColorCls
                       )}
                     >
-                      <td className="px-3 py-2.5 text-center font-mono text-[11px] text-slate-500">
-                        {idx + 1}
+                      {/* 1. # */}
+                      <td className="px-2.5 py-2.5 text-center font-mono text-[11px] text-slate-500 border-r border-slate-100 dark:border-slate-800">
+                        {rowNum}
                       </td>
-                      <td className="px-3 py-2.5">
+
+                      {/* 2. Bill No. (with 4-Serial Popover) & Bold Date */}
+                      <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
+                        <div className="relative group inline-block">
+                          <button
+                            type="button"
+                            onClick={() => openEditOrder(r.id)}
+                            className="font-mono text-xs font-black text-blue-700 hover:underline dark:text-blue-400 cursor-pointer inline-flex items-center gap-1.5"
+                          >
+                            <span>{billNo}</span>
+                            {isLocal && (
+                              <span className="rounded bg-amber-100 px-1.5 py-0.2 text-[9px] font-black text-amber-800">
+                                LOCAL
+                              </span>
+                            )}
+                          </button>
+
+                          {/* 4-Serial Speech Bubble Popover */}
+                          <div className="pointer-events-none opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-150 absolute start-0 bottom-full mb-1.5 z-50 w-64 rounded-xl border border-slate-200 bg-white p-2.5 shadow-2xl dark:border-slate-700 dark:bg-slate-900 text-start">
+                            <div className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1">
+                              {tr("Serial Information")}
+                            </div>
+                            <div className="space-y-1 text-[11px]">
+                              <div className="flex justify-between gap-2">
+                                <span className="text-slate-500">{tr("Super Admin")}:</span>
+                                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{superSerialNo}</span>
+                              </div>
+                              <div className="flex justify-between gap-2">
+                                <span className="text-slate-500">{tr("Country")}:</span>
+                                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{countrySerialNo}</span>
+                              </div>
+                              <div className="flex justify-between gap-2">
+                                <span className="text-slate-500">{tr("Branch")}:</span>
+                                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{branchSerialNo}</span>
+                              </div>
+                              <div className="flex justify-between gap-2 border-t border-slate-100 dark:border-slate-800 pt-1">
+                                <span className="text-slate-500 font-semibold">{tr("Entry/Bill")}:</span>
+                                <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{billNo}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-[11px] font-bold text-slate-800 dark:text-slate-200 font-mono mt-0.5">
+                          {formatDashDate(r.salesDate || r.bookingDate || r.createdAt)}
+                        </div>
+                      </td>
+
+                      {/* 3. Location: Country, Branch, City stacked */}
+                      <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
+                        <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1 leading-tight">
+                          <span>{getCountryFlag(r.countryName)}</span>
+                          <span>{shortenCountry(r.countryName)}</span>
+                        </div>
+                        <div className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 leading-tight mt-0.5">
+                          {r.branchName || "—"}
+                        </div>
+                        {r.cityName && r.cityName !== "-" && (
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
+                            {r.cityName}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* 4. Accounts: Customer (DR) + Sales Account (CR) with message-style popup */}
+                      <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap relative group" data-sales-account-popup="true">
                         <button
                           type="button"
-                          onClick={() => openEditOrder(r.id)}
-                          className="font-mono text-xs font-black text-blue-700 hover:underline dark:text-blue-400 cursor-pointer block text-start"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveAccountPopupId((curr) => (curr === rowKey ? null : rowKey));
+                          }}
+                          className="text-start w-full cursor-pointer focus:outline-none"
                         >
-                          {r.salesBookingOrderNumber || r.sales_order_no || "—"}
+                          <div className="font-bold text-slate-900 dark:text-slate-100 leading-tight truncate max-w-[165px]" title={r.customerName}>
+                            {r.customerName || "—"}
+                          </div>
+                          <div className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 mt-0.5 leading-tight truncate max-w-[165px]" title={r.salesAccountName}>
+                            {r.salesAccountName && r.salesAccountName !== "-" ? r.salesAccountName : "—"}
+                          </div>
                         </button>
-                        <div className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1.5">
-                          <span>{formatDashDate(r.salesDate || r.bookingDate || r.createdAt)}</span>
-                          {isLocal && (
-                            <span className="rounded bg-amber-100 px-1.5 py-0.2 text-[9px] font-black text-amber-800">
-                              LOCAL
+
+                        <div
+                          className={cn(
+                            "absolute start-1/2 -translate-x-1/2 bottom-full mb-2 z-40 w-72 rounded-xl border border-slate-200 bg-white p-3 shadow-2xl dark:border-slate-700 dark:bg-slate-900 text-start text-xs transition-all duration-150 pointer-events-none",
+                            activeAccountPopupId === rowKey
+                              ? "opacity-100 pointer-events-auto block"
+                              : "opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto hidden sm:block"
+                          )}
+                        >
+                          <div className="space-y-1 pb-2 border-b border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center justify-between">
+                              <span className="inline-flex items-center gap-1 rounded bg-sky-50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-sky-700 dark:bg-sky-950 dark:text-sky-300">
+                                👥 {tr("Customer")} (DR)
+                              </span>
+                              <span className="text-[10px] font-mono text-slate-400">
+                                {r.form_data?.form?.customerAccountNo || "—"}
+                              </span>
+                            </div>
+                            <div className="font-bold text-slate-900 dark:text-slate-100">{r.customerName || "—"}</div>
+                          </div>
+                          <div className="space-y-1 pt-2">
+                            <div className="flex items-center justify-between">
+                              <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                                🏢 {tr("Sales Account")} (CR)
+                              </span>
+                              <span className="text-[10px] font-mono text-slate-400">
+                                {r.salesAccountNumber && r.salesAccountNumber !== "-" ? r.salesAccountNumber : "—"}
+                              </span>
+                            </div>
+                            <div className="font-bold text-slate-900 dark:text-slate-100">
+                              {r.salesAccountName && r.salesAccountName !== "-" ? r.salesAccountName : "—"}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* 5. Goods Name (Brand / Size stacked underneath) */}
+                      <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap max-w-[240px]">
+                        <div className="font-bold text-slate-900 dark:text-slate-100 truncate" title={r.productName || r.goodsDescription}>
+                          {r.productName || "—"}
+                        </div>
+                        {(brand || size) ? (
+                          <div className="text-[10px] text-slate-500 truncate">
+                            {brand ? `Brand: ${brand}` : ""}{brand && size ? " | " : ""}{size ? `Size: ${size}` : ""}
+                          </div>
+                        ) : r.goodsDescription && r.goodsDescription !== r.productName ? (
+                          <div className="text-[10px] text-slate-500 truncate" title={r.goodsDescription}>
+                            {r.goodsDescription}
+                          </div>
+                        ) : null}
+                      </td>
+
+                      {/* 6. Qty stacked on top, Unit underneath */}
+                      <td className="px-2.5 py-2 text-center border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
+                        <div className="font-mono font-bold text-slate-900 dark:text-slate-100 text-xs">
+                          {Number(r.quantity || 0).toLocaleString()}
+                        </div>
+                        <div className="text-[10px] font-semibold uppercase text-slate-500 dark:text-slate-400">
+                          {r.unit || "—"}
+                        </div>
+                      </td>
+
+                      {/* 7. Gross Wt on top, Net Wt underneath */}
+                      <td className="px-3 py-2 text-end font-mono border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
+                        <div className="font-bold text-slate-900 dark:text-slate-100">
+                          {fmt(Number(r.totalGrossWeight || r.totalWeight || 0))}
+                        </div>
+                        <div className="text-[10px] text-slate-500">
+                          {fmt(Number(r.totalNetWeight || r.totalWeight || 0))}
+                        </div>
+                      </td>
+
+                      {/* 8. Sales Amount (Sales Currency + Final Currency) */}
+                      <td className="px-3 py-2 text-end font-mono border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
+                        <div className="font-black text-slate-900 dark:text-slate-100">
+                          <span className="text-[10px] opacity-70 me-1">{r.currency || "AED"}</span>
+                          {fmt(salesAmt)}
+                        </div>
+                        {r.finalCurrency && r.finalCurrency !== r.currency && (
+                          <div className="text-[10px] font-bold text-blue-700 dark:text-blue-400">
+                            <span className="text-[9px] opacity-70 me-1">{r.finalCurrency}</span>
+                            {fmt(finalAmt)}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* 9. Consolidated Payment & Transfer Status */}
+                      <td className="px-3 py-2 text-center border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800 capitalize">
+                          {r.paymentStatus || "Pending"}
+                        </div>
+                        <div className="mt-1">
+                          {transferred ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-950 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-white dark:bg-emerald-700">
+                              <CheckCircle2 className="h-2.5 w-2.5 text-emerald-400" />
+                              {tr("TRANSFERRED")}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-rose-700">
+                              <Clock className="h-2.5 w-2.5" />
+                              {tr("AWAITING TRANSFER")}
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-3 py-2.5">
-                        <div className="font-bold">
-                          {getCountryFlag(r.countryName)} {r.countryName || "—"}
-                        </div>
-                        <div className="text-[10px] text-slate-500">
-                          {r.branchName || "—"}
-                          {r.cityName && r.cityName !== "-" ? ` · ${r.cityName}` : ""}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <div className="font-bold">{r.customerName || "—"}</div>
-                        {r.salesAccountName && r.salesAccountName !== "-" && (
-                          <div className="text-[10px] text-slate-500">{r.salesAccountName}</div>
-                        )}
-                      </td>
-                      <td className="px-3 py-2.5 max-w-[240px]">
-                        <div className="font-bold truncate" title={r.productName || r.goodsDescription}>
-                          {r.productName || "—"}
-                        </div>
-                        {r.goodsDescription && r.goodsDescription !== r.productName && (
-                          <div className="text-[10px] text-slate-500 truncate" title={r.goodsDescription}>
-                            {r.goodsDescription}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-3 py-2.5 text-end font-mono font-bold">
-                        {Number(r.quantity || 0).toLocaleString()}{" "}
-                        <span className="text-[10px] font-normal text-slate-500">{r.unit || ""}</span>
-                      </td>
-                      <td className="px-3 py-2.5 text-end font-mono">
-                        <div className="font-bold">{fmt(Number(r.totalGrossWeight || r.totalWeight || 0))}</div>
-                        <div className="text-[10px] text-slate-500">
-                          Net: {fmt(Number(r.totalNetWeight || r.totalWeight || 0))}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2.5 text-end font-mono">
-                        <div className="font-black">
-                          {r.currency || "USD"} {fmt(salesAmt)}
-                        </div>
-                        {r.finalCurrency && r.finalCurrency !== r.currency && (
-                          <div className="text-[10px] text-slate-500">
-                            {r.finalCurrency} {fmt(finalAmt)}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-3 py-2.5 text-center">
-                        <span className="inline-block rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                          {r.paymentStatus || "Pending"}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5 text-center">
-                        {transferred ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-0.5 text-[10px] font-black text-white dark:bg-emerald-700">
-                            <CheckCircle2 className="h-3 w-3" />
-                            {tr("TRANSFERRED")}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-rose-300 bg-rose-50 px-2.5 py-0.5 text-[10px] font-black text-rose-700">
-                            <Clock className="h-3 w-3" />
-                            {tr("AWAITING TRANSFER")}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2.5 text-center">
-                        <div className="inline-flex items-center gap-1">
+
+                      {/* 10. Actions (Three-dot menu with View Invoice, Edit Order) */}
+                      <td className="px-2.5 py-2 text-center whitespace-nowrap" data-sales-row-menu="true">
+                        <div className="relative inline-flex items-center gap-1">
                           <button
                             type="button"
-                            onClick={() => openEditOrder(r.id)}
-                            title={tr("Open / Edit")}
+                            onClick={() => setInvoiceRow(r)}
+                            title={tr("View Invoice")}
                             className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
                           >
                             <Eye className="h-3.5 w-3.5" />
                           </button>
                           <button
                             type="button"
-                            onClick={() => {
-                              openUniversalPrintReport({
-                                title: tr("Sales Booking Invoice"),
-                                subtitle: `${tr("SO Ref")}: ${r.salesBookingOrderNumber || "-"}`,
-                                documentNo: r.salesBookingOrderNumber || "SO-DOC",
-                                reportType: "single_document",
-                                moduleType: "sales_invoice",
-                                orientation: "portrait",
-                                lang,
-                                scope: {
-                                  scopeLevel: "Sales Booking Invoice",
-                                  country: r.countryName || "All Countries",
-                                  branch: r.branchName || "Main Branch",
-                                  currency: r.currency || "",
-                                  userName: r.audit?.userName || "",
-                                },
-                                partyDetails: {
-                                  type: "customer",
-                                  name: r.customerName || "-",
-                                  address: r.countryName || "-",
-                                  departmentOrBranch: r.branchName || "-",
-                                },
-                                kpis: [
-                                  { label: tr("Total Amount"), value: salesAmt, color: "blue" },
-                                  { label: tr("Quantity"), value: `${Number(r.quantity || 0).toLocaleString()} ${r.unit || ""}`, color: "emerald" },
-                                  { label: tr("Status"), value: r.status || "PENDING", color: "amber" },
-                                ],
-                                columns: [
-                                  { key: "item", label: tr("Goods / Description"), width: "45%" },
-                                  { key: "qty", label: tr("Quantity"), align: "right", width: "20%" },
-                                  { key: "amount", label: tr("Total Amount"), align: "right", format: "currency", width: "35%" },
-                                ],
-                                rows: [
-                                  {
-                                    item: r.goodsDescription || r.productName || "-",
-                                    qty: `${Number(r.quantity || 0).toLocaleString()} ${r.unit || ""}`,
-                                    amount: salesAmt,
-                                  },
-                                ],
-                                autoPrint: false,
-                              });
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveRowMenuId((curr) => (curr === rowKey ? null : rowKey));
                             }}
-                            title={tr("Print Invoice")}
-                            className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
+                            title={tr("Actions")}
+                            className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 cursor-pointer"
                           >
-                            <Printer className="h-3.5 w-3.5" />
+                            <MoreVertical className="h-3.5 w-3.5" />
                           </button>
+
+                          {activeRowMenuId === rowKey && (
+                            <div className="absolute end-0 top-full mt-1 z-50 w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 text-start text-xs">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setInvoiceRow(r);
+                                  setActiveRowMenuId(null);
+                                }}
+                                className="w-full px-2.5 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold flex items-center gap-2 cursor-pointer"
+                              >
+                                <FileText className="h-3.5 w-3.5 text-blue-600" />
+                                <span>{tr("View Invoice")}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveRowMenuId(null);
+                                  openEditOrder(r.id);
+                                }}
+                                className="w-full px-2.5 py-1.5 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-semibold flex items-center gap-2 cursor-pointer"
+                              >
+                                <Pencil className="h-3.5 w-3.5 text-amber-500" />
+                                <span>{tr("Open / Edit")}</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -940,28 +1122,77 @@ export function SalesBookingGlobalRegisterView({
                 })
               )}
             </tbody>
-            {sortedRows.length > 0 && (
-              <tfoot className="bg-amber-50/70 font-black text-slate-900 border-t-2 border-slate-300 dark:bg-slate-800 dark:text-white dark:border-slate-700">
-                <tr>
-                  <td colSpan={5} className="px-3 py-2.5 text-xs">
-                    {tr("Total")} ({sortedRows.length} {tr("Bills")})
-                  </td>
-                  <td className="px-3 py-2.5 text-end font-mono">
-                    {summary.totalQty.toLocaleString()}
-                  </td>
-                  <td className="px-3 py-2.5 text-end font-mono">
-                    {fmt(summary.totalGross)}
-                  </td>
-                  <td className="px-3 py-2.5 text-end font-mono">
-                    {fmt(summary.totalSales)}
-                  </td>
-                  <td colSpan={3} />
-                </tr>
-              </tfoot>
-            )}
           </table>
         </div>
+
+        {/* Clean Pagination Footer (20 / 25 / 50 / 100 per page — no yellow total bar) */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/80 px-4 py-2.5 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <div>
+            {tr("Showing")}{" "}
+            <strong className="text-slate-700 dark:text-slate-200">
+              {sortedRows.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}–
+              {Math.min(sortedRows.length, currentPage * pageSize)}
+            </strong>{" "}
+            {tr("of")} <strong className="text-slate-700 dark:text-slate-200">{sortedRows.length}</strong>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <span>{tr("Rows per page")}:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="h-7 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+              >
+                <option value={20}>20</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                className="h-7 px-2.5 rounded-lg border border-slate-200 bg-white disabled:opacity-40 text-xs font-semibold inline-flex items-center gap-1 dark:border-slate-700 dark:bg-slate-800 cursor-pointer"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+                <span>{tr("Previous")}</span>
+              </button>
+              <span className="h-7 min-w-7 px-2 rounded-lg bg-blue-600 text-white font-bold inline-flex items-center justify-center text-xs">
+                {currentPage}
+              </span>
+              <button
+                type="button"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                className="h-7 px-2.5 rounded-lg border border-slate-200 bg-white disabled:opacity-40 text-xs font-semibold inline-flex items-center gap-1 dark:border-slate-700 dark:bg-slate-800 cursor-pointer"
+              >
+                <span>{tr("Next")}</span>
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Full A4 Sales Invoice View Modal */}
+      {invoiceRow && (
+        <InvoiceDocumentView
+          isOpen={Boolean(invoiceRow)}
+          onClose={() => setInvoiceRow(null)}
+          title={`${tr("Sales Booking Invoice")} — ${invoiceRow.salesBookingOrderNumber || invoiceRow.sales_order_no || ""}`}
+          source="sales_order"
+          record={selectedInvoiceRecord}
+          scope={selectedInvoiceScope}
+          companyId={invoiceRow.form_data?.form?.salesCompanyId || null}
+        />
+      )}
     </div>
   );
 }
