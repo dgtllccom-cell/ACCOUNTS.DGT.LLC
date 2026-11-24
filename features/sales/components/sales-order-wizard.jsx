@@ -1728,6 +1728,11 @@ export function SalesOrderWizard({ session }) {
               cityBranchId: mergedCityBranchId,
               salesOrderNo: soNumber,
               salesContractNo: contractNumber,
+              bookingSerials: {
+                superAdminSerialNumber: soData.super_admin_serial_number ?? rawFormData.traceability?.superAdminSerialNumber,
+                countryTransactionSerialNumber: soData.country_transaction_serial_number ?? rawFormData.traceability?.countryTransactionSerialNumber,
+                branchTransactionSerialNumber: soData.branch_transaction_serial_number ?? rawFormData.traceability?.branchTransactionSerialNumber,
+              },
             };
           });
           setScopeConfirmed(true);
@@ -3956,7 +3961,6 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   onBack={() => setActiveTab("review")}
                   onSaveDraft={() => handleSaveSalesOrder(false)}
                   onConfirmTransfer={handleTransfer}
-                  onPreviewPdf={() => setPreviewModalOpen(true)}
                   onPrint={() => {
                     import("@/lib/reports/print-dom-fragment").then((m) => {
                       if (!m.printDomFragmentViaModal("sales-booking-voucher-root", t(lang, "purchase.print_document_btn", "Print Voucher"), { lang })) {
