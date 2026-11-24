@@ -41,7 +41,7 @@ export function SalesBookingCurrencyFields({ form, lang, onChange, readOnly = fa
       ) : (
         <div className="min-w-0">
           <label htmlFor="sales-booking-exchange-rate" className={label}>{tr("Exchange Rate")} <bdi className="font-normal">{sales} → {final}</bdi></label>
-          <div className="mt-1 grid grid-cols-[minmax(0,1fr)_3.5rem] gap-2" dir="ltr">
+          <div className="mt-1 grid grid-cols-2 gap-2" dir="ltr">
             <input id="sales-booking-exchange-rate" type="number" inputMode="decimal" min="0.00000001" step="any"
               className={`${field} w-full`} value={rate.sameCurrency ? 1 : form.exchangeRate ?? ""} readOnly={readOnly || rate.sameCurrency}
               onChange={event => onChange("exchangeRate", event.target.value === "" ? "" : Number(event.target.value))} />
