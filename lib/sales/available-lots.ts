@@ -630,6 +630,8 @@ async function attachSoldQuantities(lots: AvailableLot[], excludeOrderId: string
 }
 
 export interface LotDeduction {
+  orderId: string;
+  posted: boolean;
   customer: string;
   date: string;
   quantity: number;
@@ -648,22 +650,24 @@ export async function getLotDeductions(session: ErpSession, stockRef: string): P
     const scope = scopeClause(sql, session);
     return (await sql`
       WITH so AS (
-        SELECT sales_order_no, customer_name, order_date, quantity, total_weight, created_at,
+        SELECT id, sales_order_no, customer_name, order_date, quantity, total_weight, created_at,
+               lower(coalesce(ledger_posting_status::text, '')) IN ('posted', 'transferred') AS posted,
                CASE jsonb_typeof(form_data) WHEN 'string' THEN (form_data #>> '{}')::jsonb ELSE form_data END AS fd
         FROM public.sales_orders
         WHERE ${scope} AND deleted_at IS NULL
           AND coalesce(sales_status::text, '') NOT IN ('cancelled', 'rejected')
       )
       -- goods lines that took stock from this lot (the line's own quantity and net weight)
-      SELECT so.sales_order_no, so.customer_name, so.order_date,
-             CASE WHEN ge->>'qtyNo' ~ '^[0-9]+([.][0-9]+)?$' THEN (ge->>'qtyNo')::numeric ELSE 0 END AS quantity,
+      SELECT so.id, so.posted, so.sales_order_no, so.customer_name, so.order_date,
+             CASE WHEN coalesce(ge->>'qtyNo', ge->>'quantity') ~ '^[0-9]+([.][0-9]+)?$'
+               THEN coalesce(ge->>'qtyNo', ge->>'quantity')::numeric ELSE 0 END AS quantity,
              CASE WHEN ge->>'netWeight' ~ '^[0-9]+([.][0-9]+)?$' THEN (ge->>'netWeight')::numeric ELSE 0 END AS total_weight,
              so.created_at
       FROM so, jsonb_array_elements(CASE WHEN jsonb_typeof(so.fd->'goodsEntries') = 'array' THEN so.fd->'goodsEntries' ELSE '[]'::jsonb END) ge
       WHERE coalesce(ge->>'stockLotNo', ge->>'lotNo', '') = ${ref}
       UNION ALL
       -- older bookings only recorded the lot at order level
-      SELECT so.sales_order_no, so.customer_name, so.order_date, so.quantity, so.total_weight, so.created_at
+      SELECT so.id, so.posted, so.sales_order_no, so.customer_name, so.order_date, so.quantity, so.total_weight, so.created_at
       FROM so
       WHERE (so.fd->'form'->>'allotName' = ${ref} OR so.fd->>'stockLotNo' = ${ref} OR so.fd->'form'->>'sourceStockRef' = ${ref} OR so.fd->'form'->>'stockRef' = ${ref})
         AND NOT EXISTS (
@@ -674,6 +678,8 @@ export async function getLotDeductions(session: ErpSession, stockRef: string): P
     `) as unknown as any[];
   });
   return (rows ?? []).map((r) => ({
+    orderId: r.id,
+    posted: r.posted === true,
     customer: r.customer_name || "—",
     date: String(r.order_date || "").slice(0, 10),
     quantity: n(r.quantity),
