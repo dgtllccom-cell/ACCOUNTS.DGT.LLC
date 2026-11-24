@@ -3278,6 +3278,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       const pNo = params.get("purchaseOrderNo") || "";
       if (pNo) setUrlParamPurchaseOrderNo(pNo);
       if (params.get("fromLoading") === "true") setFromLoadingParam(true);
+      // Local Purchase Payment action: preset the source (cash / bank / invoice / transfer) for the bill's saved condition.
+      const presetType = params.get("paymentType");
+      if (presetType === "cash" || presetType === "bank" || presetType === "invoice" || presetType === "transfer") setPaymentType(presetType);
     }
   }, []);
 
@@ -3594,9 +3597,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         const isInvoiceBill = paymentType.includes("invoice");
         const loadedQty = Number(workflow.loadedQuantity || 0) > 0 || Number((row as any).loaded_loading_count || 0) > 0;
         const isAdvanceBillInRemaining = isAdvanceBill && advancePercent > 0 && !isCashBill && !isInvoiceBill;
-        const hasContainerMovement = isAdvanceBillInRemaining
+        // A Local Purchase remaining payment is not tied to a loaded container (the payment route applies that rule to
+        // purchase orders only), so every posted local bill with a balance is listed here.
+        const isLocalPurchaseRow = (row as any).order_type === "local_purchase";
+        const hasContainerMovement = isLocalPurchaseRow || (isAdvanceBillInRemaining
           ? (loadedQty || hasLoadingRecord || isUrlLoadingScope)
-          : (hasTransferStatus || hasTransferAudit || hasLoadingRecord || isUrlLoadingScope || isInvoiceBill);
+          : (hasTransferStatus || hasTransferAudit || hasLoadingRecord || isUrlLoadingScope || isInvoiceBill));
 
         if (!hasContainerMovement && !isUrlLoadingScope) return false;
 

@@ -236,24 +236,25 @@ export function SalesBookingGlobalRegisterView({
     return sortedRows.slice(start, start + pageSize);
   }, [sortedRows, currentPage, pageSize]);
 
-  // Summary metrics
+  // Summary metrics (per-currency — never sum different currencies together)
   const summary = useMemo(() => {
     const totalBills = filteredRows.length;
-    let totalSales = 0;
-    let totalPaid = 0;
-    let totalRemaining = 0;
+    const salesByCur: Record<string, number> = {};
+    const paidByCur: Record<string, number> = {};
+    const remainingByCur: Record<string, number> = {};
     let completed = 0;
     let partial = 0;
     let pending = 0;
 
     filteredRows.forEach((r) => {
+      const cur = String(r.currency || "AED").toUpperCase();
       const amt = Number(r.totalSalesAmount || r.salesAmount || 0);
       const paid = Number(r.paid_amount || 0);
       const rem = r.remaining_amount != null ? Number(r.remaining_amount) : Math.max(0, amt - paid);
 
-      totalSales += amt;
-      totalPaid += paid;
-      totalRemaining += rem;
+      salesByCur[cur] = (salesByCur[cur] || 0) + amt;
+      paidByCur[cur] = (paidByCur[cur] || 0) + paid;
+      remainingByCur[cur] = (remainingByCur[cur] || 0) + rem;
 
       if (isRowTransferred(r) || (amt > 0 && paid >= amt - 0.05)) {
         completed++;
@@ -266,9 +267,9 @@ export function SalesBookingGlobalRegisterView({
 
     return {
       totalBills,
-      totalSales,
-      totalPaid,
-      totalRemaining,
+      salesByCur,
+      paidByCur,
+      remainingByCur,
       completed,
       completedPct: totalBills > 0 ? ((completed / totalBills) * 100).toFixed(1) : "0.0",
       partial,
@@ -304,6 +305,18 @@ export function SalesBookingGlobalRegisterView({
 
   const fmt = (n: number) =>
     Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const renderCurrencyLines = (values: Record<string, number>) => {
+    const keys = Object.keys(values).sort();
+    if (keys.length === 0) return <>—</>;
+    return (
+      <span className="flex flex-col items-end font-mono">
+        {keys.map((cur) => (
+          <span key={cur}>{cur} {fmt(values[cur])}</span>
+        ))}
+      </span>
+    );
+  };
 
   const formatDashDate = (val: any) => {
     if (!val) return "—";
@@ -693,17 +706,17 @@ export function SalesBookingGlobalRegisterView({
               <span className="text-slate-500">{tr("Total Bills")}</span>
               <span className="font-black text-slate-900 dark:text-white">{summary.totalBills}</span>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between">
               <span className="text-slate-500">{tr("Total Sales")}</span>
-              <span className="font-black text-blue-700 dark:text-blue-400">{fmt(summary.totalSales)}</span>
+              <span className="font-black text-blue-700 dark:text-blue-400">{renderCurrencyLines(summary.salesByCur)}</span>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between">
               <span className="text-slate-500">{tr("Total Paid")}</span>
-              <span className="font-bold text-emerald-700 dark:text-emerald-400">{fmt(summary.totalPaid)}</span>
+              <span className="font-bold text-emerald-700 dark:text-emerald-400">{renderCurrencyLines(summary.paidByCur)}</span>
             </div>
-            <div className="mt-1.5 flex items-center justify-between rounded-lg bg-amber-50 px-2.5 py-1.5 dark:bg-amber-950/40">
+            <div className="mt-1.5 flex items-start justify-between rounded-lg bg-amber-50 px-2.5 py-1.5 dark:bg-amber-950/40">
               <span className="font-bold text-amber-900 dark:text-amber-300">{tr("Balance (Remaining)")}</span>
-              <span className="font-black text-amber-900 dark:text-amber-300">{fmt(summary.totalRemaining)}</span>
+              <span className="font-black text-amber-900 dark:text-amber-300">{renderCurrencyLines(summary.remainingByCur)}</span>
             </div>
           </div>
         </div>

@@ -2813,7 +2813,8 @@ export function PurchaseBookingJournalReportView({
 
       {/* ── Main Register Section ────────────────────────────────── */}
       <section className={cn(layout === "approved" && "dgt-purchase-table-skin", "overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950")}>
-        {/* Table Header with View Switcher */}
+        {/* Table Header with View Switcher (shown only when PurchaseApprovedHeader is not already rendering it) */}
+        {layout !== "approved" && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50">
           <div className="flex items-center gap-2">
             <ClipboardList className="h-5 w-5 text-blue-600" />
@@ -2852,6 +2853,7 @@ export function PurchaseBookingJournalReportView({
             </button>
           </div>
         </div>
+        )}
 
         {message ? (
           <div className="m-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800 font-semibold shadow-sm animate-in fade-in">

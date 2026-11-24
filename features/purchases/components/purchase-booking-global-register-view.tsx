@@ -234,25 +234,21 @@ export function PurchaseBookingGlobalRegisterView({
     });
   }, [reports, filterCountry, filterBranch, filterSupplier, filterStatus, filterDateFrom, filterDateTo, searchQuery]);
 
-  // Card 1: Purchase Booking Summary calculations
+  // Card 1: Purchase Booking Summary. Amounts are kept per currency: nothing is converted,
+  // so no exchange rate is needed and a PKR amount is never labelled as USD.
   const summaryMetrics = useMemo(() => {
-    let totalPurchUSD = 0;
-    let totalPaidUSD = 0;
+    const purchaseByCur: Record<string, number> = {};
+    const paidByCur: Record<string, number> = {};
     let completedCount = 0;
     let pendingCount = 0;
 
     filteredRows.forEach((r) => {
       const cur = String(r.currency || "USD").toUpperCase();
-      const rate = cur === "USD" ? 1 : (usdRates[cur] || Number(r.exchange_rate) || 1);
       const purchAmt = Number(r.purchaseAmount || r.totalPurchaseAmount || 0);
       const paidAmt = Number(r.advance_paid || 0) + Number(r.remaining_paid || 0);
 
-      // Convert to USD representation for summary
-      const pUSD = cur === "USD" ? purchAmt : (rate > 0 ? purchAmt / rate : purchAmt);
-      const pdUSD = cur === "USD" ? paidAmt : (rate > 0 ? paidAmt / rate : paidAmt);
-
-      totalPurchUSD += pUSD;
-      totalPaidUSD += pdUSD;
+      purchaseByCur[cur] = (purchaseByCur[cur] || 0) + purchAmt;
+      paidByCur[cur] = (paidByCur[cur] || 0) + paidAmt;
 
       const st = String(r.status || "").toLowerCase();
       const isCompleted = st === "completed" || st === "posted" || st === "received" || st === "transferred" || (purchAmt > 0 && paidAmt >= purchAmt - 0.05);
@@ -263,17 +259,20 @@ export function PurchaseBookingGlobalRegisterView({
       }
     });
 
-    const balanceUSD = Math.max(0, totalPurchUSD - totalPaidUSD);
+    const balanceByCur: Record<string, number> = {};
+    Object.keys(purchaseByCur).forEach((cur) => {
+      balanceByCur[cur] = Math.max(0, (purchaseByCur[cur] || 0) - (paidByCur[cur] || 0));
+    });
 
     return {
       totalBills: filteredRows.length,
-      totalPurchase: totalPurchUSD,
-      totalPaid: totalPaidUSD,
+      purchaseByCur,
+      paidByCur,
+      balanceByCur,
       completed: completedCount,
       pending: pendingCount,
-      balance: balanceUSD,
     };
-  }, [filteredRows, usdRates]);
+  }, [filteredRows]);
 
   // Card 2: Booking Status breakdown
   const statusMetrics = useMemo(() => {
@@ -391,6 +390,18 @@ export function PurchaseBookingGlobalRegisterView({
   // Format helpers
   const fmt = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtInt = (n: number) => n.toLocaleString();
+  // One line per currency (e.g. "PKR 20,250,000.00" then "USD 230,000.00"). Never summed across currencies.
+  const renderCurrencyLines = (values: Record<string, number>) => {
+    const keys = Object.keys(values).sort();
+    if (keys.length === 0) return <>—</>;
+    return (
+      <span className="flex flex-col items-end">
+        {keys.map((cur) => (
+          <span key={cur}>{cur} {fmt(values[cur])}</span>
+        ))}
+      </span>
+    );
+  };
 
   const formatDashDate = (val: any) => {
     if (!val) return "—";
@@ -875,55 +886,10 @@ export function PurchaseBookingGlobalRegisterView({
       {/* ── 2. Top Summary & Report Navigation Section (Matches Target UI Mockup 100%) ── */}
       <div className="rounded-2xl border border-blue-200/80 bg-[#f8faff] p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900/60 space-y-2.5">
 
-        {/* 4 Columns Side-by-Side: Reports Nav + 3 Summary Cards */}
+        {/* 3 Summary Cards Side-by-Side (Reports dropdown is already in top bar — full width prevents Country card clipping) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 items-stretch">
-          
-          {/* Col 1: Reports Navigation List (lg:col-span-2) */}
-          <div className="lg:col-span-2 rounded-xl border border-slate-200/90 bg-white p-2 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
-            <div className="space-y-1">
-              <button
-                type="button"
-                className="w-full flex items-center gap-2 rounded-lg bg-[#2563eb] text-white px-2.5 py-2 text-xs font-bold shadow-xs cursor-pointer"
-              >
-                <ShoppingCart className="h-4 w-4 shrink-0" />
-                <span className="truncate">{tr("Purchase Booking")}</span>
-              </button>
-              <a
-                href="/dashboard/purchase/purchase-booking-journal-report"
-                className="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
-              >
-                <BookOpen className="h-4 w-4 text-slate-400 shrink-0" />
-                <span className="truncate">{tr("Purchase Booking Journal")}</span>
-              </a>
-              <a
-                href="/dashboard/purchase/stock/report"
-                className="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
-              >
-                <Scale className="h-4 w-4 text-slate-400 shrink-0" />
-                <span className="truncate">{tr("Weight Report")}</span>
-              </a>
-              <a
-                href="/dashboard/purchase/purchase-payments"
-                className="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
-              >
-                <CreditCard className="h-4 w-4 text-slate-400 shrink-0" />
-                <span className="truncate">{tr("Payment Report")}</span>
-              </a>
-              <a
-                href="/dashboard/purchase/finalized-purchase-orders"
-                className="w-full flex items-center justify-between rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
-              >
-                <div className="flex items-center gap-2">
-                  <Grid className="h-4 w-4 text-slate-400 shrink-0" />
-                  <span className="truncate">{tr("More Reports")}</span>
-                </div>
-                <ChevronDown className="-rotate-90 h-3 w-3 text-slate-400" />
-              </a>
-            </div>
-          </div>
-
-          {/* Col 2: Card 1 - Purchase Booking Summary (lg:col-span-3) */}
-          <div className="lg:col-span-3 rounded-xl border border-amber-200/90 bg-gradient-to-b from-[#fffef8] to-white p-3.5 shadow-xs dark:border-amber-900/60 dark:from-slate-900 dark:to-slate-950 flex flex-col justify-between">
+          {/* Col 1: Card 1 - Purchase Booking Summary (lg:col-span-4) */}
+          <div className="lg:col-span-4 rounded-xl border border-amber-200/90 bg-gradient-to-b from-[#fffef8] to-white p-3.5 shadow-xs dark:border-amber-900/60 dark:from-slate-900 dark:to-slate-950 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-2 border-b border-amber-100 dark:border-amber-900/40">
                 <div className="flex items-center gap-2">
@@ -942,11 +908,11 @@ export function PurchaseBookingGlobalRegisterView({
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-slate-600 dark:text-slate-400">{tr("Total Purchase")}</span>
-                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100">USD {fmt(summaryMetrics.totalPurchase)}</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{renderCurrencyLines(summaryMetrics.purchaseByCur)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-slate-600 dark:text-slate-400">{tr("Total Paid")}</span>
-                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100">USD {fmt(summaryMetrics.totalPaid)}</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{renderCurrencyLines(summaryMetrics.paidByCur)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-slate-600 dark:text-slate-400">{tr("Finalized (Completed)")}</span>
@@ -962,7 +928,7 @@ export function PurchaseBookingGlobalRegisterView({
             {/* Bottom Highlighted Bar */}
             <div className="rounded-lg bg-[#fed7aa]/50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 px-3 py-2 flex items-center justify-between">
               <span className="font-black text-xs text-slate-900 dark:text-slate-100">{tr("Balance (To Be Paid)")}</span>
-              <span className="font-mono font-black text-xs text-[#ea580c] dark:text-orange-400">USD {fmt(summaryMetrics.balance)}</span>
+              <span className="font-mono font-black text-xs text-[#ea580c] dark:text-orange-400">{renderCurrencyLines(summaryMetrics.balanceByCur)}</span>
             </div>
           </div>
 
@@ -1025,8 +991,8 @@ export function PurchaseBookingGlobalRegisterView({
             </div>
           </div>
 
-          {/* Col 4: Card 3 - Country Wise Purchase Booking (Final Currency Wise) (lg:col-span-4) */}
-          <div className="lg:col-span-4 rounded-xl border border-emerald-200/90 bg-gradient-to-b from-[#f7fdf9] to-white p-3.5 shadow-xs dark:border-emerald-900/60 dark:from-slate-900 dark:to-slate-950 flex flex-col justify-between">
+          {/* Col 3: Card 3 - Country Wise Purchase Booking (Final Currency Wise) (lg:col-span-5) */}
+          <div className="lg:col-span-5 rounded-xl border border-emerald-200/90 bg-gradient-to-b from-[#f7fdf9] to-white p-3.5 shadow-xs dark:border-emerald-900/60 dark:from-slate-900 dark:to-slate-950 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-2 border-b border-emerald-100 dark:border-emerald-900/40">
                 <div className="flex items-center gap-2">
