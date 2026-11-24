@@ -53,6 +53,8 @@ export interface AvailableLot {
   rackBin?: string;
   placeLabel?: string;
   purchaseId?: string;
+  purchaseAccountName?: string;
+  purchaseAccountNo?: string;
   unitCost?: number;
   landedUnitCost?: number;
   costCurrency?: string;
@@ -175,7 +177,7 @@ export async function listAvailableLots(
         SELECT lp.id, lp.goods_id, lp.goods_name, lp.brand, lp.size, lp.quantity_name, lp.numbers, lp.net_weight,
                lp.empty_kgs, lp.quantity_kgs, lp.purchase_rate, lp.purchase_currency, lp.exchange_rate,
                lp.warehouse_name, lp.lot_no, lp.manual_bill_no, lp.status, lp.origin_country_name,
-               lp.city_branch_id, lp.country_id,
+               lp.city_branch_id, lp.country_id, lp.purchase_account_no, lp.supplier_name,
                cb.name as branch_name
         FROM public.local_purchases lp
         LEFT JOIN public.city_branches cb ON cb.id = lp.city_branch_id
@@ -214,6 +216,8 @@ export async function listAvailableLots(
           exchangeRate: n(r.exchange_rate) || 1,
           coursePrice: n(r.purchase_rate),
           status: r.status || "Local stock",
+          purchaseAccountName: r.supplier_name || undefined,
+          purchaseAccountNo: r.purchase_account_no || undefined,
         });
       }
     };
@@ -354,10 +358,11 @@ export async function listAvailableLots(
       const rows = (await sql`
         SELECT l.id AS lot_id, l.lot_ref, l.goods_id, l.goods_name, l.brand, l.size, l.origin, l.unit_name, l.net_weight_kg, l.qty_purchased,
                l.original_cost, l.unit_cost, l.currency_code, l.country_id, l.city_branch_id, l.local_purchase_id,
-               s.warehouse_id, s.location_label, s.rack_bin, s.qty,
+               s.warehouse_id, s.location_label, s.rack_bin, s.qty, lp.purchase_account_no, lp.supplier_name,
                w.warehouse_name, w.warehouse_code, cb.name AS branch_name, g.chs_code
         FROM public.purchase_lots l
         JOIN public.lot_stock s ON s.lot_id = l.id AND s.state = 'available' AND s.qty > 0
+        LEFT JOIN public.local_purchases lp ON lp.id = l.local_purchase_id AND lp.deleted_at IS NULL AND ${scopeClauseFor(sql, session, "lp")}
         LEFT JOIN public.warehouses w ON w.id = s.warehouse_id
         LEFT JOIN public.city_branches cb ON cb.id = l.city_branch_id
         LEFT JOIN public.goods g ON g.id = l.goods_id
@@ -402,6 +407,8 @@ export async function listAvailableLots(
           rackBin: r.rack_bin ?? "",
           placeLabel: r.location_label ?? "",
           purchaseId: r.local_purchase_id,
+          purchaseAccountName: r.supplier_name || undefined,
+          purchaseAccountNo: r.purchase_account_no || undefined,
           unitCost: n(r.original_cost) / qty,
           landedUnitCost: n(r.unit_cost),
           costCurrency: r.currency_code ?? "",
@@ -481,6 +488,7 @@ export async function listAvailableLots(
       `) as unknown as any[];
       for (const r of rows) {
         const entries = r.form_data?.goodsEntries ?? r.form_data?.form?.goodsEntries ?? [];
+        const purchaseForm = r.form_data?.form ?? r.form_data;
         // Booking stock = booked − loaded (what has been loaded has moved on to Transit / Export stock)
         const bookedTotal = entries.reduce((sum: number, e: any) => sum + n(e.qtyNo ?? e.quantity), 0);
         const loadedShare = bookedTotal > 0 ? Math.min(1, n(r.loaded_qty) / bookedTotal) : 0;
@@ -508,6 +516,8 @@ export async function listAvailableLots(
             exchangeRate: n(e.exchangeRate ?? r.exchange_rate) || 1,
             coursePrice: n(e.coursePrice),
             status: "Ready for booking",
+            purchaseAccountName: purchaseForm?.purchaseAccountName || undefined,
+            purchaseAccountNo: purchaseForm?.purchaseAccountNo || undefined,
           });
         });
       }
