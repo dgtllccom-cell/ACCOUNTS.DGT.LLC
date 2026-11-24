@@ -218,6 +218,7 @@ export function SalesBookingStep5({
             <Button
               type="button"
               variant="outline"
+              disabled={!onSaveDraft}
               onClick={onSaveDraft}
               className="flex-1 h-8.5 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-[11px] font-bold flex items-center justify-center gap-1"
             >

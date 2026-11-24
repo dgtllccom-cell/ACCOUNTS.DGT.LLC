@@ -152,7 +152,7 @@ export function SalesBookingStep4({ form, setForm, goodsEntries = [], lang = "en
                     <Button type="button" variant="outline" size="sm" onClick={() => setViewing(previous => ({ ...previous, [field]: !previous[field] }))}>
                       {tr(viewing[field] ? "Edit" : "View")}
                     </Button>
-                    <Button type="button" size="sm" onClick={onSaveDraft} className="bg-emerald-700 text-white">{tr("Save Draft")}</Button>
+                    <Button type="button" size="sm" disabled={!onSaveDraft} onClick={onSaveDraft} className="bg-emerald-700 text-white">{tr("Save Draft")}</Button>
                   </div>
                 </div>
               </section>
@@ -169,7 +169,7 @@ export function SalesBookingStep4({ form, setForm, goodsEntries = [], lang = "en
       <div className="flex flex-wrap items-center justify-between gap-2 print:hidden">
         <Button type="button" variant="outline" onClick={onBack}>{tr("Back to Step 3")}</Button>
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" onClick={onSaveDraft}><Save className="h-4 w-4" />{tr("Save Draft")}</Button>
+          <Button type="button" variant="outline" disabled={!onSaveDraft} onClick={onSaveDraft}><Save className="h-4 w-4" />{tr("Save Draft")}</Button>
           <Button type="button" variant="outline" onClick={onPrint}><Printer className="h-4 w-4" />{tr("Print")}</Button>
           <Button type="button" variant="outline" onClick={onDownloadPdf}><Download className="h-4 w-4" />{tr("Download PDF")}</Button>
           <Button type="button" onClick={onNext} className="bg-emerald-700 text-white">{tr("Next: Final Report")}</Button>
