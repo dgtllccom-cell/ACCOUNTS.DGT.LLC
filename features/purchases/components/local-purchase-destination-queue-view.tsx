@@ -228,6 +228,10 @@ const STAGE_CONFIG: Record<
   },
 };
 
+// The list endpoint returns snake_case columns; a few callers pass camelCase. Read both, never the wrong one.
+const billGrossWeight = (bill: any): number => Number(bill.totalGrossWeight ?? bill.total_gross_weight ?? bill.quantity_kgs ?? 0);
+const billNetWeight = (bill: any): number => Number(bill.netWeight ?? bill.net_weight ?? billGrossWeight(bill));
+
 export function LocalPurchaseDestinationQueueView({
   stage,
   session,
@@ -324,8 +328,8 @@ export function LocalPurchaseDestinationQueueView({
 
   function openLoadingModal(bill: LocalPurchaseDestinationRecord) {
     const { booked, loaded, remaining } = getLoadingStats(bill);
-    const totalGross = Number(bill.totalGrossWeight || bill.quantity_kgs || 0);
-    const totalNet = Number(bill.netWeight || totalGross);
+    const totalGross = billGrossWeight(bill);
+    const totalNet = billNetWeight(bill);
     const propGross = booked > 0 ? (remaining / booked) * totalGross : 0;
     const propNet = booked > 0 ? (remaining / booked) * totalNet : 0;
 
@@ -453,11 +457,9 @@ export function LocalPurchaseDestinationQueueView({
           // purchases. The destination-stage API itself requires status = posted.
           // Filtering here avoids presenting an action that would necessarily 409.
           if (String(p.status || "").toLowerCase() !== "posted") return false;
-          const mode = (p.shipping_mode || p.shippingMode || "").toLowerCase().trim();
-          const target = config.shippingMode.toLowerCase().trim();
-          // Match if shipping mode contains target (e.g. "loading" in "Loading" or "Truck Loading")
-          // or if specific stage status is set
-          return mode.includes(target) || mode === target || Boolean((p as any)[config.statusField]);
+          // A bill belongs to the queue its saved destination resolves to: the same resolver the destination-stage API checks.
+          // A stage status alone never places a bill in a queue (a warehouse-completed bill must not show under Loading).
+          return resolveLocalPurchaseDestination(p as any) === stage;
         });
         setPurchases(filtered);
       }
@@ -1759,32 +1761,31 @@ export function LocalPurchaseDestinationQueueView({
             </div>
 
             {/* Bill Summary Banner */}
-            <div className="rounded-xl border border-indigo-100 dark:border-indigo-950 bg-indigo-50/60 dark:bg-indigo-950/30 p-3 text-xs grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono">
-              <div>
-                <span className="text-[10px] font-sans text-slate-500 block">Voucher No</span>
-                <span className="font-bold text-indigo-700 dark:text-indigo-400">
-                  {loadingModalBill.serialNo || loadingModalBill.journal_serial_no || `LP-${loadingModalBill.id?.slice(0, 5).toUpperCase()}`}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] font-sans text-slate-500 block">Goods</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
-                  {loadingModalBill.goodsName || loadingModalBill.goods_name || "—"}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] font-sans text-slate-500 block">Booked Qty</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">
-                  {Number(loadingModalBill.numbers || loadingModalBill.quantity_kgs || 0).toLocaleString()} {loadingModalBill.quantityName || "Bags"}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] font-sans text-slate-500 block">Remaining to Load</span>
-                <span className="font-black text-emerald-600 dark:text-emerald-400">
-                  {getLoadingStats(loadingModalBill).remaining.toLocaleString()} {loadingModalBill.quantityName || "Bags"}
-                </span>
-              </div>
-            </div>
+            {(() => {
+              const lb = loadingModalBill as any;
+              const currency = String(lb.purchase_currency || lb.purchaseCurrency || lb.local_currency || lb.localCurrency || "AED");
+              const total = Number(lb.final_cost ?? lb.finalCost ?? lb.purchase_cost ?? lb.purchaseCost ?? 0);
+              const cells: Array<{ label: string; value: string; tone?: string }> = [
+                { label: tt("lp.lm_voucher", "Voucher No"), value: String(lb.serialNo || lb.journal_serial_no || `LP-${String(lb.id ?? "").slice(0, 5).toUpperCase()}`), tone: "text-indigo-700 dark:text-indigo-400" },
+                { label: tt("lp.lm_goods", "Goods"), value: String(lb.goodsName || lb.goods_name || "—") },
+                { label: tt("lp.lm_supplier", "Supplier"), value: String(lb.supplierName || lb.supplier_name || lb.sales_account_name || lb.salesAccountName || "—") },
+                { label: tt("lp.lm_branch", "Branch"), value: String(lb.branchName || lb.branch_name || lb.country_branch_name || "—") },
+                { label: tt("lp.lm_booked", "Booked Qty"), value: `${Number(lb.numbers || lb.quantity_kgs || 0).toLocaleString()} ${lb.quantityName || "Bags"}` },
+                { label: tt("lp.lm_remaining", "Remaining to Load"), value: `${getLoadingStats(loadingModalBill).remaining.toLocaleString()} ${lb.quantityName || "Bags"}`, tone: "text-emerald-600 dark:text-emerald-400 font-black" },
+                { label: tt("lp.lm_total", "Total"), value: `${currency} ${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
+                { label: tt("lp.lm_condition", "Payment Condition"), value: String(lb.payment_mode || lb.paymentMode || "—") },
+              ];
+              return (
+                <div className="rounded-xl border border-indigo-100 dark:border-indigo-950 bg-indigo-50/60 dark:bg-indigo-950/30 p-3 text-xs grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono">
+                  {cells.map((c) => (
+                    <div key={c.label}>
+                      <span className="text-[10px] font-sans text-slate-500 block">{c.label}</span>
+                      <span className={`font-bold text-slate-800 dark:text-slate-200 truncate block ${c.tone ?? ""}`}>{c.value}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
 
             {loadingError && (
               <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300 font-medium">
@@ -1821,8 +1822,8 @@ export function LocalPurchaseDestinationQueueView({
                       const val = e.target.value;
                       const num = Number(val);
                       const booked = Number(loadingModalBill.numbers || loadingModalBill.quantity_kgs || 0);
-                      const totalGross = Number(loadingModalBill.totalGrossWeight || loadingModalBill.quantity_kgs || 0);
-                      const totalNet = Number(loadingModalBill.netWeight || totalGross);
+                      const totalGross = billGrossWeight(loadingModalBill);
+                      const totalNet = billNetWeight(loadingModalBill);
                       const propGross = booked > 0 && num > 0 ? (num / booked) * totalGross : 0;
                       const propNet = booked > 0 && num > 0 ? (num / booked) * totalNet : 0;
                       setLoadingForm({
