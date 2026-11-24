@@ -886,55 +886,10 @@ export function PurchaseBookingGlobalRegisterView({
       {/* ── 2. Top Summary & Report Navigation Section (Matches Target UI Mockup 100%) ── */}
       <div className="rounded-2xl border border-blue-200/80 bg-[#f8faff] p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900/60 space-y-2.5">
 
-        {/* 4 Columns Side-by-Side: Reports Nav + 3 Summary Cards */}
+        {/* 3 Summary Cards Side-by-Side (Reports dropdown is already in top bar — full width prevents Country card clipping) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 items-stretch">
-          
-          {/* Col 1: Reports Navigation List (lg:col-span-2) */}
-          <div className="lg:col-span-2 rounded-xl border border-slate-200/90 bg-white p-2 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
-            <div className="space-y-1">
-              <button
-                type="button"
-                className="w-full flex items-center gap-2 rounded-lg bg-[#2563eb] text-white px-2.5 py-2 text-xs font-bold shadow-xs cursor-pointer"
-              >
-                <ShoppingCart className="h-4 w-4 shrink-0" />
-                <span className="truncate">{tr("Purchase Booking")}</span>
-              </button>
-              <a
-                href="/dashboard/purchase/purchase-booking-journal-report"
-                className="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
-              >
-                <BookOpen className="h-4 w-4 text-slate-400 shrink-0" />
-                <span className="truncate">{tr("Purchase Booking Journal")}</span>
-              </a>
-              <a
-                href="/dashboard/purchase/stock/report"
-                className="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
-              >
-                <Scale className="h-4 w-4 text-slate-400 shrink-0" />
-                <span className="truncate">{tr("Weight Report")}</span>
-              </a>
-              <a
-                href="/dashboard/purchase/purchase-payments"
-                className="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
-              >
-                <CreditCard className="h-4 w-4 text-slate-400 shrink-0" />
-                <span className="truncate">{tr("Payment Report")}</span>
-              </a>
-              <a
-                href="/dashboard/purchase/finalized-purchase-orders"
-                className="w-full flex items-center justify-between rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
-              >
-                <div className="flex items-center gap-2">
-                  <Grid className="h-4 w-4 text-slate-400 shrink-0" />
-                  <span className="truncate">{tr("More Reports")}</span>
-                </div>
-                <ChevronDown className="-rotate-90 h-3 w-3 text-slate-400" />
-              </a>
-            </div>
-          </div>
-
-          {/* Col 2: Card 1 - Purchase Booking Summary (lg:col-span-3) */}
-          <div className="lg:col-span-3 rounded-xl border border-amber-200/90 bg-gradient-to-b from-[#fffef8] to-white p-3.5 shadow-xs dark:border-amber-900/60 dark:from-slate-900 dark:to-slate-950 flex flex-col justify-between">
+          {/* Col 1: Card 1 - Purchase Booking Summary (lg:col-span-4) */}
+          <div className="lg:col-span-4 rounded-xl border border-amber-200/90 bg-gradient-to-b from-[#fffef8] to-white p-3.5 shadow-xs dark:border-amber-900/60 dark:from-slate-900 dark:to-slate-950 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-2 border-b border-amber-100 dark:border-amber-900/40">
                 <div className="flex items-center gap-2">
@@ -1036,8 +991,8 @@ export function PurchaseBookingGlobalRegisterView({
             </div>
           </div>
 
-          {/* Col 4: Card 3 - Country Wise Purchase Booking (Final Currency Wise) (lg:col-span-4) */}
-          <div className="lg:col-span-4 rounded-xl border border-emerald-200/90 bg-gradient-to-b from-[#f7fdf9] to-white p-3.5 shadow-xs dark:border-emerald-900/60 dark:from-slate-900 dark:to-slate-950 flex flex-col justify-between">
+          {/* Col 3: Card 3 - Country Wise Purchase Booking (Final Currency Wise) (lg:col-span-5) */}
+          <div className="lg:col-span-5 rounded-xl border border-emerald-200/90 bg-gradient-to-b from-[#f7fdf9] to-white p-3.5 shadow-xs dark:border-emerald-900/60 dark:from-slate-900 dark:to-slate-950 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-2 border-b border-emerald-100 dark:border-emerald-900/40">
                 <div className="flex items-center gap-2">
