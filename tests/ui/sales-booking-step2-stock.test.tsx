@@ -50,6 +50,17 @@ describe("Sales Booking step 2 — stock first, then item search", () => {
     await vi.waitFor(() => expect(fetched.some((u) => u.includes("source=booking"))).toBe(true));
   });
 
+  it("opens the stock picker as an overlay outside the booking form", async () => {
+    const { container } = render(<Harness />);
+    fireEvent.click(screen.getByRole("button", { name: "Open Stock" }));
+    const picker = screen.getByRole("dialog", { name: "Select Stock to Sell" });
+    expect(picker.parentElement).toBe(document.body);
+    expect(container.contains(picker)).toBe(false);
+    expect(await within(picker).findByText("Walnut Kernels")).toBeTruthy();
+    fireEvent.click(within(picker).getByTestId("stock-panel-close"));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
   it("shows the lot and both currency amounts without a totals row", async () => {
     render(<Harness />);
     const search = screen.getByTestId("sales-item-search");
@@ -69,7 +80,8 @@ describe("Sales Booking step 2 — stock first, then item search", () => {
     const row = within(table).getByText("Walnut Kernels").closest("tr")!;
     expect(within(row).getByText("LOT-WAL-001")).toBeTruthy();
     expect(within(row).getByText("USD 1,250.00")).toBeTruthy();
-    expect(within(row).getByText("× 3.673")).toBeTruthy();
+    expect(screen.queryByText(/exchange rate/i)).toBeNull();
+    expect(screen.queryByText(/sales currency/i)).toBeNull();
     expect(within(row).getByText("AED 4,591.25")).toBeTruthy();
     expect(table.querySelector("tfoot")).toBeNull();
     const accounts = screen.getByRole("heading", { name: "Customer / Purchase Account" }).closest("section")!;
