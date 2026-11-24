@@ -4,7 +4,7 @@ import React from "react";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { getBookingCurrencies } from "@/lib/sales/booking-currencies";
 
-export function SalesBookingContract({ form, goodsEntries, lang, showConversion }) {
+export function SalesBookingContract({ form, goodsEntries, lang, showConversion, highlightedLot, invoiceTotal }) {
   const tr = label => translateHeader(lang, label);
   const { sales, final } = getBookingCurrencies(form);
   const format = (value, unit, digits = 2) => value == null || value === "" || !Number.isFinite(Number(value))
@@ -18,7 +18,7 @@ export function SalesBookingContract({ form, goodsEntries, lang, showConversion 
   ];
   const heading = "border-b-2 border-amber-500 bg-[#09274c] p-2 text-sm font-bold text-white";
   const cell = "break-words border border-slate-300 px-1.5 py-2 text-start align-top";
-  const labels = ["Goods Name", "Quantity", "Gross Weight", "Unit Price", "Total Sales Amount",
+  const labels = ["Goods Name", ...(highlightedLot ? ["Lot Number"] : []), "Quantity", "Gross Weight", "Unit Price", "Total Sales Amount",
     ...(showConversion ? ["Exchange Rate", "Final Amount"] : [])];
 
   return (
@@ -38,8 +38,9 @@ export function SalesBookingContract({ form, goodsEntries, lang, showConversion 
         <table className="w-full table-fixed border-collapse text-[10px]">
           <thead className="bg-amber-50"><tr>{labels.map(label => <th key={label} scope="col" className={cell}>{tr(label)}</th>)}</tr></thead>
           <tbody>{goodsEntries.map((item, index) => (
-            <tr key={index}>
+            <tr key={index} className={highlightedLot && (item.stockLotNo || item.lotNo) === highlightedLot ? "bg-blue-50" : undefined}>
               <td className={cell}><strong>{item.goodsName || item.productName || "—"}</strong><br />{[item.brand, item.size].filter(Boolean).join(" · ")}</td>
+              {highlightedLot && <td className={cell}><bdi>{item.stockLotNo || item.lotNo || "—"}</bdi></td>}
               <td className={cell}><bdi>{format(item.qtyNo ?? item.quantity, item.qtyName || item.unit, 3)}</bdi></td>
               <td className={cell}><bdi>{format(item.grossWeight, "kg", 3)}</bdi></td>
               <td className={cell}><bdi>{format(item.coursePrice ?? item.unitPrice, item.salesCurrency || item.currencyType || sales)}</bdi></td>
@@ -49,6 +50,7 @@ export function SalesBookingContract({ form, goodsEntries, lang, showConversion 
             </tr>
           ))}</tbody>
         </table>
+        {invoiceTotal != null && <p className="rounded bg-blue-50 p-2 text-end text-xs font-bold">{tr("Total")}: <bdi>{format(invoiceTotal, final)}</bdi></p>}
         {form.remarks && <p className="whitespace-pre-wrap text-xs">{form.remarks}</p>}
       </article>
       <article className="space-y-3 rounded-md border border-slate-300 bg-white p-4" style={{ breakBefore: "page", pageBreakBefore: "always" }}>
