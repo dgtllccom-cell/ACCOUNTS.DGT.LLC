@@ -105,7 +105,7 @@ function SidebarNodeItem({
             style={{ paddingInlineStart: depth > 0 ? `${14 + depth * 12}px` : undefined }}
           >
             <SidebarIcon name={node.iconKey} className={cn("transition-colors", isActive ? "text-white" : "text-slate-400 group-hover:text-slate-200")} />
-            <span className="truncate text-start">{t(lang, node.labelKey)}</span>
+            <span className="truncate text-start">{lang === "en" && node.labelKey === "nav.sales_transfer_payment" ? "Sales Payment Transfer" : t(lang, node.labelKey)}</span>
             {isChanged && !isActive && (
               <span className="ms-1 shrink-0 rounded bg-amber-400 text-amber-950 px-1.5 py-0.5 text-[11px] font-black uppercase leading-none shadow-xs whitespace-nowrap">
                 {t(lang, "common.new", "New")}
@@ -120,7 +120,7 @@ function SidebarNodeItem({
             style={{ paddingInlineStart: depth > 0 ? `${14 + depth * 12}px` : undefined }}
           >
             <SidebarIcon name={node.iconKey} className={cn("transition-colors", isActive ? "text-white" : "text-slate-400 group-hover:text-slate-200")} />
-            <span className="truncate">{t(lang, node.labelKey)}</span>
+            <span className="truncate">{lang === "en" && node.labelKey === "nav.sales_transfer_payment" ? "Sales Payment Transfer" : t(lang, node.labelKey)}</span>
             {isChanged && (
               <span className="ms-1 shrink-0 rounded bg-amber-400 text-amber-950 px-1.5 py-0.5 text-[11px] font-black uppercase leading-none shadow-xs whitespace-nowrap">
                 {t(lang, "common.new", "New")}
