@@ -44,10 +44,23 @@ describe("Sales Booking step 2 — stock first, then item search", () => {
     expect(document.body.textContent).toContain("LOT-WAL-001");
   });
 
-  it("Booking Stock loads purchase-booking stock", async () => {
+  it.each([
+    ["Warehouse Stock", "warehouse", "warehouse_all"],
+    ["Booking Stock", "booking", "booking"],
+    ["Export Stock", "export", "export_all"],
+    ["Endorsement", "endorse", "endorse"],
+    ["Confirmed Stock", "journal", "journal"],
+  ])("opens the stock picker directly at %s", async (label, group, source) => {
     render(<Harness />);
-    fireEvent.click(screen.getByText("Booking Stock"));
-    await vi.waitFor(() => expect(fetched.some((u) => u.includes("source=booking"))).toBe(true));
+    fireEvent.click(within(screen.getByTestId("sales-stock-source")).getByRole("button", { name: label }));
+    const picker = screen.getByRole("dialog", { name: "Select Stock to Sell" });
+    expect(within(picker).getByTestId(`stock-source-${group}`).getAttribute("aria-pressed")).toBe("true");
+    if (group === "warehouse") {
+      expect(await within(picker).findByText("Walnut Kernels")).toBeTruthy();
+    } else {
+      expect(await within(picker).findByTestId("stock-empty")).toBeTruthy();
+    }
+    expect(fetched.some((url) => new URL(url, "http://localhost").searchParams.get("source") === source)).toBe(true);
   });
 
   it("opens the stock picker as an overlay outside the booking form", async () => {
