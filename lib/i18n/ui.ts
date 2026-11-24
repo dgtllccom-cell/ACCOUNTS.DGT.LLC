@@ -13317,7 +13317,7 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
-  "cef.step1_setup": "Register & Entry Setup",
+  "cef.step1_setup": "Category & Entry Setup",
   "cef.register_type": "Register Type",
   "cef.register_no": "Register No.",
   "cef.entry_type": "Entry Type",
@@ -40229,7 +40229,7 @@ const en: Dict = {
 
 const ur: Dict = {
   ...en,
-  "cef.step1_setup": "رجسٹر اور اندراج سیٹ اپ",
+  "cef.step1_setup": "کیٹیگری اور اندراج سیٹ اپ",
   "cef.register_type": "رجسٹر کی قسم",
   "cef.register_no": "رجسٹر نمبر",
   "cef.entry_type": "اندراج کی قسم",
@@ -67109,7 +67109,7 @@ const ur: Dict = {
 
 const ar: Dict = {
   ...en,
-  "cef.step1_setup": "إعداد السجل والقيد",
+  "cef.step1_setup": "إعداد الفئة والقيد",
   "cef.register_type": "نوع السجل",
   "cef.register_no": "رقم السجل",
   "cef.entry_type": "نوع القيد",
@@ -93990,7 +93990,7 @@ const ar: Dict = {
 
 const fa: Dict = {
   ...en,
-  "cef.step1_setup": "تنظیمات دفتر و ثبت",
+  "cef.step1_setup": "تنظیمات دسته‌بندی و ثبت",
   "cef.register_type": "نوع دفتر",
   "cef.register_no": "شماره دفتر",
   "cef.entry_type": "نوع ثبت",
@@ -120870,7 +120870,7 @@ const fa: Dict = {
 
 const ps: Dict = {
   ...en,
-  "cef.step1_setup": "د ثبت او اندراج تنظیم",
+  "cef.step1_setup": "د کټګورۍ او اندراج تنظیم",
   "cef.register_type": "د ثبت ډول",
   "cef.register_no": "د ثبت شمیره",
   "cef.entry_type": "د اندراج ډول",
