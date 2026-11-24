@@ -26,7 +26,9 @@ import { SalesStockPanel } from "./sales-stock-panel";
 const STOCK_GROUPS = [
   { id: "warehouse", sources: ["warehouse_all"], icon: Building2 },
   { id: "booking", sources: ["booking"], icon: Package },
-  { id: "export", sources: ["export_all"], icon: Layers }
+  { id: "export", sources: ["export_all"], icon: Layers },
+  { id: "endorse", sources: ["endorse"], icon: Layers },
+  { id: "journal", sources: ["journal"], icon: Package }
 ];
 
 export function SalesBookingStep2({
@@ -38,8 +40,8 @@ export function SalesBookingStep2({
   onNext,
   onBack
 }) {
-  const [stockModalOpen, setStockModalOpen] = useState(false);
-  const [stockGroup, setStockGroup] = useState(() => (["warehouse", "booking", "export"].includes(form.stockGroup) ? form.stockGroup : "warehouse"));
+  const [pickerGroup, setPickerGroup] = useState(null);
+  const [stockGroup, setStockGroup] = useState(() => (STOCK_GROUPS.some((group) => group.id === form.stockGroup) ? form.stockGroup : "warehouse"));
   const [groupLots, setGroupLots] = useState({}); // { [group]: { status: "loading" | "ok" | "error", lots: [] } }
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [stockError, setStockError] = useState("");
@@ -107,15 +109,9 @@ export function SalesBookingStep2({
     return hits.slice(0, 30);
   }, [groupState, productName]);
 
-  const chooseGroup = (group) => {
-    setStockGroup(group);
-    setForm((p) => ({ ...p, stockGroup: group }));
-    setSuggestOpen(true);
-  };
-
-  const handleOpenStockModal = () => {
+  const openStock = (group) => {
     setSuggestOpen(false);
-    setStockModalOpen(true);
+    setPickerGroup(group);
   };
 
   // Fill the goods entry from the chosen stock record (AvailableLot from /api/erp/sales/available-lots)
@@ -320,12 +316,12 @@ export function SalesBookingStep2({
             <span className="text-[11px] font-bold uppercase text-slate-700 dark:text-slate-300">
               {tUi(lang, "sales.s2_stock_source", "Stock")} <span className="text-red-500">*</span>
             </span>
-            <Button type="button" onClick={handleOpenStockModal} className="h-8 bg-blue-600 px-2 text-xs text-white">
+            <Button type="button" onClick={() => openStock(stockGroup)} className="h-8 bg-blue-600 px-2 text-xs text-white">
               <Search className="h-3.5 w-3.5" aria-hidden="true" />
               {tr("Open Stock")}
             </Button>
           </div>
-          <div className="grid grid-cols-3 gap-1.5">
+          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
             {STOCK_GROUPS.map((g) => {
               const Icon = g.icon;
               const active = stockGroup === g.id;
@@ -333,17 +329,17 @@ export function SalesBookingStep2({
                 <button
                   key={g.id}
                   type="button"
-                  onClick={() => chooseGroup(g.id)}
+                  onClick={() => openStock(g.id)}
                   aria-pressed={active}
                   className={`h-9 px-2 rounded-lg border text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors ${active ? "bg-emerald-600 border-emerald-600 text-white" : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:border-emerald-400"}`}
                 >
                   <Icon className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">{tUi(lang, `sales.stk_source_${g.id}`, g.id)}</span>
+                  <span className="truncate">{g.id === "endorse" ? tUi(lang, "ppe.kind_endorsement", "Endorsement") : tUi(lang, `sales.stk_source_${g.id}`, g.id)}</span>
                 </button>
               );
             })}
           </div>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400">{tUi(lang, `sales.stk_source_${stockGroup}_hint`, "")}</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400">{stockGroup === "endorse" ? tUi(lang, "ppe.kind_endorsement", "Endorsement") : tUi(lang, `sales.stk_source_${stockGroup}_hint`, "")}</p>
         </div>
 
         {/* 2. ITEM NAME * — search the chosen stock (e.g. "walnut"); picking a record fills the line */}
@@ -695,15 +691,15 @@ export function SalesBookingStep2({
       />
 
       {/* Stock Selection Modal */}
-      {stockModalOpen && createPortal(<SalesStockPanel
-        open={stockModalOpen}
-        onClose={() => setStockModalOpen(false)}
+      {pickerGroup && createPortal(<SalesStockPanel
+        open
+        onClose={() => setPickerGroup(null)}
         onConfirm={(lot, group) => {
           setStockGroup(group);
           handleStockSelected(lot, group);
-          setStockModalOpen(false);
+          setPickerGroup(null);
         }}
-        initialGroup={stockGroup}
+        initialGroup={pickerGroup}
         lang={lang}
       />, document.body)}
     </div>
