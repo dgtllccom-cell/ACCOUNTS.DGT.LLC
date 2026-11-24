@@ -5,7 +5,7 @@ import { Building2, Edit3, FileText, Package, Trash2, UserRound, Users } from "l
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { getBookingCurrencies } from "@/lib/sales/booking-currencies";
 
-export function SalesBookingSummaryCards({ form, goodsEntries = [], lang }) {
+export function SalesBookingSummaryCards({ form, goodsEntries = [], lang, hideRate = false }) {
   const tr = label => translateHeader(lang, label);
   const purchases = goodsEntries.length ? goodsEntries : [form];
   const purchaseValues = key => [...new Set(purchases.map(item => item[key]).filter(Boolean))].join(" · ");
@@ -17,7 +17,7 @@ export function SalesBookingSummaryCards({ form, goodsEntries = [], lang }) {
     { title: "Sales Booking", Icon: FileText, color: "border-s-blue-600 text-blue-950 dark:text-blue-100", numbers: bookingNumbers,
       rows: [["Booking No", form.salesOrderNo], ["Booking Date", form.salesDate], ["Payment Type", form.paymentType],
         ["Ship Type", form.shippingMode || form.shipmentType], ["Delivery Type", form.deliveryType || form.deliveryMethod],
-        ["Purchase Type", form.purchaseType], ["Sales Currency", form.salesCurrency || form.currencyType]] },
+        ["Purchase Type", form.purchaseType], ...(!hideRate ? [["Sales Currency", form.salesCurrency || form.currencyType]] : [])] },
     { title: "Branch Details", Icon: Building2, color: "border-s-amber-500 text-amber-950 dark:text-amber-100",
       rows: [["Branch", form.branchName || form.cityBranchName], ["Branch Code", form.branchCode],
         ["Country", form.countryName || form.branchCountry], ["Branch ID", form.cityBranchId],
@@ -70,7 +70,7 @@ export function SalesBookingSummaryCards({ form, goodsEntries = [], lang }) {
   );
 }
 
-export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDelete, showOrigin = false }) {
+export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDelete, showOrigin = false, hideRate = false }) {
   const currencies = getBookingCurrencies(form);
   const tr = label => translateHeader(lang, label);
   const number = (value, digits = 3) => value == null || value === "" || !Number.isFinite(Number(value))
@@ -88,7 +88,7 @@ export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDe
 
   return (
   <div className="min-w-0 space-y-3">
-    <SalesBookingSummaryCards form={form} goodsEntries={goodsEntries} lang={lang} />
+    <SalesBookingSummaryCards form={form} goodsEntries={goodsEntries} lang={lang} hideRate={hideRate} />
 
     <section className="min-w-0 space-y-2 rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <h3 className="flex items-center gap-2 rounded-lg bg-blue-50 px-2.5 py-2 text-sm font-bold text-blue-950 dark:bg-blue-950 dark:text-blue-100">
@@ -101,7 +101,7 @@ export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDe
             <tr className="text-start">
               <th scope="col" className="px-2 py-2">#</th>
               {["Goods Name", "Brand", "Size", "HS Code", "Lot / Item ID", ...(showOrigin ? ["Origin"] : []), "Quantity", "Net Weight", "Gross Weight", "CBM",
-                "Unit Price", "Total Sales Amount", "Exchange Rate", "Final Amount", ...(hasActions ? ["Action"] : [])].map(label => (
+                "Unit Price", "Total Sales Amount", ...(!hideRate ? ["Exchange Rate"] : []), "Final Amount", ...(hasActions ? ["Action"] : [])].map(label => (
                 <th key={label} scope="col" className="whitespace-nowrap px-2 py-2 text-start">{tr(label)}</th>
               ))}
             </tr>
@@ -122,7 +122,7 @@ export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDe
                 <td className="whitespace-nowrap px-2 py-2"><bdi>{number(volume(item))}</bdi></td>
                 <td className="whitespace-nowrap px-2 py-2"><bdi>{amount(item.coursePrice ?? item.unitPrice, item.salesCurrency || item.currencyType || currencies.sales)}</bdi></td>
                 <td className="whitespace-nowrap px-2 py-2"><bdi>{amount(item.totalAmount, item.salesCurrency || item.currencyType || currencies.sales)}</bdi></td>
-                <td className="whitespace-nowrap px-2 py-2"><bdi>{rateText(item.exchangeRate, item.op || item.operator)}</bdi></td>
+                {!hideRate && <td className="whitespace-nowrap px-2 py-2"><bdi>{rateText(item.exchangeRate, item.op || item.operator)}</bdi></td>}
                 <td className="whitespace-nowrap px-2 py-2 font-semibold"><bdi>{amount(item.finalAmount, item.secondaryCurrency || currencies.final)}</bdi></td>
                 {hasActions && <td className="px-2 py-2">
                   <div className="flex gap-1">
@@ -140,7 +140,7 @@ export function SalesBookingGoodsReport({ form, goodsEntries, lang, onEdit, onDe
             ))}
             {goodsEntries.length === 0 && (
               <tr>
-                <td colSpan={14 + Number(showOrigin) + Number(hasActions)} className="p-6 text-center text-slate-500">{tr("No goods entered")}</td>
+                <td colSpan={14 + Number(showOrigin) + Number(hasActions) - Number(hideRate)} className="p-6 text-center text-slate-500">{tr("No goods entered")}</td>
               </tr>
             )}
           </tbody>
