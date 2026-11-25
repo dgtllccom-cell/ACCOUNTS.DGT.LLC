@@ -56,6 +56,25 @@ const buttonClass = "rounded border px-3 py-2 text-sm font-semibold disabled:opa
 const headerButton = "inline-flex min-h-9 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800";
 const scopePosted = (order: Row) => ["posted", "transferred"].includes(String(order.ledger_posting_status || "").toLowerCase());
 
+type RegisterField = { key: string; caption?: string };
+const field = (key: string, caption?: string): RegisterField => ({ key, caption });
+const registerColumns = [
+  { labels: ["Sales Booking Number", "Serial Number"], width: "9%", fields: [field("Sales Booking Number"), field("Serial Number")] },
+  { labels: ["Transfer Number", "Transfer Date"], width: "8%", fields: [field("Transfer Number"), field("Transfer Date"), field("Transfer Status")] },
+  { labels: ["Original Purchase Reference", "Supplier / Account"], width: "10%", fields: [field("Original Purchase Reference"), field("Original Purchase Supplier and Account")] },
+  { labels: ["Sales Customer and Account"], width: "9%", fields: [field("Sales Customer"), field("Customer Account")] },
+  { labels: ["Goods Name", "Brand / Lot"], width: "10%", fields: [field("Sales Item"), field("Brand"), field("Lot Number")] },
+  { labels: ["Quantity", "Unit"], width: "6%", fields: [field("Quantity"), field("Quantity Unit")] },
+  { labels: ["Gross Weight", "Net Weight"], width: "7%", fields: [field("Gross Weight", "Gross"), field("Net Weight", "Net")] },
+  { labels: ["Purchase Rate", "Sales Rate"], width: "9%", fields: [field("Purchase Rate", "Purchase"), field("Total Purchase Amount", "Amount"), field("Sales Rate", "Sales"), field("Total Sales Amount", "Amount")] },
+  { labels: ["Exchange Rate", "Final Transfer Amount"], width: "8%", fields: [field("Exchange Rate"), field("Final Transfer Amount"), field("Final Currency")] },
+  { labels: ["Payment Condition", "Receipts / Balance"], width: "10%", fields: [field("Payment Condition"), field("Payment Method"), field("Advance Payment Received", "Advance"), field("Total Payment Received", "Received"), field("Remaining Receivable Balance", "Balance")] },
+  { labels: ["DR / CR", "Ledger / Roznamcha"], width: "10%", fields: [field("Debit Reference", "DR"), field("Credit Reference", "CR"), field("Business Ledger Reference", "Ledger"), field("Business Roznamcha Reference", "Roznamcha")] },
+] as const;
+
+const compactHeading = "border-b border-e border-slate-200 bg-slate-100 px-2 py-2.5 text-start align-top text-[11px] leading-tight dark:border-slate-700 dark:bg-slate-800";
+const compactCell = "break-words border-b border-e border-slate-200 px-2 py-2.5 align-top leading-snug dark:border-slate-700";
+
 const pageStats = [
   ["finalAmount", "Final Transfer Amount"],
   ["received", "Total Payment Received"],
@@ -191,21 +210,40 @@ export function SalesPaymentTransferRegister({ orderId }: { orderId?: string }) 
     </section>;
   }
 
-  const headings = cells(current.orders[0], {}, salesPaymentTransferReport(current.orders[0]), lang).map(([label]) => label);
   return <section className="space-y-3">
     {registerHeader}
     <TransferPageSummary orders={current.orders} lang={lang} />
     <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <h2 className="flex items-center gap-2 bg-gradient-to-r from-blue-700 to-blue-800 px-3 py-2.5 text-sm font-bold text-white"><FileText aria-hidden="true" className="h-5 w-5" />{tr("Sales Transfer Register")}</h2>
       <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-xs">
-        <thead><tr>{[...headings, "View"].map(label => <th scope="col" key={label} className={labelClass}>{tr(label)}</th>)}</tr></thead>
+      <table className="w-full min-w-[1060px] table-fixed border-collapse text-xs">
+        <colgroup>{registerColumns.map(({ labels, width }) => <col key={labels[0]} style={{ width }} />)}<col style={{ width: "4%" }} /></colgroup>
+        <thead><tr>{registerColumns.map(({ labels }) => <th scope="col" key={labels[0]} className={compactHeading}>
+          {labels.map((label, index) => <span className={`block ${index ? "font-medium text-slate-600 dark:text-slate-300" : "font-bold"}`} key={label}>{tr(label)}</span>)}
+        </th>)}<th scope="col" className={compactHeading}>{tr("View")}</th></tr></thead>
         <tbody>{current.orders.flatMap(order => {
           const report = salesPaymentTransferReport(order);
-          return report.items.map((item, index) => <tr key={`${order.id}-${index}`} className="odd:bg-white even:bg-slate-50 dark:odd:bg-slate-900 dark:even:bg-slate-950">
-            {cells(order, item, report, lang).map(([label, value]) => <td key={label} className={cellClass}>{cellText(label, value)}</td>)}
-            <td className={cellClass}><Link className="font-bold text-blue-700 underline dark:text-blue-400" href={`${path}/view?id=${encodeURIComponent(order.id)}&transfer=1`}>{t(lang, "common.view", "View")}</Link></td>
-          </tr>);
+          return report.items.map((item, index) => {
+            const values = new Map(cells(order, item, report, lang));
+            const qty = item.qtyNo ?? item.quantity;
+            const unit = item.qtyName || item.unit;
+            if (qty != null && qty !== "" && Number.isFinite(Number(qty))) values.set("Quantity", Number(qty).toLocaleString(lang, { maximumFractionDigits: 6 }));
+            values.set("Quantity Unit", unit);
+            values.set("Sales Customer", order.customer_name || report.form.customerAccountName);
+            values.set("Customer Account", report.form.customerAccountNo || order.account_number);
+            return <tr key={`${order.id}-${index}`} className="odd:bg-white even:bg-slate-50 dark:odd:bg-slate-900 dark:even:bg-slate-950">
+              {registerColumns.map(({ labels, fields }) => <td key={labels[0]} className={compactCell}>
+                {fields.map(({ key, caption }, position) => {
+                  const value = values.get(key);
+                  const isReference = key === "Sales Booking Number" || key === "Transfer Number";
+                  return <div key={key} className={`mb-0.5 last:mb-0 ${isReference ? "font-bold text-blue-700 dark:text-blue-300" : position === 0 ? "font-semibold" : "text-slate-600 dark:text-slate-300"}`}>
+                    {caption && <span className="me-1 text-[10px] font-medium">{tr(caption)}:</span>}{cellText(key, value)}
+                  </div>;
+                })}
+              </td>)}
+              <td className={compactCell}><Link className="font-bold text-blue-700 underline dark:text-blue-400" href={`${path}/view?id=${encodeURIComponent(order.id)}&transfer=1`}>{t(lang, "common.view", "View")}</Link></td>
+            </tr>;
+          });
         })}</tbody>
       </table>
       </div>

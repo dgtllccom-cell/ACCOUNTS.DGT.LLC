@@ -63,4 +63,19 @@ describe("Existing Sales Payment Transfer register", () => {
     expect(summary.getByText("150.00 EUR")).toBeTruthy();
     expect(summary.getAllByText("— EUR")).toHaveLength(2);
   });
+
+  it("keeps the register compact by stacking goods, quantity and weights without losing their values", async () => {
+    const goods = { goodsName: "Walnut kernels", brand: "Example Brand", lotNo: "LOT-42", qtyNo: 500, qtyName: "Boxes", grossWeight: 1200, netWeight: 1160 };
+    apiGet.mockResolvedValue({ salesOrders: [{ ...order, form_data: { ...order.form_data, goodsEntries: [goods] } }] });
+    render(<SalesPaymentTransferRegister />);
+    const table = within(await screen.findByRole("table"));
+    expect(table.getAllByRole("columnheader")).toHaveLength(12);
+    const row = within(table.getByRole("row", { name: /SB-0042/ }));
+    const goodsCell = row.getByRole("cell", { name: /Walnut kernels.*Example Brand.*LOT-42/ });
+    expect(within(goodsCell).getByText("LOT-42")).toBeTruthy();
+    const quantityCell = row.getByRole("cell", { name: /500.*Boxes/ });
+    expect(within(quantityCell).getByText("500")).toBeTruthy();
+    const weightCell = row.getByRole("cell", { name: /1,200 kg.*1,160 kg/ });
+    expect(within(weightCell).getByText("1,160 kg")).toBeTruthy();
+  });
 });
