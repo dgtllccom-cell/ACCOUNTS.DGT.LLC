@@ -9,7 +9,8 @@ import { printPaymentVoucherCopies } from "@/lib/reports/payment-voucher-copies"
 export function printSalesReceiptCopies(receipt: SalesPaymentReceipt, lang: SupportedLanguage) {
   if (!receipt.sides) return printSalesPaymentReceipt(receipt, lang);
   return printPaymentVoucherCopies({ ...receipt.sides, number: receipt.number, date: receipt.date, bill: receipt.bill,
-    party: receipt.customer, reference: receipt.reference, source: translateHeader(lang, receipt.local ? "Local Sales" : "Sales Booking") }, lang);
+    party: receipt.customer, reference: receipt.reference, source: translateHeader(lang, receipt.local ? "Local Sales" : "Sales Booking"),
+    documentKind: "sales", goodsNames: receipt.goods?.map(line => line.name) }, lang);
 }
 
 export function printSalesPaymentReceipt(receipt: SalesPaymentReceipt, lang: SupportedLanguage, autoPrint = false) {

@@ -161,10 +161,12 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         ), voucher_lines as (
           select rl.roznamcha_entry_id, jsonb_agg(jsonb_build_object(
             'ledger_id', rl.ledger_id, 'debit', rl.debit, 'credit', rl.credit, 'currency', rl.currency,
-            'ledger_name', l.name, 'ledger_code', l.code
+            'ledger_name', l.name, 'ledger_code', l.code,
+            'account_number', coalesce(nullif(btrim(rl.account_number), ''), nullif(btrim(ea.account_number), ''))
           )) as lines
           from roznamcha_lines rl
           left join ledgers l on l.id = rl.ledger_id
+          left join enterprise_accounts ea on ea.id = coalesce(rl.enterprise_account_id, l.enterprise_account_id)
           where ${canViewFinancials}::boolean and rl.roznamcha_entry_id in (
             select journal.id from recent_payments eligible
             join roznamcha_entries journal on journal.id = eligible.roznamcha_entry_id
@@ -565,7 +567,12 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       const journalRecord = journalRows[0] as any;
 
       const journalLines = await sql`
-        select ledger_id, debit, credit, currency from roznamcha_lines where roznamcha_entry_id = ${paymentRecord.roznamcha_entry_id}::uuid
+        select rl.ledger_id, rl.debit, rl.credit, rl.currency, l.name as ledger_name, l.code as ledger_code,
+          coalesce(nullif(btrim(rl.account_number), ''), nullif(btrim(ea.account_number), '')) as account_number
+        from roznamcha_lines rl
+        left join ledgers l on l.id = rl.ledger_id
+        left join enterprise_accounts ea on ea.id = coalesce(rl.enterprise_account_id, l.enterprise_account_id)
+        where rl.roznamcha_entry_id = ${paymentRecord.roznamcha_entry_id}::uuid
       `;
 
       if (plannedReceipt) {
@@ -658,10 +665,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     const resPayload = {
       paymentId,
       receipt: issuedSalesPaymentReceipt(orderRow, paymentRecord, journalRecord, session.isSuperAdmin || session.canViewFinancials,
-        journalLines.map((line: any) => {
-          const ledger = line.ledger_id === resolvedDebitLedgerId ? debitLedger : line.ledger_id === resolvedCreditLedgerId ? creditLedger : null;
-          return { ...line, ledger_name: ledger?.name, ledger_code: ledger?.code };
-        })),
+        journalLines),
       roznamchaEntryId: paymentRecord.roznamcha_entry_id,
       superAdminSerialNumber: journalRecord.super_admin_serial_number,
       countryTransactionSerialNumber: journalRecord.country_transaction_serial_number,

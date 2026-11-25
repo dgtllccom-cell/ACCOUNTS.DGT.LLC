@@ -3091,9 +3091,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       if (!response.ok || !body?.ok || !body.data?.number) {
         throw new Error(body?.error?.message || tGlobal(currentLanguage, "common.error", "Something went wrong."));
       }
-      const { source, ...voucher } = body.data as Omit<PaymentVoucherCopies, "source"> & { source: "local_purchase" | "purchase_booking" };
+      const { source, ...voucher } = body.data as Omit<PaymentVoucherCopies, "source" | "documentKind"> & { source: "local_purchase" | "purchase_booking" };
       if (request === voucherRequest.current) {
-        printPaymentVoucherCopies({ ...voucher, source: translateHeader(currentLanguage, source === "local_purchase" ? "Local Purchase" : "Purchase Booking") }, currentLanguage);
+        printPaymentVoucherCopies({ ...voucher, documentKind: "purchase", source: translateHeader(currentLanguage, source === "local_purchase" ? "Local Purchase" : "Purchase Booking") }, currentLanguage);
       }
     } catch (err) {
       if (request === voucherRequest.current) {

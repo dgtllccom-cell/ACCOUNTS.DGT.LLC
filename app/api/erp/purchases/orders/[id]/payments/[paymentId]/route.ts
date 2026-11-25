@@ -24,12 +24,28 @@ type ReceiptRecord = {
   country_branch_id: string | null;
   city_branch_id: string | null;
   party: string | null;
+  goods_lines: unknown;
+  header_goods_name: string | null;
   voucher_no: string | null;
   journal_serial: string | null;
   date: string | null;
   reference: string | null;
   lines: PostedVoucherLine[] | null;
 };
+
+function savedGoodsNames(lines: unknown, header: string | null): string[] | undefined {
+  if (typeof lines === "string") {
+    try { lines = JSON.parse(lines); } catch { lines = null; }
+  }
+  const text = (value: unknown) => typeof value === "string" && !/^[\s—-]*$/.test(value) ? value.trim() : "";
+  const names = Array.isArray(lines) ? lines.flatMap((line) => {
+    if (!line || typeof line !== "object") return [];
+    const name = [line.goodsName, line.goods_name, line.productName, line.name, line.item].map(text).find(Boolean);
+    return name ? [name] : [];
+  }) : [];
+  // Header name is only for older, single-item bills without usable saved lines.
+  return names.length ? names : text(header) ? [text(header)] : undefined;
+}
 
 /** Print only the payment identified by BOTH IDs, with its original posted journal lines. */
 export async function GET(_request: NextRequest, context: { params: Promise<{ id: string; paymentId: string }> }) {
@@ -48,13 +64,17 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
         coalesce(po.city_branch_id, lp.city_branch_id) as city_branch_id,
         coalesce(lp.supplier_name, nullif(po.form_data->'form'->>'supplierName', ''),
                  nullif(po.form_data->'form'->>'salesAccountName', '')) as party,
+        case when lp.id is not null then to_jsonb(lp)->'line_items' else po.form_data->'goodsEntries' end as goods_lines,
+        case when lp.id is not null then lp.goods_name else po.form_data->'form'->>'goodsName' end as header_goods_name,
         j.voucher_no, j.super_admin_serial_number as journal_serial, j.entry_date::text as date,
         coalesce(nullif(j.source_reference_no, ''), nullif(j.reference_no, ''), p.reference_no) as reference,
         (select jsonb_agg(jsonb_build_object(
           'ledger_id', l.ledger_id, 'ledger_name', a.name, 'ledger_code', a.code,
+          'account_number', coalesce(nullif(btrim(l.account_number), ''), nullif(btrim(ea.account_number), '')),
           'debit', l.debit, 'credit', l.credit, 'currency', l.currency
         )) from public.roznamcha_lines l
         left join public.ledgers a on a.id = l.ledger_id
+        left join public.enterprise_accounts ea on ea.id = coalesce(l.enterprise_account_id, a.enterprise_account_id)
         where l.roznamcha_entry_id = j.id) as lines
       from public.purchase_order_payments p
       join public.roznamcha_entries j on j.id = p.roznamcha_entry_id and j.status = 'posted'
@@ -78,7 +98,7 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
     }
     return apiOk({
       ...sides, number, bill, date: row.date, party: row.party || "",
-      source: row.source, reference: row.reference || undefined,
+      source: row.source, reference: row.reference || undefined, goodsNames: savedGoodsNames(row.goods_lines, row.header_goods_name),
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     return handleApiError(error);

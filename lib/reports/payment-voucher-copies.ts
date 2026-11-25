@@ -7,7 +7,13 @@ import { A4_SHARED_CSS, escapeReportHtml as e } from "@/lib/reports/report-shell
 import type { PaymentVoucherSide } from "@/lib/reports/payment-voucher-data";
 export type PaymentVoucherCopies = {
   number: string; date: string; bill: string; party: string; source: string; reference?: string;
+  documentKind: "sales" | "purchase"; goodsNames?: string[];
   debit: PaymentVoucherSide; credit: PaymentVoucherSide;
+};
+
+const BILL_LABELS: Record<PaymentVoucherCopies["documentKind"], Record<SupportedLanguage, string>> = {
+  sales: { en: "Sales No.", ur: "سیلز نمبر", ar: "رقم البيع", fa: "شماره فروش", ps: "د پلور شمېره" },
+  purchase: { en: "Purchase No.", ur: "پرچیز نمبر", ar: "رقم الشراء", fa: "شماره خرید", ps: "د پېرود شمېره" },
 };
 
 export function buildPaymentVoucherCopies(data: PaymentVoucherCopies, lang: SupportedLanguage): string {
@@ -16,19 +22,23 @@ export function buildPaymentVoucherCopies(data: PaymentVoucherCopies, lang: Supp
   const title = tr("rvp.print_voucher", "Print Voucher");
   const rtl = ["ar", "fa", "ps", "ur"].includes(lang);
   const money = new Intl.NumberFormat(lang, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+  const goods = [...new Set((data.goodsNames ?? []).map(name => name.trim()).filter(Boolean))];
+  const billLabel = BILL_LABELS[data.documentKind][lang];
   const renderSide = (side: "DR" | "CR", entry: PaymentVoucherSide) => {
     const label = h(side === "DR" ? "Debit" : "Credit");
     const details = [
       [h("Voucher No"), data.number], [tr("rvp.date", "Date"), data.date],
-      [h("Bill No"), data.bill], [h("Party"), data.party],
-      [tr("rvp.account_title", "Account Title"), entry.name],
-      [tr("rvp.account_code", "Account Code"), entry.code],
+      [billLabel, data.bill], [h("Party"), data.party],
+      [h("Account Number"), entry.accountNumber || "—"],
+      [h("Account Name"), entry.name],
+      ...(!entry.accountNumber && entry.code ? [[tr("rvp.account_code", "Account Code"), entry.code]] : []),
       [h("Reference"), data.reference],
     ];
     return `<section class="payment-copy" data-side="${side}" aria-label="${side} ${e(label)}">
       <header class="payment-head"><div><strong>ACCOUNTS.DGT.LLC</strong><div>${e(data.source)}</div></div><h1><bdi>${side}</bdi> · ${e(label)}</h1></header>
       <div class="payment-amount"><span>${e(tr("rvp.amount", "Amount"))}</span><strong><bdi>${e(entry.currency)} ${e(money.format(entry.amount))}</bdi></strong></div>
       <dl>${details.filter(([, value]) => value).map(([key, value]) => `<dt>${e(key)}</dt><dd><bdi>${e(value)}</bdi></dd>`).join("")}</dl>
+      ${goods.length ? `<div class="payment-goods"><span>${e(h("Goods Name"))}</span><strong>${goods.map(name => `<bdi>${e(name)}</bdi>`).join(" · ")}</strong></div>` : ""}
       <div class="payment-signature">${e(tr("rvp.authorized_by", "Authorized by"))}</div>
     </section>`;
   };
@@ -51,6 +61,8 @@ body { background:#fff; }
 .payment-copy dt, .payment-copy dd { margin:0; padding:1.7mm 2mm; border-bottom:1px solid #dce4ef; }
 .payment-copy dt { color:#43546b; }
 .payment-copy dd { font-weight:700; overflow-wrap:anywhere; }
+.payment-goods { background:#f2f5f9; padding:2mm 3mm; border-radius:1mm; margin:0 0 3mm; font-size:10pt; overflow-wrap:anywhere; }
+.payment-goods span { font-weight:600; margin-inline-end:3mm; color:#43546b; }
 .payment-signature { align-self:flex-end; width:46mm; padding-top:1.5mm; margin-top:auto; border-top:1px solid #67788f; font-size:9pt; text-align:center; }
 .payment-cut { position:relative; height:8mm; display:grid; place-items:center; color:#53657b; font-weight:700; font-size:9pt; }
 .payment-cut::before { content:""; position:absolute; inset-inline:0; top:50%; border-top:1.5px dashed #65758a; }

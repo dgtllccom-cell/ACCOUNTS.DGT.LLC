@@ -1,6 +1,6 @@
-export type PaymentVoucherSide = { name: string; code?: string; amount: number; currency: string };
+export type PaymentVoucherSide = { name: string; accountNumber?: string; code?: string; amount: number; currency: string };
 export type PostedVoucherLine = {
-  ledger_id?: unknown; debit?: unknown; credit?: unknown; currency?: unknown; ledger_name?: unknown; ledger_code?: unknown;
+  ledger_id?: unknown; debit?: unknown; credit?: unknown; currency?: unknown; ledger_name?: unknown; ledger_code?: unknown; account_number?: unknown;
 };
 
 /** Accept a verified pair only. Never derive one accounting side from the other or invent a currency. */
@@ -12,8 +12,10 @@ export function postedPaymentVoucherSides(lines: readonly PostedVoucherLine[] | 
   const side = (line: PostedVoucherLine, amount: number): PaymentVoucherSide | undefined => {
     const name = typeof line.ledger_name === "string" ? line.ledger_name.trim() : "";
     const code = typeof line.ledger_code === "string" ? line.ledger_code.trim() : "";
+    const accountNumber = typeof line.account_number === "string" ? line.account_number.trim() : "";
     const currency = typeof line.currency === "string" ? line.currency.trim().toUpperCase() : "";
-    return name && /^[A-Z]{3}$/.test(currency) && Number.isFinite(amount) && amount > 0 ? { name, code, amount, currency } : undefined;
+    return name && /^[A-Z]{3}$/.test(currency) && Number.isFinite(amount) && amount > 0
+      ? { name, code, ...(accountNumber ? { accountNumber } : {}), amount, currency } : undefined;
   };
   const dr = side(debit, Number(debit.debit));
   const cr = side(credit, Number(credit.credit));
