@@ -32,4 +32,29 @@ describe("issued Sales receipt and customer print", () => {
     expect(issuedSalesPaymentReceipt(order, { ...paid, payment_kind: "booking" }, journal)).toBeNull();
     expect(issuedSalesPaymentReceipt(order, { ...paid, status: "cancelled" }, journal)).toBeNull();
   });
+  it.each(["booking", "local"])("prints every saved goods line for %s without changing the amount received", (saleSource) => {
+    const goodsEntries = [
+      { goodsName: "<Almonds>", brand: "Select", origin: "Pakistan", lotName: "A-Grade", lotNo: "LTX-210", qtyNo: 5, qtyName: "Cartons", grossWeight: 50, netWeight: 49.75, unitPrice: 12, totalAmount: 60, salesCurrency: "USD" },
+      { productName: "Walnuts", lotNo: "LTX-211", qtyNo: 2, qtyName: "Bags", grossWeight: null, netWeight: 0, totalAmount: 200, salesCurrency: "PKR" },
+    ];
+    const order = { sales_order_no: "SB-202", form_data: { form: { saleSource, manualBillNumber: "REF-314", goodsName: "Unused draft value" }, goodsEntries } };
+    const receipt = issuedSalesPaymentReceipt(order, paid, journal, true)!;
+    expect(receipt.goods?.[1]).toMatchObject({ gross: null, net: 0 });
+    printSalesPaymentReceipt(receipt, "en");
+    const [html] = print.mock.lastCall!;
+    for (const value of ["REF-314", "&lt;Almonds&gt;", "LTX-210", "LTX-211", "Walnuts", "49.75", "5 Cartons", "PKR 200", "AED 100.00"]) expect(html).toContain(value);
+    expect(html).not.toContain("Unused draft value");
+    expect(html).toContain('data-scroll-print-preview="true"');
+    expect(html).not.toContain("1 / 1");
+    const limitedReceipt = issuedSalesPaymentReceipt(order, paid, journal)!;
+    expect(limitedReceipt.goods?.[0]).toMatchObject({ amount: null, price: null, currency: "" });
+    printSalesPaymentReceipt(limitedReceipt, "ur");
+    expect(print.mock.lastCall![0]).toContain("لاٹ نمبر");
+    expect(print.mock.lastCall![0]).not.toContain("USD 60");
+  });
+  it("does not duplicate a bill or invent goods, quantities or pricing for an older receipt", () => {
+    const order = { sales_order_no: "SB-202", form_data: { form: { manualBillNumber: "SB-202", goodsName: "Historic item", qtyNo: "", quantity: "3", netWeight: false } } };
+    expect(issuedSalesPaymentReceipt(order, paid, journal, true)).toMatchObject({ manualBill: "", goods: [{ name: "Historic item", quantity: 3, net: null, price: null }] });
+    expect(issuedSalesPaymentReceipt({ sales_order_no: "SB-202" }, paid, journal, true)?.goods).toEqual([]);
+  });
 });

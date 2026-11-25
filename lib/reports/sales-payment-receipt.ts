@@ -17,16 +17,31 @@ export function printSalesPaymentReceipt(receipt: SalesPaymentReceipt, lang: Sup
     [tr("rvp.date", "Date"), receipt.date],
     [tr("rvp.received_from", "Received from"), receipt.customer],
     [h("Sales Order No"), receipt.bill],
+    ...(receipt.manualBill ? [[tr("purchase.f_manual_bill_no", "Manual Bill No."), receipt.manualBill]] : []),
     [tr("rvp.payment_method", "Payment Method"), method],
     [h("Reference"), receipt.reference],
   ];
+  const quantityFormat = new Intl.NumberFormat(lang, { maximumFractionDigits: 6 });
+  const measure = (value: number | null, unit = "") => value == null ? "" : [quantityFormat.format(value), unit].filter(Boolean).join(" ");
+  const money = (value: number | null, currency: string) => value == null ? "" : [currency, quantityFormat.format(value)].filter(Boolean).join(" ");
+  const goods = receipt.goods ?? [];
+  const prices = goods.some(line => line.price != null || line.amount != null);
+  const cell = (...parts: string[]) => parts.filter(Boolean).map(part => `<bdi>${e(part)}</bdi>`).join("<br>") || "—";
+  const goodsHtml = goods.length ? `<div class="section-header">${e(tr("purchase.goods_details_title", "Goods Details"))}</div>
+  <table class="data-table"><thead><tr>${["#", "Goods Name", "Lot Name / Lot No", "Quantity", "Gross Wt (kg)", "Net Wt (kg)", ...(prices ? ["Unit Price", "Total Sales Amount"] : [])].map(label =>
+    `<th scope="col">${e(label === "Lot Name / Lot No" ? `${h("Lot Name")} / ${tr("sales.lot_no_label", "Lot No")}` : h(label))}</th>`).join("")}</tr></thead>
+    <tbody>${goods.map((line, index) => `<tr><td>${index + 1}</td><td>${cell(line.name, line.brand, line.size, line.hsCode, line.origin)}</td>
+    <td>${cell(line.lotName, line.lotNo === line.lotName ? "" : line.lotNo)}</td>
+    <td>${cell(measure(line.quantity, line.unit))}</td><td>${cell(measure(line.gross))}</td><td>${cell(measure(line.net))}</td>
+    ${prices ? `<td>${cell(money(line.price, line.currency))}</td><td>${cell(money(line.amount, line.currency))}</td>` : ""}</tr>`).join("")}</tbody></table>` : "";
   const bodyHtml = `<div class="overview-banner">
     <div class="overview-top"><div><div class="overview-title">${e(tr("rvp.amount", "Amount"))}</div>
     <div class="overview-name"><bdi>${e(receipt.currency)} ${e(amount)}</bdi></div></div>
     <span class="overview-status">${e(h("Posted"))}</span></div></div>
     <div class="section-card"><div class="section-header">${e(tr("rvp.customer_copy", "Customer Copy"))}</div>
-    <table class="info-table">${fields.map(([label, value]) => `<tr><td class="label">${e(label)}</td><td class="value"><bdi>${e(value || "—")}</bdi></td></tr>`).join("")}</table></div>`;
+    <table class="info-table">${fields.map(([label, value]) => `<tr><td class="label">${e(label)}</td><td class="value"><bdi>${e(value || "—")}</bdi></td></tr>`).join("")}</table></div>${goodsHtml}`;
   renderA4Document({ lang, autoPrint, title, subtitle: source, reportType: title, bodyHtml, reportId: receipt.number,
+    scrollPreview: goods.length > 0,
     notesText: tr("common.system_generated_document", "This is a system-generated document."),
     signatures: [tr("rvp.authorized_by", "Authorized by")] });
 }

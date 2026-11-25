@@ -194,7 +194,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     const mapped = localizedRows.map((row: any) => ({
       ...row,
-      receipt: order ? issuedSalesPaymentReceipt(order, row, row.roznamcha_entries) : null,
+      receipt: order ? issuedSalesPaymentReceipt(order, row, row.roznamcha_entries, session.isSuperAdmin || session.canViewFinancials) : null,
       kind: row.payment_kind,
       entry_date: row.payment_date,
       reference_no: row.remarks,
@@ -635,7 +635,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
 
     const resPayload = {
       paymentId,
-      receipt: issuedSalesPaymentReceipt(orderRow, paymentRecord, journalRecord),
+      receipt: issuedSalesPaymentReceipt(orderRow, paymentRecord, journalRecord, session.isSuperAdmin || session.canViewFinancials),
       roznamchaEntryId: paymentRecord.roznamcha_entry_id,
       superAdminSerialNumber: journalRecord.super_admin_serial_number,
       countryTransactionSerialNumber: journalRecord.country_transaction_serial_number,
