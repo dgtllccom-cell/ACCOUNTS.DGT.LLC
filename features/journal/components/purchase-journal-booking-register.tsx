@@ -1,494 +1,714 @@
 "use client";
 
 /**
- * Purchase Journal Booking Stock (issue #38) - Purchase Booking bills only, table first.
- * Three compact panels (Purchase Summary, Confirm Stock, Country-wise Purchase Stock) above one parent row per bill; "+" opens the bill overview,
- * its loading / receipt entries (<Purchase No>-01, -02 ...) and the read-only invoice detail. Data = GET /api/erp/inventory/journal-stock?view=bills,
- * i.e. the canonical, server-scoped Stock Journal regrouped per bill (lib/stock-journal/booking-register.ts). No payment column, no stock action here:
- * stock is confirmed / issued in the Stock Journal (Purchase General Stock).
+ * Journal Booking Stock (/dashboard/purchase/journal-booking-stock)
+ *
+ * Updated inside the existing Stock menu (no duplicate module):
+ *   - Single "Search & Filter" dropdown button in the header opening the reusable Advanced Search modal
+ *   - Three upper summary cards: Purchase Booking (green), Sales Booking (red), Remaining Stock (blue)
+ *   - Compact side-by-side table showing Purchase Booking, corresponding Sales Booking & Remaining Stock
+ *   - Supports partial sales and multiple sales against the same purchase without duplicate stock calculations
  */
-import { Fragment, useCallback, useEffect, useState } from "react";
-import Link from "next/link";
-import { ChevronDown, ChevronRight, Loader2, RefreshCw, Search, X } from "lucide-react";
+
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { Boxes, ChevronDown, ChevronRight, Loader2, Search, ShoppingCart, X } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { UniversalPrintActionButton } from "@/components/reports/universal-print-action-button";
-import type { BillStatus, CountryStock, EntryConfirmation, EntryReceiving, RegisterBill, RegisterEntry, RegisterPanels, UnitQty, Weighted } from "@/lib/stock-journal/booking-register";
+import {
+  StockAdvancedSearchModal,
+  countActivePsFilters,
+  defaultPsFilters,
+} from "@/features/stock/components/stock-advanced-search-modal";
+import type { PsFilterOptionSet } from "@/lib/services/ps-stock-journal-service";
+import {
+  addUnitQty,
+  formatUnitQty,
+  hasNegativeUnit,
+  type BookingStockSideBySideRow,
+  type PsAdvancedFilters,
+  type PsCardSummary,
+  type StockRoleTier,
+  type UnitQty,
+} from "@/lib/stock/ps-journal-model";
 
-type Resp = { bills: RegisterBill[]; panels: RegisterPanels; pagination: { page: number; limit: number; totalRecords: number; totalPages: number } };
-const PAGE = 25;
-const STATUSES: BillStatus[] = ["draft", "booked", "partially_loaded", "in_transit", "partially_received", "received", "partially_confirmed", "confirmed"];
-const STATUS_TONE: Record<BillStatus, string> = {
-  draft: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
-  booked: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
-  partially_loaded: "bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
-  in_transit: "bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-900",
-  partially_received: "bg-sky-50 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300",
-  received: "bg-sky-100 text-sky-900 dark:bg-sky-900/60 dark:text-sky-100",
-  partially_confirmed: "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
-  confirmed: "bg-emerald-600 text-white",
-};
-
-const nq = (v: number) => v.toLocaleString("en-US", { maximumFractionDigits: 2 });
-const day = (v: string | null | undefined) => (v ? String(v).slice(0, 10) : "—");
-const fmtQty = (q: UnitQty | undefined) => {
-  const parts = Object.entries(q ?? {}).filter(([, v]) => Math.abs(v) > 0.0001);
-  return parts.length ? parts.map(([u, v]) => `${nq(v)} ${u === "-" ? "" : u}`.trim()).join(" · ") : "0";
-};
-const kg = (v: number) => `${nq(v)} kg`;
-
-function Qty({ q, strong }: { q: UnitQty | undefined; strong?: boolean }) {
-  return <span dir="ltr" className={`tabular-nums ${strong ? "font-black" : "font-semibold"}`}>{fmtQty(q)}</span>;
+interface BookingStockApiResponse {
+  mode: "booking_stock";
+  role: StockRoleTier;
+  cards: {
+    purchase: PsCardSummary;
+    sales: PsCardSummary;
+    remaining: PsCardSummary;
+  };
+  rows: BookingStockSideBySideRow[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalRecords: number;
+    totalPages: number;
+  };
+  filterOptions: PsFilterOptionSet;
 }
 
-function BillSerialDialog({ s, bill, onClose }: { s: ReturnType<typeof useErpScreen>; bill: RegisterBill; onClose: () => void }) {
-  const serials = [
-    [s.t("serial_super_admin", "Super Admin Serial"), bill.serials.superAdmin],
-    [s.t("serial_country", "Country Serial"), bill.serials.country],
-    [s.t("serial_branch", "Branch Serial"), bill.serials.branch],
-    [s.t("serial_entry", "Entry / NC Serial"), bill.serials.entry],
-  ];
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4" role="presentation" onMouseDown={onClose}>
-      <section role="dialog" aria-modal="true" aria-labelledby="pjb-serial-title" onMouseDown={(event) => event.stopPropagation()}
-        className="w-full max-w-xl overflow-hidden rounded-2xl border border-teal-200 bg-white shadow-2xl dark:border-teal-900 dark:bg-slate-900">
-        <header className="flex items-start justify-between gap-3 bg-gradient-to-r from-teal-950 to-teal-700 px-5 py-4 text-white">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-200">{s.t("serials_title", "Purchase Bill Serial Chain")}</p>
-            <h2 id="pjb-serial-title" className="mt-1 font-mono text-lg font-black" dir="ltr">{bill.purchaseNo}</h2>
-            <p className="mt-0.5 text-xs text-teal-100" dir="ltr">{day(bill.date)}</p>
-          </div>
-          <button type="button" onClick={onClose} aria-label={s.t("close", "Close")} className="grid h-8 w-8 place-items-center rounded-full border border-white/30 text-lg">×</button>
-        </header>
-        <div className="space-y-3 p-5">
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {serials.map(([label, value], index) => (
-              <div key={label} className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
-                <p className="text-[9px] font-black uppercase tracking-wide text-slate-500">{index + 1}. {label}</p>
-                <p className="mt-1 break-all font-mono text-sm font-black text-slate-950 dark:text-white" dir="ltr">{value}</p>
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-3 gap-2 rounded-xl border border-teal-100 bg-teal-50 p-3 text-xs dark:border-teal-900 dark:bg-teal-950/30">
-            <div><span className="block text-[9px] font-black uppercase text-teal-700 dark:text-teal-300">{s.t("country_code", "Country")}</span><b className="font-mono" dir="ltr">{bill.countryCode || "—"}</b></div>
-            <div><span className="block text-[9px] font-black uppercase text-teal-700 dark:text-teal-300">{s.t("main_branch", "Main Branch")}</span><b className="font-mono" dir="ltr">{bill.mainBranchCode}</b></div>
-            <div><span className="block text-[9px] font-black uppercase text-teal-700 dark:text-teal-300">{s.t("city_branch", "City Branch")}</span><b className="font-mono" dir="ltr">{bill.cityBranchCode}</b></div>
-          </div>
-          <div className="flex justify-end"><button type="button" onClick={onClose} className="rounded-lg bg-teal-800 px-4 py-2 text-xs font-black text-white">{s.t("close", "Close")}</button></div>
-        </div>
-      </section>
-    </div>
-  );
-}
+const fmtNum = (v: number, digits = 2) =>
+  v.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+
+const fmtQtyPlain = (qty: number, unit: string) => {
+  const formatted = qty.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  return !unit || unit === "UNIT" ? formatted : `${formatted} ${unit}`;
+};
 
 export function PurchaseJournalBookingRegister({ lang: langProp }: { lang?: string }) {
-  const s = useErpScreen("pjb", langProp);
-  const [data, setData] = useState<Resp | null>(null);
+  const s = useErpScreen("psj", langProp);
+  const [data, setData] = useState<BookingStockApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<"" | BillStatus>("");
-  const [place, setPlace] = useState<CountryStock | null>(null);
+  const [filters, setFilters] = useState<PsAdvancedFilters>({});
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [page, setPage] = useState(1);
-  const [open, setOpen] = useState<Record<string, boolean>>({});
-  const [serialBill, setSerialBill] = useState<RegisterBill | null>(null);
-
-  const statusLabel = useCallback((st: BillStatus) => s.t(`st_${st}`, st.replace(/_/g, " ")), [s]);
-  const receivingLabel = (r: EntryReceiving) => s.t(`rcv_${r}`, r.replace(/_/g, " "));
-  const confirmLabel = (c: EntryConfirmation) => s.t(`cnf_${c}`, c.replace(/_/g, " "));
-  const modeLabel = (m: string) => {
-    const k = m.toLowerCase();
-    if (/sea|ship|vessel|container/.test(k)) return s.t("mode_sea", "Sea");
-    if (/air|flight|awb/.test(k)) return s.t("mode_air", "Air");
-    if (/road|truck|land/.test(k)) return s.t("mode_road", "Road");
-    if (/rail|train/.test(k)) return s.t("mode_rail", "Rail");
-    return m || "—";
-  };
+  const [pageSize, setPageSize] = useState(25);
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const qs = new URLSearchParams({ view: "bills", page: String(page), limit: String(PAGE), lang: s.lang });
-      if (query) qs.set("search", query);
-      if (status) qs.set("status", status);
-      if (place) qs.set("place", place.key);
-      setData(await apiGet<Resp>(`/api/erp/inventory/journal-stock?${qs.toString()}`));
+      const qs = new URLSearchParams({
+        mode: "booking_stock",
+        page: String(page),
+        limit: String(pageSize),
+        lang: s.lang,
+      });
+      if (filters.countryId) qs.set("countryId", filters.countryId);
+      if (filters.branchId) qs.set("branchId", filters.branchId);
+      if (filters.warehouseId) qs.set("warehouseId", filters.warehouseId);
+      if (filters.goods) qs.set("goods", filters.goods);
+      if (filters.origin) qs.set("origin", filters.origin);
+      if (filters.lot) qs.set("lot", filters.lot);
+      if (filters.purchaseBill) qs.set("purchaseBill", filters.purchaseBill);
+      if (filters.salesBill) qs.set("salesBill", filters.salesBill);
+      if (filters.blNo) qs.set("blNo", filters.blNo);
+      if (filters.containerNo) qs.set("containerNo", filters.containerNo);
+      if (filters.stockStatus) qs.set("stockStatus", filters.stockStatus);
+      if (filters.dateFrom) qs.set("dateFrom", filters.dateFrom);
+      if (filters.dateTo) qs.set("dateTo", filters.dateTo);
+
+      const res = await apiGet<BookingStockApiResponse>(`/api/erp/stock/ps-journal?${qs.toString()}`);
+      setData(res);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }
-  }, [page, query, status, place, s.lang]);
-  useEffect(() => { void load(); }, [load]);
-  useEffect(() => { setPage(1); }, [query, status, place]);
-  useEffect(() => { const h = setTimeout(() => setQuery(search.trim()), 350); return () => clearTimeout(h); }, [search]);
+  }, [filters, page, pageSize, s.lang]);
 
-  const panels = data?.panels;
-  const bills = data?.bills ?? [];
+  useEffect(() => {
+    void load();
+  }, [load]);
 
-  // ── print / PDF / Excel: the register and one bill (shared A4 engine) ──
-  const registerReport = () => ({
+  const rows = data?.rows ?? [];
+  const cards = data?.cards;
+  const activeCount = countActivePsFilters(filters, data?.filterOptions);
+
+  const pageTotals = useMemo(() => {
+    const pQty: UnitQty = {};
+    const sQty: UnitQty = {};
+    const remQty: UnitQty = {};
+    let pGross = 0;
+    let pNet = 0;
+    let sGross = 0;
+    let sNet = 0;
+    let remGross = 0;
+    let remNet = 0;
+    for (const r of rows) {
+      addUnitQty(pQty, r.unit, r.pQty);
+      addUnitQty(sQty, r.unit, r.sQty);
+      addUnitQty(remQty, r.unit, r.remQty);
+      pGross += r.pGrossKg;
+      pNet += r.pNetKg;
+      sGross += r.sGrossKg;
+      sNet += r.sNetKg;
+      remGross += r.remGrossKg;
+      remNet += r.remNetKg;
+    }
+    return { pQty, sQty, remQty, pGross, pNet, sGross, sNet, remGross, remNet };
+  }, [rows]);
+
+  const reportConfig = () => ({
     moduleType: "register" as const,
     reportType: "register" as const,
-    title: s.t("title", "Purchase Journal Booking Stock"),
-    subtitle: [place ? `${place.countryName} / ${place.branchName}` : "", status ? statusLabel(status) : "", query].filter(Boolean).join(" · ") || undefined,
+    title: s.t("jbs_title", "Journal Booking Stock"),
+    subtitle: s.t("jbs_table_title", "Journal Booking Stock (Purchase, Sales & Remaining)"),
     lang: s.lang,
     orientation: "landscape" as const,
-    kpis: panels ? [
-      { label: s.t("p_bills", "Bills"), value: String(panels.purchase.bills), color: "slate" as const },
-      { label: s.t("p_booked", "Booked"), value: fmtQty(panels.purchase.booked), color: "blue" as const },
-      { label: s.t("c_transit", "In Transit"), value: fmtQty(panels.confirm.inTransit.qty), color: "amber" as const },
-      { label: s.t("c_confirmed", "Confirmed Stock"), value: fmtQty(panels.confirm.confirmed.qty), color: "emerald" as const },
-    ] : [],
+    kpis: cards
+      ? [
+          {
+            label: `${s.t("jbs_card_purchase", "Purchase Booking")} (${s.t("lbl_bills", "Bills")}: ${cards.purchase.bills})`,
+            value: `${formatUnitQty(cards.purchase.qtyByUnit)} · ${fmtNum(cards.purchase.netKg)} kg`,
+            color: "emerald" as const,
+          },
+          {
+            label: `${s.t("jbs_card_sales", "Sales Booking")} (${s.t("lbl_bills", "Bills")}: ${cards.sales.bills})`,
+            value: `${formatUnitQty(cards.sales.qtyByUnit)} · ${fmtNum(cards.sales.netKg)} kg`,
+            color: "red" as const,
+          },
+          {
+            label: `${s.t("jbs_card_remaining", "Remaining Stock")} (${s.t("lbl_lots", "Lots")}: ${cards.remaining.lots})`,
+            value: `${formatUnitQty(cards.remaining.qtyByUnit)} · ${fmtNum(cards.remaining.netKg)} kg`,
+            color: "blue" as const,
+          },
+        ]
+      : [],
     columns: [
-      { key: "purchaseNo", label: s.t("col_purchase_no", "Purchase No") },
-      { key: "date", label: s.t("col_date", "Date") },
-      { key: "place", label: s.t("col_place", "Country / Branch") },
-      { key: "supplierName", label: s.t("col_supplier", "Supplier") },
-      { key: "goodsText", label: s.t("col_goods", "Goods / Lot") },
-      { key: "bookedText", label: s.t("col_qty", "Quantity"), align: "right" as const },
-      { key: "grossText", label: s.t("col_gross", "Gross kg"), align: "right" as const },
-      { key: "netText", label: s.t("col_net", "Net kg"), align: "right" as const },
-      { key: "entriesCount", label: s.t("pr_entries", "Entries"), align: "center" as const },
-      { key: "loadedText", label: s.t("pr_loaded", "Loaded"), align: "right" as const },
-      { key: "receivedText", label: s.t("pr_received", "Received"), align: "right" as const },
-      { key: "confirmedText", label: s.t("pr_confirmed", "Confirmed"), align: "right" as const },
-      { key: "pendingText", label: s.t("pr_pending", "Pending"), align: "right" as const },
-      { key: "statusText", label: s.t("col_status", "Status") },
+      { key: "pBill", label: s.t("col_p_bill", "P. Bill No.") },
+      { key: "blNo", label: s.t("col_bl_no", "B/L No.") },
+      { key: "containerNo", label: s.t("col_container_no", "Container No.") },
+      { key: "goodsName", label: s.t("col_goods_name", "Goods Name") },
+      { key: "size", label: s.t("col_size", "Size") },
+      { key: "origin", label: s.t("col_origin", "Origin") },
+      { key: "pQty", label: s.t("col_p_qty", "P Qty"), align: "right" as const },
+      { key: "pGross", label: s.t("col_p_gross", "P Gross"), align: "right" as const },
+      { key: "pNet", label: s.t("col_p_net", "P Net"), align: "right" as const },
+      { key: "sBill", label: s.t("col_s_bill", "S. Bill No.") },
+      { key: "sQty", label: s.t("col_s_qty", "S Qty"), align: "right" as const },
+      { key: "sGross", label: s.t("col_s_gross", "S Gross"), align: "right" as const },
+      { key: "sNet", label: s.t("col_s_net", "S Net"), align: "right" as const },
+      { key: "remQty", label: s.t("col_rem_qty", "Rem Qty"), align: "right" as const },
+      { key: "remGross", label: s.t("col_rem_gross", "Rem Gross"), align: "right" as const },
+      { key: "remNet", label: s.t("col_rem_net", "Rem Net"), align: "right" as const },
     ],
-    rows: bills.map((b) => ({
-      purchaseNo: b.purchaseNo, date: day(b.date), place: `${b.countryName} / ${b.branchName}`, supplierName: b.supplierName,
-      goodsText: b.goods.map((g) => [g.name, g.brand, g.size].filter(Boolean).join(" ")).join(", "), bookedText: fmtQty(b.booked), grossText: nq(b.gross), netText: nq(b.net),
-      entriesCount: b.entries.length, loadedText: fmtQty(b.loaded), receivedText: fmtQty(b.received), confirmedText: fmtQty(b.confirmed), pendingText: fmtQty(b.pending),
-      statusText: statusLabel(b.status),
-    })),
-  });
-  const billReport = (b: RegisterBill) => () => ({
-    moduleType: "register" as const,
-    reportType: "register" as const,
-    title: `${s.t("bill_print_title", "Purchase Booking Bill")} ${b.purchaseNo}`,
-    subtitle: [b.manualNo, day(b.date), `${b.countryName} / ${b.branchName}`, b.supplierName].filter(Boolean).join(" · "),
-    lang: s.lang,
-    orientation: "portrait" as const,
-    kpis: [
-      { label: s.t("p_booked", "Booked"), value: fmtQty(b.booked), color: "blue" as const },
-      { label: s.t("pr_loaded", "Loaded"), value: fmtQty(b.loaded), color: "slate" as const },
-      { label: s.t("pr_received", "Received"), value: fmtQty(b.received), color: "amber" as const },
-      { label: s.t("pr_confirmed", "Confirmed"), value: fmtQty(b.confirmed), color: "emerald" as const },
-      { label: s.t("pr_pending", "Pending"), value: fmtQty(b.pending), color: "red" as const },
-      ...(b.invoice ? [{ label: s.t("inv_purchase_amount", "Purchase invoice amount"), value: b.invoice.purchaseAmount == null ? "—" : `${nq(b.invoice.purchaseAmount)} ${b.invoice.currency}`, color: "slate" as const }] : []),
-    ],
-    columns: [
-      { key: "entryNo", label: s.t("e_entry", "Entry") },
-      { key: "date", label: s.t("col_date", "Date") },
-      { key: "qty", label: s.t("col_qty", "Quantity"), align: "right" as const },
-      { key: "gross", label: s.t("col_gross", "Gross kg"), align: "right" as const },
-      { key: "net", label: s.t("col_net", "Net kg"), align: "right" as const },
-      { key: "truck", label: s.t("e_truck", "Truck / Container") },
-      { key: "route", label: s.t("e_route", "From → To") },
-      { key: "receiving", label: s.t("e_receiving", "Receiving") },
-      { key: "confirmation", label: s.t("e_confirmation", "Confirmation") },
-    ],
-    rows: b.entries.map((e) => ({
-      entryNo: e.entryNo, date: day(e.date), qty: fmtQty(e.loaded), gross: nq(e.gross), net: nq(e.net), truck: [e.truckOrContainer, e.blNumber].filter(Boolean).join(" · "),
-      route: `${e.loadingPlace || "—"} → ${e.receivingPlace || "—"}`, receiving: receivingLabel(e.receiving), confirmation: confirmLabel(e.confirmation),
+    rows: rows.map((r) => ({
+      pBill: r.purchaseBillNo,
+      blNo: r.blNo,
+      containerNo: r.containerNo,
+      goodsName: r.goodsName,
+      size: r.size || "—",
+      origin: r.origin,
+      pQty: fmtQtyPlain(r.pQty, r.unit),
+      pGross: fmtNum(r.pGrossKg),
+      pNet: fmtNum(r.pNetKg),
+      sBill: r.salesBillDisplay,
+      sQty: fmtQtyPlain(r.sQty, r.unit),
+      sGross: fmtNum(r.sGrossKg),
+      sNet: fmtNum(r.sNetKg),
+      remQty: fmtQtyPlain(r.remQty, r.unit),
+      remGross: fmtNum(r.remGrossKg),
+      remNet: fmtNum(r.remNetKg),
     })),
   });
 
-  const strip = (tone: string, label: string, w: Weighted | undefined, testid: string, note?: string) => (
-    <div data-testid={testid} className={`flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 rounded-lg px-2.5 py-1.5 text-[11px] ${tone}`}>
-      <span className="font-black uppercase tracking-wide">{label}</span>
-      <span className="flex flex-wrap items-center gap-x-3" dir="ltr">
-        <Qty q={w?.qty} strong />
-        <span className="tabular-nums opacity-90">G {kg(w?.gross ?? 0)}</span>
-        <span className="tabular-nums opacity-90">N {kg(w?.net ?? 0)}</span>
-      </span>
-      {note ? <span className="w-full text-[10px] opacity-80">{note}</span> : null}
-    </div>
-  );
+  const pagination = data?.pagination;
+  const startIdx = pagination && pagination.totalRecords > 0 ? (pagination.page - 1) * pagination.limit + 1 : 0;
+  const endIdx = pagination ? Math.min(pagination.totalRecords, pagination.page * pagination.limit) : 0;
 
   return (
-    <div dir={s.dir} data-testid="pjb-register" className="mx-auto max-w-[1900px] space-y-3 p-2 text-slate-800 sm:p-4 dark:text-slate-100">
-      {/* header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-teal-100 bg-gradient-to-r from-white via-teal-50/70 to-cyan-50/60 p-3 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-teal-950/30">
+    <div
+      dir={s.dir}
+      data-page-chrome="true"
+      data-testid="jbs-dashboard"
+      className="mx-auto max-w-[1920px] space-y-3.5 p-2.5 text-slate-800 sm:p-4 dark:text-slate-100"
+    >
+      {/* Page Header — Single Search & Filter Dropdown Button */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <div className="min-w-0">
-          <h1 className="truncate text-lg font-black tracking-tight text-slate-900 dark:text-white">{s.t("title", "Purchase Journal Booking Stock")}</h1>
-          <p className="text-[11px] text-slate-500">{s.t("subtitle", "Purchase Booking bills only · booking → loading → receiving → confirmed stock. Local Purchase has its own Goods Transfer Journal.")}</p>
-        </div>
-        <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-950">
-          <Link href="/dashboard/purchase/stock/journal" className="rounded-lg bg-teal-800 px-3 py-2 text-xs font-black text-white hover:bg-teal-700">
-            {s.t("open_stock_journal", "Confirm / issue in Stock Journal")}
-          </Link>
-          <button type="button" onClick={() => void load()} aria-label={s.t("refresh", "Refresh")} className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800">
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          </button>
-          <UniversalPrintActionButton variant="menu" reportConfig={registerReport} />
-        </div>
-      </div>
-
-      {/* three compact panels */}
-      <div className="grid gap-2 lg:grid-cols-3" data-testid="pjb-panels">
-        <section data-testid="pjb-panel-purchase" className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <h2 className="mb-2 text-xs font-black uppercase tracking-wider text-slate-500">{s.t("panel_purchase", "Purchase Summary")}</h2>
-          <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
-            <div className="rounded-lg bg-slate-50 p-2 dark:bg-slate-800"><span className="block text-[9px] font-black uppercase text-slate-500">{s.t("p_bills", "Bills")}</span><b className="text-base tabular-nums">{panels?.purchase.bills ?? "—"}</b></div>
-            <div className="rounded-lg bg-blue-50 p-2 text-blue-900 dark:bg-blue-950/40 dark:text-blue-100"><span className="block text-[9px] font-black uppercase opacity-70">{s.t("p_booked", "Booked")}</span><Qty q={panels?.purchase.booked} strong /></div>
-            <div className="rounded-lg bg-amber-50 p-2 text-amber-900 dark:bg-amber-950/40 dark:text-amber-100"><span className="block text-[9px] font-black uppercase opacity-70">{s.t("p_loaded", "Loaded")}</span><Qty q={panels?.purchase.loaded} strong /></div>
-            <div className="col-span-2 rounded-lg bg-slate-50 p-2 dark:bg-slate-800"><span className="block text-[9px] font-black uppercase text-slate-500">{s.t("p_gross_net", "Gross / Net")}</span><b className="tabular-nums" dir="ltr">{panels ? `G ${kg(panels.purchase.gross)} · N ${kg(panels.purchase.net)}` : "—"}</b></div>
-            <div className="rounded-lg bg-rose-50 p-2 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"><span className="block text-[9px] font-black uppercase">{s.t("p_supplier_pending", "Balance")}</span><Qty q={panels?.purchase.supplierPending} strong /></div>
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+            <span>{s.t("crumb_stock", "Stock / Warehouse")}</span>
+            <span>›</span>
+            <span>{s.t("crumb_stock_reports", "Stock Reports")}</span>
+            <span>›</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">
+              {s.t("jbs_title", "Journal Booking Stock")}
+            </span>
           </div>
-        </section>
-        <section data-testid="pjb-panel-confirm" className="space-y-1.5 rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">{s.t("panel_confirm", "Confirm Stock")}</h2>
-          {strip("bg-slate-900 text-white dark:bg-slate-700", s.t("c_transit", "In Transit"), panels?.confirm.inTransit, "pjb-strip-transit")}
-          {strip("border border-emerald-300 bg-white text-emerald-800 dark:border-emerald-800 dark:bg-slate-950 dark:text-emerald-300", s.t("c_confirmed", "Confirmed Stock"), panels?.confirm.confirmed, "pjb-strip-confirmed",
-            panels && Object.keys(panels.confirm.sold.qty).length ? `${s.t("c_sold_of_which", "of which issued / sold")}: ${fmtQty(panels.confirm.sold.qty)}` : undefined)}
-          <div className="space-y-1 rounded-lg bg-rose-600 p-1.5 text-white" data-testid="pjb-strip-pending">
-            <div className="px-1 text-[11px] font-black uppercase tracking-wide">{s.t("c_pending", "Pending")}</div>
-            {strip("bg-rose-700/60", s.t("c_not_loaded", "Not loaded yet"), panels?.confirm.notLoaded, "pjb-pending-not-loaded")}
-            {strip("bg-rose-700/60", s.t("c_awaiting", "Received, awaiting confirmation"), panels?.confirm.awaiting, "pjb-pending-awaiting")}
-          </div>
-          {panels && Object.values(panels.confirm).some((w) => w.weightMissing) ? <p className="text-[10px] text-slate-500">{s.t("weight_missing_note", "Some goods have no recorded weight; their kg are not estimated.")}</p> : null}
-        </section>
-        <section data-testid="pjb-panel-countries" className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <h2 className="mb-2 text-xs font-black uppercase tracking-wider text-slate-500">{s.t("panel_countries", "Country-wise Purchase Stock")}</h2>
-          <div className="max-h-44 space-y-1 overflow-y-auto">
-            {(panels?.countries ?? []).map((c) => (
-              <button key={c.key} type="button" data-testid="pjb-country" onClick={() => setPlace(place?.key === c.key ? null : c)}
-                className={`flex w-full flex-wrap items-center justify-between gap-x-2 rounded-lg border px-2 py-1 text-start text-[11px] ${place?.key === c.key ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40" : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"}`}>
-                <span className="font-bold" dir="auto">{c.countryCode || c.countryName}<span className="ms-1 font-mono text-[10px] text-slate-500" dir="ltr">{c.mainBranchCode} / {c.cityBranchCode}</span></span>
-                <span className="flex flex-wrap gap-x-2 text-slate-600 dark:text-slate-300" dir="ltr">
-                  <span>{c.bills} {s.t("p_bills", "Bills")}</span><Qty q={c.booked} /><span className="tabular-nums">G {kg(c.gross)}</span><span className="tabular-nums">N {kg(c.net)}</span>
+          <div className="mt-0.5 flex flex-wrap items-center gap-2.5">
+            <h1 className="text-lg font-black tracking-tight text-slate-950 sm:text-xl dark:text-white">
+              {s.t("jbs_title", "Journal Booking Stock")}
+            </h1>
+            {activeCount > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setFilters(defaultPsFilters(data?.filterOptions));
+                  setPage(1);
+                }}
+                className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-300"
+              >
+                <span>
+                  {activeCount} {s.t("active_filters", "active filters")}
                 </span>
+                <X className="h-3 w-3" aria-hidden />
               </button>
-            ))}
-            {panels && panels.countries.length === 0 ? <p className="text-xs text-slate-400">{s.t("empty", "No Purchase Booking bills in your scope.")}</p> : null}
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            data-testid="jbs-search-filter-btn"
+            onClick={() => setSearchModalOpen(true)}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#164e9e] px-4 py-2 text-xs font-black text-white shadow-sm transition hover:bg-[#123f80]"
+          >
+            <Search className="h-3.5 w-3.5" aria-hidden />
+            <span>{s.t("btn_search_filter", "Search & Filter")}</span>
+            {activeCount > 0 ? (
+              <span className="rounded-full bg-white/20 px-1.5 py-0.2 text-[10px] font-black">{activeCount}</span>
+            ) : null}
+            <ChevronDown className="h-3.5 w-3.5 opacity-85" aria-hidden />
+          </button>
+          <UniversalPrintActionButton variant="menu" reportConfig={reportConfig} />
+        </div>
+      </div>
+
+      {/* Three Upper Summary Cards: Green Purchase Booking | Red Sales Booking | Blue Remaining Stock */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3" data-testid="jbs-summary-cards">
+        {/* Card 1: Purchase Booking (Green) */}
+        <section className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50/90 via-white to-emerald-50/50 p-3.5 shadow-xs dark:border-emerald-900/60 dark:from-emerald-950/30 dark:via-slate-900 dark:to-slate-900">
+          <div className="flex items-center justify-between gap-2 border-b border-emerald-200/70 pb-2 dark:border-emerald-900/50">
+            <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
+              <ShoppingCart className="h-4 w-4 shrink-0" aria-hidden />
+              <h2 className="text-sm font-black">{s.t("jbs_card_purchase", "Purchase Booking")}</h2>
+            </div>
+            <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-black text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-200">
+              {s.t("lbl_bills", "Bills")}: {cards?.purchase.bills ?? 0}
+            </span>
+          </div>
+          <div className="mt-2.5 grid grid-cols-3 gap-2 text-center">
+            <div>
+              <span className="block text-[10px] font-bold uppercase text-slate-500">{s.t("lbl_qty", "Qty")}</span>
+              <span className="mt-0.5 block font-mono text-sm font-black text-emerald-700 sm:text-base dark:text-emerald-300" dir="ltr">
+                {formatUnitQty(cards?.purchase.qtyByUnit)}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold uppercase text-slate-500">
+                {s.t("lbl_gross_wt_kg", "Gross Wt (Kg)")}
+              </span>
+              <span className="mt-0.5 block font-mono text-sm font-black text-emerald-800 sm:text-base dark:text-emerald-200" dir="ltr">
+                {fmtNum(cards?.purchase.grossKg ?? 0)}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold uppercase text-slate-500">
+                {s.t("lbl_net_wt_kg", "Net Wt (Kg)")}
+              </span>
+              <span className="mt-0.5 block font-mono text-sm font-black text-emerald-800 sm:text-base dark:text-emerald-200" dir="ltr">
+                {fmtNum(cards?.purchase.netKg ?? 0)}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* Card 2: Sales Booking (Red) */}
+        <section className="rounded-xl border border-rose-200 bg-gradient-to-br from-rose-50/90 via-white to-rose-50/50 p-3.5 shadow-xs dark:border-rose-900/60 dark:from-rose-950/30 dark:via-slate-900 dark:to-slate-900">
+          <div className="flex items-center justify-between gap-2 border-b border-rose-200/70 pb-2 dark:border-rose-900/50">
+            <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300">
+              <ShoppingCart className="h-4 w-4 shrink-0" aria-hidden />
+              <h2 className="text-sm font-black">{s.t("jbs_card_sales", "Sales Booking")}</h2>
+            </div>
+            <span className="rounded-md bg-rose-100 px-2 py-0.5 text-xs font-black text-rose-900 dark:bg-rose-900/60 dark:text-rose-200">
+              {s.t("lbl_bills", "Bills")}: {cards?.sales.bills ?? 0}
+            </span>
+          </div>
+          <div className="mt-2.5 grid grid-cols-3 gap-2 text-center">
+            <div>
+              <span className="block text-[10px] font-bold uppercase text-slate-500">{s.t("lbl_qty", "Qty")}</span>
+              <span className="mt-0.5 block font-mono text-sm font-black text-rose-700 sm:text-base dark:text-rose-300" dir="ltr">
+                {formatUnitQty(cards?.sales.qtyByUnit)}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold uppercase text-slate-500">
+                {s.t("lbl_gross_wt_kg", "Gross Wt (Kg)")}
+              </span>
+              <span className="mt-0.5 block font-mono text-sm font-black text-rose-800 sm:text-base dark:text-rose-200" dir="ltr">
+                {fmtNum(cards?.sales.grossKg ?? 0)}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold uppercase text-slate-500">
+                {s.t("lbl_net_wt_kg", "Net Wt (Kg)")}
+              </span>
+              <span className="mt-0.5 block font-mono text-sm font-black text-rose-800 sm:text-base dark:text-rose-200" dir="ltr">
+                {fmtNum(cards?.sales.netKg ?? 0)}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* Card 3: Remaining Stock (Blue) */}
+        <section className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50/90 via-white to-blue-50/50 p-3.5 shadow-xs dark:border-blue-900/60 dark:from-blue-950/30 dark:via-slate-900 dark:to-slate-900">
+          <div className="flex items-center justify-between gap-2 border-b border-blue-200/70 pb-2 dark:border-blue-900/50">
+            <div className="flex items-center gap-2 text-blue-800 dark:text-blue-300">
+              <Boxes className="h-4 w-4 shrink-0" aria-hidden />
+              <h2 className="text-sm font-black">{s.t("jbs_card_remaining", "Remaining Stock")}</h2>
+            </div>
+            <span className="rounded-md bg-blue-100 px-2 py-0.5 text-xs font-black text-blue-900 dark:bg-blue-900/60 dark:text-blue-200">
+              {s.t("lbl_lots", "Lots")}: {cards?.remaining.lots ?? 0}
+            </span>
+          </div>
+          <div className="mt-2.5 grid grid-cols-3 gap-2 text-center">
+            <div>
+              <span className="block text-[10px] font-bold uppercase text-slate-500">{s.t("lbl_qty", "Qty")}</span>
+              <span
+                className={`mt-0.5 block font-mono text-sm font-black sm:text-base ${
+                  hasNegativeUnit(cards?.remaining.qtyByUnit)
+                    ? "text-rose-600 dark:text-rose-400"
+                    : "text-blue-800 dark:text-blue-300"
+                }`}
+                dir="ltr"
+              >
+                {formatUnitQty(cards?.remaining.qtyByUnit)}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold uppercase text-slate-500">
+                {s.t("lbl_gross_wt_kg", "Gross Wt (Kg)")}
+              </span>
+              <span
+                className={`mt-0.5 block font-mono text-sm font-black sm:text-base ${
+                  (cards?.remaining.grossKg ?? 0) < 0
+                    ? "text-rose-600 dark:text-rose-400"
+                    : "text-blue-900 dark:text-blue-200"
+                }`}
+                dir="ltr"
+              >
+                {fmtNum(cards?.remaining.grossKg ?? 0)}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold uppercase text-slate-500">
+                {s.t("lbl_net_wt_kg", "Net Wt (Kg)")}
+              </span>
+              <span
+                className={`mt-0.5 block font-mono text-sm font-black sm:text-base ${
+                  (cards?.remaining.netKg ?? 0) < 0
+                    ? "text-rose-600 dark:text-rose-400"
+                    : "text-blue-900 dark:text-blue-200"
+                }`}
+                dir="ltr"
+              >
+                {fmtNum(cards?.remaining.netKg ?? 0)}
+              </span>
+            </div>
           </div>
         </section>
       </div>
 
-      {/* filters */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[220px] flex-1">
-          <Search className="absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-          <input data-testid="pjb-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={s.t("search_ph", "Search purchase no, supplier, goods, container, BL…")}
-            className="w-full rounded-lg border border-slate-200 bg-white py-1.5 pe-2 ps-8 text-xs outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900" />
-        </div>
-        <select data-testid="pjb-status" value={status} onChange={(e) => setStatus(e.target.value as BillStatus | "")} className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-900">
-          <option value="">{s.t("all_statuses", "All statuses")}</option>
-          {STATUSES.map((st) => <option key={st} value={st}>{statusLabel(st)}</option>)}
-        </select>
-        {place ? (
-          <button type="button" onClick={() => setPlace(null)} className="inline-flex items-center gap-1 rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-bold text-white" data-testid="pjb-place-chip">
-            {place.countryName} · {place.branchName} <X className="h-3 w-3" />
-          </button>
-        ) : null}
-      </div>
-
-      {error ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">{error}</p> : null}
-
-      {/* register: desktop table */}
-      <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm md:block dark:border-slate-800 dark:bg-slate-900">
-        <table className="w-full min-w-[1180px] text-xs" data-testid="pjb-table">
-          <thead className="bg-teal-950 text-[10px] font-black uppercase tracking-wide text-white dark:bg-teal-950">
-            <tr>
-              <th className="w-8 p-2.5" />
-              <th className="p-2.5 text-start">{s.t("col_purchase_no", "Purchase Bill / Date")}</th>
-              <th className="p-2.5 text-start">{s.t("col_place", "Country / Branch Codes")}</th>
-              <th className="p-2.5 text-start">{s.t("col_accounts", "Purchase / Sales Accounts")}</th>
-              <th className="p-2.5 text-start">{s.t("col_goods", "Goods / Lot")}</th>
-              <th className="p-2.5 text-start">{s.t("col_qty", "Quantity Flow")}</th>
-              <th className="p-2.5 text-start">{s.t("p_gross_net", "Gross / Net")}</th>
-              <th className="p-2.5 text-start">{s.t("loading_summary", "Loading Summary")}</th>
-              <th className="p-2.5 text-start">{s.t("col_status", "Status")}</th>
-              <th className="w-10 p-2" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-            {loading && bills.length === 0 ? (
-              <tr><td colSpan={10} className="p-8 text-center text-slate-400"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
-            ) : bills.length === 0 ? (
-              <tr><td colSpan={10} className="p-8 text-center text-slate-400" data-testid="pjb-empty">{s.t("empty", "No Purchase Booking bills in your scope.")}</td></tr>
-            ) : bills.map((b) => (
-              <Fragment key={b.sourceId}>
-                <tr data-testid="pjb-bill" className="align-top hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                  <td className="p-2">
-                    <button type="button" data-testid="pjb-expand" aria-expanded={!!open[b.sourceId]} aria-label={s.t("expand", "Show entries")} onClick={() => setOpen((o) => ({ ...o, [b.sourceId]: !o[b.sourceId] }))}
-                      className="rounded border border-slate-300 p-0.5 dark:border-slate-600">
-                      {open[b.sourceId] ? <ChevronDown className="h-3.5 w-3.5" /> : s.isRtl ? <ChevronRight className="h-3.5 w-3.5 rotate-180" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                    </button>
-                  </td>
-                  <td className="p-2.5">
-                    <button type="button" onClick={() => setSerialBill(b)} title={s.t("serials_title", "Purchase Bill Serial Chain")} className="group text-start">
-                      <span className="block text-[10px] text-slate-500" dir="ltr">{day(b.date)}</span>
-                      <span className="font-mono font-black text-teal-900 underline decoration-dotted underline-offset-2 group-hover:text-teal-600 dark:text-teal-300" dir="ltr">{b.purchaseNo}</span>
-                      {b.manualNo ? <span className="block font-mono text-[9px] text-slate-400" dir="ltr">{b.manualNo}</span> : null}
-                    </button>
-                  </td>
-                  <td className="p-2.5" title={`${b.countryName} · ${b.branchName}`}>
-                    <span className="block font-mono text-[10px] font-black text-slate-900 dark:text-white" dir="ltr">{b.countryCode || "—"}</span>
-                    <span className="block font-mono text-[10px] text-slate-600 dark:text-slate-300" dir="ltr">{b.mainBranchCode}</span>
-                    <span className="block font-mono text-[10px] text-slate-500" dir="ltr">{b.cityBranchCode}</span>
-                  </td>
-                  <td className="relative p-2.5" dir="auto">
-                    <div className="group relative max-w-[220px] cursor-help">
-                      <span className="block truncate font-bold">{b.salesAccountName || b.supplierName || "—"}</span>
-                      <span className="block truncate font-mono text-[9px] text-slate-500" dir="ltr">{b.salesAccountNo}</span>
-                      <span className="mt-0.5 block text-[9px] font-black uppercase text-teal-700 dark:text-teal-300">{s.t("shipper_sales", "Shipper / Sales Account")}</span>
-                      <div className="pointer-events-none absolute start-0 top-full z-30 mt-1 hidden w-72 rounded-xl border border-slate-200 bg-white p-3 text-[10px] shadow-xl group-hover:block dark:border-slate-700 dark:bg-slate-900">
-                        <b className="block uppercase text-slate-500">{s.t("purchase_account", "Purchase Account")}</b><span>{b.purchaseAccountName}</span><span className="ms-1 font-mono" dir="ltr">{b.purchaseAccountNo}</span>
-                        <b className="mt-2 block uppercase text-slate-500">{s.t("shipper_sales", "Shipper / Sales Account")}</b><span>{b.salesAccountName}</span><span className="ms-1 font-mono" dir="ltr">{b.salesAccountNo}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-2.5" dir="auto">{b.goods.map((g) => <div key={`${g.name}-${g.unit}`} className="leading-tight"><span className="font-bold">{g.name}</span>{g.brand || g.size ? <span className="block text-[9px] text-slate-500">{[g.brand, g.size].filter(Boolean).join(" · ")}</span> : null}</div>)}</td>
-                  <td className="p-2.5" data-testid="pjb-progress">
-                    <div className="space-y-0.5 text-[10px]">
-                      <div className="flex justify-between gap-2"><span className="text-slate-500">{s.t("p_booked", "Booked")}</span><Qty q={b.booked} strong /></div>
-                      <div className="flex justify-between gap-2 text-amber-700 dark:text-amber-300"><span>{s.t("pr_loaded", "Loaded")}</span><Qty q={b.loaded} /></div>
-                      <div className="flex justify-between gap-2 text-rose-600 dark:text-rose-400"><span>{s.t("balance_qty", "Balance")}</span><Qty q={b.balance} /></div>
-                    </div>
-                  </td>
-                  <td className="p-2.5">
-                    <div className="rounded-lg bg-slate-50 p-1.5 text-[10px] dark:bg-slate-800" dir="ltr"><b>G {nq(b.gross)} kg</b><span className="block text-slate-500">N {nq(b.net)} kg</span></div>
-                  </td>
-                  <td className="p-2.5">
-                    <div className="space-y-0.5 text-[10px]" dir="ltr">
-                      <div><b>{s.t("pr_loaded", "Loaded")}</b> <Qty q={b.loaded} /></div>
-                      <div className="text-slate-500">G {kg(b.loadedGross)} · N {kg(b.loadedNet)}</div>
-                      <div className="text-sky-700 dark:text-sky-300">{b.entries.length} {s.t("pr_entries", "Entries")} · R <Qty q={b.received} /></div>
-                      <div className="text-emerald-700 dark:text-emerald-300">C <Qty q={b.confirmed} /></div>
-                    </div>
-                  </td>
-                  <td className="p-2"><span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[b.status]}`}>{statusLabel(b.status)}</span></td>
-                  <td className="p-2"><UniversalPrintActionButton variant="menu" reportConfig={billReport(b)} /></td>
-                </tr>
-                {open[b.sourceId] ? <tr><td colSpan={10} className="bg-slate-50/70 p-3 dark:bg-slate-950/40"><BillDetail s={s} b={b} modeLabel={modeLabel} receivingLabel={receivingLabel} confirmLabel={confirmLabel} /></td></tr> : null}
-              </Fragment>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* register: phone cards */}
-      <div className="space-y-2 md:hidden" data-testid="pjb-cards">
-        {loading && bills.length === 0 ? <Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-400" /> : null}
-        {!loading && bills.length === 0 ? <p className="text-center text-xs text-slate-400">{s.t("empty", "No Purchase Booking bills in your scope.")}</p> : null}
-        {bills.map((b) => (
-          <article key={b.sourceId} data-testid="pjb-bill-card" className="rounded-xl border border-slate-200 bg-white p-3 text-xs shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-start justify-between gap-2">
-              <button type="button" onClick={() => setSerialBill(b)} className="text-start"><div className="text-[10px] text-slate-500" dir="ltr">{day(b.date)}</div><div className="font-mono font-black text-teal-800 underline decoration-dotted" dir="ltr">{b.purchaseNo}</div><div className="font-mono text-[9px] text-slate-500" dir="ltr">{b.countryCode} · {b.mainBranchCode} · {b.cityBranchCode}</div></button>
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[b.status]}`}>{statusLabel(b.status)}</span>
-            </div>
-            <p className="mt-1 font-bold" dir="auto">{b.salesAccountName || b.supplierName}<span className="block text-[9px] font-normal text-slate-500">{b.goods.map((g) => g.name).join(", ")}</span></p>
-            <dl className="mt-2 grid grid-cols-2 gap-1 text-[10px]">
-              <div className="rounded-lg bg-blue-50 p-2 dark:bg-blue-950/30"><dt className="text-slate-500">{s.t("p_booked", "Booked")}</dt><dd><Qty q={b.booked} strong /></dd><dt className="mt-1 text-slate-500">{s.t("balance_qty", "Balance")}</dt><dd className="text-rose-600"><Qty q={b.balance} strong /></dd></div>
-              <div className="rounded-lg bg-amber-50 p-2 dark:bg-amber-950/30"><dt className="text-slate-500">{s.t("pr_loaded", "Loaded")}</dt><dd><Qty q={b.loaded} strong /></dd><dd className="mt-1 text-slate-500" dir="ltr">G {kg(b.loadedGross)} · N {kg(b.loadedNet)}</dd></div>
-              <div className="rounded-lg bg-slate-50 p-2 dark:bg-slate-800"><dt className="text-slate-500">{s.t("p_gross_net", "Gross / Net")}</dt><dd dir="ltr">G {kg(b.gross)} · N {kg(b.net)}</dd></div>
-              <div className="rounded-lg bg-emerald-50 p-2 dark:bg-emerald-950/30"><dt className="text-slate-500">{s.t("pr_entries", "Entries")} / {s.t("pr_confirmed", "Confirmed")}</dt><dd><b>{b.entries.length}</b> · <Qty q={b.confirmed} /></dd></div>
-            </dl>
-            <div className="mt-2 flex items-center justify-between">
-              <button type="button" onClick={() => setOpen((o) => ({ ...o, [b.sourceId]: !o[b.sourceId] }))} className="rounded-lg border border-slate-300 px-2 py-1 font-bold dark:border-slate-600">
-                {open[b.sourceId] ? s.t("collapse", "Hide entries") : s.t("expand", "Show entries")}
-              </button>
-              <UniversalPrintActionButton variant="menu" reportConfig={billReport(b)} />
-            </div>
-            {open[b.sourceId] ? <div className="mt-2"><BillDetail s={s} b={b} modeLabel={modeLabel} receivingLabel={receivingLabel} confirmLabel={confirmLabel} /></div> : null}
-          </article>
-        ))}
-      </div>
-
-      {/* paging */}
-      {data && data.pagination.totalPages > 1 ? (
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-500">{s.t("page_of", "Page {p} of {n}").replace("{p}", String(data.pagination.page)).replace("{n}", String(data.pagination.totalPages))} · {data.pagination.totalRecords} {s.t("p_bills", "Bills")}</span>
-          <span className="flex gap-1">
-            <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded border px-2 py-1 disabled:opacity-40 dark:border-slate-700">{s.t("prev", "Previous")}</button>
-            <button type="button" disabled={page >= data.pagination.totalPages} onClick={() => setPage((p) => p + 1)} className="rounded border px-2 py-1 disabled:opacity-40 dark:border-slate-700">{s.t("next", "Next")}</button>
-          </span>
+      {error ? (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-semibold text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
+          {error}
         </div>
       ) : null}
-      {serialBill ? <BillSerialDialog s={s} bill={serialBill} onClose={() => setSerialBill(null)} /> : null}
-    </div>
-  );
-}
 
-function BillDetail({ s, b, modeLabel, receivingLabel, confirmLabel }: {
-  s: ReturnType<typeof useErpScreen>; b: RegisterBill; modeLabel: (m: string) => string; receivingLabel: (r: EntryReceiving) => string; confirmLabel: (c: EntryConfirmation) => string;
-}) {
-  const kv = (label: string, value: React.ReactNode) => (
-    <div className="flex justify-between gap-2 border-b border-dotted border-slate-200 py-0.5 dark:border-slate-700"><span className="text-slate-500">{label}</span><span className="text-end font-semibold" dir="auto">{value || "—"}</span></div>
-  );
-  return (
-    <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,2.4fr)_minmax(0,1fr)]" data-testid="pjb-detail">
-      <section className="rounded-lg border border-slate-200 bg-white p-2.5 text-[11px] dark:border-slate-700 dark:bg-slate-900">
-        <h3 className="mb-1 text-[11px] font-black uppercase text-slate-500">{s.t("sec_overview", "Purchase Booking Bill Overview")}</h3>
-        {kv(s.t("col_purchase_no", "Purchase No"), <span dir="ltr">{b.purchaseNo}</span>)}
-        {kv(s.t("ov_manual_no", "Manual bill no"), b.manualNo)}
-        {kv(s.t("ov_booking_no", "Booking no"), <span dir="ltr">{b.bookingNo}</span>)}
-        {kv(s.t("col_date", "Date"), <span dir="ltr">{day(b.date)}</span>)}
-        {kv(s.t("col_supplier", "Supplier"), b.supplierName)}
-        {kv(s.t("ov_origin", "Origin"), b.origin)}
-        {kv(s.t("ov_booking_status", "Booking"), b.bookingStatus === "confirmed" ? s.t("ov_confirmed", "Confirmed") : s.t("st_draft", "Draft"))}
-        <table className="mt-2 w-full">
-          <thead><tr className="text-[10px] text-slate-500"><th className="text-start">{s.t("col_goods", "Goods / Lot")}</th><th className="text-end">{s.t("col_qty", "Quantity")}</th><th className="text-end">{s.t("col_gross", "Gross kg")}</th><th className="text-end">{s.t("col_net", "Net kg")}</th></tr></thead>
-          <tbody>{b.goods.map((g, i) => <tr key={i}><td dir="auto">{g.name} <span className="text-slate-500">{[g.brand, g.size].filter(Boolean).join(" ")}</span></td><td className="text-end tabular-nums" dir="ltr">{nq(g.booked)} {g.unit}</td><td className="text-end tabular-nums" dir="ltr">{nq(g.gross)}</td><td className="text-end tabular-nums" dir="ltr">{nq(g.net)}</td></tr>)}</tbody>
-        </table>
-      </section>
-
-      <section className="min-w-0 rounded-lg border border-slate-200 bg-white p-2.5 text-[11px] dark:border-slate-700 dark:bg-slate-900">
-        <h3 className="mb-1 text-[11px] font-black uppercase text-slate-500">{s.t("sec_entries", "Loading & receipt entries")}</h3>
-        {b.entries.length === 0 ? <p className="text-slate-400">{s.t("no_entries", "Nothing loaded yet - the whole booking is pending.")}</p> : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px]" data-testid="pjb-entries">
-              <thead className="text-[10px] uppercase text-slate-500">
-                <tr>
-                  <th className="p-1 text-start">{s.t("e_entry", "Entry")}</th><th className="p-1 text-start">{s.t("col_date", "Date")}</th><th className="p-1 text-start">{s.t("col_goods", "Goods / Lot")}</th>
-                  <th className="p-1 text-end">{s.t("col_qty", "Quantity")}</th><th className="p-1 text-end">{s.t("col_gross", "Gross kg")}</th><th className="p-1 text-end">{s.t("col_net", "Net kg")}</th>
-                  <th className="p-1 text-start">{s.t("e_truck", "Truck / Container")}</th><th className="p-1 text-start">BL</th><th className="p-1 text-start">{s.t("e_mode", "Mode")}</th>
-                  <th className="p-1 text-start">{s.t("e_from", "Loading (place · date)")}</th><th className="p-1 text-start">{s.t("e_to", "Receiving (place · date)")}</th>
-                  <th className="p-1 text-start">{s.t("e_receiving", "Receiving")}</th><th className="p-1 text-start">{s.t("e_confirmation", "Confirmation")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {b.entries.map((e: RegisterEntry) => (
-                  <tr key={e.loadingRecordId} data-testid="pjb-entry">
-                    <td className="p-1 font-mono font-bold" dir="ltr">{e.entryNo}<div className="text-[10px] font-normal text-slate-500">{e.loadingNo}</div></td>
-                    <td className="p-1" dir="ltr">{day(e.date)}</td>
-                    <td className="p-1" dir="auto">{e.goods}</td>
-                    <td className="p-1 text-end"><Qty q={e.loaded} strong />{Object.keys(e.received).length ? <div className="text-[10px] text-sky-700 dark:text-sky-300">{s.t("pr_received", "Received")} <Qty q={e.received} /></div> : null}</td>
-                    <td className="p-1 text-end tabular-nums" dir="ltr" title={e.weightRecorded ? "" : s.t("weight_derived", "derived from the booked weight of the same goods")}>{e.weightRecorded ? "" : "≈ "}{nq(e.gross)}</td>
-                    <td className="p-1 text-end tabular-nums" dir="ltr">{e.weightRecorded ? "" : "≈ "}{nq(e.net)}</td>
-                    <td className="p-1" dir="ltr">{e.truckOrContainer || "—"}</td>
-                    <td className="p-1" dir="ltr">{e.blNumber || "—"}</td>
-                    <td className="p-1">{modeLabel(e.transportMode)}</td>
-                    <td className="p-1" dir="auto">{e.loadingPlace || "—"}<div className="text-[10px] text-slate-500" dir="ltr">{day(e.departureDate)}</div></td>
-                    <td className="p-1" dir="auto">{e.receivingPlace || "—"}<div className="text-[10px] text-slate-500" dir="ltr">{day(e.receivedAt ?? e.arrivalDate)}{e.arrivalExpected && !e.receivedAt ? ` (${s.t("e_expected", "expected")})` : ""}</div></td>
-                    <td className="p-1">{receivingLabel(e.receiving)}</td>
-                    <td className="p-1">{confirmLabel(e.confirmation)}{Object.keys(e.confirmed).length ? <div className="text-[10px] text-emerald-700 dark:text-emerald-300"><Qty q={e.confirmed} /></div> : null}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Compact Side-by-Side Register Card */}
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/40 px-4 py-2.5 dark:border-slate-800 dark:from-slate-900 dark:to-slate-900">
+          <div className="flex items-center gap-2">
+            <Boxes className="h-4 w-4 text-blue-700 dark:text-blue-400" aria-hidden />
+            <h2 className="text-sm font-black text-slate-900 dark:text-white">
+              {s.t("jbs_table_title", "Journal Booking Stock (Purchase, Sales & Remaining)")}
+            </h2>
           </div>
-        )}
+          <span className="text-xs font-bold text-slate-500">
+            {pagination?.totalRecords ?? 0} {s.t("lbl_records", "records")}
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1380px] border-collapse text-xs" data-testid="jbs-side-by-side-table">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-100/90 text-[11px] font-black text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <th className="px-2.5 py-2 text-center">#</th>
+                <th className="px-2.5 py-2 text-start">{s.t("col_p_bill", "P. Bill No.")}</th>
+                <th className="px-2.5 py-2 text-start">{s.t("col_bl_no", "B/L No.")}</th>
+                <th className="px-2.5 py-2 text-start">{s.t("col_container_no", "Container No.")}</th>
+                <th className="px-2.5 py-2 text-start">{s.t("col_goods_name", "Goods Name")}</th>
+                <th className="px-2.5 py-2 text-start">{s.t("col_size", "Size")}</th>
+                <th className="px-2.5 py-2 text-start">{s.t("col_origin", "Origin")}</th>
+                <th className="bg-emerald-100/80 px-2.5 py-2 text-end text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300">
+                  {s.t("col_p_qty", "P Qty")}
+                </th>
+                <th className="bg-emerald-100/80 px-2.5 py-2 text-end text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300">
+                  {s.t("col_p_gross", "P Gross")}
+                </th>
+                <th className="bg-emerald-100/80 px-2.5 py-2 text-end text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300">
+                  {s.t("col_p_net", "P Net")}
+                </th>
+                <th className="bg-rose-100/70 px-2.5 py-2 text-start text-rose-900 dark:bg-rose-950/50 dark:text-rose-300">
+                  {s.t("col_s_bill", "S. Bill No.")}
+                </th>
+                <th className="bg-rose-100/70 px-2.5 py-2 text-end text-rose-900 dark:bg-rose-950/50 dark:text-rose-300">
+                  {s.t("col_s_qty", "S Qty")}
+                </th>
+                <th className="bg-rose-100/70 px-2.5 py-2 text-end text-rose-900 dark:bg-rose-950/50 dark:text-rose-300">
+                  {s.t("col_s_gross", "S Gross")}
+                </th>
+                <th className="bg-rose-100/70 px-2.5 py-2 text-end text-rose-900 dark:bg-rose-950/50 dark:text-rose-300">
+                  {s.t("col_s_net", "S Net")}
+                </th>
+                <th className="bg-blue-100/80 px-2.5 py-2 text-end text-blue-900 dark:bg-blue-950/50 dark:text-blue-300">
+                  {s.t("col_rem_qty", "Rem Qty")}
+                </th>
+                <th className="bg-blue-100/80 px-2.5 py-2 text-end text-blue-900 dark:bg-blue-950/50 dark:text-blue-300">
+                  {s.t("col_rem_gross", "Rem Gross")}
+                </th>
+                <th className="bg-blue-100/80 px-2.5 py-2 text-end text-blue-900 dark:bg-blue-950/50 dark:text-blue-300">
+                  {s.t("col_rem_net", "Rem Net")}
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {loading && rows.length === 0 ? (
+                <tr>
+                  <td colSpan={17} className="p-10 text-center text-slate-400">
+                    <Loader2 className="mx-auto h-5 w-5 animate-spin" />
+                  </td>
+                </tr>
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td colSpan={17} className="p-10 text-center font-medium text-slate-400" data-testid="jbs-empty">
+                    {s.t("empty_records", "No stock records match the selected filters in your authorized scope.")}
+                  </td>
+                </tr>
+              ) : (
+                rows.map((r, idx) => {
+                  const rowNum = startIdx + idx;
+                  const multiSales = r.salesItems.length > 1;
+                  const isOpen = Boolean(expandedRows[r.rowId]);
+                  return (
+                    <Fragment key={r.rowId}>
+                      <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
+                        <td className="px-2.5 py-2 text-center font-mono text-[11px] text-slate-500">{rowNum}</td>
+                        <td className="whitespace-nowrap px-2.5 py-2 font-mono font-bold text-slate-900 dark:text-white" dir="ltr">
+                          <div>{r.purchaseBillNo}</div>
+                          {r.lotName && r.lotName !== r.purchaseBillNo ? (
+                            <div className="text-[10px] font-semibold text-slate-400">{r.lotName}</div>
+                          ) : null}
+                        </td>
+                        <td className="whitespace-nowrap px-2.5 py-2 font-mono text-[11px] text-slate-700 dark:text-slate-300" dir="ltr">
+                          {r.blNo || "—"}
+                        </td>
+                        <td className="whitespace-nowrap px-2.5 py-2 font-mono text-[11px] text-slate-700 dark:text-slate-300" dir="ltr">
+                          {r.containerNo || "—"}
+                        </td>
+                        <td className="px-2.5 py-2 font-bold text-slate-900 dark:text-slate-100">
+                          <div>{r.goodsName}</div>
+                          {r.brand ? <div className="text-[10px] font-normal text-slate-400">{r.brand}</div> : null}
+                        </td>
+                        <td className="whitespace-nowrap px-2.5 py-2 text-[11px] text-slate-600 dark:text-slate-300">
+                          {r.size || "—"}
+                        </td>
+                        <td className="whitespace-nowrap px-2.5 py-2 text-[11px] text-slate-600 dark:text-slate-300">
+                          {r.origin || "—"}
+                        </td>
+                        <td className="whitespace-nowrap bg-emerald-50/35 px-2.5 py-2 text-end font-mono font-black text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-300" dir="ltr">
+                          {fmtQtyPlain(r.pQty, r.unit)}
+                        </td>
+                        <td className="whitespace-nowrap bg-emerald-50/35 px-2.5 py-2 text-end font-mono text-slate-800 dark:bg-emerald-950/20 dark:text-slate-200" dir="ltr">
+                          {fmtNum(r.pGrossKg)}
+                        </td>
+                        <td className="whitespace-nowrap bg-emerald-50/35 px-2.5 py-2 text-end font-mono text-slate-800 dark:bg-emerald-950/20 dark:text-slate-200" dir="ltr">
+                          {fmtNum(r.pNetKg)}
+                        </td>
+                        <td className="whitespace-nowrap bg-rose-50/35 px-2.5 py-2 font-mono font-bold text-slate-800 dark:bg-rose-950/20 dark:text-slate-200" dir="ltr">
+                          {multiSales ? (
+                            <button
+                              type="button"
+                              onClick={() => setExpandedRows((prev) => ({ ...prev, [r.rowId]: !prev[r.rowId] }))}
+                              className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-rose-200 bg-white px-2 py-0.5 text-[11px] font-black text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-300"
+                            >
+                              {isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                              <span>{r.salesBillDisplay}</span>
+                            </button>
+                          ) : (
+                            <span>{r.salesBillDisplay}</span>
+                          )}
+                        </td>
+                        <td className="whitespace-nowrap bg-rose-50/35 px-2.5 py-2 text-end font-mono font-black text-rose-700 dark:bg-rose-950/20 dark:text-rose-300" dir="ltr">
+                          {r.sQty > 0 ? fmtQtyPlain(r.sQty, r.unit) : "0"}
+                        </td>
+                        <td className="whitespace-nowrap bg-rose-50/35 px-2.5 py-2 text-end font-mono text-slate-800 dark:bg-rose-950/20 dark:text-slate-200" dir="ltr">
+                          {fmtNum(r.sGrossKg)}
+                        </td>
+                        <td className="whitespace-nowrap bg-rose-50/35 px-2.5 py-2 text-end font-mono text-slate-800 dark:bg-rose-950/20 dark:text-slate-200" dir="ltr">
+                          {fmtNum(r.sNetKg)}
+                        </td>
+                        <td
+                          className={`whitespace-nowrap bg-blue-50/35 px-2.5 py-2 text-end font-mono font-black dark:bg-blue-950/20 ${
+                            r.hasNegativeBalance ? "text-rose-600 dark:text-rose-400" : "text-blue-700 dark:text-blue-300"
+                          }`}
+                          dir="ltr"
+                        >
+                          {fmtQtyPlain(r.remQty, r.unit)}
+                        </td>
+                        <td
+                          className={`whitespace-nowrap bg-blue-50/35 px-2.5 py-2 text-end font-mono font-bold dark:bg-blue-950/20 ${
+                            r.remGrossKg < 0 ? "text-rose-600 dark:text-rose-400" : "text-blue-800 dark:text-blue-200"
+                          }`}
+                          dir="ltr"
+                        >
+                          {fmtNum(r.remGrossKg)}
+                        </td>
+                        <td
+                          className={`whitespace-nowrap bg-blue-50/35 px-2.5 py-2 text-end font-mono font-bold dark:bg-blue-950/20 ${
+                            r.remNetKg < 0 ? "text-rose-600 dark:text-rose-400" : "text-blue-800 dark:text-blue-200"
+                          }`}
+                          dir="ltr"
+                        >
+                          {fmtNum(r.remNetKg)}
+                        </td>
+                      </tr>
+
+                      {/* Multiple sales breakdown sub-rows (does NOT duplicate purchase or remaining totals) */}
+                      {multiSales && isOpen &&
+                        r.salesItems.map((si) => (
+                          <tr key={si.id} className="bg-rose-50/25 text-[11px] dark:bg-rose-950/15">
+                            <td colSpan={10} className="px-4 py-1.5 text-end font-semibold text-slate-500">
+                              {s.t("multi_sale_split", "Partial / Linked Sale")} ({si.date || "—"} · {si.accountName})
+                            </td>
+                            <td className="px-2.5 py-1.5 font-mono font-bold text-rose-700 dark:text-rose-300" dir="ltr">
+                              {si.salesBillNo}
+                            </td>
+                            <td className="px-2.5 py-1.5 text-end font-mono font-bold text-rose-700 dark:text-rose-300" dir="ltr">
+                              {fmtQtyPlain(si.qty, si.unit)}
+                            </td>
+                            <td className="px-2.5 py-1.5 text-end font-mono text-rose-700 dark:text-rose-300" dir="ltr">
+                              {fmtNum(si.grossKg)}
+                            </td>
+                            <td className="px-2.5 py-1.5 text-end font-mono text-rose-700 dark:text-rose-300" dir="ltr">
+                              {fmtNum(si.netKg)}
+                            </td>
+                            <td colSpan={3} className="px-2.5 py-1.5 text-center text-[10px] text-slate-400">
+                              —
+                            </td>
+                          </tr>
+                        ))}
+                    </Fragment>
+                  );
+                })
+              )}
+            </tbody>
+
+            {rows.length > 0 && (
+              <tfoot>
+                <tr className="border-t-2 border-amber-300 bg-amber-50/90 font-black text-slate-900 dark:border-amber-800 dark:bg-amber-950/35 dark:text-white">
+                  <td colSpan={7} className="px-3 py-2 text-center">
+                    {s.t("lbl_total", "Total")}
+                  </td>
+                  <td className="px-2.5 py-2 text-end font-mono text-emerald-800 dark:text-emerald-300" dir="ltr">
+                    {formatUnitQty(pageTotals.pQty)}
+                  </td>
+                  <td className="px-2.5 py-2 text-end font-mono text-emerald-900 dark:text-emerald-200" dir="ltr">
+                    {fmtNum(pageTotals.pGross)}
+                  </td>
+                  <td className="px-2.5 py-2 text-end font-mono text-emerald-900 dark:text-emerald-200" dir="ltr">
+                    {fmtNum(pageTotals.pNet)}
+                  </td>
+                  <td className="px-2.5 py-2 text-center text-slate-400">—</td>
+                  <td className="px-2.5 py-2 text-end font-mono text-rose-800 dark:text-rose-300" dir="ltr">
+                    {formatUnitQty(pageTotals.sQty)}
+                  </td>
+                  <td className="px-2.5 py-2 text-end font-mono text-rose-900 dark:text-rose-200" dir="ltr">
+                    {fmtNum(pageTotals.sGross)}
+                  </td>
+                  <td className="px-2.5 py-2 text-end font-mono text-rose-900 dark:text-rose-200" dir="ltr">
+                    {fmtNum(pageTotals.sNet)}
+                  </td>
+                  <td
+                    className={`px-2.5 py-2 text-end font-mono ${
+                      hasNegativeUnit(pageTotals.remQty) ? "text-rose-700 dark:text-rose-300" : "text-blue-800 dark:text-blue-300"
+                    }`}
+                    dir="ltr"
+                  >
+                    {formatUnitQty(pageTotals.remQty)}
+                  </td>
+                  <td
+                    className={`px-2.5 py-2 text-end font-mono ${
+                      pageTotals.remGross < 0 ? "text-rose-700 dark:text-rose-300" : "text-blue-900 dark:text-blue-200"
+                    }`}
+                    dir="ltr"
+                  >
+                    {fmtNum(pageTotals.remGross)}
+                  </td>
+                  <td
+                    className={`px-2.5 py-2 text-end font-mono ${
+                      pageTotals.remNet < 0 ? "text-rose-700 dark:text-rose-300" : "text-blue-900 dark:text-blue-200"
+                    }`}
+                    dir="ltr"
+                  >
+                    {fmtNum(pageTotals.remNet)}
+                  </td>
+                </tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
+
+        {/* Pagination Footer */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-4 py-2.5 text-xs text-slate-600 dark:border-slate-800 dark:text-slate-300">
+          <div>
+            {s.t("lbl_showing", "Showing")} <strong>{startIdx}</strong> {s.t("lbl_to", "to")} <strong>{endIdx}</strong>{" "}
+            {s.t("lbl_of", "of")} <strong>{pagination?.totalRecords ?? 0}</strong> {s.t("lbl_records", "records")}
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-1.5">
+              <span>{s.t("lbl_rows_per_page", "Rows per page:")}</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-bold dark:border-slate-700 dark:bg-slate-800"
+              >
+                {[25, 50, 100].map((sz) => (
+                  <option key={sz} value={sz}>
+                    {sz}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="rounded-md border border-slate-300 px-2.5 py-1 font-bold disabled:opacity-40 dark:border-slate-700"
+              >
+                ‹
+              </button>
+              <span className="rounded-md bg-blue-600 px-2.5 py-1 font-mono font-black text-white">{page}</span>
+              <button
+                type="button"
+                disabled={!pagination || page >= pagination.totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                className="rounded-md border border-slate-300 px-2.5 py-1 font-bold disabled:opacity-40 dark:border-slate-700"
+              >
+                ›
+              </button>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-2.5 text-[11px] dark:border-slate-700 dark:bg-slate-900" data-testid="pjb-invoice">
-        <h3 className="mb-1 text-[11px] font-black uppercase text-slate-500">{s.t("sec_invoice", "Invoice & amount (read-only)")}</h3>
-        {b.invoice ? (
-          <>
-            {kv(s.t("inv_no", "Linked invoice"), <span dir="ltr">{b.invoice.invoiceNo || b.invoiceNo}</span>)}
-            {kv(s.t("inv_currency", "Original currency"), <span dir="ltr">{b.invoice.currency}</span>)}
-            {kv(s.t("inv_rate", "Exchange rate"), <span dir="ltr">{b.invoice.exchangeRate ?? "—"}</span>)}
-            {kv(s.t("inv_purchase_amount", "Purchase invoice amount"), <span dir="ltr">{b.invoice.purchaseAmount == null ? "—" : `${nq(b.invoice.purchaseAmount)} ${b.invoice.currency}`}</span>)}
-            {kv(s.t("inv_final_amount", "Final invoice amount"), <span dir="ltr">{b.invoice.finalAmount == null ? "—" : `${nq(b.invoice.finalAmount)} ${b.invoice.finalCurrency}`}</span>)}
-            {kv(s.t("inv_status", "Invoice"), b.invoiceStatus === "posted" ? s.t("inv_posted", "Posted") : s.t("inv_unposted", "Not posted"))}
-          </>
-        ) : <p className="text-slate-400">—</p>}
-      </section>
+      <StockAdvancedSearchModal
+        open={searchModalOpen}
+        lang={s.lang}
+        value={filters}
+        options={data?.filterOptions ?? null}
+        onApply={(next) => {
+          setFilters(next);
+          setPage(1);
+        }}
+        onReset={(cleared) => {
+          setFilters(cleared);
+          setPage(1);
+        }}
+        onClose={() => setSearchModalOpen(false)}
+      />
     </div>
   );
 }
