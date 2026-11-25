@@ -25,6 +25,12 @@ const salesOrderPaymentPostSchema = z.object({
   salesWorkflowQueue: z.enum(["cash","account-transfer"]).optional(),
   linkedBalanceReceipt: z.literal(true).optional(),
   salesInvoiceId: uuidSchema.optional(),
+  receiptDetails: z.discriminatedUnion("channel", [
+    z.object({ channel: z.literal("cash"), partyName: z.string().trim().min(1).max(120),
+      mobile: z.string().trim().max(32).regex(/^[+\d\s().-]+$/).refine(v => v.replace(/\D/g, "").length >= 5),
+      idTail: z.string().trim().max(4).optional() }),
+    z.object({ channel: z.literal("bank"), bankId: uuidSchema, mode: z.string().trim().max(100).optional() }),
+  ]).optional(),
   entryDate: z.string(),
   amount: z.coerce.number().min(0.01),
   currencyCode: z.string(),
@@ -266,6 +272,35 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
 
     const orderRow = order as any;
     const form = orderRow.form_data?.form || {};
+    const receiptDetails = body.linkedBalanceReceipt ? body.receiptDetails : undefined;
+    let receiptBankId: string | null = null;
+    let receiptDetailSummary: string | null = null;
+    const cleanDetail = (value: string) => value.replace(/[|\r\n]/g, " ").trim();
+    if (body.linkedBalanceReceipt && (!receiptDetails ||
+        (body.salesWorkflowQueue === "cash" && receiptDetails.channel !== "cash") ||
+        (body.salesWorkflowQueue === "account-transfer" && receiptDetails.channel !== "bank"))) {
+      throw new ApiClientError("Enter the details for the selected Cash or Bank receipt.", { status: 422, code: "SALES_RECEIPT_DETAILS_REQUIRED" });
+    }
+    if (receiptDetails?.channel === "cash") {
+      receiptDetailSummary = `Cash | Receiver/Sender: ${cleanDetail(receiptDetails.partyName)} | Mobile: ${cleanDetail(receiptDetails.mobile)}` +
+        (receiptDetails.idTail ? ` | ID: •••• ${cleanDetail(receiptDetails.idTail)}` : "");
+    }
+    if (receiptDetails?.channel === "bank") {
+      // Take bank identity from the existing master, never from a client-supplied name or account number.
+      const bank = orderRow.country_id ? await withLocalPg(async sql => {
+        const rows = await sql`select id, bank_name, account_number, iban_number from public.banks
+          where id = ${receiptDetails.bankId}::uuid and country_id = ${orderRow.country_id}::uuid
+            and is_active = true and deleted_at is null limit 1`;
+        return rows[0] ?? null;
+      }) : null;
+      if (!bank || !String(bank.account_number || bank.iban_number || "").trim()) {
+        throw new ApiClientError("Select an active bank with an account number in the sales country.", { status: 409, code: "SALES_RECEIPT_BANK_MISMATCH" });
+      }
+      receiptBankId = bank.id;
+      const ending = String(bank.account_number || bank.iban_number).trim().slice(-4);
+      receiptDetailSummary = `Bank: ${cleanDetail(bank.bank_name)} | Bank Account: •••• ${cleanDetail(ending)}` +
+        (receiptDetails.mode ? ` | Transfer Type: ${cleanDetail(receiptDetails.mode)}` : "");
+    }
     const reviewedSettlement = orderRow.form_data?.transferTrace?.settlement;
     const reviewedReceipt = Boolean(body.linkedBalanceReceipt || body.salesWorkflowQueue || (body.kind === "credit" && reviewedSettlement));
     if (body.salesWorkflowQueue) {
@@ -336,6 +371,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     const goodsAuditRemark = buildSalesGoodsAuditRemark(orderRow, postingReferenceNo);
     const postingNarration = [
       goodsAuditRemark,
+      receiptDetailSummary,
       body.narration?.trim() ? "Notes: " + body.narration.trim() : null,
       trace.narrationPrefix,
       "Payment Currency: " + body.currencyCode,
@@ -471,7 +507,8 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
           country_branch_id = ${orderRow.country_branch_id || null}::uuid,
           city_branch_id = ${orderRow.city_branch_id || null}::uuid,
           type = ${rozType},
-          bank_id = coalesce(${(body.typeDetails as any)?.bankId || null}::uuid, bank_id),
+          bank_id = coalesce(${receiptBankId || (!body.linkedBalanceReceipt ? (body.typeDetails as any)?.bankId : null) || null}::uuid, bank_id),
+          entry_category = coalesce(${receiptDetails?.channel ?? null}, entry_category),
           -- a sales payment is a Business posting: never leave it unclassified (Shipping logins would see it)
           operational_domain = coalesce(operational_domain, 'business')
         where id = ${paymentRecord.roznamcha_entry_id}::uuid

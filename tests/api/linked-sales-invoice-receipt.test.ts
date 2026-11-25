@@ -28,6 +28,7 @@ const base = { id, ledger_posting_status: "posted", paid_amount: 0, remaining_am
 const send = (body: Record<string, unknown> = {}) => POST(new NextRequest(`http://test/api/erp/sales/orders/${id}/payments`, {
   method: "POST", headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ linkedBalanceReceipt: true, salesInvoiceId: invoice, entryDate: "2026-11-25", kind: "remaining",
+    receiptDetails: { channel: "cash", partyName: "QA Party", mobile: "+971 50 123 4567", idTail: "7890" },
     amount: 73.4, exchangeRate: 3.67, currencyCode: "AED", debitLedgerId: dr, creditLedgerId: cr, referenceNo: "T", ...body }),
 }), { params: Promise.resolve({ id }) });
 
@@ -97,6 +98,48 @@ it("posts a finalized Local Sales invoice through one balanced Roznamcha receipt
   expect(sqlCalls.find(([sql]) => sql.includes("from public.business_edit_invoices"))?.[1]).toContain("local_sales");
   const receiptCalls = sqlCalls.filter(([sql]) => sql.includes("select post_sales_booking_transfer"));
   expect(receiptCalls).toHaveLength(1);
+  expect(receiptCalls[0][1].at(-1)).toContain("Cash | Receiver/Sender: QA Party | Mobile: +971 50 123 4567 | ID: •••• 7890");
+  expect(sqlCalls.find(([sql]) => sql.includes("update roznamcha_entries"))?.[1]).toContain("cash");
   expect(receiptCalls[0][1].slice(1, 9)).toEqual([id, "remaining", "2026-11-25", 73.4, "AED", 1, dr, cr]);
   expect(sqlCalls.find(([sql]) => sql.includes("update public.sales_orders set paid_amount"))?.[1]).toEqual([20, 80, "partially_paid", id]);
+});
+
+it("requires channel details, preserves the Cash queue, and rejects a missing or foreign bank", async () => {
+  expect((await (await send({ receiptDetails: undefined })).json()).error.code).toBe("SALES_RECEIPT_DETAILS_REQUIRED");
+  const bankDetails = { channel: "bank", bankId: invoice };
+  expect((await (await send({ receiptDetails: bankDetails, salesWorkflowQueue: "cash" })).json()).error.code).toBe("SALES_RECEIPT_DETAILS_REQUIRED");
+  arrange({ order: { ...base, country_id: dr } as typeof base });
+  const bank = await send({ receiptDetails: bankDetails });
+  expect((await bank.json()).error.code).toBe("SALES_RECEIPT_BANK_MISMATCH");
+  const lookup = m.query.mock.calls.find(([sql]) => sql.includes("from public.banks"));
+  expect(lookup?.[0]).toMatch(/country_id = [\s\S]*is_active = true/);
+  expect(lookup?.[1]).toEqual([invoice, dr]);
+  expect(m.query.mock.calls.flat().join(" ")).not.toContain("select post_sales_booking_transfer");
+});
+
+it("records the selected Bank / Cheque master reference without copying the full account number into narration", async () => {
+  const order = { ...base, country_id: dr };
+  const voucher = { id: invoice, sales_order_id: id, roznamcha_entry_id: id, currency_code: "AED", amount: 73.4, status: "posted" };
+  m.query.mockImplementation(async (sql: string, values: unknown[]) => {
+    if (sql.includes("pg_try_advisory_xact_lock")) return [{ got: true }];
+    if (sql.includes("from ledgers")) return [{ id: values[0], currency: "AED", is_active: true }];
+    if (sql.includes("from sales_orders")) return [order];
+    if (sql.includes("from public.business_edit_invoices")) return [{ id: invoice }];
+    if (sql.includes("from public.banks")) return [{ id: invoice, bank_name: "QA Bank", account_number: "QA1200078834" }];
+    if (sql.includes("select post_sales_booking_transfer")) return [{ id: invoice }];
+    if (sql.includes("from roznamcha_lines")) return [
+      { ledger_id: dr, debit: 73.4, credit: 0 }, { ledger_id: cr, debit: 0, credit: 73.4 },
+    ];
+    if (sql.includes("from roznamcha_entries")) return [{ id, super_admin_serial_number: "T-01", country_transaction_serial_number: "T-AE-01", branch_transaction_serial_number: "T-DXB-01" }];
+    if (sql.includes("from sales_order_payments")) return [voucher];
+    return [];
+  });
+  const result = await send({ receiptDetails: { channel: "bank", bankId: invoice, mode: "Cheque" }, typeDetails: { paymentMethod: "bank" } });
+  expect(result.status).toBe(201);
+  const posting = m.query.mock.calls.find(([sql]) => sql.includes("select post_sales_booking_transfer"));
+  expect(posting?.[1].at(-1)).toContain("Bank: QA Bank | Bank Account: •••• 8834 | Transfer Type: Cheque");
+  expect(posting?.[1].at(-1)).not.toContain("QA1200078834");
+  const update = m.query.mock.calls.find(([sql]) => sql.includes("update roznamcha_entries"));
+  expect(update?.[1]).toContain(invoice);
+  expect(update?.[1]).toContain("bank");
 });

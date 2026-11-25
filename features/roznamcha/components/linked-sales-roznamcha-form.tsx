@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { BookOpen, Coins, FileText, Layers, MapPin, Pencil, Plus, RotateCcw, Save, Search, Target, User, X } from "lucide-react";
+import { BookOpen, Coins, FileText, Layers, MapPin, Pencil, Phone, CreditCard, Plus, RotateCcw, Save, Search, Target, User, X } from "lucide-react";
+import { TransferDetailsSection, type BankItem } from "./transfer-details-section";
 import { t } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -37,8 +38,8 @@ function Detail({ icon, title, entries }: { icon: ReactNode; title: string; entr
 
 type Props = {
   lang: SupportedLanguage;
-  bill: string; country: string; branch: string; city: string; currency: string; originalCurrency: string; paymentLabel: string;
-  party: string; mobile: string; approvedRate: number | null;
+  bill: string; country: string; branch: string; city: string; currency: string; originalCurrency: string;
+  party: string; approvedRate: number | null;
   approvedFinal: number | null; paidOriginal: number | null; remainingOriginal: number | null;
   accounts: { id: string; name: string; code: string; type: string; parent: string }[];
   ledgerId: string; reference: string; amount: string; date: string; remarks: string;
@@ -46,6 +47,15 @@ type Props = {
   onDate: (value: string) => void; onRemarks: (value: string) => void;
   onClear: () => void; onClose: () => void; onSave: (startNew: boolean) => void;
   disabled: boolean; busy: boolean; canSave: boolean; notice?: ReactNode;
+  countryId?: string;
+  method: "cash" | "bank";
+  methodLocked: boolean;
+  cash: { name: string; mobile: string; idDocument: string };
+  bank: { id: string; label: string; account: string; mode: string };
+  onMethod: (value: "cash" | "bank") => void;
+  onCash: (field: "name" | "mobile" | "idDocument", value: string) => void;
+  onBankRecord: (bank: BankItem | null, label?: string) => void;
+  onBankMode: (value: string) => void;
 };
 export function LinkedSalesRoznamchaForm(p: Props) {
   const h = (label: string) => translateHeader(p.lang, label);
@@ -71,8 +81,15 @@ export function LinkedSalesRoznamchaForm(p: Props) {
         <Step number={1} icon={<Layers className="h-4 w-4"/>} title={tr("cef.step1_setup", "Category & Entry Setup")}>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Field label={h("Category")}><Value value={h("Sales Payments")}/></Field>
-            <Field label={tr("cef.reference_voucher", "Reference / Voucher No.")}><input className={field} disabled={lock} aria-label={h("Receipt Reference")} maxLength={140} value={p.reference} onChange={e => p.onReference(e.target.value)}/></Field>
-            <Field label={tr("cef.entry_type", "Entry Type")}><Value value={p.paymentLabel}/></Field>
+            <Field label={tr("cef.reference_voucher", "Reference / Voucher No.")}>
+              {p.method === "bank" ? <Value value={p.reference}/> : <input className={field} disabled={lock} aria-label={h("Receipt Reference")} maxLength={140} value={p.reference} onChange={e => p.onReference(e.target.value)}/>}
+            </Field>
+            <Field label={tr("cef.entry_type", "Entry Type")}>
+              <select className={field} disabled={lock || p.methodLocked} value={p.method} onChange={e => p.onMethod(e.target.value === "bank" ? "bank" : "cash")}>
+                {(p.method === "cash" || !p.methodLocked) && <option value="cash">{h("Cash Roznamcha")}</option>}
+                {(p.method === "bank" || !p.methodLocked) && <option value="bank">{h("Bank")} / {tr("cef.opt_cheque", "Cheque")}</option>}
+              </select>
+            </Field>
             <Field label={h("Currency")}><Value value={p.currency}/></Field>
           </div>
         </Step>
@@ -81,11 +98,38 @@ export function LinkedSalesRoznamchaForm(p: Props) {
             <option value="">—</option>{p.accounts.map(x => <option key={x.id} value={x.id}>{x.code} · {x.name}</option>)}
           </select></Field>
         </Step>
-        <Step number={3} icon={<User className="h-4 w-4"/>} title={tr("rvp.party_details", "Party / Payee Details")}>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <Field label={tr("cef.party_name", "Party Name")}><Value value={p.party}/></Field>
-            <Field label={tr("cef.mobile_no", "Mobile No.")}><Value value={p.mobile}/></Field>
+        <Step number={3} icon={<User className="h-4 w-4"/>} title={p.method === "bank" ? tr("cj.mBankDetails", "Bank Details") : tr("rvp.party_details", "Party / Payee Details")}>
+          {p.method === "cash" ? (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <Field label={tr("cef.party_name", "Party Name")}>
+                <div className="relative"><User className="pointer-events-none absolute start-2 top-2 h-3.5 w-3.5 text-slate-400"/>
+                  <input className={`${field} ps-7`} disabled={lock} maxLength={120} required value={p.cash.name} onChange={e => p.onCash("name", e.target.value)} placeholder={tr("cef.enter_name_ph", "Enter name")}/>
+                </div>
+              </Field>
+              <Field label={tr("cef.mobile_no", "Mobile No.")}>
+                <div className="relative"><Phone className="pointer-events-none absolute start-2 top-2 h-3.5 w-3.5 text-slate-400"/>
+                  <input className={`${field} ps-7`} dir="ltr" inputMode="tel" disabled={lock} maxLength={32} required value={p.cash.mobile} onChange={e => p.onCash("mobile", e.target.value)}/>
+                </div>
+              </Field>
+              <Field label={tr("cef.download_id", "Download ID")}>
+                <div className="relative"><CreditCard className="pointer-events-none absolute start-2 top-2 h-3.5 w-3.5 text-slate-400"/>
+                  <input className={`${field} ps-7`} disabled={lock} maxLength={80} value={p.cash.idDocument} onChange={e => p.onCash("idDocument", e.target.value)} placeholder={tr("cef.enter_id_ph", "Enter ID (Optional)")}/>
+                </div>
+              </Field>
+            </div>
+          ) : (
+            <fieldset disabled={lock} className="min-w-0 space-y-2">
+              <TransferDetailsSection countryId={p.countryId} lang={p.lang} allowMasterChanges={false}
+                bankName={p.bank.label} onBankNameChange={() => undefined}
+                onBankRecordChange={(bank, label) => p.onBankRecord(bank, label)}
+                transferMode={p.bank.mode} onTransferModeChange={p.onBankMode}
+                transactionReference={p.reference} onTransactionReferenceChange={p.onReference}/>
+              <Field label={h("Bank Account")}><Value value={p.bank.account}/></Field>
+            </fieldset>
+          )}
+          <div className="mt-2 grid grid-cols-2 gap-2">
             <Field label={h("Sales No.")}><Value value={p.bill}/></Field>
+            <Field label={h("Customer Account")}><Value value={p.party}/></Field>
           </div>
         </Step>
         <Step number={4} icon={<Coins className="h-4 w-4"/>} title={tr("cef.amount_posting", "Amount & Posting")}>

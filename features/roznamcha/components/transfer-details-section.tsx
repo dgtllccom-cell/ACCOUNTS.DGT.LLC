@@ -21,12 +21,14 @@ export interface BankItem {
   full_address?: string | null;
   country_id?: string | null;
   is_active?: boolean;
+  account_number?: string | null;
+  iban?: string | null;
 }
 
 interface TransferDetailsSectionProps {
   bankName: string;
   onBankNameChange: (name: string) => void;
-  onBankRecordChange?: (bank: BankItem | null) => void;
+  onBankRecordChange?: (bank: BankItem | null, label?: string) => void;
   transferMode: string;
   onTransferModeChange: (mode: string) => void;
   transactionReference: string;
@@ -38,6 +40,7 @@ interface TransferDetailsSectionProps {
   extraBanks?: string[];
   className?: string;
   showAttachment?: boolean;
+  allowMasterChanges?: boolean;
   lang?: SupportedLanguage;
 }
 
@@ -55,6 +58,7 @@ export function TransferDetailsSection({
   extraBanks = [],
   className = "",
   showAttachment = false,
+  allowMasterChanges = true,
   lang = "en",
 }: TransferDetailsSectionProps) {
   // DB-loaded states
@@ -150,9 +154,11 @@ export function TransferDetailsSection({
 
     for (const b of banksList) {
       const trimmed = b.bank_name.trim();
-      if (trimmed && !seen.has(trimmed.toLowerCase())) {
-        seen.add(trimmed.toLowerCase());
-        list.push({ id: b.id, name: trimmed, record: b });
+      const key = allowMasterChanges ? trimmed.toLowerCase() : b.id;
+      if (trimmed && !seen.has(key)) {
+        seen.add(key);
+        const shortAccount = String(b.account_number || b.iban || "").slice(-4);
+        list.push({ id: b.id, name: allowMasterChanges || !shortAccount ? trimmed : `${trimmed} · •••• ${shortAccount}`, record: b });
       }
     }
 
@@ -164,12 +170,12 @@ export function TransferDetailsSection({
       }
     }
 
-    if (bankName && !seen.has(bankName.trim().toLowerCase())) {
+    if (allowMasterChanges && bankName && !seen.has(bankName.trim().toLowerCase())) {
       list.push({ name: bankName.trim() });
     }
 
     return list;
-  }, [banksList, extraBanks, bankName]);
+  }, [banksList, extraBanks, bankName, allowMasterChanges]);
 
   const modeOptions = useMemo(() => {
     const list: { id?: string; name: string; record?: TransferMode }[] = [];
@@ -452,7 +458,7 @@ export function TransferDetailsSection({
             <label className="text-[11px] font-bold text-slate-800 dark:text-slate-200 block">
               {t(lang, "td.bank_name", "Bank Name")}
             </label>
-            {activeBankRecord && (
+            {allowMasterChanges && activeBankRecord && (
               <button
                 type="button"
                 onClick={(e) => handleOpenEditBank(activeBankRecord, e)}
@@ -484,7 +490,7 @@ export function TransferDetailsSection({
               <div className="max-h-[215px] overflow-y-auto p-1.5 space-y-0.5">
                 {bankOptions.map((opt) => (
                   <div
-                    key={opt.name}
+                    key={opt.id ?? opt.name}
                     className={`w-full text-left px-2.5 py-1.5 text-xs rounded-lg transition flex items-center justify-between group ${
                       bankName === opt.name
                         ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold"
@@ -495,7 +501,7 @@ export function TransferDetailsSection({
                       type="button"
                       onClick={() => {
                         onBankNameChange(opt.name);
-                        onBankRecordChange?.(opt.record || null);
+                        onBankRecordChange?.(opt.record || null, opt.name);
                         setBankMenuOpen(false);
                         setShowNewBankForm(false);
                       }}
@@ -505,7 +511,7 @@ export function TransferDetailsSection({
                     </button>
 
                     <div className="flex items-center gap-1 shrink-0 ml-1">
-                      {opt.record && (
+                      {allowMasterChanges && opt.record && (
                         <button
                           type="button"
                           onClick={(e) => handleOpenEditBank(opt.record!, e)}
@@ -524,7 +530,7 @@ export function TransferDetailsSection({
               </div>
 
               {/* Add New Bank Name Trigger */}
-              {!showNewBankForm ? (
+              {allowMasterChanges && (!showNewBankForm ? (
                 <button
                   type="button"
                   onClick={() => setShowNewBankForm(true)}
@@ -586,7 +592,7 @@ export function TransferDetailsSection({
                     </button>
                   </div>
                 </div>
-              )}
+              ))}
             </div>
           )}
 
@@ -601,7 +607,7 @@ export function TransferDetailsSection({
             <label className="text-[11px] font-bold text-slate-800 dark:text-slate-200 block">
               {t(lang, "td.transfer_mode", "Transfer Mode")} <span className="text-red-500">*</span>
             </label>
-            {activeModeRecord && (
+            {allowMasterChanges && activeModeRecord && (
               <button
                 type="button"
                 onClick={(e) => handleOpenEditMode(activeModeRecord, e)}
@@ -633,7 +639,7 @@ export function TransferDetailsSection({
               <div className="max-h-[215px] overflow-y-auto p-1.5 space-y-0.5">
                 {modeOptions.map((opt) => (
                   <div
-                    key={opt.name}
+                    key={opt.id ?? opt.name}
                     className={`w-full text-left px-2.5 py-1.5 text-xs rounded-lg transition flex items-center justify-between group ${
                       transferMode === opt.name
                         ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold"
@@ -653,7 +659,7 @@ export function TransferDetailsSection({
                     </button>
 
                     <div className="flex items-center gap-1 shrink-0 ml-1">
-                      {opt.record && (
+                      {allowMasterChanges && opt.record && (
                         <button
                           type="button"
                           onClick={(e) => handleOpenEditMode(opt.record!, e)}
@@ -672,7 +678,7 @@ export function TransferDetailsSection({
               </div>
 
               {/* Add New Transfer Mode Trigger */}
-              {!showNewModeForm ? (
+              {allowMasterChanges && (!showNewModeForm ? (
                 <button
                   type="button"
                   onClick={() => setShowNewModeForm(true)}
@@ -734,7 +740,7 @@ export function TransferDetailsSection({
                     </button>
                   </div>
                 </div>
-              )}
+              ))}
             </div>
           )}
 
