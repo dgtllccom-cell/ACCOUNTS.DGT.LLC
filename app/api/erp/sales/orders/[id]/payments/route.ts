@@ -13,6 +13,7 @@ import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRo
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { getRequestLanguage } from "@/lib/i18n/server";
+import { t } from "@/lib/i18n/ui";
 import { getBookingCurrencies } from "@/lib/sales/booking-currencies";
 import { configuredSalesReceipt, salesReceiptBalances } from "@/lib/sales/payment-settlement";
 import { normalizeLegacySalesPaymentSources } from "@/lib/sales/legacy-payment-sources";
@@ -286,7 +287,8 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     const creditLedger = await withLocalPg((sql) => assertLedgerMatchesSalesScope(sql, body.creditLedgerId, orderRow, "Credit")) as any;
     const resolvedDebitLedgerId = debitLedger.id;
     const resolvedCreditLedgerId = creditLedger.id;
-    assertDistinctBookingLedgers(resolvedDebitLedgerId, resolvedCreditLedgerId, "Sales payment");
+    const postingLabel = t(session.preferredLanguage, "nav.sales_transfer_payment");
+    assertDistinctBookingLedgers(resolvedDebitLedgerId, resolvedCreditLedgerId, postingLabel);
 
     const customerLedgerIds = [orderRow.form_data?.transferTrace?.debitLedgerId,
       orderRow.customer_ledger_id, orderRow.customer_account_id, form.customerAccountLedgerId, form.customerAccountId]
@@ -454,14 +456,14 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       `;
 
       assertBalancedPostedLines({
-        label: "Sales payment", lines: journalLines, expectedDebitLedgerId: resolvedDebitLedgerId,
+        label: postingLabel, lines: journalLines, expectedDebitLedgerId: resolvedDebitLedgerId,
         expectedCreditLedgerId: resolvedCreditLedgerId, expectedAmount: postingAmount,
         expectedExchangeRate: postingRate,
       });
       if (configuredReceipt && journalLines.some((line: { currency?: string }) => line.currency?.toUpperCase() !== postingCurrency)) {
         throw new Error("The posted sales receipt does not use the booking's final currency.");
       }
-      assertPostedRoznamchaTrace({ label: "Sales payment", entry: journalRecord });
+      assertPostedRoznamchaTrace({ label: postingLabel, entry: journalRecord });
 
       const data = locked.form_data || {};
       const nextFormData = {

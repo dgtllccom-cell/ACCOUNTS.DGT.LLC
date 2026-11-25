@@ -31,9 +31,14 @@ describe("Existing Sales Payment Transfer register", () => {
     expect(screen.queryByText("DRAFT-001")).toBeNull();
     expect(apiGet).toHaveBeenCalledWith(expect.stringContaining("/api/erp/sales/orders?transferred=1"));
     expect(screen.getByRole("link", { name: "View" }).getAttribute("href")).toBe("/dashboard/sales/sales-order/view?id=order-1&transfer=1");
-    fireEvent.change(screen.getByRole("textbox", { name: "Search" }), { target: { value: "SB-0042" } });
-    fireEvent.click(screen.getByRole("button", { name: "Search" }));
-    await waitFor(() => expect(apiGet).toHaveBeenCalledWith(expect.stringContaining("q=SB-0042")));
+    expect(screen.queryByRole("textbox")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Advanced Search & Filter" }));
+    const popup = within(screen.getByRole("dialog"));
+    fireEvent.change(popup.getByRole("combobox", { name: "Search By" }), { target: { value: "booking" } });
+    fireEvent.change(popup.getByRole("textbox"), { target: { value: "SB-0042" } });
+    fireEvent.click(popup.getByRole("button", { name: "Apply Filters" }));
+    await waitFor(() => expect(apiGet).toHaveBeenCalledWith(expect.stringContaining("q=SB-0042&searchField=booking")));
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("uses the financial transfer detail lane and routes the remaining receipt to the existing journal", async () => {
@@ -65,17 +70,20 @@ describe("Existing Sales Payment Transfer register", () => {
   });
 
   it("keeps the register compact by stacking goods, quantity and weights without losing their values", async () => {
-    const goods = { goodsName: "Walnut kernels", brand: "Example Brand", lotNo: "LOT-42", qtyNo: 500, qtyName: "Boxes", grossWeight: 1200, netWeight: 1160 };
+    const goods = { goodsName: "Walnut kernels", brand: "Example Brand", lotName: "November batch", lotNo: "LOT-42", qtyNo: 500, qtyName: "Boxes", grossWeight: 1200, netWeight: 1160 };
     apiGet.mockResolvedValue({ salesOrders: [{ ...order, form_data: { ...order.form_data, goodsEntries: [goods] } }] });
     render(<SalesPaymentTransferRegister />);
     const table = within(await screen.findByRole("table"));
     expect(table.getAllByRole("columnheader")).toHaveLength(12);
     const row = within(table.getByRole("row", { name: /SB-0042/ }));
-    const goodsCell = row.getByRole("cell", { name: /Walnut kernels.*Example Brand.*LOT-42/ });
-    expect(within(goodsCell).getByText("LOT-42")).toBeTruthy();
+    const goodsCell = row.getByRole("cell", { name: /Walnut kernels.*Example Brand/ });
+    expect(within(goodsCell).queryByText("LOT-42")).toBeNull();
+    expect(row.getByRole("cell", { name: /November batch.*LOT-42/ })).toBeTruthy();
     const quantityCell = row.getByRole("cell", { name: /500.*Boxes/ });
     expect(within(quantityCell).getByText("500")).toBeTruthy();
     const weightCell = row.getByRole("cell", { name: /1,200 kg.*1,160 kg/ });
     expect(within(weightCell).getByText("1,160 kg")).toBeTruthy();
+    const transfer = within(row.getByRole("cell", { name: /Transfer OK.*CUST-1.*SALES-01/ }));
+    expect(transfer.getByRole("link", { name: "View" })).toBeTruthy();
   });
 });

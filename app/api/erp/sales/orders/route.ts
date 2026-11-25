@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { reserveForOrder } from "@/lib/sales/managed-lot-sales";
 import { z } from "zod";
-import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
+import { ApiClientError, apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { assertFinancialAccess } from "@/lib/permissions/middleware";
 import { isCountryLevelRole } from "@/lib/permissions/enterprise-roles";
@@ -209,16 +209,28 @@ export async function GET(request: NextRequest) {
     else await ensureTableExists();
     const countryLevel = transferredOnly && session.roles.some(isCountryLevelRole) && session.countryIds.length > 0;
     const rawTerm = params.get("q") ? String(params.get("q")).replace(/[%_]/g, "") : null;
+    const transferTerm = transferredOnly ? (rawTerm || "").replace(/\\/g, "").trim().slice(0, 120) : "";
+    const transferSearchField = params.get("searchField") || "all";
     const viaPg = await withLocalPg(async (sql) => {
       const cityIds = !session.isSuperAdmin ? session.cityBranchIds : [];
       const countryBranchIds = !session.isSuperAdmin ? session.countryBranchIds : [];
       const countryIds = !session.isSuperAdmin ? session.countryIds : [];
+      const term = `%${transferTerm}%`;
+      const byBooking = sql`(sales_order_no ilike ${term} or manual_reference_number ilike ${term} or super_admin_serial_number ilike ${term} or country_transaction_serial_number ilike ${term} or branch_transaction_serial_number ilike ${term})`;
+      const byTransfer = sql`(form_data #>> '{transferTrace,voucherNo}' ilike ${term} or form_data #>> '{transferTrace,referenceNo}' ilike ${term} or form_data #>> '{transferTrace,journalNo}' ilike ${term} or form_data #>> '{transferVerification,voucherNo}' ilike ${term} or form_data #>> '{workflow,referenceNo}' ilike ${term})`;
+      const byCustomer = sql`(customer_name ilike ${term} or customer_number ilike ${term} or account_number ilike ${term} or form_data #>> '{form,customerAccountName}' ilike ${term} or form_data #>> '{form,customerAccountNo}' ilike ${term})`;
+      const goods = sql`case when jsonb_typeof(form_data->'goodsEntries') = 'array' then form_data->'goodsEntries' else '[]'::jsonb end`;
+      const byGoods = sql`(product_summary ilike ${term} or form_data #>> '{form,goodsName}' ilike ${term} or exists (select 1 from jsonb_array_elements(${goods}) as item(value) where coalesce(item.value->>'goodsName', item.value->>'productName') ilike ${term}))`;
+      const byLot = sql`(form_data #>> '{form,stockLotNo}' ilike ${term} or form_data #>> '{form,allotName}' ilike ${term} or exists (select 1 from jsonb_array_elements(${goods}) as item(value) where item.value->>'lotName' ilike ${term} or item.value->>'lotNo' ilike ${term} or item.value->>'stockLotNo' ilike ${term} or item.value->>'lotRef' ilike ${term} or item.value->>'allotName' ilike ${term}))`;
+      const transferSearch = !transferTerm ? sql`true` : transferSearchField === "booking" ? byBooking : transferSearchField === "transfer" ? byTransfer
+        : transferSearchField === "customer" ? byCustomer : transferSearchField === "goods" ? byGoods : transferSearchField === "lot" ? byLot
+          : sql`(${byBooking} or ${byTransfer} or ${byCustomer} or ${byGoods} or ${byLot})`;
       return await sql`
         select *
         from public.sales_orders
         where deleted_at is null
           and (${transferredOnly ? sql`ledger_posting_status in ('posted', 'transferred')` : sql`true`})
-          and (${rawTerm ? sql`(
+          and (${transferredOnly ? transferSearch : rawTerm ? sql`(
                 sales_order_no ilike ${"%" + rawTerm + "%"}
                 or account_number ilike ${"%" + rawTerm + "%"}
                 or manual_reference_number ilike ${"%" + rawTerm + "%"}
@@ -281,6 +293,7 @@ export async function GET(request: NextRequest) {
       return apiOk({ salesOrders: resolved });
     }
 
+    if (transferTerm) throw new ApiClientError("Sales Transfer search is unavailable.", { status: 503, code: "TRANSFER_SEARCH_UNAVAILABLE" });
     const supabase = await createApiSupabaseClient();
     let query: any = supabase
       .from("sales_orders")
@@ -290,7 +303,7 @@ export async function GET(request: NextRequest) {
       .order("id", { ascending: false });
     if (transferredOnly) query = query.in("ledger_posting_status", ["posted", "transferred"]);
 
-    if (rawTerm) {
+    if (!transferredOnly && rawTerm) {
       query = query.or(`sales_order_no.ilike."%${rawTerm}%",account_number.ilike."%${rawTerm}%",manual_reference_number.ilike."%${rawTerm}%",customer_number.ilike."%${rawTerm}%",customer_name.ilike."%${rawTerm}%",super_admin_serial_number.ilike."%${rawTerm}%",country_transaction_serial_number.ilike."%${rawTerm}%",branch_transaction_serial_number.ilike."%${rawTerm}%"`);
     }
     if (cityBranchId) query = query.eq("city_branch_id", cityBranchId);

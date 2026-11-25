@@ -9,7 +9,7 @@ import { SalesLoadingEntry, type LoadingText } from "./sales-loading-entry";
 
 type ViewOrder = LoadingOrder & { readiness: string; canLoad?: boolean };
 type Payload = { orders: ViewOrder[]; records: LoadingRecord[]; nextOffset: number | null; canLoad: boolean; financials: boolean };
-type FilterState = { country: string; mainBranch: string; cityBranch: string; status: string };
+type FilterState = { query: string; country: string; mainBranch: string; cityBranch: string; status: string };
 const empty: Payload = { orders: [], records: [], nextOffset: null, canLoad: false, financials: false };
 const card = "rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-700 dark:bg-slate-900";
 const selectClass = "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950";
@@ -24,19 +24,19 @@ const entryNo = (r?: LoadingRecord) => r?.entry_no != null ? `LE-${String(r.entr
 const dateText = (d?: string | null) => d?.slice(0, 10) || "–";
 const dollar = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const number = (n?: number) => n == null ? "–" : n.toLocaleString(undefined, { maximumFractionDigits: 6 });
-const initialFilter = { country: "", mainBranch: "", cityBranch: "", status: "" };
+const initialFilter = { query: "", country: "", mainBranch: "", cityBranch: "", status: "" };
 const bookingName = (order: ViewOrder) => [order.bookingNo, order.customer].filter(Boolean).join(" · ");
 
 export function SalesLoadingView({ initialOrderId = "", initialAction = "", initialReport = "" }: { initialOrderId?: string; initialAction?: string; initialReport?: string }) {
   const lang = useActiveLanguage();
   const dir = ["ur", "ar", "fa", "ps"].includes(lang) ? "rtl" : "ltr";
   const tt: LoadingText = (key, fallback) => t(lang, key as never, fallback);
+  const searchLabel = tt("nav.search_and_filter", "Search & Filter");
   const statusLabel = (status: LoadingStatus) => tt(statusKeys[status][0], statusKeys[status][1]);
   const [data, setData] = useState(empty);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
   const [notice, setNotice] = useState(false);
-  const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterState>({ ...initialFilter, status: initialReport === "confirmed" ? "loaded" : "" });
   const [filterDraft, setFilterDraft] = useState(filter);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -99,7 +99,7 @@ export function SalesLoadingView({ initialOrderId = "", initialAction = "", init
   const countryChoices = [...new Map(orders.filter(({ order }) => order.countryId).map(({ order }) => [order.countryId, order.country || order.countryId])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
   const mainChoices = [...new Map(orders.filter(({ order }) => order.mainBranchId && (!filterDraft.country || order.countryId === filterDraft.country)).map(({ order }) => [order.mainBranchId, order.mainBranch || order.mainBranchId])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
   const cityChoices = [...new Map(orders.filter(({ order }) => order.cityBranchId && (!filterDraft.country || order.countryId === filterDraft.country) && (!filterDraft.mainBranch || order.mainBranchId === filterDraft.mainBranch)).map(({ order }) => [order.cityBranchId, order.cityBranch || order.cityBranchId])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
-  const term = query.trim().toLowerCase();
+  const term = filter.query.trim().toLowerCase();
   const visible = orders.filter(({ order, records, status }) => (!filter.country || filter.country === order.countryId) && (!filter.mainBranch || filter.mainBranch === order.mainBranchId) && (!filter.cityBranch || filter.cityBranch === order.cityBranchId) && (!filter.status || filter.status === status)
     && (!term || [order.bookingNo, order.contractNo, order.customer, order.vessel, order.bl, ...order.goods.flatMap(g => [g.goods, g.lot]), ...records.flatMap(r => [r.container_number, entryNo(r), r.details.bl, r.details.vessel])].some(v => v?.toLowerCase().includes(term))));
   const totals = new Map<string, { loading: number; received: number }>();
@@ -135,8 +135,7 @@ export function SalesLoadingView({ initialOrderId = "", initialAction = "", init
       <div className="relative"><button type="button" className={blue} onClick={() => setReportsOpen(v => !v)} aria-expanded={reportsOpen}><FileText className="h-4 w-4"/>{tt("sales_loading.reports", "Reports")}</button>
         {reportsOpen && <div className="absolute end-0 z-20 mt-1 w-44 rounded-lg border bg-white p-1 text-sm shadow-lg dark:border-slate-700 dark:bg-slate-950"><button type="button" onClick={() => { setReportsOpen(false); window.print(); }} className="w-full rounded-md p-2 text-start hover:bg-slate-100 dark:hover:bg-slate-800">{tt("sales_loading.print", "Print Register")}</button><button type="button" onClick={() => { setFilter(f => ({ ...f, status: "loaded" })); setReportsOpen(false); }} className="w-full rounded-md p-2 text-start hover:bg-slate-100 dark:hover:bg-slate-800">{tt("sales_loading.confirmed", "Confirmed Sales Loading")}</button></div>}
       </div>
-      <label className={`${btn} gap-2 font-normal`}><Search className="h-4 w-4 text-slate-500"/><input aria-label={tt("sales_loading.search", "Search bill, customer, goods…")} value={query} onChange={e => setQuery(e.target.value)} placeholder={tt("sales_loading.search", "Search bill, customer, goods…")} className="min-w-24 bg-transparent outline-none"/></label>
-      <button type="button" className={blue} onClick={() => { setFilterDraft(filter); setFilterOpen(true); }}><Filter className="h-4 w-4"/>{tt("sales_loading.filter", "Advanced Search & Filter")}</button>
+      <button type="button" className={blue} aria-haspopup="dialog" aria-expanded={filterOpen} onClick={() => { setFilterDraft(filter); setFilterOpen(true); }}><Filter className="h-4 w-4"/>{searchLabel}</button>
       <button type="button" onClick={() => void refresh()} className={btn} aria-label={tt("sales_loading.refresh", "Refresh")}><RefreshCw className="h-4 w-4"/></button>
       {data.canLoad && <button type="button" className={green} disabled={isLoading} onClick={() => { setPicked(""); setPicker(true); }}><Plus className="h-4 w-4"/>{tt("sales_loading.new", "New Loading")}</button>}
     </div>
@@ -179,7 +178,8 @@ export function SalesLoadingView({ initialOrderId = "", initialAction = "", init
         }))}
       </tbody></table></div>
     </section>
-    {filterOpen && <Dialog title={tt("sales_loading.filter", "Advanced Search & Filter")} onClose={() => setFilterOpen(false)} tt={tt}><form className="space-y-3" onSubmit={event => { event.preventDefault(); setFilter(filterDraft); setFilterOpen(false); }}>
+    {filterOpen && <Dialog title={searchLabel} onClose={() => setFilterOpen(false)} tt={tt}><form className="space-y-3" onSubmit={event => { event.preventDefault(); setFilter(filterDraft); setFilterOpen(false); }}>
+      <label className="relative block"><Search aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-3 my-auto h-4 w-4 text-slate-500"/><input type="search" autoFocus aria-label={tt("sales_loading.search", "Search bill, customer, goods…")} value={filterDraft.query} onChange={e => setFilterDraft(f => ({ ...f, query: e.target.value }))} placeholder={tt("sales_loading.search", "Search bill, customer, goods…")} className={`${selectClass} w-full ps-9`}/></label>
       <label className="grid gap-1 text-sm">{tt("sales_loading.country", "Country")}<select className={selectClass} value={filterDraft.country} onChange={e => setFilterDraft(f => ({ ...f, country: e.target.value, mainBranch: "", cityBranch: "" }))}><option value="">{tt("sales_loading.all", "All")}</option>{countryChoices.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>
       <label className="grid gap-1 text-sm">{tt("sales_loading.main_branch", "Main Branch")}<select className={selectClass} value={filterDraft.mainBranch} onChange={e => setFilterDraft(f => ({ ...f, mainBranch: e.target.value, cityBranch: "" }))}><option value="">{tt("sales_loading.all", "All")}</option>{mainChoices.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>
       <label className="grid gap-1 text-sm">{tt("sales_loading.city_branch", "City Branch")}<select className={selectClass} value={filterDraft.cityBranch} onChange={e => setFilterDraft(f => ({ ...f, cityBranch: e.target.value }))}><option value="">{tt("sales_loading.all", "All")}</option>{cityChoices.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>

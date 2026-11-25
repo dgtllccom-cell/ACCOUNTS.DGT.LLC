@@ -46,3 +46,37 @@ it("opens the Purchase-style sales form from the row and saves a container with 
   expect(JSON.parse(String(post?.[1]?.body))).toMatchObject({ orderId: order.id, containers: [{ containerNumber: "QA123456789", items: [{ line: 0, quantity: 200, gross: 5000, net: 4900 }] }] });
   expect(await screen.findByText("Sales Loading saved")).toBeTruthy();
 });
+
+it("keeps search and scoped filters in one popup, applies them together, and clears them together", async () => {
+  const otherOrder = { ...order, id: "eb6072b8-4d29-43a1-a3f0-be89f08953aa", bookingNo: "SB-QA-060", customer: "Another Buyer", countryId: "pk", country: "Pakistan", mainBranchId: "branch-pk", mainBranch: "Pakistan Main", cityBranchId: "branch-pk-city", cityBranch: "Chaman" };
+  const scopedOrder = { ...order, mainBranchId: "branch-ae", mainBranch: "UAE Main", cityBranchId: "branch-ae-city", cityBranch: "Dubai" };
+  const fetchData = vi.fn(async () => response({ ...getData(true), orders: [scopedOrder, otherOrder] }));
+  vi.stubGlobal("fetch", fetchData);
+  render(<SalesLoadingView/>);
+  await screen.findByText(order.bookingNo);
+  expect(screen.queryByRole("searchbox")).toBeNull();
+  const open = screen.getByRole("button", { name: "Search & Filter" });
+  fireEvent.click(open);
+  let popup = within(screen.getByRole("dialog", { name: "Search & Filter" }));
+  fireEvent.change(popup.getByRole("searchbox"), { target: { value: "Sample Buyer" } });
+  fireEvent.change(popup.getByRole("combobox", { name: "Country" }), { target: { value: "ae" } });
+  expect(popup.queryByRole("option", { name: "Pakistan Main" })).toBeNull();
+  fireEvent.change(popup.getByRole("combobox", { name: "Main Branch" }), { target: { value: "branch-ae" } });
+  fireEvent.change(popup.getByRole("combobox", { name: "City Branch" }), { target: { value: "branch-ae-city" } });
+  fireEvent.change(popup.getByRole("combobox", { name: "Loading Status" }), { target: { value: "pending" } });
+  expect(screen.getByText(otherOrder.bookingNo)).toBeTruthy();
+  fireEvent.click(popup.getByRole("button", { name: "Apply Filters" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(screen.getByText(order.bookingNo)).toBeTruthy();
+  expect(screen.queryByText(otherOrder.bookingNo)).toBeNull();
+
+  fireEvent.click(open);
+  popup = within(screen.getByRole("dialog", { name: "Search & Filter" }));
+  expect((popup.getByRole("searchbox") as HTMLInputElement).value).toBe("Sample Buyer");
+  fireEvent.click(popup.getByRole("button", { name: "Reset" }));
+  expect((popup.getByRole("searchbox") as HTMLInputElement).value).toBe("");
+  expect(popup.getAllByRole("combobox").every(select => !(select as HTMLSelectElement).value)).toBe(true);
+  fireEvent.click(popup.getByRole("button", { name: "Apply Filters" }));
+  expect(screen.getByText(otherOrder.bookingNo)).toBeTruthy();
+  expect(fetchData).toHaveBeenCalledTimes(1);
+});
