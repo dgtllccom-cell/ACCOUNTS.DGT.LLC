@@ -115,7 +115,7 @@ function salesOrdersToPayRows(list: SalesOrder[]): PayRow[] {
   });
 }
 
-export function SalesOrderManagementDashboard({ initialStage, transferOnly = false }: { initialStage?: string; transferOnly?: boolean }) {
+export function SalesOrderManagementDashboard({ initialStage, transferOnly = false, localTransfer = false }: { initialStage?: string; transferOnly?: boolean; localTransfer?: boolean }) {
   const activeLang = useActiveLanguage();
   const router = useRouter();
   const scope = useErpScope();
@@ -138,7 +138,7 @@ export function SalesOrderManagementDashboard({ initialStage, transferOnly = fal
   const localized = (order: SalesOrder, field: string, fallback: string) =>
     resolveVerifiedTranslation(order.translations?.[field], activeLang) || fallback || translationPendingLabel(activeLang);
   const tr = (label: string) => translateHeader(activeLang, label);
-  const pageTitle = transferOnly ? t(activeLang, "nav.sales_transfer_payment", "Sales Transfer Payment")
+  const pageTitle = localTransfer ? tr("Local Sales Transfer Payment") : transferOnly ? t(activeLang, "nav.sales_transfer_payment", "Sales Transfer Payment")
     : t(activeLang, "nav.sales_order_management", "Sales Order Management");
   const scopeOptions = (key: string, value: (row: SalesOrder) => unknown, label: (row: SalesOrder) => unknown) => {
     if (transferFacets) return transferFacets.filter(facet => facet.field === key)
@@ -177,6 +177,7 @@ export function SalesOrderManagementDashboard({ initialStage, transferOnly = fal
     if (search.trim()) qp.set("q", search.trim());
     if (transferOnly) {
       qp.set("transferred", "1");
+      if (localTransfer) qp.set("source", "local");
       qp.set("lang", activeLang);
       for (const [key, value] of Object.entries(transferFilters)) {
         if (!value) continue;
@@ -229,16 +230,16 @@ export function SalesOrderManagementDashboard({ initialStage, transferOnly = fal
   useEffect(() => {
     loadOrders().catch(() => null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, transferFilters, transferOnly]);
+  }, [search, transferFilters, transferOnly, localTransfer]);
 
   useEffect(() => {
     if (!transferOnly || !filtersOpen || transferFacets !== null) return;
     let active = true;
-    apiGet<{ facets?: SearchFacet[] }>("/api/erp/sales/orders?transferred=1&facets=1")
+    apiGet<{ facets?: SearchFacet[] }>(`/api/erp/sales/orders?transferred=1&facets=1${localTransfer ? "&source=local" : ""}`)
       .then(res => { if (active && Array.isArray(res.facets)) setTransferFacets(res.facets); })
       .catch(console.error);
     return () => { active = false; };
-  }, [filtersOpen, transferOnly, transferFacets]);
+  }, [filtersOpen, transferOnly, transferFacets, localTransfer]);
 
   useEffect(() => {
     if (initialStage === "booking") {
@@ -437,7 +438,7 @@ export function SalesOrderManagementDashboard({ initialStage, transferOnly = fal
         orientation="landscape"
       />
       <Button
-        onClick={() => router.push("/dashboard/sales/new-sales-booking-order")}
+        onClick={() => router.push(localTransfer ? "/dashboard/sales/new-sales-booking-order?source=local&mode=new" : "/dashboard/sales/new-sales-booking-order")}
         className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 rounded-lg shadow-md shadow-blue-100"
       >
         + {t(activeLang, "sales.sodash_create_booking", "Create Booking")}
@@ -668,7 +669,7 @@ export function SalesOrderManagementDashboard({ initialStage, transferOnly = fal
                       {/* Actions */}
                       <td className="px-3 py-2.5 text-center">
                         <div className="inline-flex items-center justify-center gap-2">
-                          {transferOnly ? <Button onClick={() => router.push(`/dashboard/sales/sales-order/view?id=${encodeURIComponent(order.id)}&transfer=1`)}
+                          {transferOnly ? <Button onClick={() => router.push(`/dashboard/sales/sales-order/view?id=${encodeURIComponent(order.id)}&transfer=1${localTransfer ? "&source=local" : ""}`)}
                             type="button" variant="outline" size="sm" aria-label={tr("View")} title={tr("View")}>
                             <Eye className="h-3.5 w-3.5" />
                           </Button> : <>

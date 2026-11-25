@@ -3,6 +3,7 @@ import { reserveForOrder } from "@/lib/sales/managed-lot-sales";
 import { z } from "zod";
 import { ApiClientError, apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { sqlLocalSalesSource } from "@/lib/sales/local-sales-source";
 import { assertFinancialAccess } from "@/lib/permissions/middleware";
 import { isCountryLevelRole } from "@/lib/permissions/enterprise-roles";
 import { assertBusinessCityBranch } from "@/lib/api/branch-scope-guard";
@@ -290,6 +291,7 @@ async function listTransferredSalesOrders(request: NextRequest) {
   try {
     const session = await requireErpSession();
     const params = request.nextUrl.searchParams;
+    const localSale = params.get("source") === "local";
     const countryId = params.get("countryId");
     const countryBranchId = params.get("countryBranchId");
     const cityBranchId = params.get("cityBranchId");
@@ -356,6 +358,7 @@ async function listTransferredSalesOrders(request: NextRequest) {
           select country_id, country_branch_id, city_branch_id, currency_code, payment_status, form_data->'form' as form
           from public.sales_orders
           where deleted_at is null and ledger_posting_status in ('posted','transferred')
+            and (${localSale ? sqlLocalSalesSource(sql, sql`form_data`) : sql`true`})
             and (${scopePredicate(sql)})
             and (${countryId ? sql`country_id = ${countryId}::uuid` : sql`true`})
             and (${countryBranchId ? sql`country_branch_id = ${countryBranchId}::uuid` : sql`true`})
@@ -400,6 +403,7 @@ async function listTransferredSalesOrders(request: NextRequest) {
         from public.sales_orders
         where deleted_at is null
           and ledger_posting_status in ('posted', 'transferred')
+          and (${localSale ? sqlLocalSalesSource(sql, sql`form_data`) : sql`true`})
           and (${transferSearch})
           and (${goodsFilter ? sql`(product_summary ilike ${"%" + goodsFilter + "%"} or form_data #>> '{form,goodsName}' ilike ${"%" + goodsFilter + "%"}
             or exists (select 1 from jsonb_array_elements(${goods}) as item(value) where coalesce(item.value->>'goodsName', item.value->>'productName') ilike ${"%" + goodsFilter + "%"}))` : sql`true`})

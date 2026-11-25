@@ -12,10 +12,10 @@ import { isClearingMenu, clearingMenuAllowsPath } from "@/lib/permissions/cleari
  * - "Need Help?" support card with "Get Support" button
  * - "<< Collapse Menu" footer
  */
-import { useEffect, useMemo, useState, useRef, type ComponentType } from "react";
+import { Suspense, useEffect, useMemo, useState, useRef, type ComponentType } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   ArrowRightLeft,
   Award,
@@ -144,6 +144,11 @@ export type SidebarMenuItem = {
 // config is looked up at render time via tr()/translateHeader(); this wrapper only
 // exists so the i18n guard recognizes each label as translated, not hardcoded.
 const nt = (s: string) => s;
+const SALES_ORDER_PATH = "/dashboard/sales/sales-order";
+const SALES_TRANSFER_REGISTER_HREF = `${SALES_ORDER_PATH}?transfer=1`;
+const LOCAL_SALES_TRANSFER_REGISTER_HREF = `${SALES_TRANSFER_REGISTER_HREF}&source=local`;
+const SALES_LOADING_PATH = "/dashboard/sales/sales-loading";
+const LOCAL_SALES_LOADING_HREF = `${SALES_LOADING_PATH}?source=local`;
 
 export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
   {
@@ -293,16 +298,10 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: ClipboardList,
         children: [
           { label: nt("New Sales Booking Order"), href: "/dashboard/sales/new-sales-booking-order", icon: ClipboardList },
+          { label: nt("Sales Transfer Payment"), href: SALES_TRANSFER_REGISTER_HREF, icon: ArrowRightLeft },
+          { label: nt("Sales Loading"), href: "/dashboard/sales/sales-loading", icon: Truck },
           { label: nt("Confirmed Sales Orders"), href: "/dashboard/sales/sales-confirm", icon: CheckSquare },
           { label: nt("Sales Booking Journal Report"), href: "/dashboard/sales/sales-booking-journal-report", icon: FileBarChart },
-        ],
-      },
-      {
-        key: "sub-sales-loading",
-        label: nt("Sales Loading"),
-        icon: Truck,
-        children: [
-          { label: nt("Sales Loading Register"), href: "/dashboard/sales/sales-loading", icon: ClipboardList },
         ],
       },
       {
@@ -311,6 +310,8 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: TrendingUp,
         children: [
           { label: nt("Local Sales Order"), href: "/dashboard/sales/local-sales", icon: ShoppingCart },
+          { label: nt("Local Sales Transfer Payment"), href: LOCAL_SALES_TRANSFER_REGISTER_HREF, icon: ArrowRightLeft },
+          { label: nt("Local Sales Loading"), href: LOCAL_SALES_LOADING_HREF, icon: Truck },
           { label: nt("Sales Order & Payment Transfer"), href: "/dashboard/sales/sales-order", icon: Receipt },
         ],
       },
@@ -745,6 +746,15 @@ function isPathActive(href: string | undefined, currentPath: string): boolean {
   if (!href) return false;
   const cleanHref = href.split("?")[0].replace(/\/$/, "");
   const cleanPath = currentPath.split("?")[0].replace(/\/$/, "");
+  // The opt-in transfer register and legacy Sales Order Management share a
+  // pathname, but only one may be highlighted, including from their reports.
+  const matched = (cleanPath === cleanHref || cleanPath.startsWith(cleanHref + "/"));
+  if ((cleanHref === SALES_ORDER_PATH || cleanHref === SALES_LOADING_PATH) && matched) {
+    const link = new URLSearchParams(href.split("?")[1]);
+    const current = new URLSearchParams(currentPath.split("?")[1]);
+    return (link.get("transfer") === "1") === (current.get("transfer") === "1")
+      && (link.get("source") === "local") === (current.get("source") === "local");
+  }
   if (cleanPath === cleanHref) return true;
   if (cleanHref === "/dashboard" && (cleanPath === "/dashboard/super-admin" || cleanPath === "/dashboard/country" || cleanPath === "/dashboard/branch")) return true;
   if (cleanHref !== "/dashboard" && cleanPath.startsWith(cleanHref + "/")) return true;
@@ -864,6 +874,13 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
     const roleOk = !r || r.length === 0 || isSuper || r.some((x) => menuRoles.has(x));
     if (!roleOk) return false;
 
+    // The opt-in register has a financial/data-read requirement even when
+    // the existing Sales Order Management route can be opened without it.
+    if ((it.href === SALES_TRANSFER_REGISTER_HREF || it.href === LOCAL_SALES_TRANSFER_REGISTER_HREF) && !userRoles.has("super_admin")) {
+      if (domainShippingOnly || isShippingOnly || shippingContext?.canViewFinancials !== true) return false;
+      if (!["sales:read", "sales:*", "*:*"].some(permission => userPermissions.has(permission))) return false;
+    }
+
     // Super Admin sees all role-permitted entries
     if (isSuper) return true;
 
@@ -872,7 +889,6 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
 
     const rawHref = it.href;
     const cleanHref = rawHref.split("?")[0];
-
     if (isClearingMenu({ permissions: [...userPermissions] }) && !clearingMenuAllowsPath(cleanHref)) return false;
 
     // Default home dashboard is always visible
@@ -1073,7 +1089,7 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
     .filter((it) => it.children === undefined || (it as any).href || (it.children as any[]).length > 0) as T[];
 }
 
-export function DigitalDockPremiumSidebar({
+function DigitalDockPremiumSidebarContent({
   onNavigate,
   onToggleCollapse,
   brandTitle,
@@ -1085,10 +1101,16 @@ export function DigitalDockPremiumSidebar({
   canViewFinancials,
 }: DigitalDockPremiumSidebarProps = {}) {
   const pathname = usePathname() ?? "";
+  const searchParams = useSearchParams();
+  const salesOrderPath = pathname === SALES_ORDER_PATH || pathname.startsWith(SALES_ORDER_PATH + "/");
+  const transferMode = salesOrderPath && searchParams?.get("transfer") === "1";
+  const localMode = (transferMode || pathname === SALES_LOADING_PATH) && searchParams?.get("source") === "local";
+  const menuQuery = [transferMode ? "transfer=1" : "", localMode ? "source=local" : ""].filter(Boolean).join("&");
+  const menuPath = menuQuery ? `${pathname}?${menuQuery}` : pathname;
   const lang = useActiveLanguage();
-  const tr = (s: string) => s === "Sales Loading"
-    ? tUi(lang, "nav.sales_loading")
-    : translateHeader(lang, s);
+  const tr = (s: string) => s === "Sales Transfer Payment"
+    ? tUi(lang, "nav.sales_transfer_payment")
+    : s === "Sales Loading" ? tUi(lang, "nav.sales_loading") : translateHeader(lang, s);
 
   const userRolesSet = useMemo(() => new Set((roles ?? []).map(String)), [roles]);
   const userPermsSet = useMemo(() => new Set((permissions ?? []).map(String)), [permissions]);
@@ -1126,11 +1148,11 @@ export function DigitalDockPremiumSidebar({
   const [openKeys, setOpenKeys] = useState<Set<string>>(() => {
     const initial = new Set<string>();
     for (const item of menuItems) {
-      if (item.defaultOpen || hasActiveDescendant(item, pathname)) {
+      if (item.defaultOpen || hasActiveDescendant(item, menuPath)) {
         initial.add(item.key);
         if (item.children) {
           for (const sub of item.children) {
-            if (sub.key && hasActiveDescendant(sub, pathname)) {
+            if (sub.key && hasActiveDescendant(sub, menuPath)) {
               initial.add(sub.key);
             }
           }
@@ -1147,11 +1169,11 @@ export function DigitalDockPremiumSidebar({
     setOpenKeys(() => {
       const next = new Set<string>();
       for (const item of menuItems) {
-        if (hasActiveDescendant(item, pathname)) {
+        if (hasActiveDescendant(item, menuPath)) {
           next.add(item.key);
           if (item.children) {
             for (const sub of item.children) {
-              if (sub.key && hasActiveDescendant(sub, pathname)) {
+              if (sub.key && hasActiveDescendant(sub, menuPath)) {
                 next.add(sub.key);
               }
             }
@@ -1161,16 +1183,16 @@ export function DigitalDockPremiumSidebar({
       return next;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [menuPath]);
 
   // Keep the page you are on visible in the (long) menu — the red tracking entries sit deep inside the Shipping section.
   useEffect(() => {
     const h = window.setTimeout(() => {
-      const exact = Array.from(document.querySelectorAll<HTMLElement>("nav a[href]")).find((el) => el.getAttribute("href")?.split("?")[0] === pathname);
+      const exact = Array.from(document.querySelectorAll<HTMLElement>("nav a[href]")).find((el) => el.getAttribute("href") === menuPath);
       (exact ?? document.querySelector<HTMLElement>('nav a[aria-current="page"]'))?.scrollIntoView({ block: "nearest" });
     }, 250);
     return () => window.clearTimeout(h);
-  }, [pathname]);
+  }, [menuPath]);
 
   // CRM Report Center Floating Panel State
   const [crmPanelOpen, setCrmPanelOpen] = useState(false);
@@ -1302,8 +1324,8 @@ export function DigitalDockPremiumSidebar({
           const Icon = item.icon;
           const hasChildren = Boolean(item.children?.length);
           const isOpen = hasChildren && openKeys.has(item.key);
-          const isDirectActive = isPathActive(item.href, pathname);
-          const isDescActive = hasChildren && hasActiveDescendant(item, pathname);
+          const isDirectActive = isPathActive(item.href, menuPath);
+          const isDescActive = hasChildren && hasActiveDescendant(item, menuPath);
           const isHighlighted = isOpen || isDirectActive || isDescActive;
           const isRed = item.tone === "red";
 
@@ -1373,8 +1395,8 @@ export function DigitalDockPremiumSidebar({
                         const subHasChildren = Boolean(sub.children?.length);
                         const subKey = sub.key || `${item.key}-${sub.label}`;
                         const isSubOpen = subHasChildren && openKeys.has(subKey);
-                        const isSubDirectActive = isPathActive(sub.href, pathname);
-                        const isSubDescActive = subHasChildren && hasActiveDescendant(sub, pathname);
+                        const isSubDirectActive = isPathActive(sub.href, menuPath);
+                        const isSubDescActive = subHasChildren && hasActiveDescendant(sub, menuPath);
                         const isSubActive = isSubDirectActive || isSubDescActive;
 
                         if (subHasChildren) {
@@ -1422,7 +1444,7 @@ export function DigitalDockPremiumSidebar({
                                     const isLeafRed = isSubRed || leaf.tone === "red";
                                     const isLeafNew = leaf.isNew;
                                     const LeafIcon = leaf.icon;
-                                    const isLeafActive = isPathActive(leaf.href, pathname);
+                                    const isLeafActive = isPathActive(leaf.href, menuPath);
                                     return (
                                       <Link
                                         key={leaf.label + leaf.href}
@@ -1681,6 +1703,12 @@ export function DigitalDockPremiumSidebar({
       )}
     </div>
   );
+}
+
+// Static preview pages can also render the sidebar; suspend around the query
+// hook so those previews remain buildable without a request.
+export function DigitalDockPremiumSidebar(props: DigitalDockPremiumSidebarProps = {}) {
+  return <Suspense fallback={null}><DigitalDockPremiumSidebarContent {...props} /></Suspense>;
 }
 
 /* ---------------- Drawer Wrapper for Mobile/Tablet ---------------- */

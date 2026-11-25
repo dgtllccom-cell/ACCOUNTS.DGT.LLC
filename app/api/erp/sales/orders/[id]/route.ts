@@ -5,6 +5,7 @@ import { ApiClientError, apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { t } from "@/lib/i18n/ui";
+import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
 import { assertFinancialAccess } from "@/lib/permissions/middleware";
 import { authorizeApiScope, authorizeApiScopeEither } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
@@ -103,6 +104,10 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         cityBranchId: (row as any).dest_city_branch_id ?? null
       }
     });
+
+    if (transferView && request.nextUrl.searchParams.get("source") === "local" && !isLocalSalesFormData((row as any).form_data)) {
+      throw new ApiClientError("Local sales order not found.", { status: 404, code: "LOCAL_SALES_ORDER_NOT_FOUND" });
+    }
 
     // record_translations sits over per-language base tables with RLS gated on
     // auth.uid()/is_super_admin(), always NULL under this app's temp-session bootstrap —

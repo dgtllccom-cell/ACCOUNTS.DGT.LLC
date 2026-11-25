@@ -32,3 +32,13 @@ export function resolveSalesBookingPaymentRoute(paymentType: unknown): SalesBook
   return { paymentKind: "advance", paymentLabel: "Advance Payment", path: "/dashboard/journal/sales-order-payment/advance" };
 }
 
+
+/** The reviewed flow posts a booking voucher, then links to the existing payment queues. */
+export function resolveReviewedSalesPaymentRoute(paymentType: unknown): Omit<SalesBookingTransferRoute, "paymentKind"> & {
+  paymentKind: SalesBookingPaymentKind | "transfer";
+} {
+  if (normalize(paymentType).includes("transfer")) {
+    return { paymentKind: "transfer", paymentLabel: "Account Transfer", path: "/dashboard/journal/sales-order-payment/advance" };
+  }
+  return resolveSalesBookingPaymentRoute(paymentType);
+}

@@ -26,7 +26,9 @@ export const loadContainerSchema = receivingSchema.extend({
     seen.add(it.line);
   });
 });
-export const createSalesLoadingSchema = z.object({ orderId: z.string().uuid(), containers: z.array(loadContainerSchema).min(1).max(30) });
+export const salesLoadingSource = z.enum(["booking", "local"]).default("booking");
+export type SalesLoadingSource = z.infer<typeof salesLoadingSource>;
+export const createSalesLoadingSchema = z.object({ source: salesLoadingSource, orderId: z.string().uuid(), containers: z.array(loadContainerSchema).min(1).max(30) });
 export type SalesLoadingInput = z.infer<typeof createSalesLoadingSchema>;
 export type SalesLoadingContainer = SalesLoadingInput["containers"][number];
 export type LoadingStatus = "pending" | "partial" | "loaded";
@@ -116,20 +118,30 @@ export function loadingValues(order: LoadingOrder, records: LoadingRecord[]) {
   }), { total: 0, loading: 0, received: 0 });
 }
 
-/** Sales-specific readiness from PR #238. Loading never creates the payment itself. */
+export const ACCOUNT_TRANSFER_LOADING_LABELS = ["account transfer", "account_transfer", "transfer account"] as const;
+export const IMMEDIATE_LOADING_LABELS = ["credit", "credit payment", "cash", "cash payment", ...ACCOUNT_TRANSFER_LOADING_LABELS] as const;
+export const INVOICE_LOADING_LABELS = ["invoice", "invoice payment"] as const;
+
+const normalizePayment = (v: unknown) => text(v).toLowerCase();
+const inLabels = (labels: readonly string[], value: string) => labels.includes(value);
+
+/** Operational eligibility only. Never reads receipts or changes payment status. */
 export function loadingReadiness(row: Record<string, unknown>) {
+  if (!["posted", "transferred"].includes(text(row.ledger_posting_status))) return "not_transferred";
   const data = parseJsonish(row.form_data) || {};
   const form = data.form || {};
-  const workflow = data.workflow || {};
-  const paymentType = text(form.paymentType || form.paymentCondition || workflow.paymentKind).toLowerCase();
-  const invoice = paymentType.includes("invoice");
-  const cash = paymentType.includes("cash");
-  if (invoice && row.invoice_finalized !== true) return "awaiting_invoice";
-  const advance = paymentType.includes("advance") ? Math.min(100, number(form.advancePercent ?? form.advancePercentage)) : 0;
-  const currencies = getBookingCurrencies(form);
-  const originalAmount = number(data.transferTrace?.settlement?.originalAmount) || number(row.total_goods_original) || number(data.totals?.grandPrimaryFinal)
-    || (form.bookingCurrencyConfigured === true && currencies.rate.ok ? convertedSalesAmount(number(row.order_total), { ...currencies.rate, operator: currencies.rate.operator === "/" ? "*" : "/" }) ?? 0 : number(row.total_goods_usd));
-  if ((cash || advance > 0) && (originalAmount <= 0 || number(row.paid_amount) + 0.005 < originalAmount * (cash ? 1 : advance / 100))) return "awaiting_advance";
+  const recorded = normalizePayment(data.transferTrace?.paymentKind) || normalizePayment(data.workflow?.paymentKind);
+  const originalType = normalizePayment(data.transferTrace?.paymentType) || normalizePayment(form.transferAudit?.paymentType);
+  const savedType = normalizePayment(form.paymentType) || normalizePayment(data.paymentType) || normalizePayment(form.paymentCondition) || normalizePayment(data.paymentCondition);
+  // Legacy Account Transfer was posted through the generic "advance" journal
+  // route. An exact stored Account Transfer label (not a balance or later receipt)
+  // distinguishes it from actual Advance; a frozen original label takes priority.
+  const originalOrLegacy = originalType || savedType;
+  const label = (recorded === "advance" && inLabels(ACCOUNT_TRANSFER_LOADING_LABELS, originalOrLegacy))
+    ? originalOrLegacy : (recorded || originalOrLegacy);
+  if (inLabels(INVOICE_LOADING_LABELS, label)) {
+    if (row.invoice_finalized !== true) return "awaiting_invoice";
+  } else if (!inLabels(IMMEDIATE_LOADING_LABELS, label)) return "payment_not_eligible";
   const needsLot = form.isEndorseSale === true || form.saleType === "endorse" || data.isEndorseSale === true;
   if (needsLot && (!data.goodsEntries?.length || data.goodsEntries.some((g: any) => !text(g.managedLotId || g.journalTransferId || g.stockLotNo || g.lotNo || g.lotRef) || number(g.qtyNo ?? g.quantity) <= 0))) return "awaiting_lot";
   return "ready";

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { NextRequest } from "next/server";
 import { apiOk } from "@/lib/api/response";
 import { requireBeiSession, beiErrorResponse } from "@/lib/business-edit-invoice/route-helpers";
@@ -13,6 +14,7 @@ export async function GET(request: NextRequest) {
     const rows = await listAvailableBills(auth.session, {
       module: p.get("module") ?? undefined,
       q: p.get("q") ?? undefined,
+      sourceId: z.string().uuid().optional().parse(p.get("sourceId") ?? undefined),
       countryId: p.get("countryId") ?? undefined,
       branchId: p.get("branchId") ?? undefined,
       limit: p.get("limit") ? Number(p.get("limit")) : undefined,

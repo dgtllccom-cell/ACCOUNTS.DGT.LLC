@@ -2,7 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { newIdempotencyKey } from "@/lib/api/idempotency-client";
-import { useEffect, useMemo, useState, Suspense } from "react";
+import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { salesPaymentTransferReport } from "@/lib/sales/payment-transfer-report";
@@ -137,11 +137,16 @@ function SalesTransferErpReportViewContent({
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
   const transferOnly = searchParams.get("transfer") === "1";
+  const localTransfer = transferOnly && searchParams.get("source") === "local";
+  const transferSuffix = localTransfer ? "&source=local" : "";
+  const localBack = "/dashboard/sales/sales-order?transfer=1&source=local";
+  const transferRequest = useRef<{ id: string; key: string } | null>(null);
+  const transferInFlight = useRef(false);
   const tr = (label: string) => translateHeader(lang, label);
   const [transferEvidence, setTransferEvidence] = useState<{ order: any; transferProof: SalesTransferProof | null } | null>(null);
 
   async function loadTransferEvidence(id: string) {
-    const response = await fetch(`/api/erp/sales/orders/${encodeURIComponent(id)}?transfer=1`, { cache: "no-store" });
+    const response = await fetch(`/api/erp/sales/orders/${encodeURIComponent(id)}?transfer=1${transferSuffix}`, { cache: "no-store" });
     const result = await response.json();
     if (!response.ok || !result.ok || !result.data?.order) throw new Error(result?.error?.message || tr("Failed to load"));
     return result.data;
@@ -179,13 +184,14 @@ function SalesTransferErpReportViewContent({
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/erp/sales/booking-journal-report?id=${encodeURIComponent(idParam)}`, { cache: "no-store" });
+        const res = await fetch(`/api/erp/sales/booking-journal-report?id=${encodeURIComponent(idParam)}${transferSuffix}`, { cache: "no-store" });
         const json = await res.json();
         const evidence = transferOnly ? await loadTransferEvidence(idParam) : null;
         if (cancelled) return;
         if (transferOnly && (!res.ok || !json?.ok)) throw new Error(json?.error?.message || tr("Failed to load"));
         setTransferEvidence(evidence);
         const row = json?.data?.reports?.[0] || json?.data?.selected || json?.reports?.[0] || json;
+        if (transferOnly && row?.id !== evidence?.order?.id) throw new Error(tr("No records found"));
         setReportData(row);
       } catch (err: any) {
         if (!cancelled) setError(err?.message || t(lang, "sales.ster_err_load_sales_record", "Failed to load sales order record."));
@@ -194,7 +200,7 @@ function SalesTransferErpReportViewContent({
       }
     })();
     return () => { cancelled = true; };
-  }, [idParam, initialData, transferOnly]);
+  }, [idParam, initialData, transferOnly, transferSuffix]);
 
   /* ── Derived values ────────────────────────────────────────── */
 
@@ -306,20 +312,21 @@ function getCurrencySymbol(c: string) {
 
   /* ── Transfer Payment ────────────────────────────────────── */
   async function handleTransferPayment() {
-    if (!d) return;
+    if (!d || transferInFlight.current) return;
+    transferInFlight.current = true;
     setTransferring(true);
     setTransferError("");
     setTransferSuccess("");
     try {
+      const previous = transferRequest.current;
+      const key = transferOnly && previous?.id === String(d.id) ? previous.key : newIdempotencyKey("sb-transfer", String(d.id));
+      if (transferOnly) transferRequest.current = { id: String(d.id), key };
       const res = await fetch(`/api/erp/sales/orders/${d.id}/transfer`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Idempotency-Key": newIdempotencyKey("sb-transfer", String(d.id)) },
-        body: JSON.stringify({
-          paymentKind: paymentRoute.paymentKind,
-          paymentType: form.paymentType || paymentRoute.paymentLabel,
-          advancePaid: 0,
-          ...(transferOnly ? { transferRegister: true } : {})
-        })
+        headers: { "Content-Type": "application/json", "Idempotency-Key": key },
+        body: JSON.stringify(transferOnly
+          ? { transferRegister: true, ...(localTransfer ? { source: "local" } : {}) }
+          : { paymentKind: paymentRoute.paymentKind, paymentType: form.paymentType || paymentRoute.paymentLabel, advancePaid: 0 })
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
@@ -339,6 +346,7 @@ function getCurrencySymbol(c: string) {
     } catch (err: any) {
       setTransferError(err?.message || t(lang, "sales.ster_err_processing_transfer", "Error processing transfer payment."));
     } finally {
+      transferInFlight.current = false;
       setTransferring(false);
     }
   }
@@ -369,7 +377,7 @@ function getCurrencySymbol(c: string) {
         <div className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-center max-w-md">
           <AlertTriangle className="h-8 w-8 text-rose-500 mx-auto mb-3" />
           <p className="text-sm font-bold text-rose-800">{error || t(lang, "sales.ster_sales_record_not_found", "Sales order record not found.")}</p>
-          <Button onClick={() => transferOnly ? router.push(recordedIsPosted ? "/dashboard/sales/sales-order?transfer=1" : "/dashboard/sales/sales-order") : router.back()} variant="outline" size="sm" className="mt-4">
+          <Button onClick={() => localTransfer ? router.push(localBack) : transferOnly ? router.push(recordedIsPosted ? "/dashboard/sales/sales-order?transfer=1" : "/dashboard/sales/sales-order") : router.back()} variant="outline" size="sm" className="mt-4">
             {t(lang, "ster.go_back_arrow", "← Go Back")}
           </Button>
         </div>
@@ -388,7 +396,7 @@ function getCurrencySymbol(c: string) {
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => router.back()}
+            onClick={() => localTransfer ? router.push(localBack) : router.back()}
             className="h-8 text-white hover:bg-white/10 gap-1.5 px-2"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
@@ -396,7 +404,7 @@ function getCurrencySymbol(c: string) {
           </Button>
           <div className="h-4 w-px bg-white/20" />
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-widest text-blue-200">{t(lang, "nav.sales_transfer_payment", "Sales Transfer Payment")}</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-blue-200">{localTransfer ? tr("Local Sales Transfer Payment") : t(lang, "nav.sales_transfer_payment", "Sales Transfer Payment")}</p>
             <p className="text-xs font-black text-white">{d.salesBookingOrderNumber}</p>
           </div>
         </div>
@@ -422,7 +430,7 @@ function getCurrencySymbol(c: string) {
             type="button"
             size="sm"
             variant="ghost"
-            onClick={() => router.push(transferOnly ? `/dashboard/sales/new-sales-booking-order?id=${encodeURIComponent(d.id)}`
+            onClick={() => router.push(transferOnly ? `/dashboard/sales/new-sales-booking-order?id=${encodeURIComponent(d.id)}${transferSuffix}`
               : `/dashboard/purchase/new-purchase-booking-order?id=${encodeURIComponent(d.id)}&purchaseOrderNo=${encodeURIComponent(d.salesBookingOrderNumber)}`)}
             disabled={recordedIsPosted || d.ledger_posting_status === "posted" || d.ledger_posting_status === "transferred"}
             className="h-8 text-white hover:bg-white/10 gap-1.5 px-2.5 disabled:opacity-50"

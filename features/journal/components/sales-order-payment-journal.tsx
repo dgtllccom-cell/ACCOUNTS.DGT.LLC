@@ -63,6 +63,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
+import { matchesSalesReceiptQueue, salesWorkflowDestination, type SalesReceiptQueue } from "@/lib/sales/payment-workflow";
 import { useRouter } from "next/navigation";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -2725,7 +2727,7 @@ function getSalesOrderTableHeader(h: string, currentLanguage: LanguageCode): str
   return SALES_ORDER_TABLE_HEADERS[h]?.[currentLanguage] || h;
 }
 
-export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentMode }) {
+export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { mode?: PaymentMode; receiptQueue?: SalesReceiptQueue }) {
   const router = useRouter();
   const activeMode: PaymentMode = mode === "charges" ? "credit" : mode;
   const logClientError = (msg: string) => {
@@ -3121,8 +3123,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       setOrderCoverage(loaded.complete);
       const rawRows = loaded.rows;
       const rows: PurchaseOrderRow[] = rawRows.map((r: any) => {
-        const form = r.form_data?.form || {};
-        const isLocal = form.saleSource === "local" || form.saleMode === "local" || r.order_type === "local_sales" || r.sale_source === "local";
+        const isLocal = isLocalSalesFormData(r.form_data) || r.order_type === "local_sales" || r.sale_source === "local";
         return {
           ...r,
           order_type: isLocal ? "local_sales" : "sales_booking"
@@ -3184,7 +3185,8 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     const urlOrderNo = getInitialPurchaseOrderNo();
     return orders.filter((row, index) => {
       if (!matchesRegisterSearch(paymentSearchRows[index], advancedPaymentFilters)) return false;
-      if (urlOrderNo && row.sales_order_no === urlOrderNo) return true;
+      if (receiptQueue && !matchesSalesReceiptQueue(row, receiptQueue)) return false;
+      if (!receiptQueue && activeMode !== "credit" && urlOrderNo && row.sales_order_no === urlOrderNo) return true;
       const postingStatus = row.ledger_posting_status?.toLowerCase();
       const workflowTransferStatus = row.form_data?.workflow?.transferStatus?.toLowerCase();
       const hasTransferAudit = Boolean(row.form_data?.form?.transferAudit);
@@ -3249,13 +3251,15 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       const remainingAdvance = requiredAdvance - paidAdvance;
       const remainingDue = Number((row as any).remaining_amount ?? (finalAmount - totalPaid));
 
-      const isCreditPaid = (row.payment_status || "").toLowerCase().includes("posted") || 
-                           (row.payment_status || "").toLowerCase().includes("paid");
+      const isCreditPaid = /^(posted|paid|completed)$/i.test(row.payment_status ?? "") && remainingDue <= 0.01;
 
       const isAdvanceCleared = advancePercent > 0 ? remainingAdvance <= 0.01 : paidAdvance > 0;
       const isRemainingCleared = remainingDue <= 0.01;
 
-      if (activeMode === "advance") {
+      if (receiptQueue) {
+        // This is an outstanding Cash/Account Transfer queue, not a percentage advance.
+        if (remainingDue <= 0.01) return false;
+      } else if (activeMode === "advance") {
         // Business Rule: Show orders that need upfront payment before delivery
         // Advance/Endorsement → need advance % cleared
         // Cash → need cash payment posted before delivery
@@ -3348,7 +3352,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(needle));
     });
-  }, [activeMode, branchFilter, countryFilter, currencyFilter, draftFilter, orders, query, startDateFilter, endDateFilter, cityFilter, partyFilter, sourceFilter, paymentSearchRows, advancedPaymentFilters]);
+  }, [activeMode, branchFilter, countryFilter, currencyFilter, draftFilter, orders, query, startDateFilter, endDateFilter, cityFilter, partyFilter, sourceFilter, paymentSearchRows, advancedPaymentFilters, receiptQueue]);
 
   // ── Approved header data: this page's RBAC-scoped orders (narrowed by the Country / Branch filters) + the real payment records ──
   const modulePayments = useModulePayments("sales");
@@ -3633,7 +3637,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
 
   // Set default paymentSourceLedgerId and sync Category & Type once cashLedger is loaded
   useEffect(() => {
-    if (cashLedger && !paymentSourceLedgerId) {
+    if (!receiptQueue && cashLedger && !paymentSourceLedgerId) {
       setPaymentSourceLedgerId(ledgerId(cashLedger) || "");
       const name = ledgerName(cashLedger).toLowerCase();
       const code = ledgerCode(cashLedger).toLowerCase();
@@ -3645,11 +3649,11 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         setRoznamchaType("Roznamcha Book No.");
       }
     }
-  }, [cashLedger, paymentSourceLedgerId]);
+  }, [cashLedger, paymentSourceLedgerId, receiptQueue]);
 
   const selectedSourceLedger = useMemo(() => {
-    return ledgers.find((l) => ledgerId(l) === paymentSourceLedgerId) || cashLedger || null;
-  }, [ledgers, paymentSourceLedgerId, cashLedger]);
+    return ledgers.find((l) => ledgerId(l) === paymentSourceLedgerId) || (!receiptQueue ? cashLedger : null) || null;
+  }, [ledgers, paymentSourceLedgerId, cashLedger, receiptQueue]);
 
   const sourceBalanceText = useMemo(() => {
     if (!selectedSourceLedger) return "-";
@@ -3890,6 +3894,14 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     // For payments (advance, remaining, credit), the debit account is the supplier's party account (salesAccountNo / salesAccountName)
     // and the credit account is the user-selected payment source account (bank/cash).
     // If it's a booking entry, we debit the purchase account and credit the supplier's account.
+    if (receiptQueue) return {
+      debitCode: selectedSourceLedger ? ledgerCode(selectedSourceLedger) : "—",
+      debitName: selectedSourceLedger ? ledgerName(selectedSourceLedger) : "—",
+      debitBranch: selectedSourceLedger?.branchName ?? "—",
+      creditCode: selectedForm.customerAccountNo || "—",
+      creditName: selectedForm.customerAccountName || "—",
+      creditBranch: selectedForm.customerAccountBranch || "—",
+    };
     const isBooking = (activeMode as string) === "booking";
 
     const debitCode = isBooking 
@@ -3917,7 +3929,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       : (selectedSourceLedger ? (selectedSourceLedger.branchName || "-") : "-");
 
     return { debitCode, debitName, debitBranch, creditCode, creditName, creditBranch };
-  }, [selectedSourceLedger, selectedForm, activeMode]);
+  }, [selectedSourceLedger, selectedForm, activeMode, receiptQueue]);
 
   // Suggested values to make input easier
   const suggestedAdvance = useMemo(() => {
@@ -3935,6 +3947,10 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
   // Final Action POST handler
   async function handleProcessPayment() {
     if (!canSave || !selected) return;
+    if (receiptQueue && !(receiptQueue === "cash" ? paymentType === "cash" : ["bank", "transfer"].includes(paymentType))) {
+      setPaymentError(translateHeader(currentLanguage, "Select the matching receipt method."));
+      return;
+    }
     setProcessingPayment(true);
     setPaymentSuccess("");
     setPaymentError("");
@@ -3946,6 +3962,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     const idempotencyKey = paymentIdempotencyKeyRef.current;
 
     try {
+      const reviewedSelection = Boolean(receiptQueue || (activeMode === "credit" && selected.form_data?.transferTrace?.settlement));
       const finalRemarks = remarks.trim() || `Automated payment settlement for Sales Order No: ${selected.sales_order_no}. Roznamcha Category: ${paymentType.toUpperCase()}.`;
       const formData = new FormData();
 
@@ -3959,7 +3976,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       let debitLedgerId = "";
       if (isUuid(paymentSourceLedgerId)) {
         debitLedgerId = paymentSourceLedgerId;
-      } else {
+      } else if (!reviewedSelection) {
         const matchedDebit = ledgers.find((l) => {
           const id = ledgerId(l);
           if (!id || !isUuid(id)) return false;
@@ -3976,15 +3993,14 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       // 2. Resolve credit ledger ID (Customer / Receivable Account)
       let creditLedgerId = "";
       const candidateCreditIds = [
+        (selected as any).form_data?.transferTrace?.debitLedgerId,
         (selected as any).customer_ledger_id,
         (selected as any).customerLedgerId,
         form.customerAccountLedgerId,
         form.customerAccountId,
         form.customerId,
-        form.salesAccountLedgerId,
-        form.salesAccountId,
         selectedForm.customerAccountLedgerId,
-        selectedForm.salesAccountLedgerId
+        ...(!reviewedSelection ? [form.salesAccountLedgerId, form.salesAccountId, selectedForm.salesAccountLedgerId] : []),
       ].filter(Boolean);
 
       for (const candidate of candidateCreditIds) {
@@ -3994,7 +4010,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         }
       }
 
-      if (!creditLedgerId) {
+      if (!creditLedgerId && !reviewedSelection) {
         const customerCode = String(form.customerAccountNo || form.customerCode || form.salesAccountNo || doubleEntry.debitCode || "").trim().toLowerCase();
         const customerName = String(form.customerAccountName || form.customerName || form.salesAccountName || doubleEntry.debitName || "").trim().toLowerCase();
 
@@ -4013,7 +4029,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         }
       }
 
-      if (!creditLedgerId) {
+      if (!creditLedgerId && !reviewedSelection) {
         const targetCountry = selected.country_id;
         const matchedReceivable = ledgers.find((l) => {
           const id = ledgerId(l);
@@ -4030,7 +4046,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         }
       }
 
-      if (!creditLedgerId) {
+      if (!creditLedgerId && !reviewedSelection) {
         const valid = ledgers.find((l) => isUuid(ledgerId(l) || "") && ledgerId(l) !== debitLedgerId) || ledgers.find((l) => isUuid(ledgerId(l) || ""));
         if (valid) creditLedgerId = ledgerId(valid) || "";
       }
@@ -4053,7 +4069,8 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       const payload = {
         purchaseOrderId: selected.id,
         salesOrderNo: selected.sales_order_no,
-        kind: ["advance", "remaining", "credit", "booking"].includes(activeMode) ? activeMode : "advance",
+        kind: receiptQueue ? "remaining" : ["advance", "remaining", "credit", "booking"].includes(activeMode) ? activeMode : "advance",
+        ...(receiptQueue ? { salesWorkflowQueue: receiptQueue } : {}),
         debitLedgerId,
         creditLedgerId,
         paymentType,
@@ -4061,13 +4078,14 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         roznamchaNumber,
         currencyCode: currency,
         exchangeRate: Number(exchangeRate || 1),
-        amount: payloadAmount,
+        amount: receiptQueue || (activeMode === "credit" && selected.form_data?.transferTrace?.settlement) ? amount : payloadAmount,
         amountLocal: amount,
         narration: finalRemarks,
         entryDate: paymentDate,
         referenceNo: roznamchaNumber || undefined,
         typeDetails: {
           ...typeDetails,
+          ...(receiptQueue ? { paymentMethod: paymentType } : {}),
           ...(fromLoading && loadingRecordId ? { loadingRecordId } : {})
         },
         doubleEntry,
@@ -4469,7 +4487,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
           page's EXISTING search, Filters panel, date range, refresh, print and export handlers; the payment-type rows link to the existing routes. */}
       <PaymentModuleHeader
         module="sales"
-        title={translateHeader(currentLanguage, ({ advance: "Advance Payment / Receipt", advance_completed: "Advance Payment / Receipt", credit: "Credit Payment / Receipt", charges: "Credit Payment / Receipt", remaining: "Remaining Payment / Recovery", history: "Sales Payment History", final: "Final Payment" } as Record<string, string>)[activeMode] ?? "Sales Payments")}
+        title={translateHeader(currentLanguage, receiptQueue ? (receiptQueue === "cash" ? "Cash Payment" : "Account Transfer") : ({ advance: "Advance Payment / Receipt", advance_completed: "Advance Payment / Receipt", credit: "Credit Payment / Receipt", charges: "Credit Payment / Receipt", remaining: "Remaining Payment / Recovery", history: "Sales Payment History", final: "Final Payment" } as Record<string, string>)[activeMode] ?? "Sales Payments")}
         activeKey={activeMode === "credit" ? "credit" : activeMode === "advance_completed" ? "advance" : activeMode}
         rows={moduleRows}
         payments={modulePayments}
@@ -4479,6 +4497,13 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         translateLabel={(label) => translateHeader(currentLanguage, label)}
         toolbar={
           <>
+            {(["Cash", "Account Transfer"] as const).map(method => {
+              const destination = salesWorkflowDestination(method, {});
+              return destination && <a key={method} className="dgt-pa-ctrl" href={destination.href}
+                aria-current={destination.payment === receiptQueue ? "page" : undefined}>
+                {translateHeader(currentLanguage, destination.label)}
+              </a>;
+            })}
             <PapSearch
               value={query}
               onChange={(v) => { setQuery(v); setPageIndex(0); }}
@@ -4796,7 +4821,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
               </div>
             </div>
             <div className="text-xs text-slate-500 font-semibold">
-              {activeMode === "advance" ? "Sales Advance Payment Entry" : activeMode === "credit" ? "Sales Credit Payment Entry" : activeMode === "remaining" ? "Sales Remaining Payment Entry" : "Sales Payment Entry"}
+              {receiptQueue ? translateHeader(currentLanguage, receiptQueue === "cash" ? "Cash Payment" : "Account Transfer") : activeMode === "advance" ? "Sales Advance Payment Entry" : activeMode === "credit" ? "Sales Credit Payment Entry" : activeMode === "remaining" ? "Sales Remaining Payment Entry" : "Sales Payment Entry"}
             </div>
             {/* Already Transferred / Overpaid Warning Banner */}
             {(() => {
@@ -4811,7 +4836,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
               const remainingDue = Number(selected.remaining_amount || 0);
               const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
               const fromLoading = searchParams.get("fromLoading") === "true";
-              if (activeMode === "advance" && advancePercent > 0 && remainingAdvanceBC <= 0.01) {
+              if (!receiptQueue && activeMode === "advance" && advancePercent > 0 && remainingAdvanceBC <= 0.01) {
                 return (
                   <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold p-3.5 rounded-xl flex items-center gap-2 dark:bg-amber-950/20 dark:border-amber-900/30 dark:text-amber-400 animate-in fade-in duration-300">
                     <XCircle className="h-5 w-5 shrink-0" /> Already Transferred: The advance payment for PO {selected.sales_order_no} has already been fully paid.

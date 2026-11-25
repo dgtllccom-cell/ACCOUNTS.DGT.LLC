@@ -9,6 +9,7 @@ import { withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { parseRegisterPage, splitRegisterPage } from "@/lib/sales/register-pagination";
+import { localSalesSourcePostgrest, sqlLocalSalesSource } from "@/lib/sales/local-sales-source";
 import { localizeRecordFields, localizeRecordNames } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
@@ -127,6 +128,7 @@ function normalizeOrder(row: any, useCountryMaster = false) {
     finalCurrency: finalCur,
     exchange_rate: Number(row.exchange_rate ?? form.exchangeRate ?? 1),
     status: row.sales_status ?? "Draft",
+    ...(row.ledger_posting_status !== undefined ? { ledger_posting_status: row.ledger_posting_status } : {}),
     paymentStatus: row.payment_status ?? "Pending",
     deliveryStatus: row.delivery_status ?? "Pending",
     workflowState: row.workflow_state ?? {},
@@ -156,7 +158,9 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
     const page = parseRegisterPage(request.nextUrl.searchParams);
+    const localSale = request.nextUrl.searchParams.get("source") === "local";
     const query = querySchema.parse({
+      id: request.nextUrl.searchParams.get("id") ?? undefined,
       salesOrderNo: request.nextUrl.searchParams.get("salesOrderNo") ?? undefined,
       dateFrom: request.nextUrl.searchParams.get("dateFrom") ?? undefined,
       dateTo: request.nextUrl.searchParams.get("dateTo") ?? undefined,
@@ -189,6 +193,7 @@ export async function GET(request: NextRequest) {
           so.currency_code, so.exchange_rate, so.order_total, so.paid_amount, so.remaining_amount, so.sales_status,
           so.payment_status, so.delivery_status, so.workflow_state, so.form_data, so.super_admin_serial_number,
           so.country_transaction_serial_number, so.branch_transaction_serial_number, so.created_at,
+          ${localSale ? sql`so.ledger_posting_status,` : sql``}
           ${page.enabled ? sql`to_char(so.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as register_cursor_timestamp,` : sql``}
           to_jsonb(c.*) as countries, to_jsonb(cb.*) as country_branches, to_jsonb(cib.*) as city_branches
         FROM public.sales_orders so
@@ -196,6 +201,7 @@ export async function GET(request: NextRequest) {
         LEFT JOIN public.country_branches cb ON cb.id = so.country_branch_id
         LEFT JOIN public.city_branches cib ON cib.id = so.city_branch_id
         WHERE so.deleted_at IS NULL
+          AND (${localSale ? sqlLocalSalesSource(sql, sql`so.form_data`) : sql`true`})
           AND (${query.id ? sql`so.id = ${query.id}::uuid` : sql`true`})
           AND (${query.salesOrderNo ? sql`so.sales_order_no = ${query.salesOrderNo}` : sql`true`})
           AND ${sqlScopeCondition(sql, sessionSqlScope(session), "so")}
@@ -226,6 +232,7 @@ export async function GET(request: NextRequest) {
           currency_code, exchange_rate, order_total, paid_amount, remaining_amount, sales_status, payment_status,
           delivery_status, workflow_state, form_data, super_admin_serial_number, country_transaction_serial_number,
           branch_transaction_serial_number, created_at,
+          ${localSale ? "ledger_posting_status," : ""}
           countries(id, name, iso2, currency_code),
           country_branches(id, name, code),
           city_branches(id, name, code, city_name)
@@ -233,6 +240,7 @@ export async function GET(request: NextRequest) {
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
+      if (localSale) recordsQuery = recordsQuery.or(localSalesSourcePostgrest);
       if (page.enabled) recordsQuery = recordsQuery.order("id", { ascending: false });
       if (page.cursor) {
         const { at, id } = page.cursor;

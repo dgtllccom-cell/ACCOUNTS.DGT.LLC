@@ -9,23 +9,44 @@ import { translateHeader } from "@/lib/i18n/table-headers";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeJoinedNames, localizeRecordNames } from "@/lib/i18n/localize-records";
 import { withLocalPg, withReadPg } from "@/lib/db/local-postgres";
+import { sqlLocalSalesSource } from "@/lib/sales/local-sales-source";
 import { SALES_LOADING_MAX_RECORDS, SALES_LOADING_PAGE_SIZE, type LoadingRegisterLocation } from "@/lib/sales/loading-pagination";
-import { createSalesLoadingSchema, loadingReadiness, LoadingValidationError, planSalesLoading, receivingSchema, toLoadingOrder, type LoadingRecord } from "@/lib/sales/loading-workflow";
+import { ACCOUNT_TRANSFER_LOADING_LABELS, IMMEDIATE_LOADING_LABELS, INVOICE_LOADING_LABELS, createSalesLoadingSchema, loadingReadiness, LoadingValidationError, planSalesLoading, receivingSchema, salesLoadingSource, toLoadingOrder, type LoadingRecord, type SalesLoadingSource } from "@/lib/sales/loading-workflow";
 
 export const dynamic = "force-dynamic";
 const uuid = z.string().uuid().optional();
 const querySchema = z.object({
-  orderId: uuid, countryId: uuid, mainBranchId: uuid, cityBranchId: uuid,
+  source: salesLoadingSource, orderId: uuid, countryId: uuid, mainBranchId: uuid, cityBranchId: uuid,
   booking: z.string().trim().min(1).max(140).optional(), container: z.string().trim().min(1).max(160).optional(),
   fromDate: z.string().date().optional(), toDate: z.string().date().optional(), receivedDate: z.string().date().optional(),
   cursor: z.string().max(512).optional(), lang: z.enum(["en", "ur", "ar", "fa", "ps"]).optional(),
 });
 const preciseDate = z.string().datetime({ precision: 6 });
 const cursorSchema = z.object({ created: preciseDate, id: z.string().uuid(), snapshot: preciseDate, scopeKey: z.string().length(64) });
-const updateSchema = receivingSchema.extend({ id: z.string().uuid() });
+const updateSchema = receivingSchema.extend({ source: salesLoadingSource, id: z.string().uuid() });
 const eligibleStatuses = ["posted", "transferred"];
 const noDb = () => new ApiClientError("Sales Loading storage is not configured.", { status: 503, code: "STORAGE_UNAVAILABLE" });
-const notFound = () => new ApiClientError("This transferred Sales Booking is not available.", { status: 404, code: "ORDER_NOT_FOUND" });
+const notFound = () => new ApiClientError("This transferred sales document is not available.", { status: 404, code: "ORDER_NOT_FOUND" });
+
+function documentScope(sql: any, source: SalesLoadingSource) {
+  const isLocal = sqlLocalSalesSource(sql, sql`o.form_data`);
+  return source === "local" ? isLocal : sql`not ${isLocal}`;
+}
+
+function paymentEligibility(sql: any) {
+  const recorded = sql`coalesce(nullif(lower(btrim(o.form_data->'transferTrace'->>'paymentKind')), ''),
+    nullif(lower(btrim(o.form_data->'workflow'->>'paymentKind')), ''))`;
+  const labelAtTransfer = sql`coalesce(nullif(lower(btrim(o.form_data->'transferTrace'->>'paymentType')), ''),
+    nullif(lower(btrim(o.form_data->'form'->'transferAudit'->>'paymentType')), ''),
+    nullif(lower(btrim(o.form_data->'form'->>'paymentType')), ''),
+    nullif(lower(btrim(o.form_data->>'paymentType')), ''),
+    nullif(lower(btrim(o.form_data->'form'->>'paymentCondition')), ''),
+    lower(btrim(o.form_data->>'paymentCondition')))`;
+  const label = sql`(case when ${recorded} = 'advance' and ${labelAtTransfer} = any(${[...ACCOUNT_TRANSFER_LOADING_LABELS]}::text[])
+    then ${labelAtTransfer} else coalesce(${recorded}, ${labelAtTransfer}) end)`;
+  return sql`(${label} = any(${[...IMMEDIATE_LOADING_LABELS]}::text[]) or
+    (${label} = any(${[...INVOICE_LOADING_LABELS]}::text[]) and ${invoiceVerification(sql)}))`;
+}
 
 function invoiceVerification(sql: any) {
   return sql`exists (select 1 from public.business_edit_invoices i
@@ -48,7 +69,7 @@ export async function GET(req: NextRequest) {
       catch (error) { if (!(error instanceof ErpPermissionError)) throw error; writer = null; }
     }
     const { cursor: rawCursor, lang, ...filters } = querySchema.parse(Object.fromEntries(req.nextUrl.searchParams));
-    const { orderId, countryId, mainBranchId, cityBranchId, booking, container, fromDate, toDate, receivedDate } = filters;
+    const { source: documentSource, orderId, countryId, mainBranchId, cityBranchId, booking, container, fromDate, toDate, receivedDate } = filters;
     const viewerLanguage = await getRequestLanguage(lang);
     if (fromDate && toDate && fromDate > toDate) {
       throw new ApiClientError(translateHeader(viewerLanguage, "To date must not precede from date"), { status: 400, code: "INVALID_DATE_RANGE" });
@@ -76,6 +97,8 @@ export async function GET(req: NextRequest) {
         left join public.city_branches b on b.id = o.city_branch_id
         where o.deleted_at is null and o.ledger_posting_status in ('posted', 'transferred')
           and (${sqlScopeCondition(sql, scope, "o")})
+          and (${documentScope(sql, documentSource)})
+          and ${paymentEligibility(sql)}
           and o.created_at <= ${snapshot}::timestamptz
           and (${cursor ? sql`(o.created_at, o.id) < (${cursor.created}::timestamptz, ${cursor.id}::uuid)` : sql`true`})
           and (${orderId ? sql`o.id = ${orderId}::uuid` : sql`true`})
@@ -123,6 +146,8 @@ export async function GET(req: NextRequest) {
             from public.sales_orders o
             where o.deleted_at is null and o.ledger_posting_status in ('posted','transferred')
               and (${sqlScopeCondition(sql, scope, "o")})
+              and (${documentScope(sql, documentSource)})
+              and ${paymentEligibility(sql)}
           ) loc
           left join public.countries c on c.id = loc.country_id
           left join public.country_branches m on m.id = loc.country_branch_id
@@ -151,7 +176,7 @@ export async function POST(req: NextRequest) {
     authorizeApiScope(session, { resource: "sales", action: "read" });
     authorizeApiScope(session, { resource: "sales", action: "update" });
     const scope = sessionSqlScope(session);
-    const { orderId, containers } = createSalesLoadingSchema.parse(await req.json());
+    const { source: documentSource, orderId, containers } = createSalesLoadingSchema.parse(await req.json());
     const result = await withLocalPg(sql => sql.begin(async tx => {
       // Serialize writes for this booking before checking line balances and existing container IDs.
       const [order] = await tx`
@@ -159,7 +184,9 @@ export async function POST(req: NextRequest) {
           o.paid_amount, o.currency_code, ${invoiceVerification(tx)} as invoice_finalized
         from public.sales_orders o where o.id = ${orderId}::uuid and o.deleted_at is null
           and o.ledger_posting_status = any(${eligibleStatuses}::text[])
-          and (${sqlScopeCondition(tx, scope, "o")}) for update of o`;
+          and (${sqlScopeCondition(tx, scope, "o")})
+          and (${documentScope(tx, documentSource)})
+          and ${paymentEligibility(tx)} for update of o`;
       if (!order || !order.sales_order_no) throw notFound();
       const readiness = loadingReadiness(order);
       if (readiness !== "ready") throw new ApiClientError("This booking has not met its loading requirements.", { status: 409, code: readiness.toUpperCase() });
@@ -194,12 +221,14 @@ export async function PATCH(req: NextRequest) {
     authorizeApiScope(session, { resource: "sales", action: "read" });
     authorizeApiScope(session, { resource: "sales", action: "update" });
     const scope = sessionSqlScope(session);
-    const { id, receivedDate, receivedCountry, receivedPort } = updateSchema.parse(await req.json());
+    const { source: documentSource, id, receivedDate, receivedCountry, receivedPort } = updateSchema.parse(await req.json());
     const result = await withLocalPg(sql => sql.begin(async tx => {
       const [record] = await tx`
         select l.loading_date::text as loading_date from public.sales_loading_records l inner join public.sales_orders o on o.id = l.sales_order_id
         where l.id = ${id}::uuid and o.deleted_at is null and o.ledger_posting_status = any(${eligibleStatuses}::text[])
-          and (${sqlScopeCondition(tx, scope, "o")}) for update of l`;
+          and (${sqlScopeCondition(tx, scope, "o")})
+          and (${documentScope(tx, documentSource)})
+          and ${paymentEligibility(tx)} for update of l`;
       if (!record) throw notFound();
       if (receivedDate && receivedDate < String(record.loading_date).slice(0, 10)) {
         throw new ApiClientError("Received date cannot precede loading date.");

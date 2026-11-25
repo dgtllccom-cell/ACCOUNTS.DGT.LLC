@@ -156,3 +156,31 @@ it("does not present partial loading scope as real summary totals", async () => 
   fireEvent.click(screen.getByRole("button", { name: "Advanced Search & Filter" }));
   expect(screen.getByRole("option", { name: "UAE" })).toBeTruthy();
 });
+
+it("opens Local Sales Loading by document scope, reuses the entry, and sends Local scope on receipt", async () => {
+  const localOrder = { ...order, bookingNo: "LS-QA-005" };
+  const localRecord = { id: "local-container", entry_no: 553, sales_order_id: order.id, sales_booking_no: localOrder.bookingNo,
+    container_number: "LS-LOCAL-005", container_type: "40 FT", loading_date: "2026-11-25", received_date: null,
+    details: {}, goods: [{ ...order.goods[0], quantity: 30 }], created_by_name: "QA" };
+  const fetchData = vi.fn(async (_path: string, init?: RequestInit) => response(init?.method === "PATCH" ? { record: localRecord } : {
+    ...getData(true), orders: [localOrder], records: [localRecord],
+  }));
+  vi.stubGlobal("fetch", fetchData);
+  render(<SalesLoadingView source="local" initialOrderId={order.id} initialAction="loading"/>);
+  const entry = await screen.findByTestId("sales-loading-entry");
+  expect(within(entry).getByRole("heading", { name: /New Local Sales Loading Entry LS-QA-005/ })).toBeTruthy();
+  expect(fetchData.mock.calls[0][0]).toContain(`source=local&orderId=${order.id}`);
+  fireEvent.click(within(entry).getByRole("button", { name: "Dashboard" }));
+  await screen.findByText(localOrder.bookingNo);
+  expect(screen.getByRole("heading", { name: /Local Sales Loading \(Global/ })).toBeTruthy();
+  expect(screen.getByRole("link", { name: "Back" }).getAttribute("href")).toBe("/dashboard/sales/local-sales");
+  expect(screen.getByRole("columnheader", { name: /Local Sales Bill No/ })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Actions" }));
+  fireEvent.click(screen.getByRole("button", { name: "View" }));
+  const details = within(screen.getByRole("dialog", { name: /LS-QA-005/ }));
+  fireEvent.change(details.getByLabelText("Actual Received Date"), { target: { value: "2026-11-26" } });
+  fireEvent.click(details.getByRole("button", { name: "Save Receiving" }));
+  await waitFor(() => expect(fetchData.mock.calls.some(([, init]) => init?.method === "PATCH")).toBe(true));
+  const patch = fetchData.mock.calls.find(([, init]) => init?.method === "PATCH");
+  expect(JSON.parse(String(patch?.[1]?.body))).toMatchObject({ source: "local", id: localRecord.id, receivedDate: "2026-11-26" });
+});

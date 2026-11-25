@@ -1,6 +1,7 @@
+import { matchesSalesReceiptQueue, planSalesWorkflowReceipt } from "@/lib/sales/payment-workflow";
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiCreated, apiOk, apiError, handleApiError } from "@/lib/api/response";
+import { ApiClientError, apiCreated, apiOk, apiError, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -20,6 +21,7 @@ const paramsSchema = z.object({
 
 const salesOrderPaymentPostSchema = z.object({
   kind: z.string(),
+  salesWorkflowQueue: z.enum(["cash","account-transfer"]).optional(),
   entryDate: z.string(),
   amount: z.coerce.number().min(0.01),
   currencyCode: z.string(),
@@ -194,7 +196,17 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
   try {
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
-    const body = salesOrderPaymentPostSchema.parse(await request.json());
+    let input: unknown;
+    if (request.headers.get("content-type")?.startsWith("multipart/form-data")) {
+      const formData = await request.formData();
+      if (formData.has("attachment")) {
+        return apiError("SALES_RECEIPT_ATTACHMENT_UNAVAILABLE", "Remove the attachment before posting. Sales receipt attachments are not supported here.", 422);
+      }
+      const raw = formData.get("payload");
+      if (typeof raw !== "string") return apiError("VALIDATION", "Sales receipt payload is missing.", 400);
+      try { input = JSON.parse(raw); } catch { return apiError("VALIDATION", "Sales receipt payload is invalid.", 400); }
+    } else input = await request.json();
+    const body = salesOrderPaymentPostSchema.parse(input);
 
     const lockRes = await acquireIdempotencyLock({
       req: request,
@@ -229,7 +241,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     const order = await withLocalPg(async (sql) => {
       const rows = await sql`
         select id, sales_order_no, sales_contract_no, country_id, country_branch_id, city_branch_id,
-               currency_code, exchange_rate, order_total, paid_amount, remaining_amount, form_data,
+               currency_code, exchange_rate, order_total, paid_amount, remaining_amount, form_data, customer_ledger_id, customer_account_id,
                ledger_posting_status, payment_status
         from sales_orders where id = ${params.id}::uuid and deleted_at is null
         limit 1
@@ -251,6 +263,25 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
 
     const orderRow = order as any;
     const form = orderRow.form_data?.form || {};
+    const reviewedSettlement = orderRow.form_data?.transferTrace?.settlement;
+    const reviewedReceipt = Boolean(body.salesWorkflowQueue || (body.kind === "credit" && reviewedSettlement));
+    if (body.salesWorkflowQueue) {
+      const method = body.typeDetails?.paymentMethod;
+      if (!matchesSalesReceiptQueue(orderRow, body.salesWorkflowQueue) || body.kind !== "remaining"
+        || !(body.salesWorkflowQueue === "cash" ? method === "cash" : method === "bank" || method === "transfer")) {
+        throw new ApiClientError("This sale does not match the selected receipt queue.", { status: 409, code: "SALES_RECEIPT_QUEUE_MISMATCH" });
+      }
+    }
+    if (reviewedReceipt) {
+      const expected = orderRow.form_data?.transferTrace?.debitLedgerId || orderRow.customer_ledger_id || form.customerAccountLedgerId
+        || orderRow.customer_account_id || form.customerAccountId;
+      if (!expected) throw new ApiClientError("The original sale has no linked receivable account.", { status: 409, code: "SALES_CUSTOMER_LEDGER_MISSING" });
+      const expectedLedger = await withLocalPg(sql => assertLedgerMatchesSalesScope(sql, expected, orderRow, "Credit"));
+      const selectedLedger = await withLocalPg(sql => assertLedgerMatchesSalesScope(sql, body.creditLedgerId, orderRow, "Credit"));
+      if (!expectedLedger || !selectedLedger || expectedLedger.id !== selectedLedger.id) {
+        throw new ApiClientError("Use the original sale's receivable account.", { status: 409, code: "SALES_CUSTOMER_LEDGER_MISMATCH" });
+      }
+    }
     let exchangeRate = Number(orderRow.exchange_rate || 0);
     if (exchangeRate <= 1) {
       exchangeRate = Number(form.exchangeRate || 1);
@@ -305,15 +336,16 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       }
     }
 
-    if ((body.kind === "remaining" || body.kind === "credit") && remainingAmountUSD <= tolerance) {
+    if (!reviewedReceipt && (body.kind === "remaining" || body.kind === "credit") && remainingAmountUSD <= tolerance) {
       throw new Error("This sales order has no remaining receivable balance. Duplicate posting is not allowed.");
     }
 
-    if ((body.kind === "remaining" || body.kind === "credit") && bodyAmountUSD > remainingAmountUSD + tolerance) {
+    if (!reviewedReceipt && (body.kind === "remaining" || body.kind === "credit") && bodyAmountUSD > remainingAmountUSD + tolerance) {
       throw new Error(`Receipt amount cannot exceed remaining receivable balance (${remainingAmountUSD.toFixed(2)}).`);
     }
 
-    const effectiveRoznamchaExchangeRate = isForeignCurrency ? Number(body.exchangeRate || 1) : 1;
+    const postingAssertionLabel = "Sales payment";
+    const effectiveRoznamchaExchangeRate = reviewedReceipt ? 1 : isForeignCurrency ? Number(body.exchangeRate || 1) : 1;
 
     // Transaction-safe posting via the SECURITY DEFINER wrapper post_sales_booking_transfer,
     // called directly over the raw Postgres connection (equivalent to, and more reliable
@@ -323,7 +355,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     // of 6,000 against 9,000 all posted). If anything fails the whole receipt rolls back - no half-posted voucher.
     const { paymentId, paymentRecord, journalRecord, journalLines } = await withLocalPg((sqlConn) => sqlConn.begin(async (sql: any) => {
       const lockedRows = await sql`
-        select paid_amount, remaining_amount from sales_orders where id = ${params.id}::uuid and deleted_at is null for update
+        select paid_amount, remaining_amount, form_data, payment_status, ledger_posting_status from sales_orders where id = ${params.id}::uuid and deleted_at is null for update
       `;
       const paidLocked = Number(lockedRows[0]?.paid_amount ?? 0);
       const remainingLocked = Number(lockedRows[0]?.remaining_amount ?? 0);
@@ -332,7 +364,15 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
         if (remAdv <= tolerance) throw new Error(`Advance payment is already fully received (Required: ${requiredAdvanceUSD.toFixed(2)}, Paid: ${paidLocked.toFixed(2)}). Duplicate posting is not allowed.`);
         if (bodyAmountUSD > remAdv + tolerance) throw new Error(`Advance receipt amount cannot exceed remaining advance balance (${remAdv.toFixed(2)}).`);
       }
-      if (body.kind === "remaining" || body.kind === "credit") {
+      const locked = lockedRows[0];
+      const plannedReceipt = reviewedReceipt ? planSalesWorkflowReceipt(locked?.form_data?.transferTrace?.settlement, {
+        currency: body.currencyCode, amount: body.amount, paidOriginal: paidLocked, remainingOriginal: remainingLocked,
+      }) : null;
+      if (reviewedReceipt && (!plannedReceipt || !locked
+        || (body.salesWorkflowQueue && !matchesSalesReceiptQueue(locked, body.salesWorkflowQueue)))) {
+        throw new ApiClientError("Receipt must match the approved final currency and outstanding amount.", { status: 409, code: "SALES_RECEIPT_SETTLEMENT_MISMATCH" });
+      }
+      if (!reviewedReceipt && (body.kind === "remaining" || body.kind === "credit")) {
         if (remainingLocked <= tolerance) throw new Error("This sales order has no remaining receivable balance. Duplicate posting is not allowed.");
         if (bodyAmountUSD > remainingLocked + tolerance) throw new Error(`Receipt amount cannot exceed remaining receivable balance (${remainingLocked.toFixed(2)}).`);
       }
@@ -397,13 +437,25 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
         select ledger_id, debit, credit from roznamcha_lines where roznamcha_entry_id = ${paymentRecord.roznamcha_entry_id}::uuid
       `;
 
+      if (plannedReceipt) {
+        assertBalancedPostedLines({
+          label: postingAssertionLabel, lines: journalLines, expectedDebitLedgerId: resolvedDebitLedgerId,
+          expectedCreditLedgerId: resolvedCreditLedgerId, expectedAmount: plannedReceipt.postingAmount, expectedExchangeRate: 1,
+        });
+        if (paymentRecord?.status !== "posted" || String(paymentRecord.currency_code).toUpperCase() !== plannedReceipt.currency
+          || Math.abs(Number(paymentRecord.amount) - plannedReceipt.postingAmount) > 0.01) {
+          throw new ApiClientError("Receipt did not post in the approved final currency.", { status: 409, code: "SALES_RECEIPT_SETTLEMENT_MISMATCH" });
+        }
+        await sql`update public.sales_orders set paid_amount = ${plannedReceipt.paid}, remaining_amount = ${plannedReceipt.remaining},
+          payment_status = ${plannedReceipt.remaining > 0.01 ? "partially_paid" : "completed"}, updated_at = now() where id = ${params.id}::uuid`;
+      }
       return { paymentId, paymentRecord, journalRecord, journalLines };
     })) as any;
 
-    const exRate = Number(body.exchangeRate || (orderRow as any)?.exchange_rate || 1) || 1;
+    const exRate = reviewedReceipt ? 1 : Number(body.exchangeRate || (orderRow as any)?.exchange_rate || 1) || 1;
     assertDistinctBookingLedgers(resolvedDebitLedgerId, resolvedCreditLedgerId, "Sales payment");
     assertBalancedPostedLines({
-      label: "Sales payment",
+      label: postingAssertionLabel,
       lines: journalLines,
       expectedDebitLedgerId: resolvedDebitLedgerId,
       expectedCreditLedgerId: resolvedCreditLedgerId,
@@ -411,7 +463,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       expectedExchangeRate: exRate
     });
     assertPostedRoznamchaTrace({
-      label: "Sales payment",
+      label: postingAssertionLabel,
       entry: {
         ...journalRecord,
         status: "posted",

@@ -26,6 +26,11 @@ export function printDomFragmentViaModal(
   if (!el) return false;
 
   const clone = el.cloneNode(true) as HTMLElement;
+  // Reveal explicitly marked report content in the printable copy only.
+  clone.querySelectorAll<HTMLElement>("[hidden][data-print-only]").forEach((node) => {
+    node.removeAttribute("hidden");
+    node.style.removeProperty("display");
+  });
 
   // ── 0) A button that carries document data (a bill no. you click to open the bill) prints as its text ──────
   clone.querySelectorAll<HTMLElement>("[data-print-text]").forEach((b) => {

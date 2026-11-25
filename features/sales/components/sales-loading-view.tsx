@@ -5,7 +5,7 @@ import { ArrowLeft, FileText, Filter, MapPin, MoreVertical, Plus, RefreshCw, Tru
 import { AdvancedRegisterSearch, type RegisterSearchField } from "@/components/purchase-ui/advanced-register-search";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { loadingProgress, loadingValues, type LoadedLine, type LoadingOrder, type LoadingRecord, type LoadingStatus } from "@/lib/sales/loading-workflow";
+import { loadingProgress, loadingValues, type LoadedLine, type LoadingOrder, type LoadingRecord, type LoadingStatus, type SalesLoadingSource } from "@/lib/sales/loading-workflow";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { loadSalesLoadingPages, type LoadingRegisterData, type LoadingRegisterOrder } from "@/lib/sales/loading-pagination";
 import { SalesLoadingEntry, type LoadingText } from "./sales-loading-entry";
@@ -21,7 +21,7 @@ const green = "inline-flex min-h-9 items-center justify-center gap-1.5 rounded-f
 const statuses: LoadingStatus[] = ["loaded", "partial", "pending"];
 const tones = { loaded: "text-emerald-700 dark:text-emerald-400", partial: "text-blue-700 dark:text-blue-400", pending: "text-rose-700 dark:text-rose-400" };
 const statusKeys = { loaded: ["sales_loading.complete", "Loaded / Completed"], partial: ["sales_loading.partial", "Partially Loaded"], pending: ["sales_loading.pending", "Pending / Awaiting Loading"] } as const;
-const readinessKeys: Record<string, [string, string]> = { awaiting_invoice: ["sales_loading.wait_invoice", "Awaiting finalized invoice"], awaiting_advance: ["sales_loading.wait_advance", "Awaiting required payment"], awaiting_lot: ["sales_loading.wait_lot", "Awaiting source lot"] };
+const readinessKeys: Record<string, [string, string]> = { awaiting_invoice: ["sales_loading.wait_invoice", "Awaiting finalized invoice"], awaiting_lot: ["sales_loading.wait_lot", "Awaiting source lot"] };
 const entryNo = (r?: LoadingRecord) => r?.entry_no != null ? `LE-${String(r.entry_no).padStart(6, "0")}` : "–";
 const dateText = (d?: string | null) => d?.slice(0, 10) || "–";
 const dollar = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -52,10 +52,11 @@ function matchesRecord(order: LoadingOrder, record: LoadingRecord | undefined, f
 }
 const bookingName = (order: ViewOrder) => [order.bookingNo, order.customer].filter(Boolean).join(" · ");
 
-export function SalesLoadingView({ initialOrderId = "", initialAction = "", initialReport = "" }: { initialOrderId?: string; initialAction?: string; initialReport?: string }) {
+export function SalesLoadingView({ source = "booking", initialOrderId = "", initialAction = "", initialReport = "" }: { source?: SalesLoadingSource; initialOrderId?: string; initialAction?: string; initialReport?: string }) {
+  const local = source === "local";
   const lang = useActiveLanguage();
   const dir = ["ur", "ar", "fa", "ps"].includes(lang) ? "rtl" : "ltr";
-  const tt: LoadingText = (key, fallback) => t(lang, key as never, fallback);
+  const tt: LoadingText = (key, fallback) => key ? t(lang, key as never, fallback) : translateHeader(lang, fallback);
   const searchLabel = tt("sales_loading.filter", "Advanced Search & Filter");
   const statusLabel = (status: LoadingStatus) => tt(statusKeys[status][0], statusKeys[status][1]);
   const [data, setData] = useState(empty);
@@ -75,6 +76,7 @@ export function SalesLoadingView({ initialOrderId = "", initialAction = "", init
   const [view, setView] = useState<{ order: string; record?: string } | null>(null);
 
   const backendQuery = new URLSearchParams({ lang });
+  if (local) backendQuery.set("source", source);
   if (directOrderId) backendQuery.set("orderId", directOrderId);
   else for (const [key, value] of Object.entries({ countryId: filter.country, mainBranchId: filter.mainBranch, cityBranchId: filter.cityBranch,
     booking: filter.booking, container: filter.container, fromDate: filter.fromDate, toDate: filter.toDate, receivedDate: filter.receivedDate })) {
@@ -178,33 +180,33 @@ export function SalesLoadingView({ initialOrderId = "", initialAction = "", init
   let rowIndex = 0;
   const rowCount = visible.reduce((n, r) => n + Math.max(1, r.records.length), 0);
 
-  if (selectedEntry && data.canLoad) return <div dir={dir}><SalesLoadingEntry key={selectedEntry.order.id} order={selectedEntry.order} records={selectedEntry.records} tt={tt} onBack={exitEntry} onSaved={() => { exitEntry(); setNotice(true); if (!directOrderId) void refresh(); }}/></div>;
+  if (selectedEntry && data.canLoad) return <div dir={dir}><SalesLoadingEntry key={selectedEntry.order.id} source={source} order={selectedEntry.order} records={selectedEntry.records} tt={tt} onBack={exitEntry} onSaved={() => { exitEntry(); setNotice(true); if (!directOrderId) void refresh(); }}/></div>;
 
   return <div dir={dir} className="space-y-3" data-testid="sales-loading-dashboard">
     <div className={`${card} flex flex-wrap items-center gap-2`}>
-      <a href="/dashboard/sales/new-sales-booking-order" className={btn}><ArrowLeft className="h-3.5 w-3.5"/>{tt("sales_loading.back", "Back")}</a>
-      <h1 className="me-auto flex items-center gap-2 text-base font-extrabold text-blue-800 dark:text-blue-300"><Truck className="h-5 w-5"/>{tt("sales_loading.title", "Sales Loading (Global & Country Wise)")}</h1>
+      <a href={local ? "/dashboard/sales/local-sales" : "/dashboard/sales/new-sales-booking-order"} className={btn}><ArrowLeft className="h-3.5 w-3.5"/>{tt("sales_loading.back", "Back")}</a>
+      <h1 className="me-auto flex items-center gap-2 text-base font-extrabold text-blue-800 dark:text-blue-300"><Truck className="h-5 w-5"/>{(local ? tt("", "Local Sales Loading (Global & Country Wise)") : tt("sales_loading.title", "Sales Loading (Global & Country Wise)"))}</h1>
       <div className="relative"><button type="button" className={blue} onClick={() => setReportsOpen(v => !v)} aria-expanded={reportsOpen}><FileText className="h-4 w-4"/>{tt("sales_loading.reports", "Reports")}</button>
-        {reportsOpen && <div className="absolute end-0 z-20 mt-1 w-44 rounded-lg border bg-white p-1 text-sm shadow-lg dark:border-slate-700 dark:bg-slate-950"><button type="button" onClick={() => { setReportsOpen(false); window.print(); }} className="w-full rounded-md p-2 text-start hover:bg-slate-100 dark:hover:bg-slate-800">{tt("sales_loading.print", "Print Register")}</button><button type="button" onClick={() => { setFilter(f => ({ ...f, status: "loaded" })); setReportsOpen(false); }} className="w-full rounded-md p-2 text-start hover:bg-slate-100 dark:hover:bg-slate-800">{tt("sales_loading.confirmed", "Confirmed Sales Loading")}</button></div>}
+        {reportsOpen && <div className="absolute end-0 z-20 mt-1 w-44 rounded-lg border bg-white p-1 text-sm shadow-lg dark:border-slate-700 dark:bg-slate-950"><button type="button" onClick={() => { setReportsOpen(false); window.print(); }} className="w-full rounded-md p-2 text-start hover:bg-slate-100 dark:hover:bg-slate-800">{tt("sales_loading.print", "Print Register")}</button><button type="button" onClick={() => { setFilter(f => ({ ...f, status: "loaded" })); setReportsOpen(false); }} className="w-full rounded-md p-2 text-start hover:bg-slate-100 dark:hover:bg-slate-800">{(local ? tt("", "Confirmed Local Sales Loading") : tt("sales_loading.confirmed", "Confirmed Sales Loading"))}</button></div>}
       </div>
       <button type="button" className={blue} aria-haspopup="dialog" aria-expanded={filterOpen} onClick={() => setFilterOpen(true)}><Filter className="h-4 w-4"/>{searchLabel}</button>
       <button type="button" onClick={() => void refresh()} className={btn} aria-label={tt("sales_loading.refresh", "Refresh")}><RefreshCw className="h-4 w-4"/></button>
       {data.canLoad && <button type="button" className={green} disabled={isLoading} onClick={() => { setPicked(""); setPicker(true); }}><Plus className="h-4 w-4"/>{tt("sales_loading.new", "New Loading")}</button>}
     </div>
     {notice && <p role="status" className="rounded-md bg-emerald-50 px-3 py-2 font-semibold text-emerald-800">{tt("sales_loading.saved", "Sales Loading saved")}</p>}
-    {(error || (!isLoading && entryOrderId && !selectedEntry)) && <div role="alert" className="rounded-md bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800">{error ? tt("sales_loading.load_error", "Sales Loading is unavailable. Refresh to try again.") : tt("sales_loading.entry_unavailable", "Loading is not available for this Sales Booking.")}{directOrderId && <button type="button" className={`${btn} ms-3`} onClick={exitEntry}>{tt("plrf.back_to_dashboard", "Dashboard")}</button>}</div>}
+    {(error || (!isLoading && entryOrderId && !selectedEntry)) && <div role="alert" className="rounded-md bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800">{error ? tt("sales_loading.load_error", "Sales Loading is unavailable. Refresh to try again.") : (local ? tt("", "Loading is not available for this Local Sale.") : tt("sales_loading.entry_unavailable", "Loading is not available for this Sales Booking."))}{directOrderId && <button type="button" className={`${btn} ms-3`} onClick={exitEntry}>{tt("plrf.back_to_dashboard", "Dashboard")}</button>}</div>}
     {!data.complete && <p role="status" className="rounded-md bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">{translateHeader(lang, "Only part of this scope is shown. Narrow by country, branch, booking or date for complete totals.")}</p>}
     <div className="grid gap-3 lg:grid-cols-[0.95fr_1fr_1.1fr]">
-      <section className={card}><h2 className="mb-2 text-xs font-extrabold uppercase">{tt("sales_loading.summary", "Sales Loading Summary")}</h2><dl className="space-y-1.5 text-xs sm:text-sm">
+      <section className={card}><h2 className="mb-2 text-xs font-extrabold uppercase">{(local ? tt("", "Local Sales Loading Summary") : tt("sales_loading.summary", "Sales Loading Summary"))}</h2><dl className="space-y-1.5 text-xs sm:text-sm">
         {([["sales_loading.total_bills", "Total Bills", visible.length, ""], ["sales_loading.total_loading", "Total Loading", sum("loading"), "text-blue-700"], ["sales_loading.total_received", "Total Received", sum("received"), "text-emerald-700"], ["sales_loading.balance", "Balance (Remaining)", sum("balance"), "bg-amber-50 dark:bg-amber-950"]] as const).map(([key, name, val, style]) => <div key={key} className={`flex justify-between gap-2 rounded px-2 py-0.5 ${style}`}><dt>{tt(key, name)}</dt><dd className="font-bold tabular-nums" dir="ltr">{data.complete && !isLoading && !error ? val : "–"}</dd></div>)}
       </dl></section>
       <section className={card}><h2 className="mb-2 text-xs font-extrabold uppercase">{tt("sales_loading.status", "Loading Status")}</h2><table className="w-full text-xs sm:text-sm"><thead className="bg-slate-100 text-xs uppercase dark:bg-slate-800"><tr><th className="p-1 text-start">{tt("sales_loading.status_col", "Status")}</th><th className="p-1 text-end">{tt("sales_loading.bills", "Bills")}</th><th className="p-1 text-end">%</th></tr></thead><tbody>{statuses.map(s => <tr key={s}><td className={`p-1 font-semibold ${tones[s]}`}><span className="me-1" aria-hidden>●</span>{statusLabel(s)}</td><td className="p-1 text-end font-bold">{data.complete && !isLoading && !error ? statusCounts[s] : "–"}</td><td className="p-1 text-end font-bold">{data.complete && !isLoading && !error ? `${(visible.length ? statusCounts[s] / visible.length * 100 : 0).toFixed(1)}%` : "–"}</td></tr>)}</tbody></table></section>
       <section className={card}><h2 className="mb-2 text-xs font-extrabold uppercase">{tt("sales_loading.country_summary", "Country Wise Loading")}</h2><div className="max-h-32 overflow-auto"><table className="w-full text-xs sm:text-sm"><thead className="bg-slate-100 text-xs uppercase dark:bg-slate-800"><tr><th className="p-1 text-start">{tt("sales_loading.country", "Country")}</th><th className="p-1 text-end">{tt("sales_loading.currency", "Currency")}</th><th className="p-1 text-end">{tt("sales_loading.bills", "Bills")}</th><th className="p-1 text-end">{tt("sales_loading.amount", "Amount")}</th></tr></thead><tbody>{(data.complete && !isLoading && !error ? [...countries.values()] : []).map((r, i) => <tr key={i} className="font-semibold"><td className="p-1">{r.country || "–"}</td><td className="p-1 text-end">{r.currency || "–"}</td><td className="p-1 text-end">{r.bills}</td><td className="p-1 text-end">{data.financials && r.currency ? dollar(r.amount) : "–"}</td></tr>)}</tbody></table></div></section>
     </div>
     <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <div className="flex items-center justify-between bg-gradient-to-r from-blue-700 to-blue-800 px-3 py-2 text-white"><h2 className="flex items-center gap-2 text-sm font-bold uppercase"><Truck className="h-5 w-5"/>{tt("sales_loading.list", "Sales Loading List")}{filter.country ? ` (${countryChoices.find(option => option.value === filter.country)?.label ?? "–"})` : ""}</h2><span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">{rowCount} {tt("sales_loading.records", "Records")}</span></div>
+      <div className="flex items-center justify-between bg-gradient-to-r from-blue-700 to-blue-800 px-3 py-2 text-white"><h2 className="flex items-center gap-2 text-sm font-bold uppercase"><Truck className="h-5 w-5"/>{(local ? tt("", "Local Sales Loading List") : tt("sales_loading.list", "Sales Loading List"))}{filter.country ? ` (${countryChoices.find(option => option.value === filter.country)?.label ?? "–"})` : ""}</h2><span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">{rowCount} {tt("sales_loading.records", "Records")}</span></div>
       <div className="overflow-x-auto"><table className="w-full min-w-[1250px] text-xs"><thead className="bg-slate-100 text-[11px] dark:bg-slate-800"><tr>{[
-        ["", "#"], ["sales_loading.entry_no", "Loading Entry No. / Date"], ["sales_loading.booking_no", "Sales Booking No. / Date"], ["sales_loading.vessel_bl", "Vessel Name / B/L Number"], ["sales_loading.branch", "Branch Name (Main / City Branch)"], ["sales_loading.posted_by", "User Name (Posted By)"], ["sales_loading.purchase_dr", "Purchase DR (Acc. No. / Name)"], ["sales_loading.sales_cr", "Sales CR (Acc. No. / Name)"], ["sales_loading.goods", "Goods Name (Brand / Size)"], ["sales_loading.lot", "Lot Name"], ["sales_loading.qty_unit", "Qty (Unit)"], ["sales_loading.weight", "Weight (KG) Gross / Net"], ["sales_loading.load_route", "Loading Country / Port"], ["sales_loading.receive_route", "Received Country / Port"], ["sales_loading.actions", "Actions"],
+        ["", "#"], ["sales_loading.entry_no", "Loading Entry No. / Date"], local ? ["", "Local Sales Bill No. / Date"] : ["sales_loading.booking_no", "Sales Booking No. / Date"], ["sales_loading.vessel_bl", "Vessel Name / B/L Number"], ["sales_loading.branch", "Branch Name (Main / City Branch)"], ["sales_loading.posted_by", "User Name (Posted By)"], ["sales_loading.purchase_dr", "Purchase DR (Acc. No. / Name)"], ["sales_loading.sales_cr", "Sales CR (Acc. No. / Name)"], ["sales_loading.goods", "Goods Name (Brand / Size)"], ["sales_loading.lot", "Lot Name"], ["sales_loading.qty_unit", "Qty (Unit)"], ["sales_loading.weight", "Weight (KG) Gross / Net"], ["sales_loading.load_route", "Loading Country / Port"], ["sales_loading.receive_route", "Received Country / Port"], ["sales_loading.actions", "Actions"],
       ].map(([key, fallback]) => <th key={key} scope="col" className="border-e border-slate-200 px-2 py-2.5 text-start font-bold dark:border-slate-700">{key ? tt(key, fallback) : fallback}</th>)}</tr></thead><tbody>
         {!visible.length && <tr><td colSpan={15} className="p-8 text-center text-slate-500">{isLoading ? tt("sales_loading.wait", "Loading sales bookings…") : data.complete ? tt("sales_loading.empty", "No matching sales loading records") : "–"}</td></tr>}
         {visible.flatMap(({ order, records, status }) => (records.length ? records : [undefined]).map(r => {
@@ -233,7 +235,7 @@ export function SalesLoadingView({ initialOrderId = "", initialAction = "", init
     </section>
     <AdvancedRegisterSearch open={filterOpen} onClose={() => setFilterOpen(false)} onApply={setFilter} value={filter} fields={searchFields} lang={lang}/>
     {picker && <Dialog title={tt("sales_loading.new", "New Loading")} onClose={() => setPicker(false)} tt={tt}><form className="space-y-3" onSubmit={event => { event.preventDefault(); if (picked) { setEntryOrderId(picked); setPicker(false); } }}>
-      <label className="grid gap-1 text-sm">{tt("sales_loading.select_booking", "Select transferred Sales Booking")}<select autoFocus required className={selectClass} value={picked} onChange={e => setPicked(e.target.value)}><option value="">–</option>{choices.map(({ order }) => <option key={order.id} value={order.id}>{bookingName(order)}</option>)}</select></label>
+      <label className="grid gap-1 text-sm">{(local ? tt("", "Select transferred Local Sale") : tt("sales_loading.select_booking", "Select transferred Sales Booking"))}<select autoFocus required className={selectClass} value={picked} onChange={e => setPicked(e.target.value)}><option value="">–</option>{choices.map(({ order }) => <option key={order.id} value={order.id}>{bookingName(order)}</option>)}</select></label>
       {!choices.length && !isLoading && <p className="text-sm text-slate-500">{tt("sales_loading.none_ready", "No transferred booking is ready for loading.")}</p>}
       <button className={green} disabled={!picked}>{tt("sales_loading.loading", "Loading")}</button>
     </form></Dialog>}
@@ -241,7 +243,7 @@ export function SalesLoadingView({ initialOrderId = "", initialAction = "", init
       <p className={`font-semibold ${tones[detail.status]}`}>{statusLabel(detail.status)}</p>
       {detail.order.readiness !== "ready" && readinessKeys[detail.order.readiness] && <p className="my-2 rounded bg-amber-50 p-2 text-sm text-amber-800">{tt(...readinessKeys[detail.order.readiness])}</p>}
       <p className="my-2 text-sm">{detail.order.customer}</p>
-      {(detailRecord ? [detailRecord] : detail.records).map(record => <ReceiveRecord key={record.id} record={record} tt={tt} canLoad={data.canLoad && detail.order.canLoad !== false} onSaved={() => { setView(null); setNotice(true); void refresh(); }}/>) }
+      {(detailRecord ? [detailRecord] : detail.records).map(record => <ReceiveRecord key={record.id} source={source} record={record} tt={tt} canLoad={data.canLoad && detail.order.canLoad !== false} onSaved={() => { setView(null); setNotice(true); void refresh(); }}/>) }
       {detail.records.length === 0 && <p className="text-sm text-slate-500">{tt("plrf.no_loading_yet", "No Loading Records Yet")}</p>}
     </Dialog>}
   </div>;
@@ -252,7 +254,7 @@ function Stack({ value, detail, blueText }: { value?: string; detail?: string; b
 function Dialog({ title, children, onClose, tt }: { title: string; children: React.ReactNode; onClose: () => void; tt: LoadingText }) {
   return <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-3" onMouseDown={e => { if (e.currentTarget === e.target) onClose(); }}><div role="dialog" aria-modal="true" aria-label={title} className="max-h-[90vh] w-full max-w-xl space-y-3 overflow-auto rounded-xl bg-white p-4 shadow-xl dark:bg-slate-950"><div className="flex items-center justify-between border-b pb-2 dark:border-slate-700"><h2 className="font-bold">{title}</h2><button type="button" className={btn} onClick={onClose}>{tt("sales_loading.close", "Close")}</button></div>{children}</div></div>;
 }
-function ReceiveRecord({ record, tt, canLoad, onSaved }: { record: LoadingRecord; tt: LoadingText; canLoad: boolean; onSaved: () => void }) {
+function ReceiveRecord({ source, record, tt, canLoad, onSaved }: { source: SalesLoadingSource; record: LoadingRecord; tt: LoadingText; canLoad: boolean; onSaved: () => void }) {
   const [receivedDate, setDate] = useState(record.received_date?.slice(0, 10) || "");
   const [receivedCountry, setCountry] = useState(record.details.receivedCountry ?? "");
   const [receivedPort, setPort] = useState(record.details.receivedPort ?? "");
@@ -261,7 +263,7 @@ function ReceiveRecord({ record, tt, canLoad, onSaved }: { record: LoadingRecord
   async function save(event: FormEvent) {
     event.preventDefault(); setSaving(true); setError(false);
     try {
-      const res = await fetch("/api/erp/sales/loading", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: record.id, receivedDate: receivedDate || null, receivedCountry, receivedPort }) });
+      const res = await fetch("/api/erp/sales/loading", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ source, id: record.id, receivedDate: receivedDate || null, receivedCountry, receivedPort }) });
       if (!res.ok) throw new Error("Save failed");
       onSaved();
     } catch { setError(true); } finally { setSaving(false); }

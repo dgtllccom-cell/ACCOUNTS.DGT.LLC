@@ -7,7 +7,10 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { printDomFragmentViaModal } from "@/lib/reports/print-dom-fragment";
 import { bookingScopeSerials, groupExactSerials } from "@/lib/sales/sales-transfer-serials";
+import { salesPaymentTransferReport } from "@/lib/sales/payment-transfer-report";
 import { SalesTransferScopeSerials } from "./sales-transfer-scope-serials";
+import { salesWorkflowDestination } from "@/lib/sales/payment-workflow";
+import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
 import { getBookingCurrencies } from "@/lib/sales/booking-currencies";
 
 function ReportSection({ title, entries, children, className = "", green = false }) {
@@ -15,8 +18,8 @@ function ReportSection({ title, entries, children, className = "", green = false
     <section className={`min-w-0 overflow-hidden rounded-lg border border-slate-300 bg-white ${className}`}>
       <h3 className={`px-3 py-1.5 text-xs font-black uppercase ${green ? "bg-emerald-700 text-white" : "bg-gradient-to-r from-blue-200 to-blue-50 text-blue-950"}`}>{title}</h3>
       {entries && <dl className="divide-y divide-slate-200 px-3 py-1">
-        {entries.map(([label, value]) => (
-          <div key={label} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-1">
+        {entries.map(([label, value, printOnly]) => (
+          <div key={label} hidden={printOnly || undefined} style={printOnly ? { display: "none" } : undefined} data-print-only={printOnly ? "" : undefined} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 py-1">
             <dt className="font-semibold text-slate-600">{label}</dt>
             <dd className="break-words font-bold"><bdi>{value ?? "—"}</bdi></dd>
           </div>
@@ -28,11 +31,11 @@ function ReportSection({ title, entries, children, className = "", green = false
 }
 
 export function SalesBookingTransferReport({
-  open, onClose, form = {}, goods = [], order = {}, confirmation, busy = false, error, onPost, onDocument, lang = "en",
+  open, onClose, form = {}, goods = [], order = {}, confirmation, busy = false, error, onPost, onDocument, lang = "en", localSale = false,
 }) {
   const printId = useId();
   const tr = label => translateHeader(lang, label);
-  const title = tr("Sales Booking Transfer Verification Report");
+  const title = tr(localSale ? "Local Sales Transfer Verification Report" : "Sales Booking Transfer Verification Report");
   const data = order.form_data || {};
   const trace = confirmation?.transferVerification || data.transferVerification || {};
   const audit = form.transferAudit || {};
@@ -57,12 +60,18 @@ export function SalesBookingTransferReport({
       return [label, journalUrl ? <a href={journalUrl} className="text-blue-700 underline decoration-blue-200" target="_blank" rel="noreferrer">{code}</a> : code];
     });
   const booking = confirmation?.salesOrderNo || order.sales_order_no || form.salesOrderNo;
+  const destination = posted ? salesWorkflowDestination(form.paymentType || form.paymentCondition, {
+    orderId: confirmation?.salesOrderId || order.id,
+    billNo: booking,
+    local: isLocalSalesFormData({ form }),
+  }) : null;
   const debit = form.customerAccountName || order.customer_name;
   const credit = form.salesAccountName;
   const debitCode = form.customerAccountNo;
   const creditCode = form.salesAccountNo;
-  const section = (name, entries, props = {}) => <ReportSection title={tr(name)} entries={entries.map(([label, value]) => [tr(label), value || value === 0 ? value : null])} {...props} />;
+  const section = (name, entries, props = {}) => <ReportSection title={tr(name)} entries={entries.map(([label, value, printOnly]) => [tr(label), value || value === 0 ? value : null, printOnly])} {...props} />;
   const cell = "border-b border-slate-200 px-2 py-1.5 text-start";
+  const localSettlement = localSale ? salesPaymentTransferReport(order) : null;
   const debitAmount = posted && trace.debitCurrency ? money(trace.debitAmount, trace.debitCurrency) : null;
   const creditAmount = posted && trace.creditCurrency ? money(trace.creditAmount, trace.creditCurrency) : null;
   const previewSummary = [
@@ -100,14 +109,14 @@ export function SalesBookingTransferReport({
               <strong className="text-lg text-blue-950">{form.branchCompanyName || form.salesCompanyName || order.branch_name || form.branchName || "—"}</strong>
               <div className="text-end"><div>{order.branch_name || form.branchName || "—"}</div><div>{order.country_name || form.countryName || form.country || "—"}</div></div>
             </header>
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-blue-950 px-3 py-2 text-white">
+            <div hidden style={{ display: "none" }} data-print-only="" className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-blue-950 px-3 py-2 text-white">
               <h2 className="text-sm font-bold">{title}</h2>
               <bdi>{booking || "—"} · {form.salesDate || order.order_date || "—"}</bdi>
               <strong className={posted ? "rounded bg-emerald-700 px-2 py-1" : "rounded bg-slate-700 px-2 py-1"}>{status}</strong>
             </div>
             <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
               <div className="grid gap-3 sm:grid-cols-2">
-                {section("Booking Information", [["Sales Booking No.", booking], ["Booking Date", form.salesDate || order.order_date], ["Booking Type", tr("Sales Booking")], ["Sales Order Ref", form.salesContractNo || form.billNo]])}
+                {section("Booking Information", [["Sales Booking No.", booking, true], ["Booking Date", form.salesDate || order.order_date], ["Booking Type", tr(localSale ? "Local Sales" : "Sales Booking")], ["Sales Order Ref", form.salesContractNo || form.billNo]])}
                 {section("Accounts (DR / CR)", [["Customer Account (DR)", debit], ["Account No. (DR)", debitCode], ["Sales Account (CR)", credit], ["Account No. (CR)", creditCode]])}
                 {section("Customer / Sender (DR)", [["Account Name", debit], ["Country / Branch", [form.customerAccountCountry, form.customerAccountBranch].filter(Boolean).join(" / ")], ["Contact Person", form.customerContactPerson], ["Contact No.", form.customerPhone]])}
                 {section("Receiver / Sales (CR)", [["Account Name", credit], ["Country / Branch", [form.salesAccountCountry, form.salesAccountBranch].filter(Boolean).join(" / ")], ["Contact Person", form.salesContactPerson], ["Contact No.", form.salesPhone]])}
@@ -125,7 +134,7 @@ export function SalesBookingTransferReport({
                   </div>
                 </ReportSection>
                 {section("Loading & Route Information", [["Loading Country", form.loadingCountry], ["Loading Port", form.loadingPort], ["Loading Date", form.loadingDate], ["Received Country", form.receivedCountry || form.receivingCountry], ["Received Port", form.receivedPort || form.receivingPort], ["Receiving Date", form.receivedDate || form.receivingDate], ["Ship Type", form.shippingMode], ["Container No.", form.containerNo]])}
-                {section("Payment Information", [["Payment Type", form.paymentType], ["Payment Condition", form.paymentCondition || form.paymentTerms], ["Sales Currency", sales], ["Exchange Rate", rate.ok ? `${sales} ${rate.operator === "/" ? "÷" : "×"} ${rate.rate} → ${final}` : null], ["Final Amount", money(finalAmount, final)], ["Paid Amount", money(confirmation?.paidAmount ?? order.paid_amount, final)], ["Remaining Amount", money(confirmation?.remainingAmount ?? order.remaining_amount, final)], ["Payment Account", form.paymentAccountName]])}
+                {section("Payment Information", [["Payment Type", form.paymentType], ["Payment Condition", form.paymentCondition || form.paymentTerms], ["Sales Currency", sales], ["Exchange Rate", rate.ok ? `${sales} ${rate.operator === "/" ? "÷" : "×"} ${rate.rate} → ${final}` : null], ["Final Amount", money(finalAmount, final)], ["Paid Amount", money(localSale ? localSettlement?.received : confirmation?.paidAmount ?? order.paid_amount, final)], ["Remaining Amount", money(localSale ? localSettlement?.remaining : confirmation?.remainingAmount ?? order.remaining_amount, final)], ["Payment Account", form.paymentAccountName]])}
                 {section("Accounting Posting (Transfer Result)", [["Debit", debitAmount], ["Credit", creditAmount]])}
                 <ReportSection title={tr("Remarks")}><p className="whitespace-pre-wrap break-words p-3">{form.salesReportRemarks || form.remarks || "—"}</p></ReportSection>
               </div>
@@ -133,7 +142,7 @@ export function SalesBookingTransferReport({
                 {section("Transfer & Posting Details", [
                   ["Business Ledger", posted ? tr("Posted") : "—"], ["Business Roznamcha", posted ? tr("Posted") : "—"],
                   ...postingReferences,
-                  ["Transfer Date & Time", (trace.postedAt || audit.transferDate) && new Date(trace.postedAt || audit.transferDate).toLocaleString(lang, { timeZone: "Asia/Dubai" })], ["Transferred By", trace.userName || audit.userName], ["Final Status", status],
+                  ["Transfer Date & Time", (trace.postedAt || audit.transferDate) && new Date(trace.postedAt || audit.transferDate).toLocaleString(lang, { timeZone: "Asia/Dubai" })], ["Transferred By", trace.userName || audit.userName], ["Final Status", status, true],
                 ], { green: true })}
                 <SalesTransferScopeSerials serials={trace.scopeSerials} booking={bookingScopeSerials(order, form)} lang={lang} />
                 {section("Posting Summary", [["Debit Account", debitCode], ["Debit Amount", debitAmount], ["Credit Account", creditCode], ["Credit Amount", creditAmount], ["Final Currency", final], ["Final Amount", money(finalAmount, final)]])}
@@ -149,6 +158,7 @@ export function SalesBookingTransferReport({
               <ArrowRightLeft aria-hidden="true" />{busy ? tr("Processing...") : tr("Transfer / Post")}
             </Button>}
             {posted && onDocument && <Button type="button" size="sm" className="bg-emerald-700 text-white hover:bg-emerald-800" onClick={onDocument}>{tr("Sales Booking")}</Button>}
+            {destination && <Button asChild size="sm" variant="outline"><a href={destination.href}>{tr(destination.label)}</a></Button>}
             {journalUrl && <Button asChild size="sm"><a href={journalUrl} target="_blank" rel="noreferrer">{tr("View Journal")}</a></Button>}
         </footer>
       </DialogContent>

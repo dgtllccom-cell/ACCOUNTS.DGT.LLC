@@ -3,7 +3,7 @@ import { createSalesLoadingSchema, loadingProgress, loadingReadiness, loadingVal
 import { t } from "@/lib/i18n/ui";
 
 const source = {
-  id: "e73b8a60-042e-4ff5-a7e1-fce71c64a502", sales_order_no: "SB-QA-009", order_date: "2026-11-23", currency_code: "AED", country_id: "ae",
+  id: "e73b8a60-042e-4ff5-a7e1-fce71c64a502", sales_order_no: "SB-QA-009", ledger_posting_status: "posted", order_date: "2026-11-23", currency_code: "AED", country_id: "ae",
   form_data: { form: { bookingCurrencyConfigured: true, currencyType: "USD", secondaryCurrency: "AED", exchangeRate: 3.6725, salesAccountName: "Walnut Sales" }, goodsEntries: [
     { goodsName: "Walnuts", lotNo: "LOT-101", qtyNo: 5000, qtyName: "Cartons", finalAmount: 367.25, purchaseAccountName: "Supplier A", purchaseAccountNo: "P-23" },
     { goodsName: "Almonds", lotRef: "LOT-102", qtyNo: 50, qtyName: "KG", finalAmount: 10 },
@@ -51,20 +51,34 @@ describe("Sales Loading", () => {
     expect(totals.loading).toBeCloseTo(83.45);
     expect(totals.received).toBeCloseTo(10);
   });
-  it("checks original-currency actual payments against cash and advance thresholds without re-converting them", () => {
-    const inCash = { ...source, order_total: 367.25, total_goods_original: 100, form_data: { ...source.form_data, form: { ...source.form_data.form, paymentType: "Cash" } } };
-    expect(loadingReadiness({ ...inCash, paid_amount: 100 })).toBe("ready");
-    expect(loadingReadiness({ ...inCash, paid_amount: 99 })).toBe("awaiting_advance");
-    expect(loadingReadiness({ ...inCash, total_goods_original: 0, paid_amount: 100 })).toBe("ready");
-    const inAdvance = { ...inCash, form_data: { ...inCash.form_data, form: { ...inCash.form_data.form, paymentType: "Advance", advancePercent: 10 } } };
-    expect(loadingReadiness({ ...inAdvance, paid_amount: 10 })).toBe("ready");
-    expect(loadingReadiness({ ...inAdvance, paid_amount: 9 })).toBe("awaiting_advance");
+  it.each(["stock", "local"])("uses the same verified loading policy for %s", saleSource => {
+    const onFile = (paymentType: string, overrides: Record<string, unknown> = {}) => ({
+      ...source, paid_amount: 0, ...overrides,
+      form_data: { ...source.form_data, form: { ...source.form_data.form, saleSource, paymentType } },
+    });
+    for (const label of ["Cash", "Credit", "Account Transfer"]) {
+      expect(loadingReadiness(onFile(label))).toBe("ready");
+      expect(loadingReadiness(onFile(label, { ledger_posting_status: "pending" }))).toBe("not_transferred");
+      expect(loadingReadiness(onFile(label, { ledger_posting_status: "transferred" }))).toBe("ready");
+    }
+    expect(loadingReadiness(onFile("Invoice", { invoice_finalized: false }))).toBe("awaiting_invoice");
+    expect(loadingReadiness(onFile("Invoice", { invoice_finalized: true }))).toBe("ready");
+    for (const label of ["Advance", "Advance Payment", "Final Payment", "", "Cash Advance"]) {
+      expect(loadingReadiness(onFile(label, { paid_amount: 999, invoice_finalized: true }))).toBe("payment_not_eligible");
+    }
+    const endorse = onFile("Cash");
+    expect(loadingReadiness({ ...endorse, form_data: { form: { ...endorse.form_data.form, saleType: "endorse" }, goodsEntries: [{ qtyNo: 2 }] } })).toBe("awaiting_lot");
   });
-  it("requires a finalized invoice and does not invent a source lot", () => {
-    const invoice = { ...source, form_data: { ...source.form_data, form: { ...source.form_data.form, paymentType: "Invoice" } } };
-    expect(loadingReadiness({ ...invoice, invoice_finalized: false })).toBe("awaiting_invoice");
-    expect(loadingReadiness({ ...invoice, invoice_finalized: true })).toBe("ready");
-    expect(loadingReadiness({ ...source, form_data: { form: { saleType: "endorse" }, goodsEntries: [{ qtyNo: 2 }] } })).toBe("awaiting_lot");
+  it("uses original transfer type ahead of the journal lane and never uses later receipts", () => {
+    const withRoute = (paymentType: string, kind: string, trace: Record<string, unknown> = {}) => ({
+      ...source, form_data: { ...source.form_data, form: { paymentType },
+        transferTrace: { paymentKind: kind, ...trace }, workflow: { paymentKind: "cash" },
+        lastPaymentTrace: { paymentKind: "cash" } },
+    });
+    expect(loadingReadiness(withRoute("Credit", "advance"))).toBe("payment_not_eligible");
+    expect(loadingReadiness(withRoute("Account Transfer", "advance"))).toBe("ready");
+    expect(loadingReadiness(withRoute("Account Transfer", "advance", { paymentType: "Advance Payment" }))).toBe("payment_not_eligible");
+    expect(loadingReadiness(withRoute("Advance Payment", "account_transfer"))).toBe("ready");
   });
   it("provides the Sales Loading title and error labels in all five locales", () => {
     for (const key of ["title", "save_error", "duplicate_container", "entry_title", "main_branch", "city_branch"]) {

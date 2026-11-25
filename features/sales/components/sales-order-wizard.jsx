@@ -55,6 +55,8 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
+import { salesWorkflowDestination } from "@/lib/sales/payment-workflow";
+import { newIdempotencyKey } from "@/lib/api/idempotency-client";
 import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
 import { SalesBookingJournalReportView } from "./sales-booking-journal-report-view";
 import { convertedSalesAmount, getBookingCurrencies } from "@/lib/sales/booking-currencies";
@@ -73,7 +75,7 @@ import { cn } from "@/lib/utils";
 
 // --- Non-location constants (static values, not from master forms) ---
 const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY", "SAR"];
-const PAYMENT_TYPES = ["Advance Payment", "Invoice", "Final Payment", "Credit"];
+const PAYMENT_TYPES = ["Advance Payment", "Invoice", "Final Payment", "Credit", "Cash", "Account Transfer"];
 const LOADING_TYPES = ["By Sea", "By Road", "By Air"];
 const CONTAINER_TYPES = ["20 FT", "40 FT", "20 FT Reefer", "40 FT Reefer", "Reefer Container", "Non Reefer", "Open Top", "Flat Rack", "LCL / Bulk"];
 const QTY_TYPE_OPTIONS = ["BAGS", "CARTONS", "Loose", "KGS", "Ton", "PCS", "Dozen", "Box", "Pallet"];
@@ -494,6 +496,7 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
   // GRADIENT header strip on an otherwise plain card (not a full-card wash);
   // it changes no calculation, field, validation, or save behavior.
   const isLocalSale = form.saleSource === "local" || (form.saleSource === "lot" && form.saleMode !== "export");
+  const reviewedTransferKeys = useRef(new Map());
   const sectionPanelCls = "rounded-2xl border border-border bg-card p-4 shadow-sm";
   const sectionPanelHeaderCls = isLocalSale
     ? "flex items-center justify-between rounded-xl bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-950/40 dark:to-amber-900/30 border border-amber-300 dark:border-amber-800 px-3 py-2 mb-3"
@@ -1637,7 +1640,7 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
         // bug as customerAccountName above. Only apply when the extracted value is
         // one of the real option strings; otherwise leave the field for the human
         // to choose rather than silently setting an invalid/blank selection.
-        const validPaymentTypes = ["Advance Payment", "Invoice", "Final Payment", "Credit"];
+        const validPaymentTypes = PAYMENT_TYPES;
         const matchedType = validPaymentTypes.find((v) => v.toLowerCase() === String(p.paymentTerms).trim().toLowerCase());
         if (matchedType) next.paymentType = matchedType;
       }
@@ -1930,10 +1933,17 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
       if (!returnedOrderId) throw new Error("The saved booking ID is missing.");
       setSavedOrderId(returnedOrderId);
       setSavedOrderNo(returnedOrderNo);
+      const destination = salesWorkflowDestination(form.paymentType, { orderId: returnedOrderId, billNo: returnedOrderNo, local: isLocalSale });
+      if (destination && !reviewedTransferKeys.current.has(returnedOrderId)) {
+        reviewedTransferKeys.current.set(returnedOrderId, newIdempotencyKey("sales-booking-transfer", returnedOrderId));
+      }
       const transferResponse = await fetch(`/api/erp/sales/orders/${returnedOrderId}/transfer`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        headers: {
+          "Content-Type": "application/json",
+          ...(destination ? { "X-Idempotency-Key": reviewedTransferKeys.current.get(returnedOrderId) } : {}),
+        },
+        body: JSON.stringify(destination ? { transferRegister: true, ...(isLocalSale ? { source: "local" } : {}) } : {
           paymentKind: paymentRoute.paymentKind,
           paymentType: form.paymentType || paymentRoute.paymentLabel
         })
@@ -1950,7 +1960,7 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
       setRegisterRefreshKey((key) => key + 1);
 
       if (intake.draft) await intake.consume(String(returnedOrderId)).catch(() => undefined);
-      if (!stayInReport) window.location.href = `${paymentRoute.path}?salesOrderNo=${encodeURIComponent(returnedOrderNo)}`;
+      if (!stayInReport) window.location.href = destination?.href ?? `${paymentRoute.path}?salesOrderNo=${encodeURIComponent(returnedOrderNo)}`;
       return confirmation;
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error saving order.";

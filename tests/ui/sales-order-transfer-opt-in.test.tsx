@@ -140,4 +140,12 @@ describe("Sales Transfer is an opt-in lane on the existing register", () => {
       expect.objectContaining({ sales_order_no: "SB-0099" }),
     ]));
   });
+  it("keeps the local source on a separate heading, API query, and existing report destination", async () => {
+    apiGet.mockResolvedValue({ salesOrders: [posted], nextOffset: null });
+    render(<SalesOrderManagementDashboard transferOnly localTransfer />);
+    expect(screen.getByRole("heading", { name: "Local Sales Transfer Payment" })).toBeTruthy();
+    fireEvent.click(await screen.findByRole("button", { name: "View" }));
+    expect(apiGet).toHaveBeenCalledWith(expect.stringContaining("transferred=1&source=local"));
+    expect(push).toHaveBeenCalledWith("/dashboard/sales/sales-order/view?id=order-1&transfer=1&source=local");
+  });
 });

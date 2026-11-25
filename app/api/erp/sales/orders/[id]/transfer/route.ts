@@ -9,13 +9,15 @@ import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { assertFinancialAccess } from "@/lib/permissions/middleware";
+import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
+import { deductLegacyLocalSaleLot } from "@/lib/sales/local-sales-transfer";
 import { scopeSerials } from "@/lib/sales/sales-transfer-serials";
 import { normalizeLegacySalesPaymentSources } from "@/lib/sales/legacy-payment-sources";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
-import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
+import { resolveReviewedSalesPaymentRoute, resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
 
 const paramsSchema = z.object({
@@ -64,29 +66,37 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
     const body = await request.json().catch(() => ({}));
-    const registerPosting = body?.transferRegister === true;
+    const localPosting = body?.source === "local";
+    const registerPosting = localPosting || body?.transferRegister === true;
     if (registerPosting) assertFinancialAccess(session);
 
-    const lockRes = await acquireIdempotencyLock({
-      req: request,
-      scopeModule: "SALES_TRANSFER",
-      userId: session.userId,
-      countryId: session.countryIds?.[0] ?? null,
-      cityBranchId: session.cityBranchIds?.[0] ?? null,
-      businessReference: params.id,
-      payload: body
-    });
+    const lockTransfer = async () => {
+      const lockRes = await acquireIdempotencyLock({
+        req: request,
+        scopeModule: "SALES_TRANSFER",
+        userId: session.userId,
+        countryId: session.countryIds?.[0] ?? null,
+        cityBranchId: session.cityBranchIds?.[0] ?? null,
+        businessReference: params.id,
+        payload: body
+      });
 
-    if (lockRes.isReplayed) {
-      return buildReplayedResponse(lockRes.responseCode || 200, lockRes.responseBody);
+      if (lockRes.isReplayed) {
+        return buildReplayedResponse(lockRes.responseCode || 200, lockRes.responseBody);
+      }
+
+      if (!lockRes.acquired) {
+        return handleApiError(new Error("A request with this idempotency key is currently being processed or duplicate submission detected. Please wait."));
+      }
+
+      idempotencyKey = lockRes.idempotencyKey;
+      tenantHash = lockRes.tenantHash;
+      return null;
+    };
+    if (!localPosting) {
+      const lockResponse = await lockTransfer();
+      if (lockResponse) return lockResponse;
     }
-
-    if (!lockRes.acquired) {
-      return handleApiError(new Error("A request with this idempotency key is currently being processed or duplicate submission detected. Please wait."));
-    }
-
-    idempotencyKey = lockRes.idempotencyKey;
-    tenantHash = lockRes.tenantHash;
 
     const supabase = (await createApiSupabaseClient()) as any;
     // Root-cause bypass (see app/api/erp/sales/orders/route.ts GET handler for the same note):
@@ -124,7 +134,17 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const formData = orderRow.form_data || {};
     const form = formData.form || {};
     const workflow = formData.workflow || {};
-    const paymentRoute = resolveSalesBookingPaymentRoute(body?.paymentKind ?? body?.paymentType ?? form.paymentType ?? "Advance Payment");
+    if (localPosting && !isLocalSalesFormData(formData)) {
+      throw new ApiClientError("Local sales order not found.", { status: 404, code: "LOCAL_SALES_ORDER_NOT_FOUND" });
+    }
+    if (localPosting) {
+      // Do not replay a previous response before validating the user's current source/scope.
+      const lockResponse = await lockTransfer();
+      if (lockResponse) return lockResponse;
+    }
+    const paymentRoute = registerPosting
+      ? resolveReviewedSalesPaymentRoute(form.paymentType ?? form.paymentCondition ?? "Advance Payment")
+      : resolveSalesBookingPaymentRoute(body?.paymentKind ?? body?.paymentType ?? form.paymentType ?? "Advance Payment");
 
     const alreadyTransferred =
       orderRow.ledger_posting_status === "transferred" ||
@@ -355,13 +375,16 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       let registerPaid: number | undefined;
       if (registerPosting) {
         const locked = await tx`
-          select o.paid_amount, o.ledger_posting_status, o.order_total, o.currency_code, c.currency_code as country_currency
+          select o.paid_amount, o.ledger_posting_status, o.order_total, o.currency_code, o.form_data, o.sales_status, c.currency_code as country_currency
           from public.sales_orders o left join public.countries c on c.id = o.country_id
           where o.id = ${params.id}::uuid and o.deleted_at is null for update of o
         `;
         if (locked.length !== 1 || ["posted", "transferred"].includes(locked[0].ledger_posting_status)
           || String(locked[0].order_total) !== String(orderRow.order_total)
-          || String(locked[0].currency_code) !== String(orderRow.currency_code)) {
+          || String(locked[0].currency_code) !== String(orderRow.currency_code)
+          || (localPosting && (!isLocalSalesFormData(locked[0].form_data) || locked[0].sales_status !== orderRow.sales_status
+            || JSON.stringify(locked[0].form_data?.form) !== JSON.stringify(form)
+            || JSON.stringify(locked[0].form_data?.goodsEntries) !== JSON.stringify(formData.goodsEntries)))) {
           throw new ApiClientError("The Sales Booking changed. Refresh and try again.", { status: 409, code: "SALES_BOOKING_CHANGED" });
         }
         if (settlement && String(locked[0].country_currency || "").toUpperCase() !== settlement.finalCurrency) {
@@ -551,7 +574,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         };
       }
 
-      if (isStockSale && !alreadyDeducted && !managedDeduction) {
+      if (isStockSale && !alreadyDeducted && (!managedDeduction || (localPosting && legacyStockLines.length > 0))) {
         // Legacy stock: one deduction per saved goods line (its own lot, quantity and source). A booking that carries no goods-line
         // stock falls back to the form-level pick, as before.
         const stockLines = legacyStockLines.length > 0
@@ -638,8 +661,13 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
                   )
                 `;
               }
-            } else if (lotNo.startsWith("LP-") || saleSource === "local") {
-              if (lotId) {
+            } else if (lotNo.startsWith("LP-") || saleSource === "local" || (localPosting && !saleSource && lotNo)) {
+              if (localPosting) {
+                await deductLegacyLocalSaleLot(sql, {
+                  lotId, lotNo, qty: soldQty, now,
+                  countryId: orderRow.country_id, countryBranchId: orderRow.country_branch_id, cityBranchId: orderRow.city_branch_id,
+                });
+              } else if (lotId) {
                 await sql`
                   UPDATE public.local_purchases
                   SET numbers = GREATEST(0, numbers - ${soldQty}),

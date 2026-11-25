@@ -9,7 +9,7 @@ import { LoadingWorkflow, LoadingWorkflowReport, type LoadingWorkflowStep } from
 import { VoiceFormFill } from "@/components/voice-form-fill";
 import { LoadingReceivingCell } from "@/features/journal/components/loading-receiving-cell";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { CONTAINER_TYPES, loadingProgress, type LoadingOrder, type LoadingRecord } from "@/lib/sales/loading-workflow";
+import { CONTAINER_TYPES, loadingProgress, type LoadingOrder, type LoadingRecord, type SalesLoadingSource } from "@/lib/sales/loading-workflow";
 
 export type LoadingText = (key: string, fallback: string) => string;
 const input = "w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100";
@@ -32,8 +32,8 @@ const operationalFields = {
   flight: label("sales_loading.flight", "Flight Details"), awb: label("sales_loading.awb", "Air Waybill"), rail: label("sales_loading.rail", "Rail Reference"),
 } as const;
 
-export function SalesLoadingEntry({ order, records, tt, onBack, onSaved }: {
-  order: LoadingOrder; records: LoadingRecord[]; tt: LoadingText; onBack: () => void; onSaved: () => void;
+export function SalesLoadingEntry({ source = "booking", order, records, tt, onBack, onSaved }: {
+  source?: SalesLoadingSource; order: LoadingOrder; records: LoadingRecord[]; tt: LoadingText; onBack: () => void; onSaved: () => void;
 }) {
   const lang = useActiveLanguage();
   const direction = ["ur", "ar", "fa", "ps"].includes(lang) ? "rtl" : "ltr";
@@ -55,7 +55,7 @@ export function SalesLoadingEntry({ order, records, tt, onBack, onSaved }: {
     setSaving(true);
     try {
       const payload = containers.map(c => ({ ...c, receivedDate: c.receivedDate || null, items: c.items.map(it => ({ ...it, quantity: +it.quantity, gross: +it.gross, net: +it.net })) }));
-      const res = await fetch("/api/erp/sales/loading", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: order.id, containers: payload }) });
+      const res = await fetch("/api/erp/sales/loading", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ source, orderId: order.id, containers: payload }) });
       const data = await res.json();
       if (!res.ok || !data.ok) {
         const msg = data.error?.code === "OVERLOAD" ? tt("sales_loading.overload", "The quantity exceeds the remaining balance of a goods line.")
@@ -139,5 +139,5 @@ export function SalesLoadingEntry({ order, records, tt, onBack, onSaved }: {
       </tbody></table></div>
     </LoadingWorkflowReport>
   </>;
-  return <div data-testid="sales-loading-entry"><LoadingWorkflow heading={tt("sales_loading.entry_title", "New Sales Loading Entry")} bookingNo={order.bookingNo} backLabel={tt("plrf.back_to_dashboard", "Dashboard")} previousLabel={tt("common.back", "Back")} direction={direction} steps={steps} report={report} onBack={onBack}/></div>;
+  return <div data-testid="sales-loading-entry"><LoadingWorkflow heading={source === "local" ? tt("", "New Local Sales Loading Entry") : tt("sales_loading.entry_title", "New Sales Loading Entry")} bookingNo={order.bookingNo} backLabel={tt("plrf.back_to_dashboard", "Dashboard")} previousLabel={tt("common.back", "Back")} direction={direction} steps={steps} report={report} onBack={onBack}/></div>;
 }

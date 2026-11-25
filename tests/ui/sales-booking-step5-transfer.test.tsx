@@ -1,10 +1,11 @@
 import React from "react";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
+import { printStore } from "@/lib/store/print-store";
 // @ts-expect-error JSX view module
 import { SalesBookingStep5 } from "@/features/sales/components/sales-booking-step5.jsx";
 
-afterEach(cleanup);
+afterEach(() => { cleanup(); printStore.closePrint(); });
 
 it("opens the booking preview independently and prevents a second transfer in the UI", () => {
   const preview = vi.fn();
@@ -46,7 +47,7 @@ it("opens the transfer report before posting and displays confirmed journal deta
   const { rerender } = render(<SalesBookingStep5 {...props} />);
   fireEvent.click(screen.getByRole("button", { name: "Sales Transfer Payment" }));
   const report = screen.getByRole("dialog", { name: "Sales Booking Transfer Verification Report" });
-  expect(within(report).getAllByText("Awaiting Transfer").length).toBeGreaterThan(0);
+  expect(within(report).getAllByText("Awaiting Transfer").filter(node => !node.closest("[hidden]"))).toHaveLength(1);
   expect(post).not.toHaveBeenCalled();
   fireEvent.click(within(report).getByRole("button", { name: "Transfer / Post" }));
   expect(post).toHaveBeenCalledTimes(1);
@@ -59,7 +60,20 @@ it("opens the transfer report before posting and displays confirmed journal deta
       debitAmount: 100, creditAmount: 100, debitCurrency: "AED", creditCurrency: "AED",
     },
   }} />);
-  expect(within(report).getAllByText("Transferred / Completed")).toHaveLength(3);
+  const visibleCopies = (value: string) => within(report).getAllByText(value).filter(node => !node.closest("[hidden]"));
+  expect(visibleCopies("Sales Booking Transfer Verification Report")).toHaveLength(1);
+  expect(visibleCopies("SB-42")).toHaveLength(1);
+  expect(visibleCopies("Transferred / Completed")).toHaveLength(1);
+  fireEvent.click(within(report).getByRole("button", { name: "Print / PDF" }));
+  const printed = new DOMParser().parseFromString(printStore.getState().htmlContent, "text/html");
+  const printHeader = printed.querySelector("[data-print-only]:has(h2)");
+  expect(printHeader?.hasAttribute("hidden")).toBe(false);
+  expect((printHeader as HTMLElement | null)?.style.display).toBe("");
+  expect(printHeader?.textContent).toContain("Sales Booking Transfer Verification Report");
+  expect(printHeader?.textContent).toContain("SB-42");
+  expect(printHeader?.textContent).toContain("Transferred / Completed");
+  expect(report.querySelector("[data-print-only]:has(h2)")?.hasAttribute("hidden")).toBe(true);
+  expect(post).toHaveBeenCalledTimes(1);
   expect(within(report).getByRole("link", { name: "VR-42" }).getAttribute("href")).toContain("entryId=journal-42");
   expect(within(report).getByText("DR-42")).toBeTruthy();
   expect(within(report).getByText("CR-42")).toBeTruthy();

@@ -105,4 +105,17 @@ describe("Sales Transfer pages", () => {
     expect((await GET(request("dateFrom=2026-11-30&dateTo=2026-11-01"))).status).toBe(400);
     expect(mocks.query).not.toHaveBeenCalled();
   });
+  it("applies Local Sales source to both the register and facets before paging independently of branch scope", async () => {
+    mocks.query.mockResolvedValue([]);
+    await GET(request("source=local&limit=2"));
+    await GET(request("source=local&facets=1"));
+    const queries: string[] = mocks.query.mock.calls.map(([query]) => query.text);
+    expect(queries).toHaveLength(2);
+    for (const text of queries) {
+      expect(text).toContain("{form,saleSource}");
+      expect(text).toContain("{form,saleMode}");
+      expect(text).toContain("city_branch_id = any");
+    }
+    expect(queries[0].indexOf("{form,saleSource}")).toBeLessThan(queries[0].indexOf("limit ? offset ?"));
+  });
 });
