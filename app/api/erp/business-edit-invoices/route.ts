@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
 const createSchema = z.object({
   sourceModule: z.enum(BEI_SOURCE_MODULES),
   sourceId: z.string().uuid(),
+  salesWorkflow: z.boolean().optional(),
   docType: z.enum(BEI_DOC_TYPES).optional(),
   lang: z.enum(["en", "ur", "ps", "fa", "ar"]).optional(),
 });

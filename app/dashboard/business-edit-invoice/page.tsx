@@ -8,7 +8,7 @@ import { t } from "@/lib/i18n/ui";
 export const metadata: Metadata = { title: "Business Edit Invoice" };
 export const dynamic = "force-dynamic";
 
-export default async function BusinessEditInvoicePage() {
+export default async function BusinessEditInvoicePage({ searchParams }: { searchParams: Promise<{ sourceId?: string; module?: string; billNo?: string }> }) {
   const session = await requireErpSession();
   const lang = await getRequestLanguage();
   if (!canUseBusinessEditInvoice(session)) {
@@ -18,9 +18,13 @@ export default async function BusinessEditInvoicePage() {
       </div>
     );
   }
+  const params = await searchParams;
+  const sourceId = /^[\da-f]{8}-(?:[\da-f]{4}-){3}[\da-f]{12}$/i.test(params.sourceId ?? "") ? params.sourceId : undefined;
+  const source = sourceId && (params.module === "sales_booking" || params.module === "local_sales")
+    ? { id: sourceId as string, module: params.module, billNo: typeof params.billNo === "string" ? params.billNo.slice(0, 140) : "" } : undefined;
   return (
     <div className="w-full px-3 sm:px-6 lg:px-8 py-4">
-      <BusinessEditInvoiceView lang={lang} />
+      <BusinessEditInvoiceView lang={lang} salesBill={source} />
     </div>
   );
 }

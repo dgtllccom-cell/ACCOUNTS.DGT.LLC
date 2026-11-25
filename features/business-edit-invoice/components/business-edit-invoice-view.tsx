@@ -53,7 +53,9 @@ const MODULES = ["purchase_booking", "sales_booking", "local_purchase", "local_s
 const fmt = (n?: number | null) => (n == null ? "0.00" : Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 const fmtD = (d?: string | null) => (d ? String(d).slice(0, 10) : "");
 
-export function BusinessEditInvoiceView({ lang: langProp }: { lang?: string }) {
+type PinnedSalesBill = { id: string; module: string; billNo: string };
+
+export function BusinessEditInvoiceView({ lang: langProp, salesBill }: { lang?: string; salesBill?: PinnedSalesBill }) {
   const s = useErpScreen("bei", langProp);
   const [rows, setRows] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +76,7 @@ export function BusinessEditInvoiceView({ lang: langProp }: { lang?: string }) {
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [showPicker, setShowPicker] = useState(false);
+  const [showPicker, setShowPicker] = useState(Boolean(salesBill));
   const [openId, setOpenId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -645,18 +647,18 @@ export function BusinessEditInvoiceView({ lang: langProp }: { lang?: string }) {
 
       </div>
 
-      {showPicker && <BillPicker s={s} onClose={() => setShowPicker(false)} onCreated={(id) => { setShowPicker(false); setOpenId(id); void load(); }} />}
+      {showPicker && <BillPicker s={s} salesBill={salesBill} onClose={() => setShowPicker(false)} onCreated={(id) => { setShowPicker(false); setOpenId(id); void load(); }} />}
       {openId && <InvoiceEditor s={s} id={openId} onClose={() => { setOpenId(null); void load(); }} />}
     </div>
   );
 }
 
 /* ── bill picker ─────────────────────────────────────────────────────────── */
-function BillPicker({ s, onClose, onCreated }: { s: Screen; onClose: () => void; onCreated: (id: string) => void }) {
+function BillPicker({ s, salesBill, onClose, onCreated }: { s: Screen; salesBill?: PinnedSalesBill; onClose: () => void; onCreated: (id: string) => void }) {
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
-  const [moduleFilter, setModuleFilter] = useState("all");
-  const [q, setQ] = useState("");
+  const [moduleFilter, setModuleFilter] = useState(salesBill?.module ?? "all");
+  const [q, setQ] = useState(salesBill?.billNo ?? "");
   const [docType, setDocType] = useState<string>("commercial_invoice");
   const [creating, setCreating] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -666,12 +668,13 @@ function BillPicker({ s, onClose, onCreated }: { s: Screen; onClose: () => void;
     try {
       const qs = new URLSearchParams();
       if (moduleFilter !== "all") qs.set("module", moduleFilter);
-      if (q.trim()) qs.set("q", q.trim());
+      if (salesBill) qs.set("sourceId", salesBill.id);
+      else if (q.trim()) qs.set("q", q.trim());
       const r = await fetch(`/api/erp/business-edit-invoices/available-bills?${qs.toString()}`);
       const j = await r.json(); const d = j.data ?? j;
       setBills(d.rows ?? []);
     } finally { setLoading(false); }
-  }, [moduleFilter, q]);
+  }, [moduleFilter, q, salesBill]);
   useEffect(() => { void load(); }, [load]);
 
   const create = async (b: Bill) => {
@@ -679,7 +682,7 @@ function BillPicker({ s, onClose, onCreated }: { s: Screen; onClose: () => void;
     try {
       const r = await fetch("/api/erp/business-edit-invoices", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sourceModule: b.sourceModule, sourceId: b.sourceId, docType, lang: s.lang }),
+        body: JSON.stringify({ sourceModule: b.sourceModule, sourceId: b.sourceId, docType, lang: s.lang, salesWorkflow: Boolean(salesBill) }),
       });
       const j = await r.json(); const d = j.data ?? j;
       if (!r.ok || j.error) throw new Error(j?.error?.message || j?.error || "Request failed");
@@ -691,14 +694,14 @@ function BillPicker({ s, onClose, onCreated }: { s: Screen; onClose: () => void;
   return (
     <Modal s={s} title={s.t("select_bill", "Select the original bill")} onClose={onClose} wide>
       <div className="flex flex-wrap items-center gap-2">
-        <select value={moduleFilter} onChange={(e) => setModuleFilter(e.target.value)} className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs dark:border-slate-700 dark:bg-slate-900">
+        <select disabled={Boolean(salesBill)} value={moduleFilter} onChange={(e) => setModuleFilter(e.target.value)} className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs dark:border-slate-700 dark:bg-slate-900">
           <option value="all">{s.t("source_module", "Source")}</option>
           {MODULES.map((m) => <option key={m} value={m}>{s.t(`m_${m}`, m)}</option>)}
         </select>
         <select value={docType} onChange={(e) => setDocType(e.target.value)} className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs dark:border-slate-700 dark:bg-slate-900">
-          {DOC_TYPES.map((d) => <option key={d} value={d}>{s.t(d, d)}</option>)}
+          {DOC_TYPES.filter(d => !salesBill || ["commercial_invoice", "export_invoice", "tax_invoice"].includes(d)).map((d) => <option key={d} value={d}>{s.t(d, d)}</option>)}
         </select>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={s.t("original_bill_no", "Original Bill No")}
+        <input readOnly={Boolean(salesBill)} value={q} onChange={(e) => setQ(e.target.value)} placeholder={s.t("original_bill_no", "Original Bill No")}
           className="w-48 rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs dark:border-slate-700 dark:bg-slate-900" />
       </div>
       {err && <p className="mt-2 rounded-lg bg-rose-50 px-3 py-1.5 text-[11px] text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">{err}</p>}

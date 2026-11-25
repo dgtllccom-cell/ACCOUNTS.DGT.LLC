@@ -32,7 +32,7 @@ export type PurchasePageTopLabels = Partial<{
 
 export function PurchasePageTop({
   lang, title, superAdmin, breadcrumb, rows, rates, reports, search, onSearch, filterCount, onOpenFilters,
-  onReset, onRefresh, onApply, loading, menu, labels, searchPlaceholder, icon: Icon = ShoppingCart,
+  onReset, onRefresh, onApply, loading, menu, labels, searchPlaceholder, advancedOnly = false, icon: Icon = ShoppingCart,
 }: {
   lang: string;
   title: string;
@@ -53,6 +53,8 @@ export function PurchasePageTop({
   labels?: PurchasePageTopLabels;
   /** already-translated placeholder for the toolbar search box (default: the translated "Search") */
   searchPlaceholder?: string;
+  /** Expose only the shared search popup on opted-in registers. */
+  advancedOnly?: boolean;
   /** page icon in the title row (default: the shopping cart used by Purchase Booking) */
   icon?: LucideIcon;
 }) {
@@ -95,23 +97,23 @@ export function PurchasePageTop({
         <button type="button" onClick={onOpenFilters}
           className="h-9 px-3 inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white text-xs font-bold shadow-[0_2px_0_0_#1e40af] cursor-pointer">
           <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-          {t("Filter")}{filterCount ? ` (${filterCount})` : ""}
+          {t(advancedOnly ? "Advanced Search & Filter" : "Filter")}{filterCount ? ` (${filterCount})` : ""}
         </button>
-        <div className="relative flex-1 min-w-[180px] max-w-md">
+        {!advancedOnly && <div className="relative flex-1 min-w-[180px] max-w-md">
           <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
           <input type="text" value={search} onChange={(e) => onSearch(e.target.value)} placeholder={searchPlaceholder ?? t("Search")}
             className="h-9 w-full ps-8 pe-3 rounded-lg border border-slate-300 bg-white text-xs font-medium text-slate-800" />
-        </div>
+        </div>}
         <div className="ms-auto flex items-center gap-2">
-          <button type="button" onClick={onReset} className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-700 cursor-pointer">
+          {!advancedOnly && <button type="button" onClick={onReset} className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-700 cursor-pointer">
             <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />{t("Reset")}
-          </button>
+          </button>}
           <button type="button" onClick={onRefresh} className="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 cursor-pointer" aria-label={t("Refresh")}>
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} aria-hidden="true" />
           </button>
-          <button type="button" onClick={onApply} className="h-9 px-4 inline-flex items-center rounded-lg bg-[#2563eb] text-white text-xs font-bold shadow-[0_3px_0_0_#1e40af] cursor-pointer">
+          {!advancedOnly && <button type="button" onClick={onApply} className="h-9 px-4 inline-flex items-center rounded-lg bg-[#2563eb] text-white text-xs font-bold shadow-[0_3px_0_0_#1e40af] cursor-pointer">
             {t("Apply")}
-          </button>
+          </button>}
           {menu}
         </div>
       </div>
