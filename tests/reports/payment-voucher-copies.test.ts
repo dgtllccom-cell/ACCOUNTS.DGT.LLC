@@ -55,4 +55,24 @@ describe("detachable copies for one posted payment", () => {
     expect(html.indexOf('data-side="DR" aria-label')).toBeLessThan(html.indexOf('data-side="CR" aria-label'));
     expect(html).not.toContain("Cut here");
   });
+
+  it.each(["en", "ur"] as const)("links both %s slips to unabridged long details without changing exact identifiers", (lang) => {
+    const goods = Array.from({ length: 35 }, (_, index) => `LOT-${index + 1} Premium apricot and walnut kernels`);
+    const longReference = "Original settlement paperwork reference ".repeat(3) + "REFERENCE-END";
+    const html = buildPaymentVoucherCopies({
+      ...details, ...postedPaymentVoucherSides([cr, dr])!, goodsNames: goods,
+      reference: longReference,
+    }, lang);
+    const [sheet, appendix] = html.split('<article class="pdf-block payment-voucher-appendix" data-splittable>');
+    expect(sheet).toContain('data-scroll-print-preview="true"');
+    expect(sheet).not.toContain('name="erp-page-count" content="1"');
+    expect(sheet).toContain('data-side="DR"');
+    expect(sheet).toContain('data-side="CR"');
+    expect(sheet).not.toContain("REFERENCE-END");
+    expect(sheet).not.toContain("LOT-35");
+    expect(appendix).toContain("VCH-101");
+    expect(appendix).toContain("SB-101");
+    expect(appendix).toContain(longReference);
+    for (const name of goods) expect(appendix).toContain(name);
+  });
 });
