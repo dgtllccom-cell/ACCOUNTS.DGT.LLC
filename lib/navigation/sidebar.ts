@@ -539,7 +539,13 @@ export const sidebarTree: SidebarNode[] = [
         key: "sales-loading",
         labelKey: "nav.sales_loading",
         iconKey: "truck",
-        href: "/dashboard/sales/sales-loading" as Route
+        children: [
+          {
+            key: "sales-loading-register",
+            labelKey: "sales_loading.list",
+            href: "/dashboard/sales/sales-loading" as Route
+          }
+        ]
       },
       {
         key: "local-sales-management",

@@ -299,9 +299,12 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         ],
       },
       {
+        key: "sub-sales-loading",
         label: nt("Sales Loading"),
-        href: "/dashboard/sales/sales-loading",
         icon: Truck,
+        children: [
+          { label: nt("Sales Loading Register"), href: "/dashboard/sales/sales-loading", icon: ClipboardList },
+        ],
       },
       {
         key: "sub-local-sales",

@@ -13,13 +13,21 @@ describe("Sales Booking transfer and loading navigation", () => {
     expect(sections.find((item) => item.key === "sub-local-sales")?.children?.map((item) => item.href)).not.toContain(transfer);
   });
 
+  it("names the Sales Loading menu separately and points it to the one existing register", () => {
+    const sections = DAMAN_SIDEBAR_ITEMS.flatMap((item) => item.children ?? []);
+    const menu = sections.find((item) => item.key === "sub-sales-loading");
+    expect(menu?.label).toBe("Sales Loading");
+    expect(menu?.href).toBeUndefined();
+    expect(menu?.children?.map(({ label, href }) => ({ label, href }))).toEqual([{ label: "Sales Loading Register", href: loading }]);
+  });
+
   for (const role of ["super_admin", "country_admin", "city_branch_admin"] as const) {
     it(`${role} gets a single transfer entry and a reachable loading register`, () => {
       const context = { operationalDomains: ["business" as const], canViewFinancials: true };
       const permissions = enterpriseRolePermissions[role];
       const links = visibleMenuHrefsFor([role], permissions, context);
       expect(links.filter((link) => link === transfer)).toHaveLength(1);
-      expect(links).toContain(loading);
+      expect(links.filter((link) => link === loading)).toHaveLength(1);
       expect(evaluateRouteAccess({ pathname: loading, permissions, roles: [role], ...context }).allowed).toBe(true);
     });
   }
