@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from "react";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SalesPaymentTransferRegister } from "@/features/sales/components/sales-payment-transfer-register";
 
@@ -47,5 +47,20 @@ describe("Existing Sales Payment Transfer register", () => {
       .toBe("/dashboard/journal/sales-order-payment/remaining?salesOrderNo=SB-0042");
     expect(screen.getAllByText("73.45 AED").length).toBeGreaterThan(0);
     expect(screen.getByText("293.8 AED")).toBeTruthy();
+  });
+
+  it("summarizes each booking once and never combines currencies or treats missing receipts as zero", async () => {
+    const eur = { ...order, id: "order-2", sales_order_no: "SB-0043", order_total: 150, currency_code: "EUR",
+      transferReceiptSummary: { received: null }, form_data: { form: {}, goodsEntries: [{ goodsName: "Beans" }] } };
+    const aed = { ...order, transferReceiptSummary: { received: 73.45 }, form_data: {
+      ...order.form_data, goodsEntries: [{ goodsName: "Walnut kernels" }, { goodsName: "Almond kernels" }],
+    } };
+    apiGet.mockResolvedValue({ salesOrders: [aed, eur] });
+    render(<SalesPaymentTransferRegister />);
+    const summary = within(await screen.findByRole("region", { name: "Transfers on this page" }));
+    expect(summary.getByText("2")).toBeTruthy();
+    expect(summary.getByText("367.25 AED")).toBeTruthy();
+    expect(summary.getByText("150.00 EUR")).toBeTruthy();
+    expect(summary.getAllByText("— EUR")).toHaveLength(2);
   });
 });

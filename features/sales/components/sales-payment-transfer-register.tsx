@@ -54,6 +54,38 @@ const cellClass = "max-w-64 border-b p-2 align-top";
 const buttonClass = "rounded border px-3 py-2 text-sm font-semibold disabled:opacity-50";
 const scopePosted = (order: Row) => ["posted", "transferred"].includes(String(order.ledger_posting_status || "").toLowerCase());
 
+const pageStats = [
+  ["finalAmount", "Final Transfer Amount"],
+  ["received", "Total Payment Received"],
+  ["remaining", "Remaining Receivable Balance"],
+] as const;
+
+function TransferPageSummary({ orders, lang }: { orders: Row[]; lang: string }) {
+  const groups = new Map<string, Record<(typeof pageStats)[number][0], number | null>>();
+  for (const order of orders) {
+    const report = salesPaymentTransferReport(order);
+    if (!report.finalCurrency) continue;
+    const totals = groups.get(report.finalCurrency) ?? { finalAmount: 0, received: 0, remaining: 0 };
+    for (const [key] of pageStats) {
+      const value = report[key];
+      // A missing receipt figure is unknown rather than zero. Do not display a partial total as final.
+      totals[key] = value == null || totals[key] == null ? null : (totals[key] as number) + value;
+    }
+    groups.set(report.finalCurrency, totals);
+  }
+  return <section aria-label={translateHeader(lang, "Transfers on this page")} className="space-y-2">
+    <p className="text-xs text-slate-600 dark:text-slate-300">{translateHeader(lang, "Transfers on this page")}: <bdi className="font-semibold">{orders.length.toLocaleString(lang)}</bdi></p>
+    <dl className="grid gap-2 sm:grid-cols-3">
+      {pageStats.map(([key, label]) => <div key={key} className="rounded-lg border bg-white px-3 py-2.5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <dt className="text-xs font-semibold text-slate-600 dark:text-slate-300">{translateHeader(lang, label)}</dt>
+        <dd className="mt-1 flex flex-wrap gap-x-3 font-bold tabular-nums">
+          {groups.size ? [...groups].sort(([left], [right]) => left.localeCompare(right)).map(([code, amounts]) => <bdi key={code}>{amounts[key]?.toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? dash} {code}</bdi>) : dash}
+        </dd>
+      </div>)}
+    </dl>
+  </section>;
+}
+
 export function SalesPaymentTransferRegister({ orderId }: { orderId?: string }) {
   const lang = useActiveLanguage();
   const tr = (label: string) => translateHeader(lang, label);
@@ -86,6 +118,7 @@ export function SalesPaymentTransferRegister({ orderId }: { orderId?: string }) 
 
   const current = results?.key === key ? results : undefined;
   const cellText = (label: string, value: string | null | undefined) => {
+    if (label === "Transfer Status" && value) return <bdi className="rounded-full bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">{value}</bdi>;
     const color = label.startsWith("Debit") ? "text-green-700 dark:text-green-400" : label.startsWith("Credit") ? "text-red-700 dark:text-red-400" : "";
     return <bdi className={color}>{value || dash}</bdi>;
   };
@@ -157,6 +190,7 @@ export function SalesPaymentTransferRegister({ orderId }: { orderId?: string }) 
   return <section className="space-y-3">
     <h1 className="text-xl font-bold">{title}</h1>
     {searchForm}
+    <TransferPageSummary orders={current.orders} lang={lang} />
     <div className="overflow-x-auto rounded border">
       <table className="w-full border-collapse text-xs">
         <thead><tr>{[...headings, "View"].map(label => <th scope="col" key={label} className={labelClass}>{tr(label)}</th>)}</tr></thead>
