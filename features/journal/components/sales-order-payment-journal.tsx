@@ -64,7 +64,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
-import { matchesSalesReceiptQueue, salesWorkflowDestination, type SalesReceiptQueue } from "@/lib/sales/payment-workflow";
+import { matchesSalesReceiptQueue, reviewedSalesSettlement, salesWorkflowDestination, type SalesReceiptQueue } from "@/lib/sales/payment-workflow";
 import { useRouter } from "next/navigation";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -3947,7 +3947,8 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
 
   const reviewedSettlement = selected?.form_data?.transferTrace?.settlement;
   const useReviewedReceiptForm = Boolean(receiptQueue || (activeMode === "credit" && reviewedSettlement));
-  const confirmedReceiptCurrency = String(reviewedSettlement?.finalCurrency || "").toUpperCase();
+  const acceptedSettlement = reviewedSalesSettlement(reviewedSettlement);
+  const confirmedReceiptCurrency = acceptedSettlement?.currency ?? "";
   const reviewedReceiptLedgers = ledgers.filter(l => {
     if (!ledgerId(l) || ledgerCurrency(l).toUpperCase() !== confirmedReceiptCurrency) return false;
     const description = [ledgerCode(l), ledgerName(l), l.account_type, l.type].map(String).join(" ").toLowerCase();
@@ -3964,7 +3965,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
 
   // Final Action POST handler
   async function handleProcessPayment() {
-    if (!selected || !(useReviewedReceiptForm ? canSaveReviewed : canSave)) return;
+    if (!selected || !(useReviewedReceiptForm ? acceptedSettlement && canSaveReviewed : canSave)) return;
     const submittedMethod = useReviewedReceiptForm ? reviewedMethod : paymentType;
     const submittedLedger = useReviewedReceiptForm ? reviewedDraft.ledgerId : paymentSourceLedgerId;
     const submittedReference = useReviewedReceiptForm ? reviewedDraft.reference.trim() : roznamchaNumber;
@@ -4841,7 +4842,16 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
             <div className="text-xs text-slate-500 font-semibold">
               {receiptQueue ? translateHeader(currentLanguage, receiptQueue === "cash" ? "Cash Payment" : "Account Transfer") : activeMode === "advance" ? "Sales Advance Payment Entry" : activeMode === "credit" ? "Sales Credit Payment Entry" : activeMode === "remaining" ? "Sales Remaining Payment Entry" : "Sales Payment Entry"}
             </div>
-            {useReviewedReceiptForm && (
+            {useReviewedReceiptForm && !acceptedSettlement && (
+              <section role="alert" className="space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                <p className="text-sm font-semibold">{translateHeader(currentLanguage, "Receipt paused: ask Accounts to verify the original bill and its posted settlement before recording payment.")}</p>
+                <button type="button" className="text-sm font-bold underline" onClick={() => {
+                  const local = isLocalSalesFormData(selected.form_data);
+                  router.push(`/dashboard/sales/sales-order/view?id=${encodeURIComponent(selected.id)}&transfer=1${local ? "&source=local" : ""}`);
+                }}>{translateHeader(currentLanguage, "View Original Sales Bill")}</button>
+              </section>
+            )}
+            {useReviewedReceiptForm && acceptedSettlement && (
               <section className="space-y-2 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
                 <h3 className="font-bold">{translateHeader(currentLanguage, "Payment Entry")}</h3>
                 <div className="grid gap-3 md:grid-cols-3">

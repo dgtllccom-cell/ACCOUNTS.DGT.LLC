@@ -44,15 +44,24 @@ export function matchesSalesReceiptQueue(row: {
   return posted && !settled && selected === queue;
 }
 
-/** Reviewed bookings keep receivable balances in original bill currency; receipts post in approved final currency. */
-export function planSalesWorkflowReceipt(settlement: { finalCurrency?: unknown; originalAmount?: unknown; finalAmount?: unknown } | undefined,
-  receipt: { currency: unknown; amount: number; paidOriginal: number; remainingOriginal: number }) {
+type ReviewedSalesSettlement = { finalCurrency?: unknown; originalAmount?: unknown; finalAmount?: unknown };
+
+export function reviewedSalesSettlement(settlement: ReviewedSalesSettlement | null | undefined) {
   const currency = String(settlement?.finalCurrency ?? "").trim().toUpperCase();
   const original = Number(settlement?.originalAmount);
   const final = Number(settlement?.finalAmount);
-  if (!currency || currency !== String(receipt.currency).trim().toUpperCase()
-    || ![original, final, receipt.amount].every(n => Number.isFinite(n) && n > 0)
+  if (!/^[A-Z]{3}$/.test(currency) || ![original, final].every(n => Number.isFinite(n) && n > 0)) return null;
+  return { currency, original, final };
+}
+
+/** Reviewed bookings keep receivable balances in original bill currency; receipts post in approved final currency. */
+export function planSalesWorkflowReceipt(settlement: ReviewedSalesSettlement | null | undefined,
+  receipt: { currency: unknown; amount: number; paidOriginal: number; remainingOriginal: number }) {
+  const approved = reviewedSalesSettlement(settlement);
+  if (!approved || approved.currency !== String(receipt.currency).trim().toUpperCase()
+    || !Number.isFinite(receipt.amount) || receipt.amount <= 0
     || ![receipt.paidOriginal, receipt.remainingOriginal].every(n => Number.isFinite(n) && n >= 0)) return null;
+  const { currency, original, final } = approved;
   const tolerance = 0.01;
   if (Math.abs(receipt.paidOriginal + receipt.remainingOriginal - original) > tolerance) return null;
   const due = receipt.remainingOriginal * final / original;

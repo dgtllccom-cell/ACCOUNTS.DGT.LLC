@@ -1,4 +1,4 @@
-import { matchesSalesReceiptQueue, planSalesWorkflowReceipt } from "@/lib/sales/payment-workflow";
+import { matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement } from "@/lib/sales/payment-workflow";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { ApiClientError, apiCreated, apiOk, apiError, handleApiError } from "@/lib/api/response";
@@ -273,6 +273,11 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       }
     }
     if (reviewedReceipt) {
+      if (!reviewedSalesSettlement(reviewedSettlement)) {
+        throw new ApiClientError("Receipt paused: ask Accounts to verify the original bill and its posted settlement before recording payment.", {
+          status: 409, code: "SALES_RECEIPT_SETTLEMENT_UNVERIFIED",
+        });
+      }
       const expected = orderRow.form_data?.transferTrace?.debitLedgerId || orderRow.customer_ledger_id || form.customerAccountLedgerId
         || orderRow.customer_account_id || form.customerAccountId;
       if (!expected) throw new ApiClientError("The original sale has no linked receivable account.", { status: 409, code: "SALES_CUSTOMER_LEDGER_MISSING" });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { matchesSalesReceiptQueue, planSalesWorkflowReceipt, salesWorkflowDestination, salesWorkflowPayment } from "@/lib/sales/payment-workflow";
+import { matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesWorkflowDestination, salesWorkflowPayment } from "@/lib/sales/payment-workflow";
 
 describe.each([{ label: "Sales Booking", local: false }, { label: "Local Sale", local: true }])("$label payment routing", ({ local }) => {
   const original = { local, billNo: "SB / 001", orderId: "e73b8a60-042e-4ff5-a7e1-fce71c64a502" };
@@ -36,4 +36,21 @@ it("checks an outstanding original balance using the approved final currency wit
   expect(planSalesWorkflowReceipt(settlement, { ...receipt, currency: "USD" })).toBeNull();
   expect(planSalesWorkflowReceipt(settlement, { ...receipt, amount: 300 })).toBeNull();
   expect(planSalesWorkflowReceipt(settlement, { ...receipt, paidOriginal: 100, remainingOriginal: 0 })).toBeNull();
+});
+
+it.each([["Cash", "cash"], ["Account Transfer", "account-transfer"]] as const)(
+  "keeps historical %s discoverable without allowing a receipt with missing settlement",
+  (paymentType, queue) => {
+    const row = { ledger_posting_status: "posted", payment_status: "partial", form_data: { form: { paymentType } } };
+    expect(matchesSalesReceiptQueue(row, queue)).toBe(true);
+    expect(reviewedSalesSettlement(undefined)).toBeNull();
+    expect(planSalesWorkflowReceipt(undefined, { currency: "AED", amount: 50, paidOriginal: 10, remainingOriginal: 90 })).toBeNull();
+  },
+);
+
+it("rejects missing and invalid approved settlement amounts and currency", () => {
+  for (const settlement of [null, {}, { finalCurrency: "AED", originalAmount: 10 }, { finalCurrency: "AED", originalAmount: 100, finalAmount: 0 }]) {
+    expect(reviewedSalesSettlement(settlement)).toBeNull();
+  }
+  expect(reviewedSalesSettlement({ finalCurrency: " aed ", originalAmount: "100", finalAmount: "367" })).toEqual({ currency: "AED", original: 100, final: 367 });
 });

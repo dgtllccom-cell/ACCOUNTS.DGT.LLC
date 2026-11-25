@@ -5,6 +5,13 @@ import { HEADER_EXTRA, HEADER_EN_SHORT } from "@/lib/i18n/table-headers-extra";
 type Row = { ur: string; ar: string; fa: string; ps: string };
 
 export const HEADER_TRANSLATIONS: Record<string, Row> = {
+  "RECEIPT PAUSED: ASK ACCOUNTS TO VERIFY THE ORIGINAL BILL AND ITS POSTED SETTLEMENT BEFORE RECORDING PAYMENT.": {
+    ur: "وصولی روک دی گئی ہے۔ ادائیگی درج کرنے سے پہلے اکاؤنٹس سے اصل بل اور پوسٹ شدہ حساب کی تصدیق کروائیں۔",
+    ar: "تم إيقاف تسجيل الإيصال. اطلب من قسم الحسابات التحقق من الفاتورة الأصلية وتسويتها المرحلة قبل تسجيل الدفعة.",
+    fa: "ثبت رسید متوقف شد. پیش از ثبت پرداخت، از واحد حسابداری بخواهید صورتحساب اصلی و تسویه ثبت‌شده آن را بررسی کند.",
+    ps: "د رسید ثبت ودرول شو. د تادیې له ثبت مخکې د حسابونو له څانګې وغواړئ چې اصلي بل او ثبت شوې تصفیه یې تایید کړي.",
+  },
+  "VIEW ORIGINAL SALES BILL": { ur: "اصل سیلز بل دیکھیں", ar: "عرض فاتورة المبيعات الأصلية", fa: "مشاهده صورتحساب اصلی فروش", ps: "د پلور اصلي بل وګورئ" },
   // ── Top-Level Navigation & Sidebar — 5-language coverage ──
   "DASHBOARD": { ur: "ڈیش بورڈ", ar: "لوحة التحكم", fa: "داشبورد", ps: "ډشبورډ" },
   "SMART OPERATIONS": { ur: "سمارٹ آپریشنز", ar: "العمليات الذكية", fa: "عملیات هوشمند", ps: "هوښیار عملیات" },
