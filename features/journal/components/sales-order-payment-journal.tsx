@@ -4,7 +4,8 @@ import { PaymentSummaryStrip } from "@/features/journal/components/payment-summa
 import { buildPaymentEntryModel, orderPaymentPercent, paymentAmountsOf, paymentSummaryFigures } from "@/lib/journal/purchase-payment-entry-model";
 import { pl } from "@/lib/reports/print-label";
 import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
-import { printStore } from "@/lib/store/print-store";
+import { printSalesPaymentReceipt } from "@/lib/reports/sales-payment-receipt";
+import type { SalesPaymentReceipt } from "@/lib/sales/payment-receipt";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { printPaymentJournal } from "@/lib/reports/payment-journal-print";
 import { createPortal } from "react-dom";
@@ -95,7 +96,6 @@ import { useUsdRates } from "@/lib/purchase-ui/use-usd-rates";
 import "@/components/purchase-ui/purchase-table-skin.css";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { rtlLanguages } from "@/lib/i18n/languages";
 import { CurrencyTotalsGrid } from "@/components/payment-report/currency-totals-grid";
 import { PaymentJournalV2Header } from "./payment-journal-v2-header";
 import { AdvancedRegisterSearch } from "@/components/purchase-ui/advanced-register-search";
@@ -155,204 +155,6 @@ type PurchaseOrderRow = {
   created_at: string | null;
   form_data?: any;
 };
-
-function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCurrency: string, autoPrint = true, lang: LanguageCode = "en") {
-  const drLedger = ledgers.find((l) => (l.id || l.account_id) === payment.debit_ledger_id);
-  const crLedger = ledgers.find((l) => (l.id || l.account_id) === payment.credit_ledger_id);
-  const drLabel = drLedger ? (drLedger.account_name || drLedger.name) : "-";
-  const crLabel = crLedger ? (crLedger.account_name || crLedger.name) : "-";
-  const re = payment.roznamcha_entries || {};
-  const form = orderRow?.form_data?.form || {};
-  const th = (label: string) => translateHeader(lang, label);
-  const isRtl = rtlLanguages.includes(lang);
-
-  const companyName = form.salesCompanyName || form.companyName || form.salesAccountName || orderRow?.company_name || "";
-  const receiptTitle = th("Payment Receipt");
-  const receiptNo = payment.reference_no || re.super_admin_serial_number || "N/A";
-  const printDate = new Date().toLocaleString();
-  const paymentDate = new Date(payment.entry_date || payment.created_at).toLocaleDateString();
-  const purchaseDate = form.orderDate ? new Date(form.orderDate).toLocaleDateString() : "N/A";
-  const poNo = orderRow?.sales_order_no || "N/A";
-  const contractNo = orderRow?.sales_contract_no || "N/A";
-  const vendorName = form.vendorName || "N/A";
-  
-  const paymentAmt = Number(payment.amount || 0);
-  const paymentExRate = Number(payment.exchange_rate || 1);
-  const currency = payment.currency_code || localCurrency.toUpperCase();
-  
-  const prevPaid = Number(payment.previous_balance_paid || 0);
-  const totalPaid = prevPaid + paymentAmt;
-  
-  const goodsTotal = orderRow?.form_data?.goodsEntries?.reduce((sum: number, g: any) => sum + Number(g.totalAmount || 0), 0) || Number(form.subTotal || 0);
-  const freight = Number(form.freightCharges || 0);
-  const discount = Number(form.discount || 0);
-  
-  const grandTotalFC = Number(orderRow?.order_total || form.totalAmount || 0);
-  const poExRate = Number(orderRow?.exchange_rate || 1);
-  const outstanding = Math.max(0, grandTotalFC - totalPaid);
-  
-  const displayNarration = payment.narration || "-";
-
-  const rtlFont = lang === "ur" ? "'Noto Nastaliq Urdu', 'Noto Naskh Arabic', serif" : lang === "ar" || lang === "ps" ? "'Cairo', 'Noto Naskh Arabic', sans-serif" : lang === "fa" ? "'Vazirmatn', sans-serif" : "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
-  const html = `
-    <!DOCTYPE html>
-    <html lang="${lang}" dir="${isRtl ? "rtl" : "ltr"}">
-    <head>
-      <meta charset="UTF-8">
-      <title>${receiptTitle} - ${receiptNo}</title>
-      <style>
-        @page { size: A4; margin: 15mm; }
-        body { font-family: ${rtlFont}; font-size: 11px; color: #1e293b; margin: 0; padding: 0; }
-        .container { width: 100%; max-width: 800px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; }
-        .header-left h1 { margin: 0; font-size: 26px; color: #1e3a8a; letter-spacing: 1px; text-transform: uppercase; font-weight: 900; }
-        .header-left p { margin: 4px 0 0; font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
-        .header-right { text-align: right; }
-        .header-right h2 { margin: 0; font-size: 20px; color: #334155; font-weight: 800; }
-        .header-right p { margin: 4px 0 0; font-size: 11px; font-weight: bold; color: #1e293b; }
-        .section-title { background: #f1f5f9; padding: 6px 10px; font-weight: 800; font-size: 11px; border: 1px solid #cbd5e1; border-left: 4px solid #1e3a8a; margin: 20px 0 10px; text-transform: uppercase; color: #0f172a; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; font-size: 11px; }
-        th { background: #f8fafc; font-weight: 700; color: #475569; width: 25%; }
-        .text-right { text-align: right; }
-        .font-bold { font-weight: bold; }
-        .summary-box { display: flex; border: 1px solid #cbd5e1; border-radius: 4px; overflow: hidden; margin-top: 15px; }
-        .summary-item { flex: 1; padding: 12px; text-align: center; background: #f8fafc; border-right: 1px solid #cbd5e1; }
-        .summary-item:last-child { border-right: none; }
-        .summary-item .lbl { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-        .summary-item .val { font-size: 16px; font-weight: 900; margin-top: 5px; color: #0f172a; }
-        .summary-item.highlight { background: #eff6ff; }
-        .summary-item.highlight .lbl { color: #1d4ed8; }
-        .summary-item.highlight .val { color: #1e40af; }
-        .footer { margin-top: 50px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-        .sig-block { width: 22%; text-align: center; }
-        .sig-line { border-top: 1px solid #94a3b8; padding-top: 5px; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-top: 50px; }
-        .stamp-box { width: 90px; height: 90px; border: 2px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; color: #cbd5e1; font-weight: 900; margin: 0 auto; border-radius: 50%; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
-        .sys-gen { text-align: center; font-size: 9px; color: #94a3b8; margin-top: 30px; font-style: italic; border-top: 1px dashed #cbd5e1; padding-top: 10px; }
-        .qr-placeholder { width: 60px; height: 60px; background: #f1f5f9; border: 1px solid #cbd5e1; float: right; margin-left: 15px; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #94a3b8; text-align: center; font-weight: bold; }
-        ${isRtl ? `
-        body { direction: rtl; }
-        th, td { text-align: right; }
-        .text-right { text-align: left; }
-        .header-right { text-align: left; }
-        .qr-placeholder { float: left; margin-left: 0; margin-right: 15px; }
-        .section-title { border-left: none; border-right: 4px solid #1e3a8a; }
-        ` : ""}
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <div class="header-left">
-            ${companyName ? `<h1>${companyName}</h1>` : ""}
-            <p>${th("Purchase Payment Receipt")}</p>
-          </div>
-          <div class="header-right">
-            <h2>${th("Payment Receipt")}</h2>
-            <p>${tGlobal(lang, "common.no_abbr", "No")}: ${receiptNo}</p>
-            <p style="font-weight: normal; color: #64748b; font-size: 10px;">${tGlobal(lang, "common.printed", "Printed")}: ${printDate}</p>
-          </div>
-        </div>
-
-        <div class="section-title">${th("Purchase & Vendor Details")}</div>
-        <table>
-          <tr>
-            <th>${th("Sales Order No")}</th><td><strong>${poNo}</strong></td>
-            <th>${th("Contract / GRN No")}</th><td>${contractNo}</td>
-          </tr>
-          <tr>
-            <th>${th("Supplier Name")}</th><td colspan="3"><strong>${vendorName}</strong></td>
-          </tr>
-          <tr>
-            <th>${th("Purchase Date")}</th><td>${purchaseDate}</td>
-            <th>${th("Currency")}</th><td><strong>${currency}</strong></td>
-          </tr>
-        </table>
-
-        <div class="section-title">${th("Purchase Financial Summary")}</div>
-        <table>
-          <tr>
-            <th>${th("Goods Total Amount")}</th><td class="text-right">${Number(goodsTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-            <th>${th("Discount")}</th><td class="text-right">${Number(discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-          </tr>
-          <tr>
-            <th>${th("Freight Charges")}</th><td class="text-right">${Number(freight).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-            <th>${th("Grand Total")} (${currency})</th><td class="text-right font-bold">${Number(grandTotalFC).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-          </tr>
-        </table>
-
-        <div class="section-title">${th("Accounting & Audit Trail")}</div>
-        <table>
-          <tr>
-            <th>${th("Debit Ledger (Dr)")}</th><td colspan="3">${drLabel}</td>
-          </tr>
-          <tr>
-            <th>${th("Credit Ledger (Cr)")}</th><td colspan="3">${crLabel}</td>
-          </tr>
-          <tr>
-            <th>${th("Payment Date")}</th><td>${paymentDate}</td>
-            <th>${th("Posted By")}</th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : "â"}</td>
-          </tr>
-          <tr>
-            <th>${th("Reference No")}</th><td>${payment.reference_no || "-"}</td>
-            <th>${th("Journal Serial")}</th><td>${re.super_admin_serial_number || "-"}</td>
-          </tr>
-          <tr>
-            <th>${th("Remarks")}</th><td colspan="3">${displayNarration || "-"}</td>
-          </tr>
-        </table>
-
-        <div class="section-title">${th("Payment Summary")}</div>
-        <div class="summary-box">
-          <div class="summary-item">
-            <div class="lbl">${th("Previously Paid")}</div>
-            <div class="val">${Number(prevPaid).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-          </div>
-          <div class="summary-item highlight">
-            <div class="lbl">${th("Current Payment")}</div>
-            <div class="val">${Number(paymentAmt).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-          </div>
-          <div class="summary-item">
-            <div class="lbl">${th("Total Paid to Date")}</div>
-            <div class="val">${Number(totalPaid).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-          </div>
-          <div class="summary-item">
-            <div class="lbl" style="color: #be123c;">${th("Running Purchase Balance")}</div>
-            <div class="val" style="color: #be123c;">${Number(outstanding).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-          </div>
-        </div>
-
-        <div class="footer">
-          <div class="sig-block">
-            <div class="sig-line">${th("Prepared By")}</div>
-          </div>
-          <div class="sig-block" style="width: auto;">
-            <div class="stamp-box">${th("Company")}<br/>${th("Stamp")}</div>
-          </div>
-          <div class="sig-block">
-            <div class="sig-line">${th("Authorized Signatory")}</div>
-          </div>
-          <div class="sig-block">
-            <div class="sig-line">${th("Receiver Signature")}</div>
-          </div>
-        </div>
-
-        <div class="sys-gen">
-          <div class="qr-placeholder">${th("Verify")}<br/>QR</div>
-          *** ${tGlobal(lang, "common.system_generated_document", "THIS IS A SYSTEM GENERATED DOCUMENT")} ***<br/>
-          UUID: ${payment.id || "N/A"} | ${tGlobal(lang, "common.exchange_rate_applied", "Exchange Rate Applied")}: ${paymentExRate.toFixed(4)}
-        </div>
-      </div>
-      <script>
-        window.onload = function() { 
-          if (${autoPrint}) { window.print(); window.close(); }
-        }
-      </script>
-    </body>
-    </html>
-  `;
-  printStore.openPrint(html, receiptTitle + " " + receiptNo);
-}
 
 type OrdersPayload = {
   orders?: PurchaseOrderRow[];
@@ -1015,7 +817,7 @@ function FieldBlock({ label, required, children, className, action }: { label: s
   );
 }
 
-function NestedRowActions({ payment, row, ledgers, localCurrency }: any) {
+function NestedRowActions({ payment, row }: any) {
   const lang = useActiveLanguage();
   function handleAction(fn: () => void) {
     fn();
@@ -1028,9 +830,9 @@ function NestedRowActions({ payment, row, ledgers, localCurrency }: any) {
         <MoreVertical className="h-4 w-4" />
       </summary>
       <div className="absolute right-0 z-30 mt-1 w-40 rounded-xl border border-border bg-popover p-1 text-sm text-popover-foreground shadow-xl">
-        <MenuAction icon={<Eye />} label={tGlobal(lang, "pay.view_details", "View Details")} onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, false, lang))} />
+        {payment.receipt && <MenuAction icon={<Eye />} label={tGlobal(lang, "pay.view_details", "View Details")} onClick={() => handleAction(() => printSalesPaymentReceipt(payment.receipt, lang, false))} />}
         <MenuAction icon={<Edit3 />} label={tGlobal(lang, "pay.edit_line", "Edit Line")} onClick={() => handleAction(() => window.dispatchEvent(new CustomEvent("open-edit-payment", { detail: { payment, row } })))} />
-        <MenuAction icon={<Printer />} label={tGlobal(lang, "pay.print_receipt", "Print Receipt")} onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, true, lang))} />
+        {payment.receipt && <MenuAction icon={<Printer />} label={tGlobal(lang, "pay.print_receipt", "Print Receipt")} onClick={() => handleAction(() => printSalesPaymentReceipt(payment.receipt, lang, false))} />}
       </div>
     </details>
   );
@@ -1537,7 +1339,7 @@ function NestedPaymentHistory({
                       </div>
                     </td>
                     <td className="px-2.5 py-1.5 text-center align-top">
-                      <NestedRowActions payment={p} row={row} ledgers={ledgers} localCurrency={p.localCurrency} />
+                      <NestedRowActions payment={p} row={row} />
                     </td>
                   </tr>
                 );
@@ -2977,6 +2779,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
   const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState("");
+  const [postedReceipt, setPostedReceipt] = useState<SalesPaymentReceipt | null>(null);
   const [paymentError, setPaymentError] = useState("");
   const [selectedOrderPayments, setSelectedOrderPayments] = useState<any[]>([]);
   const [loadingPayments, setLoadingPayments] = useState(false);
@@ -4214,7 +4017,8 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
         throw new Error(body?.error?.message ?? body?.message ?? "Execution failure on backend server.");
       }
 
-      const allSerials = [body.data?.serialNumber, body.data?.countrySerialNumber, body.data?.branchSerialNumber].filter(Boolean).join(" | ");
+      setPostedReceipt(body.data?.receipt ?? null);
+      const allSerials = [body.data?.superAdminSerialNumber, body.data?.countryTransactionSerialNumber, body.data?.branchTransactionSerialNumber, body.data?.serialNumber].filter(Boolean).join(" | ");
       setPaymentSuccess(`Double-entry ledger voucher successfully balanced! Journal Serial Number: ${allSerials || "N/A"}.`);
       paymentIdempotencyKeyRef.current = "";
       setReviewedReceiptInput(emptyReviewedReceipt());
@@ -4596,6 +4400,13 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className={cn("flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950", isRtl ? "text-right" : "text-left")}>
+      {postedReceipt && <section className="m-3 flex flex-wrap items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
+        <span>{tGlobal(currentLanguage, "rvp.receipt_no", "Receipt No.")}: <bdi className="font-bold">{postedReceipt.number}</bdi></span>
+        <Button type="button" size="sm" onClick={() => printSalesPaymentReceipt(postedReceipt, currentLanguage)}>
+          <Printer className="me-1 h-4 w-4" />{tGlobal(currentLanguage, "pay.print_receipt", "Print Receipt")}
+        </Button>
+        <Button type="button" size="sm" variant="ghost" aria-label={translateHeader(currentLanguage, "Close")} onClick={() => setPostedReceipt(null)}><X className="h-4 w-4" /></Button>
+      </section>}
       {/* Approved payment-page header (title, page toolbar, yellow summary · blue payment types · green countries). The toolbar wraps this
           page's EXISTING search, Filters panel, date range, refresh, print and export handlers; the payment-type rows link to the existing routes. */}
       <PaymentModuleHeader
@@ -4952,7 +4763,13 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
                 </section>
               )}
               {paymentError && <p role="alert" className="mt-2 text-red-700">{paymentError}</p>}
-              {paymentSuccess && <p role="status" className="mt-2 text-emerald-700">{paymentSuccess}</p>}
+              {paymentSuccess && <div className="mt-2 text-emerald-700">
+                <p role="status">{paymentSuccess}</p>
+                {postedReceipt?.orderId === selected.id && <Button type="button" size="sm" className="mt-2"
+                  onClick={() => printSalesPaymentReceipt(postedReceipt, currentLanguage)}>
+                  <Printer className="me-1 h-4 w-4" />{tGlobal(currentLanguage, "pay.print_receipt", "Print Receipt")}
+                </Button>}
+              </div>}
             </>}
           />
         </RoznamchaEntryDialog>
@@ -6002,7 +5819,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
                                     <div className="text-[11px] text-blue-500">{money(payment.runningTotalAED, baseCurrency)}</div>
                                   </td>
                                   <td className="px-3 py-2 text-center">
-                                    <NestedRowActions payment={payment} row={selected} ledgers={ledgers} localCurrency={baseCurrency} />
+                                    <NestedRowActions payment={payment} row={selected} />
                                   </td>
                                 </tr>
                               );
@@ -6223,11 +6040,25 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
                   branchId={(selected as any)?.branch_id || selected.city_branch_id || selected.country_branch_id || (erpScope as any)?.branchId || (erpScope as any)?.lockedCityBranchId || null}
                   branchName={rowBranchName(selected) || erpScope.branchDisplayName}
                   baseCurrency={baseCurrency}
-                  onSuccess={() => {
+                  onSuccess={(result) => {
+                    setPostedReceipt(null);
+                    if (typeof result?.paymentId === "string") {
+                      const paymentId = result.paymentId;
+                      void fetch(`/api/erp/sales/orders/${encodeURIComponent(selected.id)}/payments`, { cache: "no-store", credentials: "include" })
+                        .then(res => res.ok ? res.json() : null)
+                        .then(body => {
+                          const receipt = body?.data?.payments?.find((payment: any) => payment.id === paymentId)?.receipt;
+                          if (receipt) setPostedReceipt(receipt);
+                        }).catch(() => undefined);
+                    }
                     window.dispatchEvent(new CustomEvent("refresh-payments"));
                     router.refresh();
                   }}
                 />
+                {postedReceipt?.orderId === selected.id && <Button type="button" size="sm" className="mt-2"
+                  onClick={() => printSalesPaymentReceipt(postedReceipt, currentLanguage)}>
+                  <Printer className="me-1 h-4 w-4" />{tGlobal(currentLanguage, "pay.print_receipt", "Print Receipt")}
+                </Button>}
               </div>
 
               {/* Double-entry Preview, Ledger Posting, and supporting notes */}

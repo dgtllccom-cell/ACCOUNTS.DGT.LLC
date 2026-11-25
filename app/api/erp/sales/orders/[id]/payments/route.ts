@@ -1,3 +1,4 @@
+import { issuedSalesPaymentReceipt } from "@/lib/sales/payment-receipt";
 import { convertReviewedSalesReceipt, linkedSalesAdvanceReceipt, linkedSalesBalanceReceipt, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesReceiptPaymentKind, SALES_RECEIPT_INVOICE_TYPES } from "@/lib/sales/payment-workflow";
 import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
 import { NextRequest } from "next/server";
@@ -144,7 +145,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     // withLocalPg, not the RLS-gated Supabase client — see the POST handler for why.
     const { order, rows } = (await withLocalPg(async (sql) => {
       const orderRows = await sql`
-        select id, sales_order_no, sales_contract_no, country_id, country_branch_id, city_branch_id,
+        select id, sales_order_no, sales_contract_no, customer_name, country_id, country_branch_id, city_branch_id,
                currency_code, exchange_rate, order_total, paid_amount, remaining_amount, form_data,
                ledger_posting_status, payment_status
         from sales_orders where id = ${params.id}::uuid and deleted_at is null
@@ -156,6 +157,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
           p.roznamcha_entry_id, p.status, p.remarks, p.created_at,
           case when re.id is not null then jsonb_build_object(
             'id', re.id,
+            'status', re.status,
+            'voucher_no', re.voucher_no,
+            'source_reference_no', re.source_reference_no,
+            'entry_category', re.entry_category,
+            'deleted_at', re.deleted_at,
             'super_admin_serial_number', re.super_admin_serial_number,
             'country_transaction_serial_number', re.country_transaction_serial_number,
             'branch_transaction_serial_number', re.branch_transaction_serial_number,
@@ -188,6 +194,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     const mapped = localizedRows.map((row: any) => ({
       ...row,
+      receipt: order ? issuedSalesPaymentReceipt(order, row, row.roznamcha_entries) : null,
       kind: row.payment_kind,
       entry_date: row.payment_date,
       reference_no: row.remarks,
@@ -250,7 +257,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     // SECURITY DEFINER and already bypasses RLS internally by design.
     const order = await withLocalPg(async (sql) => {
       const rows = await sql`
-        select id, sales_order_no, sales_contract_no, country_id, country_branch_id, city_branch_id,
+        select id, sales_order_no, sales_contract_no, customer_name, country_id, country_branch_id, city_branch_id,
                currency_code, exchange_rate, order_total, paid_amount, remaining_amount, form_data, customer_ledger_id, customer_account_id,
                ledger_posting_status, payment_status
         from sales_orders where id = ${params.id}::uuid and deleted_at is null
@@ -505,7 +512,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       } catch { /* non-fatal — never affects posting */ }
 
       const paymentRows = await sql`
-        select id, sales_order_id, payment_kind, amount, currency_code, exchange_rate, roznamcha_entry_id, status
+        select id, sales_order_id, payment_kind, payment_date, amount, currency_code, exchange_rate, roznamcha_entry_id, status
         from sales_order_payments where id = ${paymentId}::uuid and sales_order_id = ${params.id}::uuid
         limit 1
       `;
@@ -529,7 +536,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       `;
 
       const journalRows = await sql`
-        select id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number
+        select id, status, voucher_no, source_reference_no, entry_category, deleted_at, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number
         from roznamcha_entries where id = ${paymentRecord.roznamcha_entry_id}::uuid
         limit 1
       `;
@@ -628,6 +635,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
 
     const resPayload = {
       paymentId,
+      receipt: issuedSalesPaymentReceipt(orderRow, paymentRecord, journalRecord),
       roznamchaEntryId: paymentRecord.roznamcha_entry_id,
       superAdminSerialNumber: journalRecord.super_admin_serial_number,
       countryTransactionSerialNumber: journalRecord.country_transaction_serial_number,

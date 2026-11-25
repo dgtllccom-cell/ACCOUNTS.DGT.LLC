@@ -77,8 +77,8 @@ it("blocks wrong-stage, fully paid, wrong-currency and unauthorized branch submi
 });
 
 it("posts a finalized Local Sales invoice through one balanced Roznamcha receipt and updates the original-currency balance", async () => {
-  const order = { ...base, country_id: dr, form_data: { ...base.form_data, form: { paymentType: "Invoice", saleSource: "local" }, transferTrace: { ...base.form_data.transferTrace, settlement: { ...base.form_data.transferTrace.settlement, originalCurrency: "USD", exchangeRate: 3.67, operator: "*" } } } };
-  const voucher = { id: invoice, sales_order_id: id, roznamcha_entry_id: id, currency_code: "AED", amount: 73.4, status: "posted" };
+  const order = { ...base, sales_order_no: "LS-123", customer_name: "Local Buyer", country_id: dr, form_data: { ...base.form_data, form: { paymentType: "Invoice", saleSource: "local" }, transferTrace: { ...base.form_data.transferTrace, settlement: { ...base.form_data.transferTrace.settlement, originalCurrency: "USD", exchangeRate: 3.67, operator: "*" } } } };
+  const voucher = { id: invoice, sales_order_id: id, roznamcha_entry_id: id, currency_code: "AED", amount: 73.4, status: "posted", payment_date: "2026-11-25", payment_kind: "remaining" };
   m.query.mockImplementation(async (sql: string, values: unknown[]) => {
     if (sql.includes("pg_try_advisory_xact_lock")) return [{ got: true }];
     if (sql.includes("from ledgers")) return [{ id: values[0], currency: "AED", is_active: true }];
@@ -88,12 +88,14 @@ it("posts a finalized Local Sales invoice through one balanced Roznamcha receipt
     if (sql.includes("from roznamcha_lines")) return [
       { ledger_id: dr, debit: 73.4, credit: 0 }, { ledger_id: cr, debit: 0, credit: 73.4 },
     ];
-    if (sql.includes("from roznamcha_entries")) return [{ id, super_admin_serial_number: "T-01", country_transaction_serial_number: "T-AE-01", branch_transaction_serial_number: "T-DXB-01" }];
+    if (sql.includes("from roznamcha_entries")) return [{ id, status: "posted", voucher_no: "V-LOCAL-1", entry_category: "cash", source_reference_no: "T", super_admin_serial_number: "T-01", country_transaction_serial_number: "T-AE-01", branch_transaction_serial_number: "T-DXB-01" }];
     if (sql.includes("from sales_order_payments")) return [voucher];
     return [];
   });
   const result = await send({ receiptInput: { currency: "USD", amount: 20 } });
   expect(result.status).toBe(201);
+  const resultBody = await result.json();
+  expect(resultBody.data.receipt).toMatchObject({ number: "V-LOCAL-1", date: "2026-11-25", bill: "LS-123", customer: "Local Buyer", local: true, amount: 73.4, currency: "AED", method: "cash" });
   const sqlCalls = m.query.mock.calls;
   expect(sqlCalls.find(([sql]) => sql.includes("from public.business_edit_invoices"))?.[1]).toContain("local_sales");
   const receiptCalls = sqlCalls.filter(([sql]) => sql.includes("select post_sales_booking_transfer"));
