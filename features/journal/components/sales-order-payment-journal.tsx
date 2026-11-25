@@ -2902,6 +2902,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
   };
 
   // Ledger Entry Panel state
+  const [reviewedReceiptInput, setReviewedReceiptInput] = useState({ orderId: "", ledgerId: "", reference: "", amount: "" });
   const [paymentSourceLedgerId, setPaymentSourceLedgerId] = useState("");
   const [roznamchaType, setRoznamchaType] = useState("Cash Book No.");
   const [roznamchaNumber, setRoznamchaNumber] = useState("000123");
@@ -3944,13 +3945,29 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
     return Math.max(0, requiredAdvanceBC - paidAdvanceBC);
   }, [selected]);
 
+  const reviewedSettlement = selected?.form_data?.transferTrace?.settlement;
+  const useReviewedReceiptForm = Boolean(receiptQueue || (activeMode === "credit" && reviewedSettlement));
+  const confirmedReceiptCurrency = String(reviewedSettlement?.finalCurrency || "").toUpperCase();
+  const reviewedReceiptLedgers = ledgers.filter(l => {
+    if (!ledgerId(l) || ledgerCurrency(l).toUpperCase() !== confirmedReceiptCurrency) return false;
+    const description = [ledgerCode(l), ledgerName(l), l.account_type, l.type].map(String).join(" ").toLowerCase();
+    const cash = /cash|petty/.test(description);
+    const bank = /bank|current account/.test(description);
+    return receiptQueue === "cash" ? cash : receiptQueue === "account-transfer" ? bank : cash || bank;
+  });
+  const reviewedDraft = reviewedReceiptInput.orderId === selectedId ? reviewedReceiptInput : { orderId: selectedId, ledgerId: "", reference: "", amount: "" };
+  const reviewedLedger = reviewedReceiptLedgers.find(l => ledgerId(l) === reviewedDraft.ledgerId);
+  const reviewedMethod = receiptQueue === "account-transfer" ? "transfer" : receiptQueue === "cash" ? "cash"
+    : /cash|petty/i.test([ledgerCode(reviewedLedger), ledgerName(reviewedLedger)].join(" ")) ? "cash" : "bank";
+  const canSaveReviewed = Boolean(reviewedLedger && reviewedDraft.reference.trim() && Number.isFinite(Number(reviewedDraft.amount))
+    && Number(reviewedDraft.amount) > 0 && confirmedReceiptCurrency);
+
   // Final Action POST handler
   async function handleProcessPayment() {
-    if (!canSave || !selected) return;
-    if (receiptQueue && !(receiptQueue === "cash" ? paymentType === "cash" : ["bank", "transfer"].includes(paymentType))) {
-      setPaymentError(translateHeader(currentLanguage, "Select the matching receipt method."));
-      return;
-    }
+    if (!selected || !(useReviewedReceiptForm ? canSaveReviewed : canSave)) return;
+    const submittedMethod = useReviewedReceiptForm ? reviewedMethod : paymentType;
+    const submittedLedger = useReviewedReceiptForm ? reviewedDraft.ledgerId : paymentSourceLedgerId;
+    const submittedReference = useReviewedReceiptForm ? reviewedDraft.reference.trim() : roznamchaNumber;
     setProcessingPayment(true);
     setPaymentSuccess("");
     setPaymentError("");
@@ -3962,8 +3979,8 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
     const idempotencyKey = paymentIdempotencyKeyRef.current;
 
     try {
-      const reviewedSelection = Boolean(receiptQueue || (activeMode === "credit" && selected.form_data?.transferTrace?.settlement));
-      const finalRemarks = remarks.trim() || `Automated payment settlement for Sales Order No: ${selected.sales_order_no}. Roznamcha Category: ${paymentType.toUpperCase()}.`;
+      const reviewedSelection = useReviewedReceiptForm;
+      const finalRemarks = remarks.trim() || `Automated payment settlement for Sales Order No: ${selected.sales_order_no}. Roznamcha Category: ${submittedMethod.toUpperCase()}.`;
       const formData = new FormData();
 
       // Helper to check if a string is a valid UUID
@@ -3974,8 +3991,8 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
 
       // 1. Resolve debit ledger ID (Receiving Bank / Cash account)
       let debitLedgerId = "";
-      if (isUuid(paymentSourceLedgerId)) {
-        debitLedgerId = paymentSourceLedgerId;
+      if (isUuid(submittedLedger)) {
+        debitLedgerId = submittedLedger;
       } else if (!reviewedSelection) {
         const matchedDebit = ledgers.find((l) => {
           const id = ledgerId(l);
@@ -4073,19 +4090,19 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
         ...(receiptQueue ? { salesWorkflowQueue: receiptQueue } : {}),
         debitLedgerId,
         creditLedgerId,
-        paymentType,
-        roznamchaType,
-        roznamchaNumber,
-        currencyCode: currency,
-        exchangeRate: Number(exchangeRate || 1),
-        amount: receiptQueue || (activeMode === "credit" && selected.form_data?.transferTrace?.settlement) ? amount : payloadAmount,
-        amountLocal: amount,
+        paymentType: submittedMethod,
+        roznamchaType: useReviewedReceiptForm && submittedMethod !== "cash" ? "Roznamcha Book No." : roznamchaType,
+        roznamchaNumber: submittedReference,
+        currencyCode: useReviewedReceiptForm ? confirmedReceiptCurrency : currency,
+        exchangeRate: useReviewedReceiptForm ? Number(reviewedSettlement?.exchangeRate || 1) : Number(exchangeRate || 1),
+        amount: useReviewedReceiptForm ? Number(reviewedDraft.amount) : payloadAmount,
+        amountLocal: useReviewedReceiptForm ? Number(reviewedDraft.amount) : amount,
         narration: finalRemarks,
         entryDate: paymentDate,
-        referenceNo: roznamchaNumber || undefined,
+        referenceNo: submittedReference || undefined,
         typeDetails: {
           ...typeDetails,
-          ...(receiptQueue ? { paymentMethod: paymentType } : {}),
+          ...(useReviewedReceiptForm ? { paymentMethod: submittedMethod } : {}),
           ...(fromLoading && loadingRecordId ? { loadingRecordId } : {})
         },
         doubleEntry,
@@ -4114,6 +4131,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
       const allSerials = [body.data?.serialNumber, body.data?.countrySerialNumber, body.data?.branchSerialNumber].filter(Boolean).join(" | ");
       setPaymentSuccess(`Double-entry ledger voucher successfully balanced! Journal Serial Number: ${allSerials || "N/A"}.`);
       paymentIdempotencyKeyRef.current = "";
+      setReviewedReceiptInput({ orderId: "", ledgerId: "", reference: "", amount: "" });
       setCalcAmount("");
       setFinalPayment("");
       setRemarks("");
@@ -4823,6 +4841,38 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
             <div className="text-xs text-slate-500 font-semibold">
               {receiptQueue ? translateHeader(currentLanguage, receiptQueue === "cash" ? "Cash Payment" : "Account Transfer") : activeMode === "advance" ? "Sales Advance Payment Entry" : activeMode === "credit" ? "Sales Credit Payment Entry" : activeMode === "remaining" ? "Sales Remaining Payment Entry" : "Sales Payment Entry"}
             </div>
+            {useReviewedReceiptForm && (
+              <section className="space-y-2 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+                <h3 className="font-bold">{translateHeader(currentLanguage, "Payment Entry")}</h3>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <label className="grid gap-1">
+                    <span>{translateHeader(currentLanguage, "Receiving Account")}</span>
+                    <select className="rounded border bg-background px-2 py-1.5" aria-label={translateHeader(currentLanguage, "Receiving Account")} value={reviewedDraft.ledgerId}
+                      onChange={e => setReviewedReceiptInput({ ...reviewedDraft, ledgerId: e.target.value })}>
+                      <option value="">—</option>
+                      {reviewedReceiptLedgers.map(l => <option key={ledgerId(l)} value={ledgerId(l)}>{ledgerCode(l)} · {ledgerName(l)} · {ledgerCurrency(l)}</option>)}
+                    </select>
+                  </label>
+                  <label className="grid gap-1">
+                    <span>{translateHeader(currentLanguage, "Receipt Reference")}</span>
+                    <input className="rounded border bg-background px-2 py-1.5" maxLength={140} value={reviewedDraft.reference}
+                      onChange={e => setReviewedReceiptInput({ ...reviewedDraft, reference: e.target.value })}/>
+                  </label>
+                  <label className="grid gap-1">
+                    <span>{translateHeader(currentLanguage, "Receipt Amount")} {confirmedReceiptCurrency}</span>
+                    <input className="rounded border bg-background px-2 py-1.5" type="number" step="0.01" min="0.01" value={reviewedDraft.amount}
+                      onChange={e => setReviewedReceiptInput({ ...reviewedDraft, amount: e.target.value })}/>
+                  </label>
+                </div>
+                {paymentError && <p role="alert" className="text-red-700">{paymentError}</p>}
+                {paymentSuccess && <p role="status" className="text-emerald-700">{paymentSuccess}</p>}
+                <button type="button" onClick={() => void handleProcessPayment()} disabled={!canSaveReviewed || processingPayment}
+                  className="rounded bg-emerald-700 px-3 py-1.5 font-bold text-white disabled:opacity-50">
+                  {translateHeader(currentLanguage, "Post Receipt")}
+                </button>
+              </section>
+            )}
+
             {/* Already Transferred / Overpaid Warning Banner */}
             {(() => {
               const form = selected.form_data?.form || {};

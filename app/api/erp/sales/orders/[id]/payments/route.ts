@@ -372,6 +372,16 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
         || (body.salesWorkflowQueue && !matchesSalesReceiptQueue(locked, body.salesWorkflowQueue)))) {
         throw new ApiClientError("Receipt must match the approved final currency and outstanding amount.", { status: 409, code: "SALES_RECEIPT_SETTLEMENT_MISMATCH" });
       }
+      if (plannedReceipt) {
+        const receiptReference = body.referenceNo?.trim();
+        if (!receiptReference) throw new ApiClientError("A receipt reference is required.", { status: 400, code: "SALES_RECEIPT_REFERENCE_REQUIRED" });
+        const duplicates = await sql`select p.id from public.sales_order_payments p
+          join public.roznamcha_entries r on r.id = p.roznamcha_entry_id
+          where p.sales_order_id = ${params.id}::uuid and p.deleted_at is null
+            and p.status = 'posted' and p.payment_kind <> 'booking'
+            and r.deleted_at is null and lower(r.source_reference_no) = lower(${receiptReference}) limit 1`;
+        if (duplicates.length) throw new ApiClientError("A receipt already uses this reference for this sales bill.", { status: 409, code: "SALES_RECEIPT_REFERENCE_EXISTS" });
+      }
       if (!reviewedReceipt && (body.kind === "remaining" || body.kind === "credit")) {
         if (remainingLocked <= tolerance) throw new Error("This sales order has no remaining receivable balance. Duplicate posting is not allowed.");
         if (bodyAmountUSD > remainingLocked + tolerance) throw new Error(`Receipt amount cannot exceed remaining receivable balance (${remainingLocked.toFixed(2)}).`);
