@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { linkedSalesBalanceReceipt, salesInvoiceReceiptHref, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesWorkflowDestination, salesWorkflowPayment } from "@/lib/sales/payment-workflow";
+import { convertReviewedSalesReceipt, linkedSalesBalanceReceipt, salesInvoiceReceiptHref, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesWorkflowDestination, salesWorkflowPayment } from "@/lib/sales/payment-workflow";
 
 describe.each([{ label: "Sales Booking", local: false }, { label: "Local Sale", local: true }])("$label payment routing", ({ local }) => {
   const original = { local, billNo: "SB / 001", orderId: "e73b8a60-042e-4ff5-a7e1-fce71c64a502" };
@@ -85,5 +85,22 @@ describe("linked Sales Roznamcha entry points", () => {
     for (const invalid of [{ status: "draft" }, { status: "void" }, { docType: "packing_list" }, { txnKind: "purchase" }, { sourceModule: "purchase_booking" }, { sourceTable: "purchase_orders" }, { sourceId: undefined }]) {
       expect(salesInvoiceReceiptHref({ ...invoice, ...invalid })).toBeNull();
     }
+  });
+});
+
+describe("linked receipt currency and DR/CR posting amount", () => {
+  const approved = { finalCurrency: "AED", originalCurrency: "USD", originalAmount: 100, finalAmount: 367, exchangeRate: 3.67, operator: "*" };
+  it("takes local currency straight through without conversion", () => {
+    expect(convertReviewedSalesReceipt(approved, { currency: "AED", amount: 75 })).toMatchObject({ amount: 75, currency: "AED", rate: 1 });
+  });
+  it("converts original foreign quantity at the approved rate, including division", () => {
+    expect(convertReviewedSalesReceipt(approved, { currency: "USD", amount: 20 })).toMatchObject({ amount: 73.4, currency: "AED", rate: 3.67, operator: "*" });
+    const divide = { ...approved, finalAmount: 50, exchangeRate: 2, operator: "/" };
+    expect(convertReviewedSalesReceipt(divide, { currency: "USD", amount: 9 })).toMatchObject({ amount: 4.5, currency: "AED", rate: 2, operator: "/" });
+  });
+  it("rejects other currencies and refuses to guess a missing or inconsistent foreign rate", () => {
+    expect(convertReviewedSalesReceipt(approved, { currency: "EUR", amount: 20 })).toBeNull();
+    expect(convertReviewedSalesReceipt({ ...approved, exchangeRate: 5 }, { currency: "USD", amount: 20 })).toBeNull();
+    expect(convertReviewedSalesReceipt({ ...approved, exchangeRate: null }, { currency: "AED", amount: 20 })).toMatchObject({ amount: 20, currency: "AED" });
   });
 });

@@ -66,7 +66,7 @@ import { cn } from "@/lib/utils";
 import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
 import { LinkedSalesRoznamchaForm } from "@/features/roznamcha/components/linked-sales-roznamcha-form";
 import { RoznamchaEntryDialog } from "@/features/roznamcha/components/roznamcha-entry-dialog";
-import { linkedSalesBalanceReceipt, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesReceiptPaymentKind, salesWorkflowDestination, type SalesReceiptQueue } from "@/lib/sales/payment-workflow";
+import { convertReviewedSalesReceipt, reviewedSalesReceiptCurrencies, linkedSalesBalanceReceipt, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesReceiptPaymentKind, salesWorkflowDestination, type SalesReceiptQueue } from "@/lib/sales/payment-workflow";
 import { useRouter } from "next/navigation";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -2730,7 +2730,7 @@ function getSalesOrderTableHeader(h: string, currentLanguage: LanguageCode): str
 }
 
 function emptyReviewedReceipt(orderId = "") {
-  return { orderId, ledgerId: "", reference: "", amount: "", method: "cash" as "cash" | "bank",
+  return { orderId, ledgerId: "", reference: "", amount: "", currency: "", method: "cash" as "cash" | "bank",
     cash: { name: "", mobile: "", idDocument: "" },
     bank: { id: "", label: "", account: "", mode: "" } };
 }
@@ -4009,6 +4009,12 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
   const reviewedDraft = reviewedReceiptInput.orderId === selectedId ? reviewedReceiptInput : {
     ...emptyReviewedReceipt(selectedId), cash: { name: reviewedParty, mobile: reviewedMobile, idDocument: "" },
   };
+  const receiptCurrencies = reviewedSalesReceiptCurrencies(reviewedSettlement);
+  const receiptInputCurrency = reviewedDraft.currency === receiptCurrencies?.foreign?.currency
+    ? reviewedDraft.currency : confirmedReceiptCurrency;
+  const receiptConverted = convertReviewedSalesReceipt(reviewedSettlement, {
+    amount: Number(reviewedDraft.amount), currency: receiptInputCurrency,
+  });
   const reviewedChannel = paymentQueue === "cash" ? "cash" : paymentQueue === "account-transfer" ? "bank" : reviewedDraft.method;
   const reviewedReceiptLedgers = ledgers.filter(l => {
     if (!ledgerId(l) || ledgerCurrency(l).toUpperCase() !== confirmedReceiptCurrency) return false;
@@ -4032,8 +4038,8 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
   const readyDetails = reviewedDetails.channel === "cash"
     ? Boolean(reviewedDetails.partyName && /^[+\d\s().-]+$/.test(reviewedDetails.mobile) && reviewedDetails.mobile.replace(/\D/g, "").length >= 5)
     : Boolean(reviewedDetails.bankId && reviewedDraft.bank.account);
-  const canSaveReviewed = Boolean(selectedLinkedStage && reviewedLedger && readyDetails && reviewedDraft.reference.trim() && /^\d{4}-\d{2}-\d{2}$/.test(paymentDate) &&
-    planSalesWorkflowReceipt(reviewedSettlement, { currency: confirmedReceiptCurrency, amount: Number(reviewedDraft.amount),
+  const canSaveReviewed = Boolean(selectedLinkedStage && reviewedLedger && receiptConverted && readyDetails && reviewedDraft.reference.trim() && /^\d{4}-\d{2}-\d{2}$/.test(paymentDate) &&
+    planSalesWorkflowReceipt(reviewedSettlement, { currency: confirmedReceiptCurrency, amount: receiptConverted.amount,
       paidOriginal: Number(selected?.paid_amount ?? 0), remainingOriginal: Number(selected?.remaining_amount ?? 0) }));
 
   // Final Action POST handler
@@ -4161,7 +4167,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
         purchaseOrderId: selected.id,
         salesOrderNo: selected.sales_order_no,
         kind: useReviewedReceiptForm ? selectedLinkedStage?.kind : activeMode === "credit" ? "credit" : activeMode === "advance" ? "advance" : "remaining",
-        ...(useReviewedReceiptForm ? { linkedBalanceReceipt: true, receiptDetails: reviewedDetails } : {}),
+        ...(useReviewedReceiptForm ? { linkedBalanceReceipt: true, receiptDetails: reviewedDetails, receiptInput: { currency: receiptInputCurrency, amount: Number(reviewedDraft.amount) } } : {}),
         ...(paymentQueue ? { salesWorkflowQueue: paymentQueue } : {}),
         ...(invoiceReceipt ? { salesInvoiceId: invoiceReceipt.invoiceId } : {}),
         debitLedgerId,
@@ -4170,9 +4176,9 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
         roznamchaType: useReviewedReceiptForm && submittedMethod !== "cash" ? "Roznamcha Book No." : roznamchaType,
         roznamchaNumber: submittedReference,
         currencyCode: useReviewedReceiptForm ? confirmedReceiptCurrency : currency,
-        exchangeRate: useReviewedReceiptForm ? Number(reviewedSettlement?.exchangeRate || 1) : Number(exchangeRate || 1),
-        amount: useReviewedReceiptForm ? Number(reviewedDraft.amount) : payloadAmount,
-        amountLocal: useReviewedReceiptForm ? Number(reviewedDraft.amount) : amount,
+        exchangeRate: useReviewedReceiptForm ? (receiptConverted?.rate ?? 1) : Number(exchangeRate || 1),
+        amount: useReviewedReceiptForm ? receiptConverted?.amount : payloadAmount,
+        amountLocal: useReviewedReceiptForm ? receiptConverted?.amount : amount,
         narration: finalRemarks,
         entryDate: paymentDate,
         referenceNo: submittedReference || undefined,
@@ -4902,7 +4908,10 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
             onBankRecord={(bank, label) => setReviewedReceiptInput({ ...reviewedDraft, bank: { ...reviewedDraft.bank,
               id: bank?.id || "", label: label || bank?.bank_name || "", account: bank?.account_number || bank?.iban || "" } })}
             onBankMode={value => setReviewedReceiptInput({ ...reviewedDraft, bank: { ...reviewedDraft.bank, mode: value } })}
-            approvedRate={acceptedSettlement ? acceptedSettlement.final / acceptedSettlement.original : null}
+            receiptInputCurrency={receiptInputCurrency}
+            foreignCurrency={receiptCurrencies?.foreign ?? null}
+            postingAmount={receiptConverted?.amount ?? null}
+            onCurrency={value => setReviewedReceiptInput({ ...reviewedDraft, currency: value, amount: "" })}
             approvedFinal={acceptedSettlement?.final ?? null}
             paidOriginal={selected.paid_amount ?? null}
             remainingOriginal={selected.remaining_amount ?? null}

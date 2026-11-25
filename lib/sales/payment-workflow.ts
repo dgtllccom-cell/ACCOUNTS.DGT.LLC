@@ -43,7 +43,10 @@ export function matchesSalesReceiptQueue(row: {
   return posted && !settled && selected === queue;
 }
 
-type ReviewedSalesSettlement = { finalCurrency?: unknown; originalAmount?: unknown; finalAmount?: unknown };
+type ReviewedSalesSettlement = {
+  finalCurrency?: unknown; originalCurrency?: unknown; originalAmount?: unknown; finalAmount?: unknown;
+  exchangeRate?: unknown; operator?: unknown;
+};
 
 export function reviewedSalesSettlement(settlement: ReviewedSalesSettlement | null | undefined) {
   const currency = String(settlement?.finalCurrency ?? "").trim().toUpperCase();
@@ -51,6 +54,33 @@ export function reviewedSalesSettlement(settlement: ReviewedSalesSettlement | nu
   const final = Number(settlement?.finalAmount);
   if (!/^[A-Z]{3}$/.test(currency) || ![original, final].every(n => Number.isFinite(n) && n > 0)) return null;
   return { currency, original, final };
+}
+
+/** Only offer a foreign currency with a verifiable rate from the original posted bill. */
+export function reviewedSalesReceiptCurrencies(settlement: ReviewedSalesSettlement | null | undefined) {
+  const approved = reviewedSalesSettlement(settlement);
+  if (!approved) return null;
+  const original = String(settlement?.originalCurrency ?? "").trim().toUpperCase();
+  const rate = Number(settlement?.exchangeRate);
+  const operator = settlement?.operator === "/" ? "/" : settlement?.operator === "*" ? "*" : null;
+  const originalConverted = operator === "/" ? approved.original / rate : approved.original * rate;
+  const foreign: { currency: string; rate: number; operator: "*" | "/" } | null = /^[A-Z]{3}$/.test(original) && original !== approved.currency && operator &&
+    Number.isFinite(rate) && rate > 0 && Math.abs(originalConverted - approved.final) <= 0.010001
+    ? { currency: original, rate, operator } : null;
+  return { local: approved.currency, foreign };
+}
+
+export function convertReviewedSalesReceipt(settlement: ReviewedSalesSettlement | null | undefined,
+  input: { currency: string; amount: number }) {
+  const options = reviewedSalesReceiptCurrencies(settlement);
+  if (!options || !Number.isFinite(input.amount) || input.amount <= 0) return null;
+  const currency = input.currency.trim().toUpperCase();
+  const rate = currency === options.local ? 1 : currency === options.foreign?.currency ? options.foreign.rate : null;
+  if (rate === null) return null;
+  const operator = currency === options.foreign?.currency ? options.foreign.operator : "*";
+  const amount = Math.round((operator === "/" ? input.amount / rate : input.amount * rate) * 100) / 100;
+  return Number.isFinite(amount) && amount >= 0.01
+    ? { amount, currency: options.local, inputAmount: input.amount, inputCurrency: currency, rate, operator } : null;
 }
 
 /** Reviewed bookings keep receivable balances in original bill currency; receipts post in approved final currency. */

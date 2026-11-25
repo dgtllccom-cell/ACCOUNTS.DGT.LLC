@@ -10,6 +10,8 @@ type Row = { ur: string; ar: string; fa: string; ps: string };
 const r = (ur: string, ar: string, fa: string, ps: string): Row => ({ ur, ar, fa, ps });
 
 export const HEADER_EXTRA: Record<string, Row> = {
+  "RECEIPT CONVERSION DOES NOT MATCH THE APPROVED SALES RATE.": r("وصولی کی تبدیل شدہ رقم منظور شدہ سیلز ریٹ سے نہیں ملتی۔", "المبلغ المحوّل للإيصال لا يطابق سعر صرف البيع المعتمد.", "تبدیل مبلغ رسید با نرخ فروش تأییدشده مطابقت ندارد.", "د رسید بدله شوې اندازه د پلور له منظور شوي نرخ سره سمون نه لري."),
+
   "ENTER THE DETAILS FOR THE SELECTED CASH OR BANK RECEIPT.": r("منتخب کیش یا بینک وصولی کی تفصیل درج کریں۔", "أدخل بيانات إيصال النقد أو البنك المحدد.", "جزئیات رسید نقدی یا بانکی انتخاب‌شده را وارد کنید.", "د ټاکل شوي نغدي یا بانکي رسید جزیات ولیکئ."),
   "SELECT AN ACTIVE BANK WITH AN ACCOUNT NUMBER IN THE SALES COUNTRY.": r("سیلز کے ملک میں اکاؤنٹ نمبر والا فعال بینک منتخب کریں۔", "اختر بنكًا نشطًا لديه رقم حساب في بلد البيع.", "بانک فعالی با شماره حساب در کشور فروش انتخاب کنید.", "د پلور په هېواد کې له حساب شمېرې سره فعال بانک وټاکئ."),
 

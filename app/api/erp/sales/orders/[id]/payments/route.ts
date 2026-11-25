@@ -1,4 +1,4 @@
-import { linkedSalesBalanceReceipt, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesReceiptPaymentKind, SALES_RECEIPT_INVOICE_TYPES } from "@/lib/sales/payment-workflow";
+import { convertReviewedSalesReceipt, linkedSalesBalanceReceipt, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesReceiptPaymentKind, SALES_RECEIPT_INVOICE_TYPES } from "@/lib/sales/payment-workflow";
 import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
 import { NextRequest } from "next/server";
 import { z } from "zod";
@@ -25,6 +25,7 @@ const salesOrderPaymentPostSchema = z.object({
   salesWorkflowQueue: z.enum(["cash","account-transfer"]).optional(),
   linkedBalanceReceipt: z.literal(true).optional(),
   salesInvoiceId: uuidSchema.optional(),
+  receiptInput: z.object({ currency: z.string().trim().regex(/^[A-Za-z]{3}$/), amount: z.number().positive().max(1_000_000_000_000) }).optional(),
   receiptDetails: z.discriminatedUnion("channel", [
     z.object({ channel: z.literal("cash"), partyName: z.string().trim().min(1).max(120),
       mobile: z.string().trim().max(32).regex(/^[+\d\s().-]+$/).refine(v => v.replace(/\D/g, "").length >= 5),
@@ -375,7 +376,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       body.narration?.trim() ? "Notes: " + body.narration.trim() : null,
       trace.narrationPrefix,
       "Payment Currency: " + body.currencyCode,
-      "Exchange Rate: " + body.exchangeRate,
+      "Exchange Rate: " + (body.receiptInput ? 1 : body.exchangeRate),
       "Receipt Amount: " + body.amount
     ].filter(Boolean).join(" | ");
 
@@ -408,7 +409,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     // ONE database transaction: the order row is locked (FOR UPDATE) and the balance is re-checked on the locked row before posting,
     // so simultaneous receipts are serialised and can never together exceed the receivable (found 2026-10-19: three parallel receipts
     // of 6,000 against 9,000 all posted). If anything fails the whole receipt rolls back - no half-posted voucher.
-    const { paymentId, paymentRecord, journalRecord, journalLines } = await withLocalPg((sqlConn) => sqlConn.begin(async (sql: any) => {
+    const { paymentId, paymentRecord, journalRecord, journalLines, inputConversion, postedNarration } = await withLocalPg((sqlConn) => sqlConn.begin(async (sql: any) => {
       const lockedRows = await sql`
         select paid_amount, remaining_amount, form_data, payment_status, ledger_posting_status from sales_orders where id = ${params.id}::uuid and deleted_at is null for update
       `;
@@ -442,6 +443,15 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
           }
         }
       }
+      const inputConversion = body.linkedBalanceReceipt && body.receiptInput
+        ? convertReviewedSalesReceipt(locked?.form_data?.transferTrace?.settlement, body.receiptInput) : null;
+      if (body.receiptInput && (!inputConversion || inputConversion.currency !== body.currencyCode.trim().toUpperCase() ||
+        Math.abs(inputConversion.amount - body.amount) > 0.000001)) {
+        throw new ApiClientError("Receipt conversion does not match the approved sales rate.", { status: 409, code: "SALES_RECEIPT_FX_MISMATCH" });
+      }
+      const postedNarration = inputConversion && inputConversion.inputCurrency !== inputConversion.currency
+        ? postingNarration + ` | Receipt FX: ${inputConversion.inputAmount} ${inputConversion.inputCurrency} ${inputConversion.operator} ${inputConversion.rate} = ${inputConversion.amount} ${inputConversion.currency}`
+        : postingNarration;
       const plannedReceipt = reviewedReceipt ? planSalesWorkflowReceipt(locked?.form_data?.transferTrace?.settlement, {
         currency: body.currencyCode, amount: body.amount, paidOriginal: paidLocked, remainingOriginal: remainingLocked,
       }) : null;
@@ -475,7 +485,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
           p_debit_ledger_id => ${resolvedDebitLedgerId}::uuid,
           p_credit_ledger_id => ${resolvedCreditLedgerId}::uuid,
           p_reference_no => ${postingReferenceNo},
-          p_narration => ${postingNarration || null}
+          p_narration => ${postedNarration || null}
         ) as id
       `;
       const paymentId = idRows[0]?.id as string;
@@ -537,7 +547,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
         await sql`update public.sales_orders set paid_amount = ${plannedReceipt.paid}, remaining_amount = ${plannedReceipt.remaining},
           payment_status = ${plannedReceipt.remaining > 0.01 ? "partially_paid" : "completed"}, updated_at = now() where id = ${params.id}::uuid`;
       }
-      return { paymentId, paymentRecord, journalRecord, journalLines };
+      return { paymentId, paymentRecord, journalRecord, journalLines, inputConversion, postedNarration };
     })) as any;
 
     const exRate = reviewedReceipt ? 1 : Number(body.exchangeRate || (orderRow as any)?.exchange_rate || 1) || 1;
@@ -590,9 +600,10 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
           roznamchaEntryId: paymentRecord.roznamcha_entry_id,
           debitLedgerId: resolvedDebitLedgerId,
           creditLedgerId: resolvedCreditLedgerId,
-          originalCurrencyCode: body.currencyCode,
+          originalCurrencyCode: inputConversion?.inputCurrency ?? body.currencyCode,
           currencyName: body.currencyCode,
-          exchangeRate: body.exchangeRate,
+          exchangeRate: inputConversion?.rate ?? body.exchangeRate,
+          ...(inputConversion ? { originalAmount: inputConversion.inputAmount, conversionOperator: inputConversion.operator } : {}),
           superAdminSerialNumber: journalRecord.super_admin_serial_number,
           countryTransactionSerialNumber: journalRecord.country_transaction_serial_number,
           branchTransactionSerialNumber: journalRecord.branch_transaction_serial_number,
@@ -600,7 +611,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
           manualBillNumber: trace.manualBillNumber,
           partyName: trace.partyName,
           referenceNo: postingReferenceNo,
-          narration: postingNarration,
+          narration: postedNarration,
           debitLedgerCode: debitLedger.code,
           creditLedgerCode: creditLedger.code
         }

@@ -39,7 +39,11 @@ function Detail({ icon, title, entries }: { icon: ReactNode; title: string; entr
 type Props = {
   lang: SupportedLanguage;
   bill: string; country: string; branch: string; city: string; currency: string; originalCurrency: string;
-  party: string; approvedRate: number | null;
+  party: string;
+  receiptInputCurrency: string;
+  foreignCurrency: { currency: string; rate: number; operator: "*" | "/" } | null;
+  postingAmount: number | null;
+  onCurrency: (value: string) => void;
   approvedFinal: number | null; paidOriginal: number | null; remainingOriginal: number | null;
   accounts: { id: string; name: string; code: string; type: string; parent: string }[];
   ledgerId: string; reference: string; amount: string; date: string; remarks: string;
@@ -64,7 +68,8 @@ export function LinkedSalesRoznamchaForm(p: Props) {
   const lock = p.disabled || p.busy;
   const financial = (value: number | null, currency: string) =>
     value !== null && Number.isFinite(value) && currency ? `${currency} ${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—";
-  const moneyEntered = Number(p.amount);
+  const foreign = p.receiptInputCurrency === p.foreignCurrency?.currency ? p.foreignCurrency : null;
+  const posting = financial(p.postingAmount, p.currency);
   return <>
     {p.notice}
     <section className="mt-2.5 rounded-xl border border-slate-200/80 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-800/40">
@@ -90,7 +95,12 @@ export function LinkedSalesRoznamchaForm(p: Props) {
                 {(p.method === "bank" || !p.methodLocked) && <option value="bank">{h("Bank")} / {tr("cef.opt_cheque", "Cheque")}</option>}
               </select>
             </Field>
-            <Field label={h("Currency")}><Value value={p.currency}/></Field>
+            <Field label={h("Currency")}>
+              <select className={field} aria-label={h("Currency")} disabled={lock || !p.foreignCurrency} value={p.receiptInputCurrency} onChange={e => p.onCurrency(e.target.value)}>
+                <option value={p.currency}>{p.currency ? `${p.currency} · ${tr("cj.mLocal", "local")}` : "—"}</option>
+                {p.foreignCurrency && <option value={p.foreignCurrency.currency}>{p.foreignCurrency.currency}</option>}
+              </select>
+            </Field>
           </div>
         </Step>
         <Step number={2} icon={<Search className="h-4 w-4"/>} title={h("Account Selection")}>
@@ -134,17 +144,29 @@ export function LinkedSalesRoznamchaForm(p: Props) {
         </Step>
         <Step number={4} icon={<Coins className="h-4 w-4"/>} title={tr("cef.amount_posting", "Amount & Posting")}>
           <div className="grid items-end gap-2 sm:grid-cols-3">
-            <Field label={`${h("Receipt Amount")} ${p.currency}`}><input className={field} type="number" step="0.01" min="0.01" disabled={lock} value={p.amount} onChange={e => p.onAmount(e.target.value)}/></Field>
-            <Field label={h("Exchange Rate")}><Value value={p.approvedRate === null ? "" : String(Number(p.approvedRate.toFixed(6)))}/></Field>
-            <div className="row-span-2 flex min-h-[72px] flex-col justify-between rounded-xl border border-sky-200 bg-sky-50 p-2.5 text-right dark:border-sky-800 dark:bg-sky-950/30">
-              <span className="text-[10px] font-bold uppercase text-slate-500">{tr("cj.mFinalAmount", "Final Amount")}</span>
-              <strong className="font-mono text-xl text-sky-700 dark:text-sky-300" dir="ltr">{financial(Number.isFinite(moneyEntered) ? moneyEntered : null,p.currency)}</strong>
+            <div className={foreign ? "" : "sm:col-span-2"}>
+              <Field label={`${foreign ? tr("cj.mQuantity", "Quantity (Foreign Amount)") : h("Receipt Amount")} ${p.receiptInputCurrency}`}>
+                <input className={field} type="number" step="0.01" min="0.01" disabled={lock} value={p.amount} onChange={e => p.onAmount(e.target.value)}/>
+              </Field>
             </div>
-            <div className="sm:col-span-2">
-              <div className="mb-0.5 text-[10px] font-semibold text-slate-500">{tr("cef.posting_side", "Posting Side")}</div>
-              <div className="grid grid-cols-2 gap-1.5 rounded-lg border border-slate-200 bg-slate-100/80 p-1 text-center text-[11px] font-bold dark:border-slate-700 dark:bg-slate-950/70">
-                <span className="rounded bg-sky-600 px-2 py-1 text-white">{tr("cef.debit_dr", "Debit (DR)")}</span>
-                <span className="px-2 py-1 text-slate-600 dark:text-slate-300">{tr("cef.credit_cr", "Credit (CR)")}</span>
+            {foreign && <Field label={tr("cj.mRate", "Transaction Rate")}>
+              <Value value={`${foreign.operator === "*" ? "×" : "÷"} ${foreign.rate}`}/>
+            </Field>}
+            <div className="flex min-h-14 flex-col justify-between rounded-xl border border-sky-200 bg-sky-50 p-2 text-right dark:border-sky-800 dark:bg-sky-950/30">
+              <span className="text-[10px] font-bold uppercase text-slate-500">{tr("cj.mFinalAmount", "Final Amount")}</span>
+              <strong className="font-mono text-xl text-sky-700 dark:text-sky-300" dir="ltr">{posting}</strong>
+            </div>
+            {foreign && p.postingAmount !== null && <div className="font-mono text-xs text-slate-600 dark:text-slate-300 sm:col-span-3" dir="ltr">
+              {p.amount} {p.receiptInputCurrency} {foreign.operator === "*" ? "×" : "÷"} {foreign.rate} = {posting}
+            </div>}
+            <div className="grid grid-cols-2 gap-1.5 text-[11px] sm:col-span-3">
+              <div className="min-w-0 rounded-lg border border-sky-200 bg-sky-50 px-2 py-1.5 dark:border-sky-800 dark:bg-sky-950/40">
+                <strong>{tr("cef.debit_dr", "Debit (DR)")} · <bdi>{posting}</bdi></strong>
+                <div className="break-words text-slate-600 dark:text-slate-300">{account?.name || h("Receiving Account")}</div>
+              </div>
+              <div className="min-w-0 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1.5 dark:border-emerald-800 dark:bg-emerald-950/40">
+                <strong>{tr("cef.credit_cr", "Credit (CR)")} · <bdi>{posting}</bdi></strong>
+                <div className="break-words text-slate-600 dark:text-slate-300">{p.party || h("Customer Account")}</div>
               </div>
             </div>
           </div>

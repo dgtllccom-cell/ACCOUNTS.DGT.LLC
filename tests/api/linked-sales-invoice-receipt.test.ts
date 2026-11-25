@@ -77,7 +77,7 @@ it("blocks wrong-stage, fully paid, wrong-currency and unauthorized branch submi
 });
 
 it("posts a finalized Local Sales invoice through one balanced Roznamcha receipt and updates the original-currency balance", async () => {
-  const order = { ...base, country_id: dr, form_data: { ...base.form_data, form: { paymentType: "Invoice", saleSource: "local" } } };
+  const order = { ...base, country_id: dr, form_data: { ...base.form_data, form: { paymentType: "Invoice", saleSource: "local" }, transferTrace: { ...base.form_data.transferTrace, settlement: { ...base.form_data.transferTrace.settlement, originalCurrency: "USD", exchangeRate: 3.67, operator: "*" } } } };
   const voucher = { id: invoice, sales_order_id: id, roznamcha_entry_id: id, currency_code: "AED", amount: 73.4, status: "posted" };
   m.query.mockImplementation(async (sql: string, values: unknown[]) => {
     if (sql.includes("pg_try_advisory_xact_lock")) return [{ got: true }];
@@ -92,12 +92,13 @@ it("posts a finalized Local Sales invoice through one balanced Roznamcha receipt
     if (sql.includes("from sales_order_payments")) return [voucher];
     return [];
   });
-  const result = await send();
+  const result = await send({ receiptInput: { currency: "USD", amount: 20 } });
   expect(result.status).toBe(201);
   const sqlCalls = m.query.mock.calls;
   expect(sqlCalls.find(([sql]) => sql.includes("from public.business_edit_invoices"))?.[1]).toContain("local_sales");
   const receiptCalls = sqlCalls.filter(([sql]) => sql.includes("select post_sales_booking_transfer"));
   expect(receiptCalls).toHaveLength(1);
+  expect(receiptCalls[0][1].at(-1)).toContain("Receipt FX: 20 USD * 3.67 = 73.4 AED");
   expect(receiptCalls[0][1].at(-1)).toContain("Cash | Receiver/Sender: QA Party | Mobile: +971 50 123 4567 | ID: •••• 7890");
   expect(sqlCalls.find(([sql]) => sql.includes("update roznamcha_entries"))?.[1]).toContain("cash");
   expect(receiptCalls[0][1].slice(1, 9)).toEqual([id, "remaining", "2026-11-25", 73.4, "AED", 1, dr, cr]);
@@ -134,7 +135,7 @@ it("records the selected Bank / Cheque master reference without copying the full
     if (sql.includes("from sales_order_payments")) return [voucher];
     return [];
   });
-  const result = await send({ receiptDetails: { channel: "bank", bankId: invoice, mode: "Cheque" }, typeDetails: { paymentMethod: "bank" } });
+  const result = await send({ receiptInput: { currency: "AED", amount: 73.4 }, receiptDetails: { channel: "bank", bankId: invoice, mode: "Cheque" }, typeDetails: { paymentMethod: "bank" } });
   expect(result.status).toBe(201);
   const posting = m.query.mock.calls.find(([sql]) => sql.includes("select post_sales_booking_transfer"));
   expect(posting?.[1].at(-1)).toContain("Bank: QA Bank | Bank Account: •••• 8834 | Transfer Type: Cheque");
@@ -142,4 +143,13 @@ it("records the selected Bank / Cheque master reference without copying the full
   const update = m.query.mock.calls.find(([sql]) => sql.includes("update roznamcha_entries"));
   expect(update?.[1]).toContain(invoice);
   expect(update?.[1]).toContain("bank");
+});
+
+it("recomputes a foreign input against the original approved rate and blocks a changed currency or final amount", async () => {
+  const order = { ...base, form_data: { ...base.form_data, transferTrace: { ...base.form_data.transferTrace,
+    settlement: { ...base.form_data.transferTrace.settlement, originalCurrency: "USD", exchangeRate: 3.67, operator: "*" } } } };
+  arrange({ finalized: true, order });
+  expect((await (await send({ receiptInput: { currency: "USD", amount: 20 }, amount: 80 })).json()).error.code).toBe("SALES_RECEIPT_FX_MISMATCH");
+  expect((await (await send({ receiptInput: { currency: "PKR", amount: 20 }, amount: 73.4 })).json()).error.code).toBe("SALES_RECEIPT_FX_MISMATCH");
+  expect(m.query.mock.calls.flat().join(" ")).not.toContain("select post_sales_booking_transfer");
 });
