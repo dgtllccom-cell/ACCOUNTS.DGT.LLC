@@ -342,7 +342,8 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: nt("Stock"),
     icon: Boxes,
     children: [
-      { label: nt("Journal Purchase Stock"), href: "/dashboard/purchase/journal-booking-stock", icon: Boxes },
+      { label: nt("P/S Journal (Purchase & Sales)"), href: "/dashboard/stock/ps-journal", icon: ArrowRightLeft, redNew: true },
+      { label: nt("Journal Booking Stock"), href: "/dashboard/purchase/journal-booking-stock", icon: Boxes },
       { label: nt("Purchase General Stock"), href: "/dashboard/purchase/stock/journal", icon: Package },
       { label: nt("Warehouse Stock Register"), href: "/dashboard/stock/warehouse-register", icon: Warehouse, redNew: true },
     ],
