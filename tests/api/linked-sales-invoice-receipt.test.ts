@@ -153,3 +153,16 @@ it("recomputes a foreign input against the original approved rate and blocks a c
   expect((await (await send({ receiptInput: { currency: "PKR", amount: 20 }, amount: 73.4 })).json()).error.code).toBe("SALES_RECEIPT_FX_MISMATCH");
   expect(m.query.mock.calls.flat().join(" ")).not.toContain("select post_sales_booking_transfer");
 });
+
+it("blocks collecting an existing advance twice or applying more than the bill's unpaid advance", async () => {
+  const order = { ...base, paid_amount: 10, remaining_amount: 90, form_data: { ...base.form_data,
+    form: { paymentType: "Advance", advancePercent: 30 },
+  } };
+  arrange({ order });
+  const excess = await send({ kind: "advance", salesInvoiceId: undefined, amount: 73.41 });
+  expect((await excess.json()).error.code).toBe("SALES_ADVANCE_RECEIPT_LIMIT");
+  arrange({ order: { ...order, paid_amount: 30, remaining_amount: 70 } });
+  const duplicate = await send({ kind: "advance", salesInvoiceId: undefined, amount: 1 });
+  expect((await duplicate.json()).error.code).toBe("SALES_RECEIPT_QUEUE_MISMATCH");
+  expect(m.query.mock.calls.flat().join(" ")).not.toContain("select post_sales_booking_transfer");
+});

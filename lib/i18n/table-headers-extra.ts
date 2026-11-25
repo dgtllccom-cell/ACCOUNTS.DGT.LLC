@@ -10,6 +10,9 @@ type Row = { ur: string; ar: string; fa: string; ps: string };
 const r = (ur: string, ar: string, fa: string, ps: string): Row => ({ ur, ar, fa, ps });
 
 export const HEADER_EXTRA: Record<string, Row> = {
+  "ADVANCE AMOUNT DUE": r("بقایا ایڈوانس", "الدفعة المقدمة المستحقة", "پیش‌پرداخت باقیمانده", "پاتې مخکېنۍ تادیه"),
+  "RECEIPT EXCEEDS THE OUTSTANDING ADVANCE AMOUNT.": r("وصولی بقایا ایڈوانس سے زیادہ ہے۔", "الإيصال يتجاوز الدفعة المقدمة المستحقة.", "مبلغ رسید بیش از پیش‌پرداخت باقیمانده است.", "رسید له پاتې مخکېنۍ تادیې ډېر دی."),
+
   "RECEIPT CONVERSION DOES NOT MATCH THE APPROVED SALES RATE.": r("وصولی کی تبدیل شدہ رقم منظور شدہ سیلز ریٹ سے نہیں ملتی۔", "المبلغ المحوّل للإيصال لا يطابق سعر صرف البيع المعتمد.", "تبدیل مبلغ رسید با نرخ فروش تأییدشده مطابقت ندارد.", "د رسید بدله شوې اندازه د پلور له منظور شوي نرخ سره سمون نه لري."),
 
   "ENTER THE DETAILS FOR THE SELECTED CASH OR BANK RECEIPT.": r("منتخب کیش یا بینک وصولی کی تفصیل درج کریں۔", "أدخل بيانات إيصال النقد أو البنك المحدد.", "جزئیات رسید نقدی یا بانکی انتخاب‌شده را وارد کنید.", "د ټاکل شوي نغدي یا بانکي رسید جزیات ولیکئ."),

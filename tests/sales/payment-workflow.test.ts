@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { convertReviewedSalesReceipt, linkedSalesBalanceReceipt, salesInvoiceReceiptHref, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesWorkflowDestination, salesWorkflowPayment } from "@/lib/sales/payment-workflow";
+import { convertReviewedSalesReceipt, linkedSalesAdvanceReceipt, linkedSalesBalanceReceipt, salesInvoiceReceiptHref, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesWorkflowDestination, salesWorkflowPayment } from "@/lib/sales/payment-workflow";
 
 describe.each([{ label: "Sales Booking", local: false }, { label: "Local Sale", local: true }])("$label payment routing", ({ local }) => {
   const original = { local, billNo: "SB / 001", orderId: "e73b8a60-042e-4ff5-a7e1-fce71c64a502" };
@@ -103,4 +103,16 @@ describe("linked receipt currency and DR/CR posting amount", () => {
     expect(convertReviewedSalesReceipt({ ...approved, exchangeRate: 5 }, { currency: "USD", amount: 20 })).toBeNull();
     expect(convertReviewedSalesReceipt({ ...approved, exchangeRate: null }, { currency: "AED", amount: 20 })).toMatchObject({ amount: 20, currency: "AED" });
   });
+});
+
+it.each(["stock", "local"])("counts the existing advance once and stops further collection after the target for %s sales", saleSource => {
+  const order = { ledger_posting_status: "posted", payment_status: "partial", paid_amount: 10, remaining_amount: 90,
+    form_data: { form: { saleSource, paymentType: "Advance", advancePercent: 30 },
+      transferTrace: { settlement: { finalCurrency: "AED", originalAmount: 100, finalAmount: 367 } } } };
+  expect(linkedSalesAdvanceReceipt(order)).toEqual({ kind: "advance", queue: undefined, limit: 73.4 });
+  expect(linkedSalesBalanceReceipt(order)).toBeNull();
+  const paid = { ...order, paid_amount: 30, remaining_amount: 70 };
+  expect(linkedSalesAdvanceReceipt(paid)).toBeNull();
+  expect(linkedSalesBalanceReceipt(paid)).toEqual({ kind: "remaining", queue: undefined });
+  expect(linkedSalesAdvanceReceipt({ ...order, form_data: { ...order.form_data, form: { ...order.form_data.form, paymentType: "Credit" } } })).toBeNull();
 });

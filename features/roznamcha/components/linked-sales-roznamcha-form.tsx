@@ -43,6 +43,7 @@ type Props = {
   receiptInputCurrency: string;
   foreignCurrency: { currency: string; rate: number; operator: "*" | "/" } | null;
   postingAmount: number | null;
+  advanceLimit: number | null;
   onCurrency: (value: string) => void;
   approvedFinal: number | null; paidOriginal: number | null; remainingOriginal: number | null;
   accounts: { id: string; name: string; code: string; type: string; parent: string }[];
@@ -158,6 +159,9 @@ export function LinkedSalesRoznamchaForm(p: Props) {
             </div>
             {foreign && p.postingAmount !== null && <div className="font-mono text-xs text-slate-600 dark:text-slate-300 sm:col-span-3" dir="ltr">
               {p.amount} {p.receiptInputCurrency} {foreign.operator === "*" ? "×" : "÷"} {foreign.rate} = {posting}
+            </div>}
+            {p.advanceLimit !== null && <div className="text-xs font-semibold text-slate-600 dark:text-slate-300 sm:col-span-3">
+              {h("Advance Amount Due")}: <bdi>{financial(p.advanceLimit, p.currency)}</bdi>
             </div>}
             <div className="grid grid-cols-2 gap-1.5 text-[11px] sm:col-span-3">
               <div className="min-w-0 rounded-lg border border-sky-200 bg-sky-50 px-2 py-1.5 dark:border-sky-800 dark:bg-sky-950/40">

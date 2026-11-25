@@ -1,4 +1,4 @@
-import { convertReviewedSalesReceipt, linkedSalesBalanceReceipt, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesReceiptPaymentKind, SALES_RECEIPT_INVOICE_TYPES } from "@/lib/sales/payment-workflow";
+import { convertReviewedSalesReceipt, linkedSalesAdvanceReceipt, linkedSalesBalanceReceipt, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesReceiptPaymentKind, SALES_RECEIPT_INVOICE_TYPES } from "@/lib/sales/payment-workflow";
 import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
 import { NextRequest } from "next/server";
 import { z } from "zod";
@@ -383,7 +383,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     const isForeignCurrency = body.currencyCode?.toUpperCase() === (orderRow.currency_code?.toUpperCase() || "USD");
     const bodyAmountUSD = isForeignCurrency ? Number(body.amount) : Number(body.amount) / Number(body.exchangeRate || 1);
 
-    if (body.kind === "advance" && advancePercent > 0) {
+    if (!reviewedReceipt && body.kind === "advance" && advancePercent > 0) {
       if (remainingAdvanceUSD <= tolerance) {
         throw new Error(`Advance payment is already fully received (Required: ${requiredAdvanceUSD.toFixed(2)}, Paid: ${paidAmountUSD.toFixed(2)}). Duplicate posting is not allowed.`);
       }
@@ -415,16 +415,20 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       `;
       const paidLocked = Number(lockedRows[0]?.paid_amount ?? 0);
       const remainingLocked = Number(lockedRows[0]?.remaining_amount ?? 0);
-      if (body.kind === "advance" && advancePercent > 0) {
+      if (!reviewedReceipt && body.kind === "advance" && advancePercent > 0) {
         const remAdv = Math.max(0, requiredAdvanceUSD - paidLocked);
         if (remAdv <= tolerance) throw new Error(`Advance payment is already fully received (Required: ${requiredAdvanceUSD.toFixed(2)}, Paid: ${paidLocked.toFixed(2)}). Duplicate posting is not allowed.`);
         if (bodyAmountUSD > remAdv + tolerance) throw new Error(`Advance receipt amount cannot exceed remaining advance balance (${remAdv.toFixed(2)}).`);
       }
       const locked = lockedRows[0];
       if (body.linkedBalanceReceipt) {
-        const stage = locked && linkedSalesBalanceReceipt(locked);
+        const advance = body.kind === "advance" && locked ? linkedSalesAdvanceReceipt(locked) : null;
+        const stage = body.kind === "advance" ? advance : locked && linkedSalesBalanceReceipt(locked);
         if (!stage || stage.kind !== body.kind || stage.queue !== body.salesWorkflowQueue) {
           throw new ApiClientError("Receipt is not available for this sales bill and payment stage.", { status: 409, code: "SALES_RECEIPT_QUEUE_MISMATCH" });
+        }
+        if (advance && body.amount > advance.limit) {
+          throw new ApiClientError("Receipt exceeds the outstanding advance amount.", { status: 409, code: "SALES_ADVANCE_RECEIPT_LIMIT" });
         }
         const invoiceSale = salesReceiptPaymentKind(locked) === "invoice";
         if (invoiceSale || body.salesInvoiceId) {

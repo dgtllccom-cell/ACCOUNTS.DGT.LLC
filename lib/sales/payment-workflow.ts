@@ -121,6 +121,22 @@ export function salesReceiptPaymentKind(order: SalesReceiptOrder) {
   return salesWorkflowPayment(order.form_data?.workflow?.paymentKind) ?? salesWorkflowPayment(form?.paymentType || form?.paymentCondition);
 }
 
+/** Advance already posted against this bill counts toward the target; it is never collected again. */
+export function linkedSalesAdvanceReceipt(order: SalesReceiptOrder) {
+  const payment = salesReceiptPaymentKind(order);
+  if (payment || !/^(posted|transferred)$/i.test(String(order.ledger_posting_status ?? "")) ||
+      /^(paid|completed)$/i.test(String(order.payment_status ?? ""))) return null;
+  const approved = reviewedSalesSettlement(order.form_data?.transferTrace?.settlement);
+  const percent = Number(order.form_data?.form?.advancePercent ?? 0);
+  const paid = Number(order.paid_amount);
+  const due = Number(order.remaining_amount);
+  if (!approved || !Number.isFinite(percent) || percent <= 0 || percent > 100 ||
+      !Number.isFinite(paid) || paid < 0 || !Number.isFinite(due) || due <= 0.01) return null;
+  const outstandingOriginal = Math.min(due, approved.original * percent / 100 - paid);
+  const limit = Math.round(outstandingOriginal * approved.final / approved.original * 100) / 100;
+  return outstandingOriginal > 0.01 && limit >= 0.01 ? { kind: "advance", queue: undefined, limit } as const : null;
+}
+
 /** Final is a reconciliation page, not a second payment kind. */
 export function linkedSalesBalanceReceipt(order: SalesReceiptOrder) {
   if (!/^(posted|transferred)$/i.test(String(order.ledger_posting_status ?? "")) ||

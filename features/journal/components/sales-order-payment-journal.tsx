@@ -66,7 +66,7 @@ import { cn } from "@/lib/utils";
 import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
 import { LinkedSalesRoznamchaForm } from "@/features/roznamcha/components/linked-sales-roznamcha-form";
 import { RoznamchaEntryDialog } from "@/features/roznamcha/components/roznamcha-entry-dialog";
-import { convertReviewedSalesReceipt, reviewedSalesReceiptCurrencies, linkedSalesBalanceReceipt, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesReceiptPaymentKind, salesWorkflowDestination, type SalesReceiptQueue } from "@/lib/sales/payment-workflow";
+import { convertReviewedSalesReceipt, reviewedSalesReceiptCurrencies, linkedSalesAdvanceReceipt, linkedSalesBalanceReceipt, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesReceiptPaymentKind, salesWorkflowDestination, type SalesReceiptQueue } from "@/lib/sales/payment-workflow";
 import { useRouter } from "next/navigation";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -3274,7 +3274,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
       // read undefined/0 and treated every order as if nothing had ever been paid). The real,
       // always-populated columns are paid_amount (total across every payment kind) and
       // remaining_amount (kept in sync by recalc_sales_order_payment_totals on every posting).
-      const finalAmount = orderTotal(row);
+      const finalAmount = reviewedSalesSettlement(row.form_data?.transferTrace?.settlement)?.original ?? orderTotal(row);
       const paymentType = String(form.paymentType || form.paymentCondition || "").trim().toLowerCase();
       const isCreditBill = salesReceiptPaymentKind(row) === "credit" || paymentType.includes("credit");
       const isCashBill = paymentType.includes("cash");
@@ -3991,17 +3991,21 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
     );
   }
   const reviewedSettlement = selected?.form_data?.transferTrace?.settlement;
-  const useReviewedReceiptForm = Boolean(selected && sharedReceiptPage && classicPaymentId !== selected.id);
+  const useSharedReceiptFor = (row: PurchaseOrderRow) => sharedReceiptPage ||
+    (activeMode === "advance" && Boolean(row.form_data?.transferTrace?.settlement));
+  const useReviewedReceiptForm = Boolean(selected && useSharedReceiptFor(selected) && classicPaymentId !== selected.id);
   const hasClassicReceipt = Boolean(selected && !selected.form_data?.transferTrace?.settlement && !receiptQueue &&
     !invoiceReceipt && [null, "credit"].includes(salesReceiptPaymentKind(selected)) &&
     // The classic path was already available in the Credit, Remaining and Final journals.
     (activeMode === "credit" || activeMode === "remaining" || activeMode === "final"));
-  const selectedLinkedStage = selected ? linkedSalesBalanceReceipt(selected) : null;
+  const advanceReceipt = Boolean(selected && !receiptQueue && activeMode === "advance" && !salesReceiptPaymentKind(selected));
+  const selectedAdvanceStage = advanceReceipt && selected ? linkedSalesAdvanceReceipt(selected) : null;
+  const selectedLinkedStage = selected ? (advanceReceipt ? selectedAdvanceStage : linkedSalesBalanceReceipt(selected)) : null;
   const paymentQueue = receiptQueue ?? (useReviewedReceiptForm ? selectedLinkedStage?.queue : undefined);
   const receiptQueueLabel = paymentQueue === "cash" ? "Cash Payment" : paymentQueue === "account-transfer" ? "Account Transfer" : null;
   const receiptLabel = receiptQueueLabel ?? (selected && salesReceiptPaymentKind(selected) === "invoice" ? "Invoice Payment" :
     selectedLinkedStage?.kind === "credit" || activeMode === "credit" ? "Credit Payment / Receipt" :
-    activeMode === "final" ? "Final Payment" : "Remaining Payment");
+    activeMode === "advance" ? "Advance Payment / Receipt" : activeMode === "final" ? "Final Payment" : "Remaining Payment");
   const acceptedSettlement = reviewedSalesSettlement(reviewedSettlement);
   const confirmedReceiptCurrency = acceptedSettlement?.currency ?? "";
   const reviewedParty = String(selected?.form_data?.form?.customerAccountName || selected?.form_data?.form?.customerName || "");
@@ -4038,7 +4042,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
   const readyDetails = reviewedDetails.channel === "cash"
     ? Boolean(reviewedDetails.partyName && /^[+\d\s().-]+$/.test(reviewedDetails.mobile) && reviewedDetails.mobile.replace(/\D/g, "").length >= 5)
     : Boolean(reviewedDetails.bankId && reviewedDraft.bank.account);
-  const canSaveReviewed = Boolean(selectedLinkedStage && reviewedLedger && receiptConverted && readyDetails && reviewedDraft.reference.trim() && /^\d{4}-\d{2}-\d{2}$/.test(paymentDate) &&
+  const canSaveReviewed = Boolean(selectedLinkedStage && reviewedLedger && receiptConverted && (!selectedAdvanceStage || receiptConverted.amount <= selectedAdvanceStage.limit) && readyDetails && reviewedDraft.reference.trim() && /^\d{4}-\d{2}-\d{2}$/.test(paymentDate) &&
     planSalesWorkflowReceipt(reviewedSettlement, { currency: confirmedReceiptCurrency, amount: receiptConverted.amount,
       paidOriginal: Number(selected?.paid_amount ?? 0), remainingOriginal: Number(selected?.remaining_amount ?? 0) }));
 
@@ -4484,7 +4488,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
 
           {/* 28. ACTION */}
           <td className="py-3 px-2 text-center" onClick={(e) => e.stopPropagation()}>
-            {mayOpenPayment(row) && sharedReceiptPage && (
+            {mayOpenPayment(row) && useSharedReceiptFor(row) && (
               <button type="button" onClick={() => selectOrder(row.id)}
                 className="me-1 inline-flex h-7 w-7 items-center justify-center rounded-md border border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950"
                 aria-label={`${translateHeader(currentLanguage, "Payment Entry")} ${row.sales_order_no}`}>
@@ -4911,6 +4915,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
             receiptInputCurrency={receiptInputCurrency}
             foreignCurrency={receiptCurrencies?.foreign ?? null}
             postingAmount={receiptConverted?.amount ?? null}
+            advanceLimit={selectedAdvanceStage?.limit ?? null}
             onCurrency={value => setReviewedReceiptInput({ ...reviewedDraft, currency: value, amount: "" })}
             approvedFinal={acceptedSettlement?.final ?? null}
             paidOriginal={selected.paid_amount ?? null}
