@@ -3945,6 +3945,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
     return Math.max(0, requiredAdvanceBC - paidAdvanceBC);
   }, [selected]);
 
+  const receiptQueueLabel = receiptQueue === "cash" ? "Cash Payment" : receiptQueue === "account-transfer" ? "Account Transfer" : null;
   const reviewedSettlement = selected?.form_data?.transferTrace?.settlement;
   const useReviewedReceiptForm = Boolean(receiptQueue || (activeMode === "credit" && reviewedSettlement));
   const acceptedSettlement = reviewedSalesSettlement(reviewedSettlement);
@@ -4794,7 +4795,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
       {/* Ledger Cash Entry Panel (Modal) */}
       {selected && (
         <SimpleModal
-          title={`Payment Entry - PO ${selected.sales_order_no}`}
+          title={receiptQueueLabel ? `${translateHeader(currentLanguage, receiptQueueLabel)} - ${selected.sales_order_no}` : `Payment Entry - PO ${selected.sales_order_no}`}
           onClose={() => setSelectedId("")}
           className="h-[calc(100dvh-1.5rem)] w-[calc(100vw-1.5rem)] max-w-[1760px] rounded-2xl shadow-2xl"
         >
@@ -4816,7 +4817,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
               <div>
                 <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{translateHeader(currentLanguage, "Type")}</div>
                 <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-black uppercase text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 whitespace-nowrap">
-                  {activeMode === "advance" ? "Advance" : activeMode === "credit" ? "Credit" : activeMode === "remaining" ? "Remaining" : "History"}
+                  {receiptQueueLabel ? translateHeader(currentLanguage, receiptQueueLabel) : activeMode === "advance" ? "Advance" : activeMode === "credit" ? "Credit" : activeMode === "remaining" ? "Remaining" : "History"}
                 </span>
               </div>
               <div>
@@ -4840,7 +4841,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
               </div>
             </div>
             <div className="text-xs text-slate-500 font-semibold">
-              {receiptQueue ? translateHeader(currentLanguage, receiptQueue === "cash" ? "Cash Payment" : "Account Transfer") : activeMode === "advance" ? "Sales Advance Payment Entry" : activeMode === "credit" ? "Sales Credit Payment Entry" : activeMode === "remaining" ? "Sales Remaining Payment Entry" : "Sales Payment Entry"}
+              {receiptQueueLabel ? translateHeader(currentLanguage, receiptQueueLabel) : activeMode === "advance" ? "Sales Advance Payment Entry" : activeMode === "credit" ? "Sales Credit Payment Entry" : activeMode === "remaining" ? "Sales Remaining Payment Entry" : "Sales Payment Entry"}
             </div>
             {useReviewedReceiptForm && !acceptedSettlement && (
               <section role="alert" className="space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
@@ -5258,7 +5259,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
                   {/* Header Bar */}
                   <div className="flex items-center justify-between px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
                     <div className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15 font-extrabold text-xs shadow-sm">PO</span>
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15 font-extrabold text-xs shadow-sm">{receiptQueue ? "SO" : "PO"}</span>
                       <div>
                         <div className="text-[11px] font-bold uppercase tracking-widest opacity-80">
                           {fromLoading ? "Active Container Loading Selection" : "Active Bill Selection"}
@@ -5277,6 +5278,10 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
                       {isFullyPaid ? (
                         <span className="inline-flex items-center gap-1 bg-emerald-500 text-white px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider">
                           <CheckCircle className="h-3 w-3" /> {translateHeader(currentLanguage, "Fully Paid")}
+                        </span>
+                      ) : receiptQueue ? (
+                        <span className="inline-flex items-center gap-1 bg-white/20 px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider">
+                          {translateHeader(currentLanguage, "Outstanding Balance")}
                         </span>
                       ) : isAdvComplete ? (
                         <span className="inline-flex items-center gap-1 bg-amber-400 text-amber-900 px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider">
