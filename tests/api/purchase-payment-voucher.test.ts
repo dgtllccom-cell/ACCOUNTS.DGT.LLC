@@ -7,9 +7,20 @@ const state = vi.hoisted(() => ({
   session: {} as Partial<ErpSession>,
   rows: [] as Record<string, unknown>[],
   calls: [] as { query: string; values: unknown[] }[],
+  languages: [] as string[],
+  rejectTranslations: false,
 }));
 
 vi.mock("@/lib/auth/session", () => ({ requireErpSession: async () => state.session }));
+vi.mock("@/lib/i18n/server", () => ({ getRequestLanguage: async (lang: string | null) => lang || "en" }));
+vi.mock("@/lib/i18n/localize-records", () => ({
+  localizeRecordGroups: async (groups: { records: Record<string, string>[]; table: string; fields: string[] }[], lang: string) => {
+    state.languages.push(lang);
+    if (state.rejectTranslations) throw new Error("translations unavailable");
+    return groups.map(({ records, table, fields }) => records.map(row => lang === "ur" && row.id
+      ? { ...row, [fields[0]]: `ur:${table}:${row[fields[0]]}` } : row));
+  },
+}));
 vi.mock("@/lib/api/response", () => ({
   apiOk: (data: unknown, options: ResponseInit) => NextResponse.json({ ok: true, data }, options),
   apiError: (code: string, message: string, status: number) => NextResponse.json({ ok: false, error: { code, message } }, { status }),
@@ -33,8 +44,8 @@ const otherCity = "66666666-6666-4666-8666-666666666666";
 const dr = { ledger_id: "ledger-payable", ledger_name: "Vendor Payable", ledger_code: "PAY-01", account_number: "AP-071", debit: "250.1250", credit: "0", currency: "PKR" };
 const cr = { ledger_id: "ledger-bank", ledger_name: "Bank", ledger_code: "BANK-01", account_number: "ACC-1009", debit: "0", credit: "250.1250", currency: "PKR" };
 
-async function get() {
-  const req = new NextRequest("http://localhost/api/erp/purchases/orders/" + order + "/payments/" + payment);
+async function get(lang?: string) {
+  const req = new NextRequest("http://localhost/api/erp/purchases/orders/" + order + "/payments/" + payment + (lang ? "?lang=" + lang : ""));
   const response = await GET(req, { params: Promise.resolve({ id: order, paymentId: payment }) });
   return { response, body: await response.json() };
 }
@@ -48,6 +59,8 @@ beforeEach(() => {
     goods_lines: [{ goodsName: "  Green Tea " }, { goodsName: "—", name: "Cardamom" }, {}, null],
     header_goods_name: "Old header", lines: [cr, dr] }];
   state.calls = [];
+  state.languages = [];
+  state.rejectTranslations = false;
 });
 
 describe("read-only posted purchase receipt", () => {
@@ -98,5 +111,21 @@ describe("read-only posted purchase receipt", () => {
     state.session.canViewFinancials = false;
     expect((await get()).response.status).toBe(403);
     expect(state.calls).toHaveLength(1);
+    expect(state.languages).toEqual([]);
+  });
+  it("uses viewer translations for linked names but keeps exact voucher data and saved fallback names", async () => {
+    Object.assign(state.rows[0], { supplier_customer_id: country,
+      goods_lines: [{ goodsName: "Green Tea", goodsId: city }, { goodsName: "Unlinked goods" }],
+      lines: [{ ...cr, ledger_id: country }, { ...dr, ledger_id: branch }] });
+    expect((await get("ur")).body.data).toMatchObject({
+      bill: "PO-765", number: "REAL-VOUCHER", party: "ur:customers:Saved Supplier", reference: "BANK-REF-42",
+      goodsNames: ["ur:goods:Green Tea", "Unlinked goods"],
+      debit: { name: "ur:ledgers:Vendor Payable", accountNumber: "AP-071", amount: 250.125, currency: "PKR" },
+      credit: { name: "ur:ledgers:Bank", accountNumber: "ACC-1009" },
+    });
+    Object.assign(state.rows[0], { source: "local_purchase", journal_serial_no: "LP-55", goods_lines: [], header_goods_id: city });
+    expect((await get("ur")).body.data).toMatchObject({ party: "ur:local_purchases:Saved Supplier", goodsNames: ["ur:goods:Old header"] });
+    state.rejectTranslations = true;
+    expect((await get("ur")).body.data).toMatchObject({ party: "Saved Supplier", goodsNames: ["Old header"] });
   });
 });

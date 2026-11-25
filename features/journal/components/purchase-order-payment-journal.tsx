@@ -3084,7 +3084,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     setReceiptError("");
     setReceiptLoading(true);
     try {
-      const response = await fetch(`/api/erp/purchases/orders/${encodeURIComponent(orderId)}/payments/${encodeURIComponent(paymentId)}`, {
+      const response = await fetch(`/api/erp/purchases/orders/${encodeURIComponent(orderId)}/payments/${encodeURIComponent(paymentId)}?lang=${encodeURIComponent(currentLanguage)}`, {
         method: "GET", credentials: "include", cache: "no-store",
       });
       const body = await response.json();

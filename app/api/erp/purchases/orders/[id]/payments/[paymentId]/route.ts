@@ -8,6 +8,8 @@ import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/l
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordGroups } from "@/lib/i18n/localize-records";
 import { postedPaymentVoucherSides, type PostedVoucherLine } from "@/lib/reports/payment-voucher-data";
 
 const paramsSchema = z.object({
@@ -24,8 +26,10 @@ type ReceiptRecord = {
   country_branch_id: string | null;
   city_branch_id: string | null;
   party: string | null;
+  supplier_customer_id: string | null;
   goods_lines: unknown;
   header_goods_name: string | null;
+  header_goods_id: string | null;
   voucher_no: string | null;
   journal_serial: string | null;
   date: string | null;
@@ -33,7 +37,12 @@ type ReceiptRecord = {
   lines: PostedVoucherLine[] | null;
 };
 
-function savedGoodsNames(lines: unknown, header: string | null): string[] | undefined {
+function validId(value: unknown) {
+  const parsed = uuidSchema.safeParse(value);
+  return parsed.success ? parsed.data : "";
+}
+
+function savedGoods(lines: unknown, header: string | null, headerId: string | null) {
   if (typeof lines === "string") {
     try { lines = JSON.parse(lines); } catch { lines = null; }
   }
@@ -41,14 +50,14 @@ function savedGoodsNames(lines: unknown, header: string | null): string[] | unde
   const names = Array.isArray(lines) ? lines.flatMap((line) => {
     if (!line || typeof line !== "object") return [];
     const name = [line.goodsName, line.goods_name, line.productName, line.name, line.item].map(text).find(Boolean);
-    return name ? [name] : [];
+    return name ? [{ id: [line.goodsId, line.goods_id, line.productId].map(validId).find(Boolean) || "", goods_name: name }] : [];
   }) : [];
   // Header name is only for older, single-item bills without usable saved lines.
-  return names.length ? names : text(header) ? [text(header)] : undefined;
+  return names.length ? names : text(header) ? [{ id: validId(headerId), goods_name: text(header) }] : [];
 }
 
 /** Print only the payment identified by BOTH IDs, with its original posted journal lines. */
-export async function GET(_request: NextRequest, context: { params: Promise<{ id: string; paymentId: string }> }) {
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string; paymentId: string }> }) {
   try {
     const session = await requireErpSession();
     const { id, paymentId } = paramsSchema.parse(await context.params);
@@ -64,8 +73,11 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
         coalesce(po.city_branch_id, lp.city_branch_id) as city_branch_id,
         coalesce(lp.supplier_name, nullif(po.form_data->'form'->>'supplierName', ''),
                  nullif(po.form_data->'form'->>'salesAccountName', '')) as party,
+        case when nullif(po.form_data->'form'->>'supplierName', '') is not null
+          then po.form_data->'form'->>'supplierId' end as supplier_customer_id,
         case when lp.id is not null then to_jsonb(lp)->'line_items' else po.form_data->'goodsEntries' end as goods_lines,
         case when lp.id is not null then lp.goods_name else po.form_data->'form'->>'goodsName' end as header_goods_name,
+        case when lp.id is not null then lp.goods_id::text else po.form_data->'form'->>'goodsId' end as header_goods_id,
         j.voucher_no, j.super_admin_serial_number as journal_serial, j.entry_date::text as date,
         coalesce(nullif(j.source_reference_no, ''), nullif(j.reference_no, ''), p.reference_no) as reference,
         (select jsonb_agg(jsonb_build_object(
@@ -96,9 +108,27 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
     if (!sides || !number || !bill || !row.date || !/^\d{4}-\d{2}-\d{2}$/.test(row.date)) {
       return apiError("VOUCHER_NOT_PRINTABLE", "The posted voucher is missing a verified debit or credit side.", 409);
     }
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    const goods = savedGoods(row.goods_lines, row.header_goods_name, row.header_goods_id);
+    const ledgers = (row.lines ?? []).map(line => ({
+      id: validId(line.ledger_id), name: typeof line.ledger_name === "string" ? line.ledger_name : "",
+    }));
+    const localParty = row.source === "local_purchase" ? [{ id, supplier_name: row.party ?? "" }] : [];
+    const bookingParty = row.source === "purchase_booking" ? [{ id: validId(row.supplier_customer_id), customer_name: row.party ?? "" }] : [];
+    const [localizedGoods, localizedLedgers, localizedLocalParty, localizedBookingParty] = await localizeRecordGroups([
+      { records: goods, table: "goods", fields: ["goods_name"] },
+      { records: ledgers, table: "ledgers", fields: ["name"] },
+      { records: localParty, table: "local_purchases", fields: ["supplier_name"] },
+      { records: bookingParty, table: "customers", fields: ["customer_name"] },
+    ], lang).catch(() => [goods, ledgers, localParty, bookingParty]);
+    const localizedSides = postedPaymentVoucherSides(row.lines?.map((line, index) => ({
+      ...line, ledger_name: localizedLedgers[index]?.name || line.ledger_name,
+    }))) ?? sides;
     return apiOk({
-      ...sides, number, bill, date: row.date, party: row.party || "",
-      source: row.source, reference: row.reference || undefined, goodsNames: savedGoodsNames(row.goods_lines, row.header_goods_name),
+      ...localizedSides, number, bill, date: row.date,
+      party: localizedLocalParty[0]?.supplier_name || localizedBookingParty[0]?.customer_name || row.party || "",
+      source: row.source, reference: row.reference || undefined,
+      goodsNames: goods.length ? goods.map((line, index) => localizedGoods[index]?.goods_name || line.goods_name) : undefined,
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     return handleApiError(error);
