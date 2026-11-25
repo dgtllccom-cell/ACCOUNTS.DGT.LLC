@@ -49,7 +49,7 @@ ${A4_SHARED_CSS}
 *, *::before, *::after { box-sizing: border-box; }
 body { background:#fff; }
 .payment-copy-sheet { background: #fff; color:#172339; margin:0 auto; width:100%; }
-.payment-copy { min-height:133mm; padding:8mm 10mm; display:flex; flex-direction:column; break-inside:avoid; word-break:break-word; }
+.payment-copy { min-height:133mm; padding:7mm 10mm; display:flex; flex-direction:column; break-inside:avoid; word-break:break-word; }
 .payment-head { display:flex; align-items:flex-start; justify-content:space-between; gap:5mm; padding-bottom:4mm; border-bottom:2px solid #23436b; }
 .payment-head strong { font-size:16pt; }
 .payment-head div div { font-size:10pt; margin-top:1mm; color:#455971; }
@@ -58,7 +58,7 @@ body { background:#fff; }
 .payment-amount { display:flex; align-items:center; justify-content:space-between; background:#f2f5f9; padding:2mm 3mm; margin-top:4mm; border-radius:1mm; font-size:11pt; }
 .payment-amount strong { font-size:16pt; }
 .payment-copy dl { display:grid; grid-template-columns: minmax(30mm,35%) minmax(0,1fr); margin:3mm 0; font-size:10pt; line-height:1.2; }
-.payment-copy dt, .payment-copy dd { margin:0; padding:1.7mm 2mm; border-bottom:1px solid #dce4ef; }
+.payment-copy dt, .payment-copy dd { margin:0; padding:1.3mm 2mm; border-bottom:1px solid #dce4ef; }
 .payment-copy dt { color:#43546b; }
 .payment-copy dd { font-weight:700; overflow-wrap:anywhere; }
 .payment-goods { background:#f2f5f9; padding:2mm 3mm; border-radius:1mm; margin:0 0 3mm; font-size:10pt; overflow-wrap:anywhere; }
