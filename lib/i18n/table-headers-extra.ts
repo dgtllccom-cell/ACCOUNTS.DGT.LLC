@@ -11,6 +11,7 @@ const r = (ur: string, ar: string, fa: string, ps: string): Row => ({ ur, ar, fa
 
 export const HEADER_EXTRA: Record<string, Row> = {
   "SALES PAYMENT TRANSFER": r("سیلز پیمنٹ ٹرانسفر", "تحويل دفعة المبيعات", "انتقال پرداخت فروش", "د پلور د تادیې لېږد"),
+  "SALES TRANSFER REGISTER": r("سیلز ٹرانسفر رجسٹر", "سجل تحويل المبيعات", "دفتر انتقال فروش", "د پلور د لېږد ثبت"),
   "TRANSFERS ON THIS PAGE": r("اس صفحے کی ٹرانسفرز", "التحويلات في هذه الصفحة", "انتقال‌های این صفحه", "د دې پاڼې لېږدونه"),
   "ORIGINAL PURCHASE REFERENCE": r("اصل خریداری کا حوالہ", "مرجع الشراء الأصلي", "مرجع خرید اصلی", "د اصلي پېرود حواله"),
   "ORIGINAL PURCHASE SUPPLIER AND ACCOUNT": r("اصل سپلائر اور اکاؤنٹ", "المورد الأصلي وحسابه", "تأمین‌کننده و حساب خرید اصلی", "اصلي عرضه کوونکی او حساب"),

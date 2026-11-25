@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { ArrowLeft, FileText, Receipt, Search } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
@@ -49,9 +50,10 @@ function cells(order: Row, item: Row, report: ReturnType<typeof salesPaymentTran
   ] as [string, string | null | undefined][];
 }
 
-const labelClass = "whitespace-nowrap border-b bg-slate-50 p-2 text-start dark:bg-slate-900";
-const cellClass = "max-w-64 border-b p-2 align-top";
+const labelClass = "whitespace-nowrap border-b border-e border-slate-200 bg-slate-100 px-2 py-2.5 text-start dark:border-slate-700 dark:bg-slate-800";
+const cellClass = "max-w-64 border-b border-e border-slate-200 px-2 py-2.5 align-top dark:border-slate-700";
 const buttonClass = "rounded border px-3 py-2 text-sm font-semibold disabled:opacity-50";
+const headerButton = "inline-flex min-h-9 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800";
 const scopePosted = (order: Row) => ["posted", "transferred"].includes(String(order.ledger_posting_status || "").toLowerCase());
 
 const pageStats = [
@@ -122,23 +124,26 @@ export function SalesPaymentTransferRegister({ orderId }: { orderId?: string }) 
     const color = label.startsWith("Debit") ? "text-green-700 dark:text-green-400" : label.startsWith("Credit") ? "text-red-700 dark:text-red-400" : "";
     return <bdi className={color}>{value || dash}</bdi>;
   };
-  const searchForm = !orderId && <form className="flex flex-wrap gap-2" onSubmit={(event) => {
+  const searchForm = !orderId && <form className="flex flex-wrap items-center gap-2" onSubmit={(event) => {
     event.preventDefault();
     setPage(0);
     setSearch(draftSearch.trim());
   }}>
-    <input className="rounded border px-3 py-2 text-sm" value={draftSearch} onChange={event => setDraftSearch(event.target.value)}
-      aria-label={tr("Search")} placeholder={tr("Sales Booking Number")} />
-    <button className={buttonClass} type="submit">{tr("Search")}</button>
-    {(search || draftSearch) && <button className={buttonClass} type="button" onClick={() => {
+    <label className={headerButton}><Search aria-hidden="true" className="h-4 w-4 text-slate-500" /><input className="min-w-0 bg-transparent outline-none" value={draftSearch} onChange={event => setDraftSearch(event.target.value)}
+      aria-label={tr("Search")} placeholder={tr("Sales Booking Number")} /></label>
+    <button className="min-h-9 rounded-full bg-blue-700 px-3.5 text-xs font-semibold text-white hover:bg-blue-800" type="submit">{tr("Search")}</button>
+    {(search || draftSearch) && <button className={headerButton} type="button" onClick={() => {
       setDraftSearch(""); setSearch(""); setPage(0);
     }}>{tr("Reset")}</button>}
   </form>;
+  const registerHeader = <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <Link className={headerButton} href="/dashboard/sales/new-sales-booking-order"><ArrowLeft aria-hidden="true" className="h-3.5 w-3.5" />{tr("Back")}</Link>
+    <h1 className="me-auto flex items-center gap-2 text-base font-extrabold text-blue-800 dark:text-blue-300"><Receipt aria-hidden="true" className="h-5 w-5" />{title}</h1>
+    {searchForm}
+  </div>;
 
   if (!current || current.error || !current.orders.length) return <section className="space-y-3">
-    {orderId && <Link href={path} className={buttonClass}>{tr("Back")}</Link>}
-    <h1 className="text-xl font-bold">{title}</h1>
-    {searchForm}
+    {orderId ? <><Link href={path} className={buttonClass}>{tr("Back")}</Link><h1 className="text-xl font-bold">{title}</h1></> : registerHeader}
     <p role={current?.error ? "alert" : "status"}>{!current ? tr("Loading") : current.error ? tr("Failed to load") : tr("No records found")}</p>
     {!orderId && page > 0 && <button type="button" className={buttonClass} onClick={() => setPage(page - 1)}>{tr("Previous")}</button>}
   </section>;
@@ -188,21 +193,23 @@ export function SalesPaymentTransferRegister({ orderId }: { orderId?: string }) 
 
   const headings = cells(current.orders[0], {}, salesPaymentTransferReport(current.orders[0]), lang).map(([label]) => label);
   return <section className="space-y-3">
-    <h1 className="text-xl font-bold">{title}</h1>
-    {searchForm}
+    {registerHeader}
     <TransferPageSummary orders={current.orders} lang={lang} />
-    <div className="overflow-x-auto rounded border">
+    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+      <h2 className="flex items-center gap-2 bg-gradient-to-r from-blue-700 to-blue-800 px-3 py-2.5 text-sm font-bold text-white"><FileText aria-hidden="true" className="h-5 w-5" />{tr("Sales Transfer Register")}</h2>
+      <div className="overflow-x-auto">
       <table className="w-full border-collapse text-xs">
         <thead><tr>{[...headings, "View"].map(label => <th scope="col" key={label} className={labelClass}>{tr(label)}</th>)}</tr></thead>
         <tbody>{current.orders.flatMap(order => {
           const report = salesPaymentTransferReport(order);
-          return report.items.map((item, index) => <tr key={`${order.id}-${index}`}>
+          return report.items.map((item, index) => <tr key={`${order.id}-${index}`} className="odd:bg-white even:bg-slate-50 dark:odd:bg-slate-900 dark:even:bg-slate-950">
             {cells(order, item, report, lang).map(([label, value]) => <td key={label} className={cellClass}>{cellText(label, value)}</td>)}
             <td className={cellClass}><Link className="font-bold text-blue-700 underline dark:text-blue-400" href={`${path}/view?id=${encodeURIComponent(order.id)}&transfer=1`}>{t(lang, "common.view", "View")}</Link></td>
           </tr>);
         })}</tbody>
       </table>
-    </div>
+      </div>
+    </section>
     <div className="flex gap-2">
       <button type="button" className={buttonClass} disabled={page === 0} onClick={() => setPage(page - 1)}>{tr("Previous")}</button>
       <button type="button" className={buttonClass} disabled={!current.more} onClick={() => setPage(page + 1)}>{tr("Next")}</button>
