@@ -3986,7 +3986,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
   const reviewedSettlement = selected?.form_data?.transferTrace?.settlement;
   const useReviewedReceiptForm = Boolean(selected && sharedReceiptPage && classicPaymentId !== selected.id);
   const hasClassicReceipt = Boolean(selected && !selected.form_data?.transferTrace?.settlement && !receiptQueue &&
-    !invoiceReceipt && salesReceiptPaymentKind(selected) !== "invoice" &&
+    !invoiceReceipt && [null, "credit"].includes(salesReceiptPaymentKind(selected)) &&
     // The classic path was already available in the Credit, Remaining and Final journals.
     (activeMode === "credit" || activeMode === "remaining" || activeMode === "final"));
   const selectedLinkedStage = selected ? linkedSalesBalanceReceipt(selected) : null;
