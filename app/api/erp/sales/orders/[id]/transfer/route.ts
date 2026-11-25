@@ -9,11 +9,13 @@ import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { assertFinancialAccess } from "@/lib/permissions/middleware";
+import { scopeSerials } from "@/lib/sales/sales-transfer-serials";
+import { normalizeLegacySalesPaymentSources } from "@/lib/sales/legacy-payment-sources";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
 import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
-import { normalizeLegacySalesPaymentSources } from "@/lib/sales/legacy-payment-sources";
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
 
 const paramsSchema = z.object({
@@ -56,13 +58,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   let idempotencyKey = "";
   let tenantHash = "";
   // exactly-once claim on the order (set just before posting, released if posting has NOT happened)
-  let claimedOrder: { id: string; at: string } | null = null;
+  let claimedOrderId: string | null = null;
   let paymentPosted = false;
   try {
     const session = await requireErpSession();
-    assertFinancialAccess(session);
     const params = paramsSchema.parse(await context.params);
     const body = await request.json().catch(() => ({}));
+    const registerPosting = body?.transferRegister === true;
+    if (registerPosting) assertFinancialAccess(session);
 
     const lockRes = await acquireIdempotencyLock({
       req: request,
@@ -92,9 +95,9 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     // Supabase-client read below silently returns null even for orders that exist. Try a
     // direct-Postgres read first (bypasses RLS via DATABASE_URL); fall back to the Supabase-client
     // path only when DATABASE_URL isn't configured.
-    const orderColumns = "id, country_id, country_branch_id, city_branch_id, updated_at, customer_account_id, customer_ledger_id, order_total, total_goods_original, total_goods_local, total_goods_usd, currency_code, exchange_rate, sales_order_no, sales_contract_no, form_data, sales_status, ledger_posting_status, payment_status";
+    const orderColumns = (registerPosting ? "customer_account_id, customer_ledger_id, sales_status, " : "") + "id, country_id, country_branch_id, city_branch_id, order_total, total_goods_original, total_goods_local, total_goods_usd, currency_code, exchange_rate, sales_order_no, sales_contract_no, form_data, ledger_posting_status, payment_status, is_edited_since_transfer";
     const viaPgOrder = await withLocalPg(async (sql) => {
-      const rows = await sql`select ${sql.unsafe(orderColumns)}, updated_at::text as order_version from sales_orders where id = ${params.id} and deleted_at is null limit 1`;
+      const rows = await sql`select ${sql.unsafe(orderColumns)} from sales_orders where id = ${params.id} and deleted_at is null limit 1`;
       return rows[0] ?? null;
     });
     const order = viaPgOrder ?? await requireSupabaseData(
@@ -129,12 +132,11 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       workflow.transferStatus === "transferred" ||
       Boolean(form.transferAudit);
 
-    if (alreadyTransferred) {
+    if (alreadyTransferred && (registerPosting || !orderRow.is_edited_since_transfer)) {
       throw new ApiClientError("This booking has already been transferred to Sales Transfer Payment and cannot be transferred again.", { status: 409, code: "ALREADY_TRANSFERRED" });
     }
 
-    const bookingStatus = String(orderRow.sales_status || "").trim().toLowerCase();
-    if (!bookingStatus || ["draft", "cancelled", "canceled", "void"].includes(bookingStatus)) {
+    if (registerPosting && (!orderRow.sales_status || ["draft", "cancelled", "canceled", "void"].includes(String(orderRow.sales_status).toLowerCase()))) {
       throw new ApiClientError("Complete New Sales Booking before posting its transfer.", { status: 409, code: "SALES_BOOKING_INCOMPLETE" });
     }
 
@@ -172,14 +174,18 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
           status: 409, code: "SALES_BOOKING_FX_MISMATCH"
         });
       }
-      postingCurrency = currency.final;
-      postingAmount = Number(orderRow.order_total);
-      postingRate = 1;
-      settlement = {
-        originalCurrency: currency.sales, originalAmount: totalSalesAmount,
-        finalCurrency: postingCurrency, finalAmount: postingAmount,
-        exchangeRate: currency.rate.rate, operator: currency.rate.operator,
-      };
+      if (registerPosting) {
+        postingCurrency = currency.final;
+        postingAmount = Number(orderRow.order_total);
+        postingRate = 1;
+        settlement = {
+          originalCurrency: currency.sales, originalAmount: totalSalesAmount, finalCurrency: postingCurrency,
+          finalAmount: postingAmount, exchangeRate: currency.rate.rate, operator: currency.rate.operator,
+        };
+      } else {
+        postingCurrency = currency.sales;
+        postingRate = currency.rate.operator === "/" ? 1 / currency.rate.rate : currency.rate.rate;
+      }
     }
 
     // The Sales wizard's own form state names this field customerAccountNo, not
@@ -249,10 +255,9 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         countryBranchId: orderRow.country_branch_id,
         cityBranchId: orderRow.city_branch_id,
         currencyCode: postingCurrency,
-        exchangeRate: postingRate,
-        amount: postingAmount,
-        settlement,
-        customerAccountNo: form.customerAccountNo,
+        exchangeRate: orderRow.exchange_rate || form.exchangeRate || 1,
+        amount: registerPosting ? postingAmount : totalSalesAmount,
+        ...(registerPosting ? { settlement } : {}),
         purchaseAccountNo: form.purchaseAccountNo,
         salesAccountNo: form.salesAccountNo,
         transferredAt: now,
@@ -267,39 +272,33 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     // /api/erp/accounting/accounts) doesn't return one. Resolve the real ledgers row
     // here via ledgers.enterprise_account_id, the same 1:1 link the DB already
     // enforces, instead of posting against whatever id happened to be on the form.
-    const ledgerUuid = z.string().uuid();
-    const debitCandidates = [orderRow.customer_ledger_id, orderRow.customer_account_id, form.customerAccountId, form.customerAccountLedgerId]
-      .map(value => ledgerUuid.safeParse(String(value ?? ""))).flatMap(parsed => parsed.success ? [parsed.data] : []);
-    const creditCandidates = [form.salesAccountId, form.salesAccountLedgerId]
-      .map(value => ledgerUuid.safeParse(String(value ?? ""))).flatMap(parsed => parsed.success ? [parsed.data] : []);
-    async function resolveBusinessLedger(candidates: string[]) {
-      if (!candidates.length) return null;
-      const rows = await withLocalPg(sql => sql`
-        select l.id, l.code, l.name, l.country_id, l.country_branch_id, l.city_branch_id
-        from public.ledgers l
-        left join public.enterprise_accounts ea on ea.id = l.enterprise_account_id
-        where l.deleted_at is null and l.is_active and (l.id = any(${candidates}::uuid[]) or l.enterprise_account_id = any(${candidates}::uuid[]) or l.account_id = any(${candidates}::uuid[]))
-          and (ea.id is null or (ea.deleted_at is null and coalesce(ea.operational_domain, 'business') in ('business', 'both')))
-          and (${orderRow.country_id || null}::uuid is null or l.country_id is null or l.country_id = ${orderRow.country_id || null}::uuid)
-          and (${orderRow.country_branch_id || null}::uuid is null or l.country_branch_id is null or l.country_branch_id = ${orderRow.country_branch_id || null}::uuid)
-          and (${orderRow.city_branch_id || null}::uuid is null or l.city_branch_id is null or l.city_branch_id = ${orderRow.city_branch_id || null}::uuid)
-        order by l.id = any(${candidates}::uuid[]) desc, l.id
-        limit 2
-      `);
-      if (!rows?.length) return null;
-      if (rows.length === 2) {
-        throw new ApiClientError("This booking account resolves to more than one ledger.", { status: 409, code: "SALES_LEDGER_AMBIGUOUS" });
+    const debitAccountId = orderRow.customer_account_id || form.customerAccountId || null;
+    const creditAccountId = (registerPosting ? form.salesAccountId : null) || form.salesAccountLedgerId || null;
+    const acctIdsToResolve = [debitAccountId, creditAccountId].filter(Boolean);
+    const resolvedLedgerByAccountId: Record<string, string> = {};
+    if (acctIdsToResolve.length > 0) {
+      const ledgerRows = await withLocalPg((sql) =>
+        sql`select id, enterprise_account_id from ledgers where enterprise_account_id = any(${acctIdsToResolve}::uuid[])`
+      );
+      for (const row of (ledgerRows ?? []) as any[]) {
+        if (row.enterprise_account_id) resolvedLedgerByAccountId[row.enterprise_account_id] = row.id;
       }
-      return rows[0];
     }
-    const debitLedger = await resolveBusinessLedger(debitCandidates);
-    const creditLedger = await resolveBusinessLedger(creditCandidates);
-    if (!debitLedger || !creditLedger) {
-      throw new ApiClientError("Both booking accounts must resolve to ledgers in the booking's scope.", { status: 409, code: "SALES_LEDGER_NOT_FOUND" });
+
+    const debitLedgerId =
+      (debitAccountId && resolvedLedgerByAccountId[debitAccountId]) ||
+      form.customerAccountLedgerId ||
+      orderRow.customer_ledger_id;
+    const creditLedgerId =
+      (creditAccountId && resolvedLedgerByAccountId[creditAccountId]) ||
+      form.salesAccountLedgerId;
+
+    if (!debitLedgerId) {
+      throw new Error("Customer Account Ledger ID is required before transfer to payment.");
     }
-    const debitLedgerId = String(debitLedger.id);
-    const creditLedgerId = String(creditLedger.id);
-    assertDistinctBookingLedgers(debitLedgerId, creditLedgerId, "Sales booking");
+    if (!creditLedgerId) {
+      throw new Error("Sales Account Ledger ID is required before transfer to payment.");
+    }
 
     // Managed lots: the full quantity must be reserved BEFORE any money is posted, so a short reservation
     // fails cleanly instead of posting a sale whose stock cannot be deducted.
@@ -310,7 +309,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       goodsAuditRemark,
       body?.remarks?.trim() ? "Notes: " + body.remarks.trim() : null,
       "Transfer Currency: " + postingCurrency,
-      settlement ? `Original: ${settlement.originalAmount} ${settlement.originalCurrency} ${settlement.operator} ${settlement.exchangeRate}` : "Exchange Rate: " + postingRate,
+      "Exchange Rate: " + postingRate,
       "Amount: " + postingAmount
     ].filter(Boolean).join(" | ");
 
@@ -318,7 +317,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     // This single conditional UPDATE is atomic in Postgres: only ONE request can take the claim for an order that is not yet
     // transferred; every other request gets 0 rows and is refused with 409. A claim older than 3 minutes (crashed request that never
     // posted) can be taken again; once the payment is posted the order carries transferPostedPaymentId and can never be claimed again
-    // until the final status update. Editing a posted booking must never repost the complete sale.
+    // until the final status update (re-transfer after an edit is still allowed through is_edited_since_transfer).
     const claimRows = await withLocalPg(async (sql) => {
       const rows = await sql`
         update sales_orders set
@@ -326,16 +325,19 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
             'workflow', coalesce(form_data->'workflow', '{}'::jsonb) || jsonb_build_object('transferClaimAt', now()::text)
           )
         where id = ${params.id} and deleted_at is null
-          and updated_at is not distinct from ${orderRow.order_version ?? orderRow.updated_at ?? null}::timestamptz
-          and coalesce(ledger_posting_status, '') not in ('transferred', 'posted')
-          and coalesce(form_data->'workflow'->>'transferStatus', '') <> 'transferred'
-          and coalesce(form_data->'form'->'transferAudit', 'null'::jsonb) = 'null'::jsonb
+          and (
+            (${!registerPosting} and is_edited_since_transfer is true)
+            or (
+              coalesce(ledger_posting_status, '') not in ('transferred', 'posted')
+              and coalesce(form_data->'workflow'->>'transferStatus', '') <> 'transferred'
+            )
+          )
           and coalesce(form_data->'workflow'->>'transferPostedPaymentId', '') = ''
           and (
             coalesce(form_data->'workflow'->>'transferClaimAt', '') = ''
             or (form_data->'workflow'->>'transferClaimAt')::timestamptz < now() - interval '3 minutes'
           )
-        returning id, form_data->'workflow'->>'transferClaimAt' as claim_at
+        returning id
       `;
       return rows;
     });
@@ -343,39 +345,57 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       if (claimRows.length !== 1) {
         throw new ApiClientError("This booking has already been transferred or is being transferred right now.", { status: 409, code: "ALREADY_TRANSFERRED" });
       }
-      claimedOrder = { id: params.id, at: String(claimRows[0].claim_at) };
+      claimedOrderId = params.id;
     }
 
     // ONE database transaction for the posting AND its stock: the payment, roznamcha, ledger lines, stock deduction and the
     // order status are written together or not at all. A stock refusal posts nothing; a posting refusal moves no stock.
     const core = await withLocalPg((db) => db.begin(async (tx: any) => {
       const pg = (fn: (sql: any) => Promise<any>) => fn(tx);
-      const balances = await tx`select o.paid_amount, c.currency_code as country_currency
-        from public.sales_orders o left join public.countries c on c.id = o.country_id
-        where o.id = ${params.id}::uuid and o.deleted_at is null
-        and o.form_data->'workflow'->>'transferClaimAt' = ${claimedOrder?.at ?? ""} for update of o`;
-      if (balances.length !== 1) throw new Error("Sales booking was not found before posting.");
-      const existingPaid = Number(balances[0]?.paid_amount || 0);
-      if (!Number.isFinite(existingPaid) || existingPaid < 0) throw new Error("The stored sales receipt balance is invalid.");
-      if (settlement && String(balances[0].country_currency || "").toUpperCase() !== settlement.finalCurrency) {
-        throw new ApiClientError("Final currency is not the booking country's current accounting currency.", {
-          status: 409, code: "SALES_BOOKING_FX_MISMATCH",
-        });
-      }
-      await normalizeLegacySalesPaymentSources(tx, params.id, debitLedgerId);
-      const priorEntry = await tx`
-        select id from public.roznamcha_entries where source_module = 'sales'
+      let registerPaid: number | undefined;
+      if (registerPosting) {
+        const locked = await tx`
+          select o.paid_amount, o.ledger_posting_status, o.order_total, o.currency_code, c.currency_code as country_currency
+          from public.sales_orders o left join public.countries c on c.id = o.country_id
+          where o.id = ${params.id}::uuid and o.deleted_at is null for update of o
+        `;
+        if (locked.length !== 1 || ["posted", "transferred"].includes(locked[0].ledger_posting_status)
+          || String(locked[0].order_total) !== String(orderRow.order_total)
+          || String(locked[0].currency_code) !== String(orderRow.currency_code)) {
+          throw new ApiClientError("The Sales Booking changed. Refresh and try again.", { status: 409, code: "SALES_BOOKING_CHANGED" });
+        }
+        if (settlement && String(locked[0].country_currency || "").toUpperCase() !== settlement.finalCurrency) {
+          throw new ApiClientError("Final currency is not the booking country's current accounting currency.", {
+            status: 409, code: "SALES_BOOKING_FX_MISMATCH",
+          });
+        }
+        registerPaid = Number(locked[0].paid_amount || 0);
+        if (!Number.isFinite(registerPaid) || registerPaid < 0 || registerPaid > totalSalesAmount) {
+          throw new ApiClientError("Existing receipts require reconciliation before posting.", { status: 409, code: "SALES_LEGACY_POSTING_REVIEW" });
+        }
+        await normalizeLegacySalesPaymentSources(tx, params.id, debitLedgerId);
+        const prior = await tx`select id from public.roznamcha_entries where source_module = 'sales'
           and source_transaction_type in ('sales_transfer_to_payment', 'sales_booking_transfer')
-          and source_transaction_id = ${params.id}::uuid and deleted_at is null and status <> 'cancelled' limit 1
-      `;
-      if (priorEntry.length) throw new ApiClientError("This booking already has a transfer posting or requires legacy reconciliation.", {
-        status: 409, code: "ALREADY_TRANSFERRED",
-      });
+          and source_transaction_id = ${params.id}::uuid and deleted_at is null and status <> 'cancelled' limit 1`;
+        if (prior.length) throw new ApiClientError("A posting already exists for this booking.", { status: 409, code: "ALREADY_TRANSFERRED" });
+        const ledgerCheck = await tx`
+          select l.id from public.ledgers l left join public.enterprise_accounts ea on ea.id = l.enterprise_account_id
+          where l.id in (${debitLedgerId}::uuid, ${creditLedgerId}::uuid) and l.deleted_at is null and l.is_active
+            and (ea.id is null or (ea.deleted_at is null and coalesce(ea.operational_domain, 'business') in ('business', 'both')))
+            and (l.country_id is null or l.country_id = ${orderRow.country_id ?? null}::uuid)
+            and (l.country_branch_id is null or l.country_branch_id = ${orderRow.country_branch_id ?? null}::uuid)
+            and (l.city_branch_id is null or l.city_branch_id = ${orderRow.city_branch_id ?? null}::uuid)
+        `;
+        assertDistinctBookingLedgers(debitLedgerId, creditLedgerId, "Sales booking");
+        if (ledgerCheck.length !== 2) {
+          throw new ApiClientError("Both ledger accounts must belong to the booking's Business scope.", { status: 409, code: "SALES_LEDGER_SCOPE" });
+        }
+      }
       const rpcRows = await tx`
         select public.post_sales_booking_transfer(
           ${session.userId}::uuid,
           ${params.id}::uuid,
-          'booking'::text,
+          ${registerPosting ? "booking" : paymentRoute.paymentKind}::text,
           ${new Date().toISOString().slice(0, 10)}::date,
           ${postingAmount}::numeric,
           ${postingCurrency}::text,
@@ -413,6 +433,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         throw new Error("Sales order payment record not found after posting.");
       }
 
+      if (registerPosting) {
+        await tx`update public.roznamcha_entries
+          set source_module = 'sales', source_transaction_type = 'sales_transfer_to_payment', source_transaction_id = ${params.id}::uuid
+          where id = ${paymentRecord.roznamcha_entry_id}::uuid`;
+      }
+
       let rozType = "super_admin";
       if (orderRow.city_branch_id) rozType = "branch";
       else if (orderRow.country_branch_id || orderRow.country_id) rozType = "country";
@@ -424,24 +450,21 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
           city_branch_id = ${orderRow.city_branch_id || null}::uuid,
           type = ${rozType}::roznamcha_type,
           entry_category = 'business',
-          operational_domain = 'business',
-          source_module = 'sales',
-          source_transaction_type = 'sales_transfer_to_payment',
-          source_transaction_id = ${params.id}::uuid
+          operational_domain = 'business'
         where id = ${paymentRecord.roznamcha_entry_id}::uuid
       `;
 
       const viaPgLines = await pg(async (sql) => {
-        return await sql`select ledger_id, debit, credit, currency, entry_serial_number from roznamcha_lines where roznamcha_entry_id = ${paymentRecord.roznamcha_entry_id}`;
+        return await sql`select ledger_id, debit, credit, currency, entry_serial_number, super_admin_serial_number, country_transaction_serial_number, main_branch_transaction_serial, city_branch_transaction_serial from roznamcha_lines where roznamcha_entry_id = ${paymentRecord.roznamcha_entry_id}`;
       });
       const postedLines = (viaPgLines && viaPgLines.length > 0 ? viaPgLines : await requireSupabaseData(
         supabase
           .from("roznamcha_lines")
-          .select("ledger_id, debit, credit, currency, entry_serial_number")
+          .select("ledger_id, debit, credit, currency, entry_serial_number, super_admin_serial_number, country_transaction_serial_number, main_branch_transaction_serial, city_branch_transaction_serial")
           .eq("roznamcha_entry_id", paymentRecord.roznamcha_entry_id)
       )) as any[];
 
-      const exRate = settlement ? 1 : postingRate;
+      const exRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
       // Internal posting-integrity assertion tag (developer diagnostics only, embedded in an
       // exception message if these checks ever fail — not user-facing UI copy).
       const postingAssertionLabel = "Sales booking";
@@ -457,10 +480,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       });
 
       if (settlement && postedLines.some(line => String(line.currency || "").toUpperCase() !== settlement.finalCurrency)) {
-        throw new Error("Posted Roznamcha currency does not match the approved Sales Booking final currency.");
+        throw new ApiClientError("The posted Roznamcha currency does not match the booking final currency.", { status: 409, code: "SALES_BOOKING_FX_MISMATCH" });
       }
 
-      const journalColumns = "id, journal_no, voucher_no, status, posted_at, country_id, country_branch_id, city_branch_id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number";
+      const journalColumns = "id, voucher_no, status, posted_at, country_id, country_branch_id, city_branch_id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, main_branch_transaction_serial, city_branch_transaction_serial";
       const viaPgJournal = await pg(async (sql) => {
         const rows = await sql`select ${sql.unsafe(journalColumns)} from roznamcha_entries where id = ${paymentRecord.roznamcha_entry_id} limit 1`;
         return rows[0] ?? null;
@@ -478,8 +501,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         entry: journalRecord
       });
 
-      const newRemainingSales = Math.max(0, totalSalesAmount - existingPaid);
-      const salesPaymentStatus = newRemainingSales <= 0.01 && existingPaid > 0 ? "completed" : existingPaid > 0 ? "partial" : "pending";
+      const isCreditSales = paymentRoute.paymentKind === "credit" || String(form.paymentType || form.paymentCondition || "").toLowerCase().includes("credit");
+      const existingPaid = registerPosting ? (registerPaid ?? 0) : isCreditSales ? 0 : Number(orderRow.paid_amount || 0);
+      const newRemainingSales = !registerPosting && isCreditSales ? totalSalesAmount : Math.max(0, totalSalesAmount - existingPaid);
+      const salesPaymentStatus = !registerPosting && isCreditSales ? "pending" : (newRemainingSales <= 0.01 && existingPaid > 0 ? "completed" : (existingPaid > 0 ? "partial" : "pending"));
 
       // Stock deduction handling for Stock Sale vs Endorse Sale
       const saleType = String(form.saleType || form.saleSource || "").toLowerCase();
@@ -662,6 +687,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         voucherNo: journalRecord.voucher_no,
         debitSerial: debitLine?.entry_serial_number,
         creditSerial: creditLine?.entry_serial_number,
+        scopeSerials: { voucher: scopeSerials(journalRecord), debit: scopeSerials(debitLine), credit: scopeSerials(creditLine) },
         debitAmount: debitLine?.debit,
         creditAmount: creditLine?.credit,
         debitCurrency: debitLine?.currency,
@@ -679,20 +705,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         form_data: {
           ...updatedFormData,
           transferVerification,
-          transferTrace: {
-            ...updatedFormData.transferTrace,
-            paymentId,
-            roznamchaEntryId: journalRecord.id,
-            journalNo: journalRecord.journal_no,
-            voucherNo: journalRecord.voucher_no,
-            debitLedgerId,
-            creditLedgerId,
-            debitLedgerCode: debitLedger.code,
-            creditLedgerCode: creditLedger.code,
-            lines: postedLines.map(line => ({
-              ledgerId: line.ledger_id, debit: line.debit, credit: line.credit, currency: line.currency,
-            })),
-          },
+          ...(registerPosting ? { transferTrace: { ...updatedFormData.transferTrace, paymentId,
+            roznamchaEntryId: journalRecord.id, voucherNo: journalRecord.voucher_no, debitLedgerId, creditLedgerId } } : {}),
           stockDeducted: (isStockSale || managedDeduction) ? true : (alreadyDeducted ? true : false),
           isEndorseSale: isEndorse,
           stockDeductionAudit: stockDeductionAudit || formData.stockDeductionAudit || null,
@@ -706,7 +720,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
           form: {
             ...updatedFormData.form,
             stockDeducted: isStockSale ? true : (alreadyDeducted ? true : false),
-            isEndorseSale: isEndorse
+            isEndorseSale: isEndorse,
+            ...(!registerPosting && isCreditSales ? { advancePercent: 0, advanceAmount: 0 } : {})
           },
           workflow: {
             ...updatedFormData.workflow,
@@ -798,14 +813,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     return apiOk(resPayload);
   } catch (error) {
-    if (claimedOrder && !paymentPosted) {
+    if (claimedOrderId && !paymentPosted) {
       try {
-        const failedClaim = claimedOrder;
         await withLocalPg(async (sql) => {
           await sql`
             update sales_orders set form_data = jsonb_set(form_data, '{workflow}', (coalesce(form_data->'workflow', '{}'::jsonb) - 'transferClaimAt'))
-            where id = ${failedClaim.id} and coalesce(form_data->'workflow'->>'transferPostedPaymentId', '') = ''
-              and form_data->'workflow'->>'transferClaimAt' = ${failedClaim.at}
+            where id = ${claimedOrderId} and coalesce(form_data->'workflow'->>'transferPostedPaymentId', '') = ''
           `;
         });
       } catch (releaseErr) {

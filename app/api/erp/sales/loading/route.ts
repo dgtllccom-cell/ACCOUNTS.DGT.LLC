@@ -1,18 +1,28 @@
+import { createHash } from "node:crypto";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireErpSession } from "@/lib/auth/session";
 import { apiCreated, apiOk, ApiClientError, handleApiError } from "@/lib/api/response";
 import { authorizeApiScope, recordInSessionScope, sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
 import { ErpPermissionError, hasRolePermission } from "@/lib/permissions/middleware";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeJoinedNames, localizeRecordNames } from "@/lib/i18n/localize-records";
 import { withLocalPg, withReadPg } from "@/lib/db/local-postgres";
+import { SALES_LOADING_MAX_RECORDS, SALES_LOADING_PAGE_SIZE, type LoadingRegisterLocation } from "@/lib/sales/loading-pagination";
 import { createSalesLoadingSchema, loadingReadiness, LoadingValidationError, planSalesLoading, receivingSchema, toLoadingOrder, type LoadingRecord } from "@/lib/sales/loading-workflow";
 
 export const dynamic = "force-dynamic";
-const querySchema = z.object({ orderId: z.string().uuid().optional(), offset: z.coerce.number().int().min(0).max(100000).default(0), lang: z.enum(["en", "ur", "ar", "fa", "ps"]).optional() });
+const uuid = z.string().uuid().optional();
+const querySchema = z.object({
+  orderId: uuid, countryId: uuid, mainBranchId: uuid, cityBranchId: uuid,
+  booking: z.string().trim().min(1).max(140).optional(), container: z.string().trim().min(1).max(160).optional(),
+  fromDate: z.string().date().optional(), toDate: z.string().date().optional(), receivedDate: z.string().date().optional(),
+  cursor: z.string().max(512).optional(), lang: z.enum(["en", "ur", "ar", "fa", "ps"]).optional(),
+});
+const preciseDate = z.string().datetime({ precision: 6 });
+const cursorSchema = z.object({ created: preciseDate, id: z.string().uuid(), snapshot: preciseDate, scopeKey: z.string().length(64) });
 const updateSchema = receivingSchema.extend({ id: z.string().uuid() });
-const PAGE_SIZE = 500;
 const eligibleStatuses = ["posted", "transferred"];
 const noDb = () => new ApiClientError("Sales Loading storage is not configured.", { status: 503, code: "STORAGE_UNAVAILABLE" });
 const notFound = () => new ApiClientError("This transferred Sales Booking is not available.", { status: 404, code: "ORDER_NOT_FOUND" });
@@ -37,11 +47,26 @@ export async function GET(req: NextRequest) {
       try { authorizeApiScope(writer, { resource: "sales", action: "update" }); }
       catch (error) { if (!(error instanceof ErpPermissionError)) throw error; writer = null; }
     }
-    const { orderId, offset, lang } = querySchema.parse(Object.fromEntries(req.nextUrl.searchParams));
+    const { cursor: rawCursor, lang, ...filters } = querySchema.parse(Object.fromEntries(req.nextUrl.searchParams));
+    const { orderId, countryId, mainBranchId, cityBranchId, booking, container, fromDate, toDate, receivedDate } = filters;
     const viewerLanguage = await getRequestLanguage(lang);
+    if (fromDate && toDate && fromDate > toDate) {
+      throw new ApiClientError(translateHeader(viewerLanguage, "To date must not precede from date"), { status: 400, code: "INVALID_DATE_RANGE" });
+    }
+    // This identifies a read scope, not an authorization token. Every chunk is re-authorized
+    // and SQL independently binds the user's permitted location(s).
+    const scopeKey = createHash("sha256").update(JSON.stringify({ user: session.userId, scope, writer: writer && sessionSqlScope(writer), viewFinancials, viewerLanguage, filters })).digest("hex");
+    let cursor: z.infer<typeof cursorSchema> | null = null;
+    if (rawCursor) {
+      try { cursor = cursorSchema.parse(JSON.parse(Buffer.from(rawCursor, "base64url").toString("utf8"))); }
+      catch { throw new ApiClientError("Invalid Sales Loading cursor."); }
+      if (cursor.scopeKey !== scopeKey) throw new ApiClientError("Sales Loading scope changed. Refresh and try again.", { status: 409, code: "SALES_LOADING_SCOPE_CHANGED" });
+    }
+    const snapshot = cursor?.snapshot ?? new Date().toISOString().replace(/Z$/, "000Z");
     const result = await withReadPg(async sql => {
       const source = await sql`
-        select o.id, o.sales_order_no, o.sales_contract_no, o.order_date::text as order_date, o.customer_name,
+        select o.id, to_char(o.created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as cursor_created_at,
+          o.sales_order_no, o.sales_contract_no, o.order_date::text as order_date, o.customer_name,
           o.form_data, o.order_total, o.total_goods_original, o.total_goods_usd, o.paid_amount, o.currency_code, o.ledger_posting_status, o.country_id, o.country_branch_id, o.city_branch_id,
           c.name as country_name, m.name as main_branch_name, coalesce(b.name, b.city_name) as city_branch_name,
           ${invoiceVerification(sql)} as invoice_finalized
@@ -49,11 +74,24 @@ export async function GET(req: NextRequest) {
         left join public.countries c on c.id = o.country_id
         left join public.country_branches m on m.id = o.country_branch_id
         left join public.city_branches b on b.id = o.city_branch_id
-        where o.deleted_at is null and o.ledger_posting_status = any(${eligibleStatuses}::text[])
+        where o.deleted_at is null and o.ledger_posting_status in ('posted', 'transferred')
           and (${sqlScopeCondition(sql, scope, "o")})
+          and o.created_at <= ${snapshot}::timestamptz
+          and (${cursor ? sql`(o.created_at, o.id) < (${cursor.created}::timestamptz, ${cursor.id}::uuid)` : sql`true`})
           and (${orderId ? sql`o.id = ${orderId}::uuid` : sql`true`})
-        order by o.order_date desc nulls last, o.id limit ${PAGE_SIZE + 1} offset ${offset}`;
-      const rows = source.slice(0, PAGE_SIZE);
+          and (${countryId ? sql`o.country_id = ${countryId}::uuid` : sql`true`})
+          and (${mainBranchId ? sql`o.country_branch_id = ${mainBranchId}::uuid` : sql`true`})
+          and (${cityBranchId ? sql`o.city_branch_id = ${cityBranchId}::uuid` : sql`true`})
+          and (${booking ? sql`(strpos(lower(o.sales_order_no), lower(${booking})) > 0 or strpos(lower(o.sales_contract_no), lower(${booking})) > 0)` : sql`true`})
+          and (${container || fromDate || toDate || receivedDate ? sql`exists (
+            select 1 from public.sales_loading_records l where l.sales_order_id = o.id
+              and (${container ? sql`strpos(lower(l.container_number), lower(${container})) > 0` : sql`true`})
+              and (${fromDate ? sql`l.loading_date >= ${fromDate}::date` : sql`true`})
+              and (${toDate ? sql`l.loading_date <= ${toDate}::date` : sql`true`})
+              and (${receivedDate ? sql`l.received_date = ${receivedDate}::date` : sql`true`})
+          )` : sql`true`})
+        order by o.created_at desc, o.id desc limit ${SALES_LOADING_PAGE_SIZE + 1}`;
+      const rows = source.slice(0, SALES_LOADING_PAGE_SIZE);
       const localizedCustomer = await localizeRecordNames(rows.map(row => ({
         ...row,
         id: String(row.id),
@@ -73,12 +111,37 @@ export async function GET(req: NextRequest) {
         select id, entry_no, sales_order_id, sales_booking_no, container_number, container_type,
           loading_date::text as loading_date, received_date::text as received_date, details, goods, created_by_name
         from public.sales_loading_records where sales_order_id = any(${orderIds}::uuid[])
-        order by loading_date desc, entry_no desc` : [];
-      return { orders, records, nextOffset: source.length > PAGE_SIZE ? offset + PAGE_SIZE : null };
+        order by loading_date desc, entry_no desc limit ${SALES_LOADING_MAX_RECORDS + 1}` : [];
+      // Distinct authorized locations are independent of the selected page or filters;
+      // a quieter branch is always selectable, even if its booking isn't in the first chunk.
+      let locations: LoadingRegisterLocation[] | null = null;
+      if (!cursor) {
+        const distinct = await sql`
+          select loc.*, c.name as country_name, m.name as main_branch_name, coalesce(b.name,b.city_name) as city_branch_name
+          from (
+            select distinct o.country_id, o.country_branch_id, o.city_branch_id
+            from public.sales_orders o
+            where o.deleted_at is null and o.ledger_posting_status in ('posted','transferred')
+              and (${sqlScopeCondition(sql, scope, "o")})
+          ) loc
+          left join public.countries c on c.id = loc.country_id
+          left join public.country_branches m on m.id = loc.country_branch_id
+          left join public.city_branches b on b.id = loc.city_branch_id`;
+        const readable = await localizeJoinedNames(distinct, viewerLanguage, [
+          { idField: "country_id", nameField: "country_name", table: "countries" },
+          { idField: "country_branch_id", nameField: "main_branch_name", table: "country_branches" },
+          { idField: "city_branch_id", nameField: "city_branch_name", table: "city_branches" },
+        ]);
+        locations = readable.map(r => ({ countryId: String(r.country_id ?? ""), country: String(r.country_name ?? ""), mainBranchId: String(r.country_branch_id ?? ""), mainBranch: String(r.main_branch_name ?? ""), cityBranchId: String(r.city_branch_id ?? ""), cityBranch: String(r.city_branch_name ?? "") }));
+      }
+      if (records.length > SALES_LOADING_MAX_RECORDS) return { orders: [], records: [], nextCursor: null, scopeKey, locations, limitReached: true };
+      const last = rows.at(-1);
+      const nextCursor = source.length > SALES_LOADING_PAGE_SIZE && last ? Buffer.from(JSON.stringify({ created: last.cursor_created_at, id: last.id, snapshot, scopeKey })).toString("base64url") : null;
+      return { orders, records, nextCursor, scopeKey, locations };
     });
     if (!result) throw noDb();
-    if (orderId && !result.orders.length) throw notFound();
-    return apiOk({ ...result, canLoad: Boolean(writer), financials: viewFinancials });
+    if (orderId && !result.orders.length && !result.limitReached) throw notFound();
+    return apiOk({ ...result, canLoad: Boolean(writer), financials: viewFinancials }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) { return handleApiError(error); }
 }
 

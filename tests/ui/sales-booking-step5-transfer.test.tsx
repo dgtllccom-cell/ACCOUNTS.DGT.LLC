@@ -59,8 +59,10 @@ it("opens the transfer report before posting and displays confirmed journal deta
       debitAmount: 100, creditAmount: 100, debitCurrency: "AED", creditCurrency: "AED",
     },
   }} />);
-  expect(within(report).getAllByText("Transferred / Completed")).toHaveLength(2);
+  expect(within(report).getAllByText("Transferred / Completed")).toHaveLength(3);
   expect(within(report).getByRole("link", { name: "VR-42" }).getAttribute("href")).toContain("entryId=journal-42");
+  expect(within(report).getByText("DR-42")).toBeTruthy();
+  expect(within(report).getByText("CR-42")).toBeTruthy();
   expect(within(report).queryByRole("button", { name: "Transfer / Post" })).toBeNull();
 });
 
@@ -78,4 +80,25 @@ it("opens a read-only two-page Sales Booking preview with its document actions",
   }
   expect(view.queryByRole("button", { name: "Transfer / Post" })).toBeNull();
   expect(post).not.toHaveBeenCalled();
+});
+
+
+it("shows shared DR/CR serial once and keeps the four saved scopes separate", () => {
+  render(<SalesBookingStep5 form={{ salesOrderNo: "SB-42" }} onConfirmTransfer={vi.fn()} useTransferReport
+    transferConfirmation={{
+      ledgerPostingStatus: "posted",
+      transferVerification: {
+        voucherNo: "VOUCHER-42", debitSerial: "SHARED-394", creditSerial: "SHARED-394",
+        scopeSerials: {
+          voucher: { superAdmin: "GLB-1", country: "AE-1", mainBranch: "MAIN-1", cityBranch: "CITY-1" },
+          debit: { superAdmin: "GDR-1", country: "AEDR-1", mainBranch: null, cityBranch: null },
+          credit: { superAdmin: "GCR-1", country: "AECR-1", mainBranch: null, cityBranch: null },
+        },
+      },
+    }} />);
+  fireEvent.click(screen.getByRole("button", { name: "Sales Transfer Payment" }));
+  const report = within(screen.getByRole("dialog", { name: "Sales Booking Transfer Verification Report" }));
+  expect(report.getAllByText("SHARED-394")).toHaveLength(1);
+  const scopes = within(report.getByRole("region", { name: "Serial Numbers by Scope" }));
+  for (const serial of ["GLB-1", "AE-1", "MAIN-1", "CITY-1", "AEDR-1", "AECR-1"]) expect(scopes.getByText(serial)).toBeTruthy();
 });

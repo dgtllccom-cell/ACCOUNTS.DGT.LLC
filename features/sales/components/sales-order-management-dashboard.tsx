@@ -1,9 +1,9 @@
 "use client";
 
 import { pl } from "@/lib/reports/print-label";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { BadgeDollarSign, Edit3, FileText, Printer } from "lucide-react";
+import { BadgeDollarSign, Edit3, Eye, FileText, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
 import { apiGet, apiPatch } from "@/lib/api/client";
@@ -22,6 +22,8 @@ import { PurchasePageTop } from "@/components/purchase-ui/purchase-page-top";
 import type { PayRow } from "@/features/purchases/components/purchase-payments-approved-header";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { useUsdRates } from "@/lib/purchase-ui/use-usd-rates";
+import { AdvancedRegisterSearch, type RegisterSearchField } from "@/components/purchase-ui/advanced-register-search";
+import { salesPaymentTransferReport } from "@/lib/sales/payment-transfer-report";
 
 
 type SalesOrder = {
@@ -46,6 +48,16 @@ type SalesOrder = {
   created_at: string;
   translations?: Record<string, Partial<Record<"en" | "ur" | "ar" | "fa" | "ps", string>>>;
 };
+
+type SearchFacet = { field: string; value: string; label: string };
+
+type SalesOrderList = { salesOrders: SalesOrder[]; nextOffset?: number | null; nextCursor?: string | null };
+
+const TRANSFER_PAGE_SIZE = 100;
+
+function validNextOffset(value: number | null | undefined, offset: number): number | null {
+  return typeof value === "number" && Number.isSafeInteger(value) && value > offset ? value : null;
+}
 
 const lifecycleTabs = [
   "Dashboard Overview",
@@ -103,7 +115,7 @@ function salesOrdersToPayRows(list: SalesOrder[]): PayRow[] {
   });
 }
 
-export function SalesOrderManagementDashboard({ initialStage }: { initialStage?: string }) {
+export function SalesOrderManagementDashboard({ initialStage, transferOnly = false }: { initialStage?: string; transferOnly?: boolean }) {
   const activeLang = useActiveLanguage();
   const router = useRouter();
   const scope = useErpScope();
@@ -113,32 +125,120 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [transferFilters, setTransferFilters] = useState<Record<string, string>>({});
+  const [scopeRows, setScopeRows] = useState<SalesOrder[]>([]);
+  const [transferFacets, setTransferFacets] = useState<SearchFacet[] | null>(null);
+  const [transferError, setTransferError] = useState(false);
+  const requestVersion = useRef(0);
+  const [transferOffset, setTransferOffset] = useState(0);
+  const [transferNextOffset, setTransferNextOffset] = useState<number | null>(null);
+  const transferCursors = useRef(new Map<number, string>());
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [tradeDocsOrder, setTradeDocsOrder] = useState<SalesOrder | null>(null);
   const localized = (order: SalesOrder, field: string, fallback: string) =>
     resolveVerifiedTranslation(order.translations?.[field], activeLang) || fallback || translationPendingLabel(activeLang);
   const tr = (label: string) => translateHeader(activeLang, label);
-  const pageTitle = t(activeLang, "nav.sales_order_management", "Sales Order Management");
+  const pageTitle = transferOnly ? t(activeLang, "nav.sales_transfer_payment", "Sales Transfer Payment")
+    : t(activeLang, "nav.sales_order_management", "Sales Order Management");
+  const scopeOptions = (key: string, value: (row: SalesOrder) => unknown, label: (row: SalesOrder) => unknown) => {
+    if (transferFacets) return transferFacets.filter(facet => facet.field === key)
+      .map(facet => ({ value: facet.value, label: key === "paymentType" || key === "paymentStatus" ? tr(facet.label) : facet.label }))
+      .sort((a, b) => a.label.localeCompare(b.label, activeLang));
+    const seen = new Map<string, string>();
+    for (const row of scopeRows) {
+      const id = String(value(row) || "").trim();
+      if (id) seen.set(id, String(label(row) || id));
+    }
+    return Array.from(seen, ([value, label]) => ({ value, label })).sort((a, b) => a.label.localeCompare(b.label, activeLang));
+  };
+  const form = (row: SalesOrder) => row.form_data?.form || {};
+  const transferSearchFields: RegisterSearchField[] = transferOnly ? [
+    { key: "bookingNo", label: tr("Sales Booking Number"), wide: true },
+    { key: "bookingDate", label: tr("Booking Date"), type: "date" },
+    { key: "goods", label: tr("Goods Name") },
+    { key: "lot", label: tr("Lot Name / Number") },
+    { key: "account", label: tr("Customer / Account") },
+    { key: "currency", label: tr("Final Currency"), type: "select", options: scopeOptions("currency", r => r.currency_code, r => r.currency_code) },
+    { key: "paymentType", label: tr("Payment Type"), type: "select", options: scopeOptions("paymentType", r => form(r).paymentType, r => tr(String(form(r).paymentType || ""))) },
+    { key: "paymentStatus", label: tr("Payment Status"), type: "select", options: scopeOptions("paymentStatus", r => r.payment_status, r => tr(String(r.payment_status || ""))) },
+    { key: "countryId", label: tr("Country"), type: "select", options: scopeOptions("countryId", r => r.country_id, r => r.country_name || form(r).branchCountry) },
+    { key: "countryBranchId", label: tr("Main Branch"), type: "select", options: scopeOptions("countryBranchId", r => r.country_branch_id, r => r.country_branch_name || form(r).countryBranchName || form(r).branchName) },
+    { key: "cityBranchId", label: tr("City Branch"), type: "select", options: scopeOptions("cityBranchId", r => r.city_branch_id, r => r.city_branch_name || form(r).cityBranchName || form(r).branchName) },
+    { key: "originCountry", label: tr("Loading Country"), group: "origin", type: "select", options: scopeOptions("originCountry", r => form(r).loadingCountry, r => form(r).loadingCountry) },
+    { key: "originPort", label: tr("Loading Port"), group: "origin", type: "select", options: scopeOptions("originPort", r => form(r).loadingPort, r => form(r).loadingPort) },
+    { key: "destinationCountry", label: tr("Received Country"), group: "destination", type: "select", options: scopeOptions("destinationCountry", r => form(r).receivedCountry || form(r).destinationCountry, r => form(r).receivedCountry || form(r).destinationCountry) },
+    { key: "destinationPort", label: tr("Received Port"), group: "destination", type: "select", options: scopeOptions("destinationPort", r => form(r).receivedPort, r => form(r).receivedPort) },
+    { key: "dateFrom", label: tr("From Date"), group: "dates", type: "date" },
+    { key: "dateTo", label: tr("To Date"), group: "dates", type: "date" },
+  ] : [];
+
+  function registerParams() {
+    const qp = new URLSearchParams();
+    if (search.trim()) qp.set("q", search.trim());
+    if (transferOnly) {
+      qp.set("transferred", "1");
+      qp.set("lang", activeLang);
+      for (const [key, value] of Object.entries(transferFilters)) {
+        if (!value) continue;
+        if (key === "bookingNo") {
+          qp.set("q", value);
+          qp.set("searchField", "booking");
+        } else qp.set(key, value);
+      }
+    }
+    return qp;
+  }
 
   // Load orders
-  async function loadOrders() {
+  async function loadOrders(offset = 0) {
+    const version = ++requestVersion.current;
     setLoading(true);
+    if (transferOnly) {
+      setTransferError(false);
+      setTransferOffset(offset);
+      setTransferNextOffset(null);
+      if (!offset) transferCursors.current.clear();
+    }
     try {
-      const qp = new URLSearchParams();
-      if (search.trim()) qp.set("q", search.trim());
-      const res = await apiGet<{ salesOrders: SalesOrder[] }>(`/api/erp/sales/orders?${qp.toString()}`);
+      const qp = registerParams();
+      if (transferOnly) {
+        qp.set("limit", String(TRANSFER_PAGE_SIZE));
+        if (offset) qp.set("offset", String(offset));
+        const cursor = transferCursors.current.get(offset);
+        if (cursor) qp.set("cursor", cursor);
+      }
+      const res = await apiGet<SalesOrderList>(`/api/erp/sales/orders?${qp.toString()}`);
+      if (transferOnly && version !== requestVersion.current) return;
       setOrders(res.salesOrders || []);
+      if (transferOnly) {
+        const nextOffset = validNextOffset(res.nextOffset, offset);
+        if (nextOffset !== null && res.nextCursor) transferCursors.current.set(nextOffset, res.nextCursor);
+        setTransferNextOffset(nextOffset);
+        if (!offset && !search && !Object.values(transferFilters).some(Boolean)) {
+          setScopeRows(res.salesOrders || []);
+        }
+      }
     } catch (err) {
+      if (transferOnly && version === requestVersion.current) { setOrders([]); setTransferError(true); }
       console.error(err);
     } finally {
-      setLoading(false);
+      if (!transferOnly || version === requestVersion.current) setLoading(false);
     }
   }
 
   useEffect(() => {
     loadOrders().catch(() => null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
+  }, [search, transferFilters, transferOnly]);
+
+  useEffect(() => {
+    if (!transferOnly || !filtersOpen || transferFacets !== null) return;
+    let active = true;
+    apiGet<{ facets?: SearchFacet[] }>("/api/erp/sales/orders?transferred=1&facets=1")
+      .then(res => { if (active && Array.isArray(res.facets)) setTransferFacets(res.facets); })
+      .catch(console.error);
+    return () => { active = false; };
+  }, [filtersOpen, transferOnly, transferFacets]);
 
   useEffect(() => {
     if (initialStage === "booking") {
@@ -168,15 +268,26 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
   const filtered = useMemo(() => applyTabFilter(orders),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [orders, activeTab]);
-  const pageRows = useMemo(() => salesOrdersToPayRows(filtered), [filtered]);
+  const pageRows = useMemo(() => {
+    const rows = salesOrdersToPayRows(filtered);
+    if (!transferOnly) return rows;
+    return rows.flatMap((row, idx) => {
+      const report = salesPaymentTransferReport(filtered[idx]);
+      // Unknown legacy receipts must not silently be represented as zero paid.
+      if (!report.finalCurrency || report.finalAmount == null || report.received == null || report.remaining == null) return [];
+      return [{ ...row, currency: report.finalCurrency, total: report.finalAmount, advance: report.received,
+        due: report.remaining, settled: report.remaining <= 0.01 && report.finalAmount > 0 }];
+    });
+  }, [filtered, transferOnly]);
 
   // Flat print row mirroring the on-screen table columns.
   const toPrintRow = (order: SalesOrder): Record<string, unknown> => {
     const raw = order.form_data || {};
     const f = raw.form || {};
+    const settlement = transferOnly ? salesPaymentTransferReport(order) : null;
     const exRate = Number(order.exchange_rate || 1);
     // order_total is in the final currency; the original-currency amount is order_total / rate
-    const purchaseAmount = Number(order.order_total || 0) / exRate;
+    const purchaseAmount = settlement?.originalAmount ?? Number(order.order_total || 0) / exRate;
     const invPct = Number(f.invoicePercentage || 100);
     const invoiceAmt = (purchaseAmount * invPct) / 100;
     const postingState = deriveSalesBookingPostingState(order as any);
@@ -199,26 +310,40 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
       unit: f.qtyName || "Bags",
       gross_weight: Number(f.grossWeight || 0),
       net_weight: order.total_weight,
-      pur_currency: order.original_currency_code || "USD",
-      exchange_rate: exRate.toFixed(4),
-      final_currency: order.currency_code || "AED",
+      pur_currency: settlement?.originalCurrency || order.original_currency_code || "USD",
+      exchange_rate: settlement?.rate != null ? `${settlement.operator === "/" ? "÷" : "×"} ${settlement.rate}` : exRate.toFixed(4),
+      final_currency: settlement?.finalCurrency || order.currency_code || "AED",
       pur_amount: purchaseAmount,
       invoice_pct: `${invPct}%`,
       invoice_amount: invoiceAmt,
-      final_invoice_amount: invoiceAmt * exRate,
+      final_invoice_amount: settlement?.finalAmount != null ? settlement.finalAmount * invPct / 100 : invoiceAmt * exRate,
       payment_status: postingState.label,
-      transfer_status: postingState.visualStatus === "red" ? "Pending" : order.sales_status,
+      transfer_status: transferOnly ? tr("Transferred") : postingState.visualStatus === "red" ? "Pending" : order.sales_status,
     };
   };
 
-  // API returns at most 200 orders per request (no paging); print re-queries with that
-  // maximum, same search term and same lifecycle-tab filter as the screen.
+  // Keep legacy print unchanged. Transfer export walks bounded pages using the
+  // same server-side filters instead of silently printing only the first page.
   async function fetchAllOrdersForPrint(): Promise<Record<string, unknown>[]> {
-    const qp = new URLSearchParams();
-    if (search.trim()) qp.set("q", search.trim());
+    const qp = registerParams();
     qp.set("limit", "200");
-    const res = await apiGet<{ salesOrders: SalesOrder[] }>(`/api/erp/sales/orders?${qp.toString()}`);
-    return applyTabFilter(res.salesOrders || []).map(toPrintRow);
+    if (!transferOnly) {
+      const res = await apiGet<SalesOrderList>(`/api/erp/sales/orders?${qp.toString()}`);
+      return applyTabFilter(res.salesOrders || []).map(toPrintRow);
+    }
+    const rows = new Map<string, SalesOrder>();
+    let offset: number | null = 0;
+    let cursor: string | null = null;
+    while (offset !== null) {
+      qp.set("offset", String(offset));
+      if (cursor) qp.set("cursor", cursor);
+      else qp.delete("cursor");
+      const res = await apiGet<SalesOrderList>(`/api/erp/sales/orders?${qp.toString()}`);
+      for (const row of res.salesOrders || []) rows.set(row.id, row);
+      offset = validNextOffset(res.nextOffset, offset);
+      cursor = res.nextCursor || null;
+    }
+    return applyTabFilter([...rows.values()]).map(toPrintRow);
   }
 
   // Print helper
@@ -264,7 +389,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
   }
 
   // Toolbar / filter dialog: Reset clears the search and returns to the Dashboard Overview stage; Apply closes the dialog and reloads.
-  const resetFilters = () => { setSearch(""); setActiveTab("Dashboard Overview"); };
+  const resetFilters = () => { setSearch(""); setActiveTab("Dashboard Overview"); if (transferOnly) setTransferFilters({}); };
   const applyFilters = () => { setFiltersOpen(false); void loadOrders(); };
 
   // Menu slot of the page toolbar: the register's print / PDF / Excel menu and the create action.
@@ -340,7 +465,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
           { label: tr("Local Sales"), href: "/dashboard/sales/local-sales" },
         ]}
         labels={{
-          summary: tr("Sales Booking Summary"),
+          summary: transferOnly ? `${tr("Sales Booking Summary")} · ${t(activeLang, "ledger.page_label", "Page")} ${new Intl.NumberFormat(activeLang).format(Math.floor(transferOffset / TRANSFER_PAGE_SIZE) + 1)}` : tr("Sales Booking Summary"),
           totalBills: tr("Total Orders"),
           totalAmount: tr("Total Sales"),
           totalPaid: tr("Total Received"),
@@ -349,19 +474,21 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
           countryAmount: tr("Sales Amount"),
         }}
         search={search}
+        advancedOnly={transferOnly}
         onSearch={setSearch}
         searchPlaceholder={t(activeLang, "sales.sodash_search_ph", "Search order no, customer...")}
-        filterCount={activeTab === "Dashboard Overview" ? 0 : 1}
+        filterCount={transferOnly ? Object.values(transferFilters).filter(Boolean).length : activeTab === "Dashboard Overview" ? 0 : 1}
         onOpenFilters={() => setFiltersOpen(true)}
         onReset={resetFilters}
-        onRefresh={() => { void loadOrders(); }}
+        onRefresh={() => { if (transferOnly) setTransferFacets(null); void loadOrders(transferOnly ? transferOffset : 0); }}
         onApply={applyFilters}
         loading={loading}
         menu={toolbarMenu}
       />
 
       {/* FILTER DIALOG (opened from the page toolbar): stage selector with counts, Reset / Apply */}
-      {filtersOpen ? (
+      {transferOnly ? <AdvancedRegisterSearch open={filtersOpen} value={transferFilters} fields={transferSearchFields} lang={activeLang}
+        onClose={() => setFiltersOpen(false)} onApply={(value) => { setSearch(""); setTransferFilters(value); setFiltersOpen(false); }} /> : filtersOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[2px]" onClick={() => setFiltersOpen(false)} role="presentation">
           <div role="dialog" aria-modal="true" aria-label={tr("Filter")} onClick={(e) => e.stopPropagation()}
             className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-5 shadow-[0_30px_60px_-20px_rgba(15,23,42,0.45),0_2px_0_0_#e2e8f0] dark:border-slate-800 dark:from-slate-950 dark:to-slate-900 animate-in fade-in duration-200">
@@ -456,22 +583,26 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={28} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">{t(activeLang, "sales.sodash_no_bookings_stage", "No sales bookings in this stage.")}</td>
+                  <td colSpan={28} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">{transferError ? tr("Failed to load") : t(activeLang, "sales.sodash_no_bookings_stage", "No sales bookings in this stage.")}</td>
                 </tr>
               ) : (
                 filtered.map((order) => {
                   const raw = order.form_data || {};
                   const f = raw.form || {};
                   
+                  const settlement = transferOnly ? salesPaymentTransferReport(order) : null;
                   const exRate = Number(order.exchange_rate || 1);
                   // order_total is in the final currency; the original-currency amount is order_total / rate
-                  const purchaseAmount = Number(order.order_total || 0) / exRate;
+                  const purchaseAmount = settlement?.originalAmount ?? Number(order.order_total || 0) / exRate;
                   const finalAmount = purchaseAmount * exRate;
 
                   const invPct = Number(f.invoicePercentage || 100);
                   const invoiceAmt = (purchaseAmount * invPct) / 100;
-                  const finalInvoiceAmount = invoiceAmt * exRate;
+                  const finalInvoiceAmount = settlement?.finalAmount != null ? settlement.finalAmount * invPct / 100 : invoiceAmt * exRate;
                   const postingState = deriveSalesBookingPostingState(order as any);
+                  const canReviewTransfer = !transferOnly && (scope.isSuperAdmin || Boolean(scope.canViewFinancials))
+                    && ["pending", "confirmed", "finalized", "completed"].includes(String(order.sales_status || "").toLowerCase())
+                    && !["posted", "transferred"].includes(String(order.ledger_posting_status || "").toLowerCase());
 
                   const branchName = f.branchName || "—";
                   const branchCountry = f.branchCountry || "—";
@@ -504,13 +635,13 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                       <td className="px-3 py-2.5 text-right font-mono text-blue-600 dark:text-blue-400 font-bold border-r border-slate-100 dark:border-slate-800">{order.total_weight?.toLocaleString()}</td>
 
                       {/* Financials */}
-                      <td className="px-3 py-2.5 font-black text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-800">{order.original_currency_code || "USD"}</td>
-                      <td className="px-3 py-2.5 text-right font-mono text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">{exRate.toFixed(4)}</td>
-                      <td className="px-3 py-2.5 font-black text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-800">{order.currency_code || "AED"}</td>
-                      <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-800">${purchaseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <td className="px-3 py-2.5 font-black text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-800">{settlement?.originalCurrency || order.original_currency_code || "USD"}</td>
+                      <td className="px-3 py-2.5 text-right font-mono text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">{settlement?.rate != null ? `${settlement.operator === "/" ? "÷" : "×"} ${settlement.rate}` : exRate.toFixed(4)}</td>
+                      <td className="px-3 py-2.5 font-black text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-800">{settlement?.finalCurrency || order.currency_code || "AED"}</td>
+                      <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-800">{transferOnly ? `${settlement?.originalCurrency || ""} ` : "$"}{purchaseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                       <td className="px-3 py-2.5 text-right font-mono text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">{invPct}%</td>
-                      <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-800">${invoiceAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                      <td className="px-3 py-2.5 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-slate-100 dark:border-slate-800">{order.currency_code} {finalInvoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-800">{transferOnly ? `${settlement?.originalCurrency || ""} ` : "$"}{invoiceAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <td className="px-3 py-2.5 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-slate-100 dark:border-slate-800">{settlement?.finalCurrency || order.currency_code} {finalInvoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                       <td className="px-3 py-2.5 border-r border-slate-100 dark:border-slate-800 text-center">
                         <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider ${
                           postingState.visualStatus === "red"
@@ -530,14 +661,24 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                               ? "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40"
                               : "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40"
                         }`}>
-                          {postingState.visualStatus === "red" ? "Pending" : order.sales_status}
+                          {transferOnly ? tr("Transferred") : postingState.visualStatus === "red" ? "Pending" : order.sales_status}
                         </span>
                       </td>
 
                       {/* Actions */}
                       <td className="px-3 py-2.5 text-center">
                         <div className="inline-flex items-center justify-center gap-2">
-                          <RecordTranslationCorrectionDialog recordTable="sales_orders" recordId={order.id} onSaved={loadOrders} />
+                          {transferOnly ? <Button onClick={() => router.push(`/dashboard/sales/sales-order/view?id=${encodeURIComponent(order.id)}&transfer=1`)}
+                            type="button" variant="outline" size="sm" aria-label={tr("View")} title={tr("View")}>
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button> : <>
+                          {canReviewTransfer && <Button
+                            onClick={() => router.push(`/dashboard/sales/sales-order/view?id=${encodeURIComponent(order.id)}&transfer=1`)}
+                            type="button" variant="outline" size="sm" aria-label={t(activeLang, "nav.sales_transfer_payment", "Sales Transfer Payment")}
+                            title={t(activeLang, "nav.sales_transfer_payment", "Sales Transfer Payment")} className="h-8 w-8 p-0">
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>}
+                          <RecordTranslationCorrectionDialog recordTable="sales_orders" recordId={order.id} onSaved={() => loadOrders()} />
                           <AddExpenseBillButton sourceId={order.id} lang={activeLang} size="icon" variant="outline" className="h-8 w-8 p-0" />
                           {!["transferred", "finalized", "completed"].includes(String(order.sales_status || "").toLowerCase()) && (
                             <Button
@@ -584,6 +725,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                               className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 rounded-lg shadow-sm"
                             >{t(activeLang, "sales.sodash_finalize_post_gl_btn", "Finalize & Post GL")}</Button>
                           )}
+                          </>}
                         </div>
                       </td>
                     </tr>
@@ -593,6 +735,21 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
           </tbody>
         </table>
         </div>
+        {transferOnly && (transferOffset > 0 || transferNextOffset !== null) && (
+          <div className="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 p-3 dark:border-slate-800">
+            <span className="text-sm text-slate-600 dark:text-slate-300" aria-live="polite">
+              {t(activeLang, "ledger.page_label", "Page")} {new Intl.NumberFormat(activeLang).format(Math.floor(transferOffset / TRANSFER_PAGE_SIZE) + 1)}
+            </span>
+            <Button type="button" variant="outline" size="sm" disabled={loading || transferOffset === 0}
+              onClick={() => { void loadOrders(Math.max(0, transferOffset - TRANSFER_PAGE_SIZE)); }}>
+              {t(activeLang, "common.previous_page", "Previous page")}
+            </Button>
+            <Button type="button" variant="outline" size="sm" disabled={loading || transferNextOffset === null}
+              onClick={() => { if (transferNextOffset !== null) void loadOrders(transferNextOffset); }}>
+              {t(activeLang, "common.next_page", "Next page")}
+            </Button>
+          </div>
+        )}
       </div>
       </section>
 

@@ -11,9 +11,10 @@ import { optionalUuidSchema, supportedLanguageSchema } from "@/lib/api/erp-valid
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
-import { withLocalPg } from "@/lib/db/local-postgres";
+import { withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 import postgres from "postgres";
 import { normalizeLanguage, saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
+import { parseRegisterPage, splitRegisterPage } from "@/lib/sales/register-pagination";
 import { localizeRecordNames, trustedTranslationMap } from "@/lib/i18n/localize-records";
 import { salesOrderTranslationFields } from "@/lib/i18n/sales-order-translations";
 import { assertBookingCurrency, assertConfiguredSalesSettlement, assertSalesWithinStock, resolveSalesCountryCurrency } from "@/lib/sales/booking-rules";
@@ -185,6 +186,107 @@ async function resolveEffectiveScope(input: {
 }
 
 export async function GET(request: NextRequest) {
+  if (request.nextUrl.searchParams.get("transferred") === "1") return listTransferredSalesOrders(request);
+  try {
+    if (request.nextUrl.searchParams.get("registerPage") !== "1") await ensureTableExists();
+    const session = await requireErpSession();
+    const params = request.nextUrl.searchParams;
+    const page = parseRegisterPage(params);
+    const countryId = params.get("countryId");
+    const countryBranchId = params.get("countryBranchId");
+    const cityBranchId = params.get("cityBranchId");
+
+    authorizeApiScope(session, { resource: "sales", action: "read", countryId, countryBranchId, cityBranchId });
+
+    // Root-cause bypass (see lib/db/local-postgres.ts): sales_orders_scope_read gates on
+    // is_super_admin()/can_access_country(), both keyed off auth.uid(), which is always
+    // NULL under this app's temp-session bootstrap login — so the Supabase-client query
+    // below silently returns zero rows even for orders that exist. Try a direct-Postgres
+    // read first (bypasses RLS via DATABASE_URL); fall back to the Supabase-client path
+    // only when DATABASE_URL isn't configured.
+    const limit = page.enabled ? z.coerce.number().int().min(1).max(200).parse(params.get("limit") || 100)
+      : Math.min(Number(params.get("limit") || 100), 200);
+    const fetchLimit = limit + Number(page.enabled);
+    const rawTerm = params.get("q") ? String(params.get("q")).replace(/[%_]/g, "") : null;
+    const viaPg = await (page.enabled ? withReadPg : withLocalPg)(async (sql) => {
+      const cityIds = !session.isSuperAdmin ? session.cityBranchIds : [];
+      const countryBranchIds = !session.isSuperAdmin ? session.countryBranchIds : [];
+      const countryIds = !session.isSuperAdmin ? session.countryIds : [];
+      return await sql`
+        select * ${page.enabled ? sql`, to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as register_cursor_timestamp` : sql``}
+        from public.sales_orders
+        where deleted_at is null
+          and (${rawTerm ? sql`(
+                sales_order_no ilike ${"%" + rawTerm + "%"}
+                or account_number ilike ${"%" + rawTerm + "%"}
+                or manual_reference_number ilike ${"%" + rawTerm + "%"}
+                or customer_number ilike ${"%" + rawTerm + "%"}
+                or customer_name ilike ${"%" + rawTerm + "%"}
+                or super_admin_serial_number ilike ${"%" + rawTerm + "%"}
+                or country_transaction_serial_number ilike ${"%" + rawTerm + "%"}
+                or branch_transaction_serial_number ilike ${"%" + rawTerm + "%"}
+              )` : sql`true`})
+          and (${cityBranchId
+            ? sql`city_branch_id = ${cityBranchId}`
+            : !session.isSuperAdmin && cityIds.length
+            ? sql`city_branch_id = any(${cityIds})`
+            : countryBranchId
+            ? sql`country_branch_id = ${countryBranchId}`
+            : !session.isSuperAdmin && countryBranchIds.length
+            ? sql`country_branch_id = any(${countryBranchIds})`
+            : countryId
+            ? sql`country_id = ${countryId}`
+            : !session.isSuperAdmin
+            ? sql`country_id = any(${countryIds.length ? countryIds : ["00000000-0000-0000-0000-000000000000"]})`
+            : sql`true`})
+          and (${page.cursor ? sql`(created_at, id) < (${page.cursor.at}::timestamptz, ${page.cursor.id}::uuid)` : sql`true`})
+        order by created_at desc ${page.enabled ? sql`, id desc` : sql``}
+        limit ${fetchLimit}
+      `;
+    });
+
+    const lang = normalizeLanguage(params.get("lang"), "en");
+
+    if (viaPg) {
+      const register = splitRegisterPage(viaPg as any[], limit, page.enabled);
+      const resolved = await localizeRecordNames(register.rows, "sales_orders", "customer_name", lang);
+      return apiOk({ salesOrders: resolved, ...(page.enabled ? { nextCursor: register.nextCursor } : {}) });
+    }
+
+    const supabase = await createApiSupabaseClient();
+    let query: any = supabase
+      .from("sales_orders")
+      .select("*")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(fetchLimit);
+
+    if (page.enabled) query = query.order("id", { ascending: false });
+    if (page.cursor) {
+      const { at, id } = page.cursor;
+      query = query.or(`created_at.lt.${at},and(created_at.eq.${at},id.lt.${id})`);
+    }
+
+    if (rawTerm) {
+      query = query.or(`sales_order_no.ilike."%${rawTerm}%",account_number.ilike."%${rawTerm}%",manual_reference_number.ilike."%${rawTerm}%",customer_number.ilike."%${rawTerm}%",customer_name.ilike."%${rawTerm}%",super_admin_serial_number.ilike."%${rawTerm}%",country_transaction_serial_number.ilike."%${rawTerm}%",branch_transaction_serial_number.ilike."%${rawTerm}%"`);
+    }
+    if (cityBranchId) query = query.eq("city_branch_id", cityBranchId);
+    else if (!session.isSuperAdmin && session.cityBranchIds.length) query = query.in("city_branch_id", session.cityBranchIds);
+    else if (countryBranchId) query = query.eq("country_branch_id", countryBranchId);
+    else if (!session.isSuperAdmin && session.countryBranchIds.length) query = query.in("country_branch_id", session.countryBranchIds);
+    else if (countryId) query = query.eq("country_id", countryId);
+    else if (!session.isSuperAdmin) query = query.in("country_id", session.countryIds.length ? session.countryIds : ["00000000-0000-0000-0000-000000000000"]);
+
+    const fallbackRows = await requireSupabaseData(query);
+    const register = splitRegisterPage((fallbackRows ?? []) as any[], limit, page.enabled);
+    const resolvedFallback = await localizeRecordNames(register.rows, "sales_orders", "customer_name", lang);
+    return apiOk({ salesOrders: resolvedFallback, ...(page.enabled ? { nextCursor: register.nextCursor } : {}) });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+async function listTransferredSalesOrders(request: NextRequest) {
   try {
     const session = await requireErpSession();
     const params = request.nextUrl.searchParams;
@@ -203,18 +305,86 @@ export async function GET(request: NextRequest) {
     const requestedLimit = Number(params.get("limit") || 100);
     const limit = Number.isSafeInteger(requestedLimit) ? Math.max(1, Math.min(requestedLimit, 200)) : 100;
     const requestedOffset = Number(params.get("offset") || 0);
-    const offset = Number.isSafeInteger(requestedOffset) ? Math.max(0, requestedOffset) : 0;
-    const transferredOnly = params.get("transferred") === "1";
-    if (transferredOnly) assertFinancialAccess(session);
-    else await ensureTableExists();
-    const countryLevel = transferredOnly && session.roles.some(isCountryLevelRole) && session.countryIds.length > 0;
+    const offset = Number.isSafeInteger(requestedOffset) ? Math.max(0, Math.min(requestedOffset, Number.MAX_SAFE_INTEGER - 200)) : 0;
+    assertFinancialAccess(session);
+    const rawCursor = params.get("cursor") || "";
+    const [cursorTimestamp, cursorId, unexpectedCursorSuffix] = rawCursor.split("~");
+    if (rawCursor && (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/.test(cursorTimestamp)
+      || !Number.isFinite(Date.parse(cursorTimestamp)) || new Date(cursorTimestamp).toISOString().slice(0, 23) !== cursorTimestamp.slice(0, 23)
+      || !z.string().uuid().safeParse(cursorId).success || unexpectedCursorSuffix !== undefined)) {
+      throw new ApiClientError("Invalid sales transfer cursor.", { status: 400, code: "INVALID_TRANSFER_CURSOR" });
+    }
+    const countryLevel = session.roles.some(isCountryLevelRole) && session.countryIds.length > 0;
     const rawTerm = params.get("q") ? String(params.get("q")).replace(/[%_]/g, "") : null;
-    const transferTerm = transferredOnly ? (rawTerm || "").replace(/\\/g, "").trim().slice(0, 120) : "";
+    const transferTerm = (rawTerm || "").replace(/\\/g, "").trim().slice(0, 120);
     const transferSearchField = params.get("searchField") || "all";
-    const viaPg = await withLocalPg(async (sql) => {
-      const cityIds = !session.isSuperAdmin ? session.cityBranchIds : [];
-      const countryBranchIds = !session.isSuperAdmin ? session.countryBranchIds : [];
-      const countryIds = !session.isSuperAdmin ? session.countryIds : [];
+    const bookingDate = params.get("bookingDate") || null;
+    const dateFrom = params.get("dateFrom") || null;
+    const dateTo = params.get("dateTo") || null;
+    if ([bookingDate, dateFrom, dateTo].some(value => value && (!/^\d{4}-\d{2}-\d{2}$/.test(value)
+      || !Number.isFinite(Date.parse(value)) || new Date(value).toISOString().slice(0, 10) !== value))
+      || (dateFrom && dateTo && dateFrom > dateTo)) {
+      throw new ApiClientError("Invalid booking date filter.", { status: 400, code: "INVALID_TRANSFER_DATE" });
+    }
+    const originCountry = params.get("originCountry")?.slice(0, 120);
+    const originPort = params.get("originPort")?.slice(0, 120);
+    const destCountry = params.get("destinationCountry")?.slice(0, 120);
+    const destPort = params.get("destinationPort")?.slice(0, 120);
+    const filterTerm = (key: string) => (params.get(key) || "").replace(/[\\%_]/g, "").trim().slice(0, 120);
+    const goodsFilter = filterTerm("goods");
+    const lotFilter = filterTerm("lot");
+    const accountFilter = filterTerm("account");
+    const currency = filterTerm("currency");
+    const paymentType = filterTerm("paymentType");
+    const paymentStatus = filterTerm("paymentStatus");
+    const cityIds = session.isSuperAdmin ? [] : session.cityBranchIds;
+    const countryBranchIds = session.isSuperAdmin ? [] : session.countryBranchIds;
+    const countryIds = session.isSuperAdmin ? [] : session.countryIds;
+    const scopePredicate = (sql: postgres.Sql) => session.isSuperAdmin
+      ? sql`true`
+      : countryLevel ? sql`country_id = any(${countryIds}::uuid[])`
+      : cityIds.length ? sql`city_branch_id = any(${cityIds}::uuid[])`
+      : countryBranchIds.length ? sql`country_branch_id = any(${countryBranchIds}::uuid[])`
+      : countryIds.length ? sql`country_id = any(${countryIds}::uuid[])`
+      : sql`false`;
+
+    if (params.get("facets") === "1") {
+      // Only distinct dropdown metadata leaves the database. A country/branch
+      // doesn't disappear from the search just because its bills aren't on page 1.
+      const facets = await withReadPg(sql => sql`
+        with scope as (
+          select country_id, country_branch_id, city_branch_id, currency_code, payment_status, form_data->'form' as form
+          from public.sales_orders
+          where deleted_at is null and ledger_posting_status in ('posted','transferred')
+            and (${scopePredicate(sql)})
+            and (${countryId ? sql`country_id = ${countryId}::uuid` : sql`true`})
+            and (${countryBranchId ? sql`country_branch_id = ${countryBranchId}::uuid` : sql`true`})
+            and (${cityBranchId ? sql`city_branch_id = ${cityBranchId}::uuid` : sql`true`})
+        )
+        select field, value, coalesce(min(nullif(label, '')), value) as label
+        from scope
+        cross join lateral (values
+          ('countryId', country_id::text, form->>'branchCountry'),
+          ('countryBranchId', country_branch_id::text, coalesce(form->>'countryBranchName', form->>'branchName')),
+          ('cityBranchId', city_branch_id::text, coalesce(form->>'cityBranchName', form->>'branchName')),
+          ('currency', upper(currency_code), upper(currency_code)),
+          ('paymentStatus', payment_status, payment_status),
+          ('paymentType', form->>'paymentType', form->>'paymentType'),
+          ('originCountry', form->>'loadingCountry', form->>'loadingCountry'),
+          ('originPort', form->>'loadingPort', form->>'loadingPort'),
+          ('destinationCountry', coalesce(form->>'receivedCountry', form->>'destinationCountry'), coalesce(form->>'receivedCountry', form->>'destinationCountry')),
+          ('destinationPort', form->>'receivedPort', form->>'receivedPort')
+        ) facet(field,value,label)
+        where value <> ''
+        group by field, value
+        order by field, label, value
+      `);
+      if (!facets) throw new ApiClientError("Sales Transfer search is unavailable.", { status: 503, code: "TRANSFER_SEARCH_UNAVAILABLE" });
+      return apiOk({ facets });
+    }
+
+    const viaPg = await withReadPg(async (sql) => {
+      const authorizedRows = scopePredicate(sql);
       const term = `%${transferTerm}%`;
       const byBooking = sql`(sales_order_no ilike ${term} or manual_reference_number ilike ${term} or super_admin_serial_number ilike ${term} or country_transaction_serial_number ilike ${term} or branch_transaction_serial_number ilike ${term})`;
       const byTransfer = sql`(form_data #>> '{transferTrace,voucherNo}' ilike ${term} or form_data #>> '{transferTrace,referenceNo}' ilike ${term} or form_data #>> '{transferTrace,journalNo}' ilike ${term} or form_data #>> '{transferVerification,voucherNo}' ilike ${term} or form_data #>> '{workflow,referenceNo}' ilike ${term})`;
@@ -226,43 +396,49 @@ export async function GET(request: NextRequest) {
         : transferSearchField === "customer" ? byCustomer : transferSearchField === "goods" ? byGoods : transferSearchField === "lot" ? byLot
           : sql`(${byBooking} or ${byTransfer} or ${byCustomer} or ${byGoods} or ${byLot})`;
       return await sql`
-        select *
+        select *, to_char(created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as transfer_cursor_at
         from public.sales_orders
         where deleted_at is null
-          and (${transferredOnly ? sql`ledger_posting_status in ('posted', 'transferred')` : sql`true`})
-          and (${transferredOnly ? transferSearch : rawTerm ? sql`(
-                sales_order_no ilike ${"%" + rawTerm + "%"}
-                or account_number ilike ${"%" + rawTerm + "%"}
-                or manual_reference_number ilike ${"%" + rawTerm + "%"}
-                or customer_number ilike ${"%" + rawTerm + "%"}
-                or customer_name ilike ${"%" + rawTerm + "%"}
-                or super_admin_serial_number ilike ${"%" + rawTerm + "%"}
-                or country_transaction_serial_number ilike ${"%" + rawTerm + "%"}
-                or branch_transaction_serial_number ilike ${"%" + rawTerm + "%"}
-              )` : sql`true`})
+          and ledger_posting_status in ('posted', 'transferred')
+          and (${transferSearch})
+          and (${goodsFilter ? sql`(product_summary ilike ${"%" + goodsFilter + "%"} or form_data #>> '{form,goodsName}' ilike ${"%" + goodsFilter + "%"}
+            or exists (select 1 from jsonb_array_elements(${goods}) as item(value) where coalesce(item.value->>'goodsName', item.value->>'productName') ilike ${"%" + goodsFilter + "%"}))` : sql`true`})
+          and (${lotFilter ? sql`(form_data #>> '{form,stockLotNo}' ilike ${"%" + lotFilter + "%"} or form_data #>> '{form,allotName}' ilike ${"%" + lotFilter + "%"}
+            or exists (select 1 from jsonb_array_elements(${goods}) as item(value)
+              where concat_ws(' ', item.value->>'lotName', item.value->>'lotNo', item.value->>'stockLotNo', item.value->>'lotRef', item.value->>'allotName') ilike ${"%" + lotFilter + "%"}))` : sql`true`})
+          and (${accountFilter ? sql`concat_ws(' ', account_number, customer_number, customer_name, form_data #>> '{form,customerAccountNo}',
+            form_data #>> '{form,customerAccountName}', form_data #>> '{form,salesAccountNo}', form_data #>> '{form,salesAccountName}') ilike ${"%" + accountFilter + "%"}` : sql`true`})
+          and (${currency ? sql`upper(currency_code) = upper(${currency})` : sql`true`})
+          and (${paymentType ? sql`lower(form_data #>> '{form,paymentType}') = lower(${paymentType})` : sql`true`})
+          and (${paymentStatus ? sql`lower(payment_status) = lower(${paymentStatus})` : sql`true`})
+          and (${bookingDate ? sql`order_date = ${bookingDate}::date` : sql`true`})
+          and (${dateFrom ? sql`order_date >= ${dateFrom}::date` : sql`true`})
+          and (${dateTo ? sql`order_date <= ${dateTo}::date` : sql`true`})
+          and (${originCountry ? sql`lower(form_data #>> '{form,loadingCountry}') = lower(${originCountry})` : sql`true`})
+          and (${originPort ? sql`lower(form_data #>> '{form,loadingPort}') = lower(${originPort})` : sql`true`})
+          and (${destCountry ? sql`lower(coalesce(form_data #>> '{form,receivedCountry}', form_data #>> '{form,destinationCountry}')) = lower(${destCountry})` : sql`true`})
+          and (${destPort ? sql`lower(form_data #>> '{form,receivedPort}') = lower(${destPort})` : sql`true`})
           and (${countryId ? sql`country_id = ${countryId}::uuid` : sql`true`})
           and (${countryBranchId ? sql`country_branch_id = ${countryBranchId}::uuid` : sql`true`})
           and (${cityBranchId ? sql`city_branch_id = ${cityBranchId}::uuid` : sql`true`})
-          and (${session.isSuperAdmin
-            ? sql`true`
-            : countryLevel ? sql`country_id = any(${countryIds}::uuid[])`
-            : cityIds.length ? sql`city_branch_id = any(${cityIds}::uuid[])`
-            : countryBranchIds.length ? sql`country_branch_id = any(${countryBranchIds}::uuid[])`
-            : countryIds.length ? sql`country_id = any(${countryIds}::uuid[])`
-            : sql`false`})
+          and (${authorizedRows})
+          and (${rawCursor ? sql`(created_at,id) < (${cursorTimestamp}::timestamptz,${cursorId}::uuid)` : sql`true`})
         order by created_at desc, id desc
-        limit ${limit} offset ${offset}
+        limit ${limit + 1} offset ${rawCursor ? 0 : offset}
       `;
     });
 
     const lang = normalizeLanguage(params.get("lang"), "en");
 
     if (viaPg) {
-      const sourceRows = viaPg as any[];
-      if (transferredOnly) {
+      const nextOffset = viaPg.length > limit ? offset + limit : null;
+      const last = nextOffset === null ? null : viaPg[limit - 1];
+      const nextCursor = last?.transfer_cursor_at && last?.id ? `${last.transfer_cursor_at}~${last.id}` : null;
+      const sourceRows = (viaPg as any[]).slice(0, limit).map(({ transfer_cursor_at: _, ...row }) => row);
+      {
         const receiptOrders = sourceRows.filter(row => row.form_data?.transferTrace?.paymentId || row.form_data?.transferVerification?.journalId).map(row => row.id);
         if (receiptOrders.length > 0) {
-          const summaries = await withLocalPg(sql => sql`
+          const summaries = await withReadPg(sql => sql`
             select p.sales_order_id,
                    case when count(p.payment_kind) filter (where p.payment_kind = 'advance' and p.received is null) = 0
                         then coalesce(sum(p.received) filter (where p.payment_kind = 'advance'), 0) end as advance,
@@ -290,33 +466,11 @@ export async function GET(request: NextRequest) {
         }
       }
       const resolved = await localizeRecordNames(sourceRows, "sales_orders", "customer_name", lang);
-      return apiOk({ salesOrders: resolved });
+      return apiOk({ salesOrders: resolved, nextOffset, ...(nextCursor ? { nextCursor } : {}) });
     }
 
-    if (transferTerm) throw new ApiClientError("Sales Transfer search is unavailable.", { status: 503, code: "TRANSFER_SEARCH_UNAVAILABLE" });
-    const supabase = await createApiSupabaseClient();
-    let query: any = supabase
-      .from("sales_orders")
-      .select("*")
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false });
-    if (transferredOnly) query = query.in("ledger_posting_status", ["posted", "transferred"]);
-
-    if (!transferredOnly && rawTerm) {
-      query = query.or(`sales_order_no.ilike."%${rawTerm}%",account_number.ilike."%${rawTerm}%",manual_reference_number.ilike."%${rawTerm}%",customer_number.ilike."%${rawTerm}%",customer_name.ilike."%${rawTerm}%",super_admin_serial_number.ilike."%${rawTerm}%",country_transaction_serial_number.ilike."%${rawTerm}%",branch_transaction_serial_number.ilike."%${rawTerm}%"`);
-    }
-    if (cityBranchId) query = query.eq("city_branch_id", cityBranchId);
-    if (countryBranchId) query = query.eq("country_branch_id", countryBranchId);
-    if (countryId) query = query.eq("country_id", countryId);
-    if (!session.isSuperAdmin && countryLevel) query = query.in("country_id", session.countryIds);
-    else if (!session.isSuperAdmin && session.cityBranchIds.length) query = query.in("city_branch_id", session.cityBranchIds);
-    else if (!session.isSuperAdmin && session.countryBranchIds.length) query = query.in("country_branch_id", session.countryBranchIds);
-    else if (!session.isSuperAdmin) query = query.in("country_id", session.countryIds.length ? session.countryIds : ["00000000-0000-0000-0000-000000000000"]);
-
-    const fallbackRows = await requireSupabaseData(query.range(offset, offset + limit - 1));
-    const resolvedFallback = await localizeRecordNames((fallbackRows ?? []) as any[], "sales_orders", "customer_name", lang);
-    return apiOk({ salesOrders: resolvedFallback });
+    // The transfer-specific JSON/financial filters are never silently bypassed.
+    throw new ApiClientError("Sales Transfer search is unavailable.", { status: 503, code: "TRANSFER_SEARCH_UNAVAILABLE" });
   } catch (error) {
     return handleApiError(error);
   }

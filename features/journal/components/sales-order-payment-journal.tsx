@@ -8,7 +8,7 @@ import { printStore } from "@/lib/store/print-store";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { printPaymentJournal } from "@/lib/reports/payment-journal-print";
 import { createPortal } from "react-dom";
-import React, { useEffect, useMemo, useState, type ReactNode } from "react";
+import React, { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowRight,
   Banknote,
@@ -94,7 +94,10 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { rtlLanguages } from "@/lib/i18n/languages";
 import { CurrencyTotalsGrid } from "@/components/payment-report/currency-totals-grid";
 import { PaymentJournalV2Header } from "./payment-journal-v2-header";
-import { PaymentJournalV2FilterModal } from "./payment-journal-v2-filter-modal";
+import { AdvancedRegisterSearch } from "@/components/purchase-ui/advanced-register-search";
+import { bookingSearchFields, bookingSearchRow } from "@/lib/sales/booking-register-search";
+import { loadScopedRegister, registerPageParams, type RegisterCursor } from "@/lib/sales/register-pagination";
+import { matchesRegisterSearch, registerSearchOptions } from "@/lib/sales/register-search";
 import { StandardizedDailyPaymentForm } from "@/components/daily-payments/standardized-daily-payment-form";
 import { Badge } from "@/components/ui/badge";
 import { calculatePaymentDueTracking, resolveAgreedDueDate } from "@/lib/services/payment-due-tracking";
@@ -349,6 +352,7 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
 
 type OrdersPayload = {
   orders?: PurchaseOrderRow[];
+  salesOrders?: PurchaseOrderRow[];
   limit?: number;
 };
 
@@ -2753,7 +2757,10 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
   const [cityFilter, setCityFilter] = useState("");
   const [partyFilter, setPartyFilter] = useState("");
 
+  const [advancedPaymentFilters, setAdvancedPaymentFilters] = useState<Record<string, string>>({});
+
   const reset = () => {
+    setAdvancedPaymentFilters({});
     setSourceFilter("all");
     setQuery("");
     setDraftFilter("");
@@ -2766,16 +2773,6 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     setEndDateFilter("");
     setPageIndex(0);
   };
-
-  const customerOptions = useMemo(() => {
-    const set = new Set<string>();
-    orders.forEach((o) => {
-      const form = o.form_data?.form || {};
-      const name = form.customerName || form.buyerName || o.purchase_account_name || o.sales_account_name;
-      if (name && typeof name === "string") set.add(name);
-    });
-    return Array.from(set).map((s) => ({ label: s, value: s }));
-  }, [orders]);
 
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -2799,8 +2796,8 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     if (startDateFilter || endDateFilter) count++;
     if (query) count++;
     if (partyFilter) count++;
-    return count;
-  }, [countryFilter, saCountryId, branchFilter, saBranchId, cityFilter, draftFilter, startDateFilter, endDateFilter, query, partyFilter]);
+    return count + Object.keys(advancedPaymentFilters).length;
+  }, [countryFilter, saCountryId, branchFilter, saBranchId, cityFilter, draftFilter, startDateFilter, endDateFilter, query, partyFilter, advancedPaymentFilters]);
 
   useEffect(() => {
     let cancelled = false;
@@ -3102,21 +3099,27 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     return row.exchange_rate || form.exchangeRate || 1;
   }, [liveRates]);
 
+  const orderRequests = useRef(0);
+  const [orderCoverage, setOrderCoverage] = useState(true);
   async function loadOrders() {
+    const request = ++orderRequests.current;
+    const current = () => orderRequests.current === request;
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/erp/sales/orders?limit=200", { cache: "no-store", credentials: "include" });
-      const body = await response.json();
-      if (!response.ok || body?.ok === false) throw new Error(body?.error?.message ?? body?.message ?? "Unable to load sales orders.");
-      const payload = (body?.data ?? body) as OrdersPayload | PurchaseOrderRow[];
-      // The API actually returns { data: { salesOrders: [...] } } (see app/api/erp/sales/orders
-      // route.ts) â this previously read payload.orders, a key that has never existed on the
-      // sales response, so `rows` silently resolved to [] on every load and every mode
-      // (Advance/Remaining/Credit/History) always rendered "0 records" regardless of real data.
-      const rawRows: PurchaseOrderRow[] = Array.isArray(payload)
-        ? payload
-        : (payload as any).salesOrders ?? (payload as any).orders ?? [];
+      const loaded = await loadScopedRegister<PurchaseOrderRow>(async cursor => {
+        const params = registerPageParams(cursor);
+        params.set("limit", "200");
+        params.set("lang", currentLanguage);
+        const response = await fetch(`/api/erp/sales/orders?${params}`, { cache: "no-store", credentials: "include" });
+        const body = await response.json();
+        if (!response.ok || body?.ok === false) throw new Error(body?.error?.message ?? body?.message ?? "Unable to load sales orders.");
+        const payload = (body?.data ?? body) as (OrdersPayload & { nextCursor?: RegisterCursor | null }) | PurchaseOrderRow[];
+        return Array.isArray(payload) ? { rows: payload } : { rows: payload.salesOrders ?? payload.orders ?? [], nextCursor: payload.nextCursor };
+      }, { current });
+      if (!current()) return;
+      setOrderCoverage(loaded.complete);
+      const rawRows = loaded.rows;
       const rows: PurchaseOrderRow[] = rawRows.map((r: any) => {
         const form = r.form_data?.form || {};
         const isLocal = form.saleSource === "local" || form.saleMode === "local" || r.order_type === "local_sales" || r.sale_source === "local";
@@ -3133,17 +3136,18 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         if (match) setSelectedId(match.id);
       }
     } catch (err) {
+      if (!current()) return;
       setOrders([]);
       setError(err instanceof Error ? err.message : t("unable_to_load_records_sales", currentLanguage));
     } finally {
-      setLoading(false);
+      if (current()) setLoading(false);
     }
   }
 
   useEffect(() => {
     void loadOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentLanguage]);
 
   useEffect(() => {
     const now = new Date();
@@ -3157,11 +3161,29 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     setPageIndex(0);
   }, [activeMode]);
 
+  const paymentSearchRows = useMemo(() => orders.map(row => ({
+    ...bookingSearchRow(row, true),
+    country: rowCountryName(row),
+    cityBranch: rowBranchName(row),
+    currency: rowCurrency(row),
+    customer: String(row.form_data?.form?.customerName || row.form_data?.form?.buyerName || row.purchase_account_name || row.sales_account_name || ""),
+    paymentStatus: String(row.payment_status || ""),
+  })), [orders]);
+  const paymentSearchFields = useMemo(() => {
+    const label = (value: string) => translateHeader(currentLanguage, value);
+    return [
+      ...bookingSearchFields(paymentSearchRows, label).filter(field => field.key !== "transferStatus"),
+      { key: "customer", label: label("Customer"), type: "select" as const, options: registerSearchOptions(paymentSearchRows, "customer"), wide: true },
+      { key: "paymentStatus", label: label("Payment Status"), type: "select" as const, options: registerSearchOptions(paymentSearchRows, "paymentStatus"), wide: true },
+    ];
+  }, [paymentSearchRows, currentLanguage]);
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const draft = draftFilter.trim().toLowerCase();
     const urlOrderNo = getInitialPurchaseOrderNo();
-    return orders.filter((row) => {
+    return orders.filter((row, index) => {
+      if (!matchesRegisterSearch(paymentSearchRows[index], advancedPaymentFilters)) return false;
       if (urlOrderNo && row.sales_order_no === urlOrderNo) return true;
       const postingStatus = row.ledger_posting_status?.toLowerCase();
       const workflowTransferStatus = row.form_data?.workflow?.transferStatus?.toLowerCase();
@@ -3326,7 +3348,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(needle));
     });
-  }, [activeMode, branchFilter, countryFilter, currencyFilter, draftFilter, orders, query, startDateFilter, endDateFilter]);
+  }, [activeMode, branchFilter, countryFilter, currencyFilter, draftFilter, orders, query, startDateFilter, endDateFilter, cityFilter, partyFilter, sourceFilter, paymentSearchRows, advancedPaymentFilters]);
 
   // ── Approved header data: this page's RBAC-scoped orders (narrowed by the Country / Branch filters) + the real payment records ──
   const modulePayments = useModulePayments("sales");
@@ -3865,15 +3887,37 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
 
   // Dynamic double entry preview values
   const doubleEntry = useMemo(() => {
-    return {
-      debitCode: selectedSourceLedger ? ledgerCode(selectedSourceLedger) : "-",
-      debitName: selectedSourceLedger ? ledgerName(selectedSourceLedger) : "-",
-      debitBranch: selectedSourceLedger?.branchName || "-",
-      creditCode: selectedForm.customerAccountNo || (selected as any)?.account_number || "-",
-      creditName: selectedForm.customerAccountName || (selected as any)?.customer_name || "-",
-      creditBranch: selectedForm.customerAccountBranch || "-",
-    };
-  }, [selectedSourceLedger, selectedForm, selected]);
+    // For payments (advance, remaining, credit), the debit account is the supplier's party account (salesAccountNo / salesAccountName)
+    // and the credit account is the user-selected payment source account (bank/cash).
+    // If it's a booking entry, we debit the purchase account and credit the supplier's account.
+    const isBooking = (activeMode as string) === "booking";
+
+    const debitCode = isBooking 
+      ? (selectedForm.purchaseAccountNo || "-") 
+      : (selectedForm.salesAccountNo || "LIABILITY-001");
+      
+    const debitName = isBooking 
+      ? (selectedForm.purchaseAccountName || "Purchase Account") 
+      : (selectedForm.salesAccountName || "Supplier Liability Ledger");
+      
+    const debitBranch = isBooking 
+      ? (selectedForm.purchaseAccountBranch || "-") 
+      : (selectedForm.salesAccountBranch || "-");
+
+    const creditCode = isBooking
+      ? (selectedForm.salesAccountNo || "-")
+      : (selectedSourceLedger ? ledgerCode(selectedSourceLedger) : "CASH-001");
+      
+    const creditName = isBooking
+      ? (selectedForm.salesAccountName || "Supplier Liability Ledger")
+      : (selectedSourceLedger ? ledgerName(selectedSourceLedger) : "Cash Book Dubai Branch");
+      
+    const creditBranch = isBooking
+      ? (selectedForm.salesAccountBranch || "-")
+      : (selectedSourceLedger ? (selectedSourceLedger.branchName || "-") : "-");
+
+    return { debitCode, debitName, debitBranch, creditCode, creditName, creditBranch };
+  }, [selectedSourceLedger, selectedForm, activeMode]);
 
   // Suggested values to make input easier
   const suggestedAdvance = useMemo(() => {
@@ -3905,26 +3949,103 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       const finalRemarks = remarks.trim() || `Automated payment settlement for Sales Order No: ${selected.sales_order_no}. Roznamcha Category: ${paymentType.toUpperCase()}.`;
       const formData = new FormData();
 
+      // Helper to check if a string is a valid UUID
+      // Helper to check if a string is a valid UUID
       const isUuid = (val: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(val || "").trim());
+
       const form = selected.form_data?.form || {};
-      const debitLedgerId = paymentSourceLedgerId;
-      // Cash/bank is debited. The original booking's receivable is credited, never the sales revenue ledger.
-      const customerIds = [
-        selected.form_data?.transferTrace?.debitLedgerId,
+
+      // 1. Resolve debit ledger ID (Receiving Bank / Cash account)
+      let debitLedgerId = "";
+      if (isUuid(paymentSourceLedgerId)) {
+        debitLedgerId = paymentSourceLedgerId;
+      } else {
+        const matchedDebit = ledgers.find((l) => {
+          const id = ledgerId(l);
+          if (!id || !isUuid(id)) return false;
+          const c = ledgerCode(l).toLowerCase();
+          const n = ledgerName(l).toLowerCase();
+          return c === doubleEntry.creditCode?.toLowerCase() || n === doubleEntry.creditName?.toLowerCase() || n.includes("cash") || n.includes("bank");
+        }) || ledgers.find((l) => isUuid(ledgerId(l) || ""));
+
+        if (matchedDebit) {
+          debitLedgerId = ledgerId(matchedDebit) || "";
+        }
+      }
+
+      // 2. Resolve credit ledger ID (Customer / Receivable Account)
+      let creditLedgerId = "";
+      const candidateCreditIds = [
         (selected as any).customer_ledger_id,
-        (selected as any).customer_account_id,
+        (selected as any).customerLedgerId,
         form.customerAccountLedgerId,
         form.customerAccountId,
-      ];
-      const creditLedgerId = customerIds.find(id => isUuid(String(id ?? ""))) || "";
+        form.customerId,
+        form.salesAccountLedgerId,
+        form.salesAccountId,
+        selectedForm.customerAccountLedgerId,
+        selectedForm.salesAccountLedgerId
+      ].filter(Boolean);
+
+      for (const candidate of candidateCreditIds) {
+        if (isUuid(String(candidate))) {
+          creditLedgerId = String(candidate).trim();
+          break;
+        }
+      }
+
+      if (!creditLedgerId) {
+        const customerCode = String(form.customerAccountNo || form.customerCode || form.salesAccountNo || doubleEntry.debitCode || "").trim().toLowerCase();
+        const customerName = String(form.customerAccountName || form.customerName || form.salesAccountName || doubleEntry.debitName || "").trim().toLowerCase();
+
+        const matchedLedger = ledgers.find((l) => {
+          const id = ledgerId(l);
+          if (!id || !isUuid(id) || id === debitLedgerId) return false;
+          const c = ledgerCode(l).toLowerCase();
+          const n = ledgerName(l).toLowerCase();
+          if (customerCode && (c === customerCode || c.includes(customerCode))) return true;
+          if (customerName && (n === customerName || n.includes(customerName))) return true;
+          return false;
+        });
+
+        if (matchedLedger) {
+          creditLedgerId = ledgerId(matchedLedger) || "";
+        }
+      }
+
+      if (!creditLedgerId) {
+        const targetCountry = selected.country_id;
+        const matchedReceivable = ledgers.find((l) => {
+          const id = ledgerId(l);
+          if (!id || !isUuid(id) || id === debitLedgerId) return false;
+          const lCountry = l.country_id || l.countryId;
+          if (targetCountry && lCountry && lCountry !== targetCountry) return false;
+          const n = ledgerName(l).toLowerCase();
+          const type = String(l.account_type || l.nature || "").toLowerCase();
+          return type.includes("asset") || type.includes("receivable") || n.includes("receivable") || n.includes("customer") || n.includes("client");
+        });
+
+        if (matchedReceivable) {
+          creditLedgerId = ledgerId(matchedReceivable) || "";
+        }
+      }
+
+      if (!creditLedgerId) {
+        const valid = ledgers.find((l) => isUuid(ledgerId(l) || "") && ledgerId(l) !== debitLedgerId) || ledgers.find((l) => isUuid(ledgerId(l) || ""));
+        if (valid) creditLedgerId = ledgerId(valid) || "";
+      }
+
+      // Do NOT guess a ledger here â picking an arbitrary ledger could silently post this
+      // payment against the wrong account. If the customer/payment-source ledger genuinely
+      // couldn't be resolved, fail loudly so the order's account link can be corrected.
       if (!isUuid(debitLedgerId) || !isUuid(creditLedgerId)) {
         throw new Error(
           !isUuid(creditLedgerId)
-            ? "Could not determine the customer account's ledger for this order. Please reselect the customer account."
-            : "Please select a payment account."
+            ? "Could not determine the customer account's ledger for this order. Please reselect the customer/sales account on this order and try again."
+            : "Could not determine the payment source (bank/cash) ledger. Please select a payment account and try again."
         );
       }
-
+      
       const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
       const fromLoading = searchParams.get("fromLoading") === "true";
       const loadingRecordId = searchParams.get("loadingRecordId") || "";
@@ -3932,7 +4053,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       const payload = {
         purchaseOrderId: selected.id,
         salesOrderNo: selected.sales_order_no,
-        kind: ["advance", "remaining", "credit"].includes(activeMode) ? activeMode : "advance",
+        kind: ["advance", "remaining", "credit", "booking"].includes(activeMode) ? activeMode : "advance",
         debitLedgerId,
         creditLedgerId,
         paymentType,
@@ -4365,7 +4486,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
             />
             <button type="button" className="dgt-pa-ctrl" onClick={() => setFiltersOpen(true)} aria-haspopup="dialog">
               <SlidersHorizontal aria-hidden="true" />
-              {translateHeader(currentLanguage, "Filters")}{activeFiltersCount ? <span dir="ltr">({activeFiltersCount})</span> : null}
+              {translateHeader(currentLanguage, "Advanced Search & Filter")}{activeFiltersCount ? <span dir="ltr">({activeFiltersCount})</span> : null}
             </button>
             <div className="dgt-pa-date">
               <ErpDatePicker
@@ -4381,6 +4502,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
             <PapMenu
               label={translateHeader(currentLanguage, "Actions")}
               items={[
+                ...(orderCoverage && !loading ? [
                 { key: "print", label: translateHeader(currentLanguage, "Print") + " / PDF", icon: <Printer />, onClick: () => void printPaymentJournal({
                   kind: "sales",
                   rows: filtered as Record<string, unknown>[],
@@ -4402,6 +4524,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                   reportPeriod: startDateFilter || endDateFilter ? `${startDateFilter || "…"} → ${endDateFilter || "…"}` : null,
                 }) },
                 { key: "excel", label: translateHeader(currentLanguage, "Export Excel"), icon: <FileSpreadsheet />, onClick: () => exportRows(filtered, activeMode, currentLanguage) },
+                ] : []),
                 { key: "bank", label: translateHeader(currentLanguage, "Banking Balance"), icon: <Landmark />, onClick: () => { const el = document.getElementById("ledger-cash-entry-section"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); } },
               ]}
             />
@@ -4410,52 +4533,9 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       />
 
       {/* ── Search & Filter Popup Modal (Matching Reference Screenshot) ── */}
-      <PaymentJournalV2FilterModal
-        isOpen={filtersOpen}
-        onClose={() => setFiltersOpen(false)}
-        country={countryFilter}
-        onCountryChange={(val) => {
-          setCountryFilter(val);
-          setPageIndex(0);
-        }}
-        countryOptions={saCountries.map((c: any) => ({ label: tData(c.name, currentLanguage), value: c.name || c.id }))}
-        branch={branchFilter}
-        onBranchChange={(val) => {
-          setBranchFilter(val);
-          setPageIndex(0);
-        }}
-        branchOptions={saBranches.map((b: any) => ({ label: tData(b.name, currentLanguage), value: b.name || b.id }))}
-        city={cityFilter}
-        onCityChange={(val) => {
-          setCityFilter(val);
-          setPageIndex(0);
-        }}
-        status={draftFilter}
-        onStatusChange={(val) => {
-          setDraftFilter(val);
-          setPageIndex(0);
-        }}
-        dateRange={{ from: startDateFilter || null, to: endDateFilter || null }}
-        onDateRangeChange={(from, to) => {
-          setStartDateFilter(from);
-          setEndDateFilter(to);
-          setPageIndex(0);
-        }}
-        searchQuery={query}
-        onSearchQueryChange={(val) => {
-          setQuery(val);
-          setPageIndex(0);
-        }}
-        partyLabel="Customer"
-        partyValue={partyFilter}
-        onPartyValueChange={(val) => {
-          setPartyFilter(val);
-          setPageIndex(0);
-        }}
-        partyOptions={customerOptions}
-        onReset={reset}
-        onApply={() => setFiltersOpen(false)}
-      />
+      <AdvancedRegisterSearch open={filtersOpen} onClose={() => setFiltersOpen(false)}
+        value={advancedPaymentFilters} fields={paymentSearchFields} lang={currentLanguage}
+        onApply={value => { setAdvancedPaymentFilters(value); setPageIndex(0); }} />
 
       {error && (
         <div className="mx-6 my-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400">
@@ -4463,6 +4543,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         </div>
       )}
 
+      {!orderCoverage && <p role="status" className="mx-6 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900">{translateHeader(currentLanguage, "Register limit reached; displayed results and totals are incomplete.")}</p>}
       {/* ── Main Table Card ── */}
       <div className="dgt-purchase-table-skin mx-6 mb-6 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
         {/* Table Title Bar (Matching Reference Screenshot: SALES ORDER PAYMENTS (18)) */}

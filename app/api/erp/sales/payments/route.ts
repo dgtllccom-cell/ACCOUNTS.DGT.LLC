@@ -6,7 +6,6 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
-import { assertFinancialAccess } from "@/lib/permissions/middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 
 /**
@@ -25,7 +24,6 @@ const listQuerySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    assertFinancialAccess(session);
     const { searchParams } = new URL(request.url);
     const query = listQuerySchema.parse({
       countryId: searchParams.get("countryId") || undefined,
@@ -59,8 +57,6 @@ export async function GET(request: NextRequest) {
         join public.sales_orders so on so.id = p.sales_order_id and so.deleted_at is null
         where p.deleted_at is null
           and p.payment_kind <> 'booking'
-          and p.id::text is distinct from so.form_data->'transferTrace'->>'paymentId'
-          and p.roznamcha_entry_id::text is distinct from so.form_data->'transferVerification'->>'journalId'
           and ${noScope ? sql`false` : sql`true`}
           and (${scopedCityBranchIds ? sql`so.city_branch_id = any(${scopedCityBranchIds}::uuid[])` : sql`true`})
           and (${!scopedCityBranchIds && scopedCountryBranchIds ? sql`so.country_branch_id = any(${scopedCountryBranchIds}::uuid[])` : sql`true`})

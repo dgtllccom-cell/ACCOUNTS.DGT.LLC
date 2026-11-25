@@ -4,6 +4,11 @@
 import { newIdempotencyKey } from "@/lib/api/idempotency-client";
 import { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { translateHeader } from "@/lib/i18n/table-headers";
+import { salesPaymentTransferReport } from "@/lib/sales/payment-transfer-report";
+import { SalesTransferScopeSerials } from "./sales-transfer-scope-serials";
+import { bookingScopeSerials, scopeSerials } from "@/lib/sales/sales-transfer-serials";
+import type { SalesTransferProof } from "@/lib/sales/sales-transfer-proof";
 import {
   ArrowLeft,
   Printer,
@@ -131,6 +136,16 @@ function SalesTransferErpReportViewContent({
   const router = useRouter();
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
+  const transferOnly = searchParams.get("transfer") === "1";
+  const tr = (label: string) => translateHeader(lang, label);
+  const [transferEvidence, setTransferEvidence] = useState<{ order: any; transferProof: SalesTransferProof | null } | null>(null);
+
+  async function loadTransferEvidence(id: string) {
+    const response = await fetch(`/api/erp/sales/orders/${encodeURIComponent(id)}?transfer=1`, { cache: "no-store" });
+    const result = await response.json();
+    if (!response.ok || !result.ok || !result.data?.order) throw new Error(result?.error?.message || tr("Failed to load"));
+    return result.data;
+  }
 
   const [reportData, setReportData] = useState<any>(initialData || null);
   const [loading, setLoading] = useState(!initialData && Boolean(idParam));
@@ -166,7 +181,10 @@ function SalesTransferErpReportViewContent({
       try {
         const res = await fetch(`/api/erp/sales/booking-journal-report?id=${encodeURIComponent(idParam)}`, { cache: "no-store" });
         const json = await res.json();
+        const evidence = transferOnly ? await loadTransferEvidence(idParam) : null;
         if (cancelled) return;
+        if (transferOnly && (!res.ok || !json?.ok)) throw new Error(json?.error?.message || tr("Failed to load"));
+        setTransferEvidence(evidence);
         const row = json?.data?.reports?.[0] || json?.data?.selected || json?.reports?.[0] || json;
         setReportData(row);
       } catch (err: any) {
@@ -176,7 +194,7 @@ function SalesTransferErpReportViewContent({
       }
     })();
     return () => { cancelled = true; };
-  }, [idParam, initialData]);
+  }, [idParam, initialData, transferOnly]);
 
   /* ── Derived values ────────────────────────────────────────── */
 
@@ -263,6 +281,17 @@ function getCurrencySymbol(c: string) {
   const debitCurrencySymbol = getCurrencySymbol(debitCurrency);
   const creditCurrencySymbol = getCurrencySymbol(creditCurrency);
 
+  const recordedSettlement = transferOnly && transferEvidence ? salesPaymentTransferReport(transferEvidence.order) : null;
+  const recordedProof = transferOnly ? transferEvidence?.transferProof : null;
+  const recordedIsPosted = transferOnly && ["posted", "transferred"].includes(String(transferEvidence?.order?.ledger_posting_status || "").toLowerCase());
+  const recordedBalanced = recordedProof?.lines.length === 2 &&
+    recordedProof.lines[0].ledgerId !== recordedProof.lines[1].ledgerId &&
+    recordedProof.lines[0].currency === recordedProof.lines[1].currency &&
+    recordedProof.lines.some(dr => dr.debit > 0 && dr.credit === 0
+      && recordedProof.lines.some(cr => cr.debit === 0 && cr.credit === dr.debit));
+  const displayMoney = (amount: number | null | undefined, currency?: string) =>
+    amount == null || !currency ? "—" : `${currency} ${money(amount)}`;
+
   const debitAmount = totalSalesAmountPkr;
   const creditAmount = totalSalesAmountPkr;
 
@@ -288,14 +317,16 @@ function getCurrencySymbol(c: string) {
         body: JSON.stringify({
           paymentKind: paymentRoute.paymentKind,
           paymentType: form.paymentType || paymentRoute.paymentLabel,
-          advancePaid: 0
+          advancePaid: 0,
+          ...(transferOnly ? { transferRegister: true } : {})
         })
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
         throw new Error(json?.error?.message || json?.error || t(lang, "sales.ster_err_transfer_payment", "Failed to process transfer payment."));
       }
-      setTransferSuccess("✅ Booking Transfer successfully posted! Supplier ledger and inventory balances have been automatically updated.");
+      if (transferOnly) setTransferEvidence(await loadTransferEvidence(d.id));
+      setTransferSuccess(transferOnly ? tr("Transferred") : "✅ Booking Transfer successfully posted! Supplier ledger and inventory balances have been automatically updated.");
       
       setReportData((prev: any) => ({
         ...prev,
@@ -338,7 +369,7 @@ function getCurrencySymbol(c: string) {
         <div className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-center max-w-md">
           <AlertTriangle className="h-8 w-8 text-rose-500 mx-auto mb-3" />
           <p className="text-sm font-bold text-rose-800">{error || t(lang, "sales.ster_sales_record_not_found", "Sales order record not found.")}</p>
-          <Button onClick={() => router.back()} variant="outline" size="sm" className="mt-4">
+          <Button onClick={() => transferOnly ? router.push(recordedIsPosted ? "/dashboard/sales/sales-order?transfer=1" : "/dashboard/sales/sales-order") : router.back()} variant="outline" size="sm" className="mt-4">
             {t(lang, "ster.go_back_arrow", "← Go Back")}
           </Button>
         </div>
@@ -391,8 +422,9 @@ function getCurrencySymbol(c: string) {
             type="button"
             size="sm"
             variant="ghost"
-            onClick={() => router.push(`/dashboard/purchase/new-purchase-booking-order?id=${encodeURIComponent(d.id)}&purchaseOrderNo=${encodeURIComponent(d.salesBookingOrderNumber)}`)}
-            disabled={d.ledger_posting_status === "posted" || d.ledger_posting_status === "transferred"}
+            onClick={() => router.push(transferOnly ? `/dashboard/sales/new-sales-booking-order?id=${encodeURIComponent(d.id)}`
+              : `/dashboard/purchase/new-purchase-booking-order?id=${encodeURIComponent(d.id)}&purchaseOrderNo=${encodeURIComponent(d.salesBookingOrderNumber)}`)}
+            disabled={recordedIsPosted || d.ledger_posting_status === "posted" || d.ledger_posting_status === "transferred"}
             className="h-8 text-white hover:bg-white/10 gap-1.5 px-2.5 disabled:opacity-50"
           >
             <PenLine className="h-3.5 w-3.5" />
@@ -404,7 +436,7 @@ function getCurrencySymbol(c: string) {
             type="button"
             size="sm"
             onClick={handleTransferPayment}
-            disabled={transferring || (d.ledger_posting_status === "posted" && !d.is_edited_since_transfer)}
+            disabled={transferring || recordedIsPosted || (d.ledger_posting_status === "posted" && !d.is_edited_since_transfer)}
             className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[11px] uppercase tracking-wide px-3 shadow-md gap-1.5 border-none disabled:opacity-50"
           >
             <WalletCards className="h-3.5 w-3.5" />
@@ -542,7 +574,7 @@ function getCurrencySymbol(c: string) {
         </SectionCard>
 
         {/* ── 6. PAYMENT INFORMATION ───────────────────── */}
-        {(() => {
+        {!transferOnly && (() => {
           const isPosted = d.ledger_posting_status === "posted";
           const displayAdvanceUsd = isPosted ? actualAdvancePaidUsd : advanceAmountUsd;
           const displayAdvancePkr = isPosted ? actualAdvancePaidPkr : advanceAmountPkr;
@@ -585,7 +617,42 @@ function getCurrencySymbol(c: string) {
         })()}
 
         {/* ── 7. ACCOUNTING / LEDGER IMPACT ────────────── */}
-        <SectionCard lang={lang} icon={<BookOpen className="h-4 w-4" />} title={t(lang, "pter.sec_accounting", "Accounting / Ledger Impact")}>
+        {transferOnly ? (
+          <SectionCard lang={lang} icon={<BookOpen className="h-4 w-4" />} title={t(lang, "pter.sec_accounting", "Accounting / Ledger Impact")}>
+            <div className="grid gap-x-6 sm:grid-cols-2">
+              <InfoRow label={tr("Sales Booking Number")} value={transferEvidence?.order?.sales_order_no || d.salesBookingOrderNumber || "—"} mono />
+              <InfoRow label={tr("Business Roznamcha Reference")} value={recordedProof?.journalNo || "—"} mono />
+              <InfoRow label={tr("Business Ledger Reference")} value={recordedProof?.voucherNo || "—"} mono />
+              <InfoRow label={tr("Final Transfer Amount")} value={displayMoney(recordedSettlement?.finalAmount, recordedSettlement?.finalCurrency)} mono />
+              <InfoRow label={tr("Exchange Rate")} value={recordedSettlement?.rate == null ? "—" : `${recordedSettlement.originalCurrency || "—"} ${recordedSettlement.operator === "/" ? "÷" : "×"} ${recordedSettlement.rate}`} mono />
+              <InfoRow label={tr("Advance Payment Received")} value={displayMoney(recordedSettlement?.advance, recordedSettlement?.finalCurrency)} mono />
+              <InfoRow label={tr("Total Payment Received")} value={displayMoney(recordedSettlement?.received, recordedSettlement?.finalCurrency)} mono />
+              <InfoRow label={tr("Remaining Receivable Balance")} value={displayMoney(recordedSettlement?.remaining, recordedSettlement?.finalCurrency)} mono />
+            </div>
+            {(recordedProof?.scopeSerials || transferEvidence?.order) && <SalesTransferScopeSerials lang={lang}
+              booking={bookingScopeSerials(transferEvidence?.order)} serials={recordedProof ? {
+              voucher: recordedProof.scopeSerials,
+              debit: recordedProof.lines.find(line => line.debit > 0 && line.credit === 0)?.scopeSerials ?? scopeSerials(null),
+              credit: recordedProof.lines.find(line => line.credit > 0 && line.debit === 0)?.scopeSerials ?? scopeSerials(null),
+            } : null} />}
+            {recordedProof?.lines.length ? (
+              <div className="space-y-2">
+                {recordedBalanced && <p className="text-xs font-bold text-emerald-700">{t(lang, "ster.journal_balanced", "Journal Entry Balanced — Total Debit equals Total Credit")}</p>}
+                <table className="w-full text-xs">
+                  <thead><tr><Th>{t(lang, "pter.col_gl_code", "GL Code")}</Th><Th>{t(lang, "purchase.f_account_name", "Account Name")}</Th>
+                    <Th>{t(lang, "cdash.col_debit", "Debit")}</Th><Th>{t(lang, "cdash.col_credit", "Credit")}</Th></tr></thead>
+                  <tbody>{recordedProof.lines.map((line, index) => (
+                    <tr className="border-b" key={`${line.ledgerId}-${index}`}>
+                      <td className="p-2">{line.code || "—"}</td><td className="p-2">{line.name || "—"}</td>
+                      <td className="p-2">{line.debit > 0 ? displayMoney(line.debit, line.currency) : "—"}</td>
+                      <td className="p-2">{line.credit > 0 ? displayMoney(line.credit, line.currency) : "—"}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            ) : <p role="status" className="text-xs text-slate-500">{tr("No records found")}</p>}
+          </SectionCard>
+        ) : <SectionCard lang={lang} icon={<BookOpen className="h-4 w-4" />} title={t(lang, "pter.sec_accounting", "Accounting / Ledger Impact")}>
           {/* Journal meta */}
           <div className="grid sm:grid-cols-3 gap-x-8 mb-4">
             <InfoRow label={t(lang, "pter.journal_number", "Journal Number")} value={journalNumber} mono />
@@ -650,10 +717,10 @@ function getCurrencySymbol(c: string) {
             </p>
 
           </div>
-        </SectionCard>
+        </SectionCard>}
 
         {/* ── 8. TRANSFER TO PAYMENT CTA ───────────────── */}
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 flex flex-col sm:flex-row items-center justify-between gap-3 print:hidden shadow-sm">
+        {!transferOnly && <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 flex flex-col sm:flex-row items-center justify-between gap-3 print:hidden shadow-sm">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
               <TrendingUp className="h-5 w-5" />
@@ -674,7 +741,7 @@ function getCurrencySymbol(c: string) {
             <WalletCards className="h-4 w-4" />
             {transferring ? "Transferring..." : "Transfer Payment"}
           </Button>
-        </div>
+        </div>}
 
         {/* Feedback messages */}
         {transferSuccess && (

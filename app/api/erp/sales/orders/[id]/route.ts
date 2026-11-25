@@ -15,6 +15,7 @@ import { salesOrderTranslationFields } from "@/lib/i18n/sales-order-translations
 import { assertBookingCurrency, assertConfiguredSalesSettlement, assertSalesWithinStock, resolveSalesCountryCurrency } from "@/lib/sales/booking-rules";
 import { trustedTranslationMap } from "@/lib/i18n/localize-records";
 import { getDbUrl, withLocalPg, withReadPg } from "@/lib/db/local-postgres";
+import { readSalesTransferProof, readSalesTransferReceipts } from "@/lib/sales/sales-transfer-proof";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -120,7 +121,9 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         .eq("record_table", "sales_orders").eq("record_id", params.id).is("deleted_at", null);
       translationRows = data;
     }
-    return apiOk({ order: { ...(row as any), translations: Object.fromEntries((translationRows || []).map((item: any) => [item.field_name, trustedTranslationMap("sales_orders", item.field_name, item.original_text, item)])) } });
+    const transferProof = transferView ? await readSalesTransferProof(row as any) : undefined;
+    const transferReceiptSummary = transferProof ? await readSalesTransferReceipts(params.id, transferProof.journalId, String((row as any).currency_code || "")) : undefined;
+    return apiOk({ ...(transferView ? { transferProof } : {}), order: { ...(row as any), ...(transferReceiptSummary ? { transferReceiptSummary } : {}), translations: Object.fromEntries((translationRows || []).map((item: any) => [item.field_name, trustedTranslationMap("sales_orders", item.field_name, item.original_text, item)])) } });
   } catch (error) {
     return handleApiError(error);
   }

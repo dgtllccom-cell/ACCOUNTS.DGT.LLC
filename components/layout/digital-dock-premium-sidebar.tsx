@@ -293,7 +293,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: ClipboardList,
         children: [
           { label: nt("New Sales Booking Order"), href: "/dashboard/sales/new-sales-booking-order", icon: ClipboardList },
-          { label: nt("Sales Order & Payment Transfer"), href: "/dashboard/sales/sales-order", icon: Receipt },
           { label: nt("Confirmed Sales Orders"), href: "/dashboard/sales/sales-confirm", icon: CheckSquare },
           { label: nt("Sales Booking Journal Report"), href: "/dashboard/sales/sales-booking-journal-report", icon: FileBarChart },
         ],
@@ -312,6 +311,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: TrendingUp,
         children: [
           { label: nt("Local Sales Order"), href: "/dashboard/sales/local-sales", icon: ShoppingCart },
+          { label: nt("Sales Order & Payment Transfer"), href: "/dashboard/sales/sales-order", icon: Receipt },
         ],
       },
       {
@@ -1088,9 +1088,7 @@ export function DigitalDockPremiumSidebar({
   const lang = useActiveLanguage();
   const tr = (s: string) => s === "Sales Loading"
     ? tUi(lang, "nav.sales_loading")
-    : s === "Sales Order & Payment Transfer"
-      ? tUi(lang, "nav.sales_transfer_payment")
-      : translateHeader(lang, s);
+    : translateHeader(lang, s);
 
   const userRolesSet = useMemo(() => new Set((roles ?? []).map(String)), [roles]);
   const userPermsSet = useMemo(() => new Set((permissions ?? []).map(String)), [permissions]);

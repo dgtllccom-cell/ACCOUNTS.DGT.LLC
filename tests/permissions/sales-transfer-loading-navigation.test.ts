@@ -7,10 +7,10 @@ const transfer = "/dashboard/sales/sales-order";
 const loading = "/dashboard/sales/sales-loading";
 
 describe("Sales Booking transfer and loading navigation", () => {
-  it("reuses the existing Sales Payment Transfer route under Sales Booking, not Local Sales", () => {
+  it("reuses the existing Sales Payment Transfer route without moving the existing Local Sales link", () => {
     const sections = DAMAN_SIDEBAR_ITEMS.flatMap((item) => item.children ?? []);
-    expect(sections.find((item) => item.key === "sub-sales-booking")?.children?.filter((item) => item.href === transfer)).toHaveLength(1);
-    expect(sections.find((item) => item.key === "sub-local-sales")?.children?.map((item) => item.href)).not.toContain(transfer);
+    expect(sections.find((item) => item.key === "sub-local-sales")?.children?.filter((item) => item.href === transfer)).toHaveLength(1);
+    expect(sections.find((item) => item.key === "sub-sales-booking")?.children?.map((item) => item.href)).not.toContain(transfer);
   });
 
   it("names the Sales Loading menu separately and points it to the one existing register", () => {
@@ -44,13 +44,13 @@ describe("Sales Booking transfer and loading navigation", () => {
     }
   });
 
-  it("denies the financial register and its detail routes to an explicitly non-financial business login", () => {
+  it("preserves legacy Sales Order Management route access for a non-financial business login", () => {
     const context = { operationalDomains: ["business" as const], canViewFinancials: false };
     const roles = ["city_branch_admin"];
     const permissions = enterpriseRolePermissions.city_branch_admin;
-    expect(visibleMenuHrefsFor(roles, permissions, context)).not.toContain(transfer);
+    expect(visibleMenuHrefsFor(roles, permissions, context)).toContain(transfer);
     for (const pathname of [transfer, `${transfer}/view`]) {
-      expect(evaluateRouteAccess({ pathname, roles, permissions, ...context })).toMatchObject({ allowed: false, reason: "financial_denied" });
+      expect(evaluateRouteAccess({ pathname, roles, permissions, ...context })).toMatchObject({ allowed: true });
     }
   });
 });

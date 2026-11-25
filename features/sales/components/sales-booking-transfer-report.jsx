@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useId } from "react";
-import { ArrowRightLeft, Printer } from "lucide-react";
+import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, Banknote, FileText, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { printDomFragmentViaModal } from "@/lib/reports/print-dom-fragment";
+import { bookingScopeSerials, groupExactSerials } from "@/lib/sales/sales-transfer-serials";
+import { SalesTransferScopeSerials } from "./sales-transfer-scope-serials";
 import { getBookingCurrencies } from "@/lib/sales/booking-currencies";
 
 function ReportSection({ title, entries, children, className = "", green = false }) {
@@ -47,7 +49,13 @@ export function SalesBookingTransferReport({
   const money = (value, currency) => value == null ? "—" : `${currency} ${number(value)}`;
   const sum = key => goods.reduce((total, item) => total + (Number(item[key]) || 0), 0);
   const finalAmount = order.order_total ?? (goods.length ? sum("finalAmount") : null);
-  const journalLink = value => value && journalUrl ? <a href={journalUrl} className="text-blue-700 underline" target="_blank" rel="noreferrer">{value}</a> : value;
+  const postingReferences = groupExactSerials([["VR", trace.voucherNo], ["DR", trace.debitSerial], ["CR", trace.creditSerial]])
+    .map(({ kinds, serial }) => {
+      const label = kinds.length > 1 ? `${kinds.join(" / ")} ${tr("Serial No.")}`
+        : tr({ VR: "VR (Voucher) Serial No.", DR: "DR Serial No.", CR: "CR Serial No." }[kinds[0]]);
+      const code = <code className="break-all font-mono text-[10px] font-semibold">{serial}</code>;
+      return [label, journalUrl ? <a href={journalUrl} className="text-blue-700 underline decoration-blue-200" target="_blank" rel="noreferrer">{code}</a> : code];
+    });
   const booking = confirmation?.salesOrderNo || order.sales_order_no || form.salesOrderNo;
   const debit = form.customerAccountName || order.customer_name;
   const credit = form.salesAccountName;
@@ -57,26 +65,37 @@ export function SalesBookingTransferReport({
   const cell = "border-b border-slate-200 px-2 py-1.5 text-start";
   const debitAmount = posted && trace.debitCurrency ? money(trace.debitAmount, trace.debitCurrency) : null;
   const creditAmount = posted && trace.creditCurrency ? money(trace.creditAmount, trace.creditCurrency) : null;
+  const previewSummary = [
+    [ArrowDownLeft, "Customer Account (DR)", [debitCode, debit].filter(Boolean).join(" · "), debitAmount, "text-blue-700 dark:text-blue-300"],
+    [ArrowUpRight, "Sales Account (CR)", [creditCode, credit].filter(Boolean).join(" · "), creditAmount, "text-violet-700 dark:text-violet-300"],
+    [Banknote, "Final Amount", money(finalAmount, final), rate.ok ? `${sales} ${rate.operator === "/" ? "÷" : "×"} ${number(rate.rate, 6)} → ${final}` : null, "text-emerald-700 dark:text-emerald-300"],
+  ];
 
   return (
     <Dialog open={open} onOpenChange={next => { if (!next && !busy) onClose(); }}>
-      <DialogContent aria-describedby={undefined} className="flex h-[96dvh] max-w-[min(98vw,90rem)] flex-col gap-0 overflow-hidden p-0">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-blue-50 p-3 pe-12 text-slate-900">
-          <DialogTitle className="text-base font-black uppercase">{title}</DialogTitle>
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" size="sm" variant="outline" onClick={() => printDomFragmentViaModal(printId, title, { lang, orientation: "portrait" })}>
-              <Printer aria-hidden="true" />{tr("Print / PDF")}
-            </Button>
-            {onPost && !transferred && <Button type="button" size="sm" className="bg-emerald-700 text-white hover:bg-emerald-800" disabled={busy} onClick={onPost}>
-              <ArrowRightLeft aria-hidden="true" />{busy ? tr("Processing...") : tr("Transfer / Post")}
-            </Button>}
-            {posted && onDocument && <Button type="button" size="sm" className="bg-emerald-700 text-white hover:bg-emerald-800" onClick={onDocument}>{tr("Sales Booking")}</Button>}
-            {journalUrl && <Button asChild size="sm"><a href={journalUrl} target="_blank" rel="noreferrer">{tr("View Journal")}</a></Button>}
+      <DialogContent aria-describedby={undefined} dir={["ur", "ar", "fa", "ps"].includes(lang) ? "rtl" : "ltr"}
+        className="flex h-[96dvh] max-w-[min(98vw,90rem)] flex-col gap-0 overflow-hidden p-0 [&>button]:text-white"
+      >
+        <div className="flex items-center gap-3 bg-gradient-to-r from-blue-950 to-blue-700 px-4 py-3 pe-12 text-white">
+          <FileText className="size-6 shrink-0" aria-hidden="true" />
+          <div className="min-w-0 flex-1">
+            <DialogTitle className="text-sm font-extrabold sm:text-lg">{title}</DialogTitle>
+            <bdi className="mt-1 inline-flex max-w-full break-all rounded bg-white/10 px-1.5 py-0.5 font-mono text-[10px] font-medium text-blue-100">{booking || "—"}</bdi>
           </div>
+          <span className={`rounded-full px-2 py-1 text-center text-xs font-bold ${posted ? "bg-emerald-100 text-emerald-950" : "bg-amber-100 text-amber-950"}`}>{status}</span>
         </div>
         {error && <p role="alert" className="bg-red-50 px-4 py-2 text-sm text-red-800">{error}</p>}
-        <div className="overflow-auto bg-slate-100 p-3">
-          <div id={printId} className="space-y-3 text-xs text-slate-900" dir={["ur", "ar", "fa", "ps"].includes(lang) ? "rtl" : "ltr"}>
+        <div className="min-h-0 flex-1 overflow-auto bg-slate-100 p-2.5 sm:p-4 dark:bg-slate-950">
+          <dl className="mx-auto mb-3 grid max-w-6xl grid-cols-2 gap-2 lg:grid-cols-3">
+            {previewSummary.map(([Icon, label, value, detail, tint]) => (
+              <div key={label} className="min-w-0 rounded-lg border bg-card px-3 py-2 last:col-span-2 lg:last:col-span-1">
+                <dt className={`flex items-center gap-1.5 text-xs font-bold ${tint}`}><Icon className="size-4 shrink-0" aria-hidden="true" />{tr(label)}</dt>
+                <dd className="mt-1 break-words text-sm font-extrabold"><bdi>{value || "—"}</bdi></dd>
+                {detail && <dd className="mt-0.5 text-xs text-muted-foreground"><bdi>{detail}</bdi></dd>}
+              </div>
+            ))}
+          </dl>
+          <div id={printId} className="mx-auto max-w-6xl space-y-3 text-xs text-slate-900" dir={["ur", "ar", "fa", "ps"].includes(lang) ? "rtl" : "ltr"}>
             <header className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white p-3">
               <strong className="text-lg text-blue-950">{form.branchCompanyName || form.salesCompanyName || order.branch_name || form.branchName || "—"}</strong>
               <div className="text-end"><div>{order.branch_name || form.branchName || "—"}</div><div>{order.country_name || form.countryName || form.country || "—"}</div></div>
@@ -113,14 +132,25 @@ export function SalesBookingTransferReport({
               <aside className="grid gap-3">
                 {section("Transfer & Posting Details", [
                   ["Business Ledger", posted ? tr("Posted") : "—"], ["Business Roznamcha", posted ? tr("Posted") : "—"],
-                  ["VR (Voucher) Serial No.", journalLink(trace.voucherNo)], ["DR Serial No.", journalLink(trace.debitSerial)], ["CR Serial No.", journalLink(trace.creditSerial)],
+                  ...postingReferences,
                   ["Transfer Date & Time", (trace.postedAt || audit.transferDate) && new Date(trace.postedAt || audit.transferDate).toLocaleString(lang, { timeZone: "Asia/Dubai" })], ["Transferred By", trace.userName || audit.userName], ["Final Status", status],
                 ], { green: true })}
+                <SalesTransferScopeSerials serials={trace.scopeSerials} booking={bookingScopeSerials(order, form)} lang={lang} />
                 {section("Posting Summary", [["Debit Account", debitCode], ["Debit Amount", debitAmount], ["Credit Account", creditCode], ["Credit Amount", creditAmount], ["Final Currency", final], ["Final Amount", money(finalAmount, final)]])}
               </aside>
             </div>
           </div>
         </div>
+        <footer className="flex flex-wrap items-center justify-end gap-2 border-t bg-card px-3 py-2.5">
+            <Button type="button" size="sm" variant="outline" onClick={() => printDomFragmentViaModal(printId, title, { lang, orientation: "portrait" })}>
+              <Printer aria-hidden="true" />{tr("Print / PDF")}
+            </Button>
+            {onPost && !transferred && <Button type="button" size="sm" className="bg-emerald-700 text-white hover:bg-emerald-800" disabled={busy} onClick={onPost}>
+              <ArrowRightLeft aria-hidden="true" />{busy ? tr("Processing...") : tr("Transfer / Post")}
+            </Button>}
+            {posted && onDocument && <Button type="button" size="sm" className="bg-emerald-700 text-white hover:bg-emerald-800" onClick={onDocument}>{tr("Sales Booking")}</Button>}
+            {journalUrl && <Button asChild size="sm"><a href={journalUrl} target="_blank" rel="noreferrer">{tr("View Journal")}</a></Button>}
+        </footer>
       </DialogContent>
     </Dialog>
   );

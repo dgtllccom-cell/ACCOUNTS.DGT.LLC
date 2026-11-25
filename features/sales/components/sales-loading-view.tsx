@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { ArrowLeft, FileText, Filter, MapPin, MoreVertical, Plus, RefreshCw, Search, Truck } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { ArrowLeft, FileText, Filter, MapPin, MoreVertical, Plus, RefreshCw, Truck } from "lucide-react";
+import { AdvancedRegisterSearch, type RegisterSearchField } from "@/components/purchase-ui/advanced-register-search";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { loadingProgress, loadingValues, type LoadedLine, type LoadingOrder, type LoadingRecord, type LoadingStatus } from "@/lib/sales/loading-workflow";
+import { translateHeader } from "@/lib/i18n/table-headers";
+import { loadSalesLoadingPages, type LoadingRegisterData, type LoadingRegisterOrder } from "@/lib/sales/loading-pagination";
 import { SalesLoadingEntry, type LoadingText } from "./sales-loading-entry";
 
-type ViewOrder = LoadingOrder & { readiness: string; canLoad?: boolean };
-type Payload = { orders: ViewOrder[]; records: LoadingRecord[]; nextOffset: number | null; canLoad: boolean; financials: boolean };
-type FilterState = { query: string; country: string; mainBranch: string; cityBranch: string; status: string };
-const empty: Payload = { orders: [], records: [], nextOffset: null, canLoad: false, financials: false };
+type ViewOrder = LoadingRegisterOrder;
+type FilterState = Record<string, string>;
+const empty: LoadingRegisterData = { orders: [], records: [], locations: [], canLoad: false, financials: false, complete: true };
 const card = "rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-700 dark:bg-slate-900";
 const selectClass = "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950";
 const btn = "inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800";
@@ -24,21 +26,43 @@ const entryNo = (r?: LoadingRecord) => r?.entry_no != null ? `LE-${String(r.entr
 const dateText = (d?: string | null) => d?.slice(0, 10) || "–";
 const dollar = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const number = (n?: number) => n == null ? "–" : n.toLocaleString(undefined, { maximumFractionDigits: 6 });
-const initialFilter = { query: "", country: "", mainBranch: "", cityBranch: "", status: "" };
+const includesText = (query: string | undefined, ...values: (string | null | undefined)[]) => {
+  const needle = query?.trim().toLowerCase();
+  return !needle || values.some(value => value?.toLowerCase().includes(needle));
+};
+const matchesID = (selection: string | undefined, id: string) => !selection || id === selection;
+const optionList = (pairs: readonly (readonly [string, string])[]) => [...new Map(pairs.filter(([id]) => id)).entries()]
+  .map(([value, label]) => ({ value, label: label || value })).sort((a, b) => a.label.localeCompare(b.label));
+
+function matchesRecord(order: LoadingOrder, record: LoadingRecord | undefined, filter: FilterState) {
+  const goods = record?.goods ?? order.goods;
+  const details = record?.details;
+  const vessel = details?.vessel || order.vessel;
+  const billOfLading = details?.bl || order.bl;
+  const date = record?.loading_date?.slice(0, 10);
+  // A booking planned for loading does not match a filter for actual loading/receiving dates.
+  const inDates = (!filter.fromDate || (date != null && date >= filter.fromDate)) && (!filter.toDate || (date != null && date <= filter.toDate))
+    && (!filter.receivedDate || record?.received_date?.slice(0, 10) === filter.receivedDate);
+  return inDates && includesText(filter.booking, order.bookingNo, order.contractNo) && includesText(filter.entry, entryNo(record))
+    && includesText(filter.container, record?.container_number) && includesText(filter.vessel, vessel) && includesText(filter.bl, billOfLading)
+    && includesText(filter.lot, ...goods.map(line => line.lot)) && includesText(filter.goods, ...goods.map(line => line.goods))
+    && includesText(filter.loadingCountry, details?.loadingCountry || order.loadingCountry) && includesText(filter.loadingPort, details?.loadingPort || order.loadingPort)
+    && includesText(filter.receivedCountry, details?.receivedCountry || order.receivedCountry) && includesText(filter.receivedPort, details?.receivedPort || order.receivedPort)
+    && includesText(filter.query, order.bookingNo, order.contractNo, order.customer, vessel, billOfLading, ...goods.flatMap(line => [line.goods, line.lot]), record?.container_number, entryNo(record));
+}
 const bookingName = (order: ViewOrder) => [order.bookingNo, order.customer].filter(Boolean).join(" · ");
 
 export function SalesLoadingView({ initialOrderId = "", initialAction = "", initialReport = "" }: { initialOrderId?: string; initialAction?: string; initialReport?: string }) {
   const lang = useActiveLanguage();
   const dir = ["ur", "ar", "fa", "ps"].includes(lang) ? "rtl" : "ltr";
   const tt: LoadingText = (key, fallback) => t(lang, key as never, fallback);
-  const searchLabel = tt("nav.search_and_filter", "Search & Filter");
+  const searchLabel = tt("sales_loading.filter", "Advanced Search & Filter");
   const statusLabel = (status: LoadingStatus) => tt(statusKeys[status][0], statusKeys[status][1]);
   const [data, setData] = useState(empty);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
   const [notice, setNotice] = useState(false);
-  const [filter, setFilter] = useState<FilterState>({ ...initialFilter, status: initialReport === "confirmed" ? "loaded" : "" });
-  const [filterDraft, setFilterDraft] = useState(filter);
+  const [filter, setFilter] = useState<FilterState>(initialReport === "confirmed" ? { status: "loaded" } : {});
   const [filterOpen, setFilterOpen] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(false);
   const [menu, setMenu] = useState("");
@@ -46,42 +70,47 @@ export function SalesLoadingView({ initialOrderId = "", initialAction = "", init
   const [entryOrderId, setEntryOrderId] = useState(initialOrderId && initialAction === "loading" ? initialOrderId : "");
   const [picker, setPicker] = useState(initialAction === "loading" && !initialOrderId);
   const [picked, setPicked] = useState("");
+  const [directOrderId, setDirectOrderId] = useState(initialAction === "loading" ? initialOrderId : "");
+  const requestRef = useRef<AbortController | null>(null);
   const [view, setView] = useState<{ order: string; record?: string } | null>(null);
 
-  const refresh = useCallback(async (signal?: AbortSignal) => {
+  const backendQuery = new URLSearchParams({ lang });
+  if (directOrderId) backendQuery.set("orderId", directOrderId);
+  else for (const [key, value] of Object.entries({ countryId: filter.country, mainBranchId: filter.mainBranch, cityBranchId: filter.cityBranch,
+    booking: filter.booking, container: filter.container, fromDate: filter.fromDate, toDate: filter.toDate, receivedDate: filter.receivedDate })) {
+    if (value) backendQuery.set(key, value);
+  }
+  const serializedQuery = backendQuery.toString();
+  const refresh = useCallback(async () => {
+    requestRef.current?.abort();
+    const controller = new AbortController();
+    requestRef.current = controller;
     setError(false);
     setIsLoading(true);
+    // Clear old rows and old authorization capabilities before a new filtered or manual request.
+    setData(empty);
+    const current = () => requestRef.current === controller && !controller.signal.aborted;
     try {
-      let offset: number | null = 0;
-      const accumulated: Payload = { ...empty, orders: [], records: [] };
-      while (offset != null) {
-        const res = await fetch(`/api/erp/sales/loading?offset=${offset}&lang=${encodeURIComponent(lang)}`, { cache: "no-store", signal });
-        const json = await res.json();
-        if (!res.ok || !json.ok) throw new Error("Sales loading unavailable");
-        const page = json.data as Payload;
-        accumulated.orders.push(...page.orders);
-        accumulated.records.push(...page.records);
-        accumulated.canLoad = page.canLoad;
-        accumulated.financials = page.financials;
-        offset = page.nextOffset != null && page.nextOffset > offset ? page.nextOffset : null;
-      }
-      if (!signal?.aborted) setData(accumulated);
-    } catch { if (!signal?.aborted) setError(true); }
-    finally { if (!signal?.aborted) setIsLoading(false); }
-  }, [lang]);
+      const result = await loadSalesLoadingPages(new URLSearchParams(serializedQuery), controller.signal);
+      if (current()) setData(result);
+    } catch {
+      if (current()) { setData(empty); setError(true); }
+    } finally {
+      if (current()) setIsLoading(false);
+    }
+  }, [serializedQuery]);
   useEffect(() => {
-    const ctrl = new AbortController();
-    void refresh(ctrl.signal);
-    return () => ctrl.abort();
+    void refresh();
+    return () => requestRef.current?.abort();
   }, [refresh]);
   useEffect(() => {
-    if (!picker && !view && !filterOpen && !menu && !reportsOpen) return;
+    if (!picker && !view && !menu && !reportsOpen) return;
     const close = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { setPicker(false); setView(null); setFilterOpen(false); setMenu(""); setReportsOpen(false); }
+      if (event.key === "Escape") { setPicker(false); setView(null); setMenu(""); setReportsOpen(false); }
     };
     document.addEventListener("keydown", close);
     return () => document.removeEventListener("keydown", close);
-  }, [picker, view, filterOpen, menu, reportsOpen]);
+  }, [picker, view, menu, reportsOpen]);
 
   const orders = useMemo(() => {
     const index = new Map<string, LoadingRecord[]>();
@@ -96,12 +125,34 @@ export function SalesLoadingView({ initialOrderId = "", initialAction = "", init
     });
   }, [data]);
   const choices = orders.filter(row => row.order.canLoad !== false && row.status !== "loaded" && row.order.readiness === "ready" && row.order.goods.length > 0);
-  const countryChoices = [...new Map(orders.filter(({ order }) => order.countryId).map(({ order }) => [order.countryId, order.country || order.countryId])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
-  const mainChoices = [...new Map(orders.filter(({ order }) => order.mainBranchId && (!filterDraft.country || order.countryId === filterDraft.country)).map(({ order }) => [order.mainBranchId, order.mainBranch || order.mainBranchId])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
-  const cityChoices = [...new Map(orders.filter(({ order }) => order.cityBranchId && (!filterDraft.country || order.countryId === filterDraft.country) && (!filterDraft.mainBranch || order.mainBranchId === filterDraft.mainBranch)).map(({ order }) => [order.cityBranchId, order.cityBranch || order.cityBranchId])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
-  const term = filter.query.trim().toLowerCase();
-  const visible = orders.filter(({ order, records, status }) => (!filter.country || filter.country === order.countryId) && (!filter.mainBranch || filter.mainBranch === order.mainBranchId) && (!filter.cityBranch || filter.cityBranch === order.cityBranchId) && (!filter.status || filter.status === status)
-    && (!term || [order.bookingNo, order.contractNo, order.customer, order.vessel, order.bl, ...order.goods.flatMap(g => [g.goods, g.lot]), ...records.flatMap(r => [r.container_number, entryNo(r), r.details.bl, r.details.vessel])].some(v => v?.toLowerCase().includes(term))));
+  const countryChoices = optionList(data.locations.map(loc => [loc.countryId, loc.country]));
+  const scopedChoices = (draft: FilterState) => data.locations.filter(loc => matchesID(draft.country, loc.countryId));
+  const searchFields: RegisterSearchField[] = [
+    { key: "query", label: tt("sales_loading.search", "Search bill, customer, goods…"), wide: true },
+    { key: "booking", label: tt("dintake.f_booking_number", "Booking Number") },
+    { key: "entry", label: tt("sales_loading.entry_no", "Loading Entry No. / Date") },
+    { key: "container", label: tt("sales.ster_container_number", "Container Number") },
+    { key: "country", label: tt("sales_loading.country", "Country"), type: "select", options: countryChoices, clearOnChange: ["mainBranch", "cityBranch"] },
+    { key: "mainBranch", label: tt("sales_loading.main_branch", "Main Branch"), type: "select", optionsFor: draft => optionList(scopedChoices(draft).map(loc => [loc.mainBranchId, loc.mainBranch])), clearOnChange: ["cityBranch"] },
+    { key: "cityBranch", label: tt("sales_loading.city_branch", "City Branch"), type: "select", optionsFor: draft => optionList(scopedChoices(draft).filter(loc => matchesID(draft.mainBranch, loc.mainBranchId)).map(loc => [loc.cityBranchId, loc.cityBranch])) },
+    { key: "status", label: tt("sales_loading.status", "Loading Status"), type: "select", options: statuses.map(value => ({ value, label: statusLabel(value) })) },
+    { key: "vessel", label: tt("sales_loading.vessel", "Vessel Name") },
+    { key: "bl", label: tt("sales_loading.bl", "B/L Number") },
+    { key: "goods", label: tt("sales_loading.goods", "Goods Name") },
+    { key: "lot", label: tt("sales_loading.lot", "Lot Name") },
+    { key: "loadingCountry", label: tt("sales_loading.loading_country", "Loading Country"), group: "origin" },
+    { key: "loadingPort", label: tt("sales_loading.loading_port", "Loading Port"), group: "origin" },
+    { key: "receivedCountry", label: tt("sales_loading.received_country", "Receiving Country"), group: "destination" },
+    { key: "receivedPort", label: tt("sales_loading.received_port", "Receiving Port"), group: "destination" },
+    { key: "fromDate", label: tt("report.filter_date_from", "From Date"), type: "date", group: "dates" },
+    { key: "toDate", label: tt("report.filter_date_to", "To Date"), type: "date", group: "dates" },
+    { key: "receivedDate", label: tt("sales_loading.received_date", "Actual Received Date"), type: "date", group: "dates" },
+  ];
+  const visible = orders.flatMap(({ order, records, status }) => {
+    if (!matchesID(filter.country, order.countryId) || !matchesID(filter.mainBranch, order.mainBranchId) || !matchesID(filter.cityBranch, order.cityBranchId) || !matchesID(filter.status, status)) return [];
+    const recordMatches = records.filter(record => matchesRecord(order, record, filter));
+    return (recordMatches.length || (!records.length && matchesRecord(order, undefined, filter))) ? [{ order, records: recordMatches, status }] : [];
+  });
   const totals = new Map<string, { loading: number; received: number }>();
   const countries = new Map<string, { country: string; currency: string; bills: number; amount: number }>();
   const statusCounts = { loaded: 0, partial: 0, pending: 0 };
@@ -120,13 +171,14 @@ export function SalesLoadingView({ initialOrderId = "", initialAction = "", init
     countries.set(key, country);
   }
   const sum = (key: "loading" | "received" | "balance") => [...totals.entries()].map(([cc, value]) => `${cc} ${dollar(key === "balance" ? Math.max(0, value.loading - value.received) : value[key])}`).join(" · ") || "–";
+  const exitEntry = () => { setEntryOrderId(""); if (directOrderId) setDirectOrderId(""); };
   const selectedEntry = entryOrderId && choices.find(row => row.order.id === entryOrderId);
   const detail = view && orders.find(row => row.order.id === view.order);
   const detailRecord = detail && view?.record ? detail.records.find(r => r.id === view.record) : undefined;
   let rowIndex = 0;
   const rowCount = visible.reduce((n, r) => n + Math.max(1, r.records.length), 0);
 
-  if (selectedEntry && data.canLoad) return <div dir={dir}><SalesLoadingEntry key={selectedEntry.order.id} order={selectedEntry.order} records={selectedEntry.records} tt={tt} onBack={() => setEntryOrderId("")} onSaved={() => { setEntryOrderId(""); setNotice(true); void refresh(); }}/></div>;
+  if (selectedEntry && data.canLoad) return <div dir={dir}><SalesLoadingEntry key={selectedEntry.order.id} order={selectedEntry.order} records={selectedEntry.records} tt={tt} onBack={exitEntry} onSaved={() => { exitEntry(); setNotice(true); if (!directOrderId) void refresh(); }}/></div>;
 
   return <div dir={dir} className="space-y-3" data-testid="sales-loading-dashboard">
     <div className={`${card} flex flex-wrap items-center gap-2`}>
@@ -135,25 +187,26 @@ export function SalesLoadingView({ initialOrderId = "", initialAction = "", init
       <div className="relative"><button type="button" className={blue} onClick={() => setReportsOpen(v => !v)} aria-expanded={reportsOpen}><FileText className="h-4 w-4"/>{tt("sales_loading.reports", "Reports")}</button>
         {reportsOpen && <div className="absolute end-0 z-20 mt-1 w-44 rounded-lg border bg-white p-1 text-sm shadow-lg dark:border-slate-700 dark:bg-slate-950"><button type="button" onClick={() => { setReportsOpen(false); window.print(); }} className="w-full rounded-md p-2 text-start hover:bg-slate-100 dark:hover:bg-slate-800">{tt("sales_loading.print", "Print Register")}</button><button type="button" onClick={() => { setFilter(f => ({ ...f, status: "loaded" })); setReportsOpen(false); }} className="w-full rounded-md p-2 text-start hover:bg-slate-100 dark:hover:bg-slate-800">{tt("sales_loading.confirmed", "Confirmed Sales Loading")}</button></div>}
       </div>
-      <button type="button" className={blue} aria-haspopup="dialog" aria-expanded={filterOpen} onClick={() => { setFilterDraft(filter); setFilterOpen(true); }}><Filter className="h-4 w-4"/>{searchLabel}</button>
+      <button type="button" className={blue} aria-haspopup="dialog" aria-expanded={filterOpen} onClick={() => setFilterOpen(true)}><Filter className="h-4 w-4"/>{searchLabel}</button>
       <button type="button" onClick={() => void refresh()} className={btn} aria-label={tt("sales_loading.refresh", "Refresh")}><RefreshCw className="h-4 w-4"/></button>
       {data.canLoad && <button type="button" className={green} disabled={isLoading} onClick={() => { setPicked(""); setPicker(true); }}><Plus className="h-4 w-4"/>{tt("sales_loading.new", "New Loading")}</button>}
     </div>
     {notice && <p role="status" className="rounded-md bg-emerald-50 px-3 py-2 font-semibold text-emerald-800">{tt("sales_loading.saved", "Sales Loading saved")}</p>}
-    {(error || (!isLoading && entryOrderId && !selectedEntry)) && <p role="alert" className="rounded-md bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800">{error ? tt("sales_loading.load_error", "Sales Loading is unavailable. Refresh to try again.") : tt("sales_loading.entry_unavailable", "Loading is not available for this Sales Booking.")}</p>}
+    {(error || (!isLoading && entryOrderId && !selectedEntry)) && <div role="alert" className="rounded-md bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800">{error ? tt("sales_loading.load_error", "Sales Loading is unavailable. Refresh to try again.") : tt("sales_loading.entry_unavailable", "Loading is not available for this Sales Booking.")}{directOrderId && <button type="button" className={`${btn} ms-3`} onClick={exitEntry}>{tt("plrf.back_to_dashboard", "Dashboard")}</button>}</div>}
+    {!data.complete && <p role="status" className="rounded-md bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">{translateHeader(lang, "Only part of this scope is shown. Narrow by country, branch, booking or date for complete totals.")}</p>}
     <div className="grid gap-3 lg:grid-cols-[0.95fr_1fr_1.1fr]">
       <section className={card}><h2 className="mb-2 text-xs font-extrabold uppercase">{tt("sales_loading.summary", "Sales Loading Summary")}</h2><dl className="space-y-1.5 text-xs sm:text-sm">
-        {([["sales_loading.total_bills", "Total Bills", visible.length, ""], ["sales_loading.total_loading", "Total Loading", sum("loading"), "text-blue-700"], ["sales_loading.total_received", "Total Received", sum("received"), "text-emerald-700"], ["sales_loading.balance", "Balance (Remaining)", sum("balance"), "bg-amber-50 dark:bg-amber-950"]] as const).map(([key, name, val, style]) => <div key={key} className={`flex justify-between gap-2 rounded px-2 py-0.5 ${style}`}><dt>{tt(key, name)}</dt><dd className="font-bold tabular-nums" dir="ltr">{val}</dd></div>)}
+        {([["sales_loading.total_bills", "Total Bills", visible.length, ""], ["sales_loading.total_loading", "Total Loading", sum("loading"), "text-blue-700"], ["sales_loading.total_received", "Total Received", sum("received"), "text-emerald-700"], ["sales_loading.balance", "Balance (Remaining)", sum("balance"), "bg-amber-50 dark:bg-amber-950"]] as const).map(([key, name, val, style]) => <div key={key} className={`flex justify-between gap-2 rounded px-2 py-0.5 ${style}`}><dt>{tt(key, name)}</dt><dd className="font-bold tabular-nums" dir="ltr">{data.complete && !isLoading && !error ? val : "–"}</dd></div>)}
       </dl></section>
-      <section className={card}><h2 className="mb-2 text-xs font-extrabold uppercase">{tt("sales_loading.status", "Loading Status")}</h2><table className="w-full text-xs sm:text-sm"><thead className="bg-slate-100 text-xs uppercase dark:bg-slate-800"><tr><th className="p-1 text-start">{tt("sales_loading.status_col", "Status")}</th><th className="p-1 text-end">{tt("sales_loading.bills", "Bills")}</th><th className="p-1 text-end">%</th></tr></thead><tbody>{statuses.map(s => <tr key={s}><td className={`p-1 font-semibold ${tones[s]}`}><span className="me-1" aria-hidden>●</span>{statusLabel(s)}</td><td className="p-1 text-end font-bold">{statusCounts[s]}</td><td className="p-1 text-end font-bold">{(visible.length ? statusCounts[s] / visible.length * 100 : 0).toFixed(1)}%</td></tr>)}</tbody></table></section>
-      <section className={card}><h2 className="mb-2 text-xs font-extrabold uppercase">{tt("sales_loading.country_summary", "Country Wise Loading")}</h2><div className="max-h-32 overflow-auto"><table className="w-full text-xs sm:text-sm"><thead className="bg-slate-100 text-xs uppercase dark:bg-slate-800"><tr><th className="p-1 text-start">{tt("sales_loading.country", "Country")}</th><th className="p-1 text-end">{tt("sales_loading.currency", "Currency")}</th><th className="p-1 text-end">{tt("sales_loading.bills", "Bills")}</th><th className="p-1 text-end">{tt("sales_loading.amount", "Amount")}</th></tr></thead><tbody>{[...countries.values()].map((r, i) => <tr key={i} className="font-semibold"><td className="p-1">{r.country || "–"}</td><td className="p-1 text-end">{r.currency || "–"}</td><td className="p-1 text-end">{r.bills}</td><td className="p-1 text-end">{data.financials && r.currency ? dollar(r.amount) : "–"}</td></tr>)}</tbody></table></div></section>
+      <section className={card}><h2 className="mb-2 text-xs font-extrabold uppercase">{tt("sales_loading.status", "Loading Status")}</h2><table className="w-full text-xs sm:text-sm"><thead className="bg-slate-100 text-xs uppercase dark:bg-slate-800"><tr><th className="p-1 text-start">{tt("sales_loading.status_col", "Status")}</th><th className="p-1 text-end">{tt("sales_loading.bills", "Bills")}</th><th className="p-1 text-end">%</th></tr></thead><tbody>{statuses.map(s => <tr key={s}><td className={`p-1 font-semibold ${tones[s]}`}><span className="me-1" aria-hidden>●</span>{statusLabel(s)}</td><td className="p-1 text-end font-bold">{data.complete && !isLoading && !error ? statusCounts[s] : "–"}</td><td className="p-1 text-end font-bold">{data.complete && !isLoading && !error ? `${(visible.length ? statusCounts[s] / visible.length * 100 : 0).toFixed(1)}%` : "–"}</td></tr>)}</tbody></table></section>
+      <section className={card}><h2 className="mb-2 text-xs font-extrabold uppercase">{tt("sales_loading.country_summary", "Country Wise Loading")}</h2><div className="max-h-32 overflow-auto"><table className="w-full text-xs sm:text-sm"><thead className="bg-slate-100 text-xs uppercase dark:bg-slate-800"><tr><th className="p-1 text-start">{tt("sales_loading.country", "Country")}</th><th className="p-1 text-end">{tt("sales_loading.currency", "Currency")}</th><th className="p-1 text-end">{tt("sales_loading.bills", "Bills")}</th><th className="p-1 text-end">{tt("sales_loading.amount", "Amount")}</th></tr></thead><tbody>{(data.complete && !isLoading && !error ? [...countries.values()] : []).map((r, i) => <tr key={i} className="font-semibold"><td className="p-1">{r.country || "–"}</td><td className="p-1 text-end">{r.currency || "–"}</td><td className="p-1 text-end">{r.bills}</td><td className="p-1 text-end">{data.financials && r.currency ? dollar(r.amount) : "–"}</td></tr>)}</tbody></table></div></section>
     </div>
     <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <div className="flex items-center justify-between bg-gradient-to-r from-blue-700 to-blue-800 px-3 py-2 text-white"><h2 className="flex items-center gap-2 text-sm font-bold uppercase"><Truck className="h-5 w-5"/>{tt("sales_loading.list", "Sales Loading List")}{filter.country ? ` (${countryChoices.find(([id]) => id === filter.country)?.[1] ?? "–"})` : ""}</h2><span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">{rowCount} {tt("sales_loading.records", "Records")}</span></div>
+      <div className="flex items-center justify-between bg-gradient-to-r from-blue-700 to-blue-800 px-3 py-2 text-white"><h2 className="flex items-center gap-2 text-sm font-bold uppercase"><Truck className="h-5 w-5"/>{tt("sales_loading.list", "Sales Loading List")}{filter.country ? ` (${countryChoices.find(option => option.value === filter.country)?.label ?? "–"})` : ""}</h2><span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">{rowCount} {tt("sales_loading.records", "Records")}</span></div>
       <div className="overflow-x-auto"><table className="w-full min-w-[1250px] text-xs"><thead className="bg-slate-100 text-[11px] dark:bg-slate-800"><tr>{[
         ["", "#"], ["sales_loading.entry_no", "Loading Entry No. / Date"], ["sales_loading.booking_no", "Sales Booking No. / Date"], ["sales_loading.vessel_bl", "Vessel Name / B/L Number"], ["sales_loading.branch", "Branch Name (Main / City Branch)"], ["sales_loading.posted_by", "User Name (Posted By)"], ["sales_loading.purchase_dr", "Purchase DR (Acc. No. / Name)"], ["sales_loading.sales_cr", "Sales CR (Acc. No. / Name)"], ["sales_loading.goods", "Goods Name (Brand / Size)"], ["sales_loading.lot", "Lot Name"], ["sales_loading.qty_unit", "Qty (Unit)"], ["sales_loading.weight", "Weight (KG) Gross / Net"], ["sales_loading.load_route", "Loading Country / Port"], ["sales_loading.receive_route", "Received Country / Port"], ["sales_loading.actions", "Actions"],
       ].map(([key, fallback]) => <th key={key} scope="col" className="border-e border-slate-200 px-2 py-2.5 text-start font-bold dark:border-slate-700">{key ? tt(key, fallback) : fallback}</th>)}</tr></thead><tbody>
-        {!visible.length && <tr><td colSpan={15} className="p-8 text-center text-slate-500">{isLoading ? tt("sales_loading.wait", "Loading sales bookings…") : tt("sales_loading.empty", "No matching sales loading records")}</td></tr>}
+        {!visible.length && <tr><td colSpan={15} className="p-8 text-center text-slate-500">{isLoading ? tt("sales_loading.wait", "Loading sales bookings…") : data.complete ? tt("sales_loading.empty", "No matching sales loading records") : "–"}</td></tr>}
         {visible.flatMap(({ order, records, status }) => (records.length ? records : [undefined]).map(r => {
           const rowId = r?.id ?? order.id;
           const goods: LoadedLine[] = r?.goods ?? order.goods;
@@ -178,14 +231,7 @@ export function SalesLoadingView({ initialOrderId = "", initialAction = "", init
         }))}
       </tbody></table></div>
     </section>
-    {filterOpen && <Dialog title={searchLabel} onClose={() => setFilterOpen(false)} tt={tt}><form className="space-y-3" onSubmit={event => { event.preventDefault(); setFilter(filterDraft); setFilterOpen(false); }}>
-      <label className="relative block"><Search aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-3 my-auto h-4 w-4 text-slate-500"/><input type="search" autoFocus aria-label={tt("sales_loading.search", "Search bill, customer, goods…")} value={filterDraft.query} onChange={e => setFilterDraft(f => ({ ...f, query: e.target.value }))} placeholder={tt("sales_loading.search", "Search bill, customer, goods…")} className={`${selectClass} w-full ps-9`}/></label>
-      <label className="grid gap-1 text-sm">{tt("sales_loading.country", "Country")}<select className={selectClass} value={filterDraft.country} onChange={e => setFilterDraft(f => ({ ...f, country: e.target.value, mainBranch: "", cityBranch: "" }))}><option value="">{tt("sales_loading.all", "All")}</option>{countryChoices.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>
-      <label className="grid gap-1 text-sm">{tt("sales_loading.main_branch", "Main Branch")}<select className={selectClass} value={filterDraft.mainBranch} onChange={e => setFilterDraft(f => ({ ...f, mainBranch: e.target.value, cityBranch: "" }))}><option value="">{tt("sales_loading.all", "All")}</option>{mainChoices.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>
-      <label className="grid gap-1 text-sm">{tt("sales_loading.city_branch", "City Branch")}<select className={selectClass} value={filterDraft.cityBranch} onChange={e => setFilterDraft(f => ({ ...f, cityBranch: e.target.value }))}><option value="">{tt("sales_loading.all", "All")}</option>{cityChoices.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>
-      <label className="grid gap-1 text-sm">{tt("sales_loading.status", "Loading Status")}<select className={selectClass} value={filterDraft.status} onChange={e => setFilterDraft(f => ({ ...f, status: e.target.value }))}><option value="">{tt("sales_loading.all", "All")}</option>{statuses.map(s => <option key={s} value={s}>{statusLabel(s)}</option>)}</select></label>
-      <div className="flex justify-end gap-2"><button className={btn} type="button" onClick={() => setFilterDraft(initialFilter)}>{tt("sales_loading.reset", "Reset")}</button><button className={blue}>{tt("sales_loading.apply", "Apply Filters")}</button></div>
-    </form></Dialog>}
+    <AdvancedRegisterSearch open={filterOpen} onClose={() => setFilterOpen(false)} onApply={setFilter} value={filter} fields={searchFields} lang={lang}/>
     {picker && <Dialog title={tt("sales_loading.new", "New Loading")} onClose={() => setPicker(false)} tt={tt}><form className="space-y-3" onSubmit={event => { event.preventDefault(); if (picked) { setEntryOrderId(picked); setPicker(false); } }}>
       <label className="grid gap-1 text-sm">{tt("sales_loading.select_booking", "Select transferred Sales Booking")}<select autoFocus required className={selectClass} value={picked} onChange={e => setPicked(e.target.value)}><option value="">–</option>{choices.map(({ order }) => <option key={order.id} value={order.id}>{bookingName(order)}</option>)}</select></label>
       {!choices.length && !isLoading && <p className="text-sm text-slate-500">{tt("sales_loading.none_ready", "No transferred booking is ready for loading.")}</p>}

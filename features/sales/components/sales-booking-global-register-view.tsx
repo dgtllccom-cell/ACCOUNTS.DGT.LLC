@@ -33,6 +33,10 @@ import { InvoiceDocumentView } from "@/components/invoices/invoice-document-view
 import { EntryMethodSelector } from "@/features/document-intelligence/components/entry-method-selector";
 import { SalesOrderWizard } from "@/features/sales/components/sales-order-wizard.jsx";
 
+import { AdvancedRegisterSearch } from "@/components/purchase-ui/advanced-register-search";
+import { bookingSearchFields, bookingSearchRow } from "@/lib/sales/booking-register-search";
+import { loadScopedRegister, registerPageParams, type RegisterCursor } from "@/lib/sales/register-pagination";
+import { matchesRegisterSearch } from "@/lib/sales/register-search";
 import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 // @ts-expect-error JSX view module
 import { SalesBookingTransferReport } from "./sales-booking-transfer-report.jsx";
@@ -129,6 +133,8 @@ export function SalesBookingGlobalRegisterView({
 
   // Filters
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<Record<string, string>>({});
   const [filterCountry, setFilterCountry] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [localScopeFilter, setLocalScopeFilter] = useState<"local" | "all">(
@@ -159,20 +165,36 @@ export function SalesBookingGlobalRegisterView({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const requests = useRef(0);
+  const [reportCoverage, setReportCoverage] = useState(true);
   const loadReports = useCallback(async () => {
+    const request = ++requests.current;
+    const current = () => request === requests.current;
     setLoading(true);
     setError("");
     try {
-      const res = await apiGet<{ reports: any[] }>(
-        `/api/erp/sales/booking-journal-report?limit=500&lang=${encodeURIComponent(lang)}`
-      );
-      setReports(Array.isArray(res?.reports) ? res.reports : []);
+      if (isLocalSalesPage) {
+        const res = await apiGet<{ reports: any[] }>(`/api/erp/sales/booking-journal-report?limit=500&lang=${encodeURIComponent(lang)}`);
+        if (current()) setReports(Array.isArray(res?.reports) ? res.reports : []);
+        return;
+      }
+      const result = await loadScopedRegister(async (cursor) => {
+        const params = registerPageParams(cursor);
+        params.set("limit", "250");
+        params.set("lang", lang);
+        const res = await apiGet<{ reports: any[]; nextCursor?: RegisterCursor | null }>(`/api/erp/sales/booking-journal-report?${params}`);
+        return { rows: res.reports || [], nextCursor: res.nextCursor };
+      }, { current });
+      if (current()) { setReports(result.rows); setReportCoverage(result.complete); }
     } catch (err: any) {
-      setError(err?.message || "Failed to load sales booking register");
+      if (current()) {
+        if (!isLocalSalesPage) setReports([]);
+        setError(err?.message || "Failed to load sales booking register");
+      }
     } finally {
-      setLoading(false);
+      if (current()) setLoading(false);
     }
-  }, [lang]);
+  }, [isLocalSalesPage, lang]);
 
   useEffect(() => {
     if (!isFormMode) {
@@ -229,9 +251,12 @@ export function SalesBookingGlobalRegisterView({
     return Array.from(set).sort();
   }, [reports]);
 
+  const searchRows = useMemo(() => reports.map(r => bookingSearchRow(r, isRowTransferred(r))), [reports, isRowTransferred]);
+  const searchFields = useMemo(() => bookingSearchFields(searchRows, tr), [searchRows, tr]);
   const filteredRows = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return reports.filter((r) => {
+    return reports.filter((r, index) => {
+      if (!isLocalSalesPage && !matchesRegisterSearch(searchRows[index], advancedFilters)) return false;
       if (localScopeFilter === "local" && !isRowLocalSale(r)) return false;
       if (filterCountry !== "all" && r.countryName !== filterCountry) return false;
       if (filterStatus !== "all") {
@@ -260,12 +285,12 @@ export function SalesBookingGlobalRegisterView({
       }
       return true;
     });
-  }, [reports, localScopeFilter, isRowLocalSale, filterCountry, filterStatus, isRowTransferred, searchQuery]);
+  }, [reports, localScopeFilter, isRowLocalSale, filterCountry, filterStatus, isRowTransferred, searchQuery, isLocalSalesPage, searchRows, advancedFilters]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filterCountry, filterStatus, localScopeFilter]);
+  }, [searchQuery, filterCountry, filterStatus, localScopeFilter, advancedFilters]);
 
   // Awaiting transfer in red at top, transferred in black at bottom (matching Purchase Booking)
   const sortedRows = useMemo(() => {
@@ -646,6 +671,8 @@ export function SalesBookingGlobalRegisterView({
                     setReportsOpen(false);
                     handleExportCsv();
                   }}
+                  disabled={!isLocalSalesPage && (!reportCoverage || loading)}
+                  title={!reportCoverage ? tr("Register limit reached; displayed results and totals are incomplete.") : undefined}
                   className="w-full text-start rounded-lg px-3 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:text-slate-200 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
                 >
                   <Download className="h-3.5 w-3.5" />
@@ -667,6 +694,16 @@ export function SalesBookingGlobalRegisterView({
             />
           </div>
 
+          {!isLocalSalesPage && <>
+            <button type="button" onClick={() => setAdvancedOpen(true)} aria-haspopup="dialog" aria-expanded={advancedOpen}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-bold text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200">
+              <Search className="h-4 w-4" aria-hidden="true" />{tr("Advanced Search & Filter")}
+              {Object.keys(advancedFilters).length > 0 && <span>({Object.keys(advancedFilters).length})</span>}
+            </button>
+            <AdvancedRegisterSearch open={advancedOpen} onClose={() => setAdvancedOpen(false)} onApply={setAdvancedFilters}
+              value={advancedFilters} fields={searchFields} lang={lang} />
+          </>}
+          {isLocalSalesPage && <>
           {/* Country filter */}
           <select
             value={filterCountry}
@@ -691,6 +728,8 @@ export function SalesBookingGlobalRegisterView({
             <option value="pending">{tr("Awaiting Transfer")}</option>
             <option value="transferred">{tr("Transferred")}</option>
           </select>
+
+          </>}
 
           {/* Local Sales scope toggle */}
           {isLocalSalesPage && (
@@ -852,6 +891,7 @@ export function SalesBookingGlobalRegisterView({
         </div>
       </div>
 
+      {!isLocalSalesPage && !reportCoverage && <p role="status" className="rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900">{tr("Register limit reached; displayed results and totals are incomplete.")}</p>}
       {/* 3. Main Register Table */}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className={cn("flex items-center justify-between px-4 py-2.5 text-white", accentHeaderBg)}>
@@ -961,8 +1001,8 @@ export function SalesBookingGlobalRegisterView({
                         </td>
                         <td className={cell}>{stacked(form.mainBranchName || r.countryName, r.branchName || form.branchName)}</td>
                         <td className={cell}>{form.transferAudit?.userName || r.postedByName || r.createdByName || form.createdByName || "—"}</td>
-                        <td className={cell}>{stacked(form.customerAccountNo, form.customerAccountName || r.customerName)}</td>
-                        <td className={cell}>{stacked(form.salesAccountNo || r.salesAccountNumber, form.salesAccountName || r.salesAccountName)}</td>
+                        <td className={cell}>{stacked(form.customerAccountNo, r.customerName || form.customerAccountName)}</td>
+                        <td className={cell}>{stacked(form.salesAccountNo || r.salesAccountNumber, r.salesAccountName || form.salesAccountName)}</td>
                         <td className={cell}>{stacked(r.productName || goods0.goodsName, [brand, size, goods0.hsCode].filter(Boolean).join(" · "))}</td>
                         <td className={cn(cell, "font-mono")}>{lots.join(", ") || goods0.stockLotNo || goods0.lotNo || "—"}</td>
                         <td className={cn(cell, "whitespace-nowrap text-end tabular-nums")}>{stacked(Number(r.quantity || 0).toLocaleString(lang), r.unit)}</td>
