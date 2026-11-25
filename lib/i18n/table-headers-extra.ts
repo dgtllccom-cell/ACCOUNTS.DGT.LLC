@@ -10,6 +10,8 @@ type Row = { ur: string; ar: string; fa: string; ps: string };
 const r = (ur: string, ar: string, fa: string, ps: string): Row => ({ ur, ar, fa, ps });
 
 export const HEADER_EXTRA: Record<string, Row> = {
+  "SALES NO.": r("سیلز نمبر", "رقم البيع", "شماره فروش", "د پلور شمېره"),
+  "PURCHASE NO.": r("پرچیز نمبر", "رقم الشراء", "شماره خرید", "د پېرود شمېره"),
   "ADVANCE AMOUNT DUE": r("بقایا ایڈوانس", "الدفعة المقدمة المستحقة", "پیش‌پرداخت باقیمانده", "پاتې مخکېنۍ تادیه"),
   "RECEIPT EXCEEDS THE OUTSTANDING ADVANCE AMOUNT.": r("وصولی بقایا ایڈوانس سے زیادہ ہے۔", "الإيصال يتجاوز الدفعة المقدمة المستحقة.", "مبلغ رسید بیش از پیش‌پرداخت باقیمانده است.", "رسید له پاتې مخکېنۍ تادیې ډېر دی."),
 

@@ -11,11 +11,6 @@ export type PaymentVoucherCopies = {
   debit: PaymentVoucherSide; credit: PaymentVoucherSide;
 };
 
-const BILL_LABELS: Record<PaymentVoucherCopies["documentKind"], Record<SupportedLanguage, string>> = {
-  sales: { en: "Sales No.", ur: "سیلز نمبر", ar: "رقم البيع", fa: "شماره فروش", ps: "د پلور شمېره" },
-  purchase: { en: "Purchase No.", ur: "پرچیز نمبر", ar: "رقم الشراء", fa: "شماره خرید", ps: "د پېرود شمېره" },
-};
-
 export function buildPaymentVoucherCopies(data: PaymentVoucherCopies, lang: SupportedLanguage): string {
   const tr = (key: Parameters<typeof t>[1], fallback: string) => t(lang, key, fallback);
   const h = (label: string) => translateHeader(lang, label);
@@ -23,7 +18,7 @@ export function buildPaymentVoucherCopies(data: PaymentVoucherCopies, lang: Supp
   const rtl = ["ar", "fa", "ps", "ur"].includes(lang);
   const money = new Intl.NumberFormat(lang, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
   const goods = [...new Set((data.goodsNames ?? []).map(name => name.trim()).filter(Boolean))];
-  const billLabel = BILL_LABELS[data.documentKind][lang];
+  const billLabel = h(data.documentKind === "purchase" ? "Purchase No." : "Sales No.");
   const renderSide = (side: "DR" | "CR", entry: PaymentVoucherSide) => {
     const label = h(side === "DR" ? "Debit" : "Credit");
     const details = [
