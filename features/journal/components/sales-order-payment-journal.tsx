@@ -64,6 +64,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
+import { RoznamchaEntryDialog } from "@/features/roznamcha/components/roznamcha-entry-dialog";
 import { matchesSalesReceiptQueue, reviewedSalesSettlement, salesWorkflowDestination, type SalesReceiptQueue } from "@/lib/sales/payment-workflow";
 import { useRouter } from "next/navigation";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
@@ -3962,7 +3963,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
   const reviewedMethod = receiptQueue === "account-transfer" ? "transfer" : receiptQueue === "cash" ? "cash"
     : /cash|petty/i.test([ledgerCode(reviewedLedger), ledgerName(reviewedLedger)].join(" ")) ? "cash" : "bank";
   const canSaveReviewed = Boolean(reviewedLedger && reviewedDraft.reference.trim() && Number.isFinite(Number(reviewedDraft.amount))
-    && Number(reviewedDraft.amount) > 0 && confirmedReceiptCurrency);
+    && Number(reviewedDraft.amount) > 0 && confirmedReceiptCurrency && /^\d{4}-\d{2}-\d{2}$/.test(paymentDate));
 
   // Final Action POST handler
   async function handleProcessPayment() {
@@ -4402,6 +4403,13 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
 
           {/* 28. ACTION */}
           <td className="py-3 px-2 text-center" onClick={(e) => e.stopPropagation()}>
+            {(receiptQueue || (activeMode === "credit" && row.form_data?.transferTrace?.settlement)) && (
+              <button type="button" onClick={() => selectOrder(row.id)}
+                className="me-1 inline-flex h-7 w-7 items-center justify-center rounded-md border border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950"
+                aria-label={`${translateHeader(currentLanguage, "Payment Entry")} ${row.sales_order_no}`}>
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+            )}
             <ViewportActionMenu
               ariaLabel={translateHeader(currentLanguage, "Row actions")}
               buttonClassName="inline-flex items-center justify-center h-7 w-7 rounded-md border border-slate-200 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 transition text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 shadow-sm"
@@ -4792,8 +4800,80 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
       </div>
 
 
+      {selected && useReviewedReceiptForm && (
+        <RoznamchaEntryDialog
+          title={translateHeader(currentLanguage, "New Roznamcha Entry")}
+          description={`${translateHeader(currentLanguage, receiptQueueLabel || "Credit Payment / Receipt")} · ${selected.sales_order_no}`}
+          closeLabel={translateHeader(currentLanguage, "Close")}
+          onClose={() => setSelectedId("")}
+          busy={processingPayment}
+        >
+          <div className="my-3 grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs sm:grid-cols-4 dark:border-slate-700 dark:bg-slate-800">
+            {[
+              ["Sales No.", selected.sales_order_no],
+              ["Country", rowCountryName(selected) || "-"],
+              ["Branch", rowBranchName(selected) || "-"],
+              ["Currency", confirmedReceiptCurrency || "-"],
+            ].map(([label, value]) => (
+              <div key={label}><div className="font-semibold text-slate-500">{translateHeader(currentLanguage, label)}</div><div className="font-bold">{value}</div></div>
+            ))}
+          </div>
+            {!acceptedSettlement && (
+              <section role="alert" className="space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                <p className="text-sm font-semibold">{translateHeader(currentLanguage, "Receipt paused: ask Accounts to verify the original bill and its posted settlement before recording payment.")}</p>
+                <button type="button" className="text-sm font-bold underline" onClick={() => {
+                  const local = isLocalSalesFormData(selected.form_data);
+                  router.push(`/dashboard/sales/sales-order/view?id=${encodeURIComponent(selected.id)}&transfer=1${local ? "&source=local" : ""}`);
+                }}>{translateHeader(currentLanguage, "View Original Sales Bill")}</button>
+              </section>
+            )}
+            {acceptedSettlement && (
+              <section className="space-y-2 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+                <h3 className="font-bold">{translateHeader(currentLanguage, "Payment Entry")}</h3>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <label className="grid gap-1">
+                    <span>{translateHeader(currentLanguage, "Receiving Account")}</span>
+                    <select className="rounded border bg-background px-2 py-1.5" aria-label={translateHeader(currentLanguage, "Receiving Account")} value={reviewedDraft.ledgerId}
+                      onChange={e => setReviewedReceiptInput({ ...reviewedDraft, ledgerId: e.target.value })}>
+                      <option value="">—</option>
+                      {reviewedReceiptLedgers.map(l => <option key={ledgerId(l)} value={ledgerId(l)}>{ledgerCode(l)} · {ledgerName(l)} · {ledgerCurrency(l)}</option>)}
+                    </select>
+                  </label>
+                  <label className="grid gap-1">
+                    <span>{translateHeader(currentLanguage, "Receipt Reference")}</span>
+                    <input className="rounded border bg-background px-2 py-1.5" maxLength={140} value={reviewedDraft.reference}
+                      onChange={e => setReviewedReceiptInput({ ...reviewedDraft, reference: e.target.value })}/>
+                  </label>
+                  <label className="grid gap-1">
+                    <span>{translateHeader(currentLanguage, "Receipt Amount")} {confirmedReceiptCurrency}</span>
+                    <input className="rounded border bg-background px-2 py-1.5" type="number" step="0.01" min="0.01" value={reviewedDraft.amount}
+                      onChange={e => setReviewedReceiptInput({ ...reviewedDraft, amount: e.target.value })}/>
+                  </label>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="grid gap-1 text-xs font-semibold">
+                    <span>{translateHeader(currentLanguage, "Entry Date")}</span>
+                    <input type="date" className="rounded border bg-background px-2 py-1.5" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} />
+                  </label>
+                  <label className="grid gap-1 text-xs font-semibold">
+                    <span>{translateHeader(currentLanguage, "Remarks")}</span>
+                    <input className="rounded border bg-background px-2 py-1.5" maxLength={500} value={remarks} onChange={e => setRemarks(e.target.value)} />
+                  </label>
+                </div>
+                {paymentError && <p role="alert" className="text-red-700">{paymentError}</p>}
+                {paymentSuccess && <p role="status" className="text-emerald-700">{paymentSuccess}</p>}
+                <button type="button" onClick={() => void handleProcessPayment()} disabled={!canSaveReviewed || processingPayment}
+                  className="rounded bg-emerald-700 px-3 py-1.5 font-bold text-white disabled:opacity-50">
+                  {translateHeader(currentLanguage, "Post Receipt")}
+                </button>
+              </section>
+            )}
+
+        </RoznamchaEntryDialog>
+      )}
+
       {/* Ledger Cash Entry Panel (Modal) */}
-      {selected && (
+      {selected && !useReviewedReceiptForm && (
         <SimpleModal
           title={receiptQueueLabel ? `${translateHeader(currentLanguage, receiptQueueLabel)} - ${selected.sales_order_no}` : `Payment Entry - PO ${selected.sales_order_no}`}
           onClose={() => setSelectedId("")}
@@ -4843,47 +4923,6 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
             <div className="text-xs text-slate-500 font-semibold">
               {receiptQueueLabel ? translateHeader(currentLanguage, receiptQueueLabel) : activeMode === "advance" ? "Sales Advance Payment Entry" : activeMode === "credit" ? "Sales Credit Payment Entry" : activeMode === "remaining" ? "Sales Remaining Payment Entry" : "Sales Payment Entry"}
             </div>
-            {useReviewedReceiptForm && !acceptedSettlement && (
-              <section role="alert" className="space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
-                <p className="text-sm font-semibold">{translateHeader(currentLanguage, "Receipt paused: ask Accounts to verify the original bill and its posted settlement before recording payment.")}</p>
-                <button type="button" className="text-sm font-bold underline" onClick={() => {
-                  const local = isLocalSalesFormData(selected.form_data);
-                  router.push(`/dashboard/sales/sales-order/view?id=${encodeURIComponent(selected.id)}&transfer=1${local ? "&source=local" : ""}`);
-                }}>{translateHeader(currentLanguage, "View Original Sales Bill")}</button>
-              </section>
-            )}
-            {useReviewedReceiptForm && acceptedSettlement && (
-              <section className="space-y-2 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
-                <h3 className="font-bold">{translateHeader(currentLanguage, "Payment Entry")}</h3>
-                <div className="grid gap-3 md:grid-cols-3">
-                  <label className="grid gap-1">
-                    <span>{translateHeader(currentLanguage, "Receiving Account")}</span>
-                    <select className="rounded border bg-background px-2 py-1.5" aria-label={translateHeader(currentLanguage, "Receiving Account")} value={reviewedDraft.ledgerId}
-                      onChange={e => setReviewedReceiptInput({ ...reviewedDraft, ledgerId: e.target.value })}>
-                      <option value="">—</option>
-                      {reviewedReceiptLedgers.map(l => <option key={ledgerId(l)} value={ledgerId(l)}>{ledgerCode(l)} · {ledgerName(l)} · {ledgerCurrency(l)}</option>)}
-                    </select>
-                  </label>
-                  <label className="grid gap-1">
-                    <span>{translateHeader(currentLanguage, "Receipt Reference")}</span>
-                    <input className="rounded border bg-background px-2 py-1.5" maxLength={140} value={reviewedDraft.reference}
-                      onChange={e => setReviewedReceiptInput({ ...reviewedDraft, reference: e.target.value })}/>
-                  </label>
-                  <label className="grid gap-1">
-                    <span>{translateHeader(currentLanguage, "Receipt Amount")} {confirmedReceiptCurrency}</span>
-                    <input className="rounded border bg-background px-2 py-1.5" type="number" step="0.01" min="0.01" value={reviewedDraft.amount}
-                      onChange={e => setReviewedReceiptInput({ ...reviewedDraft, amount: e.target.value })}/>
-                  </label>
-                </div>
-                {paymentError && <p role="alert" className="text-red-700">{paymentError}</p>}
-                {paymentSuccess && <p role="status" className="text-emerald-700">{paymentSuccess}</p>}
-                <button type="button" onClick={() => void handleProcessPayment()} disabled={!canSaveReviewed || processingPayment}
-                  className="rounded bg-emerald-700 px-3 py-1.5 font-bold text-white disabled:opacity-50">
-                  {translateHeader(currentLanguage, "Post Receipt")}
-                </button>
-              </section>
-            )}
-
             {/* Already Transferred / Overpaid Warning Banner */}
             {(() => {
               const form = selected.form_data?.form || {};
