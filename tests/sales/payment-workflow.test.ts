@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesWorkflowDestination, salesWorkflowPayment } from "@/lib/sales/payment-workflow";
+import { linkedSalesBalanceReceipt, salesInvoiceReceiptHref, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesWorkflowDestination, salesWorkflowPayment } from "@/lib/sales/payment-workflow";
 
 describe.each([{ label: "Sales Booking", local: false }, { label: "Local Sale", local: true }])("$label payment routing", ({ local }) => {
   const original = { local, billNo: "SB / 001", orderId: "e73b8a60-042e-4ff5-a7e1-fce71c64a502" };
@@ -53,4 +53,37 @@ it("rejects missing and invalid approved settlement amounts and currency", () =>
     expect(reviewedSalesSettlement(settlement)).toBeNull();
   }
   expect(reviewedSalesSettlement({ finalCurrency: " aed ", originalAmount: "100", finalAmount: "367" })).toEqual({ currency: "AED", original: 100, final: 367 });
+});
+
+describe("linked Sales Roznamcha entry points", () => {
+  const settlement = { finalCurrency: "AED", originalAmount: 100, finalAmount: 367 };
+  const postedOrder = (paymentType: string, advancePercent = 0) => ({
+    ledger_posting_status: "posted", payment_status: "partially_paid", paid_amount: 20, remaining_amount: 80,
+    form_data: { form: { paymentType, advancePercent }, transferTrace: { settlement } },
+  });
+  it.each([
+    ["Invoice", "remaining", undefined],
+    ["Credit", "credit", undefined],
+    ["Cash", "remaining", "cash"],
+    ["Account Transfer", "remaining", "account-transfer"],
+  ])("uses the same posting stage from the order entry or Final for %s", (paymentType, kind, queue) => {
+    expect(linkedSalesBalanceReceipt(postedOrder(paymentType))).toEqual({ kind, queue });
+  });
+  it("does not enable a new receipt for unposted, fully paid, or advance-pending bills", () => {
+    expect(linkedSalesBalanceReceipt({ ...postedOrder("Invoice"), ledger_posting_status: "draft" })).toBeNull();
+    expect(linkedSalesBalanceReceipt({ ...postedOrder("Cash"), payment_status: "completed" })).toBeNull();
+    expect(linkedSalesBalanceReceipt({ ...postedOrder("Credit"), remaining_amount: 0 })).toBeNull();
+    expect(linkedSalesBalanceReceipt(postedOrder("Endorsement", 30))).toBeNull();
+    expect(linkedSalesBalanceReceipt(postedOrder("Endorsement", 20))).toEqual({ kind: "remaining", queue: undefined });
+  });
+  it.each(["sales_booking", "local_sales"])("links %s invoice to the original order UUID and invoice UUID", sourceModule => {
+    const invoice = { id: "b78ef105-dfe2-472c-8016-cae6f19de8af", sourceId: "e73b8a60-042e-4ff5-a7e1-fce71c64a502",
+      sourceTable: "sales_orders", sourceModule, docType: "commercial_invoice", txnKind: "sales", status: "finalized" };
+    const url = new URL(salesInvoiceReceiptHref(invoice)!, "https://example.com");
+    expect(url.pathname).toBe("/dashboard/journal/sales-order-payment/remaining");
+    expect(Object.fromEntries(url.searchParams)).toEqual({ orderId: invoice.sourceId, invoiceId: invoice.id });
+    for (const invalid of [{ status: "draft" }, { status: "void" }, { docType: "packing_list" }, { txnKind: "purchase" }, { sourceModule: "purchase_booking" }, { sourceTable: "purchase_orders" }, { sourceId: undefined }]) {
+      expect(salesInvoiceReceiptHref({ ...invoice, ...invalid })).toBeNull();
+    }
+  });
 });

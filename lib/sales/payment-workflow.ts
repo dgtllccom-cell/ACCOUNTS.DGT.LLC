@@ -39,8 +39,7 @@ export function matchesSalesReceiptQueue(row: {
 }, queue: SalesReceiptQueue) {
   const posted = /^(posted|transferred)$/i.test(String(row.ledger_posting_status ?? ""));
   const settled = /^(completed|paid)$/i.test(String(row.payment_status ?? ""));
-  const form = row.form_data?.form;
-  const selected = salesWorkflowPayment(row.form_data?.workflow?.paymentKind) ?? salesWorkflowPayment(form?.paymentType || form?.paymentCondition);
+  const selected = salesReceiptPaymentKind(row);
   return posted && !settled && selected === queue;
 }
 
@@ -73,4 +72,51 @@ export function planSalesWorkflowReceipt(settlement: ReviewedSalesSettlement | n
     paid: Math.round((receipt.paidOriginal + originalReceipt) * 10000) / 10000,
     remaining: Math.round(Math.max(0, receipt.remainingOriginal - originalReceipt) * 10000) / 10000,
   };
+}
+
+type SalesReceiptOrder = {
+  ledger_posting_status?: unknown;
+  payment_status?: unknown;
+  paid_amount?: unknown;
+  remaining_amount?: unknown;
+  form_data?: {
+    form?: { paymentType?: unknown; paymentCondition?: unknown; advancePercent?: unknown };
+    workflow?: { paymentKind?: unknown };
+    transferTrace?: { settlement?: ReviewedSalesSettlement | null };
+  } | null;
+};
+
+export function salesReceiptPaymentKind(order: SalesReceiptOrder) {
+  const form = order.form_data?.form;
+  return salesWorkflowPayment(order.form_data?.workflow?.paymentKind) ?? salesWorkflowPayment(form?.paymentType || form?.paymentCondition);
+}
+
+/** Final is a reconciliation page, not a second payment kind. */
+export function linkedSalesBalanceReceipt(order: SalesReceiptOrder) {
+  if (!/^(posted|transferred)$/i.test(String(order.ledger_posting_status ?? "")) ||
+      /^(paid|completed)$/i.test(String(order.payment_status ?? ""))) return null;
+  const due = Number(order.remaining_amount);
+  if (!Number.isFinite(due) || due <= 0.01) return null;
+  const payment = salesReceiptPaymentKind(order);
+  if (payment === "cash" || payment === "account-transfer") return { kind: "remaining", queue: payment } as const;
+  if (payment === "credit") return { kind: "credit", queue: undefined } as const;
+  if (payment === "invoice") return { kind: "remaining", queue: undefined } as const;
+  const approved = reviewedSalesSettlement(order.form_data?.transferTrace?.settlement);
+  const advancePercent = Number(order.form_data?.form?.advancePercent ?? 0);
+  const paid = Number(order.paid_amount ?? 0);
+  if (!approved || !Number.isFinite(advancePercent) || advancePercent < 0 || advancePercent > 100 ||
+      (advancePercent > 0 && (!Number.isFinite(paid) || paid + 0.01 < approved.original * advancePercent / 100))) return null;
+  return { kind: "remaining", queue: undefined } as const;
+}
+
+export const SALES_RECEIPT_INVOICE_TYPES: readonly string[] = ["commercial_invoice", "export_invoice", "tax_invoice"];
+
+export function salesInvoiceReceiptHref(invoice: { id: string; sourceId?: string; sourceTable?: string; sourceModule: string; status: string; docType: string; txnKind: string }) {
+  if (invoice.txnKind !== "sales" || invoice.sourceTable !== "sales_orders" ||
+      (invoice.sourceModule !== "sales_booking" && invoice.sourceModule !== "local_sales") ||
+      invoice.status !== "finalized" || !SALES_RECEIPT_INVOICE_TYPES.includes(invoice.docType) ||
+      !invoice.sourceId) return null;
+  return `/dashboard/journal/sales-order-payment/remaining?${new URLSearchParams({
+    orderId: invoice.sourceId, invoiceId: invoice.id,
+  })}`;
 }

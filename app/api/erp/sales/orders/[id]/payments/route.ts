@@ -1,4 +1,5 @@
-import { matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement } from "@/lib/sales/payment-workflow";
+import { linkedSalesBalanceReceipt, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesReceiptPaymentKind, SALES_RECEIPT_INVOICE_TYPES } from "@/lib/sales/payment-workflow";
+import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { ApiClientError, apiCreated, apiOk, apiError, handleApiError } from "@/lib/api/response";
@@ -22,6 +23,8 @@ const paramsSchema = z.object({
 const salesOrderPaymentPostSchema = z.object({
   kind: z.string(),
   salesWorkflowQueue: z.enum(["cash","account-transfer"]).optional(),
+  linkedBalanceReceipt: z.literal(true).optional(),
+  salesInvoiceId: uuidSchema.optional(),
   entryDate: z.string(),
   amount: z.coerce.number().min(0.01),
   currencyCode: z.string(),
@@ -94,7 +97,7 @@ function buildSalesGoodsAuditRemark(orderRow: any, fallbackReference?: string | 
 
 async function assertLedgerMatchesSalesScope(sql: any, ledgerId: string, orderRow: any, label: string) {
   const rows = await sql`
-    select id, code, name, country_id, country_branch_id, city_branch_id
+    select id, code, name, currency, is_active, country_id, country_branch_id, city_branch_id
     from ledgers where id = ${ledgerId}::uuid and deleted_at is null
   `;
   let ledger = rows[0];
@@ -104,7 +107,7 @@ async function assertLedgerMatchesSalesScope(sql: any, ledgerId: string, orderRo
     // (ledgers.account_id is a separate FK, not the same UUID as ledgers.id). Resolve the
     // ledger linked to that account rather than failing outright.
     const byAccount = await sql`
-      select id, code, name, country_id, country_branch_id, city_branch_id
+      select id, code, name, currency, is_active, country_id, country_branch_id, city_branch_id
       from ledgers where account_id = ${ledgerId}::uuid and deleted_at is null
     `;
     if (byAccount[0]) ledger = byAccount[0];
@@ -264,13 +267,16 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     const orderRow = order as any;
     const form = orderRow.form_data?.form || {};
     const reviewedSettlement = orderRow.form_data?.transferTrace?.settlement;
-    const reviewedReceipt = Boolean(body.salesWorkflowQueue || (body.kind === "credit" && reviewedSettlement));
+    const reviewedReceipt = Boolean(body.linkedBalanceReceipt || body.salesWorkflowQueue || (body.kind === "credit" && reviewedSettlement));
     if (body.salesWorkflowQueue) {
       const method = body.typeDetails?.paymentMethod;
       if (!matchesSalesReceiptQueue(orderRow, body.salesWorkflowQueue) || body.kind !== "remaining"
         || !(body.salesWorkflowQueue === "cash" ? method === "cash" : method === "bank" || method === "transfer")) {
         throw new ApiClientError("This sale does not match the selected receipt queue.", { status: 409, code: "SALES_RECEIPT_QUEUE_MISMATCH" });
       }
+    }
+    if (body.salesInvoiceId && !body.linkedBalanceReceipt) {
+      throw new ApiClientError("An invoice receipt must use the linked sales payment form.", { status: 409, code: "SALES_INVOICE_RECEIPT_MISMATCH" });
     }
     if (reviewedReceipt) {
       if (!reviewedSalesSettlement(reviewedSettlement)) {
@@ -313,6 +319,14 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     // accounts.id (see the compatibility fallback above), which is a different UUID.
     const resolvedDebitLedgerId = debitLedger.id;
     const resolvedCreditLedgerId = creditLedger.id;
+    if (body.linkedBalanceReceipt && (
+      debitLedger.is_active !== true || String(debitLedger.currency).toUpperCase() !== String(body.currencyCode).toUpperCase() ||
+      (orderRow.country_branch_id && debitLedger.country_branch_id && orderRow.country_branch_id !== debitLedger.country_branch_id)
+    )) {
+      throw new ApiClientError("Select an active receiving account in the approved currency and sales branch.", {
+        status: 409, code: "SALES_RECEIVING_ACCOUNT_MISMATCH",
+      });
+    }
     if (resolvedDebitLedgerId === resolvedCreditLedgerId) {
       throw new Error("Debit and credit ledgers must be different for sales payment posting.");
     }
@@ -370,6 +384,28 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
         if (bodyAmountUSD > remAdv + tolerance) throw new Error(`Advance receipt amount cannot exceed remaining advance balance (${remAdv.toFixed(2)}).`);
       }
       const locked = lockedRows[0];
+      if (body.linkedBalanceReceipt) {
+        const stage = locked && linkedSalesBalanceReceipt(locked);
+        if (!stage || stage.kind !== body.kind || stage.queue !== body.salesWorkflowQueue) {
+          throw new ApiClientError("Receipt is not available for this sales bill and payment stage.", { status: 409, code: "SALES_RECEIPT_QUEUE_MISMATCH" });
+        }
+        const invoiceSale = salesReceiptPaymentKind(locked) === "invoice";
+        if (invoiceSale || body.salesInvoiceId) {
+          // Match the original UUID, not the displayed number or a second invoice's amount.
+          const invoices = invoiceSale ? await sql`
+            select i.id from public.business_edit_invoices i
+            where i.source_id = ${params.id}::uuid and i.source_table = 'sales_orders'
+              and i.txn_kind = 'sales' and i.source_module = ${isLocalSalesFormData(locked.form_data) ? 'local_sales' : 'sales_booking'}
+              and i.status = 'finalized' and i.deleted_at is null
+              and i.doc_type = any(${[...SALES_RECEIPT_INVOICE_TYPES]}::text[])
+              and (${body.salesInvoiceId ?? null}::uuid is null or i.id = ${body.salesInvoiceId ?? null}::uuid)
+            order by i.id limit 1 for share
+          ` : [];
+          if (!invoices.length) {
+            throw new ApiClientError("A finalized invoice linked to the original sales bill is required.", { status: 409, code: "SALES_INVOICE_RECEIPT_MISMATCH" });
+          }
+        }
+      }
       const plannedReceipt = reviewedReceipt ? planSalesWorkflowReceipt(locked?.form_data?.transferTrace?.settlement, {
         currency: body.currencyCode, amount: body.amount, paidOriginal: paidLocked, remainingOriginal: remainingLocked,
       }) : null;
