@@ -132,7 +132,7 @@ export function LinkedSalesRoznamchaForm(p: Props) {
             <fieldset disabled={lock} className="min-w-0 space-y-2">
               <TransferDetailsSection countryId={p.countryId} lang={p.lang} allowMasterChanges={false}
                 bankName={p.bank.label} onBankNameChange={() => undefined}
-                onBankRecordChange={(bank, label) => p.onBankRecord(bank, label)}
+                onBankSelectionChange={p.onBankRecord}
                 transferMode={p.bank.mode} onTransferModeChange={p.onBankMode}
                 transactionReference={p.reference} onTransactionReferenceChange={p.onReference}/>
               <Field label={h("Bank Account")}><Value value={p.bank.account}/></Field>

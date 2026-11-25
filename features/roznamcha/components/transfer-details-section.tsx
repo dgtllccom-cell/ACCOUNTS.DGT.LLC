@@ -28,7 +28,8 @@ export interface BankItem {
 interface TransferDetailsSectionProps {
   bankName: string;
   onBankNameChange: (name: string) => void;
-  onBankRecordChange?: (bank: BankItem | null, label?: string) => void;
+  onBankRecordChange?: (bank: BankItem | null) => void;
+  onBankSelectionChange?: (bank: BankItem | null, label: string) => void;
   transferMode: string;
   onTransferModeChange: (mode: string) => void;
   transactionReference: string;
@@ -48,6 +49,7 @@ export function TransferDetailsSection({
   bankName,
   onBankNameChange,
   onBankRecordChange,
+  onBankSelectionChange,
   transferMode,
   onTransferModeChange,
   transactionReference,
@@ -501,7 +503,8 @@ export function TransferDetailsSection({
                       type="button"
                       onClick={() => {
                         onBankNameChange(opt.name);
-                        onBankRecordChange?.(opt.record || null, opt.name);
+                        onBankRecordChange?.(opt.record || null);
+                        onBankSelectionChange?.(opt.record || null, opt.name);
                         setBankMenuOpen(false);
                         setShowNewBankForm(false);
                       }}
@@ -597,7 +600,7 @@ export function TransferDetailsSection({
           )}
 
           <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 min-h-[14px] leading-tight">
-            {t(lang, "td.bank_hint", "Select an existing bank or add a new one")}
+            {allowMasterChanges ? t(lang, "td.bank_hint", "Select an existing bank or add a new one") : t(lang, "td.select_bank", "Select bank")}
           </div>
         </div>
 
@@ -605,7 +608,7 @@ export function TransferDetailsSection({
         <div ref={modeFieldRef} className="w-full sm:flex-[0.8] relative">
           <div className="flex items-center justify-between mb-1">
             <label className="text-[11px] font-bold text-slate-800 dark:text-slate-200 block">
-              {t(lang, "td.transfer_mode", "Transfer Mode")} <span className="text-red-500">*</span>
+              {t(lang, "td.transfer_mode", "Transfer Mode")} {allowMasterChanges && <span className="text-red-500">*</span>}
             </label>
             {allowMasterChanges && activeModeRecord && (
               <button
