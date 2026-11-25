@@ -64,6 +64,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
+import { LinkedSalesRoznamchaForm } from "@/features/roznamcha/components/linked-sales-roznamcha-form";
 import { RoznamchaEntryDialog } from "@/features/roznamcha/components/roznamcha-entry-dialog";
 import { matchesSalesReceiptQueue, reviewedSalesSettlement, salesWorkflowDestination, type SalesReceiptQueue } from "@/lib/sales/payment-workflow";
 import { useRouter } from "next/navigation";
@@ -3967,7 +3968,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
 
   // Final Action POST handler
   async function handleProcessPayment() {
-    if (!selected || !(useReviewedReceiptForm ? acceptedSettlement && canSaveReviewed : canSave)) return;
+    if (processingPayment || !selected || !(useReviewedReceiptForm ? acceptedSettlement && canSaveReviewed : canSave)) return false;
     const submittedMethod = useReviewedReceiptForm ? reviewedMethod : paymentType;
     const submittedLedger = useReviewedReceiptForm ? reviewedDraft.ledgerId : paymentSourceLedgerId;
     const submittedReference = useReviewedReceiptForm ? reviewedDraft.reference.trim() : roznamchaNumber;
@@ -4143,8 +4144,10 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
       
       // Auto-reload data
       await loadOrders();
+      return true;
     } catch (err: any) {
       setPaymentError(err?.message || "Failed to process payment settlement. Please try again.");
+      return false;
     } finally {
       setProcessingPayment(false);
     }
@@ -4808,67 +4811,47 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
           onClose={() => setSelectedId("")}
           busy={processingPayment}
         >
-          <div className="my-3 grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs sm:grid-cols-4 dark:border-slate-700 dark:bg-slate-800">
-            {[
-              ["Sales No.", selected.sales_order_no],
-              ["Country", rowCountryName(selected) || "-"],
-              ["Branch", rowBranchName(selected) || "-"],
-              ["Currency", confirmedReceiptCurrency || "-"],
-            ].map(([label, value]) => (
-              <div key={label}><div className="font-semibold text-slate-500">{translateHeader(currentLanguage, label)}</div><div className="font-bold">{value}</div></div>
-            ))}
-          </div>
-            {!acceptedSettlement && (
-              <section role="alert" className="space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
-                <p className="text-sm font-semibold">{translateHeader(currentLanguage, "Receipt paused: ask Accounts to verify the original bill and its posted settlement before recording payment.")}</p>
-                <button type="button" className="text-sm font-bold underline" onClick={() => {
-                  const local = isLocalSalesFormData(selected.form_data);
-                  router.push(`/dashboard/sales/sales-order/view?id=${encodeURIComponent(selected.id)}&transfer=1${local ? "&source=local" : ""}`);
-                }}>{translateHeader(currentLanguage, "View Original Sales Bill")}</button>
-              </section>
-            )}
-            {acceptedSettlement && (
-              <section className="space-y-2 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
-                <h3 className="font-bold">{translateHeader(currentLanguage, "Payment Entry")}</h3>
-                <div className="grid gap-3 md:grid-cols-3">
-                  <label className="grid gap-1">
-                    <span>{translateHeader(currentLanguage, "Receiving Account")}</span>
-                    <select className="rounded border bg-background px-2 py-1.5" aria-label={translateHeader(currentLanguage, "Receiving Account")} value={reviewedDraft.ledgerId}
-                      onChange={e => setReviewedReceiptInput({ ...reviewedDraft, ledgerId: e.target.value })}>
-                      <option value="">—</option>
-                      {reviewedReceiptLedgers.map(l => <option key={ledgerId(l)} value={ledgerId(l)}>{ledgerCode(l)} · {ledgerName(l)} · {ledgerCurrency(l)}</option>)}
-                    </select>
-                  </label>
-                  <label className="grid gap-1">
-                    <span>{translateHeader(currentLanguage, "Receipt Reference")}</span>
-                    <input className="rounded border bg-background px-2 py-1.5" maxLength={140} value={reviewedDraft.reference}
-                      onChange={e => setReviewedReceiptInput({ ...reviewedDraft, reference: e.target.value })}/>
-                  </label>
-                  <label className="grid gap-1">
-                    <span>{translateHeader(currentLanguage, "Receipt Amount")} {confirmedReceiptCurrency}</span>
-                    <input className="rounded border bg-background px-2 py-1.5" type="number" step="0.01" min="0.01" value={reviewedDraft.amount}
-                      onChange={e => setReviewedReceiptInput({ ...reviewedDraft, amount: e.target.value })}/>
-                  </label>
-                </div>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <label className="grid gap-1 text-xs font-semibold">
-                    <span>{translateHeader(currentLanguage, "Entry Date")}</span>
-                    <input type="date" className="rounded border bg-background px-2 py-1.5" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} />
-                  </label>
-                  <label className="grid gap-1 text-xs font-semibold">
-                    <span>{translateHeader(currentLanguage, "Remarks")}</span>
-                    <input className="rounded border bg-background px-2 py-1.5" maxLength={500} value={remarks} onChange={e => setRemarks(e.target.value)} />
-                  </label>
-                </div>
-                {paymentError && <p role="alert" className="text-red-700">{paymentError}</p>}
-                {paymentSuccess && <p role="status" className="text-emerald-700">{paymentSuccess}</p>}
-                <button type="button" onClick={() => void handleProcessPayment()} disabled={!canSaveReviewed || processingPayment}
-                  className="rounded bg-emerald-700 px-3 py-1.5 font-bold text-white disabled:opacity-50">
-                  {translateHeader(currentLanguage, "Post Receipt")}
-                </button>
-              </section>
-            )}
-
+          <LinkedSalesRoznamchaForm
+            lang={currentLanguage}
+            bill={selected.sales_order_no}
+            country={rowCountryName(selected) || ""}
+            branch={rowBranchName(selected) || ""}
+            city={String(selected.form_data?.form?.cityName || selected.form_data?.form?.branchCity || "")}
+            currency={confirmedReceiptCurrency}
+            originalCurrency={String(reviewedSettlement?.originalCurrency || selected.form_data?.form?.salesCurrency || selected.currency_code || "")}
+            paymentLabel={translateHeader(currentLanguage, receiptQueueLabel || "Credit Payment / Receipt")}
+            party={String(selected.form_data?.form?.customerAccountName || selected.form_data?.form?.customerName || "")}
+            mobile={String(selected.form_data?.form?.customerMobile || selected.form_data?.form?.customerPhone || "")}
+            approvedRate={acceptedSettlement ? acceptedSettlement.final / acceptedSettlement.original : null}
+            approvedFinal={acceptedSettlement?.final ?? null}
+            paidOriginal={selected.paid_amount ?? null}
+            remainingOriginal={selected.remaining_amount ?? null}
+            accounts={reviewedReceiptLedgers.map(l => ({ id: ledgerId(l) || "", name: ledgerName(l), code: ledgerCode(l),
+              type: String(l.account_type || l.type || ""), parent: String(l.parentAccountName || l.parent_account_name || "") }))}
+            ledgerId={reviewedDraft.ledgerId} reference={reviewedDraft.reference} amount={reviewedDraft.amount} date={paymentDate} remarks={remarks}
+            onLedger={value => setReviewedReceiptInput({ ...reviewedDraft, ledgerId: value })}
+            onReference={value => setReviewedReceiptInput({ ...reviewedDraft, reference: value })}
+            onAmount={value => setReviewedReceiptInput({ ...reviewedDraft, amount: value })}
+            onDate={setPaymentDate}
+            onRemarks={setRemarks}
+            onClear={() => { setReviewedReceiptInput({ orderId: selectedId, ledgerId: "", reference: "", amount: "" }); setRemarks(""); setPaymentError(""); setPaymentSuccess(""); }}
+            onClose={() => setSelectedId("")}
+            onSave={startNew => void handleProcessPayment().then(saved => { if (saved && !startNew) setSelectedId(""); })}
+            disabled={!acceptedSettlement} busy={processingPayment} canSave={canSaveReviewed}
+            notice={<>
+              {!acceptedSettlement && (
+                <section role="alert" className="mt-2 space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                  <p className="text-sm font-semibold">{translateHeader(currentLanguage, "Receipt paused: ask Accounts to verify the original bill and its posted settlement before recording payment.")}</p>
+                  <button type="button" className="text-sm font-bold underline" onClick={() => {
+                    const local = isLocalSalesFormData(selected.form_data);
+                    router.push(`/dashboard/sales/sales-order/view?id=${encodeURIComponent(selected.id)}&transfer=1${local ? "&source=local" : ""}`);
+                  }}>{translateHeader(currentLanguage, "View Original Sales Bill")}</button>
+                </section>
+              )}
+              {paymentError && <p role="alert" className="mt-2 text-red-700">{paymentError}</p>}
+              {paymentSuccess && <p role="status" className="mt-2 text-emerald-700">{paymentSuccess}</p>}
+            </>}
+          />
         </RoznamchaEntryDialog>
       )}
 
