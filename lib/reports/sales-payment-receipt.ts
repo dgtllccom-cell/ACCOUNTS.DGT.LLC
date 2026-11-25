@@ -18,7 +18,7 @@ export function printSalesPaymentReceipt(receipt: SalesPaymentReceipt, lang: Sup
     [tr("rvp.received_from", "Received from"), receipt.customer],
     [h("Sales Order No"), receipt.bill],
     [tr("rvp.payment_method", "Payment Method"), method],
-    [tr("rvp.reference", "Reference"), receipt.reference],
+    [h("Reference"), receipt.reference],
   ];
   const bodyHtml = `<div class="overview-banner">
     <div class="overview-top"><div><div class="overview-title">${e(tr("rvp.amount", "Amount"))}</div>
@@ -27,5 +27,6 @@ export function printSalesPaymentReceipt(receipt: SalesPaymentReceipt, lang: Sup
     <div class="section-card"><div class="section-header">${e(tr("rvp.customer_copy", "Customer Copy"))}</div>
     <table class="info-table">${fields.map(([label, value]) => `<tr><td class="label">${e(label)}</td><td class="value"><bdi>${e(value || "—")}</bdi></td></tr>`).join("")}</table></div>`;
   renderA4Document({ lang, autoPrint, title, subtitle: source, reportType: title, bodyHtml, reportId: receipt.number,
+    notesText: tr("common.system_generated_document", "This is a system-generated document."),
     signatures: [tr("rvp.authorized_by", "Authorized by")] });
 }

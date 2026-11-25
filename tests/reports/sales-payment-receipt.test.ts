@@ -20,6 +20,7 @@ describe("issued Sales receipt and customer print", () => {
     expect(html).toContain("A &amp; B &lt;script&gt;");
     expect(html).toContain("R-100");
     expect(html).not.toContain("Purchase & Vendor");
+    expect(html.toLowerCase()).not.toContain("account setup profile");
     expect(html).not.toContain("A & B <script>");
     expect(html).toContain("size: A4");
   });
