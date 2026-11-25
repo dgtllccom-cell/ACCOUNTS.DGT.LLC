@@ -1,10 +1,12 @@
 import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
+import { postedPaymentVoucherSides, type PostedVoucherLine, type PaymentVoucherSide } from "@/lib/reports/payment-voucher-data";
 
 export type SalesPaymentReceipt = {
   orderId: string; number: string; date: string; bill: string; customer: string; local: boolean;
   amount: number; currency: string; method: "cash" | "bank" | null; reference: string;
   manualBill?: string;
   goods?: SalesReceiptGoods[];
+  sides?: { debit: PaymentVoucherSide; credit: PaymentVoucherSide };
 };
 
 type SalesReceiptGoods = {
@@ -30,7 +32,7 @@ export function issuedSalesPaymentReceipt(order: {
 }, journal: {
   status?: unknown; voucher_no?: unknown; super_admin_serial_number?: unknown; source_reference_no?: unknown;
   entry_category?: unknown; deleted_at?: unknown;
-} | null | undefined, viewGoodsPrices = false): SalesPaymentReceipt | null {
+} | null | undefined, viewGoodsPrices = false, postedLines?: PostedVoucherLine[]): SalesPaymentReceipt | null {
   if (!journal || journal.deleted_at || journal.status !== "posted" || payment.status !== "posted" || payment.payment_kind === "booking") return null;
   const number = clean(journal.voucher_no) || clean(journal.super_admin_serial_number);
   const bill = clean(order.sales_order_no);
@@ -60,5 +62,6 @@ export function issuedSalesPaymentReceipt(order: {
     }];
   });
   return { orderId: clean(order.id), number, date, customer, bill, local: isLocalSalesFormData(order.form_data), amount, currency,
-    method, reference: clean(journal.source_reference_no), manualBill: manualBill === bill ? "" : manualBill, goods };
+    method, reference: clean(journal.source_reference_no), manualBill: manualBill === bill ? "" : manualBill, goods,
+    sides: viewGoodsPrices ? postedPaymentVoucherSides(postedLines) : undefined };
 }

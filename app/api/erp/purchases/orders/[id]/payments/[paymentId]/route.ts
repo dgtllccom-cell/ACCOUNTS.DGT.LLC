@@ -1,17 +1,89 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiOk, handleApiError } from "@/lib/api/response";
+import { apiError, apiOk, handleApiError } from "@/lib/api/response";
 import { purchaseOrderPaymentPostSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { withLocalPg } from "@/lib/db/local-postgres";
+import { postedPaymentVoucherSides, type PostedVoucherLine } from "@/lib/reports/payment-voucher-data";
 
 const paramsSchema = z.object({
   id: uuidSchema,
   paymentId: uuidSchema
 });
+
+type ReceiptRecord = {
+  source: "purchase_booking" | "local_purchase";
+  bill: string | null;
+  journal_serial_no: string | null;
+  manual_bill_no: string | null;
+  country_id: string | null;
+  country_branch_id: string | null;
+  city_branch_id: string | null;
+  party: string | null;
+  voucher_no: string | null;
+  journal_serial: string | null;
+  date: string | null;
+  reference: string | null;
+  lines: PostedVoucherLine[] | null;
+};
+
+/** Print only the payment identified by BOTH IDs, with its original posted journal lines. */
+export async function GET(_request: NextRequest, context: { params: Promise<{ id: string; paymentId: string }> }) {
+  try {
+    const session = await requireErpSession();
+    const { id, paymentId } = paramsSchema.parse(await context.params);
+    if (!(session.isSuperAdmin || session.canViewFinancials)) {
+      return apiError("FORBIDDEN", "Financial permission is required to print the payment voucher.", 403);
+    }
+    const rows = await withLocalPg(async (sql) => sql<ReceiptRecord[]>`
+      select
+        case when lp.id is not null then 'local_purchase' else 'purchase_booking' end as source,
+        po.purchase_order_no as bill, lp.journal_serial_no, lp.manual_bill_no,
+        coalesce(po.country_id, lp.country_id) as country_id,
+        coalesce(po.country_branch_id, lp.country_branch_id) as country_branch_id,
+        coalesce(po.city_branch_id, lp.city_branch_id) as city_branch_id,
+        coalesce(lp.supplier_name, nullif(po.form_data->'form'->>'supplierName', ''),
+                 nullif(po.form_data->'form'->>'salesAccountName', '')) as party,
+        j.voucher_no, j.super_admin_serial_number as journal_serial, j.entry_date::text as date,
+        coalesce(nullif(j.source_reference_no, ''), nullif(j.reference_no, ''), p.reference_no) as reference,
+        (select jsonb_agg(jsonb_build_object(
+          'ledger_id', l.ledger_id, 'ledger_name', a.name, 'ledger_code', a.code,
+          'debit', l.debit, 'credit', l.credit, 'currency', l.currency
+        )) from public.roznamcha_lines l
+        left join public.ledgers a on a.id = l.ledger_id
+        where l.roznamcha_entry_id = j.id) as lines
+      from public.purchase_order_payments p
+      join public.roznamcha_entries j on j.id = p.roznamcha_entry_id and j.status = 'posted'
+        and j.posted_at is not null and j.deleted_at is null
+      left join public.purchase_orders po on po.id = p.purchase_order_id and po.deleted_at is null
+        and p.local_purchase_id is null
+      left join public.local_purchases lp on lp.id = p.local_purchase_id and lp.deleted_at is null
+        and p.purchase_order_id is null
+      where p.id = ${paymentId}::uuid and (po.id = ${id}::uuid or lp.id = ${id}::uuid)
+        and p.status = 'posted' and p.kind <> 'booking' and p.deleted_at is null
+      limit 1
+    `);
+    const row = rows?.[0];
+    if (!row) return apiError("VOUCHER_NOT_FOUND", "No posted payment voucher was found for this purchase.", 404);
+    authorizeApiScope(session, { resource: "purchases", action: "read", countryId: row.country_id, countryBranchId: row.country_branch_id, cityBranchId: row.city_branch_id });
+    const sides = postedPaymentVoucherSides(row.lines);
+    const number = row.voucher_no?.trim() || row.journal_serial?.trim();
+    const bill = row.source === "local_purchase" ? row.journal_serial_no?.trim() || row.manual_bill_no?.trim() : row.bill?.trim();
+    if (!sides || !number || !bill || !row.date || !/^\d{4}-\d{2}-\d{2}$/.test(row.date)) {
+      return apiError("VOUCHER_NOT_PRINTABLE", "The posted voucher is missing a verified debit or credit side.", 409);
+    }
+    return apiOk({
+      ...sides, number, bill, date: row.date, party: row.party || "",
+      source: row.source, reference: row.reference || undefined,
+    }, { headers: { "Cache-Control": "private, no-store" } });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
 
 // Since there is no `edit_purchase_booking_transfer` RPC yet, we simulate an edit by:
 // 1. Reversing the old roznamcha entry.

@@ -12,6 +12,7 @@ import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-acti
 import { printStore } from "@/lib/store/print-store";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { printPaymentJournal } from "@/lib/reports/payment-journal-print";
+import { printPaymentVoucherCopies, type PaymentVoucherCopies } from "@/lib/reports/payment-voucher-copies";
 import { createPortal } from "react-dom";
 import { PurchasePaymentEntryDocument, type EntryPaymentRow } from "@/features/journal/components/purchase-payment-entry-document";
 import {
@@ -1083,7 +1084,7 @@ function FieldBlock({ label, required, children, className, action }: { label: s
   );
 }
 
-function NestedRowActions({ payment, row, ledgers, localCurrency }: any) {
+function NestedRowActions({ payment, row, ledgers, localCurrency, onPrintPaymentVoucher }: any) {
   const currentLanguage = useActiveLanguage() as LanguageCode;
   function handleAction(fn: () => void) {
     fn();
@@ -1098,7 +1099,8 @@ function NestedRowActions({ payment, row, ledgers, localCurrency }: any) {
       <div className="absolute right-0 z-30 mt-1 w-40 rounded-xl border border-border bg-popover p-1 text-sm text-popover-foreground shadow-xl">
         <MenuAction icon={<Eye />} label={t("row_view_details", currentLanguage)} onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, false, currentLanguage))} />
         <MenuAction icon={<Edit3 />} label={t("row_edit_line", currentLanguage)} onClick={() => handleAction(() => window.dispatchEvent(new CustomEvent("open-edit-payment", { detail: { payment, row } })))} />
-        <MenuAction icon={<Printer />} label={t("row_print_receipt", currentLanguage)} onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, true, currentLanguage))} />
+        {payment.id && payment.kind !== "booking" && String(payment.status).toLowerCase() === "posted" &&
+          <MenuAction icon={<Printer />} label={t("row_print_receipt", currentLanguage)} onClick={() => handleAction(() => onPrintPaymentVoucher(row.id, payment.id))} />}
       </div>
     </details>
   );
@@ -1114,7 +1116,8 @@ function NestedPaymentHistory({
   setExpandedIds,
   logClientError,
   onOpenFullBill,
-  loadingRemainingLoadingRecords = false
+  loadingRemainingLoadingRecords = false,
+  onPrintPaymentVoucher,
 }: { 
   row: any, 
   ledgers: any[], 
@@ -1125,7 +1128,8 @@ function NestedPaymentHistory({
   setExpandedIds: React.Dispatch<React.SetStateAction<Record<string, boolean>>>,
   logClientError: (msg: string) => void,
   onOpenFullBill?: () => void,
-  loadingRemainingLoadingRecords?: boolean
+  loadingRemainingLoadingRecords?: boolean,
+  onPrintPaymentVoucher: (orderId: string, paymentId: string) => void
 }) {
   const currentLanguage = useActiveLanguage() as LanguageCode;
   const [payments, setPayments] = useState<any[]>([]);
@@ -1608,7 +1612,7 @@ function NestedPaymentHistory({
                       </div>
                     </td>
                     <td className="px-2.5 py-1.5 text-center align-top">
-                      <NestedRowActions payment={p} row={row} ledgers={ledgers} localCurrency={p.localCurrency} />
+                      <NestedRowActions payment={p} row={row} ledgers={ledgers} localCurrency={p.localCurrency} onPrintPaymentVoucher={onPrintPaymentVoucher} />
                     </td>
                   </tr>
                 );
@@ -3071,6 +3075,34 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   // the order's supplier company (name / code / country / contacts) for the payment document's Supplier Details card — the list API does not carry it
   const [supplierRecord, setSupplierRecord] = useState<{ orderId: string; company: any } | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState("");
+  const [postedVoucher, setPostedVoucher] = useState<{ orderId: string; paymentId: string } | null>(null);
+  const [receiptError, setReceiptError] = useState("");
+  const [receiptLoading, setReceiptLoading] = useState(false);
+  const voucherRequest = React.useRef(0);
+  async function openPostedPurchaseVoucher(orderId: string, paymentId: string) {
+    const request = ++voucherRequest.current;
+    setReceiptError("");
+    setReceiptLoading(true);
+    try {
+      const response = await fetch(`/api/erp/purchases/orders/${encodeURIComponent(orderId)}/payments/${encodeURIComponent(paymentId)}`, {
+        method: "GET", credentials: "include", cache: "no-store",
+      });
+      const body = await response.json();
+      if (!response.ok || !body?.ok || !body.data?.number) {
+        throw new Error(body?.error?.message || tGlobal(currentLanguage, "common.error", "Something went wrong."));
+      }
+      const { source, ...voucher } = body.data as Omit<PaymentVoucherCopies, "source"> & { source: "local_purchase" | "purchase_booking" };
+      if (request === voucherRequest.current) {
+        printPaymentVoucherCopies({ ...voucher, source: translateHeader(currentLanguage, source === "local_purchase" ? "Local Purchase" : "Purchase Booking") }, currentLanguage);
+      }
+    } catch (err) {
+      if (request === voucherRequest.current) {
+        setReceiptError(err instanceof Error ? err.message : tGlobal(currentLanguage, "common.error", "Something went wrong."));
+      }
+    } finally {
+      if (request === voucherRequest.current) setReceiptLoading(false);
+    }
+  }
   const [paymentError, setPaymentError] = useState("");
   const [selectedOrderPayments, setSelectedOrderPayments] = useState<any[]>([]);
   const [loadingPayments, setLoadingPayments] = useState(false);
@@ -4759,6 +4791,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     }
     setProcessingPayment(true);
     setPaymentSuccess("");
+    setPostedVoucher(null);
+    setReceiptError("");
     setPaymentError("");
 
     if (!paymentIdempotencyKeyRef.current) {
@@ -4932,6 +4966,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       }
 
       const allSerials = [body.data?.serialNumber, body.data?.countrySerialNumber, body.data?.branchSerialNumber].filter(Boolean).join(" | ");
+      if (typeof body.data?.paymentId === "string") setPostedVoucher({ orderId: selected.id, paymentId: body.data.paymentId });
       setPaymentSuccess(`Double-entry ledger voucher successfully balanced! Journal Serial Number: ${allSerials || "N/A"}.`);
       paymentIdempotencyKeyRef.current = ""; // next submission is a new, distinct payment attempt
       setCalcAmount("");
@@ -5358,6 +5393,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 logClientError={logClientError}
                 onOpenFullBill={() => setViewingRow(row)}
                 loadingRemainingLoadingRecords={loadingRemainingLoadingRecords}
+                onPrintPaymentVoucher={openPostedPurchaseVoucher}
               />
             </td>
           </tr>
@@ -5392,16 +5428,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
           countryOptions={countryOptions}
           branchOptions={branchOptions}
           onOpenFullDetails={(orderId) => selectOrder(orderId)}
-          onPrintReceipt={(payment, orderRow) =>
-            handlePrintReceipt(
-              { ...payment, roznamcha_entries: { super_admin_serial_number: payment.journal_no } },
-              orderRow,
-              ledgers,
-              baseCurrency,
-              true,
-              currentLanguage
-            )
-          }
+          onPrintReceipt={(payment) => void openPostedPurchaseVoucher(payment.purchase_order_id, payment.id)}
           onDownloadPdf={(orderRow) => handleOpenA4PDF(orderRow, true)}
           onPrintJournal={() => void printPaymentJournal({
             kind: "purchase",
@@ -5547,6 +5574,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       {error && (
         <div className="mx-6 my-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400">
           {error}
+        </div>
+      )}
+
+      {receiptError && <p role="alert" className="mx-6 my-3 rounded-lg bg-red-50 p-3 text-sm text-red-800">{receiptError}</p>}
+      {postedVoucher && !selected && (
+        <div className="mx-6 my-3">
+          <Button type="button" size="sm" disabled={receiptLoading} onClick={() => void openPostedPurchaseVoucher(postedVoucher.orderId, postedVoucher.paymentId)}>
+            <Printer className="me-1 h-4 w-4" />{t("row_print_receipt", currentLanguage)}
+          </Button>
         </div>
       )}
 
@@ -5700,6 +5736,18 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
             const paymentCondition = form.paymentCondition || (activeMode === "advance" ? "Advance Payment" : isCredit ? "Credit Payment" : "");
 
             // Payment calculations
+            const renderTransactionPrint = (tx: { id?: string; kind?: string; status?: string }) =>
+              tx.id && tx.kind !== "booking" && String(tx.status).toLowerCase() === "posted" && (
+                <button
+                  type="button"
+                  className="me-1 inline-flex items-center rounded border border-slate-300 px-2 py-1 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                  title={t("row_print_receipt", currentLanguage)}
+                  aria-label={t("row_print_receipt", currentLanguage)}
+                  onClick={() => void openPostedPurchaseVoucher(selected.id, tx.id!)}
+                >
+                  <Printer className="h-3.5 w-3.5" aria-hidden />
+                </button>
+              );
             const displayPayments = selectedOrderPayments.filter((p: any) => activeMode === "advance" ? isActualInvoicePayment(p) : p.kind !== "booking");
             const chronological = displayPayments.sort((a: any, b: any) =>
               new Date(a.entry_date || a.created_at).getTime() - new Date(b.entry_date || b.created_at).getTime()
@@ -5898,6 +5946,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   paymentsLoading={loadingPayments}
                   onBack={returnToPaymentRegister}
                   onPrint={() => handleOpenA4PDF(selected, true)}
+                  onPrintReceipt={(payment) => void openPostedPurchaseVoucher(selected.id, payment.id)}
+                  receiptError={receiptError}
                   onSave={() => {
                     setIsDoubleEntryExpanded(true);
                     if (canSave && !processingPayment) void handleProcessPayment();
@@ -6549,6 +6599,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                                     AED {Number(tx.showRemainAED ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                   </td>
                                   <td className="px-3 py-2 text-center whitespace-nowrap">
+                                    {renderTransactionPrint(tx)}
                                     <button
                                       type="button"
                                       onClick={(e) => {
@@ -6661,6 +6712,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                                 <td className="px-3 py-2 text-slate-600 dark:text-slate-300 font-normal">{tx.details || tx.narration || "—"}</td>
                                 <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{Number(tx.amountAED ?? tx.amtAED ?? tx.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                                 <td className="px-3 py-2 text-center whitespace-nowrap">
+                                  {renderTransactionPrint(tx)}
                                   <button
                                     type="button"
                                     onClick={(e) => {
@@ -6719,6 +6771,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                                 <td className="px-3 py-2 text-slate-600 dark:text-slate-300 font-normal">{tx.details || tx.narration || "—"}</td>
                                 <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{Number(tx.amountAED ?? tx.amtAED ?? tx.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                                 <td className="px-3 py-2 text-center whitespace-nowrap">
+                                  {renderTransactionPrint(tx)}
                                   <button
                                     type="button"
                                     onClick={(e) => {
@@ -7203,6 +7256,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       <div>
                         <div className="font-bold mb-0.5">{t("payment_posted_successfully", currentLanguage)}</div>
                         <div className="text-xs">{paymentSuccess}</div>
+                        {postedVoucher?.orderId === selected.id && <Button type="button" size="sm" className="mt-2" disabled={receiptLoading} onClick={() => void openPostedPurchaseVoucher(postedVoucher.orderId, postedVoucher.paymentId)}>
+                          <Printer className="me-1 h-4 w-4" />{t("row_print_receipt", currentLanguage)}
+                        </Button>}
                       </div>
                     </div>
                   )}
@@ -7211,6 +7267,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       ❌ {paymentError}
                     </div>
                   )}
+                  {!docMode && receiptError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{receiptError}</p>}
                 </div>
                 </EntryPortal>
               </div>

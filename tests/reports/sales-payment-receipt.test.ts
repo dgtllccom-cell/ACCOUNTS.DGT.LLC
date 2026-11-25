@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { issuedSalesPaymentReceipt } from "@/lib/sales/payment-receipt";
-import { printSalesPaymentReceipt } from "@/lib/reports/sales-payment-receipt";
+import { printSalesPaymentReceipt, printSalesReceiptCopies } from "@/lib/reports/sales-payment-receipt";
 
 const print = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/store/print-store", () => ({ printStore: { openPrint: print } }));
@@ -56,5 +56,21 @@ describe("issued Sales receipt and customer print", () => {
     const order = { sales_order_no: "SB-202", form_data: { form: { manualBillNumber: "SB-202", goodsName: "Historic item", qtyNo: "", quantity: "3", netWeight: false } } };
     expect(issuedSalesPaymentReceipt(order, paid, journal, true)).toMatchObject({ manualBill: "", goods: [{ name: "Historic item", quantity: 3, net: null, price: null }] });
     expect(issuedSalesPaymentReceipt({ sales_order_no: "SB-202" }, paid, journal, true)?.goods).toEqual([]);
+  });
+  it("uses posted sides only for authorized financial users, and preserves the detailed receipt otherwise", () => {
+    const order = { sales_order_no: "SB-202", customer_name: "North Customer" };
+    const lines = [
+      { ledger_id: "dr", ledger_name: "Cash Desk", debit: 100, credit: 0, currency: "AED" },
+      { ledger_id: "cr", ledger_name: "Receivables", debit: 0, credit: 100, currency: "AED" },
+    ];
+    const receipt = issuedSalesPaymentReceipt(order, paid, journal, true, lines)!;
+    printSalesReceiptCopies(receipt, "en");
+    expect(print.mock.lastCall![0]).toContain('data-side="DR"');
+    expect(print.mock.lastCall![0]).toContain('data-side="CR"');
+    const nonFinancial = issuedSalesPaymentReceipt(order, paid, journal, false, lines)!;
+    expect(nonFinancial.sides).toBeUndefined();
+    printSalesReceiptCopies(nonFinancial, "en");
+    expect(print.mock.lastCall![0]).not.toContain("Cash Desk");
+    expect(print.mock.lastCall![0]).toContain("Customer Copy");
   });
 });

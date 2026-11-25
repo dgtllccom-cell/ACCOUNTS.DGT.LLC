@@ -274,6 +274,7 @@ export function PdfPreviewModal() {
     /<script\b[^>]*>[\s\S]*?<\/script>/gi,
     (block) => (/window\.print\s*\(|__ERP_A4_AUTOPRINT__/.test(block) ? "" : block)
   );
+  const fixedVoucherPortrait = /^<!doctype html>\s*<html\b[^>]*\bdata-voucher-portrait="true"/i.test(sanitizedHtml);
   const scrollPreview = /<html\b[^>]*\bdata-scroll-print-preview="true"/i.test(sanitizedHtml);
 
   const injectedHtml = `
@@ -381,7 +382,7 @@ export function PdfPreviewModal() {
 
         {/* Center: Controls */}
         <div className="flex items-center gap-2 sm:gap-4 bg-[#1e293b] p-1.5 rounded-lg border border-slate-700 shrink-0">
-          <button
+          {!fixedVoucherPortrait && <button
             onClick={() => {
               const next = orientation === "portrait" ? "landscape" : "portrait";
               setOrientation(next);
@@ -391,7 +392,7 @@ export function PdfPreviewModal() {
           >
             <LayoutList className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{orientation === "portrait" ? tt("pdfprev.portrait", "Portrait") : tt("pdfprev.landscape", "Landscape")}</span>
-          </button>
+          </button>}
 
           {rebuild && (
             <select

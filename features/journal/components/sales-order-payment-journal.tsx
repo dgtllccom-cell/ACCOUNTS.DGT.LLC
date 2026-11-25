@@ -4,7 +4,7 @@ import { PaymentSummaryStrip } from "@/features/journal/components/payment-summa
 import { buildPaymentEntryModel, orderPaymentPercent, paymentAmountsOf, paymentSummaryFigures } from "@/lib/journal/purchase-payment-entry-model";
 import { pl } from "@/lib/reports/print-label";
 import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
-import { printSalesPaymentReceipt } from "@/lib/reports/sales-payment-receipt";
+import { printSalesPaymentReceipt, printSalesReceiptCopies } from "@/lib/reports/sales-payment-receipt";
 import type { SalesPaymentReceipt } from "@/lib/sales/payment-receipt";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { printPaymentJournal } from "@/lib/reports/payment-journal-print";
@@ -832,7 +832,7 @@ function NestedRowActions({ payment, row }: any) {
       <div className="absolute right-0 z-30 mt-1 w-40 rounded-xl border border-border bg-popover p-1 text-sm text-popover-foreground shadow-xl">
         {payment.receipt && <MenuAction icon={<Eye />} label={tGlobal(lang, "pay.view_details", "View Details")} onClick={() => handleAction(() => printSalesPaymentReceipt(payment.receipt, lang, false))} />}
         <MenuAction icon={<Edit3 />} label={tGlobal(lang, "pay.edit_line", "Edit Line")} onClick={() => handleAction(() => window.dispatchEvent(new CustomEvent("open-edit-payment", { detail: { payment, row } })))} />
-        {payment.receipt && <MenuAction icon={<Printer />} label={tGlobal(lang, "pay.print_receipt", "Print Receipt")} onClick={() => handleAction(() => printSalesPaymentReceipt(payment.receipt, lang, false))} />}
+        {payment.receipt && <MenuAction icon={<Printer />} label={tGlobal(lang, "pay.print_receipt", "Print Receipt")} onClick={() => handleAction(() => printSalesReceiptCopies(payment.receipt, lang))} />}
       </div>
     </details>
   );
@@ -4402,7 +4402,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
     <div dir={isRtl ? "rtl" : "ltr"} className={cn("flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950", isRtl ? "text-right" : "text-left")}>
       {postedReceipt && <section className="m-3 flex flex-wrap items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
         <span>{tGlobal(currentLanguage, "rvp.receipt_no", "Receipt No.")}: <bdi className="font-bold">{postedReceipt.number}</bdi></span>
-        <Button type="button" size="sm" onClick={() => printSalesPaymentReceipt(postedReceipt, currentLanguage)}>
+        <Button type="button" size="sm" onClick={() => printSalesReceiptCopies(postedReceipt, currentLanguage)}>
           <Printer className="me-1 h-4 w-4" />{tGlobal(currentLanguage, "pay.print_receipt", "Print Receipt")}
         </Button>
         <Button type="button" size="sm" variant="ghost" aria-label={translateHeader(currentLanguage, "Close")} onClick={() => setPostedReceipt(null)}><X className="h-4 w-4" /></Button>
@@ -4766,7 +4766,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
               {paymentSuccess && <div className="mt-2 text-emerald-700">
                 <p role="status">{paymentSuccess}</p>
                 {postedReceipt?.orderId === selected.id && <Button type="button" size="sm" className="mt-2"
-                  onClick={() => printSalesPaymentReceipt(postedReceipt, currentLanguage)}>
+                  onClick={() => printSalesReceiptCopies(postedReceipt, currentLanguage)}>
                   <Printer className="me-1 h-4 w-4" />{tGlobal(currentLanguage, "pay.print_receipt", "Print Receipt")}
                 </Button>}
               </div>}
@@ -6056,7 +6056,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
                   }}
                 />
                 {postedReceipt?.orderId === selected.id && <Button type="button" size="sm" className="mt-2"
-                  onClick={() => printSalesPaymentReceipt(postedReceipt, currentLanguage)}>
+                  onClick={() => printSalesReceiptCopies(postedReceipt, currentLanguage)}>
                   <Printer className="me-1 h-4 w-4" />{tGlobal(currentLanguage, "pay.print_receipt", "Print Receipt")}
                 </Button>}
               </div>

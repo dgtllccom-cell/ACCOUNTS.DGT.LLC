@@ -141,6 +141,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    const canViewFinancials = session.isSuperAdmin || session.canViewFinancials;
 
     // withLocalPg, not the RLS-gated Supabase client — see the POST handler for why.
     const { order, rows } = (await withLocalPg(async (sql) => {
@@ -152,6 +153,27 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         limit 1
       `;
       const paymentRows = await sql`
+        with recent_payments as materialized (
+          select * from sales_order_payments
+          where sales_order_id = ${params.id}::uuid and deleted_at is null
+          order by created_at desc
+          limit 200
+        ), voucher_lines as (
+          select rl.roznamcha_entry_id, jsonb_agg(jsonb_build_object(
+            'ledger_id', rl.ledger_id, 'debit', rl.debit, 'credit', rl.credit, 'currency', rl.currency,
+            'ledger_name', l.name, 'ledger_code', l.code
+          )) as lines
+          from roznamcha_lines rl
+          left join ledgers l on l.id = rl.ledger_id
+          where ${canViewFinancials}::boolean and rl.roznamcha_entry_id in (
+            select journal.id from recent_payments eligible
+            join roznamcha_entries journal on journal.id = eligible.roznamcha_entry_id
+            where eligible.status = 'posted' and eligible.payment_kind <> 'booking'
+              and journal.status = 'posted' and journal.deleted_at is null
+          )
+          group by rl.roznamcha_entry_id
+          having count(*) = 2
+        )
         select
           p.id, p.sales_order_id, p.payment_kind, p.payment_date, p.amount, p.currency_code, p.exchange_rate,
           p.roznamcha_entry_id, p.status, p.remarks, p.created_at,
@@ -166,13 +188,13 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
             'country_transaction_serial_number', re.country_transaction_serial_number,
             'branch_transaction_serial_number', re.branch_transaction_serial_number,
             'profiles', case when pr.id is not null then jsonb_build_object('full_name', pr.full_name) else null end
-          ) else null end as roznamcha_entries
-        from sales_order_payments p
+          ) else null end as roznamcha_entries,
+          voucher_lines.lines as voucher_lines
+        from recent_payments p
         left join roznamcha_entries re on re.id = p.roznamcha_entry_id
         left join profiles pr on pr.id = re.created_by
-        where p.sales_order_id = ${params.id}::uuid and p.deleted_at is null
+        left join voucher_lines on voucher_lines.roznamcha_entry_id = re.id
         order by p.created_at desc
-        limit 200
       `;
       return { order: orderRows[0] ?? null, rows: paymentRows };
     }))!;
@@ -192,9 +214,9 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       lang
     );
 
-    const mapped = localizedRows.map((row: any) => ({
+    const mapped = localizedRows.map(({ voucher_lines, ...row }: any) => ({
       ...row,
-      receipt: order ? issuedSalesPaymentReceipt(order, row, row.roznamcha_entries, session.isSuperAdmin || session.canViewFinancials) : null,
+      receipt: order ? issuedSalesPaymentReceipt(order, row, row.roznamcha_entries, canViewFinancials, voucher_lines) : null,
       kind: row.payment_kind,
       entry_date: row.payment_date,
       reference_no: row.remarks,
@@ -543,7 +565,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       const journalRecord = journalRows[0] as any;
 
       const journalLines = await sql`
-        select ledger_id, debit, credit from roznamcha_lines where roznamcha_entry_id = ${paymentRecord.roznamcha_entry_id}::uuid
+        select ledger_id, debit, credit, currency from roznamcha_lines where roznamcha_entry_id = ${paymentRecord.roznamcha_entry_id}::uuid
       `;
 
       if (plannedReceipt) {
@@ -635,7 +657,11 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
 
     const resPayload = {
       paymentId,
-      receipt: issuedSalesPaymentReceipt(orderRow, paymentRecord, journalRecord, session.isSuperAdmin || session.canViewFinancials),
+      receipt: issuedSalesPaymentReceipt(orderRow, paymentRecord, journalRecord, session.isSuperAdmin || session.canViewFinancials,
+        journalLines.map((line: any) => {
+          const ledger = line.ledger_id === resolvedDebitLedgerId ? debitLedger : line.ledger_id === resolvedCreditLedgerId ? creditLedger : null;
+          return { ...line, ledger_name: ledger?.name, ledger_code: ledger?.code };
+        })),
       roznamchaEntryId: paymentRecord.roznamcha_entry_id,
       superAdminSerialNumber: journalRecord.super_admin_serial_number,
       countryTransactionSerialNumber: journalRecord.country_transaction_serial_number,

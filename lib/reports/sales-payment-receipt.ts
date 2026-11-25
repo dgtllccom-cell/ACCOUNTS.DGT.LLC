@@ -3,6 +3,14 @@ import { translateHeader } from "@/lib/i18n/table-headers";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { escapeReportHtml as e, renderA4Document } from "@/lib/reports/report-shell";
 import type { SalesPaymentReceipt } from "@/lib/sales/payment-receipt";
+import { printPaymentVoucherCopies } from "@/lib/reports/payment-voucher-copies";
+
+/** Keep the goods report as View Details; the Print Receipt action issues the detachable pair. */
+export function printSalesReceiptCopies(receipt: SalesPaymentReceipt, lang: SupportedLanguage) {
+  if (!receipt.sides) return printSalesPaymentReceipt(receipt, lang);
+  return printPaymentVoucherCopies({ ...receipt.sides, number: receipt.number, date: receipt.date, bill: receipt.bill,
+    party: receipt.customer, reference: receipt.reference, source: translateHeader(lang, receipt.local ? "Local Sales" : "Sales Booking") }, lang);
+}
 
 export function printSalesPaymentReceipt(receipt: SalesPaymentReceipt, lang: SupportedLanguage, autoPrint = false) {
   const tr = (key: Parameters<typeof t>[1], fallback: string) => t(lang, key, fallback);
