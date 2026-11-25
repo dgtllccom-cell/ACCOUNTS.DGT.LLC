@@ -3,6 +3,8 @@ import { reserveForOrder } from "@/lib/sales/managed-lot-sales";
 import { z } from "zod";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { assertFinancialAccess } from "@/lib/permissions/middleware";
+import { isCountryLevelRole } from "@/lib/permissions/enterprise-roles";
 import { assertBusinessCityBranch } from "@/lib/api/branch-scope-guard";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { optionalUuidSchema, supportedLanguageSchema } from "@/lib/api/erp-validation";
@@ -184,7 +186,6 @@ async function resolveEffectiveScope(input: {
 
 export async function GET(request: NextRequest) {
   try {
-    await ensureTableExists();
     const session = await requireErpSession();
     const params = request.nextUrl.searchParams;
     const countryId = params.get("countryId");
@@ -199,7 +200,14 @@ export async function GET(request: NextRequest) {
     // below silently returns zero rows even for orders that exist. Try a direct-Postgres
     // read first (bypasses RLS via DATABASE_URL); fall back to the Supabase-client path
     // only when DATABASE_URL isn't configured.
-    const limit = Math.min(Number(params.get("limit") || 100), 200);
+    const requestedLimit = Number(params.get("limit") || 100);
+    const limit = Number.isSafeInteger(requestedLimit) ? Math.max(1, Math.min(requestedLimit, 200)) : 100;
+    const requestedOffset = Number(params.get("offset") || 0);
+    const offset = Number.isSafeInteger(requestedOffset) ? Math.max(0, requestedOffset) : 0;
+    const transferredOnly = params.get("transferred") === "1";
+    if (transferredOnly) assertFinancialAccess(session);
+    else await ensureTableExists();
+    const countryLevel = transferredOnly && session.roles.some(isCountryLevelRole) && session.countryIds.length > 0;
     const rawTerm = params.get("q") ? String(params.get("q")).replace(/[%_]/g, "") : null;
     const viaPg = await withLocalPg(async (sql) => {
       const cityIds = !session.isSuperAdmin ? session.cityBranchIds : [];
@@ -209,6 +217,7 @@ export async function GET(request: NextRequest) {
         select *
         from public.sales_orders
         where deleted_at is null
+          and (${transferredOnly ? sql`ledger_posting_status in ('posted', 'transferred')` : sql`true`})
           and (${rawTerm ? sql`(
                 sales_order_no ilike ${"%" + rawTerm + "%"}
                 or account_number ilike ${"%" + rawTerm + "%"}
@@ -219,28 +228,56 @@ export async function GET(request: NextRequest) {
                 or country_transaction_serial_number ilike ${"%" + rawTerm + "%"}
                 or branch_transaction_serial_number ilike ${"%" + rawTerm + "%"}
               )` : sql`true`})
-          and (${cityBranchId
-            ? sql`city_branch_id = ${cityBranchId}`
-            : !session.isSuperAdmin && cityIds.length
-            ? sql`city_branch_id = any(${cityIds})`
-            : countryBranchId
-            ? sql`country_branch_id = ${countryBranchId}`
-            : !session.isSuperAdmin && countryBranchIds.length
-            ? sql`country_branch_id = any(${countryBranchIds})`
-            : countryId
-            ? sql`country_id = ${countryId}`
-            : !session.isSuperAdmin
-            ? sql`country_id = any(${countryIds.length ? countryIds : ["00000000-0000-0000-0000-000000000000"]})`
-            : sql`true`})
-        order by created_at desc
-        limit ${limit}
+          and (${countryId ? sql`country_id = ${countryId}::uuid` : sql`true`})
+          and (${countryBranchId ? sql`country_branch_id = ${countryBranchId}::uuid` : sql`true`})
+          and (${cityBranchId ? sql`city_branch_id = ${cityBranchId}::uuid` : sql`true`})
+          and (${session.isSuperAdmin
+            ? sql`true`
+            : countryLevel ? sql`country_id = any(${countryIds}::uuid[])`
+            : cityIds.length ? sql`city_branch_id = any(${cityIds}::uuid[])`
+            : countryBranchIds.length ? sql`country_branch_id = any(${countryBranchIds}::uuid[])`
+            : countryIds.length ? sql`country_id = any(${countryIds}::uuid[])`
+            : sql`false`})
+        order by created_at desc, id desc
+        limit ${limit} offset ${offset}
       `;
     });
 
     const lang = normalizeLanguage(params.get("lang"), "en");
 
     if (viaPg) {
-      const resolved = await localizeRecordNames(viaPg as any[], "sales_orders", "customer_name", lang);
+      const sourceRows = viaPg as any[];
+      if (transferredOnly) {
+        const receiptOrders = sourceRows.filter(row => row.form_data?.transferTrace?.paymentId || row.form_data?.transferVerification?.journalId).map(row => row.id);
+        if (receiptOrders.length > 0) {
+          const summaries = await withLocalPg(sql => sql`
+            select p.sales_order_id,
+                   case when count(p.payment_kind) filter (where p.payment_kind = 'advance' and p.received is null) = 0
+                        then coalesce(sum(p.received) filter (where p.payment_kind = 'advance'), 0) end as advance,
+                   case when count(p.payment_kind) filter (where p.received is null) = 0
+                        then coalesce(sum(p.received), 0) end as received
+            from (
+              select o.id as sales_order_id, p.payment_kind,
+                     case when upper(p.currency_code) = upper(o.currency_code) then p.amount else p.base_currency_amount end as received
+              from sales_orders o
+              left join sales_order_payments p on p.sales_order_id = o.id
+                and p.status = 'posted' and p.deleted_at is null
+                and p.payment_kind <> 'booking'
+                and p.id::text is distinct from o.form_data->'transferTrace'->>'paymentId'
+                and p.roznamcha_entry_id::text is distinct from o.form_data->'transferVerification'->>'journalId'
+                and p.roznamcha_entry_id is not null
+                and exists (select 1 from public.roznamcha_entries r where r.id = p.roznamcha_entry_id
+                  and r.status = 'posted' and r.deleted_at is null
+                  and coalesce(r.operational_domain, 'business') = 'business')
+              where o.id = any(${receiptOrders}::uuid[])
+            ) p
+            group by p.sales_order_id
+          `);
+          const byOrder = new Map((summaries ?? []).map(row => [row.sales_order_id, row]));
+          for (const row of sourceRows) row.transferReceiptSummary = byOrder.get(row.id);
+        }
+      }
+      const resolved = await localizeRecordNames(sourceRows, "sales_orders", "customer_name", lang);
       return apiOk({ salesOrders: resolved });
     }
 
@@ -250,19 +287,21 @@ export async function GET(request: NextRequest) {
       .select("*")
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
-      .limit(limit);
+      .order("id", { ascending: false });
+    if (transferredOnly) query = query.in("ledger_posting_status", ["posted", "transferred"]);
 
     if (rawTerm) {
       query = query.or(`sales_order_no.ilike."%${rawTerm}%",account_number.ilike."%${rawTerm}%",manual_reference_number.ilike."%${rawTerm}%",customer_number.ilike."%${rawTerm}%",customer_name.ilike."%${rawTerm}%",super_admin_serial_number.ilike."%${rawTerm}%",country_transaction_serial_number.ilike."%${rawTerm}%",branch_transaction_serial_number.ilike."%${rawTerm}%"`);
     }
     if (cityBranchId) query = query.eq("city_branch_id", cityBranchId);
+    if (countryBranchId) query = query.eq("country_branch_id", countryBranchId);
+    if (countryId) query = query.eq("country_id", countryId);
+    if (!session.isSuperAdmin && countryLevel) query = query.in("country_id", session.countryIds);
     else if (!session.isSuperAdmin && session.cityBranchIds.length) query = query.in("city_branch_id", session.cityBranchIds);
-    else if (countryBranchId) query = query.eq("country_branch_id", countryBranchId);
     else if (!session.isSuperAdmin && session.countryBranchIds.length) query = query.in("country_branch_id", session.countryBranchIds);
-    else if (countryId) query = query.eq("country_id", countryId);
     else if (!session.isSuperAdmin) query = query.in("country_id", session.countryIds.length ? session.countryIds : ["00000000-0000-0000-0000-000000000000"]);
 
-    const fallbackRows = await requireSupabaseData(query);
+    const fallbackRows = await requireSupabaseData(query.range(offset, offset + limit - 1));
     const resolvedFallback = await localizeRecordNames((fallbackRows ?? []) as any[], "sales_orders", "customer_name", lang);
     return apiOk({ salesOrders: resolvedFallback });
   } catch (error) {

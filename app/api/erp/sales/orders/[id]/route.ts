@@ -5,6 +5,7 @@ import { ApiClientError, apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { t } from "@/lib/i18n/ui";
+import { assertFinancialAccess } from "@/lib/permissions/middleware";
 import { authorizeApiScope, authorizeApiScopeEither } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -61,8 +62,14 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
 
+    const transferView = request.nextUrl.searchParams.get("transfer") === "1";
+    if (transferView) assertFinancialAccess(session);
     const supabase = await createApiSupabaseClient();
-    const row = await requireSupabaseData(
+    const direct = transferView ? await withLocalPg(async sql => {
+      const rows = await sql`select * from public.sales_orders where id = ${params.id}::uuid and deleted_at is null limit 1`;
+      return rows[0] || null;
+    }) : null;
+    const row = direct ?? await requireSupabaseData(
       supabase
         .from("sales_orders")
         .select("*")
@@ -77,7 +84,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     // Dual-scope: a Country Sale is visible to its source (selling) branch OR its
     // destination (owning) branch — mirrors purchase_orders' authorizeApiScopeEither.
-    authorizeApiScopeEither(session, {
+    if (transferView) authorizeApiScope(session, {
+      resource: "sales", action: "read", countryId: (row as any).country_id,
+      countryBranchId: (row as any).country_branch_id, cityBranchId: (row as any).city_branch_id,
+    });
+    else authorizeApiScopeEither(session, {
       resource: "sales",
       action: "read",
       source: {

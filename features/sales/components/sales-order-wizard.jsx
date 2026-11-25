@@ -1175,7 +1175,8 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
             salesAccountName: accountName,
             salesAccountBranch: branchName,
             salesAccountCurrency: currency || prev.salesAccountCurrency || prev.salesCurrency || prev.secondaryCurrency || "PKR",
-            salesAccountLedgerId: entityId,
+            salesAccountId: resolvedAccountId,
+            salesAccountLedgerId: resolvedLedgerId,
             salesCompanyId: resolvedCompId,
             salesCompanyName: cName,
             salesCompanyCode: cCode,
@@ -1839,10 +1840,13 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
       totalGoodsOriginal: reportTotals.grandPrimaryFinal || 0,
       totalGoodsLocal: reportTotals.grandFinal || 0,
       totalGoodsUsd: reportTotals.grandPrimaryFinal || 0,
-      paidAmount: isTransferred ? (reportTotals.grandFinal || reportTotals.grandPrimaryFinal || 0) : 0,
-      remainingAmount: isTransferred ? 0 : (reportTotals.grandFinal || reportTotals.grandPrimaryFinal || 0),
+      // The receipt endpoint owns these balances. Resaving an existing booking before Transfer must not erase advances.
+      ...(!savedOrderId ? {
+        paidAmount: 0,
+        remainingAmount: reportTotals.grandPrimaryFinal || 0,
+      } : {}),
       salesStatus: salesStatus.toLowerCase(),
-      paymentStatus: isTransferred ? "completed" : "pending",
+      ...(!savedOrderId ? { paymentStatus: "pending" } : {}),
       deliveryStatus: "pending",
       formData: {
         form,

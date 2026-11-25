@@ -3865,37 +3865,15 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
 
   // Dynamic double entry preview values
   const doubleEntry = useMemo(() => {
-    // For payments (advance, remaining, credit), the debit account is the supplier's party account (salesAccountNo / salesAccountName)
-    // and the credit account is the user-selected payment source account (bank/cash).
-    // If it's a booking entry, we debit the purchase account and credit the supplier's account.
-    const isBooking = (activeMode as string) === "booking";
-
-    const debitCode = isBooking 
-      ? (selectedForm.purchaseAccountNo || "-") 
-      : (selectedForm.salesAccountNo || "LIABILITY-001");
-      
-    const debitName = isBooking 
-      ? (selectedForm.purchaseAccountName || "Purchase Account") 
-      : (selectedForm.salesAccountName || "Supplier Liability Ledger");
-      
-    const debitBranch = isBooking 
-      ? (selectedForm.purchaseAccountBranch || "-") 
-      : (selectedForm.salesAccountBranch || "-");
-
-    const creditCode = isBooking
-      ? (selectedForm.salesAccountNo || "-")
-      : (selectedSourceLedger ? ledgerCode(selectedSourceLedger) : "CASH-001");
-      
-    const creditName = isBooking
-      ? (selectedForm.salesAccountName || "Supplier Liability Ledger")
-      : (selectedSourceLedger ? ledgerName(selectedSourceLedger) : "Cash Book Dubai Branch");
-      
-    const creditBranch = isBooking
-      ? (selectedForm.salesAccountBranch || "-")
-      : (selectedSourceLedger ? (selectedSourceLedger.branchName || "-") : "-");
-
-    return { debitCode, debitName, debitBranch, creditCode, creditName, creditBranch };
-  }, [selectedSourceLedger, selectedForm, activeMode]);
+    return {
+      debitCode: selectedSourceLedger ? ledgerCode(selectedSourceLedger) : "-",
+      debitName: selectedSourceLedger ? ledgerName(selectedSourceLedger) : "-",
+      debitBranch: selectedSourceLedger?.branchName || "-",
+      creditCode: selectedForm.customerAccountNo || (selected as any)?.account_number || "-",
+      creditName: selectedForm.customerAccountName || (selected as any)?.customer_name || "-",
+      creditBranch: selectedForm.customerAccountBranch || "-",
+    };
+  }, [selectedSourceLedger, selectedForm, selected]);
 
   // Suggested values to make input easier
   const suggestedAdvance = useMemo(() => {
@@ -3927,103 +3905,26 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       const finalRemarks = remarks.trim() || `Automated payment settlement for Sales Order No: ${selected.sales_order_no}. Roznamcha Category: ${paymentType.toUpperCase()}.`;
       const formData = new FormData();
 
-      // Helper to check if a string is a valid UUID
-      // Helper to check if a string is a valid UUID
       const isUuid = (val: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(val || "").trim());
-
       const form = selected.form_data?.form || {};
-
-      // 1. Resolve debit ledger ID (Receiving Bank / Cash account)
-      let debitLedgerId = "";
-      if (isUuid(paymentSourceLedgerId)) {
-        debitLedgerId = paymentSourceLedgerId;
-      } else {
-        const matchedDebit = ledgers.find((l) => {
-          const id = ledgerId(l);
-          if (!id || !isUuid(id)) return false;
-          const c = ledgerCode(l).toLowerCase();
-          const n = ledgerName(l).toLowerCase();
-          return c === doubleEntry.creditCode?.toLowerCase() || n === doubleEntry.creditName?.toLowerCase() || n.includes("cash") || n.includes("bank");
-        }) || ledgers.find((l) => isUuid(ledgerId(l) || ""));
-
-        if (matchedDebit) {
-          debitLedgerId = ledgerId(matchedDebit) || "";
-        }
-      }
-
-      // 2. Resolve credit ledger ID (Customer / Receivable Account)
-      let creditLedgerId = "";
-      const candidateCreditIds = [
+      const debitLedgerId = paymentSourceLedgerId;
+      // Cash/bank is debited. The original booking's receivable is credited, never the sales revenue ledger.
+      const customerIds = [
+        selected.form_data?.transferTrace?.debitLedgerId,
         (selected as any).customer_ledger_id,
-        (selected as any).customerLedgerId,
+        (selected as any).customer_account_id,
         form.customerAccountLedgerId,
         form.customerAccountId,
-        form.customerId,
-        form.salesAccountLedgerId,
-        form.salesAccountId,
-        selectedForm.customerAccountLedgerId,
-        selectedForm.salesAccountLedgerId
-      ].filter(Boolean);
-
-      for (const candidate of candidateCreditIds) {
-        if (isUuid(String(candidate))) {
-          creditLedgerId = String(candidate).trim();
-          break;
-        }
-      }
-
-      if (!creditLedgerId) {
-        const customerCode = String(form.customerAccountNo || form.customerCode || form.salesAccountNo || doubleEntry.debitCode || "").trim().toLowerCase();
-        const customerName = String(form.customerAccountName || form.customerName || form.salesAccountName || doubleEntry.debitName || "").trim().toLowerCase();
-
-        const matchedLedger = ledgers.find((l) => {
-          const id = ledgerId(l);
-          if (!id || !isUuid(id) || id === debitLedgerId) return false;
-          const c = ledgerCode(l).toLowerCase();
-          const n = ledgerName(l).toLowerCase();
-          if (customerCode && (c === customerCode || c.includes(customerCode))) return true;
-          if (customerName && (n === customerName || n.includes(customerName))) return true;
-          return false;
-        });
-
-        if (matchedLedger) {
-          creditLedgerId = ledgerId(matchedLedger) || "";
-        }
-      }
-
-      if (!creditLedgerId) {
-        const targetCountry = selected.country_id;
-        const matchedReceivable = ledgers.find((l) => {
-          const id = ledgerId(l);
-          if (!id || !isUuid(id) || id === debitLedgerId) return false;
-          const lCountry = l.country_id || l.countryId;
-          if (targetCountry && lCountry && lCountry !== targetCountry) return false;
-          const n = ledgerName(l).toLowerCase();
-          const type = String(l.account_type || l.nature || "").toLowerCase();
-          return type.includes("asset") || type.includes("receivable") || n.includes("receivable") || n.includes("customer") || n.includes("client");
-        });
-
-        if (matchedReceivable) {
-          creditLedgerId = ledgerId(matchedReceivable) || "";
-        }
-      }
-
-      if (!creditLedgerId) {
-        const valid = ledgers.find((l) => isUuid(ledgerId(l) || "") && ledgerId(l) !== debitLedgerId) || ledgers.find((l) => isUuid(ledgerId(l) || ""));
-        if (valid) creditLedgerId = ledgerId(valid) || "";
-      }
-
-      // Do NOT guess a ledger here â picking an arbitrary ledger could silently post this
-      // payment against the wrong account. If the customer/payment-source ledger genuinely
-      // couldn't be resolved, fail loudly so the order's account link can be corrected.
+      ];
+      const creditLedgerId = customerIds.find(id => isUuid(String(id ?? ""))) || "";
       if (!isUuid(debitLedgerId) || !isUuid(creditLedgerId)) {
         throw new Error(
           !isUuid(creditLedgerId)
-            ? "Could not determine the customer account's ledger for this order. Please reselect the customer/sales account on this order and try again."
-            : "Could not determine the payment source (bank/cash) ledger. Please select a payment account and try again."
+            ? "Could not determine the customer account's ledger for this order. Please reselect the customer account."
+            : "Please select a payment account."
         );
       }
-      
+
       const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
       const fromLoading = searchParams.get("fromLoading") === "true";
       const loadingRecordId = searchParams.get("loadingRecordId") || "";
@@ -4031,7 +3932,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       const payload = {
         purchaseOrderId: selected.id,
         salesOrderNo: selected.sales_order_no,
-        kind: ["advance", "remaining", "credit", "booking"].includes(activeMode) ? activeMode : "advance",
+        kind: ["advance", "remaining", "credit"].includes(activeMode) ? activeMode : "advance",
         debitLedgerId,
         creditLedgerId,
         paymentType,

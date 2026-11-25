@@ -1,9 +1,10 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiCreated, apiOk, apiError, handleApiError } from "@/lib/api/response";
+import { ApiClientError, apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { assertFinancialAccess } from "@/lib/permissions/middleware";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { withKeyedLock } from "@/lib/db/keyed-lock";
@@ -11,21 +12,23 @@ import { allocateFormSerials } from "@/lib/services/form-serials";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
-import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
+import { getBookingCurrencies } from "@/lib/sales/booking-currencies";
+import { configuredSalesReceipt, salesReceiptBalances } from "@/lib/sales/payment-settlement";
+import { normalizeLegacySalesPaymentSources } from "@/lib/sales/legacy-payment-sources";
 
 const paramsSchema = z.object({
   id: uuidSchema
 });
 
 const salesOrderPaymentPostSchema = z.object({
-  kind: z.string(),
+  kind: z.enum(["advance", "remaining", "credit", "cash", "receipt", "invoice"]),
   entryDate: z.string(),
   amount: z.coerce.number().min(0.01),
-  currencyCode: z.string(),
+  currencyCode: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/),
   exchangeRate: z.coerce.number().min(0.000001),
-  debitLedgerId: z.string(),
-  creditLedgerId: z.string(),
+  debitLedgerId: uuidSchema,
+  creditLedgerId: uuidSchema,
   referenceNo: z.string().optional().nullable(),
   narration: z.string().optional().nullable(),
   typeDetails: z.record(z.string(), z.unknown()).optional().nullable()
@@ -92,21 +95,17 @@ function buildSalesGoodsAuditRemark(orderRow: any, fallbackReference?: string | 
 
 async function assertLedgerMatchesSalesScope(sql: any, ledgerId: string, orderRow: any, label: string) {
   const rows = await sql`
-    select id, code, name, country_id, country_branch_id, city_branch_id
-    from ledgers where id = ${ledgerId}::uuid and deleted_at is null
+    select l.id, l.code, l.name, l.country_id, l.country_branch_id, l.city_branch_id
+    from public.ledgers l
+    left join public.enterprise_accounts ea on ea.id = l.enterprise_account_id
+    where l.deleted_at is null and l.is_active and (l.id = ${ledgerId}::uuid or l.account_id = ${ledgerId}::uuid
+      or l.enterprise_account_id = ${ledgerId}::uuid)
+      and (ea.id is null or (ea.deleted_at is null and coalesce(ea.operational_domain, 'business') in ('business', 'both')))
+    order by (l.id = ${ledgerId}::uuid) desc, l.id
+    limit 2
   `;
-  let ledger = rows[0];
-
-  if (!ledger && ledgerId) {
-    // Compatibility fallback: some callers pass an accounts.id instead of the ledger's own id
-    // (ledgers.account_id is a separate FK, not the same UUID as ledgers.id). Resolve the
-    // ledger linked to that account rather than failing outright.
-    const byAccount = await sql`
-      select id, code, name, country_id, country_branch_id, city_branch_id
-      from ledgers where account_id = ${ledgerId}::uuid and deleted_at is null
-    `;
-    if (byAccount[0]) ledger = byAccount[0];
-  }
+  const ledger = rows[0];
+  if (rows.length > 1 && ledger?.id !== ledgerId) throw new Error(label + " ledger is ambiguous.");
 
   if (!ledger) {
     throw new Error(label + " ledger was not found.");
@@ -114,6 +113,10 @@ async function assertLedgerMatchesSalesScope(sql: any, ledgerId: string, orderRo
 
   if (orderRow.country_id && ledger.country_id && ledger.country_id !== orderRow.country_id) {
     throw new Error(label + " ledger belongs to a different country and cannot be used for this sales booking.");
+  }
+
+  if (orderRow.country_branch_id && ledger.country_branch_id && ledger.country_branch_id !== orderRow.country_branch_id) {
+    throw new Error(label + " ledger belongs to a different main branch and cannot be used for this sales booking.");
   }
 
   if (orderRow.city_branch_id && ledger.city_branch_id && ledger.city_branch_id !== orderRow.city_branch_id) {
@@ -126,6 +129,7 @@ async function assertLedgerMatchesSalesScope(sql: any, ledgerId: string, orderRo
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
+    assertFinancialAccess(session);
     const params = paramsSchema.parse(await context.params);
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
@@ -133,7 +137,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const { order, rows } = (await withLocalPg(async (sql) => {
       const orderRows = await sql`
         select id, sales_order_no, sales_contract_no, country_id, country_branch_id, city_branch_id,
-               currency_code, exchange_rate, order_total, paid_amount, remaining_amount, form_data,
+               currency_code, exchange_rate, order_total, total_goods_original, total_goods_usd,
+               customer_ledger_id, customer_account_id, paid_amount, remaining_amount, form_data,
                ledger_posting_status, payment_status
         from sales_orders where id = ${params.id}::uuid and deleted_at is null
         limit 1
@@ -141,7 +146,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       const paymentRows = await sql`
         select
           p.id, p.sales_order_id, p.payment_kind, p.payment_date, p.amount, p.currency_code, p.exchange_rate,
-          p.roznamcha_entry_id, p.status, p.remarks, p.created_at,
+          p.roznamcha_entry_id, p.status, p.remarks, p.created_at, p.base_currency_amount,
+          re.status as journal_status, re.operational_domain, re.deleted_at as journal_deleted_at,
           case when re.id is not null then jsonb_build_object(
             'id', re.id,
             'super_admin_serial_number', re.super_admin_serial_number,
@@ -152,7 +158,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         from sales_order_payments p
         left join roznamcha_entries re on re.id = p.roznamcha_entry_id
         left join profiles pr on pr.id = re.created_by
+        join public.sales_orders o on o.id = p.sales_order_id and o.deleted_at is null
         where p.sales_order_id = ${params.id}::uuid and p.deleted_at is null
+          and p.id::text is distinct from o.form_data->'transferTrace'->>'paymentId'
+          and p.roznamcha_entry_id::text is distinct from o.form_data->'transferVerification'->>'journalId'
+          and p.payment_kind <> 'booking'
         order by p.created_at desc
         limit 200
       `;
@@ -193,6 +203,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
   let tenantHash = "";
   try {
     const session = await requireErpSession();
+    assertFinancialAccess(session);
     const params = paramsSchema.parse(await context.params);
     const body = salesOrderPaymentPostSchema.parse(await request.json());
 
@@ -229,7 +240,8 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     const order = await withLocalPg(async (sql) => {
       const rows = await sql`
         select id, sales_order_no, sales_contract_no, country_id, country_branch_id, city_branch_id,
-               currency_code, exchange_rate, order_total, paid_amount, remaining_amount, form_data,
+               currency_code, exchange_rate, order_total, total_goods_original, total_goods_usd,
+               customer_ledger_id, customer_account_id, paid_amount, remaining_amount, form_data,
                ledger_posting_status, payment_status
         from sales_orders where id = ${params.id}::uuid and deleted_at is null
         limit 1
@@ -246,40 +258,46 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     });
 
     if (!order) {
-      return apiError("NOT_FOUND", "Sales order not found.", 404);
+      throw new ApiClientError("Sales order not found.", { status: 404, code: "NOT_FOUND" });
     }
 
     const orderRow = order as any;
     const form = orderRow.form_data?.form || {};
-    let exchangeRate = Number(orderRow.exchange_rate || 0);
-    if (exchangeRate <= 1) {
-      exchangeRate = Number(form.exchangeRate || 1);
-    }
-    if (exchangeRate <= 0) exchangeRate = 1;
-
-    const orderTotalUSD = Number(orderRow.order_total || 0) / exchangeRate;
-    const paidAmountUSD = Number(orderRow.paid_amount || 0);
-    const remainingAmountUSD = Number(orderRow.remaining_amount || 0);
-
-    const goodsEntries = Array.isArray(orderRow.form_data?.goodsEntries) ? orderRow.form_data.goodsEntries : [];
-    const formTotalUSD = goodsEntries.length
-      ? goodsEntries.reduce((sum: number, item: any) => sum + Number(item.totalAmount || 0), 0)
-      : Number(form.totalAmount || orderTotalUSD);
-      
+    const currency = getBookingCurrencies(form);
+    const configured = form.bookingCurrencyConfigured === true;
+    const legacyExchangeRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
+    // Balances on sales_orders are saved in the original Sales Booking currency.
+    const totalOriginal = Number(orderRow.total_goods_original || orderRow.total_goods_usd || (
+      configured && currency.rate.ok
+        ? (currency.rate.operator === "/" ? Number(orderRow.order_total) * currency.rate.rate : Number(orderRow.order_total) / currency.rate.rate)
+        : Number(orderRow.order_total || 0) / Math.max(1, legacyExchangeRate)
+    ));
     const advancePercent = Number(form.advancePercent || 0);
-    const requiredAdvanceUSD = advancePercent > 0 ? (formTotalUSD * advancePercent) / 100 : 0;
-    const remainingAdvanceUSD = Math.max(0, requiredAdvanceUSD - paidAmountUSD);
-    const tolerance = 0.01;
+    const requiredAdvance = totalOriginal * Math.max(0, advancePercent) / 100;
+    const configuredReceipt = configured && currency.rate.ok ? configuredSalesReceipt({
+      amount: body.amount, currency: body.currencyCode, salesCurrency: currency.sales, finalCurrency: currency.final,
+      rate: currency.rate.rate, operator: currency.rate.operator,
+    }) : null;
+    if (configured && (!configuredReceipt || currency.final !== orderRow.currency_code)) {
+      throw new ApiClientError("The final currency does not match the approved Sales Booking.", { status: 409, code: "SALES_BOOKING_FX_MISMATCH" });
+    }
 
     const debitLedger = await withLocalPg((sql) => assertLedgerMatchesSalesScope(sql, body.debitLedgerId, orderRow, "Debit")) as any;
     const creditLedger = await withLocalPg((sql) => assertLedgerMatchesSalesScope(sql, body.creditLedgerId, orderRow, "Credit")) as any;
-    // Use the resolved ledger rows' own ids from here on — the client may have sent an
-    // accounts.id (see the compatibility fallback above), which is a different UUID.
     const resolvedDebitLedgerId = debitLedger.id;
     const resolvedCreditLedgerId = creditLedger.id;
-    if (resolvedDebitLedgerId === resolvedCreditLedgerId) {
-      throw new Error("Debit and credit ledgers must be different for sales payment posting.");
-    }
+    assertDistinctBookingLedgers(resolvedDebitLedgerId, resolvedCreditLedgerId, "Sales payment");
+
+    const customerLedgerIds = [orderRow.form_data?.transferTrace?.debitLedgerId,
+      orderRow.customer_ledger_id, orderRow.customer_account_id, form.customerAccountLedgerId, form.customerAccountId]
+      .map(id => uuidSchema.safeParse(id)).flatMap(id => id.success ? [id.data] : []);
+    const customerMatch = customerLedgerIds.length ? await withLocalPg(async (sql) => {
+      const rows = await sql`select id from public.ledgers where id = ${resolvedCreditLedgerId}::uuid and deleted_at is null
+        and (id = any(${customerLedgerIds}::uuid[]) or account_id = any(${customerLedgerIds}::uuid[])
+          or enterprise_account_id = any(${customerLedgerIds}::uuid[])) limit 1`;
+      return rows[0];
+    }) : null;
+    if (!customerMatch) throw new ApiClientError("The receipt credit must be the booking’s customer ledger.", { status: 409, code: "SALES_RECEIPT_CUSTOMER_LEDGER" });
 
     const trace = buildSalesTrace(orderRow, body.referenceNo ?? null);
     const postingReferenceNo = body.referenceNo?.trim() || trace.referenceNo;
@@ -293,58 +311,89 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       "Receipt Amount: " + body.amount
     ].filter(Boolean).join(" | ");
 
-    const isForeignCurrency = body.currencyCode?.toUpperCase() === (orderRow.currency_code?.toUpperCase() || "USD");
-    const bodyAmountUSD = isForeignCurrency ? Number(body.amount) : Number(body.amount) / Number(body.exchangeRate || 1);
+    const isOrderCurrency = body.currencyCode === (orderRow.currency_code || "USD").toUpperCase();
+    const originalReceipt = configuredReceipt?.originalAmount ?? (isOrderCurrency ? body.amount : body.amount / body.exchangeRate);
+    const postingAmount = configuredReceipt?.finalAmount ?? body.amount;
+    const postingCurrency = configuredReceipt?.finalCurrency ?? body.currencyCode;
+    const postingRate = configuredReceipt ? 1 : (isOrderCurrency ? body.exchangeRate : 1);
 
-    if (body.kind === "advance" && advancePercent > 0) {
-      if (remainingAdvanceUSD <= tolerance) {
-        throw new Error(`Advance payment is already fully received (Required: ${requiredAdvanceUSD.toFixed(2)}, Paid: ${paidAmountUSD.toFixed(2)}). Duplicate posting is not allowed.`);
-      }
-      if (bodyAmountUSD > remainingAdvanceUSD + tolerance) {
-        throw new Error(`Advance receipt amount cannot exceed remaining advance balance (${remainingAdvanceUSD.toFixed(2)}).`);
-      }
-    }
-
-    if ((body.kind === "remaining" || body.kind === "credit") && remainingAmountUSD <= tolerance) {
-      throw new Error("This sales order has no remaining receivable balance. Duplicate posting is not allowed.");
-    }
-
-    if ((body.kind === "remaining" || body.kind === "credit") && bodyAmountUSD > remainingAmountUSD + tolerance) {
-      throw new Error(`Receipt amount cannot exceed remaining receivable balance (${remainingAmountUSD.toFixed(2)}).`);
-    }
-
-    const effectiveRoznamchaExchangeRate = isForeignCurrency ? Number(body.exchangeRate || 1) : 1;
-
-    // Transaction-safe posting via the SECURITY DEFINER wrapper post_sales_booking_transfer,
-    // called directly over the raw Postgres connection (equivalent to, and more reliable
-    // than, the Supabase RPC call).
-    // ONE database transaction: the order row is locked (FOR UPDATE) and the balance is re-checked on the locked row before posting,
-    // so simultaneous receipts are serialised and can never together exceed the receivable (found 2026-10-19: three parallel receipts
-    // of 6,000 against 9,000 all posted). If anything fails the whole receipt rolls back - no half-posted voucher.
-    const { paymentId, paymentRecord, journalRecord, journalLines } = await withLocalPg((sqlConn) => sqlConn.begin(async (sql: any) => {
+    // Lock the same order as the booking transfer. Assert and update the actual receipt balance in
+    // this transaction, so the transfer voucher can never be counted as cash received.
+    const core = await withLocalPg((sqlConn) => sqlConn.begin(async (sql: any) => {
       const lockedRows = await sql`
-        select paid_amount, remaining_amount from sales_orders where id = ${params.id}::uuid and deleted_at is null for update
+        select o.paid_amount, o.form_data, o.order_total, o.currency_code, o.total_goods_original, o.exchange_rate,
+               c.currency_code as country_currency
+        from public.sales_orders o left join public.countries c on c.id = o.country_id
+        where o.id = ${params.id}::uuid and o.deleted_at is null for update of o
       `;
-      const paidLocked = Number(lockedRows[0]?.paid_amount ?? 0);
-      const remainingLocked = Number(lockedRows[0]?.remaining_amount ?? 0);
-      if (body.kind === "advance" && advancePercent > 0) {
-        const remAdv = Math.max(0, requiredAdvanceUSD - paidLocked);
-        if (remAdv <= tolerance) throw new Error(`Advance payment is already fully received (Required: ${requiredAdvanceUSD.toFixed(2)}, Paid: ${paidLocked.toFixed(2)}). Duplicate posting is not allowed.`);
-        if (bodyAmountUSD > remAdv + tolerance) throw new Error(`Advance receipt amount cannot exceed remaining advance balance (${remAdv.toFixed(2)}).`);
+      if (lockedRows.length !== 1) throw new Error("The sales order was not found before posting the receipt.");
+      const locked = lockedRows[0];
+      if (String(locked.order_total) !== String(orderRow.order_total)
+        || String(locked.total_goods_original) !== String(orderRow.total_goods_original)
+        || String(locked.currency_code) !== String(orderRow.currency_code)
+        || String(locked.exchange_rate) !== String(orderRow.exchange_rate)
+        || Number(locked.form_data?.form?.advancePercent || 0) !== advancePercent) {
+        throw new ApiClientError("The Sales Booking was edited before the receipt posted. Refresh and try again.", { status: 409, code: "SALES_BOOKING_CHANGED" });
       }
-      if (body.kind === "remaining" || body.kind === "credit") {
-        if (remainingLocked <= tolerance) throw new Error("This sales order has no remaining receivable balance. Duplicate posting is not allowed.");
-        if (bodyAmountUSD > remainingLocked + tolerance) throw new Error(`Receipt amount cannot exceed remaining receivable balance (${remainingLocked.toFixed(2)}).`);
+      if (configuredReceipt && String(locked.country_currency || "").toUpperCase() !== configuredReceipt.finalCurrency) {
+        throw new ApiClientError("Final currency is not the booking country's current accounting currency.", {
+          status: 409, code: "SALES_BOOKING_FX_MISMATCH",
+        });
       }
+      const trace = locked.form_data?.transferTrace;
+      const transferJournalId = trace?.roznamchaEntryId || locked.form_data?.transferVerification?.journalId || null;
+      await normalizeLegacySalesPaymentSources(sql, params.id, resolvedCreditLedgerId, transferJournalId);
+
+      let previouslyReceived: number | undefined;
+      if (configuredReceipt) {
+        const funds = await sql`
+          select count(*)::int as receipt_count, count(received)::int as priced_count, coalesce(sum(received),0) as total
+          from (
+            select case when upper(p.currency_code) = ${configuredReceipt.finalCurrency} then p.amount
+                        else p.base_currency_amount end as received
+            from public.sales_order_payments p
+            join public.roznamcha_entries re on re.id = p.roznamcha_entry_id
+            where p.sales_order_id = ${params.id}::uuid and p.deleted_at is null and p.status = 'posted'
+              and re.status = 'posted' and re.deleted_at is null and coalesce(re.operational_domain, 'business') = 'business'
+              and p.payment_kind <> 'booking'
+              and re.source_transaction_type is distinct from 'sales_transfer_to_payment'
+              and p.id::text is distinct from ${trace?.paymentId ?? null}
+              and re.id::text is distinct from ${transferJournalId}
+          ) receipts
+        `;
+        const sum = funds[0];
+        if (sum?.receipt_count > 0) {
+          if (sum.priced_count !== sum.receipt_count) throw new Error("An earlier sales receipt is missing its final currency amount.");
+          previouslyReceived = Number(sum.total);
+          if (currency.rate.ok) {
+            const factor = currency.rate.operator === "/" ? 1 / currency.rate.rate : currency.rate.rate;
+            const impliedOriginal = Math.round(previouslyReceived / factor * 100) / 100;
+            if (Number(locked.paid_amount || 0) > impliedOriginal + 0.01) {
+              throw new ApiClientError("The saved receipt balance exceeds the linked posted receipts. Reconcile the booking before posting another.", {
+                status: 409, code: "SALES_LEGACY_POSTING_REVIEW",
+              });
+            }
+          }
+        } else if (Number(locked.paid_amount || 0) > 0) {
+          throw new ApiClientError("The saved receipt balance has no linked posted receipt. Reconcile the booking before posting another.", {
+            status: 409, code: "SALES_LEGACY_POSTING_REVIEW",
+          });
+        }
+      }
+      const balance = salesReceiptBalances(totalOriginal, Number(locked.paid_amount || 0), originalReceipt, body.kind, requiredAdvance,
+        configuredReceipt && currency.rate.ok ? {
+          booked: Number(orderRow.order_total), received: configuredReceipt.finalAmount, rate: currency.rate.rate,
+          operator: currency.rate.operator, previouslyReceived,
+        } : undefined);
       const idRows = await sql`
         select post_sales_booking_transfer(
           p_actor_id => ${session.userId}::uuid,
           p_sales_order_id => ${params.id}::uuid,
           p_payment_kind => ${body.kind},
           p_entry_date => ${body.entryDate}::date,
-          p_amount => ${body.amount},
-          p_currency_code => ${body.currencyCode},
-          p_exchange_rate => ${effectiveRoznamchaExchangeRate},
+          p_amount => ${postingAmount},
+          p_currency_code => ${postingCurrency},
+          p_exchange_rate => ${postingRate},
           p_debit_ledger_id => ${resolvedDebitLedgerId}::uuid,
           p_credit_ledger_id => ${resolvedCreditLedgerId}::uuid,
           p_reference_no => ${postingReferenceNo},
@@ -352,6 +401,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
         ) as id
       `;
       const paymentId = idRows[0]?.id as string;
+      if (!paymentId) throw new Error("Sales receipt did not return a payment ID.");
 
       // 4-level serial (Global/Country/Branch/Entry) — additive metadata only, applied
       // AFTER the atomic posting RPC. Does NOT touch the posting/ledger/roznamcha logic.
@@ -369,6 +419,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
         limit 1
       `;
       const paymentRecord = paymentRows[0] as any;
+      if (!paymentRecord?.roznamcha_entry_id || paymentRecord.status !== "posted") throw new Error("The posted sales receipt is missing its Roznamcha entry.");
 
       let rozType = "super_admin";
       if (orderRow.city_branch_id) rozType = "branch";
@@ -382,94 +433,69 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
           type = ${rozType},
           bank_id = coalesce(${(body.typeDetails as any)?.bankId || null}::uuid, bank_id),
           -- a sales payment is a Business posting: never leave it unclassified (Shipping logins would see it)
-          operational_domain = coalesce(operational_domain, 'business')
+          operational_domain = 'business',
+          entry_category = 'business',
+          source_module = 'sales',
+          source_transaction_type = 'sales_payment',
+          source_transaction_id = id
         where id = ${paymentRecord.roznamcha_entry_id}::uuid
       `;
 
       const journalRows = await sql`
-        select id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number
+        select id, status, posted_at, country_id, country_branch_id, city_branch_id,
+               super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number
         from roznamcha_entries where id = ${paymentRecord.roznamcha_entry_id}::uuid
         limit 1
       `;
       const journalRecord = journalRows[0] as any;
 
       const journalLines = await sql`
-        select ledger_id, debit, credit from roznamcha_lines where roznamcha_entry_id = ${paymentRecord.roznamcha_entry_id}::uuid
+        select ledger_id, debit, credit, currency from roznamcha_lines where roznamcha_entry_id = ${paymentRecord.roznamcha_entry_id}::uuid
       `;
 
-      return { paymentId, paymentRecord, journalRecord, journalLines };
-    })) as any;
-
-    const exRate = Number(body.exchangeRate || (orderRow as any)?.exchange_rate || 1) || 1;
-    assertDistinctBookingLedgers(resolvedDebitLedgerId, resolvedCreditLedgerId, "Sales payment");
-    assertBalancedPostedLines({
-      label: "Sales payment",
-      lines: journalLines,
-      expectedDebitLedgerId: resolvedDebitLedgerId,
-      expectedCreditLedgerId: resolvedCreditLedgerId,
-      expectedAmount: Number(body.amount),
-      expectedExchangeRate: exRate
-    });
-    assertPostedRoznamchaTrace({
-      label: "Sales payment",
-      entry: {
-        ...journalRecord,
-        status: "posted",
-        posted_at: journalRecord?.posted_at ?? new Date().toISOString(),
-        country_id: orderRow.country_id || null,
-        country_branch_id: orderRow.country_branch_id || null,
-        city_branch_id: orderRow.city_branch_id || null
+      assertBalancedPostedLines({
+        label: "Sales payment", lines: journalLines, expectedDebitLedgerId: resolvedDebitLedgerId,
+        expectedCreditLedgerId: resolvedCreditLedgerId, expectedAmount: postingAmount,
+        expectedExchangeRate: postingRate,
+      });
+      if (configuredReceipt && journalLines.some((line: { currency?: string }) => line.currency?.toUpperCase() !== postingCurrency)) {
+        throw new Error("The posted sales receipt does not use the booking's final currency.");
       }
-    });
+      assertPostedRoznamchaTrace({ label: "Sales payment", entry: journalRecord });
 
-    const postedWorkflow = {
-      ...(orderRow.form_data?.workflow || {}),
-      invoiceStatus: "available",
-      paymentStatus: "posted",
-      journalStatus: "posted",
-      ledgerStatus: "posted",
-      currentStep: "payment_posted",
-      lastPaymentId: paymentId,
-      lastRoznamchaEntryId: paymentRecord.roznamcha_entry_id,
-      lastPaymentPostedAt: new Date().toISOString(),
-      sourceModule: "sales",
-      sourceTransactionType: "sales_payment",
-      systemBillNumber: trace.systemBillNumber,
-      manualBillNumber: trace.manualBillNumber,
-      partyName: trace.partyName,
-      referenceNo: postingReferenceNo
-    };
-
-    // Update order row details
-    await withLocalPg(async (sql) => {
+      const data = locked.form_data || {};
       const nextFormData = {
-        ...(orderRow.form_data || {}),
-        workflow: postedWorkflow,
+        ...data,
+        workflow: {
+          ...(data.workflow || {}),
+          invoiceStatus: data.workflow?.invoiceStatus || "available",
+          paymentStatus: balance.status,
+          currentStep: "payment_posted",
+          lastPaymentId: paymentId,
+          lastRoznamchaEntryId: paymentRecord.roznamcha_entry_id,
+          lastPaymentPostedAt: new Date().toISOString(),
+        },
         lastPaymentTrace: {
-          paymentId,
-          roznamchaEntryId: paymentRecord.roznamcha_entry_id,
-          debitLedgerId: resolvedDebitLedgerId,
-          creditLedgerId: resolvedCreditLedgerId,
-          originalCurrencyCode: body.currencyCode,
-          currencyName: body.currencyCode,
-          exchangeRate: body.exchangeRate,
+          paymentId, roznamchaEntryId: paymentRecord.roznamcha_entry_id,
+          debitLedgerId: resolvedDebitLedgerId, creditLedgerId: resolvedCreditLedgerId,
+          originalCurrencyCode: body.currencyCode, currencyName: postingCurrency, exchangeRate: body.exchangeRate,
           superAdminSerialNumber: journalRecord.super_admin_serial_number,
           countryTransactionSerialNumber: journalRecord.country_transaction_serial_number,
           branchTransactionSerialNumber: journalRecord.branch_transaction_serial_number,
-          systemBillNumber: trace.systemBillNumber,
-          manualBillNumber: trace.manualBillNumber,
-          partyName: trace.partyName,
-          referenceNo: postingReferenceNo,
-          narration: postingNarration,
-          debitLedgerCode: debitLedger.code,
-          creditLedgerCode: creditLedger.code
+          systemBillNumber: trace.systemBillNumber, manualBillNumber: trace.manualBillNumber,
+          partyName: trace.partyName, referenceNo: postingReferenceNo, narration: postingNarration,
+          debitLedgerCode: debitLedger.code, creditLedgerCode: creditLedger.code
         }
       };
       await sql`
-        update sales_orders set form_data = ${sql.json(nextFormData)}, updated_at = now()
+        update public.sales_orders set paid_amount = ${balance.paid}, remaining_amount = ${balance.remaining},
+          payment_status = ${balance.status}, form_data = ${sql.json(nextFormData)}, updated_at = now()
         where id = ${params.id}::uuid
       `;
-    });
+      return { paymentId, paymentRecord, journalRecord };
+    }));
+    if (!core) throw new Error("The sales receipt could not be posted.");
+    const { paymentId, paymentRecord, journalRecord } = core;
 
     const resPayload = {
       paymentId,
