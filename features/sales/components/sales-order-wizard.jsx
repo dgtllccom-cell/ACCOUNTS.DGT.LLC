@@ -1,6 +1,6 @@
 "use client";
 import { A4DocumentViewer } from "@/components/ui/a4-document-viewer";
-import React, { useMemo, useState, useEffect, useCallback } from "react";
+import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
