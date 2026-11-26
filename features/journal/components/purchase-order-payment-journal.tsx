@@ -117,6 +117,7 @@ import { PaymentJournalV2FilterModal } from "./payment-journal-v2-filter-modal";
 import { PurchasePaymentJournalRemainingView } from "./purchase-payment-journal-remaining-view";
 import { StandardizedDailyPaymentForm } from "@/components/daily-payments/standardized-daily-payment-form";
 import { calculatePaymentDueTracking, resolveAgreedDueDate } from "@/lib/services/payment-due-tracking";
+import { isPurchaseBalanceCleared } from "@/lib/purchases/payment-precision";
 import { paymentInPurchaseCurrency } from "@/lib/purchases/loaded-payable";
 import { localPurchaseSettlement } from "@/lib/purchases/local-purchase-balance";
 import { Badge } from "@/components/ui/badge";
@@ -1399,13 +1400,13 @@ function NestedPaymentHistory({
           <div
             className={cn(
               "mt-0.5 font-mono text-xs font-black",
-              stageBalanceForeign <= 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+              isPurchaseBalanceCleared(stageBalanceForeign) ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
             )}
           >
-            {stageBalanceForeign <= 0.01 ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
+            {isPurchaseBalanceCleared(stageBalanceForeign) ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
           </div>
           <div className="text-[11px] font-semibold text-slate-500">
-            Local: {stageBalanceLocal <= 0.01 ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
+            Local: {isPurchaseBalanceCleared(stageBalanceLocal) ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
           </div>
         </div>
 
@@ -1590,8 +1591,8 @@ function NestedPaymentHistory({
                       <div className="text-[11px] text-slate-400">Entry: {money(p.amtForeign, p.purchaseCurrency)}</div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
-                      <div className={cn("font-bold", remainingTargetForeign <= 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
-                        {remainingTargetForeign <= 0.01 ? "Cleared" : money(remainingTargetForeign, p.purchaseCurrency)}
+                      <div className={cn("font-bold", isPurchaseBalanceCleared(remainingTargetForeign) ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+                        {isPurchaseBalanceCleared(remainingTargetForeign) ? "Cleared" : money(remainingTargetForeign, p.purchaseCurrency)}
                       </div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-center font-mono text-slate-600 align-top dark:border-slate-800">
@@ -1607,8 +1608,8 @@ function NestedPaymentHistory({
                       <div className="text-[11px] text-slate-400">Entry: {money(p.amtLocal, p.localCurrency)}</div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
-                      <div className={cn("font-bold", remainingTargetLocal <= 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
-                        {remainingTargetLocal <= 0.01 ? "Cleared" : money(remainingTargetLocal, p.localCurrency)}
+                      <div className={cn("font-bold", isPurchaseBalanceCleared(remainingTargetLocal) ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+                        {isPurchaseBalanceCleared(remainingTargetLocal) ? "Cleared" : money(remainingTargetLocal, p.localCurrency)}
                       </div>
                     </td>
                     <td className="px-2.5 py-1.5 text-center align-top">
@@ -1628,7 +1629,7 @@ function NestedPaymentHistory({
                   {money(totalPaidForeign, purchaseCurrency)}
                 </td>
                 <td className="px-2.5 py-1.5 text-right text-rose-600 dark:text-rose-400">
-                  {stageBalanceForeign <= 0.01 ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
+                  {isPurchaseBalanceCleared(stageBalanceForeign) ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
                 </td>
                 <td className="px-2.5 py-1.5 text-center text-slate-400">⇄</td>
                 <td className="px-2.5 py-1.5 text-right text-slate-400">
@@ -1638,7 +1639,7 @@ function NestedPaymentHistory({
                   {money(totalPaidLocal, calcs.finalCurr)}
                 </td>
                 <td className="px-2.5 py-1.5 text-right text-rose-600 dark:text-rose-400">
-                  {stageBalanceLocal <= 0.01 ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
+                  {isPurchaseBalanceCleared(stageBalanceLocal) ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
                 </td>
                 <td></td>
               </tr>
@@ -3591,10 +3592,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       const isCreditPaid = rawPaymentStatus === "paid" || 
                            rawPaymentStatus === "completed" || 
                            rawPaymentStatus === "fully_paid" || 
-                           (remainingDue <= 0.01 && finalAmount > 0 && rawPaymentStatus !== "unpaid" && rawPaymentStatus !== "pending");
+                           (isPurchaseBalanceCleared(remainingDue) && finalAmount > 0 && rawPaymentStatus !== "unpaid" && rawPaymentStatus !== "pending");
 
       const isAdvanceCleared = advancePercent > 0 ? remainingAdvance <= 0.01 : paidAdvance > 0;
-      const isRemainingCleared = remainingDue <= 0.01;
+      const isRemainingCleared = isPurchaseBalanceCleared(remainingDue);
 
       if (activeMode === "advance") {
         if (isCreditBill) return false;
@@ -3696,7 +3697,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     const paid = Number(r.advance_paid || 0) + Number(r.remaining_paid || 0) + Number(r.credit_amount || 0);
     const rawDue = r.remaining_due;
     const due = rawDue === null || rawDue === undefined ? Math.max(0, total - paid) : Math.max(0, Number(rawDue) || 0);
-    return status === "paid" || status === "completed" || (total > 0 && due <= 0.01);
+    return status === "paid" || status === "completed" || (total > 0 && isPurchaseBalanceCleared(due));
   };
 
   const isLocalPurchaseRecord = (r: any) => Boolean(
@@ -3796,7 +3797,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         total,
         paid,
         due,
-        settled: status === "paid" || status === "completed" || (total > 0 && due <= 0.01),
+        settled: status === "paid" || status === "completed" || (total > 0 && isPurchaseBalanceCleared(due)),
         endorsement: String(form.paymentType || form.paymentCondition || "").toLowerCase().includes("endorsement"),
       };
     }), [orders, countryFilter, branchFilter, countryNameById]);
@@ -3988,7 +3989,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         poCurrency: batch?.currency || String(selected.currency_code || "USD"),
         exRate: rate,
         isAdvComplete: Boolean(batch),
-        isFullyPaid: Boolean(batch) && outstanding <= 0.01,
+        isFullyPaid: Boolean(batch) && isPurchaseBalanceCleared(outstanding),
         loadingAdvancePaid: batch?.advanceAllocated ?? 0,
         loadingRemainingAdvance: 0,
         finalPurchaseAmount: batchValue,
@@ -4090,7 +4091,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     const advancePaidPercent = loadingRequiredAdvance > 0 ? Math.min(100, (loadingAdvancePaid / loadingRequiredAdvance) * 100) : 0;
 
     const isAdvComplete = loadingRemainingAdvance <= 0.01;
-    const isFullyPaid = outstandingBalance <= 0.01;
+    const isFullyPaid = isPurchaseBalanceCleared(outstandingBalance);
 
     return {
       fromLoading,
@@ -5136,7 +5137,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 const rowActualPaid = isCreditBill ? Number(row.advance_paid || 0) : calcs.advanceAmountFC;
 
                 if (isCreditBill) {
-                  if (rowActualPaid > 0 && rowRemainingDue <= 0.01) {
+                  if (rowActualPaid > 0 && isPurchaseBalanceCleared(rowRemainingDue)) {
                     return (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0 whitespace-nowrap">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -5144,7 +5145,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       </span>
                     );
                   }
-                  if (rowActualPaid > 0 && rowRemainingDue > 0.01) {
+                  if (rowActualPaid > 0 && !isPurchaseBalanceCleared(rowRemainingDue)) {
                     return (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 shrink-0 whitespace-nowrap">
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
@@ -5160,7 +5161,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   );
                 }
 
-                if (isPosted || (calcs.advanceAmountFC > 0 && calcs.remainingPurchaseFC <= 0.01)) {
+                if (isPosted || (calcs.advanceAmountFC > 0 && isPurchaseBalanceCleared(calcs.remainingPurchaseFC))) {
                   return (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0 whitespace-nowrap">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -7294,7 +7295,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                         </div>
                       </div>
                     </div>
-                    {activeMode === "remaining" && !isLocalSelected && Boolean(selectedLoadingRecord?.id) && Number(selectedLoadingDue?.outstanding ?? 1) <= 0.01 && (
+                    {activeMode === "remaining" && !isLocalSelected && Boolean(selectedLoadingRecord?.id) && isPurchaseBalanceCleared(Number(selectedLoadingDue?.outstanding ?? 1)) && (
                       <a
                         href={`/dashboard/purchase/purchase-transit-lane?source=purchase_booking&sourceId=${encodeURIComponent(String(selectedLoadingRecord.id))}&focus=${encodeURIComponent(String(selectedLoadingRecord.id))}`}
                         className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700"

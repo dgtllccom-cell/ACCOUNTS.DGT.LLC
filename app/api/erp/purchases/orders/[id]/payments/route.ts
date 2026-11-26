@@ -4,6 +4,7 @@ import { apiCreated, apiOk, apiError, handleApiError, ApiClientError } from "@/l
 import { parseJsonish } from "@/lib/stock-journal/model";
 import { resolvePaymentCondition, resolvePurchaseAmounts } from "@/lib/services/purchase-calculation-service";
 import { advanceClearance, loadedPayable, paymentInPurchaseCurrency } from "@/lib/purchases/loaded-payable";
+import { comparePurchasePaymentToLimit, isPurchaseBalanceCleared } from "@/lib/purchases/payment-precision";
 import { contractLines, loadingGoodsValue } from "@/lib/purchases/loading-value";
 import { purchaseOrderPaymentPostSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
@@ -570,7 +571,14 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       bodyAmountPur = toPurchaseCcy(Number(body.amount), bodyCcy, bodyRate);
     }
 
-    if (body.kind === "advance" && advancePercent > 0) {
+    const sameCurrencySettlement = bodyCcy === orderCcy && body.kind !== "booking";
+    const compareLimit = (limit: number, fxTolerance: number) => sameCurrencySettlement
+      ? comparePurchasePaymentToLimit(bodyAmountPur, limit)
+      : limit <= fxTolerance ? "settled" : bodyAmountPur > limit + fxTolerance ? "exceeds" : "allowed";
+    if (sameCurrencySettlement && compareLimit(remainingDuePur, 0) === "invalid") {
+      throw new ApiClientError("Use a valid purchase payment amount.", { status: 422, code: "INVALID_PAYMENT_AMOUNT" });
+    }
+    if (body.kind === "advance" && advancePercent > 0 && !sameCurrencySettlement) {
       const maxAllowedAdvancePur = Math.max(remainingAdvancePur, remainingDuePur);
       if (remainingDuePur <= tolerance) {
         throw new Error("This purchase order is already fully paid. Duplicate posting is not allowed.");
@@ -580,12 +588,14 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       }
     }
 
-    if ((body.kind === "remaining" || body.kind === "credit") && remainingDuePur <= tolerance) {
-      throw new Error("This purchase order has no remaining payable balance. Duplicate posting is not allowed.");
-    }
-
-    if ((body.kind === "remaining" || body.kind === "credit") && bodyAmountPur > remainingDuePur + tolerance) {
-      throw new Error(`Payment amount cannot exceed remaining payable balance (${remainingDuePur.toFixed(2)} ${orderCcy}).`);
+    if (sameCurrencySettlement || body.kind === "remaining" || body.kind === "credit") {
+      const result = compareLimit(remainingDuePur, tolerance);
+      if (result === "settled") {
+        throw new Error("This purchase order has no remaining payable balance. Duplicate posting is not allowed.");
+      }
+      if (result === "exceeds") {
+        throw new Error(`Payment amount cannot exceed remaining payable balance (${remainingDuePur.toFixed(2)} ${orderCcy}).`);
+      }
     }
 
     // ── Remaining payment ↔ loaded quantity ──
@@ -646,10 +656,13 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       if (mustFollowLoading && payable.loadedQuantity <= 0) {
         throw new ApiClientError("No quantity has been loaded for this purchase order yet. A Remaining payment is due only against loaded quantity.", { status: 409, code: "BUSINESS_RULE" });
       }
-      if (mustFollowLoading && bodyAmountPur > payable.loadedOutstandingFC + capTol) {
+      const exceedsLoadingLimit = (limit: number) => sameCurrencySettlement
+        ? comparePurchasePaymentToLimit(bodyAmountPur, limit) !== "allowed"
+        : bodyAmountPur > limit + capTol;
+      if (mustFollowLoading && exceedsLoadingLimit(payable.loadedOutstandingFC)) {
         throw new ApiClientError(`Payment amount cannot exceed the remaining payable for the loaded quantity (${payable.loadedOutstandingFC.toFixed(2)} ${orderCcy}).`, { status: 409, code: "BUSINESS_RULE" });
       }
-      if (requestedLoadingId && payable.loadingOutstandingFC != null && bodyAmountPur > payable.loadingOutstandingFC + capTol) {
+      if (requestedLoadingId && payable.loadingOutstandingFC != null && exceedsLoadingLimit(payable.loadingOutstandingFC)) {
         throw new ApiClientError(`Payment amount cannot exceed what this loading still owes (${payable.loadingOutstandingFC.toFixed(2)} ${orderCcy}).`, { status: 409, code: "BUSINESS_RULE" });
       }
       linkedLoadingId = requestedLoadingId || null;
@@ -1019,7 +1032,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
         const remainingDue = Number(updated.remaining_due || 0);
 
         const isAdvanceCompleted = requiredAdvance > 0 && clearance.cleared;
-        const isFullyPaid = remainingDue <= 0.01;
+        const isFullyPaid = isPurchaseBalanceCleared(remainingDue);
 
         if (isFullyPaid) {
           const completedWorkflow = {
