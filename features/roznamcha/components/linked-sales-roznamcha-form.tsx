@@ -54,7 +54,7 @@ type Props = {
   disabled: boolean; busy: boolean; canSave: boolean; notice?: ReactNode;
   countryId?: string;
   method: "cash" | "bank";
-  paymentCondition: "Advance Payment" | "Credit Payment" | "Remaining Payment" | "Final Payment";
+  paymentCondition: "Advance Payment" | "Credit Payment" | "Remaining Payment" | "Final Payment" | "Endorsement";
   methodLocked: boolean;
   cash: { name: string; mobile: string; idDocument: string };
   bank: { id: string; label: string; account: string; mode: string };

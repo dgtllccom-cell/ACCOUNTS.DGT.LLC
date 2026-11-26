@@ -287,7 +287,7 @@ it.each([
   render(await AdvancePage({ searchParams: Promise.resolve({}) }));
   const bill = await screen.findByRole("button", { name: `S#${source}-LEGACY` });
   fireEvent.click(within(bill.closest("tr")!).getByRole("button", { name: "Row actions" }));
-  fireEvent.click(await screen.findByRole("button", { name: "Payment Entry", exact: true }));
+  fireEvent.click(await screen.findByRole("button", { name: /^Payment Entry$/ }));
   await screen.findByRole("heading", { name: /Payment Entry - PO/ });
   const form = within(screen.getByLabelText("Roznamcha Type").closest("form")!);
   const condition = form.getByLabelText("Payment Condition") as HTMLInputElement;
@@ -328,7 +328,7 @@ describe.each(["SB", "LS"] as const)("existing %s payment routes", source => {
     render(await page());
     const bill = await screen.findByRole("button", { name: `S#${source}-OLD` });
     fireEvent.click(within(bill.closest("tr")!).getByRole("button", { name: "Row actions" }));
-    fireEvent.click(await screen.findByRole("button", { name: "Payment Entry", exact: true }));
+    fireEvent.click(await screen.findByRole("button", { name: /^Payment Entry$/ }));
     fireEvent.click(await screen.findByRole("button", { name: "Open Existing Payment Form" }));
     if (stage === "Remaining Payment") fireEvent.click(await screen.findByRole("button", { name: /Container #QA-01/ }));
     const channel = await screen.findByLabelText("Payment Type / Channel") as HTMLSelectElement;
