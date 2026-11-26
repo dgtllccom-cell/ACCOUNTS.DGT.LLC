@@ -157,9 +157,31 @@ it.each([
     expect(screen.queryByRole("button", { name: `S#${source}-ZERO` })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: `Payment Entry ${source}-CENT` }));
     const entry = await screen.findByRole("dialog", { name: "New Roznamcha Entry" });
-    const balance = within(entry).getByText("Outstanding Balance");
+    const form = within(entry);
+    const balance = form.getByText("Outstanding Balance");
     expect(balance.parentElement?.textContent).toMatch(/(?:AED\s*0\.01|0\.01\s*AED)/);
-    fireEvent.click(within(entry).getByRole("button", { name: "Close" }));
+    const type = form.getByLabelText("Roznamcha Type") as HTMLSelectElement;
+    const channel = form.getByLabelText("Payment Type / Channel") as HTMLSelectElement;
+    const condition = form.getByLabelText("Payment Condition") as HTMLInputElement;
+    const locked = lane === "cash" || lane === "account-transfer";
+    expect(condition.value).toBe(lane === "credit" ? "Credit Payment" : "Remaining Payment");
+    expect(condition.readOnly).toBe(true);
+    expect([type.disabled, channel.disabled]).toEqual([locked, locked]);
+    expect([type.value, channel.value]).toEqual(Array(2).fill(lane === "account-transfer" ? "bank" : "cash"));
+    if (!locked) {
+      fireEvent.change(type, { target: { value: "bank" } });
+      expect(channel.value).toBe("bank");
+      expect(form.getByText("Bank Account", { exact: true })).toBeTruthy();
+      expect(form.queryByPlaceholderText("Enter name")).toBeNull();
+      expect(condition.value).toBe(lane === "credit" ? "Credit Payment" : "Remaining Payment");
+    } else if (lane === "cash") {
+      expect(form.getByPlaceholderText("Enter name")).toBeTruthy();
+      expect(form.queryByText("Bank Account", { exact: true })).toBeNull();
+    } else {
+      expect(form.getByText("Bank Account", { exact: true })).toBeTruthy();
+      expect(form.queryByPlaceholderText("Enter name")).toBeNull();
+    }
+    fireEvent.click(form.getByRole("button", { name: "Close" }));
   }
   expect(moduleHeader.mock.calls.at(-1)?.[0]).toEqual(expect.arrayContaining([
     expect.objectContaining({ id: "LS-CENT", due: 0.01, paid: 366.99, total: 367, currency: "AED", settled: false }),
