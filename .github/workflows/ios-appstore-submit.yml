@@ -1,0 +1,116 @@
+# App Store listing, screenshots and (optionally) "Submit for Review" for DGT.llc B, via the App Store Connect API.
+# Manual only: Actions → "iOS App Store submit" → Run workflow. Needs a TestFlight build first (workflow "iOS TestFlight").
+# Run once with submit = off to upload texts and screenshots, check them in App Store Connect, then run with submit = on.
+#
+# Secrets (Settings → Secrets and variables → Actions):
+#   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8          the same API key as "iOS TestFlight"
+#   ASC_REVIEW_EMAIL, ASC_REVIEW_PASSWORD           the reviewer's ERP login (only needed with submit = on)
+#   ASC_REVIEW_CODE                                 the Apple store-review pass code from Super Admin → Mobile Devices (submit = on)
+# Not possible through the API — do once in App Store Connect before submitting: App Privacy, Pricing (Free) and availability.
+name: iOS App Store submit
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: "TestFlight build number to attach (the run number of the iOS TestFlight run); empty = latest"
+        type: string
+        default: ""
+      app_version:
+        description: "App Store version (must match the build's version)"
+        type: string
+        default: "1.0"
+      submit:
+        description: "Submit for App Review (off = upload listing + screenshots only)"
+        type: boolean
+        default: false
+      contact_first_name:
+        description: "App Review contact — first name"
+        type: string
+        default: "DGT"
+      contact_last_name:
+        description: "App Review contact — last name"
+        type: string
+        default: "Support"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-appstore-submit
+  cancel-in-progress: false
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+      ASC_REVIEW_EMAIL: ${{ secrets.ASC_REVIEW_EMAIL }}
+      ASC_REVIEW_PASSWORD: ${{ secrets.ASC_REVIEW_PASSWORD }}
+      ASC_REVIEW_CODE: ${{ secrets.ASC_REVIEW_CODE }}
+      BUILD_NUMBER: ${{ inputs.build_number }}
+      APP_VERSION: ${{ inputs.app_version }}
+      SUBMIT: ${{ inputs.submit }}
+      ASC_CONTACT_FIRST_NAME: ${{ inputs.contact_first_name }}
+      ASC_CONTACT_LAST_NAME: ${{ inputs.contact_last_name }}
+      FASTLANE_SKIP_UPDATE_CHECK: "1"
+      FASTLANE_HIDE_CHANGELOG: "1"
+    steps:
+      - name: Check required secrets
+        run: |
+          need=(ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8)
+          if [ "$SUBMIT" = "true" ]; then need+=(ASC_REVIEW_EMAIL ASC_REVIEW_PASSWORD ASC_REVIEW_CODE); fi
+          missing=0
+          for name in "${need[@]}"; do
+            if [ -z "${!name}" ]; then
+              echo "::error title=Missing secret::Repository secret $name is not set (see docs/store/app-store-connect.md)."
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ] || exit 1
+          if [ -n "$BUILD_NUMBER" ] && ! [[ "$BUILD_NUMBER" =~ ^[0-9]+$ ]]; then echo "::error::build_number must be a number"; exit 1; fi
+          echo "Secrets present for submit=$SUBMIT."
+
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
+      - name: Install fastlane
+        run: gem install fastlane --no-document
+
+      - name: Collect screenshots (iPhone 6.9" and iPad 13")
+        run: |
+          set -euo pipefail
+          src=docs/store/assets/ios
+          for loc in en-US ar-SA; do
+            l=${loc%%-*}
+            dst=fastlane/screenshots/$loc
+            mkdir -p "$dst"
+            for dev in iphone-6.9 ipad-13; do
+              n=1
+              for shot in login device-activation offline privacy; do
+                f="$src/$dev-$shot-$l.jpg"
+                [ -f "$f" ] || f="$src/$dev-$shot-en.jpg"
+                [ -f "$f" ] || continue
+                cp "$f" "$dst/${dev}-${n}-${shot}.jpg"
+                n=$((n+1))
+              done
+            done
+          done
+          find fastlane/screenshots -type f | sort
+
+      - name: Upload listing${{ inputs.submit && ' and submit for review' || '' }}
+        run: fastlane ios store
+
+      - name: Summary
+        if: ${{ success() }}
+        run: |
+          {
+            echo "### App Store Connect updated"
+            if [ "$SUBMIT" = "true" ]; then echo "Submitted for review — status: App Store Connect → Apps → DGT.llc B → Distribution."; else echo "Listing and screenshots uploaded (not submitted)."; fi
+          } >> "$GITHUB_STEP_SUMMARY"

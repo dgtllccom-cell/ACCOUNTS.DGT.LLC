@@ -11,7 +11,7 @@ export function DamanBusinessGroupEmblem({ className = "w-24 h-24" }: EmblemProp
   return (
     <img
       src="/images/damaan-logo.png"
-      alt="Damaan General Trading LLC - DGT.LLC"
+      alt="DAMAAN GENERAL TRADING L.L.C - DGT.LLC"
       className={`rounded-full object-contain drop-shadow-[0_10px_25px_rgba(234,179,8,0.4)] ${className}`}
     />
   );

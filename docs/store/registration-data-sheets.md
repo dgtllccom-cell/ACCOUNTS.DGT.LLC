@@ -2,17 +2,17 @@
 
 I cannot create the accounts (account creation, identity checks, payments and agreement acceptance must be done by the company owner). Everything the forms ask for is below, so each registration is copy-paste work of ~15 minutes. **[CONFIRM]** = an item only you can settle.
 
-## Company facts (same in every form)
+## Company facts (same in every form) — owner-confirmed 2026-11-26, source of truth: `company-identity.md`
 | Field | Value |
 |---|---|
-| Legal entity name | **DAMAAN GENERAL TRADING L.L.C** (exactly as on the trade licence — your last message; confirm the dots on the paper licence) |
+| Legal entity name | **DAMAAN GENERAL TRADING L.L.C** (exactly as on the D-U-N-S record, dots included) |
 | Country / emirate / area | United Arab Emirates · Dubai · Al Ras, Deira |
 | Trade licence no. | 1099620 (ERP shows expiry 15 Sep 2027) |
-| Registered / head-office address | **[CONFIRM]** "Al Hathoor Building, Office 2-01, Al Ras, Deira, Dubai" (your message) **or** "Al Hathboor Building, Office No. 201, Al Ras, Dubai – UAE" (ERP) — copy it from the licence |
+| Registered / head-office address | **Office No. 201, Al Ras – Deira, Dubai, United Arab Emirates** (exactly as on the D-U-N-S record; the older "Al Hathoor/Hathboor Building, Office 2-01" wording is retired) |
 | Company phone | +971 54 481 6664 (+971544816664) |
 | Website | https://dgt.llc |
 | Business activities | General Trading, Import & Export |
-| D-U-N-S number | **pending** — D&B application submitted; add the 9 digits here when it arrives: `_________` |
+| D-U-N-S number | **850005751** (DAMAAN GENERAL TRADING L.L.C, Corporation) |
 | Account e-mails | Apple: `apple@dgt.llc` · Google: `play@dgt.llc` · Samsung: **[CONFIRM which — suggest `support@dgt.llc`]** · public support: `support@dgt.llc` |
 | Privacy policy | https://api.dgt.llc/legal/privacy (live now in 5 languages; the company-name wording will be refreshed at the next approved deployment) |
 | Support URL | https://dgt.llc |
@@ -51,4 +51,4 @@ I cannot create the accounts (account creation, identity checks, payments and ag
 2. Add application ×2: category Business, free, content rating, countries (all or UAE + the countries you operate in), upload the signed release (`.aab`, or the signed `.apk` if AAB is not offered), listing text + screenshots + icon, reviewer login.
 
 ## What I do the moment a number/approval arrives
-D-U-N-S → I update these sheets and the store texts. Google/Samsung approved → I upload the files and complete the listings with you at the confirm/payment/OTP steps. Apple approved → cloud-Mac build (`scripts/ios-build-apps.sh`) the same day.
+D-U-N-S → I update these sheets and the store texts. Google/Samsung approved → I upload the files and complete the listings with you at the confirm/payment/OTP steps. Apple approved → GitHub Actions *iOS TestFlight* build the same day (`ios-requirements.md`).
