@@ -30,6 +30,34 @@ function ReportSection({ title, entries, children, className = "", green = false
   );
 }
 
+const SOURCE_LABELS = { lot: "Managed Lot", managed: "Managed Lot", warehouse: "Warehouse", local: "Local Stock", in_transit: "In Transit", export: "Warehouse" };
+
+/** Lot number without the "@location" suffix the lot picker appends. */
+export function goodsLotNo(item = {}) {
+  return String(item.stockLotNo || item.lotNo || item.lotRef || "").split("@")[0].trim();
+}
+
+/** Where the goods line's stock physically leaves from: saved name → "@location" of the lot → resolved id → booking default. */
+export function goodsWarehouse(item = {}, form = {}, warehouseNames = {}) {
+  const lot = String(item.stockLotNo || item.lotNo || "");
+  const fromLot = lot.includes("@") ? lot.slice(lot.indexOf("@") + 1).trim() : "";
+  return String(item.warehouse || item.warehouseName || fromLot || warehouseNames[item.warehouseId] || warehouseNames[item.managedWarehouseId]
+    || form.warehouseName || "").trim();
+}
+
+export function goodsStockSource(item = {}) {
+  const key = String(item.saleSource || item.stockSource || item.stockGroup || "").toLowerCase();
+  return SOURCE_LABELS[key] || (key ? key : "");
+}
+
+/** A transfer that posted its payment before the atomic transfer existed but never finished its status. */
+export function isHalfPostedSalesTransfer(order = {}) {
+  const wf = order.form_data?.workflow || {};
+  return Boolean(String(wf.transferPostedPaymentId || "").trim())
+    && !["posted", "transferred", "reversed"].includes(String(order.ledger_posting_status || "").toLowerCase())
+    && wf.transferStatus !== "transferred";
+}
+
 export function SalesBookingTransferReport({
   open, onClose, form = {}, goods = [], order = {}, confirmation, busy = false, error, onPost, onDocument, lang = "en", localSale = false,
 }) {
@@ -40,8 +68,13 @@ export function SalesBookingTransferReport({
   const trace = confirmation?.transferVerification || data.transferVerification || {};
   const audit = form.transferAudit || {};
   const posted = [confirmation?.ledgerPostingStatus, order.ledger_posting_status].includes("posted");
-  const transferred = posted || order.ledger_posting_status === "transferred" || data.workflow?.transferStatus === "transferred";
-  const status = posted ? tr("Transferred / Completed") : transferred ? tr("Transferred") : tr("Awaiting Transfer");
+  const halfPosted = !confirmation && isHalfPostedSalesTransfer(order);
+  const transferred = posted || halfPosted || order.ledger_posting_status === "transferred" || data.workflow?.transferStatus === "transferred";
+  const status = posted ? tr("Transferred / Completed") : halfPosted ? tr("Posted — status incomplete") : transferred ? tr("Transferred") : tr("Awaiting Transfer");
+  const warehouseNames = order.warehouseNames || {};
+  const loadingRecords = Array.isArray(order.loadingRecords) ? order.loadingRecords : [];
+  const stockAudit = confirmation?.stockDeductionAudit || data.stockDeductionAudit || null;
+  const fill = (template, values) => Object.entries(values).reduce((text, [key, value]) => text.split(`{${key}}`).join(value ?? "—"), tr(template));
   const journalId = trace.journalId || data.lastPaymentTrace?.roznamchaEntryId;
   const journalScope = order.city_branch_id || form.cityBranchId ? "branch"
     : order.country_branch_id || order.country_id || form.countryBranchId || form.countryId ? "country" : "super-admin";
@@ -93,7 +126,26 @@ export function SalesBookingTransferReport({
           </div>
           <span className={`rounded-full px-2 py-1 text-center text-xs font-bold ${posted ? "bg-emerald-100 text-emerald-950" : "bg-amber-100 text-amber-950"}`}>{status}</span>
         </div>
-        {error && <p role="alert" className="bg-red-50 px-4 py-2 text-sm text-red-800">{error}</p>}
+        {error && <p role="alert" className="bg-red-50 px-4 py-2 text-sm text-red-800">{tr(error)}</p>}
+        {confirmation && <div role="status" className="space-y-0.5 bg-emerald-50 px-4 py-2 text-sm text-emerald-900">
+          <p className="font-bold">{fill("Transferred successfully. Roznamcha voucher {voucher}.", { voucher: trace.voucherNo || "—" })}</p>
+          {goods.map((item, i) => <p key={i}><bdi>{fill("Stock left {warehouse} (Lot {lot}): {qty} {goods}.", {
+            warehouse: goodsWarehouse(item, form, warehouseNames) || "—", lot: goodsLotNo(item) || "—",
+            qty: `${number(item.qtyNo ?? item.quantity, 3)} ${item.qtyName || item.unit || ""}`.trim(), goods: item.goodsName || item.productName || "",
+          })}</bdi></p>)}
+          {!stockAudit?.deducted && goods.some(item => goodsLotNo(item)) && <p>{tr("No stock deduction was recorded for this posting.")}</p>}
+        </div>}
+        {!confirmation && halfPosted && <p role="status" className="bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
+          {tr("This booking was already posted to the Roznamcha; its status was not completed. Do not post it again; ask Accounts to review it.")}
+        </p>}
+        {!confirmation && !transferred && onPost && goods.length > 0 && <div className="space-y-0.5 bg-amber-50 px-4 py-2 text-sm text-amber-950">
+          <p className="font-bold">{tr("On Transfer / Post:")}</p>
+          {goods.map((item, i) => <p key={i}><bdi>{fill("{qty} {goods} will leave {warehouse} (Lot {lot}).", {
+            qty: `${number(item.qtyNo ?? item.quantity, 3)} ${item.qtyName || item.unit || ""}`.trim(), goods: item.goodsName || item.productName || "",
+            warehouse: goodsWarehouse(item, form, warehouseNames) || "—", lot: goodsLotNo(item) || "—",
+          })}</bdi></p>)}
+          <p><bdi>{fill("{customer} will be debited {amount}; {sales} will be credited.", { customer: debit || "—", amount: money(finalAmount, final), sales: credit || "—" })}</bdi></p>
+        </div>}
         <div className="min-h-0 flex-1 overflow-auto bg-slate-100 p-2.5 sm:p-4 dark:bg-slate-950">
           <dl className="mx-auto mb-3 grid max-w-6xl grid-cols-2 gap-2 lg:grid-cols-3">
             {previewSummary.map(([Icon, label, value, detail, tint]) => (
@@ -120,21 +172,50 @@ export function SalesBookingTransferReport({
                 {section("Accounts (DR / CR)", [["Customer Account (DR)", debit], ["Account No. (DR)", debitCode], ["Sales Account (CR)", credit], ["Account No. (CR)", creditCode]])}
                 {section("Customer / Sender (DR)", [["Account Name", debit], ["Country / Branch", [form.customerAccountCountry, form.customerAccountBranch].filter(Boolean).join(" / ")], ["Contact Person", form.customerContactPerson], ["Contact No.", form.customerPhone]])}
                 {section("Receiver / Sales (CR)", [["Account Name", credit], ["Country / Branch", [form.salesAccountCountry, form.salesAccountBranch].filter(Boolean).join(" / ")], ["Contact Person", form.salesContactPerson], ["Contact No.", form.salesPhone]])}
+                <ReportSection title={tr("Warehouse / Stock Source")} className="sm:col-span-2">
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-[11px]">
+                      <thead className="bg-blue-50"><tr>{["#", "Goods Name", "Lot No.", "Stock Source", "Warehouse / Location", "Available Before", "This Sale", "Remaining After", "Stock Status"].map(label => <th className={cell} key={label} scope="col">{tr(label)}</th>)}</tr></thead>
+                      <tbody>{goods.map((item, i) => {
+                        const sold = Number(item.qtyNo ?? item.quantity);
+                        const available = item.lotAvailableQty == null || item.lotAvailableQty === "" ? null : Number(item.lotAvailableQty);
+                        const unit = item.qtyName || item.unit || "";
+                        const deducted = Boolean(stockAudit?.deducted || data.stockDeducted);
+                        return <tr key={i}>{[i + 1, item.goodsName || item.productName, goodsLotNo(item), goodsStockSource(item) && tr(goodsStockSource(item)),
+                          goodsWarehouse(item, form, warehouseNames), available == null ? null : `${number(available, 3)} ${unit}`, `${number(sold, 3)} ${unit}`,
+                          available == null || !Number.isFinite(sold) ? null : `${number(Math.max(0, available - sold), 3)} ${unit}`,
+                          deducted ? `${tr("Stock deducted")} ✓` : transferred ? "—" : tr("Deducted on Transfer"),
+                        ].map((value, col) => <td className={cell} key={col}><bdi>{value || "—"}</bdi></td>)}</tr>;
+                      })}</tbody>
+                    </table>
+                  </div>
+                </ReportSection>
                 <ReportSection title={tr("Goods Details")} className="sm:col-span-2">
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-[11px]">
-                      <thead className="bg-blue-50"><tr>{["#", "Goods Name", "Lot Name", "Size / Grade", "Qty (Unit)", "Gross Weight (KG)", "Net Weight (KG)", "Exchange Rate", "Sales Amount", "Final Amount"].map(label => <th className={cell} key={label} scope="col">{tr(label)}</th>)}</tr></thead>
+                      <thead className="bg-blue-50"><tr>{["#", "Goods Name", "Lot Name", "Brand", "Origin", "HS Code", "Packing", "Size / Grade", "Qty (Unit)", "Gross Weight (KG)", "Net Weight (KG)", "Unit Price", "Exchange Rate", "Sales Amount", "Final Amount"].map(label => <th className={cell} key={label} scope="col">{tr(label)}</th>)}</tr></thead>
                       <tbody>{goods.map((item, i) => (
-                        <tr key={i}>{[i + 1, item.goodsName || item.productName, item.stockLotNo || item.lotNo, [item.size, item.grade].filter(Boolean).join(" / "), `${number(item.qtyNo ?? item.quantity, 3)} ${item.qtyName || item.unit || ""}`, number(item.grossWeight, 3), number(item.netWeight, 3), item.exchangeRate ? `${(item.op || item.operator) === "/" ? "÷" : "×"} ${item.exchangeRate}` : "—", money(item.totalAmount, item.salesCurrency || sales), money(item.finalAmount, item.secondaryCurrency || final)].map((value, col) => <td className={cell} key={col}><bdi>{value || "—"}</bdi></td>)}</tr>
+                        <tr key={i}>{[i + 1, item.goodsName || item.productName, goodsLotNo(item), item.brand, item.origin, item.hsCode, item.packType, [item.size, item.grade].filter(Boolean).join(" / "), `${number(item.qtyNo ?? item.quantity, 3)} ${item.qtyName || item.unit || ""}`, number(item.grossWeight, 3), number(item.netWeight, 3), item.unitPrice ?? item.coursePrice ?? null, item.exchangeRate ? `${(item.op || item.operator) === "/" ? "÷" : "×"} ${item.exchangeRate}` : "—", money(item.totalAmount, item.salesCurrency || sales), money(item.finalAmount, item.secondaryCurrency || final)].map((value, col) => <td className={cell} key={col}><bdi>{value || value === 0 ? (col === 11 ? number(value, 4) : value) : "—"}</bdi></td>)}</tr>
                       ))}</tbody>
                       {goods.length > 0 && <tfoot className="bg-amber-50 font-bold">
-                        <tr><th colSpan={5} className={cell} scope="row">{tr("Total")}</th><td className={cell}>{number(sum("grossWeight"), 3)}</td><td className={cell}>{number(sum("netWeight"), 3)}</td><td className={cell}>—</td><td className={cell}>{money(order.total_goods_original ?? sum("totalAmount"), sales)}</td><td className={cell}>{money(finalAmount, final)}</td></tr>
+                        <tr><th colSpan={9} className={cell} scope="row">{tr("Total")}</th><td className={cell}>{number(sum("grossWeight"), 3)}</td><td className={cell}>{number(sum("netWeight"), 3)}</td><td className={cell}>—</td><td className={cell}>—</td><td className={cell}>{money(order.total_goods_original ?? sum("totalAmount"), sales)}</td><td className={cell}>{money(finalAmount, final)}</td></tr>
                       </tfoot>}
                     </table>
                   </div>
                 </ReportSection>
-                {section("Loading & Route Information", [["Loading Country", form.loadingCountry], ["Loading Port", form.loadingPort], ["Loading Date", form.loadingDate], ["Received Country", form.receivedCountry || form.receivingCountry], ["Received Port", form.receivedPort || form.receivingPort], ["Receiving Date", form.receivedDate || form.receivingDate], ["Ship Type", form.shippingMode], ["Container No.", form.containerNo]])}
+                {section("Loading & Route Information", [["Loading Country", form.loadingCountry], ["Loading Port", form.loadingPort || form.loadingBorder], ["Loading Date", form.loadingDate || loadingRecords[0]?.loadingDate], ["Received Country", form.receivedCountry || form.receivingCountry || form.destinationCountry], ["Received Port", form.receivedPort || form.receivingPort || form.receivedPortName], ["Receiving Date", form.receivedDate || form.receivingDate], ["Ship Type", form.shippingMode || form.shipmentType], ["Container Size", form.containerSize || form.containerType], ["Container Count", loadingRecords.length || form.containerCount], ["Container No.", loadingRecords.map(r => r.containerNumber).join(", ") || form.containerNumbers || form.containerNo]])}
                 {section("Payment Information", [["Payment Type", form.paymentType], ["Payment Condition", form.paymentCondition || form.paymentTerms], ["Sales Currency", sales], ["Exchange Rate", rate.ok ? `${sales} ${rate.operator === "/" ? "÷" : "×"} ${rate.rate} → ${final}` : null], ["Final Amount", money(finalAmount, final)], ["Paid Amount", money(localSale ? localSettlement?.received : confirmation?.paidAmount ?? order.paid_amount, final)], ["Remaining Amount", money(localSale ? localSettlement?.remaining : confirmation?.remainingAmount ?? order.remaining_amount, final)], ["Payment Account", form.paymentAccountName]])}
+                <ReportSection title={tr("Loading Records")} className="sm:col-span-2">
+                  {loadingRecords.length === 0 ? <p className="p-3 text-slate-600">{tr("No loading recorded yet.")}</p> : <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-[11px]">
+                      <thead className="bg-blue-50"><tr>{["#", "Container No.", "Container Type", "Truck No.", "Driver", "Loading Date", "Received Date", "Qty", "Net Wt (KG)"].map(label => <th className={cell} key={label} scope="col">{tr(label)}</th>)}</tr></thead>
+                      <tbody>{loadingRecords.map((record, i) => <tr key={record.containerNumber + i}>{[i + 1, record.containerNumber, record.containerType, record.truck && `${record.truck}${record.truckRegistrationType ? ` (${tr(record.truckRegistrationType === "registered" ? "Registered" : "Temporary")})` : ""}`, record.driver, record.loadingDate, record.receivedDate, number(record.quantity, 3), number(record.netWeight, 3)].map((value, col) => <td className={cell} key={col}><bdi>{value || value === 0 ? value : "—"}</bdi></td>)}</tr>)}</tbody>
+                      <tfoot className="bg-amber-50 font-bold"><tr><th colSpan={7} className={cell} scope="row">{tr("Total")}</th>
+                        <td className={cell}>{number(loadingRecords.reduce((s, r) => s + (Number(r.quantity) || 0), 0), 3)}</td>
+                        <td className={cell}>{number(loadingRecords.reduce((s, r) => s + (Number(r.netWeight) || 0), 0), 3)}</td></tr></tfoot>
+                    </table>
+                  </div>}
+                </ReportSection>
                 {section("Accounting Posting (Transfer Result)", [["Debit", debitAmount], ["Credit", creditAmount]])}
                 <ReportSection title={tr("Remarks")}><p className="whitespace-pre-wrap break-words p-3">{form.salesReportRemarks || form.remarks || "—"}</p></ReportSection>
               </div>

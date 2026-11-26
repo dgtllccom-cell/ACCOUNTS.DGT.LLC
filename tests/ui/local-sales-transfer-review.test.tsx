@@ -49,7 +49,8 @@ describe("Local Sales row Transfer", () => {
     fireEvent.click(screen.getByRole("button", { name: "Actions LS-101" }));
     fireEvent.click(screen.getByRole("button", { name: "Transfer" }));
     const report = await screen.findByRole("dialog", { name: "Local Sales Transfer Verification Report" });
-    expect(await within(report).findByText("Local goods")).toBeTruthy();
+    // the goods line is listed in both the Warehouse / Stock Source and the Goods Details tables
+    expect((await within(report).findAllByText("Local goods")).length).toBe(2);
     expect(apiGet).toHaveBeenCalledWith(`/api/erp/sales/orders/${localId}?transfer=1&source=local`);
     expect(apiFetch).not.toHaveBeenCalled();
     fireEvent.click(within(report).getByRole("button", { name: "Transfer / Post" }));
