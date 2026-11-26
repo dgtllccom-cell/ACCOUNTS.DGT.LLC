@@ -103,19 +103,10 @@ export function printDomFragmentViaModal(
   });
 
   // ── 2) Drop the "Actions" column from data tables (header + each row cell) ──
-  clone.querySelectorAll("table").forEach((table) => {
-    const headRow = table.tHead?.rows?.[0] || table.rows?.[0];
-    if (!headRow) return;
-    const cells = Array.from(headRow.cells);
-    const actionIdx = cells.findIndex((c) => {
-      const t = (c.textContent || "").trim().toLowerCase();
-      return t === "actions" || t === "action" || t === "" && c.querySelectorAll("button,a").length > 0;
-    });
-    if (actionIdx < 0) return;
-    Array.from(table.rows).forEach((row) => {
-      if (row.cells[actionIdx]) row.deleteCell(actionIdx);
-    });
-  });
+  //   Multi-row headers (a group row "MASTER REFERENCE | … | ACTIONS" above the leaf row) are
+  //   handled by LOGICAL column position (colSpan aware): the old code looked at the group row
+  //   only and deleted the wrong physical cell in every row.
+  clone.querySelectorAll("table").forEach((table) => removeActionColumns(table as HTMLTableElement));
 
   // ── 3) Collapse now-empty wrappers left behind by the strip pass ───────────
   for (let pass = 0; pass < 3; pass++) {
@@ -133,13 +124,7 @@ export function printDomFragmentViaModal(
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   // A wide data table (7+ columns) does not fit A4 portrait — default to landscape
   // so columns are not clipped (the modal still lets the user flip it back).
-  const widestTableCols = Math.max(
-    0,
-    ...Array.from(clone.querySelectorAll("table")).map((t) => {
-      const hr = (t as HTMLTableElement).tHead?.rows?.[0] || (t as HTMLTableElement).rows?.[0];
-      return hr ? hr.cells.length : 0;
-    }),
-  );
+  const widestTableCols = Math.max(0, ...Array.from(clone.querySelectorAll("table")).map((t) => logicalColumnCount(t as HTMLTableElement)));
   const orientation = opts.orientation || (widestTableCols >= 7 ? "landscape" : "portrait");
 
   // Pull the page's stylesheets so Tailwind utility classes still resolve, but
@@ -150,7 +135,7 @@ export function printDomFragmentViaModal(
     .join("\n");
 
   const html = `<!doctype html>
-<html lang="${lang}" dir="${isRtl ? "rtl" : "ltr"}">
+<html lang="${lang}" dir="${isRtl ? "rtl" : "ltr"}" data-erp-paginate="true">
 <head>
 <meta charset="utf-8" />
 <title>${title.replace(/[<>&"]/g, "")}</title>
@@ -185,6 +170,16 @@ ${styleLinks}
   #__frag [class*="overflow-y"], #__frag [class*="overflow-auto"], #__frag [class*="overflow-scroll"] {
     overflow: visible !important; max-height: none !important; height: auto !important;
   }
+  /* Spreadsheet-style print: screen-only minimum widths (min-w-[1700px] scroll tables) must not
+     force the table wider than the paper — the preview fits whatever remains to the page width. */
+  #__frag table, #__frag th, #__frag td { min-width: 0 !important; max-width: none !important; }
+  #__frag thead, #__frag thead th, #__frag [class*="sticky"] { position: static !important; }
+  #__frag tbody tr:nth-child(even) > td { background-color: #f8fafc !important; }
+  #__frag thead tr:not(:last-child) th { background: #e2e8f0 !important; text-align: center; }
+  #__frag td [class*="rounded"], #__frag td [class*="border"] { border: 0 !important; padding: 0 !important; background: transparent !important; }
+  #__frag details > :not(summary) { display: none !important; }
+  #__frag summary { list-style: none !important; }
+  #__frag summary::-webkit-details-marker, #__frag summary::marker { display: none !important; content: "" !important; }
   #__frag img, #__frag svg { max-width: 100%; }
   /* Headings: scale to the print column and wrap at a balanced point rather than
      leaving a single orphan word ("… Communication / Centre") on its own line */
@@ -229,4 +224,54 @@ ${styleLinks}
 
   printStore.openPrint(html, title);
   return true;
+}
+
+/** Number of logical columns of a table (the widest header/body row, colSpan aware). */
+export function logicalColumnCount(table: HTMLTableElement): number {
+  let max = 0;
+  Array.from(table.rows).forEach((row) => {
+    const n = Array.from(row.cells).reduce((sum, c) => sum + Math.max(1, c.colSpan || 1), 0);
+    if (n > max) max = n;
+  });
+  return max;
+}
+
+function cellAtLogicalColumn(row: HTMLTableRowElement, col: number): HTMLTableCellElement | null {
+  let pos = 0;
+  for (const cell of Array.from(row.cells)) {
+    const span = Math.max(1, cell.colSpan || 1);
+    if (col >= pos && col < pos + span) return cell;
+    pos += span;
+  }
+  return null;
+}
+
+/**
+ * Remove "Actions" columns (header label "Action(s)", or an empty header over buttons/links)
+ * from a table. Works on the leaf header row by logical column index; spanning group cells are
+ * narrowed (colSpan − 1) instead of deleted.
+ */
+export function removeActionColumns(table: HTMLTableElement): void {
+  const headRows = table.tHead ? Array.from(table.tHead.rows) : table.rows[0] ? [table.rows[0]] : [];
+  const leaf = headRows[headRows.length - 1];
+  if (!leaf) return;
+  const actionCols: number[] = [];
+  let pos = 0;
+  for (const c of Array.from(leaf.cells)) {
+    const span = Math.max(1, c.colSpan || 1);
+    const txt = (c.textContent || "").trim().toLowerCase();
+    if (span === 1 && (txt === "actions" || txt === "action" || (txt === "" && c.querySelectorAll("button,a").length > 0))) {
+      actionCols.push(pos);
+    }
+    pos += span;
+  }
+  // remove right-to-left so earlier logical indexes stay valid
+  actionCols.sort((a, b) => b - a).forEach((col) => {
+    Array.from(table.rows).forEach((row) => {
+      const cell = cellAtLogicalColumn(row, col);
+      if (!cell) return;
+      if (cell.colSpan > 1) cell.colSpan -= 1;
+      else cell.remove();
+    });
+  });
 }

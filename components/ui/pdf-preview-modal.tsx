@@ -6,7 +6,18 @@ import React, { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { usePrintStore } from "@/lib/store/print-store";
 import { Button } from "@/components/ui/button";
-import { X, Printer, Download, Mail, Share2, Menu, FileText, LayoutList } from "lucide-react";
+import { X, Printer, Download, Mail, Share2, Menu, FileText, LayoutList, ZoomIn, ZoomOut, Maximize, MoveHorizontal } from "lucide-react";
+import {
+  PAGE_GAP_PX,
+  PAGINATED_ATTR,
+  downloadPaginatedSheetsPdf,
+  unifyScreenAndPrintCss,
+  paginateDocument,
+  paginatedSheetCss,
+  paperSizePx,
+  waitForDocumentAssets,
+  wantsPagination,
+} from "@/lib/reports/print-paginate";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 
@@ -52,6 +63,85 @@ export function PdfPreviewModal() {
   const [pages, setPages] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
+
+  // ── Paginated mode (documents that opt in with <html data-erp-paginate="true">) ──────────────
+  // The document is split into real A4 sheets inside the iframe; the preview, Print and the PDF
+  // download all use those same sheets, so nothing is clipped and the page count is real.
+  const paginate = wantsPagination(htmlContent || "");
+  const [paginatedCount, setPaginatedCount] = useState(0);
+  const [paginatedHtml, setPaginatedHtml] = useState("");
+  const [zoomMode, setZoomMode] = useState<"page" | "width" | "manual">("page");
+  const [manualScale, setManualScale] = useState(1);
+  const orientationRef = useRef(orientation);
+  orientationRef.current = orientation;
+  const sheetPx = paperSizePx(orientation);
+  const stackHeightPx = paginatedCount > 0
+    ? paginatedCount * sheetPx.h + (paginatedCount - 1) * PAGE_GAP_PX
+    : sheetPx.h;
+  const [areaSize, setAreaSize] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    if (!isOpen) return;
+    const el = previewAreaRef.current;
+    const read = () => setAreaSize({ w: el?.clientWidth ?? window.innerWidth, h: el?.clientHeight ?? window.innerHeight - 80 });
+    read();
+    window.addEventListener("resize", read);
+    let ro: ResizeObserver | null = null;
+    if (el && typeof ResizeObserver !== "undefined") { ro = new ResizeObserver(read); ro.observe(el); }
+    return () => { window.removeEventListener("resize", read); ro?.disconnect(); };
+  }, [isOpen, paginate]);
+  const PREVIEW_PAD = 24;
+  const fitPageScale = Math.min((areaSize.w - PREVIEW_PAD * 2) / sheetPx.w, (areaSize.h - PREVIEW_PAD * 2) / sheetPx.h);
+  const fitWidthScale = (areaSize.w - PREVIEW_PAD * 2) / sheetPx.w;
+  const clampScale = (v: number) => Math.min(3, Math.max(0.15, Number.isFinite(v) && v > 0 ? v : 1));
+  const viewScale = clampScale(zoomMode === "page" ? fitPageScale : zoomMode === "width" ? fitWidthScale : manualScale);
+  const zoomBy = (factor: number) => { setManualScale(clampScale(viewScale * factor)); setZoomMode("manual"); };
+
+  useEffect(() => { setPaginatedCount(0); setPaginatedHtml(""); }, [htmlContent, orientation]);
+
+  const runPagination = async () => {
+    const iframe = iframeRef.current;
+    const doc = iframe?.contentDocument;
+    if (!paginate || !doc || !doc.body || doc.documentElement.hasAttribute(PAGINATED_ATTR)) return;
+    const o = orientationRef.current;
+    unifyScreenAndPrintCss(doc);
+    await waitForDocumentAssets(doc);
+    if (doc.documentElement.hasAttribute(PAGINATED_ATTR)) return;
+    const root = doc.getElementById("__frag") || doc.body;
+    const docLangAttr = doc.documentElement.lang || previewLang || lang;
+    const rtl = (doc.documentElement.dir || "").toLowerCase() === "rtl";
+    const style = doc.createElement("style");
+    style.setAttribute("data-erp-sheet-css", "true");
+    style.textContent = paginatedSheetCss(o, { rtl, scope: root.id ? `#${root.id}` : "body" });
+    doc.head.appendChild(style);
+    const res = paginateDocument(doc, {
+      orientation: o,
+      rtl,
+      root,
+      pageLabel: (current, total) => t(docLangAttr, "pdfprev.page_of" as never, "Page {current} of {total}")
+        .replace("{current}", String(current)).replace("{total}", String(total)),
+    });
+    if (orientationRef.current !== o) return;
+    setPaginatedCount(res.pageCount);
+    setCurrentPage(1);
+    const serial = "<!doctype html>\n" + doc.documentElement.outerHTML.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
+    setPaginatedHtml(serial);
+  };
+
+  const scrollToPage = (pageNum: number) => {
+    setCurrentPage(pageNum);
+    const area = previewAreaRef.current;
+    if (!area) return;
+    area.scrollTo({ top: (pageNum - 1) * (sheetPx.h + PAGE_GAP_PX) * viewScale, behavior: "smooth" });
+  };
+  const onPreviewScroll = () => {
+    if (!paginate || paginatedCount < 2) return;
+    const area = previewAreaRef.current;
+    if (!area) return;
+    const step = (sheetPx.h + PAGE_GAP_PX) * viewScale;
+    const idx = Math.floor((area.scrollTop + area.clientHeight * 0.35) / step);
+    const next = Math.min(paginatedCount, Math.max(1, idx + 1));
+    if (next !== currentPage) setCurrentPage(next);
+  };
 
   // Scale the A4 sheet down to fit screen dimensions gracefully
   const previewAreaRef = useRef<HTMLDivElement>(null);
@@ -139,6 +229,11 @@ export function PdfPreviewModal() {
     const filename = `${safeName}-${timestamp}.pdf`;
 
     try {
+      // Paginated preview: rasterise exactly the sheets on screen.
+      if (paginate && iframeRef.current?.contentDocument?.documentElement.hasAttribute(PAGINATED_ATTR)) {
+        await downloadPaginatedSheetsPdf(iframeRef.current.contentDocument, orientation, filename);
+        return;
+      }
       // Preferred path: paginate the report's data table into real A4 pages (all rows, repeated
       // column header, PAGE x / N) — the raw iframe capture below clips to a single sheet.
       try {
@@ -188,7 +283,7 @@ export function PdfPreviewModal() {
     // injectedHtml is the report body the iframe already renders (report builder output,
     // already in the selected language + RTL/LTR + scope-filtered) plus @page sizing.
     // No session/cookie/token data is present in it.
-    const blob = new Blob([injectedHtml || htmlContent], { type: "text/html;charset=utf-8;" });
+    const blob = new Blob([(paginate && paginatedHtml) || injectedHtml || htmlContent], { type: "text/html;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -277,7 +372,10 @@ export function PdfPreviewModal() {
   const fixedVoucherPortrait = /^<!doctype html>\s*<html\b[^>]*\bdata-voucher-portrait="true"/i.test(sanitizedHtml);
   const scrollPreview = /<html\b[^>]*\bdata-scroll-print-preview="true"/i.test(sanitizedHtml);
 
-  const injectedHtml = `
+  const injectedHtml = paginate ? `
+    ${sanitizedHtml}
+    <style>.no-print-toolbar, .screen-only { display: none !important; }</style>
+  ` : `
     ${sanitizedHtml}
     <style>
       @page {
@@ -406,12 +504,30 @@ export function PdfPreviewModal() {
           )}
 
           {!scrollPreview && <div className="hidden text-xs font-medium text-slate-300 px-2 border-x border-slate-700 sm:block">
-            {tt("pdfprev.page_of", "Page {current} of {total}").replace("{current}", String(currentPage)).replace("{total}", String(pages.length))}
+            {tt("pdfprev.page_of", "Page {current} of {total}").replace("{current}", String(currentPage)).replace("{total}", String(paginate ? Math.max(1, paginatedCount) : pages.length))}
           </div>}
 
           <span className="hidden text-[11px] font-bold text-slate-300 bg-slate-800 px-2 py-0.5 rounded border border-slate-700 select-none sm:inline">
             A4
           </span>
+
+          {paginate && (
+            <div className="hidden items-center gap-0.5 sm:flex" role="group" aria-label={tt("pdfprev.zoom", "Zoom")}>
+              <button type="button" onClick={() => zoomBy(1 / 1.2)} className="rounded p-1 text-slate-300 hover:bg-slate-700 hover:text-white" title={tt("pdfprev.zoom_out", "Zoom out")} aria-label={tt("pdfprev.zoom_out", "Zoom out")}>
+                <ZoomOut className="h-3.5 w-3.5" />
+              </button>
+              <span className="min-w-[3rem] text-center text-[11px] font-semibold tabular-nums text-slate-300" dir="ltr">{Math.round(viewScale * 100)}%</span>
+              <button type="button" onClick={() => zoomBy(1.2)} className="rounded p-1 text-slate-300 hover:bg-slate-700 hover:text-white" title={tt("pdfprev.zoom_in", "Zoom in")} aria-label={tt("pdfprev.zoom_in", "Zoom in")}>
+                <ZoomIn className="h-3.5 w-3.5" />
+              </button>
+              <button type="button" onClick={() => setZoomMode("page")} className={`rounded p-1 hover:bg-slate-700 hover:text-white ${zoomMode === "page" ? "bg-slate-700 text-white" : "text-slate-300"}`} title={tt("pdfprev.fit_page", "Fit page")} aria-label={tt("pdfprev.fit_page", "Fit page")}>
+                <Maximize className="h-3.5 w-3.5" />
+              </button>
+              <button type="button" onClick={() => setZoomMode("width")} className={`rounded p-1 hover:bg-slate-700 hover:text-white ${zoomMode === "width" ? "bg-slate-700 text-white" : "text-slate-300"}`} title={tt("pdfprev.fit_width", "Fit width")} aria-label={tt("pdfprev.fit_width", "Fit width")}>
+                <MoveHorizontal className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Right: Actions */}
@@ -496,6 +612,54 @@ export function PdfPreviewModal() {
         </div>
       </div>
 
+      {paginate ? (
+        <div className="flex flex-1 overflow-hidden">
+          {/* Start-side page list: real thumbnails of the paginated sheets (flips to the right in RTL) */}
+          <aside className="hidden w-44 shrink-0 flex-col border-e border-slate-700 bg-[#0f172a] md:flex" aria-label={tt("pdfprev.pages", "Pages")}>
+            <div className="flex items-center justify-between border-b border-slate-700 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-300">
+              <span>{tt("pdfprev.pages", "Pages")}</span>
+              <span className="rounded bg-slate-800 px-1.5 py-0.5 tabular-nums text-slate-200" dir="ltr">{paginatedCount || "…"}</span>
+            </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              {paginatedCount === 0 ? (
+                <div className="p-4 text-center text-xs text-slate-400">{tt("pdfprev.preparing_pages", "Preparing pages…")}</div>
+              ) : (
+                <PageThumbnails
+                  html={paginatedHtml}
+                  count={paginatedCount}
+                  sheetW={sheetPx.w}
+                  sheetH={sheetPx.h}
+                  current={currentPage}
+                  onSelect={scrollToPage}
+                  label={(n) => tt("pdfprev.page_n", "Page {n}").replace("{n}", String(n))}
+                />
+              )}
+            </div>
+          </aside>
+
+          <div ref={previewAreaRef} onScroll={onPreviewScroll} className="relative flex-1 overflow-auto bg-[#1e293b] custom-scrollbar" style={{ padding: PREVIEW_PAD }}>
+            {paginatedCount === 0 && (
+              <div className="pointer-events-none absolute inset-x-0 top-3 z-10 text-center text-xs font-semibold text-slate-300">
+                {tt("pdfprev.preparing_pages", "Preparing pages…")}
+              </div>
+            )}
+            <div dir="ltr" style={{ width: sheetPx.w * viewScale, height: stackHeightPx * viewScale, margin: "0 auto", flex: "0 0 auto" }}>
+              <div style={{ width: sheetPx.w, height: stackHeightPx, transform: `scale(${viewScale})`, transformOrigin: "top left", opacity: paginatedCount === 0 ? 0 : 1 }}>
+                <iframe
+                  key={`${orientation}-${htmlContent.length}`}
+                  ref={iframeRef}
+                  srcDoc={injectedHtml}
+                  onLoad={() => { void runPagination(); }}
+                  scrolling="no"
+                  className="block border-none"
+                  style={{ width: sheetPx.w, height: stackHeightPx, overflow: "hidden", background: "transparent" }}
+                  title={tt("pdfprev.preview_title", "PDF Preview")}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar: Thumbnails (only shown if multi-page) */}
         {pages.length > 1 && (
@@ -561,6 +725,7 @@ export function PdfPreviewModal() {
           </div>
         </div>
       </div>
+      )}
 
       <style dangerouslySetInnerHTML={{__html: `
         .custom-scrollbar::-webkit-scrollbar {
@@ -578,6 +743,66 @@ export function PdfPreviewModal() {
           background: #475569; 
         }
       `}} />
+    </div>
+  );
+}
+
+/**
+ * Real page thumbnails: one scaled copy of the paginated document (pages stacked with a wider gap
+ * that leaves room for the "Page N" caption), with a clickable overlay per sheet.
+ */
+function PageThumbnails({
+  html, count, sheetW, sheetH, current, onSelect, label,
+}: {
+  html: string;
+  count: number;
+  sheetW: number;
+  sheetH: number;
+  current: number;
+  onSelect: (page: number) => void;
+  label: (n: number) => string;
+}) {
+  const THUMB_W = 120;
+  const CAPTION = 30;
+  const s = THUMB_W / sheetW;
+  const thumbH = sheetH * s;
+  const gapUnscaled = CAPTION / s;
+  const stackH = count * sheetH + (count - 1) * gapUnscaled;
+  const thumbDoc = html
+    ? html.replace(/<\/head>/i, `<style>html .erp-pages, html body .erp-pages, html #__frag .erp-pages { gap:${gapUnscaled}px !important; } html, body { overflow:hidden !important; } .erp-page { box-shadow:none !important; }</style></head>`)
+    : "";
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  return (
+    <div className="relative mx-auto my-3" style={{ width: THUMB_W, height: count * thumbH + count * CAPTION }}>
+      <div dir="ltr" className="pointer-events-none absolute left-0 top-0" style={{ width: THUMB_W, height: stackH * s, overflow: "hidden" }}>
+        <div style={{ width: sheetW, height: stackH, transform: `scale(${s})`, transformOrigin: "top left" }}>
+          <iframe
+            ref={frameRef}
+            srcDoc={thumbDoc}
+            tabIndex={-1}
+            aria-hidden="true"
+            scrolling="no"
+            style={{ width: sheetW, height: stackH, border: 0, display: "block", background: "transparent" }}
+          />
+        </div>
+      </div>
+      {Array.from({ length: count }, (_, i) => i + 1).map((n) => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => onSelect(n)}
+          aria-current={n === current ? "page" : undefined}
+          className="group absolute left-0 flex w-full flex-col items-center"
+          style={{ top: (n - 1) * (thumbH + CAPTION), height: thumbH + CAPTION }}
+          title={label(n)}
+        >
+          <span
+            className={`block w-full rounded-sm transition-all ${n === current ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-[#0f172a]" : "ring-1 ring-slate-600 group-hover:ring-slate-400"}`}
+            style={{ height: thumbH }}
+          />
+          <span className={`mt-1 text-[11px] font-semibold ${n === current ? "text-blue-400" : "text-slate-400"}`}>{label(n)}</span>
+        </button>
+      ))}
     </div>
   );
 }
