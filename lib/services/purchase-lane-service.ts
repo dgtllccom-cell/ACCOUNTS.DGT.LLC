@@ -554,7 +554,7 @@ const money = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 
  * If anything is still unpaid the transfer is refused and the exact outstanding amount is returned.
  * Sales sources are not gated by this rule.
  */
-async function assertTransferPaymentSettled(tx: Sql, l: Record<string, any>) {
+export async function assertTransferPaymentSettled(tx: Sql, l: Record<string, any>) {
   if (l.source_type !== "purchase_booking" && l.source_type !== "local_purchase") return;
   const fallbackNo = l.purchase_ref_no || l.loading_record_no || l.container_number || String(l.id).slice(0, 8);
   let billNo = fallbackNo;
@@ -576,11 +576,11 @@ async function assertTransferPaymentSettled(tx: Sql, l: Record<string, any>) {
     billNo = row.purchase_order_no || fallbackNo;
     currency = String(row.currency_code || "USD").toUpperCase();
     total = resolvePurchaseAmounts(order as never).totalPurchaseFC;
-    const payments = await tx`select amount, exchange_rate, kind, status, currency_code, posted_to_journal, roznamcha_entry_id, debit_ledger_id, credit_ledger_id from public.purchase_order_payments where purchase_order_id = ${poId}::uuid and deleted_at is null`;
+    const payments = await tx`select amount, exchange_rate, kind, status, currency_code, posted_to_journal, roznamcha_entry_id, debit_ledger_id, credit_ledger_id, to_jsonb(pop)->>'applied_purchase_amount' as applied_purchase_amount from public.purchase_order_payments pop where purchase_order_id = ${poId}::uuid and deleted_at is null`;
     const baseCcy = String(row.country_currency || currency).toUpperCase();
     const rateToBase = currency === baseCcy ? 1 : Number(row.exchange_rate) > 0 ? Number(row.exchange_rate) : 1;
     const v = verifiedPaid(payments as never, currency, rateToBase);
-    paid = v.advanceFC + v.settledFC;
+    paid = v.settledFC; // Already includes advance, remaining and credit exactly once.
   } else {
     const lpId = l.local_purchase_id ?? l.source_id;
     const lp = (await tx`select id, purchase_currency, local_currency, exchange_rate, purchase_cost, manual_bill_no, entry_serial from public.local_purchases where id = ${lpId}::uuid and deleted_at is null`)[0];

@@ -5,6 +5,7 @@ import { apiCreated, apiOk, apiError, handleApiError, ApiClientError } from "@/l
 import { parseJsonish } from "@/lib/stock-journal/model";
 import { resolvePaymentCondition, resolvePurchaseAmounts } from "@/lib/services/purchase-calculation-service";
 import { advanceClearance, loadedPayable, paymentInPurchaseCurrency } from "@/lib/purchases/loaded-payable";
+import { exactBookingPaymentQuote, purchaseBaseUnits } from "@/lib/purchases/booking-payment-allocation";
 import { comparePurchasePaymentToLimit, isPurchaseBalanceCleared } from "@/lib/purchases/payment-precision";
 import { contractLines, loadingGoodsValue } from "@/lib/purchases/loading-value";
 import { purchaseOrderPaymentPostSchema, uuidSchema } from "@/lib/api/erp-validation";
@@ -352,7 +353,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
           p.kind, p.entry_date, p.amount, p.currency_code, p.exchange_rate,
           p.debit_ledger_id, p.credit_ledger_id, p.roznamcha_entry_id, p.status, p.reference_no,
           p.narration, p.source_module, p.source_transaction_type, p.source_reference_no,
-          p.original_currency_code, p.currency_name, p.base_currency_amount, p.created_at,
+          p.original_currency_code, p.currency_name, p.base_currency_amount,
+          to_jsonb(p)->>'applied_purchase_amount' as applied_purchase_amount, p.created_at,
           p.loading_record_id,
           case when re.id is not null then jsonb_build_object(
             'id', re.id,
@@ -620,8 +622,32 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
         ? ((await paymentDb((sql) => sql`select upper(currency_code) as c from countries where id = ${orderRow.country_id}::uuid limit 1`)) as any[])
         : [];
       const localCcy = String(localCcyRows[0]?.c || "").toUpperCase();
+      const explicitApplied = body.purchaseAppliedAmount;
+      const exactQuote = explicitApplied != null && orderRow.order_type === "purchase_booking" && body.kind !== "booking"
+        ? exactBookingPaymentQuote({
+            applied: explicitApplied, tender: Number(body.amount), billCurrency: orderCcy,
+            baseCurrency: localCcy, tenderCurrency: bodyCcy, rateToBase: bodyRate
+          })
+        : null;
+      if (explicitApplied != null && !exactQuote) {
+        throw new ApiClientError("The bill amount, payment currency and manual exchange rate do not match.", {
+          status: 422, code: "PURCHASE_PAYMENT_QUOTE_MISMATCH"
+        });
+      }
       let bodyAmountPur: number;
-      if (bodyCcy !== orderCcy && localCcy && bodyCcy === localCcy) {
+      if (exactQuote) {
+        for (const ledger of [debitLedger, creditLedger]) {
+          const sameScope = ledger.country_id === orderRow.country_id
+            && (ledger.country_branch_id || null) === (orderRow.country_branch_id || null)
+            && (ledger.city_branch_id || null) === (orderRow.city_branch_id || null);
+          if (!sameScope) {
+            throw new ApiClientError("Use debit and credit accounts from the branch that owns this purchase bill.", {
+              status: 409, code: "PURCHASE_PAYMENT_WRONG_LEDGER_BRANCH"
+            });
+          }
+        }
+        bodyAmountPur = exactQuote.applied;
+      } else if (bodyCcy !== orderCcy && localCcy && bodyCcy === localCcy) {
         const bodyLocalRate = Number(body.exchangeRate || 0);
         const usable = bodyLocalRate > 0 && orderRate > 0 && Math.abs(bodyLocalRate / orderRate - 1) <= 0.1 ? bodyLocalRate : orderRate || 1;
         bodyAmountPur = Number(body.amount) / usable;
@@ -629,14 +655,14 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
         bodyAmountPur = toPurchaseCcy(Number(body.amount), bodyCcy, bodyRate);
       }
 
-      const sameCurrencySettlement = bodyCcy === orderCcy && body.kind !== "booking";
-      const compareLimit = (limit: number, fxTolerance: number) => sameCurrencySettlement
+      const exactBillSettlement = Boolean(exactQuote) || (bodyCcy === orderCcy && body.kind !== "booking");
+      const compareLimit = (limit: number, fxTolerance: number) => exactBillSettlement
         ? comparePurchasePaymentToLimit(bodyAmountPur, limit)
         : limit <= fxTolerance ? "settled" : bodyAmountPur > limit + fxTolerance ? "exceeds" : "allowed";
-      if (sameCurrencySettlement && compareLimit(remainingDuePur, 0) === "invalid") {
+      if (exactBillSettlement && compareLimit(remainingDuePur, 0) === "invalid") {
         throw new ApiClientError("Use a valid purchase payment amount.", { status: 422, code: "INVALID_PAYMENT_AMOUNT" });
       }
-      if (body.kind === "advance" && advancePercent > 0 && !sameCurrencySettlement) {
+      if (body.kind === "advance" && advancePercent > 0 && !exactBillSettlement) {
         const maxAllowedAdvancePur = Math.max(remainingAdvancePur, remainingDuePur);
         if (remainingDuePur <= tolerance) {
           throw new Error("This purchase order is already fully paid. Duplicate posting is not allowed.");
@@ -646,7 +672,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
         }
       }
 
-      if (sameCurrencySettlement || body.kind === "remaining" || body.kind === "credit") {
+      if (exactBillSettlement || body.kind === "remaining" || body.kind === "credit") {
         const result = compareLimit(remainingDuePur, tolerance);
         if (result === "settled") {
           throw new Error("This purchase order has no remaining payable balance. Duplicate posting is not allowed.");
@@ -678,8 +704,9 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
             order by created_at asc, id asc
           `) as any[],
           remainingRows: (await sql`
-            select amount, currency_code, exchange_rate, base_currency_amount, loading_record_id::text as loading_record_id
-            from purchase_order_payments
+            select amount, currency_code, exchange_rate, base_currency_amount, loading_record_id::text as loading_record_id,
+                   to_jsonb(p)->>'applied_purchase_amount' as applied_purchase_amount
+            from purchase_order_payments p
             where purchase_order_id = ${params.id}::uuid and deleted_at is null and status = 'posted' and kind::text = 'remaining'
           `) as any[]
         }));
@@ -714,7 +741,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
         if (mustFollowLoading && payable.loadedQuantity <= 0) {
           throw new ApiClientError("No quantity has been loaded for this purchase order yet. A Remaining payment is due only against loaded quantity.", { status: 409, code: "BUSINESS_RULE" });
         }
-        const exceedsLoadingLimit = (limit: number) => sameCurrencySettlement
+        const exceedsLoadingLimit = (limit: number) => exactBillSettlement
           ? comparePurchasePaymentToLimit(bodyAmountPur, limit) !== "allowed"
           : bodyAmountPur > limit + capTol;
         if (mustFollowLoading && exceedsLoadingLimit(payable.loadedOutstandingFC)) {
@@ -907,8 +934,10 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
           p_purchase_order_id => ${params.id}::uuid,
           p_kind => ${body.kind}::purchase_order_payment_kind,
           p_entry_date => ${body.entryDate}::date,
-          p_amount => ${body.amount},
-          p_currency_code => ${body.currencyCode},
+          -- An exact quote already computed the branch amount. Pass the actual
+          -- base currency explicitly so the posting routine never converts twice.
+          p_amount => ${exactQuote?.baseAmount ?? body.amount},
+          p_currency_code => ${exactQuote?.baseCurrency ?? body.currencyCode},
           p_exchange_rate => ${effectiveRoznamchaExchangeRate},
           p_debit_ledger_id => ${resolvedDebitLedgerId}::uuid,
           p_credit_ledger_id => ${resolvedCreditLedgerId}::uuid,
@@ -933,6 +962,15 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
         await sql`update purchase_order_payments set source_reference_no = ${String(body.typeDetails.sourceRecordId)} where id = ${paymentId}::uuid`;
       }
 
+      if (exactQuote) {
+        const applied = await sql`
+          update purchase_order_payments set applied_purchase_amount = ${exactQuote.applied}
+          where id = ${paymentId}::uuid and purchase_order_id = ${params.id}::uuid and deleted_at is null
+          returning id
+        `;
+        if (!applied[0]) throw new Error("The payment's exact purchase amount was not saved.");
+      }
+
       // Record which loading (container) this Remaining payment settles, then let the database refresh the loading balances from it.
       if (linkedLoadingId) {
         const linked = await sql`
@@ -941,6 +979,8 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
           returning id
         `;
         if (!linked[0]) throw new Error("Purchase payment was not linked to the selected loading record.");
+      }
+      if (linkedLoadingId || exactQuote) {
         await sql`select recalc_purchase_order_payment_totals(${params.id}::uuid)`;
       }
 
@@ -1008,6 +1048,18 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
         entry: journalRecord
       });
 
+      if (exactQuote) {
+        const expectedUnits = purchaseBaseUnits(exactQuote.baseAmount);
+        if (String(paymentRecord.currency_code || "").trim().toUpperCase() !== exactQuote.baseCurrency
+          || purchaseBaseUnits(Number(paymentRecord.base_currency_amount)) !== expectedUnits
+          || journalLines.some((line) => String(line.currency || "").trim().toUpperCase() !== exactQuote.baseCurrency
+            || purchaseBaseUnits(Number(line.debit || 0) + Number(line.credit || 0)) !== expectedUnits)) {
+          throw new ApiClientError("The purchase payment did not post in the confirmed branch currency.", {
+            status: 409, code: "PURCHASE_PAYMENT_SETTLEMENT_MISMATCH"
+          });
+        }
+      }
+
       const postedWorkflow = {
         ...(orderRow.form_data?.workflow || {}),
         invoiceStatus: "available",
@@ -1039,6 +1091,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
             currencyName: paymentRecord.currency_name || body.currencyCode,
             exchangeRate: paymentRecord.exchange_rate || body.exchangeRate,
             baseCurrencyAmount: paymentRecord.base_currency_amount,
+            ...(exactQuote ? { appliedPurchaseAmount: exactQuote.applied, appliedPurchaseCurrency: orderCcy } : {}),
             superAdminSerialNumber: journalRecord.super_admin_serial_number,
             countryTransactionSerialNumber: journalRecord.country_transaction_serial_number,
             branchTransactionSerialNumber: journalRecord.branch_transaction_serial_number,

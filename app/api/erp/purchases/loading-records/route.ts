@@ -378,6 +378,7 @@ export async function GET(request: NextRequest) {
                       'status', pop.status::text,
                       'currency_code', pop.currency_code,
                       'base_currency_amount', pop.base_currency_amount,
+                      'applied_purchase_amount', to_jsonb(pop)->>'applied_purchase_amount',
                       'posted_to_journal', pop.posted_to_journal,
                       'roznamcha_entry_id', pop.roznamcha_entry_id,
                       'debit_ledger_id', pop.debit_ledger_id,
@@ -614,8 +615,9 @@ export async function POST(request: NextRequest) {
           // Posted, ledger-verified payments only, in the order's purchase currency (see lib/purchases/loaded-payable.ts)
           const payRows = await tx`
             select kind::text as kind, status::text as status, amount, currency_code, exchange_rate, base_currency_amount,
+                   to_jsonb(pop)->>'applied_purchase_amount' as applied_purchase_amount,
                    posted_to_journal, roznamcha_entry_id, debit_ledger_id, credit_ledger_id
-            from purchase_order_payments
+            from purchase_order_payments pop
             where purchase_order_id = ${purchaseOrderId}::uuid and deleted_at is null
           `;
           const gateCcy = String(po.currency_code || "USD").toUpperCase();

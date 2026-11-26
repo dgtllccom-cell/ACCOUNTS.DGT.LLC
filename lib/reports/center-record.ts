@@ -153,13 +153,15 @@ function goodsTable(goods: any[], ccy: string, localCcy: string): DocTable | nul
 
 async function purchasePaymentsTable(sql: any, where: any, orderTotal: number, ccy: string, rateToBase: number): Promise<DocTable | null> {
   const pays = (await sql`
-    select pop.id::text id, pop.kind::text kind, pop.entry_date, pop.created_at, pop.amount, pop.currency_code, pop.exchange_rate, pop.base_currency_amount, pop.status::text status, pop.reference_no
+    select pop.id::text id, pop.kind::text kind, pop.entry_date, pop.created_at, pop.amount, pop.currency_code, pop.exchange_rate, pop.base_currency_amount,
+           case when pop.purchase_order_id is not null and pop.local_purchase_id is null then to_jsonb(pop)->>'applied_purchase_amount' end applied_purchase_amount,
+           pop.status::text status, pop.reference_no
     from purchase_order_payments pop where pop.deleted_at is null and pop.kind::text <> 'booking' and ${where}
     order by coalesce(pop.entry_date, pop.created_at::date), pop.created_at`) as any[];
   if (!pays.length) return null;
   let paid = 0;
   const rows = pays.map((p) => {
-    const inBill = paymentInPurchaseCurrency({ amount: p.amount, currency_code: p.currency_code, exchange_rate: p.exchange_rate, base_currency_amount: p.base_currency_amount }, ccy, rateToBase);
+    const inBill = paymentInPurchaseCurrency(p, ccy, rateToBase);
     const counted = s(p.status).toLowerCase() === "posted";
     if (counted) paid += inBill;
     return {
@@ -300,7 +302,7 @@ async function purchasePaymentDoc(sql: any, id: string): Promise<RecordDoc | nul
   const payCcy = s(p.currency_code).toUpperCase();
   const local = s(p.local_currency).toUpperCase();
   const total = purchaseTotalInOrderCurrency({ ...p, currency_code: p.order_ccy, exchange_rate: p.order_rate });
-  const inBill = paymentInPurchaseCurrency({ amount: p.amount, currency_code: p.currency_code, exchange_rate: p.exchange_rate, base_currency_amount: p.base_currency_amount }, orderCcy, orderCcy === local ? 1 : num(p.order_rate) || 1);
+  const inBill = paymentInPurchaseCurrency(p, orderCcy, orderCcy === local ? 1 : num(p.order_rate) || 1);
   const kind = s(p.kind).toLowerCase();
   const typeKey = kind === "advance" || kind === "endorsement" ? "rc.type.advance_payment" : kind === "remaining" ? "rc.type.remaining_payment" : "rc.type.final_payment";
   const pays = await purchasePaymentsTable(sql, sql`pop.purchase_order_id = ${p.purchase_order_id}::uuid`, total, orderCcy, orderCcy === local ? 1 : num(p.order_rate) || 1);

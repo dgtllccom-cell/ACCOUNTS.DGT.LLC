@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-type StoredPayment = { id: string; orderId: string; amount: number; loadingId?: string; posted: boolean };
+type StoredPayment = { id: string; orderId: string; amount: number; loadingId?: string; applied?: number; posted: boolean };
 type StoredKey = { request_hash: string; status: string; response_body?: unknown };
 type LedgerState = { due: number; form: any; orderStatus: string; payments: StoredPayment[]; keys: Record<string, StoredKey> };
 
@@ -12,6 +12,7 @@ const mock = vi.hoisted(() => ({
   postAttempts: 0,
   auditAttempts: 0,
   auditFails: false,
+  fx: false,
   rollbackCount: 0,
 }));
 const order = "11111111-1111-4111-8111-111111111111";
@@ -53,8 +54,8 @@ vi.mock("@/lib/db/local-postgres", () => ({
             if (!query.includes("for update")) throw new Error("Locked order re-read is missing FOR UPDATE");
             transaction.kind = "booking";
           }
-          return [{ id: order, purchase_order_no: "QA-PO", country_id: country, currency_code: "AED", exchange_rate: 1,
-            order_total: 100, total_goods_original: 100, advance_paid: 0, remaining_paid: 100 - snapshot.due, remaining_due: snapshot.due,
+          return [{ id: order, purchase_order_no: "QA-PO", country_id: country, currency_code: mock.fx ? "USD" : "AED", exchange_rate: mock.fx ? 3.67 : 1,
+            order_total: mock.fx ? 367 : 100, total_goods_original: 100, advance_paid: 0, remaining_paid: 100 - snapshot.due, remaining_due: snapshot.due,
             payment_status: snapshot.orderStatus, ledger_posting_status: "posted", order_type: "purchase_booking", form_data: structuredClone(snapshot.form) }];
         }
         if (query.startsWith("insert into public.idempotency_keys")) {
@@ -82,7 +83,8 @@ vi.mock("@/lib/db/local-postgres", () => ({
           expect(values[1]).toBe(order);
           mock.postAttempts++;
           snapshot.payments.push({ id: payment, orderId: order, amount: Number(values[4]), posted: true });
-          snapshot.due -= Number(values[4]);
+          snapshot.due -= mock.fx ? Number(values[4]) / 3.67 : Number(values[4]);
+          if (mock.fx) expect(values.slice(4, 9)).toEqual([370, "AED", 3.7, dr, cr]);
           return [{ id: payment }];
         }
         if (query.startsWith("select allocate_4level_serials")) {
@@ -96,9 +98,16 @@ vi.mock("@/lib/db/local-postgres", () => ({
           snapshot.payments.at(-1)!.loadingId = String(values[0]);
           return [{ id: payment }];
         }
-        if (query.startsWith("select recalc_purchase_order_payment_totals")) { requireBookingTxn(); return []; }
+        if (query.startsWith("update purchase_order_payments set applied_purchase_amount")) {
+          requireBookingTxn(); snapshot.payments.at(-1)!.applied = Number(values[0]); return [{ id: payment }];
+        }
+        if (query.startsWith("select recalc_purchase_order_payment_totals")) {
+          requireBookingTxn();
+          if (mock.fx) snapshot.due = 100 - snapshot.payments.reduce((sum, p) => sum + (p.applied ?? p.amount / 3.67), 0);
+          return [];
+        }
         if (query.startsWith("select id, purchase_order_id, kind, amount")) {
-          return [{ id: payment, roznamcha_entry_id: journal, base_currency_amount: snapshot.payments.at(-1)?.amount, source_transaction_type: "payment" }];
+          return [{ id: payment, currency_code: "AED", roznamcha_entry_id: journal, base_currency_amount: snapshot.payments.at(-1)?.amount, source_transaction_type: "payment" }];
         }
         if (query.startsWith("update roznamcha_entries")) { requireBookingTxn(); return []; }
         if (query.includes("from roznamcha_entries where id")) {
@@ -107,7 +116,7 @@ vi.mock("@/lib/db/local-postgres", () => ({
         }
         if (query.includes("from roznamcha_lines")) {
           const amount = snapshot.payments.at(-1)?.amount ?? 0;
-          return [{ ledger_id: dr, debit: amount, credit: 0 }, { ledger_id: cr, debit: 0, credit: mock.fault === "verification" ? amount - 1 : amount }];
+          return [{ ledger_id: dr, debit: amount, credit: 0, currency: "AED" }, { ledger_id: cr, debit: 0, currency: "AED", credit: mock.fault === "verification" ? amount - 1 : amount }];
         }
         if (query.startsWith("update purchase_orders set form_data")) {
           requireBookingTxn(); snapshot.form = values[0]; return [];
@@ -158,11 +167,12 @@ vi.mock("@/lib/db/local-postgres", () => ({
 
 import { POST } from "@/app/api/erp/purchases/orders/[id]/payments/route";
 
-function pay({ key = "same-form-attempt", amount = 40 }: { key?: string | null; amount?: number } = {}) {
+function pay({ key = "same-form-attempt", amount = 40, currency = "AED", applied, rate = 1 }:
+  { key?: string | null; amount?: number; currency?: string; applied?: number; rate?: number } = {}) {
   const req = new NextRequest("http://localhost/api/erp/purchases/orders/" + order + "/payments", {
     method: "POST",
     headers: { "Content-Type": "application/json", ...(key ? { "X-Idempotency-Key": key } : {}) },
-    body: JSON.stringify({ kind: "remaining", entryDate: "2026-11-26", amount, currencyCode: "AED", exchangeRate: 1,
+    body: JSON.stringify({ kind: "remaining", entryDate: "2026-11-26", amount, currencyCode: currency, exchangeRate: rate, purchaseAppliedAmount: applied,
       debitLedgerId: dr, creditLedgerId: cr, typeDetails: { loadingRecordId: loading }, referenceNo: "SYNTHETIC-ONLY" }),
   });
   return POST(req, { params: Promise.resolve({ id: order }) });
@@ -175,6 +185,7 @@ beforeEach(() => {
   mock.postAttempts = 0;
   mock.auditAttempts = 0;
   mock.auditFails = false;
+  mock.fx = false;
   mock.rollbackCount = 0;
 });
 
@@ -197,6 +208,20 @@ describe("Purchase Booking payment atomic retries", () => {
     expect(await replay.json()).toEqual({ ok: true, data: { paymentId: payment }, isReplayed: true });
     expect(mock.postAttempts).toBe(2); // one rolled back, one committed, replay never attempted posting
     expect(mock.auditAttempts).toBe(1);
+  });
+
+  it.each([["USD", 100], ["AED", 370]] as const)("applies exactly USD 100 from %s tender using the typed 3.70 rate", async (currency, amount) => {
+    mock.fx = true;
+    const bad = await pay({ amount: 369, applied: 100, rate: 3.7 });
+    expect(bad.status).toBe(422);
+    expect(mock.postAttempts).toBe(0);
+    const args = { currency, amount, applied: 100, rate: 3.7 };
+    expect((await pay(args)).status).toBe(201);
+    expect(mock.committed.due).toBe(0);
+    expect(mock.committed.payments).toEqual([{ id: payment, orderId: order, posted: true, amount: 370, applied: 100, loadingId: loading }]);
+    expect(mock.committed.form.lastPaymentTrace).toMatchObject({ appliedPurchaseAmount: 100, appliedPurchaseCurrency: "USD" });
+    expect((await pay(args)).headers.get("X-Idempotent-Replayed")).toBe("true");
+    expect(mock.postAttempts).toBe(1);
   });
 
   it("replays the one committed payment despite losing the response after the commit, and refuses mismatched payloads", async () => {

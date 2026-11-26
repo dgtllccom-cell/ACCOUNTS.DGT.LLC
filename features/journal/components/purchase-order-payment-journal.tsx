@@ -117,6 +117,7 @@ import { PaymentJournalV2FilterModal } from "./payment-journal-v2-filter-modal";
 import { PurchasePaymentJournalRemainingView } from "./purchase-payment-journal-remaining-view";
 import { StandardizedDailyPaymentForm } from "@/components/daily-payments/standardized-daily-payment-form";
 import { calculatePaymentDueTracking, resolveAgreedDueDate } from "@/lib/services/payment-due-tracking";
+import { exactPurchaseAllocation, supportsExactPurchaseAllocation } from "@/lib/purchases/payment-request";
 import { isPurchaseBalanceCleared } from "@/lib/purchases/payment-precision";
 import { paymentInPurchaseCurrency } from "@/lib/purchases/loaded-payable";
 import { localPurchaseSettlement } from "@/lib/purchases/local-purchase-balance";
@@ -152,6 +153,7 @@ type PurchaseOrderRow = {
   branchSerialNo?: string | null;
   branchName?: string | null;
   countryName?: string | null;
+  countries?: { currency_code?: string | null } | null;
   sales_account_no?: string | null;
   sales_account_name?: string | null;
   purchase_account_no?: string | null;
@@ -2826,6 +2828,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     // The next bill must never inherit the previous bill's selected container.
     setSelectedLoadingRecord(null);
     setCalcAmount("");
+    setManualPurchaseFx(null);
     setFinalPayment("");
     setSelectedOrderPayments([]);
     setPaymentError("");
@@ -3021,6 +3024,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const [calcAmount, setCalcAmount] = useState("");
   const [exchangeRate, setExchangeRate] = useState("1");
   const [calcOp, setCalcOp] = useState<"mul" | "div">("mul");
+  const [manualPurchaseFx, setManualPurchaseFx] = useState<{ orderId: string; rate: string; operator: "mul" | "div" } | null>(null);
   const [finalPayment, setFinalPayment] = useState("");
   const [remarks, setRemarks] = useState("");
   const [typeDetails, setTypeDetails] = useState<Record<string, string>>({});
@@ -4416,6 +4420,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
 
   const baseCurrency = useMemo(() => {
     if (selected) {
+      const bookingCurrency = String(selected.countries?.currency_code ?? "").trim().toUpperCase();
+      if ((selected as any).order_type === "purchase_booking" && /^[A-Z]{3}$/.test(bookingCurrency)) return bookingCurrency;
       return rowOfficeCurrency(selected);
     }
 
@@ -4680,6 +4686,30 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     return sorted.map(toLedgerOption);
   }, [ledgers]);
 
+  const showManualPurchaseFx = supportsExactPurchaseAllocation({
+    bookingSettlement: Boolean(selected && !isLocalPurchaseRecord(selected) && (selected as any).order_type === "purchase_booking"
+      && ["advance", "remaining", "credit", "endorsement"].includes(activeMode)),
+    billCurrency: selected?.currency_code,
+    calculatorCurrency: selected?.form_data?.form?.currencyType || selected?.form_data?.form?.currency || selected?.currency_code,
+    tenderCurrency: currency,
+    localCurrency: baseCurrency,
+  });
+  const savedManualFx = manualPurchaseFx && manualPurchaseFx.orderId === selected?.id ? manualPurchaseFx : null;
+  const effectiveInputRate = showManualPurchaseFx ? savedManualFx?.rate ?? "" : exchangeRate;
+  const effectiveInputOperator = showManualPurchaseFx ? savedManualFx?.operator ?? "mul" : calcOp;
+  const exactAllocation = showManualPurchaseFx ? exactPurchaseAllocation({
+    amount: calcAmount, manualRate: effectiveInputRate, operator: effectiveInputOperator,
+    billCurrency: selected?.currency_code, tenderCurrency: currency,
+  }) : null;
+  const changePaymentRate = (rate: string) => {
+    if (showManualPurchaseFx && selected) setManualPurchaseFx({ orderId: selected.id, rate, operator: effectiveInputOperator });
+    else setExchangeRate(rate);
+  };
+  const changePaymentOperator = (operator: "mul" | "div") => {
+    if (showManualPurchaseFx && selected) setManualPurchaseFx({ orderId: selected.id, rate: effectiveInputRate, operator });
+    else setCalcOp(operator);
+  };
+
   // Calculate dynamic currency values
   const isLocalCurrency = currency === baseCurrency;
   const isPOCurrencyLocal = useMemo(() => {
@@ -4695,6 +4725,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const isLocalPayment = !showCalcPanel;
 
   const calcFinal = useMemo(() => {
+    if (showManualPurchaseFx) return exactAllocation?.amountLocal ?? 0;
     if (!showCalcPanel) return null;
     const fAmt = Number(calcAmount || 0);
     // If PO currency is local (PKR), no conversion rate is needed (rate is 1).
@@ -4705,7 +4736,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     } else {
       return exRate > 0 ? fAmt / exRate : 0;
     }
-  }, [showCalcPanel, calcAmount, exchangeRate, calcOp, isPOCurrencyLocal]);
+  }, [showCalcPanel, calcAmount, exchangeRate, calcOp, isPOCurrencyLocal, showManualPurchaseFx, exactAllocation?.amountLocal]);
 
   // Derive target numeric payment amount
   const amount = useMemo(() => {
@@ -4714,10 +4745,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   }, [showCalcPanel, calcFinal, finalPayment]);
 
   const payloadAmount = useMemo(() => {
+    if (showManualPurchaseFx) return exactAllocation?.amount ?? 0;
     return showCalcPanel
       ? (isLocalCurrency ? Number(calcFinal || 0) : Number(calcAmount || 0))
       : Number(finalPayment || 0);
-  }, [showCalcPanel, isLocalCurrency, calcFinal, calcAmount, finalPayment]);
+  }, [showCalcPanel, isLocalCurrency, calcFinal, calcAmount, finalPayment, showManualPurchaseFx, exactAllocation?.amount]);
 
   // Endorsement / Advance / Remaining open as ONE in-page document instead of the 4-tab modal. `overLimit` is reported by that document
   // (the typed amount is more than the remaining balance); the payment API enforces the same rule, this only stops the click earlier.
@@ -4936,6 +4968,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         exchangeRate: isLocalPayment ? 1 : Number(exchangeRate || 1),
         amount: payloadAmount,
         amountLocal: amount,
+        ...(exactAllocation ?? {}),
         narration: finalRemarks,
         entryDate: paymentDate,
         referenceNo: typeDetails.transferReferenceNumber || typeDetails.refNo || typeDetails.chequeNo || roznamchaNumber || undefined,
@@ -5878,7 +5911,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 totalPaid: selectedLoadingDue ? selectedLoadingDue.advanceAllocated + selectedLoadingDue.remainingPaid : statTotalPaidFC,
                 balance: selectedLoadingDue ? selectedLoadingDue.outstanding : statRemainingFC
               });
-              const docEntered = amountInPurchaseCurrency({
+              const docEntered = showManualPurchaseFx ? exactAllocation?.purchaseAppliedAmount ?? 0 : amountInPurchaseCurrency({
                 amount: payloadAmount,
                 paymentCurrency: currency,
                 rate: Number(exchangeRate || 0),
@@ -7060,26 +7093,28 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                             </FieldBlock>
 
                             {!isLocalPayment && (
-                            <FieldBlock label={t("exchange_rate", currentLanguage)} required>
+                            <FieldBlock label={showManualPurchaseFx ? `${t("exchange_rate", currentLanguage)} (${translateHeader(currentLanguage, "Manual")})` : t("exchange_rate", currentLanguage)} required>
                               <Input
+                                aria-label={showManualPurchaseFx ? `${t("exchange_rate", currentLanguage)} (${translateHeader(currentLanguage, "Manual")})` : t("exchange_rate", currentLanguage)}
                                 type="number"
                                 step="0.0001"
                                 min="0"
                                 className="h-8 font-mono text-xs font-bold bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100"
-                                value={exchangeRate}
-                                onChange={(e) => setExchangeRate(e.target.value)}
-                                placeholder={String(exRate || 1)}
+                                value={effectiveInputRate}
+                                onChange={(e) => changePaymentRate(e.target.value)}
+                                placeholder={showManualPurchaseFx ? undefined : String(exRate || 1)}
                               />
                             </FieldBlock>
                             )}
 
                             {!isLocalPayment && (
-                            <FieldBlock label={`${t("payment_amount_usd", currentLanguage)} (${poCurrencyHeader})`}>
+                            <FieldBlock label={`${showManualPurchaseFx ? translateHeader(currentLanguage, "Purchase Amount") : t("payment_amount_usd", currentLanguage)} (${poCurrencyHeader})`}>
                               <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">
                                   {poCurrencyHeader}
                                 </span>
                                 <Input
+                                  aria-label={`${translateHeader(currentLanguage, "Purchase Amount")} (${poCurrencyHeader})`}
                                   className="h-8 pl-12 text-right text-xs font-black font-mono text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800"
                                   value={calcAmount}
                                   onChange={(e) => setCalcAmount(e.target.value)}
@@ -7111,17 +7146,18 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                               <FieldBlock label={translateHeader(currentLanguage, "Conversion Rate")}>
                                 <Input
                                   className="h-7 text-xs font-mono bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
-                                  value={exchangeRate}
-                                  onChange={(e) => setExchangeRate(e.target.value)}
-                                  placeholder="3.6725"
+                                  value={effectiveInputRate}
+                                  onChange={(e) => changePaymentRate(e.target.value)}
+                                  placeholder={showManualPurchaseFx ? undefined : "3.6725"}
                                   type="number"
                                 />
                               </FieldBlock>
                               <FieldBlock label={translateHeader(currentLanguage, "Operation")}>
                                 <select
                                   className="flex h-7 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-xs font-semibold"
-                                  value={calcOp}
-                                  onChange={(e) => setCalcOp(e.target.value as any)}
+                                  aria-label={translateHeader(currentLanguage, "Operation")}
+                                  value={effectiveInputOperator}
+                                  onChange={(e) => changePaymentOperator(e.target.value === "div" ? "div" : "mul")}
                                 >
                                   <option value="mul">{t("multiply_op", currentLanguage)}</option>
                                   <option value="div">{translateHeader(currentLanguage, "Divide (/)")}</option>
@@ -7138,7 +7174,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                               </span>
                               <Input
                                 className="h-8 pl-12 text-right text-xs font-black font-mono bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100"
-                                value={showCalcPanel && calcFinal !== null ? calcFinal.toFixed(2) : finalPayment}
+                                aria-label={`${t("final_local_amount", currentLanguage)} (${baseCurrency})`}
+                                value={showManualPurchaseFx ? exactAllocation ? String(exactAllocation.amountLocal) : "" : showCalcPanel && calcFinal !== null ? calcFinal.toFixed(2) : finalPayment}
+                                readOnly={showManualPurchaseFx}
                                 onChange={(e) => setFinalPayment(e.target.value)}
                                 placeholder="0.00"
                                 type="number"

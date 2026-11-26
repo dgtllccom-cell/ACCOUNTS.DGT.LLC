@@ -60,8 +60,9 @@ export async function GET(request: NextRequest) {
         where purchase_order_id = any(${ids}::uuid[]) and deleted_at is null and coalesce(loaded_quantity, 0) > 0
         order by created_at asc, id asc`;
       const payments = await sql`
-        select purchase_order_id::text as purchase_order_id, loading_record_id::text as loading_record_id, amount, currency_code, exchange_rate, base_currency_amount
-        from public.purchase_order_payments
+        select purchase_order_id::text as purchase_order_id, loading_record_id::text as loading_record_id, amount, currency_code, exchange_rate, base_currency_amount,
+               to_jsonb(pop)->>'applied_purchase_amount' as applied_purchase_amount
+        from public.purchase_order_payments pop
         where purchase_order_id = any(${ids}::uuid[]) and deleted_at is null and status = 'posted' and kind::text = 'remaining'`;
       return { pos, loadings: loadings as any[], payments: payments as any[] };
     });

@@ -9,6 +9,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { getRequestLanguage } from "@/lib/i18n/server";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { localizeRecordGroups } from "@/lib/i18n/localize-records";
 import { postedPaymentVoucherSides, type PostedVoucherLine } from "@/lib/reports/payment-voucher-data";
 
@@ -192,6 +193,15 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
       countryBranchId: (order as any)?.country_branch_id ?? null,
       cityBranchId: (order as any)?.city_branch_id ?? null
     });
+
+    // The legacy editor reverses the journal and posts via a different, non-atomic
+    // route which cannot preserve an exact original-bill currency allocation.
+    if (existingPayment.applied_purchase_amount != null) {
+      const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+      return apiError("PURCHASE_EXACT_PAYMENT_EDIT_LOCKED",
+        translateHeader(lang, "This payment has a fixed amount in the original purchase currency and cannot be edited here. Contact Accounts for correction."),
+        409);
+    }
 
     if (body.debitLedgerId === body.creditLedgerId) {
       throw new Error("Debit and credit ledgers must be different for purchase payment posting.");
