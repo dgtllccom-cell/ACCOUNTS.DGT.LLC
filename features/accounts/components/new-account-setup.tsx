@@ -1052,18 +1052,18 @@ export function NewAccountSetup({
     return () => { cancelled = true; };
   }, [linkedCompanyId, lang, addressCountryId]);
 
-  // Keep addressCountries synced with location master
+  // Customer addresses use Location Master, independent of operating branch scope.
   useEffect(() => {
-    if (countries.length > 0) {
-      setAddressCountries(countries);
-    } else {
-      listCountries({ all: true, lang })
-        .then((res) => {
-          if (Array.isArray(res)) setAddressCountries(res);
-        })
-        .catch(() => null);
-    }
-  }, [countries, lang]);
+    let cancelled = false;
+    listCountries({ all: true, lang })
+      .then((rows) => {
+        if (!cancelled) setAddressCountries(Array.isArray(rows) ? rows : []);
+      })
+      .catch(() => {
+        if (!cancelled) setMessage(getLabel("couldNotLoadCountries", lang));
+      });
+    return () => { cancelled = true; };
+  }, [lang]);
 
   // Default address country to operational country if empty
   useEffect(() => {
