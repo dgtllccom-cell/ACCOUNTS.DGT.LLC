@@ -266,6 +266,15 @@ export async function postCanonicalDailyPayment(
       operator: targetType === "purchase_booking" ? bookingFxOperator : "*",
     });
 
+    // Preserve the existing Sales linked-receipt convention: never put a full ID in the journal.
+    const cleanCashDetail = (value: unknown, limit: number) =>
+      typeof value === "string" ? value.replace(/[|\r\n]+/g, " ").trim().slice(0, limit) : "";
+    const salesCashDetails = direction === "sales_payment" && method === "cash" ? [
+      ["Receiver/Sender", cleanCashDetail(methodDetails?.cashPartyName, 120)],
+      ["Mobile", cleanCashDetail(methodDetails?.cashMobile, 35)],
+      ["ID", cleanCashDetail(methodDetails?.cashIdTail, 80).slice(-4)],
+    ].filter(([, value]) => value).map(([label, value]) => `${label}: ${label === "ID" ? "•••• " : ""}${value}`).join(" | ") : "";
+
     // Build consolidated narration
     const fullNarration = [
       `Daily Payment (${condition.toUpperCase()} via ${method.toUpperCase()}): ${billIdentifier}`,
@@ -273,6 +282,7 @@ export async function postCanonicalDailyPayment(
       effectiveTtRef ? `TT Ref: ${effectiveTtRef}` : null,
       methodDetails?.bankName ? `Bank: ${methodDetails.bankName}` : null,
       methodDetails?.chequeNumber ? `Cheque #: ${methodDetails.chequeNumber}` : null,
+      salesCashDetails || null,
       narration ? `Remarks: ${narration.trim()}` : null,
       `Paid: ${amount.toFixed(2)} ${currencyCode} (Base: ${baseCurrencyAmount.toFixed(2)} ${baseCurrency} @ ${effectiveExchangeRate})`
     ].filter(Boolean).join(" | ");

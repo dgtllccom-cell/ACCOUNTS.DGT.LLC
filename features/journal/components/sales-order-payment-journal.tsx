@@ -4770,7 +4770,8 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
             party={reviewedParty}
             countryId={selected.country_id ?? undefined}
             method={reviewedChannel}
-            paymentCondition={selectedLinkedStage?.kind === "advance" ? "Advance Payment" :
+            paymentCondition={selectedLinkedStage?.kind === "advance"
+              ? (/endorse/i.test(String(selected.form_data?.form?.paymentType || selected.form_data?.form?.paymentCondition || "")) ? "Endorsement" : "Advance Payment") :
               selectedLinkedStage?.kind === "credit" || activeMode === "credit" ? "Credit Payment" :
               activeMode === "final" ? "Final Payment" : "Remaining Payment"}
             methodLocked={Boolean(paymentQueue)}
