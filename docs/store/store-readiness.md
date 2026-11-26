@@ -44,9 +44,9 @@ certificate the build must be redone.
    them in Production needs the owner's approval; the review code is shown once and goes into each store's review notes.
 3. **No store developer account is confirmed.** `store-links.json` is empty; the owner has not reported D-U-N-S, registrations or e-mail addresses. Nothing in
    the repository or session notes shows an account exists.
-4. **D-U-N-S status unknown**; licence spelling ("LLC" vs "L.L.C", "Hathoor Office 2-01" vs "Hathboor Office 201") must be settled against the paper licence
-   before any registration (`owner-checklist.md` §1).
-5. **iOS:** needs a Mac with Xcode (own or rented), Apple Developer Program membership, App IDs and App Store Connect records (§6).
+4. **D-U-N-S settled (2026-11-26): 850005751** — DAMAAN GENERAL TRADING L.L.C, Office No. 201, Al Ras – Deira, Dubai, AE (Corporation). Use exactly this
+   in every registration (`owner-checklist.md` §1).
+5. **iOS:** no Mac needed any more — the GitHub Actions workflow `iOS TestFlight` builds, signs and uploads on a GitHub-hosted Mac (`ios-requirements.md`). Still needs Apple Developer Program membership, the App Store Connect app record(s) and the 4 repository secrets.
 6. **Apple guideline 4.2 risk (real, not cosmetic):** the apps are native shells around the ERP web app. Apple can reject "minimal functionality" web wrappers.
    Strengths to state in review notes: device approval/activation, scoped enterprise accounts, camera document capture, offline notice, native splash/status bar,
    no public sign-up. Weak points: no native push yet (no Firebase/APNs set up), no biometric sign-in. Treat a first-round rejection as likely enough to plan for

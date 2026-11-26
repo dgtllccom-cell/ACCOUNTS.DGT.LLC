@@ -35,7 +35,7 @@ Brand assets: `node scripts/generate-digitic-icons.mjs` (regenerates every icon 
 
 ## What the COMPANY must provide (I cannot create accounts, pay, or sign in as the owner)
 1. **Google Play Console** developer account (company, one-time USD 25 + identity/D-U-N-S verification). Create both apps with the ids above, enrol in **Play App Signing**, upload the AABs.
-2. **Apple Developer Program** (organisation, USD 99/year, D-U-N-S) and a **Mac with Xcode** (or a cloud Mac / CI such as Xcode Cloud, Codemagic). Create the two App IDs, two App Store Connect records, then run `scripts/ios-build-apps.sh`.
+2. **Apple Developer Program** (organisation, USD 99/year, D-U-N-S 850005751). No Mac needed: create the App Store Connect record(s), add the 4 API-key secrets and run the GitHub Actions workflow *iOS TestFlight* (`ios-requirements.md`; a Mac owner can still use `scripts/ios-build-apps.sh`).
 3. **Samsung Seller Office / Galaxy Store** account (company verification). It accepts the same signed Android build.
 4. **Support e-mail and website**, **company legal name/address** for the listings, and approval of the privacy policy text (`/legal/privacy`, needs the next Production deployment).
 5. **Reviewer login** for Apple/Google/Samsung (they must be able to sign in). A least-privilege account on Production with no extra business data — your decision, because the project rule is that Production gets no test data.
