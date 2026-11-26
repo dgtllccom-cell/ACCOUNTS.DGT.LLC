@@ -45,7 +45,7 @@ type Props = {
   postingAmount: number | null;
   advanceLimit: number | null;
   onCurrency: (value: string) => void;
-  approvedFinal: number | null; paidOriginal: number | null; remainingOriginal: number | null;
+  approvedFinal: number | null; paidOriginal: number | null; remainingOriginal: number | null; payableFinal?: number | null;
   accounts: { id: string; name: string; code: string; type: string; parent: string }[];
   ledgerId: string; reference: string; amount: string; date: string; remarks: string;
   onLedger: (value: string) => void; onReference: (value: string) => void; onAmount: (value: string) => void;
@@ -182,7 +182,7 @@ export function LinkedSalesRoznamchaForm(p: Props) {
       <aside className="space-y-2 lg:col-span-4">
         <Detail icon={<BookOpen className="h-4 w-4"/>} title={tr("cj.mAcctDetails", "Selected Account Details")} entries={[[h("Account Name"), account?.name || ""],[h("Account No."), account?.code || ""],[tr("asr.col_parent_account", "Parent Account"), account?.parent || ""],[h("Account Type"), account?.type || ""]]}/>
         <Detail icon={<MapPin className="h-4 w-4"/>} title={tr("locedit.details", "Location Details")} entries={[[h("Country"),p.country],[h("Branch"),p.branch],[h("City / Location"),p.city]]}/>
-        <Detail icon={<FileText className="h-4 w-4"/>} title={tr("cj.mSnapshot", "Financial Snapshot")} entries={[[h("Sales No."),p.bill],[tr("cj.mFinalAmount","Final Amount"),financial(p.approvedFinal,p.currency)],[h("Amount Paid"),financial(p.paidOriginal,p.originalCurrency)],[h("Outstanding Balance"),financial(p.remainingOriginal,p.originalCurrency)]]}/>
+        <Detail icon={<FileText className="h-4 w-4"/>} title={tr("cj.mSnapshot", "Financial Snapshot")} entries={[[h("Sales No."),p.bill],[tr("cj.mFinalAmount","Final Amount"),financial(p.approvedFinal,p.currency)],[h("Amount Paid"),financial(p.paidOriginal,p.originalCurrency)],[h("Outstanding Balance"),p.payableFinal == null ? financial(p.remainingOriginal,p.originalCurrency) : financial(p.payableFinal,p.currency)]]}/>
       </aside>
     </div>
     <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-slate-100 pt-5 dark:border-slate-800 sm:flex-row">

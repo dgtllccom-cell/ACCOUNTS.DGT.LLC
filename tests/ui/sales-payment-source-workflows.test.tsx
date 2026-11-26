@@ -12,6 +12,8 @@ vi.mock("@/lib/i18n/use-active-language", () => ({ useActiveLanguage: () => "en"
 vi.mock("@/lib/hooks/use-erp-scope", () => ({ useErpScope: () => ({ isSuperAdmin: true, canViewFinancials: true }) }));
 vi.mock("@/lib/purchase-ui/use-usd-rates", () => ({ useUsdRates: () => ({}) }));
 
+vi.mock("@/features/reports/ledger-report/ledger-report-api", () => ({ listLedgerReportLedgers: async () => ({ ledgers: [] }) }));
+
 const order = (source: "SB" | "LS", tag: string, method: string, advancePercent: number, paid: number) => ({
   id: `${source}-${tag}`, sales_order_no: `${source}-${tag}`, ledger_posting_status: "posted",
   payment_status: paid >= 100 ? "completed" : paid > 0 ? "partially_paid" : "pending",
@@ -27,7 +29,17 @@ const rows = (["SB", "LS"] as const).flatMap(source => [
   order(source, "CL", "Credit", 0, 100),
 ]);
 
-const { printCopies } = vi.hoisted(() => ({ printCopies: vi.fn() }));
+const { printCopies, moduleHeader } = vi.hoisted(() => ({ printCopies: vi.fn(), moduleHeader: vi.fn() }));
+vi.mock("@/features/journal/components/payment-module-approved-header", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/features/journal/components/payment-module-approved-header")>();
+  return {
+    ...actual,
+    PaymentModuleHeader: (props: React.ComponentProps<typeof actual.PaymentModuleHeader>) => {
+      moduleHeader(props.rows);
+      return <actual.PaymentModuleHeader {...props} />;
+    },
+  };
+});
 vi.mock("@/lib/reports/sales-payment-receipt", () => ({
   printSalesReceiptCopies: printCopies, printSalesPaymentReceipt: vi.fn(),
 }));
@@ -36,6 +48,7 @@ const body = (data: unknown) => Promise.resolve({ ok: true, json: async () => ({
 
 beforeEach(() => {
   printCopies.mockClear();
+  moduleHeader.mockClear();
   vi.stubGlobal("React", React);
   vi.stubGlobal("fetch", fetchMock);
   vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn(), addListener: vi.fn(), removeListener: vi.fn() })));
@@ -112,4 +125,103 @@ it.each([
   expect(paymentRow.textContent).toContain(expectedOriginal);
   expect(paymentRow.textContent).toContain(expectedBase);
   expect(paymentRow.textContent).not.toContain("Entry: 73.40 USD");
+});
+
+
+const cents = (source: "SB" | "LS", tag: string, method: string, open = true) => {
+  const record = order(source, tag, method, method === "Advance" ? 30 : 0, 100);
+  const fx = source === "LS";
+  const due = open ? (fx ? 0.0027 : 0.01) : 0;
+  return {
+    ...record, payment_status: "partially_paid", paid_amount: 100 - due, remaining_amount: due,
+    form_data: { ...record.form_data, transferTrace: { settlement: {
+      ...record.form_data.transferTrace.settlement,
+      originalCurrency: fx ? "USD" : "AED", finalAmount: fx ? 367 : 100, exchangeRate: fx ? 3.67 : 1,
+    } } },
+  };
+};
+
+it.each([
+  ["Cash", "cash"],
+  ["Account Transfer", "account-transfer"],
+  ["Advance", "remaining"],
+  ["Credit", "credit"],
+] as const)("%s keeps a payable final cent on both Sales sources and removes zero", async (method, lane) => {
+  const fixtureOrders = (["SB", "LS"] as const).flatMap(source => [cents(source, "CENT", method), cents(source, "ZERO", method, false)]);
+  fetchMock.mockImplementation((url: string) => url.startsWith("/api/erp/sales/orders?")
+    ? body({ salesOrders: fixtureOrders, nextCursor: null }) : body([]));
+  render(lane === "remaining" ? await RemainingPage({ searchParams: Promise.resolve({}) }) :
+    lane === "credit" ? CreditPage() : await AdvancePage({ searchParams: Promise.resolve({ payment: lane }) }));
+  await screen.findByRole("button", { name: "S#SB-CENT" });
+  for (const source of ["SB", "LS"]) {
+    expect(screen.queryByRole("button", { name: `S#${source}-ZERO` })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: `Payment Entry ${source}-CENT` }));
+    const entry = await screen.findByRole("dialog", { name: "New Roznamcha Entry" });
+    const balance = within(entry).getByText("Outstanding Balance");
+    expect(balance.parentElement?.textContent).toMatch(/(?:AED\s*0\.01|0\.01\s*AED)/);
+    fireEvent.click(within(entry).getByRole("button", { name: "Close" }));
+  }
+  expect(moduleHeader.mock.calls.at(-1)?.[0]).toEqual(expect.arrayContaining([
+    expect.objectContaining({ id: "LS-CENT", due: 0.01, paid: 366.99, total: 367, currency: "AED", settled: false }),
+    expect.objectContaining({ id: "SB-CENT", due: 0.01, settled: false }),
+    expect.objectContaining({ id: "LS-ZERO", due: 0, settled: true }),
+    expect.objectContaining({ id: "SB-ZERO", due: 0, settled: true }),
+  ]));
+  expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
+});
+
+const shortcutInvoiceId = "d3c6b091-4f48-42cc-9bea-c42ab19cb934";
+const shortcutOrderId = "5edac6a2-4013-4a24-bd70-58176dd90d8d";
+async function invoiceShortcut(source: "SB" | "LS", billState: "ready" | "zero" | "draft" | "missing-review", invoiceState: string) {
+  let record = { ...cents(source, "INV", "Invoice", billState !== "zero"), id: shortcutOrderId };
+  if (billState === "draft") record.ledger_posting_status = "draft";
+  if (billState === "missing-review") record = { ...record, form_data: { ...record.form_data, transferTrace: {} } } as typeof record;
+  fetchMock.mockImplementation((url: string) => {
+    if (url.startsWith(`/api/erp/sales/orders/${shortcutOrderId}?transfer=1`)) return body({ order: record });
+    if (url.startsWith(`/api/erp/business-edit-invoices/${shortcutInvoiceId}`)) return body({ invoice: {
+      id: shortcutInvoiceId, sourceId: record.id, sourceTable: "sales_orders", txnKind: "sales",
+      sourceModule: source === "LS" ? "local_sales" : "sales_booking", status: invoiceState, docType: "commercial_invoice",
+    } });
+    return body([]);
+  });
+  render(await RemainingPage({ searchParams: Promise.resolve({ orderId: record.id, invoiceId: shortcutInvoiceId }) }));
+}
+
+it.each(["SB", "LS"] as const)("opens the %s finalized invoice shortcut only for its reviewed payable cent", async source => {
+  await invoiceShortcut(source, "ready", "finalized");
+  expect(await screen.findByRole("dialog", { name: "New Roznamcha Entry" })).toBeTruthy();
+  expect(fetchMock.mock.calls.some(([url]) => url.includes(shortcutInvoiceId))).toBe(true);
+});
+
+it.each(["zero", "draft", "missing-review"] as const)("does not open or offer an invoice receipt for a %s bill", async state => {
+  await invoiceShortcut("LS", state, "finalized");
+  await screen.findByText("Receipt is not available for this sales bill and payment stage.");
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(fetchMock.mock.calls.some(([url]) => url.includes(shortcutInvoiceId))).toBe(false);
+});
+
+it("does not open a draft invoice shortcut even if the original bill itself has one payable cent", async () => {
+  await invoiceShortcut("SB", "ready", "draft");
+  await screen.findByText("A finalized invoice linked to the original sales bill is required.");
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+it("does not let a bare bill-number URL bypass the selected payment stage", async () => {
+  window.history.replaceState({}, "", "/?salesOrderNo=LS-CR");
+  render(await RemainingPage({ searchParams: Promise.resolve({}) }));
+  expect(await screen.findByRole("button", { name: "S#LS-RE" })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "S#LS-CR" })).toBeNull();
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+
+it("keeps a zero-balance bill visible for Final reconciliation without a payment shortcut", async () => {
+  const record = cents("LS", "ZERO", "Cash", false);
+  fetchMock.mockImplementation((url: string) => url.startsWith("/api/erp/sales/orders?")
+    ? body({ salesOrders: [record], nextCursor: null }) : body({ payments: [] }));
+  render(FinalPage());
+  fireEvent.click((await screen.findByRole("button", { name: "S#LS-ZERO" })).closest("tr")!);
+  expect(await screen.findByText(/No payment transactions posted yet/)).toBeTruthy();
+  expect(screen.queryByRole("button", { name: /payment entry/i })).toBeNull();
+  expect(screen.queryByRole("dialog")).toBeNull();
 });

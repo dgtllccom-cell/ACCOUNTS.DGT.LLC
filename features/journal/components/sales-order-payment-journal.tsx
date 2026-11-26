@@ -67,7 +67,7 @@ import { cn } from "@/lib/utils";
 import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
 import { LinkedSalesRoznamchaForm } from "@/features/roznamcha/components/linked-sales-roznamcha-form";
 import { RoznamchaEntryDialog } from "@/features/roznamcha/components/roznamcha-entry-dialog";
-import { convertReviewedSalesReceipt, reviewedSalesReceiptCurrencies, linkedSalesAdvanceReceipt, linkedSalesBalanceReceipt, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesReceiptPaymentKind, salesWorkflowDestination, type SalesReceiptQueue } from "@/lib/sales/payment-workflow";
+import { convertReviewedSalesReceipt, reviewedSalesReceiptCurrencies, linkedSalesAdvanceReceipt, linkedSalesBalanceReceipt, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesPayableAmount, reviewedSalesSettlement, salesInvoiceReceiptHref, salesReceiptPaymentKind, salesWorkflowDestination, type SalesReceiptQueue } from "@/lib/sales/payment-workflow";
 import { useRouter } from "next/navigation";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -853,7 +853,7 @@ function NestedPaymentHistory({
   ledgers: any[], 
   baseCurrency: string, 
   activeMode: string,
-  selectOrder: (id: string) => void,
+  selectOrder?: (id: string) => void,
   expandedIds: Record<string, boolean>,
   setExpandedIds: React.Dispatch<React.SetStateAction<Record<string, boolean>>>,
   logClientError: (msg: string) => void,
@@ -1268,14 +1268,14 @@ function NestedPaymentHistory({
               ({money(stageRequiredLocal, calcs.finalCurr)}).
             </span>
           </div>
-          <button
+          {selectOrder && <button
             type="button"
             onClick={() => selectOrder(row.id)}
             className="inline-flex h-7 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-[11px] font-bold text-white shadow-sm transition hover:bg-blue-700"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>{translateHeader(currentLanguage, "POST PAYMENT ENTRY")}</span>
-          </button>
+          </button>}
         </div>
       ) : (
         /* High-Density Compact Table */
@@ -2955,11 +2955,14 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
 
   const orderRequests = useRef(0);
   const [orderCoverage, setOrderCoverage] = useState(true);
+  const invoiceReceiptKey = invoiceReceipt ? `${invoiceReceipt.orderId}:${invoiceReceipt.invoiceId}` : "";
+  const [verifiedInvoiceReceiptKey, setVerifiedInvoiceReceiptKey] = useState("");
   async function loadOrders() {
     const request = ++orderRequests.current;
     const current = () => orderRequests.current === request;
     setLoading(true);
     setError("");
+    if (invoiceReceipt) setVerifiedInvoiceReceiptKey("");
     try {
       const loaded = invoiceReceipt ? await (async () => {
         const response = await fetch(`/api/erp/sales/orders/${encodeURIComponent(invoiceReceipt.orderId)}?transfer=1`, {
@@ -2969,6 +2972,19 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
         const order = body?.data?.order;
         if (!response.ok || order?.id !== invoiceReceipt.orderId || salesReceiptPaymentKind(order) !== "invoice") {
           throw new Error(body?.error?.message || t("unable_to_load_records_sales", currentLanguage));
+        }
+        if (!(Number(reviewedSalesPayableAmount(order)) > 0) || linkedSalesBalanceReceipt(order)?.kind !== "remaining") {
+          throw new Error(translateHeader(currentLanguage, "Receipt is not available for this sales bill and payment stage."));
+        }
+        const invoiceResponse = await fetch(`/api/erp/business-edit-invoices/${encodeURIComponent(invoiceReceipt.invoiceId)}`, {
+          credentials: "include", cache: "no-store",
+        });
+        const invoiceBody = await invoiceResponse.json();
+        const invoice = invoiceBody?.data?.invoice;
+        const source = isLocalSalesFormData(order.form_data) ? "local_sales" : "sales_booking";
+        if (!invoiceResponse.ok || !invoice || invoice.id !== invoiceReceipt.invoiceId || invoice.sourceId !== order.id
+            || invoice.sourceModule !== source || !salesInvoiceReceiptHref(invoice)) {
+          throw new Error(invoiceBody?.error?.message || translateHeader(currentLanguage, "A finalized invoice linked to the original sales bill is required."));
         }
         return { rows: [order as PurchaseOrderRow], complete: true };
       })() : await loadScopedRegister<PurchaseOrderRow>(async cursor => {
@@ -2992,6 +3008,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
         };
       });
       setOrders(rows);
+      if (invoiceReceipt) setVerifiedInvoiceReceiptKey(invoiceReceiptKey);
       // The invoice entry point selects by immutable UUID, never by a repeated bill number.
       // Do not reopen the form after the operator saves and closes it.
       // The effect below selects on navigation, before the data arrives.
@@ -3052,12 +3069,13 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const draft = draftFilter.trim().toLowerCase();
-    const urlOrderNo = getInitialPurchaseOrderNo();
     return orders.filter((row, index) => {
       if (!matchesRegisterSearch(paymentSearchRows[index], advancedPaymentFilters)) return false;
       if (receiptQueue && !matchesSalesReceiptQueue(row, receiptQueue)) return false;
-      if (invoiceReceipt && row.id === invoiceReceipt.orderId) return true;
-      if (!receiptQueue && activeMode !== "credit" && urlOrderNo && row.sales_order_no === urlOrderNo) return true;
+      if (invoiceReceipt) {
+        return invoiceReceiptKey === verifiedInvoiceReceiptKey && row.id === invoiceReceipt.orderId
+          && Number(reviewedSalesPayableAmount(row)) > 0 && linkedSalesBalanceReceipt(row)?.kind === "remaining";
+      }
       const postingStatus = row.ledger_posting_status?.toLowerCase();
       const workflowTransferStatus = row.form_data?.workflow?.transferStatus?.toLowerCase();
       const hasTransferAudit = Boolean(row.form_data?.form?.transferAudit);
@@ -3110,10 +3128,11 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
       // read undefined/0 and treated every order as if nothing had ever been paid). The real,
       // always-populated columns are paid_amount (total across every payment kind) and
       // remaining_amount (kept in sync by recalc_sales_order_payment_totals on every posting).
-      const finalAmount = reviewedSalesSettlement(row.form_data?.transferTrace?.settlement)?.original ?? orderTotal(row);
+      const approved = reviewedSalesSettlement(row.form_data?.transferTrace?.settlement);
+      const finalAmount = approved?.original ?? orderTotal(row);
       const paymentType = String(form.paymentType || form.paymentCondition || "").trim().toLowerCase();
       const isCreditBill = salesReceiptPaymentKind(row) === "credit" || paymentType.includes("credit");
-      const isCashBill = paymentType.includes("cash");
+      const isCashBill = salesReceiptPaymentKind(row) === "cash" || paymentType.includes("cash");
       const advancePercent = isCreditBill ? 0 : Number(form.advancePercent || 0);
       const isAdvanceBill = paymentType.includes("advance") || paymentType.includes("endorsement") || (!isCreditBill && !isCashBill && advancePercent > 0);
       const requiredAdvance = (finalAmount * advancePercent) / 100;
@@ -3122,14 +3141,16 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
       const remainingAdvance = requiredAdvance - paidAdvance;
       const remainingDue = Number((row as any).remaining_amount ?? (finalAmount - totalPaid));
 
-      const isCreditPaid = /^(posted|paid|completed)$/i.test(row.payment_status ?? "") && remainingDue <= 0.01;
-
-      const isAdvanceCleared = advancePercent > 0 ? remainingAdvance <= 0.01 : paidAdvance > 0;
-      const isRemainingCleared = remainingDue <= 0.01;
+      const payable = reviewedSalesPayableAmount(row);
+      const reviewedBalanceStage = approved ? linkedSalesBalanceReceipt(row) : null;
+      const reviewedAdvanceStage = approved ? linkedSalesAdvanceReceipt(row) : null;
+      const isRemainingCleared = approved ? payable === 0 : remainingDue <= 0.01;
+      const isCreditPaid = /^(posted|paid|completed)$/i.test(row.payment_status ?? "") && isRemainingCleared;
+      const isAdvanceCleared = advancePercent > 0 ? (approved ? payable !== null && !reviewedAdvanceStage : remainingAdvance <= 0.01) : paidAdvance > 0;
 
       if (receiptQueue) {
         // This is an outstanding Cash/Account Transfer queue, not a percentage advance.
-        if (remainingDue <= 0.01) return false;
+        if (approved ? !(Number(payable) > 0) || reviewedBalanceStage?.queue !== receiptQueue : isRemainingCleared) return false;
       } else if (activeMode === "advance") {
         // Business Rule: Show orders that need upfront payment before delivery
         // Advance/Endorsement → need advance % cleared
@@ -3137,8 +3158,8 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
         if (isCreditBill) return false;
 
         const isFullyPaid = (row.payment_status || "").toLowerCase() === "paid" || (row.payment_status || "").toLowerCase() === "completed";
-        if (isFullyPaid) return false;
-        
+        if (isFullyPaid || (approved && !(Number(payable) > 0))) return false;
+
         if (isCashBill) {
           // Cash bills: show until cash payment posted
           if (totalPaid > 0.01) return false; // Cash posted → moves to delivery
@@ -3146,7 +3167,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
         }
         
         if (!isAdvanceBill && advancePercent <= 0) return false;
-        if (advancePercent > 0 && remainingAdvance <= 0.01) return false; // Already cleared required advance
+        if (approved ? !reviewedAdvanceStage : (advancePercent > 0 && isAdvanceCleared)) return false;
 
       } else if (activeMode === "advance_completed") {
         if (isCreditBill) return false;
@@ -3158,19 +3179,19 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
         }
         
         if (advancePercent === 0) return false;
-        if (remainingAdvance > 0.01) return false; // Not yet cleared
+        if (!isAdvanceCleared) return false; // Not yet cleared
         if (paidAdvance <= 0) return false; // Not paid anything
       } else if (activeMode === "remaining") {
         // Business Rule: Credit bills do NOT belong in Remaining Journal
         if (isCreditBill) return false;
         
         // Business Rule: Advance/Endorsement must be fully cleared first
-        if (!isCashBill && advancePercent > 0 && remainingAdvance > 0.01) return false;
+        if (!isCashBill && advancePercent > 0 && !isAdvanceCleared) return false;
         
         // Business Rule: Cash bills must have cash payment posted first
-        if (isCashBill && totalPaid <= 0.01) return false;
-        
-        if (remainingDue <= 0.01) return false; // Already cleared
+        if (isCashBill && totalPaid <= (approved ? 0 : 0.01)) return false;
+
+        if (approved ? !(Number(payable) > 0) || reviewedBalanceStage?.kind !== "remaining" : isRemainingCleared) return false;
 
         // NOTE: sales orders have no loading/container-transfer stage (that's a Country
         // Purchase concept — sales_loading_records doesn't exist in this schema), so unlike
@@ -3180,7 +3201,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
       } else if (activeMode === "credit") {
         // Strict Business Rule: ONLY show Credit bills in Credit Payment Journal
         if (!isCreditBill) return false;
-        if (isCreditPaid) return false; // Already cleared
+        if (approved ? !(Number(payable) > 0) || reviewedBalanceStage?.kind !== "credit" : isCreditPaid) return false;
       } else if (activeMode === "history") {
         // Show in history if fully cleared
         const isFullyCleared = isCreditBill ? isCreditPaid : ((advancePercent > 0 ? isAdvanceCleared : true) && isRemainingCleared);
@@ -3223,7 +3244,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(needle));
     });
-  }, [activeMode, branchFilter, countryFilter, currencyFilter, draftFilter, orders, query, startDateFilter, endDateFilter, cityFilter, partyFilter, sourceFilter, paymentSearchRows, advancedPaymentFilters, receiptQueue, invoiceReceipt?.orderId]);
+  }, [activeMode, branchFilter, countryFilter, currencyFilter, draftFilter, orders, query, startDateFilter, endDateFilter, cityFilter, partyFilter, sourceFilter, paymentSearchRows, advancedPaymentFilters, receiptQueue, invoiceReceipt?.orderId, invoiceReceiptKey, verifiedInvoiceReceiptKey]);
 
   // ── Approved header data: this page's RBAC-scoped orders (narrowed by the Country / Branch filters) + the real payment records ──
   const modulePayments = useModulePayments("sales");
@@ -3238,21 +3259,23 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
       const rawDue = r.remaining_amount;
       const due = rawDue === null || rawDue === undefined ? Math.max(0, total - paid) : Math.max(0, Number(rawDue) || 0);
       const status = String(r.payment_status || "").toLowerCase();
+      const approved = reviewedSalesSettlement(row.form_data?.transferTrace?.settlement);
+      const payable = reviewedSalesPayableAmount(row);
       const form = rowForm(row);
       return {
         id: String(row.id),
-        // the order's own country (by id, from the scoped countries list) and its stored currency — the amounts are denominated in currency_code
+        // Reviewed totals and balances must share the same approved currency.
         country: countryNameById.get(String((row as any).country_id)) || rowCountryName(row),
-        currency: String((row as any).currency_code || rowCurrency(row)).toUpperCase(),
-        total,
-        paid,
-        due,
-        settled: status === "paid" || status === "completed" || (total > 0 && due <= 0.01),
+        currency: approved && payable !== null ? approved.currency : String((row as any).currency_code || rowCurrency(row)).toUpperCase(),
+        total: approved && payable !== null ? approved.final : total,
+        paid: approved && payable !== null ? Math.round((approved.final - payable) * 100) / 100 : paid,
+        due: payable ?? due,
+        settled: approved ? payable === 0 : status === "paid" || status === "completed" || (total > 0 && due <= 0.01),
         endorsement: String(form.paymentType || form.paymentCondition || "").toLowerCase().includes("endorsement"),
       };
     }), [orders, countryFilter, branchFilter, countryNameById]);
 
-  const selected = selectedId ? (filtered.find((row) => row.id === selectedId) ?? null) : null;
+  const selected = selectedId ? (filtered.find((row) => row.id === selectedId && mayOpenPayment(row)) ?? null) : null;
 
   // Container Selection local state (moved here to allow access to 'selected' initialization)
   const [selectedLoadingRecord, setSelectedLoadingRecord] = useState<any>(null);
@@ -3818,6 +3841,18 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
   const sharedReceiptPage = Boolean(receiptQueue || invoiceReceipt || activeMode === "credit" || activeMode === "remaining" || activeMode === "final");
   function mayOpenPayment(row: PurchaseOrderRow) {
     if (activeMode === "advance_completed" || activeMode === "history") return false;
+    const approved = reviewedSalesSettlement(row.form_data?.transferTrace?.settlement);
+    if (approved) {
+      if (!(Number(reviewedSalesPayableAmount(row)) > 0)) return false;
+      if (activeMode === "advance" && !receiptQueue && !salesReceiptPaymentKind(row)) return Boolean(linkedSalesAdvanceReceipt(row));
+      const stage = linkedSalesBalanceReceipt(row);
+      if (!stage) return false;
+      if (receiptQueue) return stage.queue === receiptQueue;
+      if (activeMode === "credit") return stage.kind === "credit";
+      if (activeMode === "remaining") return stage.kind === "remaining";
+      return true;
+    }
+    if (invoiceReceipt) return false;
     if (activeMode !== "final") return true;
     // Final still displays reconciled rows. Only open a receipt for real outstanding amounts.
     return linkedSalesBalanceReceipt(row) !== null || (
@@ -4397,9 +4432,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
                 ledgers={ledgers}
                 baseCurrency={baseCurrency}
                 activeMode={activeMode}
-                selectOrder={(id: string) => {
-                  selectOrder(id);
-                }}
+                selectOrder={mayOpenPayment(row) ? selectOrder : undefined}
                 expandedIds={expandedIds}
                 setExpandedIds={setExpandedIds}
                 logClientError={logClientError}
@@ -4753,6 +4786,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
             approvedFinal={acceptedSettlement?.final ?? null}
             paidOriginal={selected.paid_amount ?? null}
             remainingOriginal={selected.remaining_amount ?? null}
+            payableFinal={reviewedSalesPayableAmount(selected)}
             accounts={reviewedReceiptLedgers.map(l => ({ id: ledgerId(l) || "", name: ledgerName(l), code: ledgerCode(l),
               type: String(l.account_type || l.type || ""), parent: String(l.parentAccountName || l.parent_account_name || "") }))}
             ledgerId={reviewedDraft.ledgerId} reference={reviewedDraft.reference} amount={reviewedDraft.amount} date={paymentDate} remarks={remarks}

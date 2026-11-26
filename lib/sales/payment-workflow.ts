@@ -90,18 +90,23 @@ export function convertReviewedSalesReceipt(settlement: ReviewedSalesSettlement 
     ? { amount, currency: options.local, inputAmount: input.amount, inputCurrency: currency, rate, operator } : null;
 }
 
+function reviewedSalesDueUnits(approved: NonNullable<ReturnType<typeof reviewedSalesSettlement>>,
+  paidOriginal: number, remainingOriginal: number) {
+  if (![paidOriginal, remainingOriginal].every(n => Number.isFinite(n) && n >= 0)
+      || Math.abs(paidOriginal + remainingOriginal - approved.original) > 0.01) return NaN;
+  return receiptMinorUnits(remainingOriginal * approved.final / approved.original);
+}
+
 /** Reviewed bookings keep receivable balances in original bill currency; receipts post in approved final currency. */
 export function planSalesWorkflowReceipt(settlement: ReviewedSalesSettlement | null | undefined,
   receipt: { currency: unknown; amount: number; paidOriginal: number; remainingOriginal: number }) {
   const approved = reviewedSalesSettlement(settlement);
   if (!approved || approved.currency !== String(receipt.currency).trim().toUpperCase()
-    || !Number.isFinite(receipt.amount) || receipt.amount <= 0
-    || ![receipt.paidOriginal, receipt.remainingOriginal].every(n => Number.isFinite(n) && n >= 0)) return null;
+    || !Number.isFinite(receipt.amount) || receipt.amount <= 0) return null;
   const { currency, original, final } = approved;
   // Original bill balances retain their existing storage precision; compare the
   // payable amount and receipt in the posted currency's integer minor units.
-  if (Math.abs(receipt.paidOriginal + receipt.remainingOriginal - original) > 0.01) return null;
-  const dueUnits = receiptMinorUnits(receipt.remainingOriginal * final / original);
+  const dueUnits = reviewedSalesDueUnits(approved, receipt.paidOriginal, receipt.remainingOriginal);
   const paymentUnits = receiptMinorUnits(receipt.amount);
   const postingAmount = paymentUnits / 100;
   if (!Number.isFinite(dueUnits) || dueUnits < 1 || paymentUnits < 1 || paymentUnits > dueUnits
@@ -131,6 +136,14 @@ type SalesReceiptOrder = {
     transferTrace?: { settlement?: ReviewedSalesSettlement | null };
   } | null;
 };
+
+/** Amount payable in the verified final currency; null means the saved balances cannot be verified. */
+export function reviewedSalesPayableAmount(order: SalesReceiptOrder): number | null {
+  const approved = reviewedSalesSettlement(order.form_data?.transferTrace?.settlement);
+  if (!approved || order.paid_amount == null || order.remaining_amount == null) return null;
+  const units = reviewedSalesDueUnits(approved, Number(order.paid_amount), Number(order.remaining_amount));
+  return Number.isFinite(units) ? units / 100 : null;
+}
 
 export function salesReceiptPaymentKind(order: SalesReceiptOrder) {
   const form = order.form_data?.form;
