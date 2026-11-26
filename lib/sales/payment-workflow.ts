@@ -70,6 +70,13 @@ export function reviewedSalesReceiptCurrencies(settlement: ReviewedSalesSettleme
   return { local: approved.currency, foreign };
 }
 
+// Sales voucher amounts are stored and displayed at two decimal places.
+function receiptMinorUnits(amount: number) {
+  const scaled = amount * 100;
+  const units = Math.round(scaled + Number.EPSILON * Math.abs(scaled));
+  return Number.isSafeInteger(units) ? units : NaN;
+}
+
 export function convertReviewedSalesReceipt(settlement: ReviewedSalesSettlement | null | undefined,
   input: { currency: string; amount: number }) {
   const options = reviewedSalesReceiptCurrencies(settlement);
@@ -78,7 +85,7 @@ export function convertReviewedSalesReceipt(settlement: ReviewedSalesSettlement 
   const rate = currency === options.local ? 1 : currency === options.foreign?.currency ? options.foreign.rate : null;
   if (rate === null) return null;
   const operator = currency === options.foreign?.currency ? options.foreign.operator : "*";
-  const amount = Math.round((operator === "/" ? input.amount / rate : input.amount * rate) * 100) / 100;
+  const amount = receiptMinorUnits(operator === "/" ? input.amount / rate : input.amount * rate) / 100;
   return Number.isFinite(amount) && amount >= 0.01
     ? { amount, currency: options.local, inputAmount: input.amount, inputCurrency: currency, rate, operator } : null;
 }
@@ -91,16 +98,25 @@ export function planSalesWorkflowReceipt(settlement: ReviewedSalesSettlement | n
     || !Number.isFinite(receipt.amount) || receipt.amount <= 0
     || ![receipt.paidOriginal, receipt.remainingOriginal].every(n => Number.isFinite(n) && n >= 0)) return null;
   const { currency, original, final } = approved;
-  const tolerance = 0.01;
-  if (Math.abs(receipt.paidOriginal + receipt.remainingOriginal - original) > tolerance) return null;
-  const due = receipt.remainingOriginal * final / original;
-  if (due <= tolerance || receipt.amount > due + tolerance) return null;
-  const originalReceipt = Math.min(receipt.remainingOriginal, Math.round(receipt.amount * original / final * 10000) / 10000);
-  if (originalReceipt <= 0) return null;
+  // Original bill balances retain their existing storage precision; compare the
+  // payable amount and receipt in the posted currency's integer minor units.
+  if (Math.abs(receipt.paidOriginal + receipt.remainingOriginal - original) > 0.01) return null;
+  const dueUnits = receiptMinorUnits(receipt.remainingOriginal * final / original);
+  const paymentUnits = receiptMinorUnits(receipt.amount);
+  const postingAmount = paymentUnits / 100;
+  if (!Number.isFinite(dueUnits) || dueUnits < 1 || paymentUnits < 1 || paymentUnits > dueUnits
+      || postingAmount !== receipt.amount) return null;
+  if (paymentUnits === dueUnits) return {
+    currency, postingAmount,
+    paid: Math.round((receipt.paidOriginal + receipt.remainingOriginal) * 10000) / 10000,
+    remaining: 0,
+  };
+  const originalReceipt = Math.round(postingAmount * original / final * 10000) / 10000;
+  if (originalReceipt <= 0 || originalReceipt >= receipt.remainingOriginal) return null;
   return {
-    currency, postingAmount: receipt.amount,
+    currency, postingAmount,
     paid: Math.round((receipt.paidOriginal + originalReceipt) * 10000) / 10000,
-    remaining: Math.round(Math.max(0, receipt.remainingOriginal - originalReceipt) * 10000) / 10000,
+    remaining: Math.round((receipt.remainingOriginal - originalReceipt) * 10000) / 10000,
   };
 }
 
@@ -131,10 +147,10 @@ export function linkedSalesAdvanceReceipt(order: SalesReceiptOrder) {
   const paid = Number(order.paid_amount);
   const due = Number(order.remaining_amount);
   if (!approved || !Number.isFinite(percent) || percent <= 0 || percent > 100 ||
-      !Number.isFinite(paid) || paid < 0 || !Number.isFinite(due) || due <= 0.01) return null;
+      !Number.isFinite(paid) || paid < 0 || !Number.isFinite(due) || due <= 0) return null;
   const outstandingOriginal = Math.min(due, approved.original * percent / 100 - paid);
-  const limit = Math.round(outstandingOriginal * approved.final / approved.original * 100) / 100;
-  return outstandingOriginal > 0.01 && limit >= 0.01 ? { kind: "advance", queue: undefined, limit } as const : null;
+  const limit = receiptMinorUnits(outstandingOriginal * approved.final / approved.original) / 100;
+  return outstandingOriginal > 0 && limit >= 0.01 ? { kind: "advance", queue: undefined, limit } as const : null;
 }
 
 /** Final is a reconciliation page, not a second payment kind. */
@@ -142,7 +158,7 @@ export function linkedSalesBalanceReceipt(order: SalesReceiptOrder) {
   if (!/^(posted|transferred)$/i.test(String(order.ledger_posting_status ?? "")) ||
       /^(paid|completed)$/i.test(String(order.payment_status ?? ""))) return null;
   const due = Number(order.remaining_amount);
-  if (!Number.isFinite(due) || due <= 0.01) return null;
+  if (!Number.isFinite(due) || due <= 0) return null;
   const payment = salesReceiptPaymentKind(order);
   if (payment === "cash" || payment === "account-transfer") return { kind: "remaining", queue: payment } as const;
   if (payment === "credit") return { kind: "credit", queue: undefined } as const;

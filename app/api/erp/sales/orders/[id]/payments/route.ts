@@ -514,7 +514,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
           p_sales_order_id => ${params.id}::uuid,
           p_payment_kind => ${body.kind},
           p_entry_date => ${body.entryDate}::date,
-          p_amount => ${body.amount},
+          p_amount => ${plannedReceipt?.postingAmount ?? body.amount},
           p_currency_code => ${body.currencyCode},
           p_exchange_rate => ${effectiveRoznamchaExchangeRate},
           p_debit_ledger_id => ${resolvedDebitLedgerId}::uuid,
@@ -581,11 +581,13 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
           expectedCreditLedgerId: resolvedCreditLedgerId, expectedAmount: plannedReceipt.postingAmount, expectedExchangeRate: 1,
         });
         if (paymentRecord?.status !== "posted" || String(paymentRecord.currency_code).toUpperCase() !== plannedReceipt.currency
-          || Math.abs(Number(paymentRecord.amount) - plannedReceipt.postingAmount) > 0.01) {
+          || Number(paymentRecord.amount) !== plannedReceipt.postingAmount
+          || journalLines.some((line: { debit: unknown; credit: unknown }) =>
+            Number(line.debit || 0) + Number(line.credit || 0) !== plannedReceipt.postingAmount)) {
           throw new ApiClientError("Receipt did not post in the approved final currency.", { status: 409, code: "SALES_RECEIPT_SETTLEMENT_MISMATCH" });
         }
         await sql`update public.sales_orders set paid_amount = ${plannedReceipt.paid}, remaining_amount = ${plannedReceipt.remaining},
-          payment_status = ${plannedReceipt.remaining > 0.01 ? "partially_paid" : "completed"}, updated_at = now() where id = ${params.id}::uuid`;
+          payment_status = ${plannedReceipt.remaining > 0 ? "partially_paid" : "completed"}, updated_at = now() where id = ${params.id}::uuid`;
       }
       return { paymentId, paymentRecord, journalRecord, journalLines, inputConversion, postedNarration };
     })) as any;

@@ -4746,7 +4746,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
             notice={<>
               {acceptedSettlement && !selectedLinkedStage && (
                 <p role="status" className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
-                  {translateHeader(currentLanguage, Number(selected.remaining_amount) <= 0.01 ? "No outstanding balance" : "Receipt is not available for this sales bill and payment stage.")}
+                  {translateHeader(currentLanguage, Number(selected.remaining_amount) <= 0 ? "No outstanding balance" : "Receipt is not available for this sales bill and payment stage.")}
                 </p>
               )}
               {!acceptedSettlement && (

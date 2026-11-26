@@ -116,3 +116,40 @@ it.each(["stock", "local"])("counts the existing advance once and stops further 
   expect(linkedSalesBalanceReceipt(paid)).toEqual({ kind: "remaining", queue: undefined });
   expect(linkedSalesAdvanceReceipt({ ...order, form_data: { ...order.form_data, form: { ...order.form_data.form, paymentType: "Credit" } } })).toBeNull();
 });
+
+describe("reviewed Sales receipt minor units", () => {
+  const same = { finalCurrency: "AED", originalAmount: 100, finalAmount: 100 };
+  const receipt = { currency: "AED", paidOriginal: 90, remainingOriginal: 10 };
+  it("rejects even a one-cent overpayment or fractional-cent posting", () => {
+    expect(planSalesWorkflowReceipt(same, { ...receipt, amount: 10.01 })).toBeNull();
+    expect(planSalesWorkflowReceipt(same, { ...receipt, amount: 9.999 })).toBeNull();
+    expect(planSalesWorkflowReceipt(same, { ...receipt, amount: 9.99 })).toEqual({
+      currency: "AED", postingAmount: 9.99, paid: 99.99, remaining: 0.01,
+    });
+    expect(planSalesWorkflowReceipt(same, { ...receipt, amount: 10 })).toEqual({
+      currency: "AED", postingAmount: 10, paid: 100, remaining: 0,
+    });
+  });
+
+  it("collects and fully settles a one-cent balance on the existing paths", () => {
+    const order = { ledger_posting_status: "posted", payment_status: "partially_paid", paid_amount: 99.99,
+      remaining_amount: 0.01, form_data: { form: { paymentType: "Credit" }, transferTrace: { settlement: same } } };
+    expect(linkedSalesBalanceReceipt(order)).toEqual({ kind: "credit", queue: undefined });
+    expect(linkedSalesAdvanceReceipt({ ...order, form_data: { ...order.form_data,
+      form: { paymentType: "Endorsement", advancePercent: 100 } } })).toMatchObject({ kind: "advance", limit: 0.01 });
+    expect(planSalesWorkflowReceipt(same, { currency: "AED", amount: 0.01, paidOriginal: 99.99, remainingOriginal: 0.01 }))
+      .toEqual({ currency: "AED", postingAmount: 0.01, paid: 100, remaining: 0 });
+  });
+
+  it("uses identical rounding for foreign receipt conversion and the approved outstanding amount", () => {
+    const fx = { finalCurrency: "AED", originalCurrency: "USD", originalAmount: 100, finalAmount: 100.5,
+      exchangeRate: 1.005, operator: "*" };
+    const converted = convertReviewedSalesReceipt(fx, { currency: "USD", amount: 1 });
+    expect(converted).toMatchObject({ amount: 1.01, currency: "AED" });
+    const balance = { currency: "AED", paidOriginal: 99, remainingOriginal: 1 };
+    expect(planSalesWorkflowReceipt(fx, { ...balance, amount: converted!.amount })).toEqual({
+      currency: "AED", postingAmount: 1.01, paid: 100, remaining: 0,
+    });
+    expect(planSalesWorkflowReceipt(fx, { ...balance, amount: 1.02 })).toBeNull();
+  });
+});
