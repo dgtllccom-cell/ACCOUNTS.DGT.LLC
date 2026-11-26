@@ -2167,7 +2167,7 @@ export function AccountGeneralReportView({
               </div>
             </div>
 
-            <div className="lg:hidden flex items-center justify-center gap-1.5 px-4 py-1.5 text-[11px] font-semibold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800/60">
+            <div className="no-print lg:hidden flex items-center justify-center gap-1.5 px-4 py-1.5 text-[11px] font-semibold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800/60">
               <span aria-hidden>↔</span>
               <span>{t(lang, "acct.swipe_cols", "Swipe sideways to see all columns")}</span>
             </div>
@@ -2188,7 +2188,7 @@ export function AccountGeneralReportView({
                         colSpan={group.span}
                         className={`${group.cls} px-3 py-2 text-[11px] font-black uppercase tracking-wider text-center`}
                       >
-                        {group.label}
+                        {tr(group.label)}
                       </Th>
                     ))}
                   </tr>
@@ -2217,7 +2217,7 @@ export function AccountGeneralReportView({
                           col.width
                         )}
                       >
-                        {col.label}
+                        {tr(col.label)}
                       </Th>
                     ))}
                   </tr>
@@ -2327,11 +2327,11 @@ export function AccountGeneralReportView({
                                   <div className="font-bold text-slate-900 dark:text-white text-xs">{localizeName(row.accountName, lang)}</div>
                                   <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
                                     <span className="text-slate-400">{tr("CATEGORY")}:</span>
-                                    <span className="font-semibold">{row.accountCategory || "General"}</span>
+                                    <span className="font-semibold">{tr(row.accountCategory || "General")}</span>
                                   </div>
                                   <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
                                     <span className="text-slate-400">{tr("SUB TYPE")}:</span>
-                                    <span className="font-semibold">{row.subType || "Business Account"}</span>
+                                    <span className="font-semibold">{tr(row.subType || "Business Account")}</span>
                                   </div>
                                   <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
                                     <span className="text-slate-400">{tr("BALANCE") || "Balance"}:</span>
@@ -2359,7 +2359,7 @@ export function AccountGeneralReportView({
                                 "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold border shadow-2xs whitespace-nowrap",
                                 getCategoryBadgeClass(row.accountCategory)
                               )}>
-                                {row.accountCategory || "General"}
+                                {tr(row.accountCategory || "General")}
                               </span>
                               {row.categoryCode && row.categoryCode !== "-" && (
                                 <span className="font-mono text-[9.5px] font-bold text-slate-400 dark:text-slate-500 uppercase">
@@ -2372,7 +2372,7 @@ export function AccountGeneralReportView({
                           {/* 4. Sub Type */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
                             <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[10.5px] font-medium whitespace-nowrap">
-                              {row.subType || "Business Account"}
+                              {tr(row.subType || "Business Account")}
                             </span>
                           </td>
 
@@ -2417,7 +2417,7 @@ export function AccountGeneralReportView({
                                 <User className="h-2.5 w-2.5 text-blue-500 shrink-0" />
                                 <span>{tr("By:")}</span>
                                 <span className="font-bold text-slate-700 dark:text-slate-300">
-                                  {row.creatorName || row.createdBy || "Super Admin"}
+                                  {row.creatorName || row.createdBy ? localizeName(row.creatorName || row.createdBy, lang) : tr("Super Admin")}
                                 </span>
                               </div>
                             </div>

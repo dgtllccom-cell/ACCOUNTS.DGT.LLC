@@ -13408,6 +13408,14 @@ export type UiKey =
   | "rcd.col.user"
   | "rc.handover_operational_subtitle"
   | "rc.nav.handover"
+  | "pdfprev.pages"
+  | "pdfprev.page_n"
+  | "pdfprev.zoom"
+  | "pdfprev.zoom_in"
+  | "pdfprev.zoom_out"
+  | "pdfprev.fit_page"
+  | "pdfprev.fit_width"
+  | "pdfprev.preparing_pages"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -19217,6 +19225,14 @@ const en: Dict = {
   "pdfprev.export_excel_csv": "Export Excel / CSV",
   "pdfprev.export_csv_desc": "Raw spreadsheet table data",
   "pdfprev.preview_title": "PDF Preview",
+  "pdfprev.pages": "Pages",
+  "pdfprev.page_n": "Page {n}",
+  "pdfprev.zoom": "Zoom",
+  "pdfprev.zoom_in": "Zoom in",
+  "pdfprev.zoom_out": "Zoom out",
+  "pdfprev.fit_page": "Fit page",
+  "pdfprev.fit_width": "Fit width",
+  "pdfprev.preparing_pages": "Preparing pages…",
   "report.print": "Print",
   "report.view_details": "View Details",
   "report.pdf_portrait": "Download PDF - Portrait",
@@ -46685,6 +46701,14 @@ const ur: Dict = {
   "pdfprev.export_excel_csv": "ایکسل / CSV ایکسپورٹ کریں",
   "pdfprev.export_csv_desc": "خام اسپریڈ شیٹ ٹیبل ڈیٹا",
   "pdfprev.preview_title": "PDF پیش نظارہ",
+  "pdfprev.pages": "صفحات",
+  "pdfprev.page_n": "صفحہ {n}",
+  "pdfprev.zoom": "زوم",
+  "pdfprev.zoom_in": "بڑا کریں",
+  "pdfprev.zoom_out": "چھوٹا کریں",
+  "pdfprev.fit_page": "پورا صفحہ",
+  "pdfprev.fit_width": "پوری چوڑائی",
+  "pdfprev.preparing_pages": "صفحات تیار ہو رہے ہیں…",
   "report.print": "پرنٹ",
   "report.view_details": "تفصیلات دیکھیں",
   "report.pdf_portrait": "PDF ڈاؤن لوڈ - پورٹریٹ",
@@ -73740,6 +73764,14 @@ const ar: Dict = {
   "pdfprev.export_excel_csv": "تصدير Excel / CSV",
   "pdfprev.export_csv_desc": "بيانات جدول بيانات خام",
   "pdfprev.preview_title": "معاينة PDF",
+  "pdfprev.pages": "الصفحات",
+  "pdfprev.page_n": "صفحة {n}",
+  "pdfprev.zoom": "التكبير",
+  "pdfprev.zoom_in": "تكبير",
+  "pdfprev.zoom_out": "تصغير",
+  "pdfprev.fit_page": "ملاءمة الصفحة",
+  "pdfprev.fit_width": "ملاءمة العرض",
+  "pdfprev.preparing_pages": "جارٍ تجهيز الصفحات…",
   "report.print": "طباعة",
   "report.view_details": "عرض التفاصيل",
   "report.pdf_portrait": "تحميل PDF - عمودي",
@@ -100785,6 +100817,14 @@ const fa: Dict = {
   "pdfprev.export_excel_csv": "خروجی Excel / CSV",
   "pdfprev.export_csv_desc": "داده‌های خام جدول صفحه‌گسترده",
   "pdfprev.preview_title": "پیش‌نمایش PDF",
+  "pdfprev.pages": "صفحه‌ها",
+  "pdfprev.page_n": "صفحه {n}",
+  "pdfprev.zoom": "بزرگ‌نمایی",
+  "pdfprev.zoom_in": "بزرگ‌تر",
+  "pdfprev.zoom_out": "کوچک‌تر",
+  "pdfprev.fit_page": "تمام صفحه",
+  "pdfprev.fit_width": "تمام عرض",
+  "pdfprev.preparing_pages": "در حال آماده‌سازی صفحه‌ها…",
   "report.print": "چاپ",
   "report.view_details": "مشاهده جزئیات",
   "report.pdf_portrait": "دانلود PDF - عمودی",
@@ -127871,6 +127911,14 @@ const ps: Dict = {
   "pdfprev.export_excel_csv": "Excel / CSV صادرول",
   "pdfprev.export_csv_desc": "خام سپریدشیټ جدول ډاټا",
   "pdfprev.preview_title": "د PDF مخکتنه",
+  "pdfprev.pages": "پاڼې",
+  "pdfprev.page_n": "پاڼه {n}",
+  "pdfprev.zoom": "زوم",
+  "pdfprev.zoom_in": "لوی کول",
+  "pdfprev.zoom_out": "کوچني کول",
+  "pdfprev.fit_page": "بشپړه پاڼه",
+  "pdfprev.fit_width": "بشپړ پلن",
+  "pdfprev.preparing_pages": "پاڼې چمتو کېږي…",
   "report.print": "چاپ",
   "report.view_details": "تفصیلات وګورئ",
   "report.pdf_portrait": "PDF ډاونلوډ - عمودی",
