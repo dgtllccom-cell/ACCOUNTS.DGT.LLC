@@ -25,6 +25,10 @@ Then: App Store Connect → the app → **TestFlight** → wait for "Processing"
 (the Info.plist already says *no non-exempt encryption*) → add yourself to *Internal Testing* → install **TestFlight** from the App Store on the
 iPhone/iPad and open the invite → test → **App Store** tab: fill the listing from `docs/store/app-store-connect.md`, pick the build, **Add for Review**.
 
+**Submitting without clicking through every page:** the workflow *iOS App Store submit* uploads the listing, screenshots, age rating,
+review contact, reviewer login and notes, and can press *Submit for Review* (`app-store-connect.md` §5). You still do App Privacy and
+Pricing (Free) once in App Store Connect, because Apple's API does not offer them.
+
 If a secret is missing the first step of the workflow fails with a red message naming it (e.g. *Repository secret ASC_KEY_P8 is not set*).
 
 ## What the workflow does

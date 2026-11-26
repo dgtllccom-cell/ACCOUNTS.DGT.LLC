@@ -44,3 +44,18 @@ describe("iOS shell (App Store readiness)", () => {
     expect(wf).toContain("workflow_dispatch");
   });
 });
+
+describe("App Store submit workflow", () => {
+  it("uses the API key, never stores reviewer credentials and only submits on request", () => {
+    const wf = readFileSync(".github/workflows/ios-appstore-submit.yml", "utf8");
+    const fastfile = readFileSync("fastlane/Fastfile", "utf8");
+    for (const s of ["ASC_KEY_ID", "ASC_ISSUER_ID", "ASC_KEY_P8", "ASC_REVIEW_EMAIL", "ASC_REVIEW_PASSWORD", "ASC_REVIEW_CODE"]) {
+      expect(wf).toContain(`secrets.${s}`);
+    }
+    expect(wf).toContain("default: false");
+    expect(fastfile).toContain('submit = ENV["SUBMIT"] == "true"');
+    expect(fastfile).toContain("skip_binary_upload: true");
+    expect(readFileSync("fastlane/metadata/en-US/name.txt", "utf8").trim()).toBe("DGT.llc B");
+    expect(readFileSync("fastlane/metadata/copyright.txt", "utf8")).toContain("DAMAAN GENERAL TRADING L.L.C");
+  });
+});

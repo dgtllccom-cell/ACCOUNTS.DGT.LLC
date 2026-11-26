@@ -9,7 +9,7 @@ Seller / company: **DAMAAN GENERAL TRADING L.L.C** · Office No. 201, Al Ras –
 | Name | `DGT.llc B` (BS: `DGT.llc BS`) |
 | Subtitle (30) | `Your company ERP on the go` |
 | Bundle ID / SKU | `com.dgtllc.b` / `dgtllc-b` (BS: `com.dgtllc.bs` / `dgtllc-bs`) |
-| Primary language | English (U.S.); add localisations Arabic, Urdu, Persian (Farsi) — App Store Connect has no Pashto storefront language, the app itself still offers Pashto |
+| Primary language | English (U.S.); localisation Arabic (`fastlane/metadata/ar-SA`). Add Urdu / Persian in App Store Connect only if it offers them; it has no Pashto storefront language. The app itself always offers all five languages |
 | Category | Business (secondary: Productivity) |
 | Content rights | Does not contain third-party content |
 | Age rating | answer **None / No** to every question → 4+ |
@@ -79,14 +79,25 @@ All taken from a local build connected only to public pages / the TESTING Supaba
 |---|---|---|
 | iPhone 6.9" | 1320 × 2868 | `iphone-6.9-login-{en,ur,ps,fa,ar}.jpg`, `iphone-6.9-device-activation-{en,ur,ps,fa,ar}.jpg`, `iphone-6.9-offline-{en,ar}.jpg`, `iphone-6.9-privacy-en.jpg` |
 | iPad 13" | 2064 × 2752 | `ipad-13-login-…`, `ipad-13-device-activation-…`, `ipad-13-offline-…`, `ipad-13-privacy-en.jpg` |
-Upload per localisation: English → `*-en`, Arabic → `*-ar`, Urdu → `*-ur`, Persian → `*-fa` (the Pashto files are for the listing of other stores).
+The submit workflow uploads English → `*-en` and Arabic → `*-ar` (privacy screenshot in English for both). The Urdu, Persian and Pashto files are for other stores or for adding later.
 Apple accepts 1–10 per display size; App Store Connect scales the 6.9"/13" sets down for smaller devices.
 
 Screens inside the ERP (dashboard, ledgers, document intake) were **not** captured: that needs a signed-in TESTING session (TESTING service key /
 database URL), which this build environment does not have. Capture them from the TestFlight build signed in to a TESTING-scoped account, or from
 the TESTING web app at 440 × 956 (iPhone, ×3) / 1032 × 1376 (iPad, ×2) — never from Production data.
 
-## 5. Before pressing "Submit for Review"
+## 5. Automated upload and submission — workflow *iOS App Store submit*
+`.github/workflows/ios-appstore-submit.yml` + `fastlane/` push the listing (name, subtitle, description, keywords, URLs, promotional
+text in English + Arabic), copyright, categories, age rating (all "None"), export compliance, the App Review contact, reviewer login and
+notes, and the screenshots above, through the same App Store Connect API key. Nothing secret is stored in the repository.
+1. Run it with **submit = off** → check the listing in App Store Connect.
+2. In App Store Connect do the three things the API cannot: **App Privacy** (section 2 above → Publish), **Pricing and Availability → Free**,
+   and (only if the run reported it) the **Age Rating** questionnaire.
+3. Add 3 more repository secrets: `ASC_REVIEW_EMAIL`, `ASC_REVIEW_PASSWORD` (the reviewer's ERP login) and `ASC_REVIEW_CODE` (the Apple review pass).
+4. Run it again with **submit = on** and the TestFlight build number → the app goes to *Waiting for Review*; with automatic release it
+   appears on the App Store as soon as Apple approves it.
+
+## 6. Before pressing "Submit for Review"
 - [ ] TestFlight build installed and checked on a real iPhone and iPad (camera capture, offline screen, swipe-back, 5 languages)
 - [ ] Production has the device-approval system, the reviewer login and an Apple review pass (owner approval; `reviewer-accounts.md`)
 - [ ] Review credentials + notes filled in; App Privacy published; screenshots uploaded; price Free; age rating 4+
