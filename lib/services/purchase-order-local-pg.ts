@@ -8,7 +8,7 @@ function money(value: unknown) {
   return Number.isFinite(numeric) ? numeric : 0;
 }
 
-async function saveTranslations(tx: any, input: {
+export async function savePurchaseOrderTranslations(tx: any, input: {
   recordId: string;
   originalLanguage: any;
   fields: Array<{ fieldName: string; value: string | null | undefined; mode?: "translate" | "transliterate"; translations?: Record<string, string> }>;
@@ -194,7 +194,7 @@ export async function createPurchaseOrderViaLocalPg(input: {
         branch_transaction_serial_number: branchTransactionSerialNumber
       };
 
-      const insertedRows = await tx`insert into purchase_orders ${tx(payload as any)} returning id, purchase_order_no`;
+      const insertedRows = await tx`insert into purchase_orders ${tx(payload as any)} returning id, purchase_order_no, to_char(updated_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as version`;
       const inserted = insertedRows[0];
       if (!inserted?.id) throw new Error("Purchase order insert failed.");
 
@@ -280,7 +280,7 @@ export async function createPurchaseOrderViaLocalPg(input: {
         ...field,
         translations: (body.translations as any)?.[field.fieldName]
       }));
-      await saveTranslations(tx, {
+      await savePurchaseOrderTranslations(tx, {
         recordId: inserted.id,
         originalLanguage: body.originalLanguage || session.preferredLanguage || "en",
         fields: translationFields,
@@ -291,6 +291,7 @@ export async function createPurchaseOrderViaLocalPg(input: {
       return {
         purchaseOrderId: inserted.id,
         purchaseOrderNo: inserted.purchase_order_no,
+        updatedAt: inserted.version,
         systemBillNumber: purchaseOrderNo,
         branchTransactionSerialNumber,
         countryTransactionSerialNumber,

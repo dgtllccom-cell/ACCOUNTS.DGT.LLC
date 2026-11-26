@@ -458,8 +458,9 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
     // Remaining payments already posted, each tied to its loading (the Confirmed Stock rule needs them)
     const remainingPays = poIds.length
       ? await sql`
-          select purchase_order_id, loading_record_id, amount, currency_code, exchange_rate, base_currency_amount
-          from public.purchase_order_payments
+          select purchase_order_id, loading_record_id, amount, currency_code, exchange_rate, base_currency_amount,
+                 to_jsonb(pop)->>'applied_purchase_amount' as applied_purchase_amount
+          from public.purchase_order_payments pop
           where purchase_order_id = any(${poIds}::uuid[]) and deleted_at is null and status = 'posted' and kind::text = 'remaining'`
       : [];
 
@@ -1022,7 +1023,7 @@ export async function confirmStock(session: ErpSession, input: ConfirmInput) {
       const eligible = confirmableQuantity(chunk, confs);
       // Advance / Endorsement bills: the loading's own Remaining Payment must be complete (posted and verified) before its quantity is confirmed
       {
-        const remainingRows = await tx`select loading_record_id, amount, currency_code, exchange_rate, base_currency_amount from public.purchase_order_payments where purchase_order_id = ${po.id}::uuid and deleted_at is null and status = 'posted' and kind::text = 'remaining'`;
+        const remainingRows = await tx`select loading_record_id, amount, currency_code, exchange_rate, base_currency_amount, to_jsonb(pop)->>'applied_purchase_amount' as applied_purchase_amount from public.purchase_order_payments pop where purchase_order_id = ${po.id}::uuid and deleted_at is null and status = 'posted' and kind::text = 'remaining'`;
         const baseCcy = po.country_id ? (await tx`select upper(currency_code) as c from public.countries where id = ${po.country_id}::uuid limit 1`)[0]?.c : null;
         const bill = buildBillPayment({ ...po, base_currency: baseCcy }, plrs, remainingRows as any[]);
         if (!loadingPaymentOk(bill, plr.id)) {

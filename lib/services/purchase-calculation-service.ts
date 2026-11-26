@@ -13,6 +13,8 @@
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
+import { billFxOperator, effectiveFxRate } from "@/lib/purchases/fx-operator";
+
 export type PurchaseOrderData = {
   id?: string;
   order_total?: number | null;
@@ -21,6 +23,7 @@ export type PurchaseOrderData = {
   credit_amount?: number | null;
   remaining_due?: number | null;
   currency_code?: string | null;
+  payment_currency?: string | null;
   exchange_rate?: number | null;
   form_data?: {
     form?: {
@@ -343,12 +346,13 @@ export function resolvePurchaseAmounts(order: PurchaseOrderData): PurchaseAmount
   ).toUpperCase();
 
   const localCurrency = (
-    String(form.officeCurrency || form.localCurrency || "PKR")
+    String(order.payment_currency || form.secondaryCurrency || form.officeCurrency || form.localCurrency || "PKR").split(" ")[0]
   ).toUpperCase();
 
   // ── Exchange rate ──
-  let exchangeRate = toNum(order.exchange_rate || form.exchangeRate, 1);
-  if (exchangeRate <= 0) exchangeRate = 1;
+  const operator = billFxOperator(order.form_data);
+  const exchangeRate = purchaseCurrency === localCurrency ? 1
+    : effectiveFxRate(toNum(order.exchange_rate || form.exchangeRate, 1), operator);
 
   // ── Total Purchase Amount (in purchase/foreign currency) ──
   let totalPurchaseFC = 0;
@@ -361,7 +365,7 @@ export function resolvePurchaseAmounts(order: PurchaseOrderData): PurchaseAmount
   // Fallback: if order_total is stored but seems to be in local currency, convert back
   if (totalPurchaseFC <= 0) {
     const rawTotal = toNum(order.order_total, 0);
-    if (exchangeRate > 1 && rawTotal > 1000000) {
+    if (operator === "/" || (exchangeRate > 1 && rawTotal > 1000000)) {
       // Likely stored in local currency
       totalPurchaseFC = rawTotal / exchangeRate;
     } else {
@@ -399,7 +403,7 @@ export function resolvePurchaseAmounts(order: PurchaseOrderData): PurchaseAmount
   const remainingAdvanceLC = remainingAdvanceFC * exchangeRate;
 
   // ── Remaining Purchase Balance ──
-  const remainingPurchaseFC = Math.max(0, totalPurchaseFC - paidAdvanceFC);
+  const remainingPurchaseFC = Math.max(0, totalPurchaseFC - paidAdvanceFC - toNum(order.remaining_paid) - toNum(order.credit_amount));
   const remainingPurchaseLC = remainingPurchaseFC * exchangeRate;
 
   // ── Total Quantity ──

@@ -146,9 +146,8 @@ export function normalizeBookingStatus(record: AnyRec): BookingReportStatus {
 }
 
 /**
- * A remark may be saved only while the bill is not posted / transferred: the purchase-order PATCH API reverses the
- * bill's Roznamcha entry and every payment whenever form_data changes on a posted / transferred bill, so a remarks
- * save there would undo the posting. Posted bills (isPurchaseBookingTransferLocked) are read-only here.
+ * The report's inline remarks are editable during booking preparation. A posted booking
+ * uses the versioned correction workflow in the booking wizard.
  */
 export function bookingRemarksEditable(record: AnyRec | null | undefined): boolean {
   if (!record) return false;

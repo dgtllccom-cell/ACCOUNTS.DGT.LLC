@@ -4,7 +4,8 @@ import { PaymentSummaryStrip } from "@/features/journal/components/payment-summa
 import { buildPaymentEntryModel, orderPaymentPercent, paymentAmountsOf, paymentSummaryFigures } from "@/lib/journal/purchase-payment-entry-model";
 import { pl } from "@/lib/reports/print-label";
 import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
-import { printStore } from "@/lib/store/print-store";
+import { printSalesPaymentReceipt, printSalesReceiptCopies } from "@/lib/reports/sales-payment-receipt";
+import type { SalesPaymentReceipt } from "@/lib/sales/payment-receipt";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { printPaymentJournal } from "@/lib/reports/payment-journal-print";
 import { createPortal } from "react-dom";
@@ -64,7 +65,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
-import { matchesSalesReceiptQueue, salesWorkflowDestination, type SalesReceiptQueue } from "@/lib/sales/payment-workflow";
+import { LinkedSalesRoznamchaForm } from "@/features/roznamcha/components/linked-sales-roznamcha-form";
+import { RoznamchaEntryDialog } from "@/features/roznamcha/components/roznamcha-entry-dialog";
+import { convertReviewedSalesReceipt, reviewedSalesReceiptCurrencies, linkedSalesAdvanceReceipt, linkedSalesBalanceReceipt, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesPayableAmount, reviewedSalesSettlement, salesInvoiceReceiptHref, salesReceiptPaymentKind, salesWorkflowDestination, type SalesReceiptQueue } from "@/lib/sales/payment-workflow";
 import { useRouter } from "next/navigation";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -93,7 +96,6 @@ import { useUsdRates } from "@/lib/purchase-ui/use-usd-rates";
 import "@/components/purchase-ui/purchase-table-skin.css";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { rtlLanguages } from "@/lib/i18n/languages";
 import { CurrencyTotalsGrid } from "@/components/payment-report/currency-totals-grid";
 import { PaymentJournalV2Header } from "./payment-journal-v2-header";
 import { AdvancedRegisterSearch } from "@/components/purchase-ui/advanced-register-search";
@@ -153,204 +155,6 @@ type PurchaseOrderRow = {
   created_at: string | null;
   form_data?: any;
 };
-
-function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCurrency: string, autoPrint = true, lang: LanguageCode = "en") {
-  const drLedger = ledgers.find((l) => (l.id || l.account_id) === payment.debit_ledger_id);
-  const crLedger = ledgers.find((l) => (l.id || l.account_id) === payment.credit_ledger_id);
-  const drLabel = drLedger ? (drLedger.account_name || drLedger.name) : "-";
-  const crLabel = crLedger ? (crLedger.account_name || crLedger.name) : "-";
-  const re = payment.roznamcha_entries || {};
-  const form = orderRow?.form_data?.form || {};
-  const th = (label: string) => translateHeader(lang, label);
-  const isRtl = rtlLanguages.includes(lang);
-
-  const companyName = form.salesCompanyName || form.companyName || form.salesAccountName || orderRow?.company_name || "";
-  const receiptTitle = th("Payment Receipt");
-  const receiptNo = payment.reference_no || re.super_admin_serial_number || "N/A";
-  const printDate = new Date().toLocaleString();
-  const paymentDate = new Date(payment.entry_date || payment.created_at).toLocaleDateString();
-  const purchaseDate = form.orderDate ? new Date(form.orderDate).toLocaleDateString() : "N/A";
-  const poNo = orderRow?.sales_order_no || "N/A";
-  const contractNo = orderRow?.sales_contract_no || "N/A";
-  const vendorName = form.vendorName || "N/A";
-  
-  const paymentAmt = Number(payment.amount || 0);
-  const paymentExRate = Number(payment.exchange_rate || 1);
-  const currency = payment.currency_code || localCurrency.toUpperCase();
-  
-  const prevPaid = Number(payment.previous_balance_paid || 0);
-  const totalPaid = prevPaid + paymentAmt;
-  
-  const goodsTotal = orderRow?.form_data?.goodsEntries?.reduce((sum: number, g: any) => sum + Number(g.totalAmount || 0), 0) || Number(form.subTotal || 0);
-  const freight = Number(form.freightCharges || 0);
-  const discount = Number(form.discount || 0);
-  
-  const grandTotalFC = Number(orderRow?.order_total || form.totalAmount || 0);
-  const poExRate = Number(orderRow?.exchange_rate || 1);
-  const outstanding = Math.max(0, grandTotalFC - totalPaid);
-  
-  const displayNarration = payment.narration || "-";
-
-  const rtlFont = lang === "ur" ? "'Noto Nastaliq Urdu', 'Noto Naskh Arabic', serif" : lang === "ar" || lang === "ps" ? "'Cairo', 'Noto Naskh Arabic', sans-serif" : lang === "fa" ? "'Vazirmatn', sans-serif" : "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
-  const html = `
-    <!DOCTYPE html>
-    <html lang="${lang}" dir="${isRtl ? "rtl" : "ltr"}">
-    <head>
-      <meta charset="UTF-8">
-      <title>${receiptTitle} - ${receiptNo}</title>
-      <style>
-        @page { size: A4; margin: 15mm; }
-        body { font-family: ${rtlFont}; font-size: 11px; color: #1e293b; margin: 0; padding: 0; }
-        .container { width: 100%; max-width: 800px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; }
-        .header-left h1 { margin: 0; font-size: 26px; color: #1e3a8a; letter-spacing: 1px; text-transform: uppercase; font-weight: 900; }
-        .header-left p { margin: 4px 0 0; font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
-        .header-right { text-align: right; }
-        .header-right h2 { margin: 0; font-size: 20px; color: #334155; font-weight: 800; }
-        .header-right p { margin: 4px 0 0; font-size: 11px; font-weight: bold; color: #1e293b; }
-        .section-title { background: #f1f5f9; padding: 6px 10px; font-weight: 800; font-size: 11px; border: 1px solid #cbd5e1; border-left: 4px solid #1e3a8a; margin: 20px 0 10px; text-transform: uppercase; color: #0f172a; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; font-size: 11px; }
-        th { background: #f8fafc; font-weight: 700; color: #475569; width: 25%; }
-        .text-right { text-align: right; }
-        .font-bold { font-weight: bold; }
-        .summary-box { display: flex; border: 1px solid #cbd5e1; border-radius: 4px; overflow: hidden; margin-top: 15px; }
-        .summary-item { flex: 1; padding: 12px; text-align: center; background: #f8fafc; border-right: 1px solid #cbd5e1; }
-        .summary-item:last-child { border-right: none; }
-        .summary-item .lbl { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-        .summary-item .val { font-size: 16px; font-weight: 900; margin-top: 5px; color: #0f172a; }
-        .summary-item.highlight { background: #eff6ff; }
-        .summary-item.highlight .lbl { color: #1d4ed8; }
-        .summary-item.highlight .val { color: #1e40af; }
-        .footer { margin-top: 50px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-        .sig-block { width: 22%; text-align: center; }
-        .sig-line { border-top: 1px solid #94a3b8; padding-top: 5px; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-top: 50px; }
-        .stamp-box { width: 90px; height: 90px; border: 2px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; color: #cbd5e1; font-weight: 900; margin: 0 auto; border-radius: 50%; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
-        .sys-gen { text-align: center; font-size: 9px; color: #94a3b8; margin-top: 30px; font-style: italic; border-top: 1px dashed #cbd5e1; padding-top: 10px; }
-        .qr-placeholder { width: 60px; height: 60px; background: #f1f5f9; border: 1px solid #cbd5e1; float: right; margin-left: 15px; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #94a3b8; text-align: center; font-weight: bold; }
-        ${isRtl ? `
-        body { direction: rtl; }
-        th, td { text-align: right; }
-        .text-right { text-align: left; }
-        .header-right { text-align: left; }
-        .qr-placeholder { float: left; margin-left: 0; margin-right: 15px; }
-        .section-title { border-left: none; border-right: 4px solid #1e3a8a; }
-        ` : ""}
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <div class="header-left">
-            ${companyName ? `<h1>${companyName}</h1>` : ""}
-            <p>${th("Purchase Payment Receipt")}</p>
-          </div>
-          <div class="header-right">
-            <h2>${th("Payment Receipt")}</h2>
-            <p>${tGlobal(lang, "common.no_abbr", "No")}: ${receiptNo}</p>
-            <p style="font-weight: normal; color: #64748b; font-size: 10px;">${tGlobal(lang, "common.printed", "Printed")}: ${printDate}</p>
-          </div>
-        </div>
-
-        <div class="section-title">${th("Purchase & Vendor Details")}</div>
-        <table>
-          <tr>
-            <th>${th("Sales Order No")}</th><td><strong>${poNo}</strong></td>
-            <th>${th("Contract / GRN No")}</th><td>${contractNo}</td>
-          </tr>
-          <tr>
-            <th>${th("Supplier Name")}</th><td colspan="3"><strong>${vendorName}</strong></td>
-          </tr>
-          <tr>
-            <th>${th("Purchase Date")}</th><td>${purchaseDate}</td>
-            <th>${th("Currency")}</th><td><strong>${currency}</strong></td>
-          </tr>
-        </table>
-
-        <div class="section-title">${th("Purchase Financial Summary")}</div>
-        <table>
-          <tr>
-            <th>${th("Goods Total Amount")}</th><td class="text-right">${Number(goodsTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-            <th>${th("Discount")}</th><td class="text-right">${Number(discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-          </tr>
-          <tr>
-            <th>${th("Freight Charges")}</th><td class="text-right">${Number(freight).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-            <th>${th("Grand Total")} (${currency})</th><td class="text-right font-bold">${Number(grandTotalFC).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-          </tr>
-        </table>
-
-        <div class="section-title">${th("Accounting & Audit Trail")}</div>
-        <table>
-          <tr>
-            <th>${th("Debit Ledger (Dr)")}</th><td colspan="3">${drLabel}</td>
-          </tr>
-          <tr>
-            <th>${th("Credit Ledger (Cr)")}</th><td colspan="3">${crLabel}</td>
-          </tr>
-          <tr>
-            <th>${th("Payment Date")}</th><td>${paymentDate}</td>
-            <th>${th("Posted By")}</th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : "â"}</td>
-          </tr>
-          <tr>
-            <th>${th("Reference No")}</th><td>${payment.reference_no || "-"}</td>
-            <th>${th("Journal Serial")}</th><td>${re.super_admin_serial_number || "-"}</td>
-          </tr>
-          <tr>
-            <th>${th("Remarks")}</th><td colspan="3">${displayNarration || "-"}</td>
-          </tr>
-        </table>
-
-        <div class="section-title">${th("Payment Summary")}</div>
-        <div class="summary-box">
-          <div class="summary-item">
-            <div class="lbl">${th("Previously Paid")}</div>
-            <div class="val">${Number(prevPaid).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-          </div>
-          <div class="summary-item highlight">
-            <div class="lbl">${th("Current Payment")}</div>
-            <div class="val">${Number(paymentAmt).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-          </div>
-          <div class="summary-item">
-            <div class="lbl">${th("Total Paid to Date")}</div>
-            <div class="val">${Number(totalPaid).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-          </div>
-          <div class="summary-item">
-            <div class="lbl" style="color: #be123c;">${th("Running Purchase Balance")}</div>
-            <div class="val" style="color: #be123c;">${Number(outstanding).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-          </div>
-        </div>
-
-        <div class="footer">
-          <div class="sig-block">
-            <div class="sig-line">${th("Prepared By")}</div>
-          </div>
-          <div class="sig-block" style="width: auto;">
-            <div class="stamp-box">${th("Company")}<br/>${th("Stamp")}</div>
-          </div>
-          <div class="sig-block">
-            <div class="sig-line">${th("Authorized Signatory")}</div>
-          </div>
-          <div class="sig-block">
-            <div class="sig-line">${th("Receiver Signature")}</div>
-          </div>
-        </div>
-
-        <div class="sys-gen">
-          <div class="qr-placeholder">${th("Verify")}<br/>QR</div>
-          *** ${tGlobal(lang, "common.system_generated_document", "THIS IS A SYSTEM GENERATED DOCUMENT")} ***<br/>
-          UUID: ${payment.id || "N/A"} | ${tGlobal(lang, "common.exchange_rate_applied", "Exchange Rate Applied")}: ${paymentExRate.toFixed(4)}
-        </div>
-      </div>
-      <script>
-        window.onload = function() { 
-          if (${autoPrint}) { window.print(); window.close(); }
-        }
-      </script>
-    </body>
-    </html>
-  `;
-  printStore.openPrint(html, receiptTitle + " " + receiptNo);
-}
 
 type OrdersPayload = {
   orders?: PurchaseOrderRow[];
@@ -1013,7 +817,7 @@ function FieldBlock({ label, required, children, className, action }: { label: s
   );
 }
 
-function NestedRowActions({ payment, row, ledgers, localCurrency }: any) {
+function NestedRowActions({ payment, row }: any) {
   const lang = useActiveLanguage();
   function handleAction(fn: () => void) {
     fn();
@@ -1026,9 +830,9 @@ function NestedRowActions({ payment, row, ledgers, localCurrency }: any) {
         <MoreVertical className="h-4 w-4" />
       </summary>
       <div className="absolute right-0 z-30 mt-1 w-40 rounded-xl border border-border bg-popover p-1 text-sm text-popover-foreground shadow-xl">
-        <MenuAction icon={<Eye />} label={tGlobal(lang, "pay.view_details", "View Details")} onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, false, lang))} />
+        {payment.receipt && <MenuAction icon={<Eye />} label={tGlobal(lang, "pay.view_details", "View Details")} onClick={() => handleAction(() => printSalesPaymentReceipt(payment.receipt, lang, false))} />}
         <MenuAction icon={<Edit3 />} label={tGlobal(lang, "pay.edit_line", "Edit Line")} onClick={() => handleAction(() => window.dispatchEvent(new CustomEvent("open-edit-payment", { detail: { payment, row } })))} />
-        <MenuAction icon={<Printer />} label={tGlobal(lang, "pay.print_receipt", "Print Receipt")} onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, true, lang))} />
+        {payment.receipt && <MenuAction icon={<Printer />} label={tGlobal(lang, "pay.print_receipt", "Print Receipt")} onClick={() => handleAction(() => printSalesReceiptCopies(payment.receipt, lang))} />}
       </div>
     </details>
   );
@@ -1049,7 +853,7 @@ function NestedPaymentHistory({
   ledgers: any[], 
   baseCurrency: string, 
   activeMode: string,
-  selectOrder: (id: string) => void,
+  selectOrder?: (id: string) => void,
   expandedIds: Record<string, boolean>,
   setExpandedIds: React.Dispatch<React.SetStateAction<Record<string, boolean>>>,
   logClientError: (msg: string) => void,
@@ -1081,18 +885,26 @@ function NestedPaymentHistory({
   }, [row.id, currentLanguage]);
 
   const form = row.form_data?.form || {};
+  const frozenSettlement = row.form_data?.transferTrace?.settlement;
+  const approved = reviewedSalesSettlement(frozenSettlement);
+  const frozenForeign = reviewedSalesReceiptCurrencies(frozenSettlement)?.foreign;
   const purchaseCurrency = String(
+    frozenForeign?.currency || approved?.currency ||
     form.currencyType ||
     form.currency ||
     row.currency_code ||
     row.form_data?.goodsEntries?.[0]?.purchaseCurrency ||
     "USD"
   ).toUpperCase();
-  const orderExchangeRate = Number(row.exchange_rate || form.exchangeRate || form.usdRate || 1) || 1;
-  const totalPrice = row.form_data?.goodsEntries?.length
-    ? row.form_data.goodsEntries.reduce((sum: number, g: any) => sum + Number(g.totalAmount || g.amount || 0), 0)
-    : Number(form.totalAmount || row.order_total || 0);
-  const totalPurchaseLocal = totalPrice * orderExchangeRate;
+  // The reviewed receipt's persisted exchange_rate is deliberately 1: it
+  // was already posted in base currency. Use the original bill ratio instead.
+  const orderExchangeRate = approved ? (frozenForeign ? approved.final / approved.original : 1)
+    : (Number(row.exchange_rate || form.exchangeRate || form.usdRate || 1) || 1);
+  const totalPrice = approved ? (frozenForeign ? approved.original : approved.final)
+    : row.form_data?.goodsEntries?.length
+      ? row.form_data.goodsEntries.reduce((sum: number, g: any) => sum + Number(g.totalAmount || g.amount || 0), 0)
+      : Number(form.totalAmount || row.order_total || 0);
+  const totalPurchaseLocal = approved?.final ?? totalPrice * orderExchangeRate;
   const advancePercent = Number(form.advancePercent || 0);
   const totalRequiredAdvanceFC = (totalPrice * advancePercent) / 100;
   
@@ -1108,20 +920,31 @@ function NestedPaymentHistory({
 
   let runningPaidForeign = 0;
   let runningPaidLocal = 0;
+  let allReceiptAmountsKnown = true;
 
   const computedHistory = chronological.map((p: any) => {
     const drLedger = ledgers.find((l) => ledgerId(l) === p.debit_ledger_id);
     const crLedger = ledgers.find((l) => ledgerId(l) === p.credit_ledger_id);
-    const localCurrency = (ledgerCurrency(drLedger) || ledgerCurrency(crLedger) || baseCurrency).toUpperCase();
+    const localCurrency = approved?.currency ?? (ledgerCurrency(drLedger) || ledgerCurrency(crLedger) || baseCurrency).toUpperCase();
 
-    const paymentCurrency = String(p.currency_code || purchaseCurrency).toUpperCase();
-    const rate = Number(p.exchange_rate || orderExchangeRate || 1) || 1;
+    const paymentCurrency = String(p.currency_code || (approved ? "" : purchaseCurrency)).toUpperCase();
+    const rate = approved ? orderExchangeRate : (Number(p.exchange_rate || orderExchangeRate || 1) || 1);
     const rawAmount = Number(p.amount || 0);
     const storedLocalAmount = Number(p.local_currency_amount || p.base_currency_amount || 0);
 
     let amtForeign = 0;
     let amtLocal = 0;
-    if (paymentCurrency === purchaseCurrency) {
+    const amountKnown = !approved || (Number.isFinite(rawAmount) && rawAmount > 0 &&
+      (paymentCurrency === approved.currency || (Boolean(frozenForeign) && paymentCurrency === purchaseCurrency)));
+    if (approved) {
+      if (amountKnown && paymentCurrency === approved.currency) {
+        amtLocal = rawAmount;
+        amtForeign = rawAmount / rate;
+      } else if (amountKnown) {
+        amtForeign = rawAmount;
+        amtLocal = rawAmount * rate;
+      }
+    } else if (paymentCurrency === purchaseCurrency) {
       amtForeign = rawAmount;
       amtLocal = storedLocalAmount || rawAmount * rate;
     } else if (paymentCurrency === localCurrency || paymentCurrency === baseCurrency.toUpperCase()) {
@@ -1132,8 +955,12 @@ function NestedPaymentHistory({
       amtLocal = storedLocalAmount || rawAmount * rate;
     }
 
-    runningPaidForeign += amtForeign;
-    runningPaidLocal += amtLocal;
+    if (amountKnown) {
+      runningPaidForeign += amtForeign;
+      runningPaidLocal += amtLocal;
+    } else {
+      allReceiptAmountsKnown = false;
+    }
 
     // Remaining balance is calculated in purchase currency first, then converted to local currency.
     const remainingForeign = Math.max(0, totalPrice - runningPaidForeign);
@@ -1146,6 +973,9 @@ function NestedPaymentHistory({
       ...p,
       purchaseCurrency,
       paymentCurrency,
+      amountKnown,
+      rawAmount,
+      balancesKnown: allReceiptAmountsKnown,
       exchangeRateUsed: rate,
       amtForeign,
       amtLocal,
@@ -1162,7 +992,14 @@ function NestedPaymentHistory({
 
   const latestPaymentState = computedHistory[computedHistory.length - 1];
   const historyWithBalance = [...computedHistory].reverse();
-  const calcs = resolvePurchaseCalculations(row);
+  const legacyCalcs = resolvePurchaseCalculations(row);
+  const calcs = approved ? {
+    ...legacyCalcs, purchCurr: purchaseCurrency, finalCurr: approved.currency, exRate: orderExchangeRate,
+    totalPurchaseFC: totalPrice, totalPurchaseLC: totalPurchaseLocal,
+    advanceAmountFC: totalRequiredAdvanceFC, advanceAmountLC: totalRequiredAdvanceFC * orderExchangeRate,
+    remainingPurchaseFC: Math.max(0, totalPrice - totalRequiredAdvanceFC),
+    remainingPurchaseLC: Math.max(0, totalPurchaseLocal - totalRequiredAdvanceFC * orderExchangeRate),
+  } : legacyCalcs;
   const statementRate = Number(latestPaymentState?.exchangeRateUsed || orderExchangeRate || calcs.exRate || 1) || 1;
 
   // Determine stage context based on activeMode (advance, remaining, credit)
@@ -1307,10 +1144,10 @@ function NestedPaymentHistory({
             {translateHeader(currentLanguage, "Total Received / Paid")}
           </div>
           <div className="mt-0.5 font-mono text-xs font-black text-emerald-600 dark:text-emerald-400">
-            {money(totalPaidForeign, purchaseCurrency)}
+            {allReceiptAmountsKnown ? money(totalPaidForeign, purchaseCurrency) : "—"}
           </div>
           <div className="text-[11px] font-semibold text-slate-500">
-            Local: {money(totalPaidLocal, calcs.finalCurr)}
+            Local: {allReceiptAmountsKnown ? money(totalPaidLocal, calcs.finalCurr) : "—"}
           </div>
         </div>
 
@@ -1325,10 +1162,10 @@ function NestedPaymentHistory({
               stageBalanceForeign <= 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
             )}
           >
-            {stageBalanceForeign <= 0.01 ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
+            {!allReceiptAmountsKnown ? "—" : stageBalanceForeign <= 0.01 ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
           </div>
           <div className="text-[11px] font-semibold text-slate-500">
-            Local: {stageBalanceLocal <= 0.01 ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
+            Local: {!allReceiptAmountsKnown ? "—" : stageBalanceLocal <= 0.01 ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
           </div>
         </div>
 
@@ -1431,14 +1268,14 @@ function NestedPaymentHistory({
               ({money(stageRequiredLocal, calcs.finalCurr)}).
             </span>
           </div>
-          <button
+          {selectOrder && <button
             type="button"
             onClick={() => selectOrder(row.id)}
             className="inline-flex h-7 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-[11px] font-bold text-white shadow-sm transition hover:bg-blue-700"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>{translateHeader(currentLanguage, "POST PAYMENT ENTRY")}</span>
-          </button>
+          </button>}
         </div>
       ) : (
         /* High-Density Compact Table */
@@ -1509,33 +1346,33 @@ function NestedPaymentHistory({
                       <div className="font-bold text-slate-800 dark:text-slate-200">{money(requiredTargetForeign, p.purchaseCurrency)}</div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
-                      <div className="font-bold text-emerald-600 dark:text-emerald-400">{money(p.runningPaidForeign, p.purchaseCurrency)}</div>
-                      <div className="text-[11px] text-slate-400">Entry: {money(p.amtForeign, p.purchaseCurrency)}</div>
+                      <div className="font-bold text-emerald-600 dark:text-emerald-400">{p.balancesKnown ? money(p.runningPaidForeign, p.purchaseCurrency) : "—"}</div>
+                      <div className="text-[11px] text-slate-400">Entry: {p.amountKnown ? money(p.amtForeign, p.purchaseCurrency) : p.paymentCurrency && Number.isFinite(p.rawAmount) ? money(p.rawAmount, p.paymentCurrency) : "—"}</div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
                       <div className={cn("font-bold", remainingTargetForeign <= 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
-                        {remainingTargetForeign <= 0.01 ? "Cleared" : money(remainingTargetForeign, p.purchaseCurrency)}
+                        {!p.balancesKnown ? "—" : remainingTargetForeign <= 0.01 ? "Cleared" : money(remainingTargetForeign, p.purchaseCurrency)}
                       </div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-center font-mono text-slate-600 align-top dark:border-slate-800">
                       <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold dark:bg-slate-800 whitespace-nowrap">
-                        {Number(p.exchangeRateUsed || 1).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                        {p.amountKnown ? Number(p.exchangeRateUsed || 1).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : "—"}
                       </span>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
                       <div className="font-bold text-slate-800 dark:text-slate-200">{money(requiredTargetLocal, p.localCurrency)}</div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
-                      <div className="font-bold text-emerald-600 dark:text-emerald-400">{money(p.runningPaidLocal, p.localCurrency)}</div>
-                      <div className="text-[11px] text-slate-400">Entry: {money(p.amtLocal, p.localCurrency)}</div>
+                      <div className="font-bold text-emerald-600 dark:text-emerald-400">{p.balancesKnown ? money(p.runningPaidLocal, p.localCurrency) : "—"}</div>
+                      <div className="text-[11px] text-slate-400">Entry: {p.amountKnown ? money(p.amtLocal, p.localCurrency) : "—"}</div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
                       <div className={cn("font-bold", remainingTargetLocal <= 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
-                        {remainingTargetLocal <= 0.01 ? "Cleared" : money(remainingTargetLocal, p.localCurrency)}
+                        {!p.balancesKnown ? "—" : remainingTargetLocal <= 0.01 ? "Cleared" : money(remainingTargetLocal, p.localCurrency)}
                       </div>
                     </td>
                     <td className="px-2.5 py-1.5 text-center align-top">
-                      <NestedRowActions payment={p} row={row} ledgers={ledgers} localCurrency={p.localCurrency} />
+                      <NestedRowActions payment={p} row={row} />
                     </td>
                   </tr>
                 );
@@ -1548,20 +1385,20 @@ function NestedPaymentHistory({
                   Total Settled to Date:
                 </td>
                 <td className="px-2.5 py-1.5 text-right text-emerald-600 dark:text-emerald-400">
-                  {money(totalPaidForeign, purchaseCurrency)}
+                  {allReceiptAmountsKnown ? money(totalPaidForeign, purchaseCurrency) : "—"}
                 </td>
                 <td className="px-2.5 py-1.5 text-right text-rose-600 dark:text-rose-400">
-                  {stageBalanceForeign <= 0.01 ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
+                  {!allReceiptAmountsKnown ? "—" : stageBalanceForeign <= 0.01 ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
                 </td>
                 <td className="px-2.5 py-1.5 text-center text-slate-400">⇄</td>
                 <td className="px-2.5 py-1.5 text-right text-slate-400">
                   {money(stageRequiredLocal, calcs.finalCurr)}
                 </td>
                 <td className="px-2.5 py-1.5 text-right text-emerald-600 dark:text-emerald-400">
-                  {money(totalPaidLocal, calcs.finalCurr)}
+                  {allReceiptAmountsKnown ? money(totalPaidLocal, calcs.finalCurr) : "—"}
                 </td>
                 <td className="px-2.5 py-1.5 text-right text-rose-600 dark:text-rose-400">
-                  {stageBalanceLocal <= 0.01 ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
+                  {!allReceiptAmountsKnown ? "—" : stageBalanceLocal <= 0.01 ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
                 </td>
                 <td></td>
               </tr>
@@ -2727,7 +2564,17 @@ function getSalesOrderTableHeader(h: string, currentLanguage: LanguageCode): str
   return SALES_ORDER_TABLE_HEADERS[h]?.[currentLanguage] || h;
 }
 
-export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { mode?: PaymentMode; receiptQueue?: SalesReceiptQueue }) {
+function emptyReviewedReceipt(orderId = "") {
+  return { orderId, ledgerId: "", reference: "", amount: "", currency: "", method: "cash" as "cash" | "bank",
+    cash: { name: "", mobile: "", idDocument: "" },
+    bank: { id: "", label: "", account: "", mode: "" } };
+}
+
+export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoiceReceipt }: {
+  mode?: PaymentMode;
+  receiptQueue?: SalesReceiptQueue;
+  invoiceReceipt?: { orderId: string; invoiceId: string };
+}) {
   const router = useRouter();
   const activeMode: PaymentMode = mode === "charges" ? "credit" : mode;
   const logClientError = (msg: string) => {
@@ -2739,7 +2586,10 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
   };
   const [orders, setOrders] = useState<PurchaseOrderRow[]>([]);
   const [selectedId, setSelectedId] = useState("");
+  const [classicPaymentId, setClassicPaymentId] = useState("");
   const selectOrder = (id: string) => {
+    setClassicPaymentId("");
+    setReviewedReceiptInput(emptyReviewedReceipt());
     setSelectedId(id);
     setTimeout(() => {
       const el = document.getElementById("ledger-cash-entry-section");
@@ -2902,7 +2752,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
   };
 
   // Ledger Entry Panel state
-  const [reviewedReceiptInput, setReviewedReceiptInput] = useState({ orderId: "", ledgerId: "", reference: "", amount: "" });
+  const [reviewedReceiptInput, setReviewedReceiptInput] = useState(() => emptyReviewedReceipt());
   const [paymentSourceLedgerId, setPaymentSourceLedgerId] = useState("");
   const [roznamchaType, setRoznamchaType] = useState("Cash Book No.");
   const [roznamchaNumber, setRoznamchaNumber] = useState("000123");
@@ -2962,6 +2812,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
   const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState("");
+  const [postedReceipt, setPostedReceipt] = useState<SalesPaymentReceipt | null>(null);
   const [paymentError, setPaymentError] = useState("");
   const [selectedOrderPayments, setSelectedOrderPayments] = useState<any[]>([]);
   const [loadingPayments, setLoadingPayments] = useState(false);
@@ -3104,13 +2955,39 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
 
   const orderRequests = useRef(0);
   const [orderCoverage, setOrderCoverage] = useState(true);
+  const invoiceReceiptKey = invoiceReceipt ? `${invoiceReceipt.orderId}:${invoiceReceipt.invoiceId}` : "";
+  const [verifiedInvoiceReceiptKey, setVerifiedInvoiceReceiptKey] = useState("");
   async function loadOrders() {
     const request = ++orderRequests.current;
     const current = () => orderRequests.current === request;
     setLoading(true);
     setError("");
+    if (invoiceReceipt) setVerifiedInvoiceReceiptKey("");
     try {
-      const loaded = await loadScopedRegister<PurchaseOrderRow>(async cursor => {
+      const loaded = invoiceReceipt ? await (async () => {
+        const response = await fetch(`/api/erp/sales/orders/${encodeURIComponent(invoiceReceipt.orderId)}?transfer=1`, {
+          credentials: "include", cache: "no-store",
+        });
+        const body = await response.json();
+        const order = body?.data?.order;
+        if (!response.ok || order?.id !== invoiceReceipt.orderId || salesReceiptPaymentKind(order) !== "invoice") {
+          throw new Error(body?.error?.message || t("unable_to_load_records_sales", currentLanguage));
+        }
+        if (!(Number(reviewedSalesPayableAmount(order)) > 0) || linkedSalesBalanceReceipt(order)?.kind !== "remaining") {
+          throw new Error(translateHeader(currentLanguage, "Receipt is not available for this sales bill and payment stage."));
+        }
+        const invoiceResponse = await fetch(`/api/erp/business-edit-invoices/${encodeURIComponent(invoiceReceipt.invoiceId)}`, {
+          credentials: "include", cache: "no-store",
+        });
+        const invoiceBody = await invoiceResponse.json();
+        const invoice = invoiceBody?.data?.invoice;
+        const source = isLocalSalesFormData(order.form_data) ? "local_sales" : "sales_booking";
+        if (!invoiceResponse.ok || !invoice || invoice.id !== invoiceReceipt.invoiceId || invoice.sourceId !== order.id
+            || invoice.sourceModule !== source || !salesInvoiceReceiptHref(invoice)) {
+          throw new Error(invoiceBody?.error?.message || translateHeader(currentLanguage, "A finalized invoice linked to the original sales bill is required."));
+        }
+        return { rows: [order as PurchaseOrderRow], complete: true };
+      })() : await loadScopedRegister<PurchaseOrderRow>(async cursor => {
         const params = registerPageParams(cursor);
         params.set("limit", "200");
         params.set("lang", currentLanguage);
@@ -3131,6 +3008,11 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
         };
       });
       setOrders(rows);
+      if (invoiceReceipt) setVerifiedInvoiceReceiptKey(invoiceReceiptKey);
+      // The invoice entry point selects by immutable UUID, never by a repeated bill number.
+      // Do not reopen the form after the operator saves and closes it.
+      // The effect below selects on navigation, before the data arrives.
+      if (invoiceReceipt) return;
       // Auto-select by URL param
       const urlOrderNo = getInitialPurchaseOrderNo();
       if (urlOrderNo) {
@@ -3149,7 +3031,11 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
   useEffect(() => {
     void loadOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentLanguage]);
+  }, [currentLanguage, invoiceReceipt?.orderId, invoiceReceipt?.invoiceId]);
+
+  useEffect(() => {
+    if (invoiceReceipt) setSelectedId(invoiceReceipt.orderId);
+  }, [invoiceReceipt?.orderId, invoiceReceipt?.invoiceId]);
 
   useEffect(() => {
     const now = new Date();
@@ -3183,11 +3069,13 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const draft = draftFilter.trim().toLowerCase();
-    const urlOrderNo = getInitialPurchaseOrderNo();
     return orders.filter((row, index) => {
       if (!matchesRegisterSearch(paymentSearchRows[index], advancedPaymentFilters)) return false;
       if (receiptQueue && !matchesSalesReceiptQueue(row, receiptQueue)) return false;
-      if (!receiptQueue && activeMode !== "credit" && urlOrderNo && row.sales_order_no === urlOrderNo) return true;
+      if (invoiceReceipt) {
+        return invoiceReceiptKey === verifiedInvoiceReceiptKey && row.id === invoiceReceipt.orderId
+          && Number(reviewedSalesPayableAmount(row)) > 0 && linkedSalesBalanceReceipt(row)?.kind === "remaining";
+      }
       const postingStatus = row.ledger_posting_status?.toLowerCase();
       const workflowTransferStatus = row.form_data?.workflow?.transferStatus?.toLowerCase();
       const hasTransferAudit = Boolean(row.form_data?.form?.transferAudit);
@@ -3240,10 +3128,11 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
       // read undefined/0 and treated every order as if nothing had ever been paid). The real,
       // always-populated columns are paid_amount (total across every payment kind) and
       // remaining_amount (kept in sync by recalc_sales_order_payment_totals on every posting).
-      const finalAmount = orderTotal(row);
+      const approved = reviewedSalesSettlement(row.form_data?.transferTrace?.settlement);
+      const finalAmount = approved?.original ?? orderTotal(row);
       const paymentType = String(form.paymentType || form.paymentCondition || "").trim().toLowerCase();
-      const isCreditBill = paymentType.includes("credit");
-      const isCashBill = paymentType.includes("cash");
+      const isCreditBill = salesReceiptPaymentKind(row) === "credit" || paymentType.includes("credit");
+      const isCashBill = salesReceiptPaymentKind(row) === "cash" || paymentType.includes("cash");
       const advancePercent = isCreditBill ? 0 : Number(form.advancePercent || 0);
       const isAdvanceBill = paymentType.includes("advance") || paymentType.includes("endorsement") || (!isCreditBill && !isCashBill && advancePercent > 0);
       const requiredAdvance = (finalAmount * advancePercent) / 100;
@@ -3252,14 +3141,16 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
       const remainingAdvance = requiredAdvance - paidAdvance;
       const remainingDue = Number((row as any).remaining_amount ?? (finalAmount - totalPaid));
 
-      const isCreditPaid = /^(posted|paid|completed)$/i.test(row.payment_status ?? "") && remainingDue <= 0.01;
-
-      const isAdvanceCleared = advancePercent > 0 ? remainingAdvance <= 0.01 : paidAdvance > 0;
-      const isRemainingCleared = remainingDue <= 0.01;
+      const payable = reviewedSalesPayableAmount(row);
+      const reviewedBalanceStage = approved ? linkedSalesBalanceReceipt(row) : null;
+      const reviewedAdvanceStage = approved ? linkedSalesAdvanceReceipt(row) : null;
+      const isRemainingCleared = approved ? payable === 0 : remainingDue <= 0.01;
+      const isCreditPaid = /^(posted|paid|completed)$/i.test(row.payment_status ?? "") && isRemainingCleared;
+      const isAdvanceCleared = advancePercent > 0 ? (approved ? payable !== null && !reviewedAdvanceStage : remainingAdvance <= 0.01) : paidAdvance > 0;
 
       if (receiptQueue) {
         // This is an outstanding Cash/Account Transfer queue, not a percentage advance.
-        if (remainingDue <= 0.01) return false;
+        if (approved ? !(Number(payable) > 0) || reviewedBalanceStage?.queue !== receiptQueue : isRemainingCleared) return false;
       } else if (activeMode === "advance") {
         // Business Rule: Show orders that need upfront payment before delivery
         // Advance/Endorsement → need advance % cleared
@@ -3267,8 +3158,8 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
         if (isCreditBill) return false;
 
         const isFullyPaid = (row.payment_status || "").toLowerCase() === "paid" || (row.payment_status || "").toLowerCase() === "completed";
-        if (isFullyPaid) return false;
-        
+        if (isFullyPaid || (approved && !(Number(payable) > 0))) return false;
+
         if (isCashBill) {
           // Cash bills: show until cash payment posted
           if (totalPaid > 0.01) return false; // Cash posted → moves to delivery
@@ -3276,7 +3167,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
         }
         
         if (!isAdvanceBill && advancePercent <= 0) return false;
-        if (advancePercent > 0 && remainingAdvance <= 0.01) return false; // Already cleared required advance
+        if (approved ? !reviewedAdvanceStage : (advancePercent > 0 && isAdvanceCleared)) return false;
 
       } else if (activeMode === "advance_completed") {
         if (isCreditBill) return false;
@@ -3288,19 +3179,19 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
         }
         
         if (advancePercent === 0) return false;
-        if (remainingAdvance > 0.01) return false; // Not yet cleared
+        if (!isAdvanceCleared) return false; // Not yet cleared
         if (paidAdvance <= 0) return false; // Not paid anything
       } else if (activeMode === "remaining") {
         // Business Rule: Credit bills do NOT belong in Remaining Journal
         if (isCreditBill) return false;
         
         // Business Rule: Advance/Endorsement must be fully cleared first
-        if (!isCashBill && advancePercent > 0 && remainingAdvance > 0.01) return false;
+        if (!isCashBill && advancePercent > 0 && !isAdvanceCleared) return false;
         
         // Business Rule: Cash bills must have cash payment posted first
-        if (isCashBill && totalPaid <= 0.01) return false;
-        
-        if (remainingDue <= 0.01) return false; // Already cleared
+        if (isCashBill && totalPaid <= (approved ? 0 : 0.01)) return false;
+
+        if (approved ? !(Number(payable) > 0) || reviewedBalanceStage?.kind !== "remaining" : isRemainingCleared) return false;
 
         // NOTE: sales orders have no loading/container-transfer stage (that's a Country
         // Purchase concept — sales_loading_records doesn't exist in this schema), so unlike
@@ -3310,7 +3201,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
       } else if (activeMode === "credit") {
         // Strict Business Rule: ONLY show Credit bills in Credit Payment Journal
         if (!isCreditBill) return false;
-        if (isCreditPaid) return false; // Already cleared
+        if (approved ? !(Number(payable) > 0) || reviewedBalanceStage?.kind !== "credit" : isCreditPaid) return false;
       } else if (activeMode === "history") {
         // Show in history if fully cleared
         const isFullyCleared = isCreditBill ? isCreditPaid : ((advancePercent > 0 ? isAdvanceCleared : true) && isRemainingCleared);
@@ -3353,7 +3244,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(needle));
     });
-  }, [activeMode, branchFilter, countryFilter, currencyFilter, draftFilter, orders, query, startDateFilter, endDateFilter, cityFilter, partyFilter, sourceFilter, paymentSearchRows, advancedPaymentFilters, receiptQueue]);
+  }, [activeMode, branchFilter, countryFilter, currencyFilter, draftFilter, orders, query, startDateFilter, endDateFilter, cityFilter, partyFilter, sourceFilter, paymentSearchRows, advancedPaymentFilters, receiptQueue, invoiceReceipt?.orderId, invoiceReceiptKey, verifiedInvoiceReceiptKey]);
 
   // ── Approved header data: this page's RBAC-scoped orders (narrowed by the Country / Branch filters) + the real payment records ──
   const modulePayments = useModulePayments("sales");
@@ -3368,21 +3259,23 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
       const rawDue = r.remaining_amount;
       const due = rawDue === null || rawDue === undefined ? Math.max(0, total - paid) : Math.max(0, Number(rawDue) || 0);
       const status = String(r.payment_status || "").toLowerCase();
+      const approved = reviewedSalesSettlement(row.form_data?.transferTrace?.settlement);
+      const payable = reviewedSalesPayableAmount(row);
       const form = rowForm(row);
       return {
         id: String(row.id),
-        // the order's own country (by id, from the scoped countries list) and its stored currency — the amounts are denominated in currency_code
+        // Reviewed totals and balances must share the same approved currency.
         country: countryNameById.get(String((row as any).country_id)) || rowCountryName(row),
-        currency: String((row as any).currency_code || rowCurrency(row)).toUpperCase(),
-        total,
-        paid,
-        due,
-        settled: status === "paid" || status === "completed" || (total > 0 && due <= 0.01),
+        currency: approved && payable !== null ? approved.currency : String((row as any).currency_code || rowCurrency(row)).toUpperCase(),
+        total: approved && payable !== null ? approved.final : total,
+        paid: approved && payable !== null ? Math.round((approved.final - payable) * 100) / 100 : paid,
+        due: payable ?? due,
+        settled: approved ? payable === 0 : status === "paid" || status === "completed" || (total > 0 && due <= 0.01),
         endorsement: String(form.paymentType || form.paymentCondition || "").toLowerCase().includes("endorsement"),
       };
     }), [orders, countryFilter, branchFilter, countryNameById]);
 
-  const selected = selectedId ? (filtered.find((row) => row.id === selectedId) ?? null) : null;
+  const selected = selectedId ? (filtered.find((row) => row.id === selectedId && mayOpenPayment(row)) ?? null) : null;
 
   // Container Selection local state (moved here to allow access to 'selected' initialization)
   const [selectedLoadingRecord, setSelectedLoadingRecord] = useState<any>(null);
@@ -3945,26 +3838,88 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
     return Math.max(0, requiredAdvanceBC - paidAdvanceBC);
   }, [selected]);
 
+  const sharedReceiptPage = Boolean(receiptQueue || invoiceReceipt || activeMode === "credit" || activeMode === "remaining" || activeMode === "final");
+  function mayOpenPayment(row: PurchaseOrderRow) {
+    if (activeMode === "advance_completed" || activeMode === "history") return false;
+    const approved = reviewedSalesSettlement(row.form_data?.transferTrace?.settlement);
+    if (approved) {
+      if (!(Number(reviewedSalesPayableAmount(row)) > 0)) return false;
+      if (activeMode === "advance" && !receiptQueue && !salesReceiptPaymentKind(row)) return Boolean(linkedSalesAdvanceReceipt(row));
+      const stage = linkedSalesBalanceReceipt(row);
+      if (!stage) return false;
+      if (receiptQueue) return stage.queue === receiptQueue;
+      if (activeMode === "credit") return stage.kind === "credit";
+      if (activeMode === "remaining") return stage.kind === "remaining";
+      return true;
+    }
+    if (invoiceReceipt) return false;
+    if (activeMode !== "final") return true;
+    // Final still displays reconciled rows. Only open a receipt for real outstanding amounts.
+    return linkedSalesBalanceReceipt(row) !== null || (
+      /^(posted|transferred)$/i.test(String(row.ledger_posting_status ?? "")) &&
+      !/^(paid|completed)$/i.test(String(row.payment_status ?? "")) &&
+      Number(row.remaining_amount) > 0.01 && !row.form_data?.transferTrace?.settlement
+    );
+  }
   const reviewedSettlement = selected?.form_data?.transferTrace?.settlement;
-  const useReviewedReceiptForm = Boolean(receiptQueue || (activeMode === "credit" && reviewedSettlement));
-  const confirmedReceiptCurrency = String(reviewedSettlement?.finalCurrency || "").toUpperCase();
+  const useSharedReceiptFor = (row: PurchaseOrderRow) => sharedReceiptPage ||
+    (activeMode === "advance" && Boolean(row.form_data?.transferTrace?.settlement));
+  const useReviewedReceiptForm = Boolean(selected && useSharedReceiptFor(selected) && classicPaymentId !== selected.id);
+  const hasClassicReceipt = Boolean(selected && !selected.form_data?.transferTrace?.settlement && !receiptQueue &&
+    !invoiceReceipt && [null, "credit"].includes(salesReceiptPaymentKind(selected)) &&
+    // The classic path was already available in the Credit, Remaining and Final journals.
+    (activeMode === "credit" || activeMode === "remaining" || activeMode === "final"));
+  const advanceReceipt = Boolean(selected && !receiptQueue && activeMode === "advance" && !salesReceiptPaymentKind(selected));
+  const selectedAdvanceStage = advanceReceipt && selected ? linkedSalesAdvanceReceipt(selected) : null;
+  const selectedLinkedStage = selected ? (advanceReceipt ? selectedAdvanceStage : linkedSalesBalanceReceipt(selected)) : null;
+  const paymentQueue = receiptQueue ?? (useReviewedReceiptForm ? selectedLinkedStage?.queue : undefined);
+  const receiptQueueLabel = paymentQueue === "cash" ? "Cash Payment" : paymentQueue === "account-transfer" ? "Account Transfer" : null;
+  const receiptLabel = receiptQueueLabel ?? (selected && salesReceiptPaymentKind(selected) === "invoice" ? "Invoice Payment" :
+    selectedLinkedStage?.kind === "credit" || activeMode === "credit" ? "Credit Payment / Receipt" :
+    activeMode === "advance" ? "Advance Payment / Receipt" : activeMode === "final" ? "Final Payment" : "Remaining Payment");
+  const acceptedSettlement = reviewedSalesSettlement(reviewedSettlement);
+  const confirmedReceiptCurrency = acceptedSettlement?.currency ?? "";
+  const reviewedParty = String(selected?.form_data?.form?.customerAccountName || selected?.form_data?.form?.customerName || "");
+  const reviewedMobile = String(selected?.form_data?.form?.customerMobile || selected?.form_data?.form?.customerPhone || "");
+  const reviewedDraft = reviewedReceiptInput.orderId === selectedId ? reviewedReceiptInput : {
+    ...emptyReviewedReceipt(selectedId), cash: { name: reviewedParty, mobile: reviewedMobile, idDocument: "" },
+  };
+  const receiptCurrencies = reviewedSalesReceiptCurrencies(reviewedSettlement);
+  const receiptInputCurrency = reviewedDraft.currency === receiptCurrencies?.foreign?.currency
+    ? reviewedDraft.currency : confirmedReceiptCurrency;
+  const receiptConverted = convertReviewedSalesReceipt(reviewedSettlement, {
+    amount: Number(reviewedDraft.amount), currency: receiptInputCurrency,
+  });
+  const reviewedChannel = paymentQueue === "cash" ? "cash" : paymentQueue === "account-transfer" ? "bank" : reviewedDraft.method;
   const reviewedReceiptLedgers = ledgers.filter(l => {
     if (!ledgerId(l) || ledgerCurrency(l).toUpperCase() !== confirmedReceiptCurrency) return false;
     const description = [ledgerCode(l), ledgerName(l), l.account_type, l.type].map(String).join(" ").toLowerCase();
     const cash = /cash|petty/.test(description);
     const bank = /bank|current account/.test(description);
-    return receiptQueue === "cash" ? cash : receiptQueue === "account-transfer" ? bank : cash || bank;
+    const country = l.country_id || l.countryId;
+    const countryBranch = l.country_branch_id || l.countryBranchId;
+    const cityBranch = l.city_branch_id || l.cityBranchId;
+    if ((selected?.country_id && country && selected.country_id !== country) ||
+        (selected?.country_branch_id && countryBranch && selected.country_branch_id !== countryBranch) ||
+        (selected?.city_branch_id && cityBranch && selected.city_branch_id !== cityBranch)) return false;
+    return reviewedChannel === "cash" ? cash : bank;
   });
-  const reviewedDraft = reviewedReceiptInput.orderId === selectedId ? reviewedReceiptInput : { orderId: selectedId, ledgerId: "", reference: "", amount: "" };
   const reviewedLedger = reviewedReceiptLedgers.find(l => ledgerId(l) === reviewedDraft.ledgerId);
-  const reviewedMethod = receiptQueue === "account-transfer" ? "transfer" : receiptQueue === "cash" ? "cash"
-    : /cash|petty/i.test([ledgerCode(reviewedLedger), ledgerName(reviewedLedger)].join(" ")) ? "cash" : "bank";
-  const canSaveReviewed = Boolean(reviewedLedger && reviewedDraft.reference.trim() && Number.isFinite(Number(reviewedDraft.amount))
-    && Number(reviewedDraft.amount) > 0 && confirmedReceiptCurrency);
+  const reviewedMethod = reviewedChannel === "cash" ? "cash" : paymentQueue === "account-transfer" ? "transfer" : "bank";
+  const reviewedDetails = reviewedChannel === "cash"
+    ? { channel: "cash" as const, partyName: reviewedDraft.cash.name.trim(), mobile: reviewedDraft.cash.mobile.trim(),
+      idTail: reviewedDraft.cash.idDocument.trim().slice(-4) || undefined }
+    : { channel: "bank" as const, bankId: reviewedDraft.bank.id, mode: reviewedDraft.bank.mode.trim() || undefined };
+  const readyDetails = reviewedDetails.channel === "cash"
+    ? Boolean(reviewedDetails.partyName && /^[+\d\s().-]+$/.test(reviewedDetails.mobile) && reviewedDetails.mobile.replace(/\D/g, "").length >= 5)
+    : Boolean(reviewedDetails.bankId && reviewedDraft.bank.account);
+  const canSaveReviewed = Boolean(selectedLinkedStage && reviewedLedger && receiptConverted && (!selectedAdvanceStage || receiptConverted.amount <= selectedAdvanceStage.limit) && readyDetails && reviewedDraft.reference.trim() && /^\d{4}-\d{2}-\d{2}$/.test(paymentDate) &&
+    planSalesWorkflowReceipt(reviewedSettlement, { currency: confirmedReceiptCurrency, amount: receiptConverted.amount,
+      paidOriginal: Number(selected?.paid_amount ?? 0), remainingOriginal: Number(selected?.remaining_amount ?? 0) }));
 
   // Final Action POST handler
   async function handleProcessPayment() {
-    if (!selected || !(useReviewedReceiptForm ? canSaveReviewed : canSave)) return;
+    if (processingPayment || !selected || !(useReviewedReceiptForm ? acceptedSettlement && canSaveReviewed : canSave)) return false;
     const submittedMethod = useReviewedReceiptForm ? reviewedMethod : paymentType;
     const submittedLedger = useReviewedReceiptForm ? reviewedDraft.ledgerId : paymentSourceLedgerId;
     const submittedReference = useReviewedReceiptForm ? reviewedDraft.reference.trim() : roznamchaNumber;
@@ -4086,22 +4041,24 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
       const payload = {
         purchaseOrderId: selected.id,
         salesOrderNo: selected.sales_order_no,
-        kind: receiptQueue ? "remaining" : ["advance", "remaining", "credit", "booking"].includes(activeMode) ? activeMode : "advance",
-        ...(receiptQueue ? { salesWorkflowQueue: receiptQueue } : {}),
+        kind: useReviewedReceiptForm ? selectedLinkedStage?.kind : activeMode === "credit" ? "credit" : activeMode === "advance" ? "advance" : "remaining",
+        ...(useReviewedReceiptForm ? { linkedBalanceReceipt: true, receiptDetails: reviewedDetails, receiptInput: { currency: receiptInputCurrency, amount: Number(reviewedDraft.amount) } } : {}),
+        ...(paymentQueue ? { salesWorkflowQueue: paymentQueue } : {}),
+        ...(invoiceReceipt ? { salesInvoiceId: invoiceReceipt.invoiceId } : {}),
         debitLedgerId,
         creditLedgerId,
         paymentType: submittedMethod,
         roznamchaType: useReviewedReceiptForm && submittedMethod !== "cash" ? "Roznamcha Book No." : roznamchaType,
         roznamchaNumber: submittedReference,
         currencyCode: useReviewedReceiptForm ? confirmedReceiptCurrency : currency,
-        exchangeRate: useReviewedReceiptForm ? Number(reviewedSettlement?.exchangeRate || 1) : Number(exchangeRate || 1),
-        amount: useReviewedReceiptForm ? Number(reviewedDraft.amount) : payloadAmount,
-        amountLocal: useReviewedReceiptForm ? Number(reviewedDraft.amount) : amount,
+        exchangeRate: useReviewedReceiptForm ? (receiptConverted?.rate ?? 1) : Number(exchangeRate || 1),
+        amount: useReviewedReceiptForm ? receiptConverted?.amount : payloadAmount,
+        amountLocal: useReviewedReceiptForm ? receiptConverted?.amount : amount,
         narration: finalRemarks,
         entryDate: paymentDate,
         referenceNo: submittedReference || undefined,
         typeDetails: {
-          ...typeDetails,
+          ...(!useReviewedReceiptForm ? typeDetails : {}),
           ...(useReviewedReceiptForm ? { paymentMethod: submittedMethod } : {}),
           ...(fromLoading && loadingRecordId ? { loadingRecordId } : {})
         },
@@ -4128,10 +4085,11 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
         throw new Error(body?.error?.message ?? body?.message ?? "Execution failure on backend server.");
       }
 
-      const allSerials = [body.data?.serialNumber, body.data?.countrySerialNumber, body.data?.branchSerialNumber].filter(Boolean).join(" | ");
+      setPostedReceipt(body.data?.receipt ?? null);
+      const allSerials = [body.data?.superAdminSerialNumber, body.data?.countryTransactionSerialNumber, body.data?.branchTransactionSerialNumber, body.data?.serialNumber].filter(Boolean).join(" | ");
       setPaymentSuccess(`Double-entry ledger voucher successfully balanced! Journal Serial Number: ${allSerials || "N/A"}.`);
       paymentIdempotencyKeyRef.current = "";
-      setReviewedReceiptInput({ orderId: "", ledgerId: "", reference: "", amount: "" });
+      setReviewedReceiptInput(emptyReviewedReceipt());
       setCalcAmount("");
       setFinalPayment("");
       setRemarks("");
@@ -4140,8 +4098,10 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
       
       // Auto-reload data
       await loadOrders();
+      return true;
     } catch (err: any) {
-      setPaymentError(err?.message || "Failed to process payment settlement. Please try again.");
+      setPaymentError(translateHeader(currentLanguage, err?.message || "Failed to process payment settlement. Please try again."));
+      return false;
     } finally {
       setProcessingPayment(false);
     }
@@ -4400,6 +4360,13 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
 
           {/* 28. ACTION */}
           <td className="py-3 px-2 text-center" onClick={(e) => e.stopPropagation()}>
+            {mayOpenPayment(row) && useSharedReceiptFor(row) && (
+              <button type="button" onClick={() => selectOrder(row.id)}
+                className="me-1 inline-flex h-7 w-7 items-center justify-center rounded-md border border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950"
+                aria-label={`${translateHeader(currentLanguage, "Payment Entry")} ${row.sales_order_no}`}>
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+            )}
             <ViewportActionMenu
               ariaLabel={translateHeader(currentLanguage, "Row actions")}
               buttonClassName="inline-flex items-center justify-center h-7 w-7 rounded-md border border-slate-200 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 transition text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 shadow-sm"
@@ -4408,7 +4375,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
             >
               {(close) => (
                 <div className="py-1 text-xs">
-                  {activeMode !== "advance_completed" && (
+                  {mayOpenPayment(row) && (
                     <button
                       className="flex w-full items-center px-3 py-2 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded transition font-bold"
                       onClick={() => {
@@ -4465,9 +4432,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
                 ledgers={ledgers}
                 baseCurrency={baseCurrency}
                 activeMode={activeMode}
-                selectOrder={(id: string) => {
-                  selectOrder(id);
-                }}
+                selectOrder={mayOpenPayment(row) ? selectOrder : undefined}
                 expandedIds={expandedIds}
                 setExpandedIds={setExpandedIds}
                 logClientError={logClientError}
@@ -4501,6 +4466,13 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className={cn("flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950", isRtl ? "text-right" : "text-left")}>
+      {postedReceipt && <section className="m-3 flex flex-wrap items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
+        <span>{tGlobal(currentLanguage, "rvp.receipt_no", "Receipt No.")}: <bdi className="font-bold">{postedReceipt.number}</bdi></span>
+        <Button type="button" size="sm" onClick={() => printSalesReceiptCopies(postedReceipt, currentLanguage)}>
+          <Printer className="me-1 h-4 w-4" />{tGlobal(currentLanguage, "pay.print_receipt", "Print Receipt")}
+        </Button>
+        <Button type="button" size="sm" variant="ghost" aria-label={translateHeader(currentLanguage, "Close")} onClick={() => setPostedReceipt(null)}><X className="h-4 w-4" /></Button>
+      </section>}
       {/* Approved payment-page header (title, page toolbar, yellow summary · blue payment types · green countries). The toolbar wraps this
           page's EXISTING search, Filters panel, date range, refresh, print and export handlers; the payment-type rows link to the existing routes. */}
       <PaymentModuleHeader
@@ -4697,18 +4669,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
                     <div className="flex flex-col items-center justify-center gap-2">
                       <FileSpreadsheet className="h-10 w-10 opacity-30" />
                       <span>{t("no_payment_records_found", currentLanguage)}</span>
-                      {activeMode === "remaining" ? (
-                        <div className="max-w-md text-center">
-                          <span className="text-[11px] text-amber-500 font-bold block">
-                            {tGlobal(currentLanguage, "pay.remaining_workflow_warning", "Warning: Workflow Rule: Remaining Payment requires Transfer to Loading first.")}
-                          </span>
-                          <span className="text-[11px] text-slate-400 block mt-1">
-                            {tGlobal(currentLanguage, "pay.remaining_workflow_steps", "Orders only appear here after: Booking â Advance Payment â Transfer to Loading â Loading Confirmation. Ensure the order has been transferred to loading before making a remaining payment.")}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-[11px] text-slate-400">{t("try_adjusting_filters", currentLanguage)}</span>
-                      )}
+                      <span className="text-[11px] text-slate-400">{t("try_adjusting_filters", currentLanguage)}</span>
                     </div>
                   </td>
                 </tr>
@@ -4790,10 +4751,90 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
       </div>
 
 
-      {/* Ledger Cash Entry Panel (Modal) */}
-      {selected && (
+      {selected && useReviewedReceiptForm && (
+        <RoznamchaEntryDialog
+          title={translateHeader(currentLanguage, "New Roznamcha Entry")}
+          description={`${translateHeader(currentLanguage, receiptLabel)} · ${selected.sales_order_no}`}
+          closeLabel={translateHeader(currentLanguage, "Close")}
+          onClose={() => setSelectedId("")}
+          busy={processingPayment}
+        >
+          <LinkedSalesRoznamchaForm
+            lang={currentLanguage}
+            bill={selected.sales_order_no}
+            country={rowCountryName(selected) || ""}
+            branch={rowBranchName(selected) || ""}
+            city={String(selected.form_data?.form?.cityName || selected.form_data?.form?.branchCity || "")}
+            currency={confirmedReceiptCurrency}
+            originalCurrency={String(reviewedSettlement?.originalCurrency || selected.form_data?.form?.salesCurrency || selected.currency_code || "")}
+            party={reviewedParty}
+            countryId={selected.country_id ?? undefined}
+            method={reviewedChannel}
+            methodLocked={Boolean(paymentQueue)}
+            cash={reviewedDraft.cash}
+            bank={reviewedDraft.bank}
+            onMethod={value => setReviewedReceiptInput({ ...reviewedDraft, method: value, ledgerId: "", reference: "" })}
+            onCash={(field, value) => setReviewedReceiptInput({ ...reviewedDraft, cash: { ...reviewedDraft.cash, [field]: value } })}
+            onBankRecord={(bank, label) => setReviewedReceiptInput({ ...reviewedDraft, bank: { ...reviewedDraft.bank,
+              id: bank?.id || "", label: label || bank?.bank_name || "", account: bank?.account_number || bank?.iban || "" } })}
+            onBankMode={value => setReviewedReceiptInput({ ...reviewedDraft, bank: { ...reviewedDraft.bank, mode: value } })}
+            receiptInputCurrency={receiptInputCurrency}
+            foreignCurrency={receiptCurrencies?.foreign ?? null}
+            postingAmount={receiptConverted?.amount ?? null}
+            advanceLimit={selectedAdvanceStage?.limit ?? null}
+            onCurrency={value => setReviewedReceiptInput({ ...reviewedDraft, currency: value, amount: "" })}
+            approvedFinal={acceptedSettlement?.final ?? null}
+            paidOriginal={selected.paid_amount ?? null}
+            remainingOriginal={selected.remaining_amount ?? null}
+            payableFinal={reviewedSalesPayableAmount(selected)}
+            accounts={reviewedReceiptLedgers.map(l => ({ id: ledgerId(l) || "", name: ledgerName(l), code: ledgerCode(l),
+              type: String(l.account_type || l.type || ""), parent: String(l.parentAccountName || l.parent_account_name || "") }))}
+            ledgerId={reviewedDraft.ledgerId} reference={reviewedDraft.reference} amount={reviewedDraft.amount} date={paymentDate} remarks={remarks}
+            onLedger={value => setReviewedReceiptInput({ ...reviewedDraft, ledgerId: value })}
+            onReference={value => setReviewedReceiptInput({ ...reviewedDraft, reference: value })}
+            onAmount={value => setReviewedReceiptInput({ ...reviewedDraft, amount: value })}
+            onDate={setPaymentDate}
+            onRemarks={setRemarks}
+            onClear={() => { setReviewedReceiptInput(emptyReviewedReceipt()); setRemarks(""); setPaymentError(""); setPaymentSuccess(""); }}
+            onClose={() => setSelectedId("")}
+            onSave={startNew => void handleProcessPayment().then(saved => { if (saved && !startNew) setSelectedId(""); })}
+            disabled={!acceptedSettlement || !selectedLinkedStage} busy={processingPayment} canSave={canSaveReviewed}
+            notice={<>
+              {acceptedSettlement && !selectedLinkedStage && (
+                <p role="status" className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  {translateHeader(currentLanguage, Number(selected.remaining_amount) <= 0 ? "No outstanding balance" : "Receipt is not available for this sales bill and payment stage.")}
+                </p>
+              )}
+              {!acceptedSettlement && (
+                <section role="alert" className="mt-2 space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                  <p className="text-sm font-semibold">{translateHeader(currentLanguage, "Receipt paused: ask Accounts to verify the original bill and its posted settlement before recording payment.")}</p>
+                  <button type="button" className="text-sm font-bold underline" onClick={() => {
+                    const local = isLocalSalesFormData(selected.form_data);
+                    router.push(`/dashboard/sales/sales-order/view?id=${encodeURIComponent(selected.id)}&transfer=1${local ? "&source=local" : ""}`);
+                  }}>{translateHeader(currentLanguage, "View Original Sales Bill")}</button>
+                  {hasClassicReceipt && <button type="button" className="ms-3 text-sm font-bold underline"
+                    onClick={() => setClassicPaymentId(selected.id)}>
+                    {translateHeader(currentLanguage, "Open Existing Payment Form")}
+                  </button>}
+                </section>
+              )}
+              {paymentError && <p role="alert" className="mt-2 text-red-700">{paymentError}</p>}
+              {paymentSuccess && <div className="mt-2 text-emerald-700">
+                <p role="status">{paymentSuccess}</p>
+                {postedReceipt?.orderId === selected.id && <Button type="button" size="sm" className="mt-2"
+                  onClick={() => printSalesReceiptCopies(postedReceipt, currentLanguage)}>
+                  <Printer className="me-1 h-4 w-4" />{tGlobal(currentLanguage, "pay.print_receipt", "Print Receipt")}
+                </Button>}
+              </div>}
+            </>}
+          />
+        </RoznamchaEntryDialog>
+      )}
+
+      {/* Existing payment tools for legacy records without reviewed posting data. */}
+      {selected && !useReviewedReceiptForm && mayOpenPayment(selected) && (
         <SimpleModal
-          title={`Payment Entry - PO ${selected.sales_order_no}`}
+          title={receiptQueueLabel ? `${translateHeader(currentLanguage, receiptQueueLabel)} - ${selected.sales_order_no}` : `Payment Entry - PO ${selected.sales_order_no}`}
           onClose={() => setSelectedId("")}
           className="h-[calc(100dvh-1.5rem)] w-[calc(100vw-1.5rem)] max-w-[1760px] rounded-2xl shadow-2xl"
         >
@@ -4815,7 +4856,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
               <div>
                 <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{translateHeader(currentLanguage, "Type")}</div>
                 <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-black uppercase text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 whitespace-nowrap">
-                  {activeMode === "advance" ? "Advance" : activeMode === "credit" ? "Credit" : activeMode === "remaining" ? "Remaining" : "History"}
+                  {receiptQueueLabel ? translateHeader(currentLanguage, receiptQueueLabel) : activeMode === "advance" ? "Advance" : activeMode === "credit" ? "Credit" : activeMode === "remaining" ? "Remaining" : "History"}
                 </span>
               </div>
               <div>
@@ -4839,40 +4880,8 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
               </div>
             </div>
             <div className="text-xs text-slate-500 font-semibold">
-              {receiptQueue ? translateHeader(currentLanguage, receiptQueue === "cash" ? "Cash Payment" : "Account Transfer") : activeMode === "advance" ? "Sales Advance Payment Entry" : activeMode === "credit" ? "Sales Credit Payment Entry" : activeMode === "remaining" ? "Sales Remaining Payment Entry" : "Sales Payment Entry"}
+              {receiptQueueLabel ? translateHeader(currentLanguage, receiptQueueLabel) : activeMode === "advance" ? "Sales Advance Payment Entry" : activeMode === "credit" ? "Sales Credit Payment Entry" : activeMode === "remaining" ? "Sales Remaining Payment Entry" : "Sales Payment Entry"}
             </div>
-            {useReviewedReceiptForm && (
-              <section className="space-y-2 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
-                <h3 className="font-bold">{translateHeader(currentLanguage, "Payment Entry")}</h3>
-                <div className="grid gap-3 md:grid-cols-3">
-                  <label className="grid gap-1">
-                    <span>{translateHeader(currentLanguage, "Receiving Account")}</span>
-                    <select className="rounded border bg-background px-2 py-1.5" aria-label={translateHeader(currentLanguage, "Receiving Account")} value={reviewedDraft.ledgerId}
-                      onChange={e => setReviewedReceiptInput({ ...reviewedDraft, ledgerId: e.target.value })}>
-                      <option value="">—</option>
-                      {reviewedReceiptLedgers.map(l => <option key={ledgerId(l)} value={ledgerId(l)}>{ledgerCode(l)} · {ledgerName(l)} · {ledgerCurrency(l)}</option>)}
-                    </select>
-                  </label>
-                  <label className="grid gap-1">
-                    <span>{translateHeader(currentLanguage, "Receipt Reference")}</span>
-                    <input className="rounded border bg-background px-2 py-1.5" maxLength={140} value={reviewedDraft.reference}
-                      onChange={e => setReviewedReceiptInput({ ...reviewedDraft, reference: e.target.value })}/>
-                  </label>
-                  <label className="grid gap-1">
-                    <span>{translateHeader(currentLanguage, "Receipt Amount")} {confirmedReceiptCurrency}</span>
-                    <input className="rounded border bg-background px-2 py-1.5" type="number" step="0.01" min="0.01" value={reviewedDraft.amount}
-                      onChange={e => setReviewedReceiptInput({ ...reviewedDraft, amount: e.target.value })}/>
-                  </label>
-                </div>
-                {paymentError && <p role="alert" className="text-red-700">{paymentError}</p>}
-                {paymentSuccess && <p role="status" className="text-emerald-700">{paymentSuccess}</p>}
-                <button type="button" onClick={() => void handleProcessPayment()} disabled={!canSaveReviewed || processingPayment}
-                  className="rounded bg-emerald-700 px-3 py-1.5 font-bold text-white disabled:opacity-50">
-                  {translateHeader(currentLanguage, "Post Receipt")}
-                </button>
-              </section>
-            )}
-
             {/* Already Transferred / Overpaid Warning Banner */}
             {(() => {
               const form = selected.form_data?.form || {};
@@ -5248,7 +5257,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
                   {/* Header Bar */}
                   <div className="flex items-center justify-between px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
                     <div className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15 font-extrabold text-xs shadow-sm">PO</span>
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15 font-extrabold text-xs shadow-sm">{receiptQueue ? "SO" : "PO"}</span>
                       <div>
                         <div className="text-[11px] font-bold uppercase tracking-widest opacity-80">
                           {fromLoading ? "Active Container Loading Selection" : "Active Bill Selection"}
@@ -5267,6 +5276,10 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
                       {isFullyPaid ? (
                         <span className="inline-flex items-center gap-1 bg-emerald-500 text-white px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider">
                           <CheckCircle className="h-3 w-3" /> {translateHeader(currentLanguage, "Fully Paid")}
+                        </span>
+                      ) : receiptQueue ? (
+                        <span className="inline-flex items-center gap-1 bg-white/20 px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider">
+                          {translateHeader(currentLanguage, "Outstanding Balance")}
                         </span>
                       ) : isAdvComplete ? (
                         <span className="inline-flex items-center gap-1 bg-amber-400 text-amber-900 px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider">
@@ -5862,7 +5875,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
                                     <div className="text-[11px] text-blue-500">{money(payment.runningTotalAED, baseCurrency)}</div>
                                   </td>
                                   <td className="px-3 py-2 text-center">
-                                    <NestedRowActions payment={payment} row={selected} ledgers={ledgers} localCurrency={baseCurrency} />
+                                    <NestedRowActions payment={payment} row={selected} />
                                   </td>
                                 </tr>
                               );
@@ -6083,11 +6096,25 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
                   branchId={(selected as any)?.branch_id || selected.city_branch_id || selected.country_branch_id || (erpScope as any)?.branchId || (erpScope as any)?.lockedCityBranchId || null}
                   branchName={rowBranchName(selected) || erpScope.branchDisplayName}
                   baseCurrency={baseCurrency}
-                  onSuccess={() => {
+                  onSuccess={(result) => {
+                    setPostedReceipt(null);
+                    if (typeof result?.paymentId === "string") {
+                      const paymentId = result.paymentId;
+                      void fetch(`/api/erp/sales/orders/${encodeURIComponent(selected.id)}/payments`, { cache: "no-store", credentials: "include" })
+                        .then(res => res.ok ? res.json() : null)
+                        .then(body => {
+                          const receipt = body?.data?.payments?.find((payment: any) => payment.id === paymentId)?.receipt;
+                          if (receipt) setPostedReceipt(receipt);
+                        }).catch(() => undefined);
+                    }
                     window.dispatchEvent(new CustomEvent("refresh-payments"));
                     router.refresh();
                   }}
                 />
+                {postedReceipt?.orderId === selected.id && <Button type="button" size="sm" className="mt-2"
+                  onClick={() => printSalesReceiptCopies(postedReceipt, currentLanguage)}>
+                  <Printer className="me-1 h-4 w-4" />{tGlobal(currentLanguage, "pay.print_receipt", "Print Receipt")}
+                </Button>}
               </div>
 
               {/* Double-entry Preview, Ledger Posting, and supporting notes */}
@@ -6399,6 +6426,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue }: { m
           payments={viewingRowPayments}
           lang={currentLanguage}
           onOpenPaymentEntry={(ord) => {
+            if (!mayOpenPayment(ord)) return;
             setViewingRow(null);
             selectOrder(ord.id);
           }}

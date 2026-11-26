@@ -12,6 +12,7 @@ import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-acti
 import { printStore } from "@/lib/store/print-store";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { printPaymentJournal } from "@/lib/reports/payment-journal-print";
+import { printPaymentVoucherCopies, type PaymentVoucherCopies } from "@/lib/reports/payment-voucher-copies";
 import { createPortal } from "react-dom";
 import { PurchasePaymentEntryDocument, type EntryPaymentRow } from "@/features/journal/components/purchase-payment-entry-document";
 import {
@@ -116,6 +117,8 @@ import { PaymentJournalV2FilterModal } from "./payment-journal-v2-filter-modal";
 import { PurchasePaymentJournalRemainingView } from "./purchase-payment-journal-remaining-view";
 import { StandardizedDailyPaymentForm } from "@/components/daily-payments/standardized-daily-payment-form";
 import { calculatePaymentDueTracking, resolveAgreedDueDate } from "@/lib/services/payment-due-tracking";
+import { exactPurchaseAllocation, supportsExactPurchaseAllocation } from "@/lib/purchases/payment-request";
+import { isPurchaseBalanceCleared } from "@/lib/purchases/payment-precision";
 import { paymentInPurchaseCurrency } from "@/lib/purchases/loaded-payable";
 import { localPurchaseSettlement } from "@/lib/purchases/local-purchase-balance";
 import { Badge } from "@/components/ui/badge";
@@ -150,6 +153,7 @@ type PurchaseOrderRow = {
   branchSerialNo?: string | null;
   branchName?: string | null;
   countryName?: string | null;
+  countries?: { currency_code?: string | null } | null;
   sales_account_no?: string | null;
   sales_account_name?: string | null;
   purchase_account_no?: string | null;
@@ -1083,7 +1087,7 @@ function FieldBlock({ label, required, children, className, action }: { label: s
   );
 }
 
-function NestedRowActions({ payment, row, ledgers, localCurrency }: any) {
+function NestedRowActions({ payment, row, ledgers, localCurrency, onPrintPaymentVoucher }: any) {
   const currentLanguage = useActiveLanguage() as LanguageCode;
   function handleAction(fn: () => void) {
     fn();
@@ -1098,7 +1102,8 @@ function NestedRowActions({ payment, row, ledgers, localCurrency }: any) {
       <div className="absolute right-0 z-30 mt-1 w-40 rounded-xl border border-border bg-popover p-1 text-sm text-popover-foreground shadow-xl">
         <MenuAction icon={<Eye />} label={t("row_view_details", currentLanguage)} onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, false, currentLanguage))} />
         <MenuAction icon={<Edit3 />} label={t("row_edit_line", currentLanguage)} onClick={() => handleAction(() => window.dispatchEvent(new CustomEvent("open-edit-payment", { detail: { payment, row } })))} />
-        <MenuAction icon={<Printer />} label={t("row_print_receipt", currentLanguage)} onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, true, currentLanguage))} />
+        {payment.id && payment.kind !== "booking" && String(payment.status).toLowerCase() === "posted" &&
+          <MenuAction icon={<Printer />} label={t("row_print_receipt", currentLanguage)} onClick={() => handleAction(() => onPrintPaymentVoucher(row.id, payment.id))} />}
       </div>
     </details>
   );
@@ -1114,7 +1119,8 @@ function NestedPaymentHistory({
   setExpandedIds,
   logClientError,
   onOpenFullBill,
-  loadingRemainingLoadingRecords = false
+  loadingRemainingLoadingRecords = false,
+  onPrintPaymentVoucher,
 }: { 
   row: any, 
   ledgers: any[], 
@@ -1125,7 +1131,8 @@ function NestedPaymentHistory({
   setExpandedIds: React.Dispatch<React.SetStateAction<Record<string, boolean>>>,
   logClientError: (msg: string) => void,
   onOpenFullBill?: () => void,
-  loadingRemainingLoadingRecords?: boolean
+  loadingRemainingLoadingRecords?: boolean,
+  onPrintPaymentVoucher: (orderId: string, paymentId: string) => void
 }) {
   const currentLanguage = useActiveLanguage() as LanguageCode;
   const [payments, setPayments] = useState<any[]>([]);
@@ -1395,13 +1402,13 @@ function NestedPaymentHistory({
           <div
             className={cn(
               "mt-0.5 font-mono text-xs font-black",
-              stageBalanceForeign <= 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+              isPurchaseBalanceCleared(stageBalanceForeign) ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
             )}
           >
-            {stageBalanceForeign <= 0.01 ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
+            {isPurchaseBalanceCleared(stageBalanceForeign) ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
           </div>
           <div className="text-[11px] font-semibold text-slate-500">
-            Local: {stageBalanceLocal <= 0.01 ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
+            Local: {isPurchaseBalanceCleared(stageBalanceLocal) ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
           </div>
         </div>
 
@@ -1586,8 +1593,8 @@ function NestedPaymentHistory({
                       <div className="text-[11px] text-slate-400">Entry: {money(p.amtForeign, p.purchaseCurrency)}</div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
-                      <div className={cn("font-bold", remainingTargetForeign <= 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
-                        {remainingTargetForeign <= 0.01 ? "Cleared" : money(remainingTargetForeign, p.purchaseCurrency)}
+                      <div className={cn("font-bold", isPurchaseBalanceCleared(remainingTargetForeign) ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+                        {isPurchaseBalanceCleared(remainingTargetForeign) ? "Cleared" : money(remainingTargetForeign, p.purchaseCurrency)}
                       </div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-center font-mono text-slate-600 align-top dark:border-slate-800">
@@ -1603,12 +1610,12 @@ function NestedPaymentHistory({
                       <div className="text-[11px] text-slate-400">Entry: {money(p.amtLocal, p.localCurrency)}</div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
-                      <div className={cn("font-bold", remainingTargetLocal <= 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
-                        {remainingTargetLocal <= 0.01 ? "Cleared" : money(remainingTargetLocal, p.localCurrency)}
+                      <div className={cn("font-bold", isPurchaseBalanceCleared(remainingTargetLocal) ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+                        {isPurchaseBalanceCleared(remainingTargetLocal) ? "Cleared" : money(remainingTargetLocal, p.localCurrency)}
                       </div>
                     </td>
                     <td className="px-2.5 py-1.5 text-center align-top">
-                      <NestedRowActions payment={p} row={row} ledgers={ledgers} localCurrency={p.localCurrency} />
+                      <NestedRowActions payment={p} row={row} ledgers={ledgers} localCurrency={p.localCurrency} onPrintPaymentVoucher={onPrintPaymentVoucher} />
                     </td>
                   </tr>
                 );
@@ -1624,7 +1631,7 @@ function NestedPaymentHistory({
                   {money(totalPaidForeign, purchaseCurrency)}
                 </td>
                 <td className="px-2.5 py-1.5 text-right text-rose-600 dark:text-rose-400">
-                  {stageBalanceForeign <= 0.01 ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
+                  {isPurchaseBalanceCleared(stageBalanceForeign) ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
                 </td>
                 <td className="px-2.5 py-1.5 text-center text-slate-400">⇄</td>
                 <td className="px-2.5 py-1.5 text-right text-slate-400">
@@ -1634,7 +1641,7 @@ function NestedPaymentHistory({
                   {money(totalPaidLocal, calcs.finalCurr)}
                 </td>
                 <td className="px-2.5 py-1.5 text-right text-rose-600 dark:text-rose-400">
-                  {stageBalanceLocal <= 0.01 ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
+                  {isPurchaseBalanceCleared(stageBalanceLocal) ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
                 </td>
                 <td></td>
               </tr>
@@ -2821,6 +2828,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     // The next bill must never inherit the previous bill's selected container.
     setSelectedLoadingRecord(null);
     setCalcAmount("");
+    setManualPurchaseFx(null);
     setFinalPayment("");
     setSelectedOrderPayments([]);
     setPaymentError("");
@@ -3016,6 +3024,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const [calcAmount, setCalcAmount] = useState("");
   const [exchangeRate, setExchangeRate] = useState("1");
   const [calcOp, setCalcOp] = useState<"mul" | "div">("mul");
+  const [manualPurchaseFx, setManualPurchaseFx] = useState<{ orderId: string; rate: string; operator: "mul" | "div" } | null>(null);
   const [finalPayment, setFinalPayment] = useState("");
   const [remarks, setRemarks] = useState("");
   const [typeDetails, setTypeDetails] = useState<Record<string, string>>({});
@@ -3071,6 +3080,34 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   // the order's supplier company (name / code / country / contacts) for the payment document's Supplier Details card — the list API does not carry it
   const [supplierRecord, setSupplierRecord] = useState<{ orderId: string; company: any } | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState("");
+  const [postedVoucher, setPostedVoucher] = useState<{ orderId: string; paymentId: string } | null>(null);
+  const [receiptError, setReceiptError] = useState("");
+  const [receiptLoading, setReceiptLoading] = useState(false);
+  const voucherRequest = React.useRef(0);
+  async function openPostedPurchaseVoucher(orderId: string, paymentId: string) {
+    const request = ++voucherRequest.current;
+    setReceiptError("");
+    setReceiptLoading(true);
+    try {
+      const response = await fetch(`/api/erp/purchases/orders/${encodeURIComponent(orderId)}/payments/${encodeURIComponent(paymentId)}?lang=${encodeURIComponent(currentLanguage)}`, {
+        method: "GET", credentials: "include", cache: "no-store",
+      });
+      const body = await response.json();
+      if (!response.ok || !body?.ok || !body.data?.number) {
+        throw new Error(body?.error?.message || tGlobal(currentLanguage, "common.error", "Something went wrong."));
+      }
+      const { source, ...voucher } = body.data as Omit<PaymentVoucherCopies, "source" | "documentKind"> & { source: "local_purchase" | "purchase_booking" };
+      if (request === voucherRequest.current) {
+        printPaymentVoucherCopies({ ...voucher, documentKind: "purchase", source: translateHeader(currentLanguage, source === "local_purchase" ? "Local Purchase" : "Purchase Booking") }, currentLanguage);
+      }
+    } catch (err) {
+      if (request === voucherRequest.current) {
+        setReceiptError(err instanceof Error ? err.message : tGlobal(currentLanguage, "common.error", "Something went wrong."));
+      }
+    } finally {
+      if (request === voucherRequest.current) setReceiptLoading(false);
+    }
+  }
   const [paymentError, setPaymentError] = useState("");
   const [selectedOrderPayments, setSelectedOrderPayments] = useState<any[]>([]);
   const [loadingPayments, setLoadingPayments] = useState(false);
@@ -3559,10 +3596,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       const isCreditPaid = rawPaymentStatus === "paid" || 
                            rawPaymentStatus === "completed" || 
                            rawPaymentStatus === "fully_paid" || 
-                           (remainingDue <= 0.01 && finalAmount > 0 && rawPaymentStatus !== "unpaid" && rawPaymentStatus !== "pending");
+                           (isPurchaseBalanceCleared(remainingDue) && finalAmount > 0 && rawPaymentStatus !== "unpaid" && rawPaymentStatus !== "pending");
 
       const isAdvanceCleared = advancePercent > 0 ? remainingAdvance <= 0.01 : paidAdvance > 0;
-      const isRemainingCleared = remainingDue <= 0.01;
+      const isRemainingCleared = isPurchaseBalanceCleared(remainingDue);
 
       if (activeMode === "advance") {
         if (isCreditBill) return false;
@@ -3664,7 +3701,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     const paid = Number(r.advance_paid || 0) + Number(r.remaining_paid || 0) + Number(r.credit_amount || 0);
     const rawDue = r.remaining_due;
     const due = rawDue === null || rawDue === undefined ? Math.max(0, total - paid) : Math.max(0, Number(rawDue) || 0);
-    return status === "paid" || status === "completed" || (total > 0 && due <= 0.01);
+    return status === "paid" || status === "completed" || (total > 0 && isPurchaseBalanceCleared(due));
   };
 
   const isLocalPurchaseRecord = (r: any) => Boolean(
@@ -3764,7 +3801,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         total,
         paid,
         due,
-        settled: status === "paid" || status === "completed" || (total > 0 && due <= 0.01),
+        settled: status === "paid" || status === "completed" || (total > 0 && isPurchaseBalanceCleared(due)),
         endorsement: String(form.paymentType || form.paymentCondition || "").toLowerCase().includes("endorsement"),
       };
     }), [orders, countryFilter, branchFilter, countryNameById]);
@@ -3956,7 +3993,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         poCurrency: batch?.currency || String(selected.currency_code || "USD"),
         exRate: rate,
         isAdvComplete: Boolean(batch),
-        isFullyPaid: Boolean(batch) && outstanding <= 0.01,
+        isFullyPaid: Boolean(batch) && isPurchaseBalanceCleared(outstanding),
         loadingAdvancePaid: batch?.advanceAllocated ?? 0,
         loadingRemainingAdvance: 0,
         finalPurchaseAmount: batchValue,
@@ -4058,7 +4095,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     const advancePaidPercent = loadingRequiredAdvance > 0 ? Math.min(100, (loadingAdvancePaid / loadingRequiredAdvance) * 100) : 0;
 
     const isAdvComplete = loadingRemainingAdvance <= 0.01;
-    const isFullyPaid = outstandingBalance <= 0.01;
+    const isFullyPaid = isPurchaseBalanceCleared(outstandingBalance);
 
     return {
       fromLoading,
@@ -4383,6 +4420,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
 
   const baseCurrency = useMemo(() => {
     if (selected) {
+      const bookingCurrency = String(selected.countries?.currency_code ?? "").trim().toUpperCase();
+      if ((selected as any).order_type === "purchase_booking" && /^[A-Z]{3}$/.test(bookingCurrency)) return bookingCurrency;
       return rowOfficeCurrency(selected);
     }
 
@@ -4647,6 +4686,30 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     return sorted.map(toLedgerOption);
   }, [ledgers]);
 
+  const showManualPurchaseFx = supportsExactPurchaseAllocation({
+    bookingSettlement: Boolean(selected && !isLocalPurchaseRecord(selected) && (selected as any).order_type === "purchase_booking"
+      && ["advance", "remaining", "credit", "endorsement"].includes(activeMode)),
+    billCurrency: selected?.currency_code,
+    calculatorCurrency: selected?.form_data?.form?.currencyType || selected?.form_data?.form?.currency || selected?.currency_code,
+    tenderCurrency: currency,
+    localCurrency: baseCurrency,
+  });
+  const savedManualFx = manualPurchaseFx && manualPurchaseFx.orderId === selected?.id ? manualPurchaseFx : null;
+  const effectiveInputRate = showManualPurchaseFx ? savedManualFx?.rate ?? "" : exchangeRate;
+  const effectiveInputOperator = showManualPurchaseFx ? savedManualFx?.operator ?? "mul" : calcOp;
+  const exactAllocation = showManualPurchaseFx ? exactPurchaseAllocation({
+    amount: calcAmount, manualRate: effectiveInputRate, operator: effectiveInputOperator,
+    billCurrency: selected?.currency_code, tenderCurrency: currency,
+  }) : null;
+  const changePaymentRate = (rate: string) => {
+    if (showManualPurchaseFx && selected) setManualPurchaseFx({ orderId: selected.id, rate, operator: effectiveInputOperator });
+    else setExchangeRate(rate);
+  };
+  const changePaymentOperator = (operator: "mul" | "div") => {
+    if (showManualPurchaseFx && selected) setManualPurchaseFx({ orderId: selected.id, rate: effectiveInputRate, operator });
+    else setCalcOp(operator);
+  };
+
   // Calculate dynamic currency values
   const isLocalCurrency = currency === baseCurrency;
   const isPOCurrencyLocal = useMemo(() => {
@@ -4662,6 +4725,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   const isLocalPayment = !showCalcPanel;
 
   const calcFinal = useMemo(() => {
+    if (showManualPurchaseFx) return exactAllocation?.amountLocal ?? 0;
     if (!showCalcPanel) return null;
     const fAmt = Number(calcAmount || 0);
     // If PO currency is local (PKR), no conversion rate is needed (rate is 1).
@@ -4672,7 +4736,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     } else {
       return exRate > 0 ? fAmt / exRate : 0;
     }
-  }, [showCalcPanel, calcAmount, exchangeRate, calcOp, isPOCurrencyLocal]);
+  }, [showCalcPanel, calcAmount, exchangeRate, calcOp, isPOCurrencyLocal, showManualPurchaseFx, exactAllocation?.amountLocal]);
 
   // Derive target numeric payment amount
   const amount = useMemo(() => {
@@ -4681,10 +4745,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
   }, [showCalcPanel, calcFinal, finalPayment]);
 
   const payloadAmount = useMemo(() => {
+    if (showManualPurchaseFx) return exactAllocation?.amount ?? 0;
     return showCalcPanel
       ? (isLocalCurrency ? Number(calcFinal || 0) : Number(calcAmount || 0))
       : Number(finalPayment || 0);
-  }, [showCalcPanel, isLocalCurrency, calcFinal, calcAmount, finalPayment]);
+  }, [showCalcPanel, isLocalCurrency, calcFinal, calcAmount, finalPayment, showManualPurchaseFx, exactAllocation?.amount]);
 
   // Endorsement / Advance / Remaining open as ONE in-page document instead of the 4-tab modal. `overLimit` is reported by that document
   // (the typed amount is more than the remaining balance); the payment API enforces the same rule, this only stops the click earlier.
@@ -4759,6 +4824,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     }
     setProcessingPayment(true);
     setPaymentSuccess("");
+    setPostedVoucher(null);
+    setReceiptError("");
     setPaymentError("");
 
     if (!paymentIdempotencyKeyRef.current) {
@@ -4901,6 +4968,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         exchangeRate: isLocalPayment ? 1 : Number(exchangeRate || 1),
         amount: payloadAmount,
         amountLocal: amount,
+        ...(exactAllocation ?? {}),
         narration: finalRemarks,
         entryDate: paymentDate,
         referenceNo: typeDetails.transferReferenceNumber || typeDetails.refNo || typeDetails.chequeNo || roznamchaNumber || undefined,
@@ -4932,6 +5000,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       }
 
       const allSerials = [body.data?.serialNumber, body.data?.countrySerialNumber, body.data?.branchSerialNumber].filter(Boolean).join(" | ");
+      if (typeof body.data?.paymentId === "string") setPostedVoucher({ orderId: selected.id, paymentId: body.data.paymentId });
       setPaymentSuccess(`Double-entry ledger voucher successfully balanced! Journal Serial Number: ${allSerials || "N/A"}.`);
       paymentIdempotencyKeyRef.current = ""; // next submission is a new, distinct payment attempt
       setCalcAmount("");
@@ -5101,7 +5170,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 const rowActualPaid = isCreditBill ? Number(row.advance_paid || 0) : calcs.advanceAmountFC;
 
                 if (isCreditBill) {
-                  if (rowActualPaid > 0 && rowRemainingDue <= 0.01) {
+                  if (rowActualPaid > 0 && isPurchaseBalanceCleared(rowRemainingDue)) {
                     return (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0 whitespace-nowrap">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -5109,7 +5178,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       </span>
                     );
                   }
-                  if (rowActualPaid > 0 && rowRemainingDue > 0.01) {
+                  if (rowActualPaid > 0 && !isPurchaseBalanceCleared(rowRemainingDue)) {
                     return (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 shrink-0 whitespace-nowrap">
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
@@ -5125,7 +5194,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   );
                 }
 
-                if (isPosted || (calcs.advanceAmountFC > 0 && calcs.remainingPurchaseFC <= 0.01)) {
+                if (isPosted || (calcs.advanceAmountFC > 0 && isPurchaseBalanceCleared(calcs.remainingPurchaseFC))) {
                   return (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0 whitespace-nowrap">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -5358,6 +5427,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 logClientError={logClientError}
                 onOpenFullBill={() => setViewingRow(row)}
                 loadingRemainingLoadingRecords={loadingRemainingLoadingRecords}
+                onPrintPaymentVoucher={openPostedPurchaseVoucher}
               />
             </td>
           </tr>
@@ -5392,16 +5462,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
           countryOptions={countryOptions}
           branchOptions={branchOptions}
           onOpenFullDetails={(orderId) => selectOrder(orderId)}
-          onPrintReceipt={(payment, orderRow) =>
-            handlePrintReceipt(
-              { ...payment, roznamcha_entries: { super_admin_serial_number: payment.journal_no } },
-              orderRow,
-              ledgers,
-              baseCurrency,
-              true,
-              currentLanguage
-            )
-          }
+          onPrintReceipt={(payment) => void openPostedPurchaseVoucher(payment.purchase_order_id, payment.id)}
           onDownloadPdf={(orderRow) => handleOpenA4PDF(orderRow, true)}
           onPrintJournal={() => void printPaymentJournal({
             kind: "purchase",
@@ -5547,6 +5608,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       {error && (
         <div className="mx-6 my-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400">
           {error}
+        </div>
+      )}
+
+      {receiptError && <p role="alert" className="mx-6 my-3 rounded-lg bg-red-50 p-3 text-sm text-red-800">{receiptError}</p>}
+      {postedVoucher && !selected && (
+        <div className="mx-6 my-3">
+          <Button type="button" size="sm" disabled={receiptLoading} onClick={() => void openPostedPurchaseVoucher(postedVoucher.orderId, postedVoucher.paymentId)}>
+            <Printer className="me-1 h-4 w-4" />{t("row_print_receipt", currentLanguage)}
+          </Button>
         </div>
       )}
 
@@ -5700,6 +5770,18 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
             const paymentCondition = form.paymentCondition || (activeMode === "advance" ? "Advance Payment" : isCredit ? "Credit Payment" : "");
 
             // Payment calculations
+            const renderTransactionPrint = (tx: { id?: string; kind?: string; status?: string }) =>
+              tx.id && tx.kind !== "booking" && String(tx.status).toLowerCase() === "posted" && (
+                <button
+                  type="button"
+                  className="me-1 inline-flex items-center rounded border border-slate-300 px-2 py-1 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                  title={t("row_print_receipt", currentLanguage)}
+                  aria-label={t("row_print_receipt", currentLanguage)}
+                  onClick={() => void openPostedPurchaseVoucher(selected.id, tx.id!)}
+                >
+                  <Printer className="h-3.5 w-3.5" aria-hidden />
+                </button>
+              );
             const displayPayments = selectedOrderPayments.filter((p: any) => activeMode === "advance" ? isActualInvoicePayment(p) : p.kind !== "booking");
             const chronological = displayPayments.sort((a: any, b: any) =>
               new Date(a.entry_date || a.created_at).getTime() - new Date(b.entry_date || b.created_at).getTime()
@@ -5829,7 +5911,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                 totalPaid: selectedLoadingDue ? selectedLoadingDue.advanceAllocated + selectedLoadingDue.remainingPaid : statTotalPaidFC,
                 balance: selectedLoadingDue ? selectedLoadingDue.outstanding : statRemainingFC
               });
-              const docEntered = amountInPurchaseCurrency({
+              const docEntered = showManualPurchaseFx ? exactAllocation?.purchaseAppliedAmount ?? 0 : amountInPurchaseCurrency({
                 amount: payloadAmount,
                 paymentCurrency: currency,
                 rate: Number(exchangeRate || 0),
@@ -5898,6 +5980,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                   paymentsLoading={loadingPayments}
                   onBack={returnToPaymentRegister}
                   onPrint={() => handleOpenA4PDF(selected, true)}
+                  onPrintReceipt={(payment) => void openPostedPurchaseVoucher(selected.id, payment.id)}
+                  receiptError={receiptError}
                   onSave={() => {
                     setIsDoubleEntryExpanded(true);
                     if (canSave && !processingPayment) void handleProcessPayment();
@@ -6549,6 +6633,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                                     AED {Number(tx.showRemainAED ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                   </td>
                                   <td className="px-3 py-2 text-center whitespace-nowrap">
+                                    {renderTransactionPrint(tx)}
                                     <button
                                       type="button"
                                       onClick={(e) => {
@@ -6661,6 +6746,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                                 <td className="px-3 py-2 text-slate-600 dark:text-slate-300 font-normal">{tx.details || tx.narration || "—"}</td>
                                 <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{Number(tx.amountAED ?? tx.amtAED ?? tx.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                                 <td className="px-3 py-2 text-center whitespace-nowrap">
+                                  {renderTransactionPrint(tx)}
                                   <button
                                     type="button"
                                     onClick={(e) => {
@@ -6719,6 +6805,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                                 <td className="px-3 py-2 text-slate-600 dark:text-slate-300 font-normal">{tx.details || tx.narration || "—"}</td>
                                 <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{Number(tx.amountAED ?? tx.amtAED ?? tx.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                                 <td className="px-3 py-2 text-center whitespace-nowrap">
+                                  {renderTransactionPrint(tx)}
                                   <button
                                     type="button"
                                     onClick={(e) => {
@@ -7006,26 +7093,28 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                             </FieldBlock>
 
                             {!isLocalPayment && (
-                            <FieldBlock label={t("exchange_rate", currentLanguage)} required>
+                            <FieldBlock label={showManualPurchaseFx ? `${t("exchange_rate", currentLanguage)} (${translateHeader(currentLanguage, "Manual")})` : t("exchange_rate", currentLanguage)} required>
                               <Input
+                                aria-label={showManualPurchaseFx ? `${t("exchange_rate", currentLanguage)} (${translateHeader(currentLanguage, "Manual")})` : t("exchange_rate", currentLanguage)}
                                 type="number"
                                 step="0.0001"
                                 min="0"
                                 className="h-8 font-mono text-xs font-bold bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100"
-                                value={exchangeRate}
-                                onChange={(e) => setExchangeRate(e.target.value)}
-                                placeholder={String(exRate || 1)}
+                                value={effectiveInputRate}
+                                onChange={(e) => changePaymentRate(e.target.value)}
+                                placeholder={showManualPurchaseFx ? undefined : String(exRate || 1)}
                               />
                             </FieldBlock>
                             )}
 
                             {!isLocalPayment && (
-                            <FieldBlock label={`${t("payment_amount_usd", currentLanguage)} (${poCurrencyHeader})`}>
+                            <FieldBlock label={`${showManualPurchaseFx ? translateHeader(currentLanguage, "Purchase Amount") : t("payment_amount_usd", currentLanguage)} (${poCurrencyHeader})`}>
                               <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">
                                   {poCurrencyHeader}
                                 </span>
                                 <Input
+                                  aria-label={`${translateHeader(currentLanguage, "Purchase Amount")} (${poCurrencyHeader})`}
                                   className="h-8 pl-12 text-right text-xs font-black font-mono text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800"
                                   value={calcAmount}
                                   onChange={(e) => setCalcAmount(e.target.value)}
@@ -7057,17 +7146,18 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                               <FieldBlock label={translateHeader(currentLanguage, "Conversion Rate")}>
                                 <Input
                                   className="h-7 text-xs font-mono bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
-                                  value={exchangeRate}
-                                  onChange={(e) => setExchangeRate(e.target.value)}
-                                  placeholder="3.6725"
+                                  value={effectiveInputRate}
+                                  onChange={(e) => changePaymentRate(e.target.value)}
+                                  placeholder={showManualPurchaseFx ? undefined : "3.6725"}
                                   type="number"
                                 />
                               </FieldBlock>
                               <FieldBlock label={translateHeader(currentLanguage, "Operation")}>
                                 <select
                                   className="flex h-7 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-xs font-semibold"
-                                  value={calcOp}
-                                  onChange={(e) => setCalcOp(e.target.value as any)}
+                                  aria-label={translateHeader(currentLanguage, "Operation")}
+                                  value={effectiveInputOperator}
+                                  onChange={(e) => changePaymentOperator(e.target.value === "div" ? "div" : "mul")}
                                 >
                                   <option value="mul">{t("multiply_op", currentLanguage)}</option>
                                   <option value="div">{translateHeader(currentLanguage, "Divide (/)")}</option>
@@ -7084,7 +7174,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                               </span>
                               <Input
                                 className="h-8 pl-12 text-right text-xs font-black font-mono bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100"
-                                value={showCalcPanel && calcFinal !== null ? calcFinal.toFixed(2) : finalPayment}
+                                aria-label={`${t("final_local_amount", currentLanguage)} (${baseCurrency})`}
+                                value={showManualPurchaseFx ? exactAllocation ? String(exactAllocation.amountLocal) : "" : showCalcPanel && calcFinal !== null ? calcFinal.toFixed(2) : finalPayment}
+                                readOnly={showManualPurchaseFx}
                                 onChange={(e) => setFinalPayment(e.target.value)}
                                 placeholder="0.00"
                                 type="number"
@@ -7203,6 +7295,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       <div>
                         <div className="font-bold mb-0.5">{t("payment_posted_successfully", currentLanguage)}</div>
                         <div className="text-xs">{paymentSuccess}</div>
+                        {postedVoucher?.orderId === selected.id && <Button type="button" size="sm" className="mt-2" disabled={receiptLoading} onClick={() => void openPostedPurchaseVoucher(postedVoucher.orderId, postedVoucher.paymentId)}>
+                          <Printer className="me-1 h-4 w-4" />{t("row_print_receipt", currentLanguage)}
+                        </Button>}
                       </div>
                     </div>
                   )}
@@ -7211,6 +7306,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                       ❌ {paymentError}
                     </div>
                   )}
+                  {!docMode && receiptError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{receiptError}</p>}
                 </div>
                 </EntryPortal>
               </div>
@@ -7237,7 +7333,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                         </div>
                       </div>
                     </div>
-                    {activeMode === "remaining" && !isLocalSelected && Boolean(selectedLoadingRecord?.id) && Number(selectedLoadingDue?.outstanding ?? 1) <= 0.01 && (
+                    {activeMode === "remaining" && !isLocalSelected && Boolean(selectedLoadingRecord?.id) && isPurchaseBalanceCleared(Number(selectedLoadingDue?.outstanding ?? 1)) && (
                       <a
                         href={`/dashboard/purchase/purchase-transit-lane?source=purchase_booking&sourceId=${encodeURIComponent(String(selectedLoadingRecord.id))}&focus=${encodeURIComponent(String(selectedLoadingRecord.id))}`}
                         className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700"
