@@ -82,6 +82,7 @@ import { translateOptionLabel } from "@/lib/i18n/option-labels";
 import { VoiceFormFill } from "@/components/voice-form-fill";
 import { findSelectedAccount, resolveAccountCompany, accountCompanyName } from "@/lib/purchases/booking-account-panel";
 import { loadingReadinessNote } from "@/lib/purchases/loading-readiness";
+import { branchBusinessScopeKey, branchBusinessAccountDefaults, branchDefaultAction, preferSameAccount } from "@/lib/purchases/booking-branch-accounts";
 
 // --- Non-location constants (static values, not from master forms) ---
 const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY", "SAR"];
@@ -625,6 +626,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
   const [savingOrder, setSavingOrder] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [savedOrderId, setSavedOrderId] = useState("");
+  const [savedOrderVersion, setSavedOrderVersion] = useState("");
   // Serial numbers issued to a loaded bill (row + saved workflow). Shown as saved; never synthesized.
   const [loadedBillSerials, setLoadedBillSerials] = useState(null);
   const [savedOrderNo, setSavedOrderNo] = useState("");
@@ -698,17 +700,30 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
   const [showSavedDraftsPicker, setShowSavedDraftsPicker] = useState(false);
   const [dbAccounts, setDbAccounts] = useState([]);
   const [dbAccountsLoading, setDbAccountsLoading] = useState(true);
+  const [branchAccountCandidates, setBranchAccountCandidates] = useState(null);
+  const accountChoice = useRef({ purchase: null, sales: null });
   const [customQtyNames, setCustomQtyNames] = useState([]);
 
   const applyDraft = useCallback((d) => {
     const p = d.draft_payload || d.payload || {};
+    const draftPurchaseId = p.purchaseAccountId || p.purchase_account_id || "";
+    const draftPurchaseNo = p.purchaseAccountNo || p.purchase_account_no || "";
+    const draftPurchaseName = p.purchaseAccountName || p.purchase_account_name || "";
+    const hasDraftPurchaseAccount = Boolean(draftPurchaseId || draftPurchaseNo || draftPurchaseName);
+    if (hasDraftPurchaseAccount) {
+      accountChoice.current.purchase = { mode: "manual" };
+    }
     setForm((prev) => ({
       ...prev,
       countryId: p.countryId || p.country_id || prev.countryId,
       countryBranchId: p.countryBranchId || p.country_branch_id || prev.countryBranchId,
       cityBranchId: p.cityBranchId || p.city_branch_id || prev.cityBranchId,
-      purchaseAccountNo: p.purchaseAccountNo || p.purchase_account_no || prev.purchaseAccountNo,
-      purchaseAccountName: p.purchaseAccountName || p.purchase_account_name || prev.purchaseAccountName,
+      ...(hasDraftPurchaseAccount ? {
+        purchaseAccountId: draftPurchaseId,
+        purchaseAccountNo: draftPurchaseNo,
+        purchaseAccountName: draftPurchaseName,
+        purchaseAccountLedgerId: p.purchaseAccountLedgerId || p.purchase_account_ledger_id || "",
+      } : {}),
       purchaseDate: p.purchaseDate || p.purchase_date || prev.purchaseDate,
       purchaseCurrency: p.purchaseCurrency || p.currency || prev.purchaseCurrency,
       exchangeRate: Number(p.exchangeRate || p.exchange_rate || prev.exchangeRate || 1),
@@ -854,7 +869,8 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
       isControlAccount: acc.is_control_account || false,
       currentBalance: acc.current_balance || 0,
       openingBalance: acc.opening_balance || 0,
-      status: acc.status || "active",
+      status: acc.status || "",
+      operationalDomain: acc.operational_domain || acc.operationalDomain || "",
       accountSerialNumber: acc.account_serial_number || "",
       countrySerialNumber: acc.country_serial_number || "",
       branchSerialNumber: acc.branch_serial_number || "",
@@ -1441,7 +1457,14 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
         }
       }
 
-      if (poData) {
+      if (poData?.id && !poData.updated_at) {
+        const res = await fetch(`/api/erp/purchases/orders/${encodeURIComponent(poData.id)}?lang=${encodeURIComponent(lang)}`, {
+          credentials: "same-origin", cache: "no-store"
+        });
+        const payload = await res.json().catch(() => ({}));
+        poData = res.ok ? payload.data?.order : null;
+      }
+      if (poData?.id && poData.updated_at) {
         let rawFormData = poData.form_data || {};
         if (typeof rawFormData === "string") {
           try { rawFormData = JSON.parse(rawFormData); } catch (_) {}
@@ -1479,7 +1502,8 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
         const poNumber = poData.purchase_order_no || poData.purchaseBookingOrderNumber || loadedForm.purchaseOrderNo || needle;
         const contractNumber = poData.purchase_contract_no || poData.purchaseContractNo || loadedForm.purchaseContractNo || "";
 
-        setSavedOrderId(poData.id || "");
+        setSavedOrderId(poData.id);
+        setSavedOrderVersion(poData.updated_at);
         setSavedOrderNo(poNumber);
         {
           const wf = (rawFormData && typeof rawFormData === "object" && rawFormData.workflow) || {};
@@ -1522,9 +1546,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
           setSalesSearch(loadedForm.salesAccountName || loadedForm.salesAccountNo || "");
         }
 
-        if (Array.isArray(loadedGoods) && loadedGoods.length) {
-          setGoodsEntries(loadedGoods);
-        }
+        setGoodsEntries(loadedGoods);
 
         if (rawFormData.reports && Array.isArray(rawFormData.reports)) {
           setReportsList(rawFormData.reports);
@@ -1689,47 +1711,57 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
     }
   }, [form.countryId, form.countryBranchId, form.cityBranchId, mainBranches, cityBranches, form.purchaseOrderNo, transitCountryOptions]);
 
-  // Auto-select Default Purchase and Sales Accounts for the selected Branch or on initial load
+  // The branch's automatic Business accounts and manually selectable trade accounts are
+  // different. Resolve defaults from a complete, exact-scope read; the manual picker
+  // below retains authorized interbranch/inter-country trade options.
+  const branchAccountScope = branchBusinessScopeKey(form);
+  const savedBillRef = searchParams.get("id") || searchParams.get("purchaseOrderId") ||
+    searchParams.get("purchaseId") || searchParams.get("orderId") || searchParams.get("purchaseOrderNo");
   useEffect(() => {
-    if (dbAccounts.length === 0) return;
-    // A bill named in the URL is still loading: wait for its own saved accounts instead of filling defaults first.
-    const urlBillRef = searchParams.get("id") || searchParams.get("purchaseOrderId") || searchParams.get("purchaseId") || searchParams.get("orderId") || searchParams.get("purchaseOrderNo");
-    if (urlBillRef && !savedOrderId) return;
-    
-    // Find matching accounts for the current scope or fallback to all dbAccounts
-    let scopedAccounts = dbAccounts.filter(acc => accountMatchesScope(acc));
-    if (scopedAccounts.length === 0) {
-      scopedAccounts = dbAccounts;
+    if (!isFormOpen || savedOrderId || savedBillRef || !branchAccountScope) return;
+    const controller = new AbortController();
+    const params = new URLSearchParams({ countryId: form.countryId, limit: "1000", lang: "en" });
+    if (form.countryBranchId) params.set("countryBranchId", form.countryBranchId);
+    if (form.cityBranchId) params.set("cityBranchId", form.cityBranchId);
+    fetch(`/api/erp/accounting/accounts?${params.toString()}`, { cache: "no-store", signal: controller.signal })
+      .then(async response => {
+        if (!response.ok) return;
+        const body = await response.json();
+        const rows = body?.data?.accounts;
+        // At the cap there could be another candidate hidden beyond the page.
+        if (!controller.signal.aborted && body?.ok && Array.isArray(rows) && rows.length < 1000) {
+          setBranchAccountCandidates({ scope: branchAccountScope, accounts: rows.map(mapEnterpriseAccount) });
+        }
+      })
+      .catch(error => { if (!controller.signal.aborted) console.error("Failed to load branch Business accounts:", error); });
+    return () => controller.abort();
+  }, [isFormOpen, savedOrderId, savedBillRef, branchAccountScope]);
+
+  useEffect(() => {
+    if (!isFormOpen || savedOrderId || savedBillRef) return; // do not rewrite an existing bill, not even a missing side
+    const rows = branchAccountCandidates?.scope === branchAccountScope ? branchAccountCandidates.accounts : [];
+    const defaults = branchBusinessAccountDefaults(rows, form);
+    for (const side of ["purchase", "sales"]) {
+      const choice = accountChoice.current[side];
+      const action = branchDefaultAction({
+        savedBill: false, scope: branchAccountScope, choice, candidate: defaults[side],
+        selected: { id: form[`${side}AccountId`], code: form[`${side}AccountNo`], name: form[`${side}AccountName`] },
+      });
+      if (action.type === "select") {
+        applyAccountMaster(side, action.account, branchAccountScope);
+      } else if (action.type === "clear") {
+        const pref = `${side}Account`;
+        const party = side === "purchase" ? "supplier" : "customer";
+        setForm(prev => {
+          if (accountChoice.current[side] !== choice || String(prev[`${side}AccountId`] || "") !== choice?.id) return prev;
+          const fields = Object.keys(prev).filter(k => k.startsWith(pref) || k.startsWith(`${side}Company`) || k === `${party}Id` || k === `${party}Name`);
+          return {
+            ...prev, ...Object.fromEntries(fields.map(k => [k, DEFAULT_FORM[k] ?? ""])),
+          };
+        });
+      }
     }
-
-    // A saved bill keeps the accounts it was saved with. Its account no. may be the ledger number (ACC-000006) while
-    // the master list is keyed by code (AE-AEDU-PS-001), so match by id, code or account number — never swap a saved
-    // bill's Purchase / Sales account for a "default" one (that showed another party's account on AE-001-0004).
-    const isKnownAccount = (id, no) => dbAccounts.some(a =>
-      (id && String(a.id || a.accountId || "") === String(id)) || (no && (a.accountCode === no || a.accountNumber === no)));
-    const purchaseHasAccount = Boolean(form.purchaseAccountId || form.purchaseAccountNo);
-    const salesHasAccount = Boolean(form.salesAccountId || form.salesAccountNo);
-    const purchaseNeedsUpdate = !purchaseHasAccount || (!savedOrderId && !isKnownAccount(form.purchaseAccountId, form.purchaseAccountNo));
-    const salesNeedsUpdate = !salesHasAccount || (!savedOrderId && !isKnownAccount(form.salesAccountId, form.salesAccountNo));
-
-    let newPurchaseAcc = null;
-    let newSalesAcc = null;
-
-    if (purchaseNeedsUpdate) {
-      newPurchaseAcc = scopedAccounts.find(a => String(a.kind || "").toLowerCase() === "liability" && !a.isControlAccount)
-        || scopedAccounts.find(a => String(a.kind || "").toLowerCase() === "liability")
-        || scopedAccounts[0];
-    }
-    
-    if (salesNeedsUpdate) {
-      newSalesAcc = scopedAccounts.find(a => String(a.kind || "").toLowerCase() === "asset" && !a.isControlAccount)
-        || scopedAccounts.find(a => String(a.kind || "").toLowerCase() === "asset")
-        || (scopedAccounts.length > 1 ? scopedAccounts[1] : scopedAccounts[0]);
-    }
-
-    if (newPurchaseAcc) applyAccountMaster("purchase", newPurchaseAcc);
-    if (newSalesAcc) applyAccountMaster("sales", newSalesAcc);
-  }, [form.cityBranchId, form.countryBranchId, form.countryId, dbAccounts, savedOrderId]);
+  }, [isFormOpen, savedOrderId, savedBillRef, branchAccountScope, branchAccountCandidates]);
 
   // Load latest exchange rate and set currency when country or branch changes
   useEffect(() => {
@@ -1881,14 +1913,12 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
     return `${name} (${code})${manual}${contact}`;
   };
 
-  const applyAccountMaster = (type, account) => {
+  const applyAccountMaster = (type, account, automaticScope = null) => {
     if (!account) return;
     const accountNo = account.accountCode || account.rawAccountCode || account.ledgerCode || account.code || "";
 
-    // Find the rich account from dbAccounts if available to get extra attributes
-    const richAccount = dbAccounts.find(
-      (a) => (a.accountCode || "").trim().toLowerCase() === accountNo.trim().toLowerCase()
-    ) || account;
+    // A branch may reuse another branch's code; never enrich a selected ID with that other record.
+    const richAccount = automaticScope ? account : preferSameAccount(dbAccounts, account, accountNo);
 
     const accountName = richAccount.accountName || richAccount.ledgerName || richAccount.name || "";
     const branchName = richAccount.cityBranchName || richAccount.countryBranchName || richAccount.branch_code || "";
@@ -1908,8 +1938,13 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
     const contactPerson = richAccount.contactPerson || richAccount.contact_person || "";
     const bankName = richAccount.bankName || richAccount.bank_name || "";
     const resolvedAccountId = richAccount.id || richAccount.accountId || null;
+    accountChoice.current[type] = automaticScope
+      ? { mode: "automatic", scope: automaticScope, id: String(resolvedAccountId || "") }
+      : { mode: "manual" };
 
-    setForm((prev) => ({
+    setForm((prev) => automaticScope && (
+      branchBusinessScopeKey(prev) !== automaticScope || accountChoice.current[type]?.mode !== "automatic"
+    ) ? prev : ({
       ...prev,
       ...(type === "purchase"
         ? {
@@ -1918,7 +1953,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
             purchaseAccountName: accountName,
             purchaseAccountBranch: branchName,
             purchaseAccountCurrency: currency || prev.purchaseAccountCurrency || prev.purchaseCurrency || prev.secondaryCurrency || "PKR",
-            purchaseCurrency: currency || prev.purchaseCurrency || prev.secondaryCurrency || "PKR",
+            purchaseCurrency: automaticScope ? prev.purchaseCurrency : currency || prev.purchaseCurrency || prev.secondaryCurrency || "PKR",
             supplierId: entityId,
             purchaseAccountLedgerId: entityId,
             supplierName: accountName || prev.supplierName,
@@ -1989,6 +2024,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
   };
 
   const handleTextChange = (type, val) => {
+    accountChoice.current[type] = { mode: "manual" };
     const rawVal = val;
     const cleanVal = (val || "").trim().toLowerCase();
 
@@ -2225,8 +2261,8 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
       hsCode: row.hsCode || "",
       qtyName: row.qtyName || "BAGS",
       qtyNo: Number(row.qtyNo || 0),
-      qtyKgs: Number(row.qtyKgs || 0),
-      emptyKgs: Number(row.emptyKgs || 0),
+      qtyKgs: Number(row.qtyKgs ?? (Number(row.grossWeight || 0) / Number(row.qtyNo || 1))),
+      emptyKgs: Number(row.emptyKgs ?? Math.max(0, (Number(row.grossWeight || 0) - Number(row.netWeight || 0)) / Number(row.qtyNo || 1))),
       netWeight: row.netWeight !== undefined ? row.netWeight : "",
       priceType: row.priceType || "P/KGs",
       divideType: row.divideType || "D/KGs",
@@ -2435,12 +2471,23 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
   };
 
   const buildPurchaseOrderPayload = (ledgerPostingStatus = "Pending", customOrderNo = null) => {
+    if (!savedOrderId) {
+      const scope = branchBusinessScopeKey(form);
+      for (const side of ["purchase", "sales"]) {
+        const choice = accountChoice.current[side];
+        const selectedId = String(form[`${side}AccountId`] || "");
+        if (choice?.mode === "automatic" && selectedId && (choice.id !== selectedId || choice.scope !== scope)) {
+          throw new Error(side === "purchase" ? t(lang, "purchase.select_purchase_account_dr_header", "Select Purchase Account (DR)") :
+            t(lang, "purchase.select_sales_account_cr_header", "Select Sales Account (CR)"));
+        }
+      }
+    }
     const usdRate = Number(form.exchangeRate || 1);
     const cleanUuid = (val) => (val && typeof val === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim()) ? val.trim() : null);
 
     let allEntries = [...goodsEntries];
     const pendingGoodsName = (form.goodsName || "").trim();
-    if (pendingGoodsName) {
+    if (pendingGoodsName && (!savedOrderId || !goodsEntries.length)) {
       const calculated = calculateItemTotals(form);
       const pendingLot = {
         allotName: form.allotName || "",
@@ -2517,9 +2564,10 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
       totalGoodsUsd: finalPrimaryTotal,
       items: allEntries.map(g => {
         const rateOrig = Number(g.coursePrice || 0);
-        const rateLoc = rateOrig * usdRate;
+        const multiplier = form.operator === "/" ? 1 / usdRate : usdRate;
+        const rateLoc = rateOrig * multiplier;
         const totOrig = Number(g.totalAmount || 0);
-        const totLoc = Number(g.finalAmount || totOrig * usdRate);
+        const totLoc = Number(g.finalAmount ?? totOrig * multiplier);
         return {
           productId: g.productId || null,
           goodsName: g.goodsName,
@@ -2568,6 +2616,22 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
     };
   };
 
+  const buildBookingSavePayload = (ledgerStatus, orderNo) => {
+    const payload = buildPurchaseOrderPayload(ledgerStatus, orderNo);
+    if (!savedOrderId) {
+      if (["id", "purchaseOrderId", "purchaseId", "orderId", "purchaseOrderNo"].some((key) => searchParams.get(key))) {
+        throw new Error(t(lang, "purchase.booking_reload_before_edit", "Reload the saved booking before editing."));
+      }
+      return payload;
+    }
+    if (!savedOrderVersion) {
+      throw new Error(t(lang, "purchase.booking_reload_before_edit", "Reload the saved booking before editing."));
+    }
+    const editReason = window.prompt(t(lang, "purchase.booking_edit_reason", "Enter the reason for this booking correction."))?.trim();
+    if (!editReason) return null;
+    return { ...payload, expectedUpdatedAt: savedOrderVersion, editReason };
+  };
+
   const isSubmittingRef = React.useRef(false);
 
   const handleSavePurchaseOrder = async (shouldClose = false) => {
@@ -2577,10 +2641,12 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
     setSaveMessage("");
     try {
       const nextOrderNo = savedOrderId ? String(form.purchaseOrderNo || "").trim() : "AUTO";
+      const savePayload = buildBookingSavePayload("Pending", nextOrderNo);
+      if (!savePayload) return;
       const response = await fetch(savedOrderId ? `/api/erp/purchases/orders/${savedOrderId}` : "/api/erp/purchases/orders", {
         method: savedOrderId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildPurchaseOrderPayload("Pending", nextOrderNo))
+        body: JSON.stringify(savePayload)
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
@@ -2591,6 +2657,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
       const returnedOrderNo = payload.data?.purchaseOrderNo || savedOrderNo || form.purchaseOrderNo;
       let transferDestination = buildPurchaseBookingTransferUrl(form.paymentType, returnedOrderNo);
       setSavedOrderId(returnedOrderId || "");
+      setSavedOrderVersion(payload.data?.updatedAt || "");
       setSavedOrderNo(returnedOrderNo);
       setSaveMessage(`Successfully saved Purchase Order: ${returnedOrderNo}.`);
       setRegisterRefreshKey((key) => key + 1);
@@ -2617,7 +2684,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
   };
 
   const handleTransfer = async () => {
-    if (isTransferred) {
+    if (isTransferred || loadedBillSerials?.posted) {
       alert(trUi("This booking has already been transferred."));
       return;
     }
@@ -2627,7 +2694,8 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
       const isAccepting = false && form.purchaseOrderNo;
       const ledgerStatus = isAccepting ? "Pending" : "Pending";
       const nextOrderNo = savedOrderId ? String(form.purchaseOrderNo || "").trim() : "AUTO";
-      const transferPayload = buildPurchaseOrderPayload(ledgerStatus, nextOrderNo);
+      const transferPayload = buildBookingSavePayload(ledgerStatus, nextOrderNo);
+      if (!transferPayload) return;
       const response = await fetch(savedOrderId ? `/api/erp/purchases/orders/${savedOrderId}` : "/api/erp/purchases/orders", {
         method: savedOrderId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -2660,6 +2728,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
       }
 
       setSavedOrderId(returnedOrderId || "");
+      setSavedOrderVersion(payload.data?.updatedAt || "");
       setSavedOrderNo(returnedOrderNo);
       setSaveMessage(`Transferred Purchase Order ${returnedOrderNo} to Journal / Payment and ledger posting.`);
       setTransferredData({
@@ -2684,7 +2753,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
   };
 
   const handleTransferEmpty = async () => {
-    if (isTransferred) {
+    if (isTransferred || loadedBillSerials?.posted) {
       alert(trUi("This booking has already been transferred."));
       return;
     }
@@ -2694,7 +2763,8 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
       const isAccepting = false && form.purchaseOrderNo;
       const ledgerStatus = isAccepting ? "Pending" : "Pending";
       const nextOrderNo = savedOrderId ? String(form.purchaseOrderNo || "").trim() : "AUTO";
-      const transferPayload = buildPurchaseOrderPayload(ledgerStatus, nextOrderNo);
+      const transferPayload = buildBookingSavePayload(ledgerStatus, nextOrderNo);
+      if (!transferPayload) return;
       const response = await fetch(savedOrderId ? `/api/erp/purchases/orders/${savedOrderId}` : "/api/erp/purchases/orders", {
         method: savedOrderId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -2726,6 +2796,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
       }
 
       setSavedOrderId(returnedOrderId || "");
+      setSavedOrderVersion(payload.data?.updatedAt || "");
       setSavedOrderNo(returnedOrderNo);
       setSaveMessage(`Transferred Purchase Order ${returnedOrderNo}.`);
       setTransferredData(payload.data || { purchaseOrderNo: returnedOrderNo });
@@ -2823,6 +2894,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
   };
 
   const handleReset = () => {
+    accountChoice.current = { purchase: null, sales: null };
     setForm({
       ...DEFAULT_FORM,
       purchaseDate: new Date().toISOString().slice(0, 10),
@@ -2843,7 +2915,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
       manualFinalAmount: "",
     });
     setGoodsEntries([]);
-    setSavedOrderId(""); setLoadedBillSerials(null);
+    setSavedOrderId(""); setSavedOrderVersion(""); setLoadedBillSerials(null);
     setSavedOrderNo("");
     setTransferredData(null);
     setIsTransferred(false);
@@ -3713,7 +3785,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
           highlightPurchaseOrderNo={savedOrderNo}
           onNewBooking={() => {
             handleReset();
-            setSavedOrderId(""); setLoadedBillSerials(null);
+            setSavedOrderId(""); setSavedOrderVersion(""); setLoadedBillSerials(null);
             setSavedOrderNo("");
             setIsFormOpen(true);
             setActiveTab("booking");
@@ -6066,7 +6138,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
                   {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   {savingOrder ? t(lang, "common.saving", "Saving...") : (savedOrderId ? t(lang, "purchase.update_purchase_order", "Update Purchase Order") : t(lang, "purchase.save_purchase_order", "Save Purchase Order"))}
                 </Button>
-                {!isTransferred && (
+                {!isTransferred && !loadedBillSerials?.posted && (
                   <Button
                     type="button"
                     onClick={handleTransfer}

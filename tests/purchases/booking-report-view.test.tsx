@@ -1,11 +1,12 @@
 import React from "react";
-import { describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor, fireEvent, within } from "@testing-library/react";
+import { describe, expect, it, onTestFinished, vi } from "vitest";
+import { render, screen, waitFor, fireEvent, within, act } from "@testing-library/react";
 import { PurchaseBookingReportScreen } from "@/features/purchases/components/purchase-booking-report";
 
 const ORDER = {
   id: "8cd5a174-8354-4faf-b646-e0558ee5426c",
   purchase_order_no: "AE-001-0005",
+  updated_at: "2026-11-23T10:00:00.000000Z",
   ledger_posting_status: "draft",
   payment_status: "pending",
   currency_code: "PKR",
@@ -56,7 +57,8 @@ describe("PurchaseBookingReportScreen", { timeout: 20000 }, () => {
     await waitFor(() => expect(screen.queryByTestId("purchase-booking-report-view")).toBeNull(), WAIT);
   });
 
-  it("a remarks Save PATCHes only formData with that one field changed", async () => {
+  it("a remarks Save sends the saved version and reason with the one changed field", async () => {
+    const prompt = vi.spyOn(window, "prompt").mockReturnValueOnce("Clarify payment terms");
     const fetchImpl = mockFetch();
     render(<PurchaseBookingReportScreen orderId={ORDER.id} fetchImpl={fetchImpl as any} lang="en" />);
     const box = await screen.findByTestId("remark-payment", {}, WAIT);
@@ -66,9 +68,80 @@ describe("PurchaseBookingReportScreen", { timeout: 20000 }, () => {
     const patch = fetchImpl.mock.calls.find((c) => (c[1] as RequestInit | undefined)?.method === "PATCH")!;
     expect(patch[0]).toBe(`/api/erp/purchases/orders/${ORDER.id}`);
     const body = JSON.parse(String((patch[1] as RequestInit).body));
-    expect(Object.keys(body)).toEqual(["formData"]);
+    expect(body.expectedUpdatedAt).toBe(ORDER.updated_at);
+    expect(body.editReason).toBe("Clarify payment terms");
+    prompt.mockRestore();
     expect(body.formData.form.paymentReport).toBe("Credit 30 days");
     expect(body.formData.goodsEntries).toEqual(ORDER.form_data.goodsEntries);
+  });
+
+  it("keeps a typed remark when current bill details refresh while the editor is open", async () => {
+    // a correction to a saved booking asks for its reason (PR #236)
+    const prompt = vi.spyOn(window, "prompt").mockReturnValue("Correction reason");
+    onTestFinished(() => prompt.mockRestore());
+    let stored = ORDER;
+    let nextGet: Promise<Response> | null = null;
+    const fetchImpl = vi.fn(async (_url: string, init?: RequestInit) => {
+      if (init?.method === "PATCH") return new Response(JSON.stringify({ ok: true, data: { purchaseOrderId: ORDER.id } }));
+      if (nextGet) { const response = nextGet; nextGet = null; return response; }
+      return new Response(JSON.stringify({ ok: true, data: { order: stored } }));
+    });
+    const props = { orderId: ORDER.id, fetchImpl: fetchImpl as any, lang: "en" };
+    const view = render(<PurchaseBookingReportScreen {...props} reloadToken={0} />);
+    const box = await screen.findByTestId("remark-payment", {}, WAIT) as HTMLTextAreaElement;
+    fireEvent.change(box, { target: { value: "Credit 30 days" } });
+    expect(box.value).toBe("Credit 30 days");
+
+    stored = {
+      ...ORDER,
+      form_data: {
+        ...ORDER.form_data,
+        goodsEntries: [{ ...ORDER.form_data.goodsEntries[0], goodsName: "REFRESHED GOODS", totalAmount: 20_300_000 }],
+        totals: { ...ORDER.form_data.totals, grandPrimaryFinal: 20_300_000 },
+      },
+    };
+    let resolveRefresh!: (value: Response) => void;
+    nextGet = new Promise<Response>((resolve) => { resolveRefresh = resolve; });
+    view.rerender(<PurchaseBookingReportScreen {...props} reloadToken={1} />);
+    await act(async () => { resolveRefresh(new Response(JSON.stringify({ ok: true, data: { order: stored } }))); });
+    expect(screen.getByText("REFRESHED GOODS")).toBeTruthy();
+    expect((screen.getByTestId("remark-payment") as HTMLTextAreaElement).value).toBe("Credit 30 days");
+    fireEvent.click(screen.getByTestId("remark-save-payment"));
+    await screen.findByText("Saved", {}, WAIT);
+    const patch = fetchImpl.mock.calls.find(([, init]) => init?.method === "PATCH");
+    const body = JSON.parse(String(patch?.[1]?.body));
+    expect(body.formData.form.paymentReport).toBe("Credit 30 days");
+    expect(body.formData.goodsEntries).toEqual(stored.form_data.goodsEntries);
+  });
+
+  it("does not carry an editor or a delayed save response to another booking", async () => {
+    // a correction to a saved booking asks for its reason (PR #236)
+    const prompt = vi.spyOn(window, "prompt").mockReturnValue("Correction reason");
+    onTestFinished(() => prompt.mockRestore());
+    const second = { ...ORDER, id: "91a6d6a5-a138-4442-9b04-3afcbf312dfd", purchase_order_no: "AE-001-0006",
+      form_data: { ...ORDER.form_data, form: { ...ORDER.form_data.form, paymentReport: "Second booking payment note" } } };
+    let resolveSecond!: (res: Response) => void;
+    let resolvePatch!: (res: Response) => void;
+    const next = new Promise<Response>((resolve) => { resolveSecond = resolve; });
+    const patch = new Promise<Response>((resolve) => { resolvePatch = resolve; });
+    const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
+      if (init?.method === "PATCH") return patch;
+      if (url.includes(second.id)) return next;
+      return new Response(JSON.stringify({ ok: true, data: { order: ORDER } }));
+    });
+    const props = { fetchImpl: fetchImpl as any, lang: "en" };
+    const view = render(<PurchaseBookingReportScreen {...props} orderId={ORDER.id} />);
+    fireEvent.change(await screen.findByTestId("remark-payment", {}, WAIT), { target: { value: "First booking note" } });
+    fireEvent.click(screen.getByTestId("remark-save-payment"));
+    await waitFor(() => expect(fetchImpl.mock.calls.some(([, init]) => init?.method === "PATCH")).toBe(true), WAIT);
+
+    view.rerender(<PurchaseBookingReportScreen {...props} orderId={second.id} />);
+    expect(screen.queryByTestId("remark-payment")).toBeNull();
+    await act(async () => { resolveSecond(new Response(JSON.stringify({ ok: true, data: { order: second } }))); });
+    expect(screen.getByText("Second booking payment note")).toBeTruthy();
+    await act(async () => { resolvePatch(new Response(JSON.stringify({ ok: true }))); });
+    expect(screen.getByText("Second booking payment note")).toBeTruthy();
+    expect(screen.queryByText("First booking note")).toBeNull();
   });
 
   it("a posted bill is read-only", async () => {

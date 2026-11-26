@@ -123,6 +123,7 @@ export type BeiAvailableBill = {
 export type CreateBeiInput = {
   sourceModule: BeiSourceModule;
   sourceId: string;
+  salesWorkflow?: boolean;
   docType?: BeiDocType;
   lang?: SupportedLanguage;
 };

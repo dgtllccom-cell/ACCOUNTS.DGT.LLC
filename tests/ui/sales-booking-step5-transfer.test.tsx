@@ -1,10 +1,11 @@
 import React from "react";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
+import { printStore } from "@/lib/store/print-store";
 // @ts-expect-error JSX view module
 import { SalesBookingStep5 } from "@/features/sales/components/sales-booking-step5.jsx";
 
-afterEach(cleanup);
+afterEach(() => { cleanup(); printStore.closePrint(); });
 
 it("opens the booking preview independently and prevents a second transfer in the UI", () => {
   const preview = vi.fn();
@@ -46,7 +47,7 @@ it("opens the transfer report before posting and displays confirmed journal deta
   const { rerender } = render(<SalesBookingStep5 {...props} />);
   fireEvent.click(screen.getByRole("button", { name: "Sales Transfer Payment" }));
   const report = screen.getByRole("dialog", { name: "Sales Booking Transfer Verification Report" });
-  expect(within(report).getAllByText("Awaiting Transfer").length).toBeGreaterThan(0);
+  expect(within(report).getAllByText("Awaiting Transfer").filter(node => !node.closest("[hidden]"))).toHaveLength(1);
   expect(post).not.toHaveBeenCalled();
   fireEvent.click(within(report).getByRole("button", { name: "Transfer / Post" }));
   expect(post).toHaveBeenCalledTimes(1);
@@ -59,8 +60,23 @@ it("opens the transfer report before posting and displays confirmed journal deta
       debitAmount: 100, creditAmount: 100, debitCurrency: "AED", creditCurrency: "AED",
     },
   }} />);
-  expect(within(report).getAllByText("Transferred / Completed")).toHaveLength(2);
+  const visibleCopies = (value: string) => within(report).getAllByText(value).filter(node => !node.closest("[hidden]"));
+  expect(visibleCopies("Sales Booking Transfer Verification Report")).toHaveLength(1);
+  expect(visibleCopies("SB-42")).toHaveLength(1);
+  expect(visibleCopies("Transferred / Completed")).toHaveLength(1);
+  fireEvent.click(within(report).getByRole("button", { name: "Print / PDF" }));
+  const printed = new DOMParser().parseFromString(printStore.getState().htmlContent, "text/html");
+  const printHeader = printed.querySelector("[data-print-only]:has(h2)");
+  expect(printHeader?.hasAttribute("hidden")).toBe(false);
+  expect((printHeader as HTMLElement | null)?.style.display).toBe("");
+  expect(printHeader?.textContent).toContain("Sales Booking Transfer Verification Report");
+  expect(printHeader?.textContent).toContain("SB-42");
+  expect(printHeader?.textContent).toContain("Transferred / Completed");
+  expect(report.querySelector("[data-print-only]:has(h2)")?.hasAttribute("hidden")).toBe(true);
+  expect(post).toHaveBeenCalledTimes(1);
   expect(within(report).getByRole("link", { name: "VR-42" }).getAttribute("href")).toContain("entryId=journal-42");
+  expect(within(report).getByText("DR-42")).toBeTruthy();
+  expect(within(report).getByText("CR-42")).toBeTruthy();
   expect(within(report).queryByRole("button", { name: "Transfer / Post" })).toBeNull();
 });
 
@@ -78,4 +94,25 @@ it("opens a read-only two-page Sales Booking preview with its document actions",
   }
   expect(view.queryByRole("button", { name: "Transfer / Post" })).toBeNull();
   expect(post).not.toHaveBeenCalled();
+});
+
+
+it("shows shared DR/CR serial once and keeps the four saved scopes separate", () => {
+  render(<SalesBookingStep5 form={{ salesOrderNo: "SB-42" }} onConfirmTransfer={vi.fn()} useTransferReport
+    transferConfirmation={{
+      ledgerPostingStatus: "posted",
+      transferVerification: {
+        voucherNo: "VOUCHER-42", debitSerial: "SHARED-394", creditSerial: "SHARED-394",
+        scopeSerials: {
+          voucher: { superAdmin: "GLB-1", country: "AE-1", mainBranch: "MAIN-1", cityBranch: "CITY-1" },
+          debit: { superAdmin: "GDR-1", country: "AEDR-1", mainBranch: null, cityBranch: null },
+          credit: { superAdmin: "GCR-1", country: "AECR-1", mainBranch: null, cityBranch: null },
+        },
+      },
+    }} />);
+  fireEvent.click(screen.getByRole("button", { name: "Sales Transfer Payment" }));
+  const report = within(screen.getByRole("dialog", { name: "Sales Booking Transfer Verification Report" }));
+  expect(report.getAllByText("SHARED-394")).toHaveLength(1);
+  const scopes = within(report.getByRole("region", { name: "Serial Numbers by Scope" }));
+  for (const serial of ["GLB-1", "AE-1", "MAIN-1", "CITY-1", "AEDR-1", "AECR-1"]) expect(scopes.getByText(serial)).toBeTruthy();
 });

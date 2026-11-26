@@ -11,8 +11,8 @@
  *     unchanged "View Full Details" modal and the existing print functions.
  *
  * "View Full Details" opens the parent's existing big detail modal unchanged
- * (via onOpenFullDetails -> selectOrder). Print / Download PDF call the parent's
- * existing handlePrintReceipt / handleOpenA4PDF, unchanged.
+ * (via onOpenFullDetails -> selectOrder). Print Receipt opens one posted
+ * payment voucher; Download PDF still opens the parent order report.
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -51,6 +51,7 @@ import { RemainingDueBills } from "./remaining-due-bills";
 type FlatPayment = {
   id: string;
   purchase_order_id: string;
+  local_purchase_id?: string | null;
   kind: string;
   entry_date: string | null;
   amount: number | string | null;
@@ -94,7 +95,7 @@ export type PurchasePaymentJournalRemainingViewProps = {
   countryOptions: string[];
   branchOptions: string[];
   onOpenFullDetails: (orderId: string, initialTab?: "overview" | "goods" | "payments" | "transport") => void;
-  onPrintReceipt: (payment: any, orderRow: any) => void;
+  onPrintReceipt: (payment: FlatPayment) => void;
   onDownloadPdf: (orderRow: any) => void;
   /** "approved" = owner-approved Purchase Payments layout (the Purchase Payments route only); default keeps the original layout */
   layout?: "approved" | "legacy";
@@ -246,7 +247,11 @@ export function PurchasePaymentJournalRemainingView({
       const res = await fetch(`/api/erp/purchases/payments?lang=${lang}&limit=200${headerKind === "module" ? "&kind=remaining" : ""}`, { credentials: "include" });
       const body = await res.json();
       if (!body?.ok) throw new Error(body?.error?.message || "Failed to load payments");
-      setPayments(body.data.payments || []);
+      // Local Purchase uses a different FK in the flat API. Use the actual
+      // source record ID for lookups, receipt links, and scope filters.
+      setPayments((body.data.payments || []).map((payment: FlatPayment) => ({
+        ...payment, purchase_order_id: payment.purchase_order_id || payment.local_purchase_id || "",
+      })));
     } catch (e: any) {
       setError(e?.message || tt("err_load", "Unable to load payments"));
     } finally {
@@ -847,13 +852,13 @@ export function PurchasePaymentJournalRemainingView({
               >
                 <Eye className="h-3.5 w-3.5" /> {tt("view_full_details", "View Full Details")}
               </button>
-              <button
+              {checked.purchase_order_id && checked.kind !== "booking" && String(checked.status).toLowerCase() === "posted" && <button
                 type="button"
-                onClick={() => checkedOrder && onPrintReceipt(checked, checkedOrder)}
+                onClick={() => onPrintReceipt(checked)}
                 className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
               >
-                <Printer className="h-3.5 w-3.5" /> {tt("print", "Print")}
-              </button>
+                <Printer className="h-3.5 w-3.5" /> {centralT(lang, "pay.print_receipt", "Print Receipt")}
+              </button>}
               <button
                 type="button"
                 onClick={() => checkedOrder && onDownloadPdf(checkedOrder)}

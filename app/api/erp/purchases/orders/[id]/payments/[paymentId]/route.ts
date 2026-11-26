@@ -1,17 +1,140 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiOk, handleApiError } from "@/lib/api/response";
+import { apiError, apiOk, handleApiError } from "@/lib/api/response";
 import { purchaseOrderPaymentPostSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { withLocalPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { translateHeader } from "@/lib/i18n/table-headers";
+import { localizeRecordGroups } from "@/lib/i18n/localize-records";
+import { postedPaymentVoucherSides, type PostedVoucherLine } from "@/lib/reports/payment-voucher-data";
 
 const paramsSchema = z.object({
   id: uuidSchema,
   paymentId: uuidSchema
 });
+
+type ReceiptRecord = {
+  source: "purchase_booking" | "local_purchase";
+  bill: string | null;
+  journal_serial_no: string | null;
+  manual_bill_no: string | null;
+  country_id: string | null;
+  country_branch_id: string | null;
+  city_branch_id: string | null;
+  party: string | null;
+  supplier_customer_id: string | null;
+  goods_lines: unknown;
+  header_goods_name: string | null;
+  header_goods_id: string | null;
+  voucher_no: string | null;
+  journal_serial: string | null;
+  date: string | null;
+  reference: string | null;
+  lines: PostedVoucherLine[] | null;
+};
+
+function validId(value: unknown) {
+  const parsed = uuidSchema.safeParse(value);
+  return parsed.success ? parsed.data : "";
+}
+
+function savedGoods(lines: unknown, header: string | null, headerId: string | null) {
+  if (typeof lines === "string") {
+    try { lines = JSON.parse(lines); } catch { lines = null; }
+  }
+  const text = (value: unknown) => typeof value === "string" && !/^[\s—-]*$/.test(value) ? value.trim() : "";
+  const names = Array.isArray(lines) ? lines.flatMap((line) => {
+    if (!line || typeof line !== "object") return [];
+    const name = [line.goodsName, line.goods_name, line.productName, line.name, line.item].map(text).find(Boolean);
+    return name ? [{ id: [line.goodsId, line.goods_id, line.productId].map(validId).find(Boolean) || "", goods_name: name }] : [];
+  }) : [];
+  // Header name is only for older, single-item bills without usable saved lines.
+  return names.length ? names : text(header) ? [{ id: validId(headerId), goods_name: text(header) }] : [];
+}
+
+/** Print only the payment identified by BOTH IDs, with its original posted journal lines. */
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string; paymentId: string }> }) {
+  try {
+    const session = await requireErpSession();
+    const { id, paymentId } = paramsSchema.parse(await context.params);
+    if (!(session.isSuperAdmin || session.canViewFinancials)) {
+      return apiError("FORBIDDEN", "Financial permission is required to print the payment voucher.", 403);
+    }
+    const rows = await withLocalPg(async (sql) => sql<ReceiptRecord[]>`
+      select
+        case when lp.id is not null then 'local_purchase' else 'purchase_booking' end as source,
+        po.purchase_order_no as bill, lp.journal_serial_no, lp.manual_bill_no,
+        coalesce(po.country_id, lp.country_id) as country_id,
+        coalesce(po.country_branch_id, lp.country_branch_id) as country_branch_id,
+        coalesce(po.city_branch_id, lp.city_branch_id) as city_branch_id,
+        coalesce(lp.supplier_name, nullif(po.form_data->'form'->>'supplierName', ''),
+                 nullif(po.form_data->'form'->>'salesAccountName', '')) as party,
+        case when nullif(po.form_data->'form'->>'supplierName', '') is not null
+          then po.form_data->'form'->>'supplierId' end as supplier_customer_id,
+        case when lp.id is not null then to_jsonb(lp)->'line_items' else po.form_data->'goodsEntries' end as goods_lines,
+        case when lp.id is not null then lp.goods_name else po.form_data->'form'->>'goodsName' end as header_goods_name,
+        case when lp.id is not null then lp.goods_id::text else po.form_data->'form'->>'goodsId' end as header_goods_id,
+        j.voucher_no, j.super_admin_serial_number as journal_serial, j.entry_date::text as date,
+        coalesce(nullif(j.source_reference_no, ''), nullif(j.reference_no, ''), p.reference_no) as reference,
+        (select jsonb_agg(jsonb_build_object(
+          'ledger_id', l.ledger_id, 'ledger_name', a.name, 'ledger_code', a.code,
+          'account_number', coalesce(nullif(btrim(l.account_number), ''), nullif(btrim(ea.account_number), '')),
+          'debit', l.debit, 'credit', l.credit, 'currency', l.currency
+        )) from public.roznamcha_lines l
+        left join public.ledgers a on a.id = l.ledger_id
+        left join public.enterprise_accounts ea on ea.id = coalesce(l.enterprise_account_id, a.enterprise_account_id)
+        where l.roznamcha_entry_id = j.id) as lines
+      from public.purchase_order_payments p
+      join public.roznamcha_entries j on j.id = p.roznamcha_entry_id and j.status = 'posted'
+        and j.posted_at is not null and j.deleted_at is null
+      left join public.purchase_orders po on po.id = p.purchase_order_id and po.deleted_at is null
+        and p.local_purchase_id is null
+      left join public.local_purchases lp on lp.id = p.local_purchase_id and lp.deleted_at is null
+        and p.purchase_order_id is null
+      where p.id = ${paymentId}::uuid and (po.id = ${id}::uuid or lp.id = ${id}::uuid)
+        and p.status = 'posted' and p.kind <> 'booking' and p.deleted_at is null
+      limit 1
+    `);
+    const row = rows?.[0];
+    if (!row) return apiError("VOUCHER_NOT_FOUND", "No posted payment voucher was found for this purchase.", 404);
+    authorizeApiScope(session, { resource: "purchases", action: "read", countryId: row.country_id, countryBranchId: row.country_branch_id, cityBranchId: row.city_branch_id });
+    const sides = postedPaymentVoucherSides(row.lines);
+    const number = row.voucher_no?.trim() || row.journal_serial?.trim();
+    const bill = row.source === "local_purchase" ? row.journal_serial_no?.trim() || row.manual_bill_no?.trim() : row.bill?.trim();
+    if (!sides || !number || !bill || !row.date || !/^\d{4}-\d{2}-\d{2}$/.test(row.date)) {
+      return apiError("VOUCHER_NOT_PRINTABLE", "The posted voucher is missing a verified debit or credit side.", 409);
+    }
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    const goods = savedGoods(row.goods_lines, row.header_goods_name, row.header_goods_id);
+    const ledgers = (row.lines ?? []).map(line => ({
+      id: validId(line.ledger_id), name: typeof line.ledger_name === "string" ? line.ledger_name : "",
+    }));
+    const localParty = row.source === "local_purchase" ? [{ id, supplier_name: row.party ?? "" }] : [];
+    const bookingParty = row.source === "purchase_booking" ? [{ id: validId(row.supplier_customer_id), customer_name: row.party ?? "" }] : [];
+    const [localizedGoods, localizedLedgers, localizedLocalParty, localizedBookingParty] = await localizeRecordGroups([
+      { records: goods, table: "goods", fields: ["goods_name"] },
+      { records: ledgers, table: "ledgers", fields: ["name"] },
+      { records: localParty, table: "local_purchases", fields: ["supplier_name"] },
+      { records: bookingParty, table: "customers", fields: ["customer_name"] },
+    ], lang).catch(() => [goods, ledgers, localParty, bookingParty]);
+    const localizedSides = postedPaymentVoucherSides(row.lines?.map((line, index) => ({
+      ...line, ledger_name: localizedLedgers[index]?.name || line.ledger_name,
+    }))) ?? sides;
+    return apiOk({
+      ...localizedSides, number, bill, date: row.date,
+      party: localizedLocalParty[0]?.supplier_name || localizedBookingParty[0]?.customer_name || row.party || "",
+      source: row.source, reference: row.reference || undefined,
+      goodsNames: goods.length ? goods.map((line, index) => localizedGoods[index]?.goods_name || line.goods_name) : undefined,
+    }, { headers: { "Cache-Control": "private, no-store" } });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
 
 // Since there is no `edit_purchase_booking_transfer` RPC yet, we simulate an edit by:
 // 1. Reversing the old roznamcha entry.
@@ -70,6 +193,15 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
       countryBranchId: (order as any)?.country_branch_id ?? null,
       cityBranchId: (order as any)?.city_branch_id ?? null
     });
+
+    // The legacy editor reverses the journal and posts via a different, non-atomic
+    // route which cannot preserve an exact original-bill currency allocation.
+    if (existingPayment.applied_purchase_amount != null) {
+      const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+      return apiError("PURCHASE_EXACT_PAYMENT_EDIT_LOCKED",
+        translateHeader(lang, "This payment has a fixed amount in the original purchase currency and cannot be edited here. Contact Accounts for correction."),
+        409);
+    }
 
     if (body.debitLedgerId === body.creditLedgerId) {
       throw new Error("Debit and credit ledgers must be different for purchase payment posting.");

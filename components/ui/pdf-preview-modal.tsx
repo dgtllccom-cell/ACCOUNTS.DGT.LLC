@@ -274,6 +274,8 @@ export function PdfPreviewModal() {
     /<script\b[^>]*>[\s\S]*?<\/script>/gi,
     (block) => (/window\.print\s*\(|__ERP_A4_AUTOPRINT__/.test(block) ? "" : block)
   );
+  const fixedVoucherPortrait = /^<!doctype html>\s*<html\b[^>]*\bdata-voucher-portrait="true"/i.test(sanitizedHtml);
+  const scrollPreview = /<html\b[^>]*\bdata-scroll-print-preview="true"/i.test(sanitizedHtml);
 
   const injectedHtml = `
     ${sanitizedHtml}
@@ -311,10 +313,19 @@ export function PdfPreviewModal() {
           width: 100% !important;
           height: 100% !important;
         }
-        html::-webkit-scrollbar, body::-webkit-scrollbar {
+        html:not([data-scroll-print-preview])::-webkit-scrollbar, html:not([data-scroll-print-preview]) body::-webkit-scrollbar {
           display: none !important;
           width: 0 !important;
           height: 0 !important;
+        }
+        html[data-scroll-print-preview] {
+          overflow-y: auto !important;
+          scrollbar-width: auto !important;
+          -ms-overflow-style: auto !important;
+        }
+        html[data-scroll-print-preview] body {
+          overflow: visible !important;
+          height: auto !important;
         }
         .no-print-toolbar { display: none !important; }
         .wrap {
@@ -371,7 +382,7 @@ export function PdfPreviewModal() {
 
         {/* Center: Controls */}
         <div className="flex items-center gap-2 sm:gap-4 bg-[#1e293b] p-1.5 rounded-lg border border-slate-700 shrink-0">
-          <button
+          {!fixedVoucherPortrait && <button
             onClick={() => {
               const next = orientation === "portrait" ? "landscape" : "portrait";
               setOrientation(next);
@@ -381,7 +392,7 @@ export function PdfPreviewModal() {
           >
             <LayoutList className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{orientation === "portrait" ? tt("pdfprev.portrait", "Portrait") : tt("pdfprev.landscape", "Landscape")}</span>
-          </button>
+          </button>}
 
           {rebuild && (
             <select
@@ -394,9 +405,9 @@ export function PdfPreviewModal() {
             </select>
           )}
 
-          <div className="hidden text-xs font-medium text-slate-300 px-2 border-x border-slate-700 sm:block">
+          {!scrollPreview && <div className="hidden text-xs font-medium text-slate-300 px-2 border-x border-slate-700 sm:block">
             {tt("pdfprev.page_of", "Page {current} of {total}").replace("{current}", String(currentPage)).replace("{total}", String(pages.length))}
-          </div>
+          </div>}
 
           <span className="hidden text-[11px] font-bold text-slate-300 bg-slate-800 px-2 py-0.5 rounded border border-slate-700 select-none sm:inline">
             A4
@@ -537,7 +548,7 @@ export function PdfPreviewModal() {
                <iframe
                   ref={iframeRef}
                   srcDoc={injectedHtml}
-                  scrolling="no"
+                  scrolling={scrollPreview ? "auto" : "no"}
                   className="w-full h-full border-none block"
                   style={{
                     width: orientation === "portrait" ? "210mm" : "297mm",

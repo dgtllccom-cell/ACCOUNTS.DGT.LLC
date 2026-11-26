@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { releaseForOrder, reserveForOrder } from "@/lib/sales/managed-lot-sales";
+import { changesSalesBookingContent, isSalesBookingEditLocked } from "@/lib/sales/booking-edit-state";
 import { z } from "zod";
 import { ApiClientError, apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { t } from "@/lib/i18n/ui";
+import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
+import { assertFinancialAccess } from "@/lib/permissions/middleware";
 import { authorizeApiScope, authorizeApiScopeEither } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -14,6 +17,7 @@ import { salesOrderTranslationFields } from "@/lib/i18n/sales-order-translations
 import { assertBookingCurrency, assertConfiguredSalesSettlement, assertSalesWithinStock, resolveSalesCountryCurrency } from "@/lib/sales/booking-rules";
 import { trustedTranslationMap } from "@/lib/i18n/localize-records";
 import { getDbUrl, withLocalPg, withReadPg } from "@/lib/db/local-postgres";
+import { readSalesTransferProof, readSalesTransferReceipts } from "@/lib/sales/sales-transfer-proof";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -61,8 +65,14 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
 
+    const transferView = request.nextUrl.searchParams.get("transfer") === "1";
+    if (transferView) assertFinancialAccess(session);
     const supabase = await createApiSupabaseClient();
-    const row = await requireSupabaseData(
+    const direct = transferView ? await withLocalPg(async sql => {
+      const rows = await sql`select * from public.sales_orders where id = ${params.id}::uuid and deleted_at is null limit 1`;
+      return rows[0] || null;
+    }) : null;
+    const row = direct ?? await requireSupabaseData(
       supabase
         .from("sales_orders")
         .select("*")
@@ -77,7 +87,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     // Dual-scope: a Country Sale is visible to its source (selling) branch OR its
     // destination (owning) branch — mirrors purchase_orders' authorizeApiScopeEither.
-    authorizeApiScopeEither(session, {
+    if (transferView) authorizeApiScope(session, {
+      resource: "sales", action: "read", countryId: (row as any).country_id,
+      countryBranchId: (row as any).country_branch_id, cityBranchId: (row as any).city_branch_id,
+    });
+    else authorizeApiScopeEither(session, {
       resource: "sales",
       action: "read",
       source: {
@@ -91,6 +105,10 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         cityBranchId: (row as any).dest_city_branch_id ?? null
       }
     });
+
+    if (transferView && request.nextUrl.searchParams.get("source") === "local" && !isLocalSalesFormData((row as any).form_data)) {
+      throw new ApiClientError("Local sales order not found.", { status: 404, code: "LOCAL_SALES_ORDER_NOT_FOUND" });
+    }
 
     // record_translations sits over per-language base tables with RLS gated on
     // auth.uid()/is_super_admin(), always NULL under this app's temp-session bootstrap —
@@ -109,7 +127,9 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         .eq("record_table", "sales_orders").eq("record_id", params.id).is("deleted_at", null);
       translationRows = data;
     }
-    return apiOk({ order: { ...(row as any), translations: Object.fromEntries((translationRows || []).map((item: any) => [item.field_name, trustedTranslationMap("sales_orders", item.field_name, item.original_text, item)])) } });
+    const transferProof = transferView ? await readSalesTransferProof(row as any) : undefined;
+    const transferReceiptSummary = transferProof ? await readSalesTransferReceipts(params.id, transferProof.journalId, String((row as any).currency_code || "")) : undefined;
+    return apiOk({ ...(transferView ? { transferProof } : {}), order: { ...(row as any), ...(transferReceiptSummary ? { transferReceiptSummary } : {}), translations: Object.fromEntries((translationRows || []).map((item: any) => [item.field_name, trustedTranslationMap("sales_orders", item.field_name, item.original_text, item)])) } });
   } catch (error) {
     return handleApiError(error);
   }
@@ -147,6 +167,24 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const currentStatus = String((before as any).sales_status || "").toLowerCase();
     if (currentStatus === "transferred" || currentStatus === "finalized" || currentStatus === "completed") {
       return NextResponse.json({ ok: false, error: { message: t(session.preferredLanguage, "so.already_transferred_readonly", "This Sales Order has already been transferred and is read-only.") } }, { status: 400 });
+    }
+
+    // A posted, paid or in-transfer booking keeps its goods, amounts, accounts, number and branch (PR #237/#238): only
+    // status moves are allowed, so the ledger and the booking can never disagree.
+    if (changesSalesBookingContent(body as Record<string, unknown>) && isSalesBookingEditLocked(before)) {
+      throw new ApiClientError(t(session.preferredLanguage, "so.already_transferred_readonly", "This Sales Order is read-only."),
+        { status: 409, code: "SALES_BOOKING_EDIT_LOCKED" });
+    }
+    // A saved booking keeps its original number and its issuing country / branches.
+    if (body.salesOrderNo && (before as any).sales_order_no && body.salesOrderNo !== (before as any).sales_order_no) {
+      throw new ApiClientError(t(session.preferredLanguage, "so.bill_number_immutable", "The original sales booking number cannot be changed."), { status: 400, code: "SALES_BILL_NUMBER_IMMUTABLE" });
+    }
+    const sameScope = (incoming: unknown, saved: unknown) => incoming === undefined || (incoming || null) === (saved || null);
+    if (!sameScope(body.countryId, (before as any).country_id) || !sameScope(body.countryBranchId, (before as any).country_branch_id)
+      || !sameScope(body.cityBranchId, (before as any).city_branch_id)) {
+      throw new ApiClientError(t(session.preferredLanguage, "so.bill_scope_immutable", "The issuing country and branches cannot be changed on an existing sales booking."), {
+        status: 400, code: "SALES_BILL_SCOPE_IMMUTABLE"
+      });
     }
 
     authorizeApiScope(session, {

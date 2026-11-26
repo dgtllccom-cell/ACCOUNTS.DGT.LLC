@@ -55,6 +55,8 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
+import { salesWorkflowDestination } from "@/lib/sales/payment-workflow";
+import { newIdempotencyKey } from "@/lib/api/idempotency-client";
 import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
 import { SalesBookingJournalReportView } from "./sales-booking-journal-report-view";
 import { convertedSalesAmount, getBookingCurrencies } from "@/lib/sales/booking-currencies";
@@ -73,7 +75,17 @@ import { cn } from "@/lib/utils";
 
 // --- Non-location constants (static values, not from master forms) ---
 const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY", "SAR"];
-const PAYMENT_TYPES = ["Advance Payment", "Invoice", "Final Payment", "Credit"];
+const PAYMENT_TYPES = ["Advance Payment", "Invoice", "Final Payment", "Credit", "Cash", "Account Transfer"];
+const SALES_BOOKING_STEPS = {
+  booking: 1,
+  goods: 2,
+  shipping: 3,
+  others: 3,
+  review: 4,
+  reports_tab: 4,
+  finalize: 5,
+  report: 5,
+};
 const LOADING_TYPES = ["By Sea", "By Road", "By Air"];
 const CONTAINER_TYPES = ["20 FT", "40 FT", "20 FT Reefer", "40 FT Reefer", "Reefer Container", "Non Reefer", "Open Top", "Flat Rack", "LCL / Bulk"];
 const QTY_TYPE_OPTIONS = ["BAGS", "CARTONS", "Loose", "KGS", "Ton", "PCS", "Dozen", "Box", "Pallet"];
@@ -494,6 +506,7 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
   // GRADIENT header strip on an otherwise plain card (not a full-card wash);
   // it changes no calculation, field, validation, or save behavior.
   const isLocalSale = form.saleSource === "local" || (form.saleSource === "lot" && form.saleMode !== "export");
+  const reviewedTransferKeys = useRef(new Map());
   const sectionPanelCls = "rounded-2xl border border-border bg-card p-4 shadow-sm";
   const sectionPanelHeaderCls = isLocalSale
     ? "flex items-center justify-between rounded-xl bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-950/40 dark:to-amber-900/30 border border-amber-300 dark:border-amber-800 px-3 py-2 mb-3"
@@ -674,6 +687,7 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
   const [savedOrderId, setSavedOrderId] = useState("");
   const [tradeDocsOpen, setTradeDocsOpen] = useState(false);
   const [savedOrderNo, setSavedOrderNo] = useState("");
+  const [savedBookingSteps, setSavedBookingSteps] = useState([]);
   // The sale source as stored on the saved order (saved orders keep it at the top of form_data, not under form).
   const [loadedSaleSource, setLoadedSaleSource] = useState("");
   // The header columns of the saved order (currency, total, rate, customer, purchase link, date). The document record
@@ -1637,7 +1651,7 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
         // bug as customerAccountName above. Only apply when the extracted value is
         // one of the real option strings; otherwise leave the field for the human
         // to choose rather than silently setting an invalid/blank selection.
-        const validPaymentTypes = ["Advance Payment", "Invoice", "Final Payment", "Credit"];
+        const validPaymentTypes = PAYMENT_TYPES;
         const matchedType = validPaymentTypes.find((v) => v.toLowerCase() === String(p.paymentTerms).trim().toLowerCase());
         if (matchedType) next.paymentType = matchedType;
       }
@@ -1747,7 +1761,14 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
           // Always replace the sample goods: a saved order with no goods lines has none (not DEFAULT_SEEDED_GOODS).
           setGoodsEntries(Array.isArray(loadedGoods) ? loadedGoods : []);
 
-          setIsTransferred(false);
+          setReportsList(Array.isArray(rawFormData.reports) ? rawFormData.reports : []);
+          setSavedBookingSteps(Array.isArray(rawFormData.savedBookingSteps)
+            ? rawFormData.savedBookingSteps.filter((step) => Number.isInteger(step) && step >= 1 && step <= 5)
+            : []);
+          const isPosted = ["transferred", "finalized", "completed"].includes(String(soData.sales_status || "").toLowerCase())
+            || ["posted", "transferred"].includes(String(soData.ledger_posting_status || "").toLowerCase())
+            || rawFormData.workflow?.transferStatus === "transferred";
+          setIsTransferred(isPosted);
           setTransferredData(null);
           setActiveTab("booking");
           setSaveMessage(t(lang, "sales.order_loaded_success", "Sales order loaded successfully."));
@@ -1796,7 +1817,7 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
     return true;
   };
 
-  const buildSalesOrderPayload = (salesStatus = "Draft", customOrderNo = null) => {
+  const buildSalesOrderPayload = (salesStatus = "Draft", customOrderNo = null, bookingSteps = savedBookingSteps) => {
     const currencies = getBookingCurrencies(form);
     const usdRate = form.bookingCurrencyConfigured && currencies.rate.ok
       ? (currencies.rate.operator === "/" ? 1 / currencies.rate.rate : currencies.rate.rate)
@@ -1849,6 +1870,7 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
         totals: reportTotals,
         goodsEntries: goodsEntries,
         reports: reportsList,
+        savedBookingSteps: bookingSteps,
         workflow: {
           currentStep: isTransferred ? "sales_transfer_payment" : "booking_sales_order",
           nextStep: isTransferred ? "Post Payment" : "Booking Confirm",
@@ -1863,8 +1885,11 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
     };
   };
 
-  const handleSaveSalesOrder = async (shouldClose = false) => {
-    if (isSubmittingRef.current) return;
+  const handleSaveSalesOrder = async (shouldClose = false, bookingStep = null) => {
+    if (isSubmittingRef.current || isTransferred) return false;
+    const bookingSteps = bookingStep && !savedBookingSteps.includes(bookingStep)
+      ? [...savedBookingSteps, bookingStep]
+      : savedBookingSteps;
     isSubmittingRef.current = true;
     setSavingOrder(true);
     setSaveMessage("");
@@ -1873,7 +1898,7 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
       const response = await fetch(savedOrderId ? `/api/erp/sales/orders/${savedOrderId}` : "/api/erp/sales/orders", {
         method: savedOrderId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildSalesOrderPayload("Draft", nextOrderNo))
+        body: JSON.stringify(buildSalesOrderPayload("Draft", nextOrderNo, bookingSteps))
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
@@ -1881,9 +1906,20 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
         throw new Error(`${payload?.error?.message || payload?.error || t(lang, "sales.err_sales_order_save", "Sales order failed to save.")} ${errDetails}`);
       }
       const returnedOrderId = payload.data?.salesOrderId || savedOrderId || payload.data?.id;
-      const returnedOrderNo = payload.data?.salesOrderNo || savedOrderNo || form.salesOrderNo;
+      if (!returnedOrderId) {
+        throw new Error(t(lang, "sales.err_sales_order_save", "Sales order failed to save."));
+      }
+      const returnedOrderNo = payload.data?.salesOrderNo || payload.data?.order?.sales_order_no || savedOrderNo || form.salesOrderNo;
       setSavedOrderId(returnedOrderId || "");
       setSavedOrderNo(returnedOrderNo);
+      setSavedBookingSteps(bookingSteps);
+      if (returnedOrderNo) {
+        setForm((previous) => ({
+          ...previous,
+          salesOrderNo: returnedOrderNo,
+          bookingSerials: payload.data?.bookingSerials || previous.bookingSerials,
+        }));
+      }
       if (returnedOrderId && intake.draft) await intake.consume(String(returnedOrderId));
       setSaveMessage(`Successfully saved Sales Order: ${returnedOrderNo}.`);
       setRegisterRefreshKey((key) => key + 1);
@@ -1895,25 +1931,58 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
           router.push("/dashboard/sales/sales-booking-journal-report");
         }
       }
+      return true;
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error saving order.";
       setSaveMessage(msg);
       alert(msg);
+      return false;
     } finally {
       setSavingOrder(false);
       isSubmittingRef.current = false;
     }
   };
 
+  const saveBookingStep = (shouldClose = false) => {
+    if (!validateStep1Ownership()) return false;
+    return handleSaveSalesOrder(shouldClose, SALES_BOOKING_STEPS[activeTab]);
+  };
+
+  const saveAndOpenBookingStep = async (nextTab) => {
+    if (isTransferred || await saveBookingStep()) {
+      setActiveTab(nextTab);
+    }
+  };
+
+  const canOpenBookingStep = (tab) => {
+    const targetStep = SALES_BOOKING_STEPS[tab];
+    const currentStep = SALES_BOOKING_STEPS[activeTab];
+    return !savingOrder && (isTransferred || targetStep <= currentStep + 1
+      || Array.from({ length: targetStep - 1 }, (_, index) => index + 1)
+        .every((step) => savedBookingSteps.includes(step)));
+  };
+
+  const openBookingStep = (tab) => {
+    if (!canOpenBookingStep(tab)) return;
+    if (!isTransferred && SALES_BOOKING_STEPS[tab] > SALES_BOOKING_STEPS[activeTab]
+      && !savedBookingSteps.includes(SALES_BOOKING_STEPS[tab] - 1)) {
+      return saveAndOpenBookingStep(tab);
+    }
+    setActiveTab(tab);
+  };
+
   const handleTransfer = async ({ stayInReport = false } = {}) => {
-    if (isSubmittingRef.current) return;
+    if (isSubmittingRef.current || isTransferred) return;
     isSubmittingRef.current = true;
     setSavingOrder(true);
     setSaveMessage("");
     try {
       const nextOrderNo = savedOrderId ? String(form.salesOrderNo || "").trim() : "";
       const paymentRoute = resolveSalesBookingPaymentRoute(form.paymentType || "Advance Payment");
-      const transferPayload = buildSalesOrderPayload("Pending", nextOrderNo);
+      const bookingSteps = SALES_BOOKING_STEPS[activeTab] === 5 && !savedBookingSteps.includes(5)
+        ? [...savedBookingSteps, 5]
+        : savedBookingSteps;
+      const transferPayload = buildSalesOrderPayload("Pending", nextOrderNo, bookingSteps);
       const response = await fetch(savedOrderId ? `/api/erp/sales/orders/${savedOrderId}` : "/api/erp/sales/orders", {
         method: savedOrderId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -1930,10 +1999,18 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
       if (!returnedOrderId) throw new Error("The saved booking ID is missing.");
       setSavedOrderId(returnedOrderId);
       setSavedOrderNo(returnedOrderNo);
+      setSavedBookingSteps(bookingSteps);
+      const destination = salesWorkflowDestination(form.paymentType, { orderId: returnedOrderId, billNo: returnedOrderNo, local: isLocalSale });
+      if (destination && !reviewedTransferKeys.current.has(returnedOrderId)) {
+        reviewedTransferKeys.current.set(returnedOrderId, newIdempotencyKey("sales-booking-transfer", returnedOrderId));
+      }
       const transferResponse = await fetch(`/api/erp/sales/orders/${returnedOrderId}/transfer`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        headers: {
+          "Content-Type": "application/json",
+          ...(destination ? { "X-Idempotency-Key": reviewedTransferKeys.current.get(returnedOrderId) } : {}),
+        },
+        body: JSON.stringify(destination ? { transferRegister: true, ...(isLocalSale ? { source: "local" } : {}) } : {
           paymentKind: paymentRoute.paymentKind,
           paymentType: form.paymentType || paymentRoute.paymentLabel
         })
@@ -1950,7 +2027,7 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
       setRegisterRefreshKey((key) => key + 1);
 
       if (intake.draft) await intake.consume(String(returnedOrderId)).catch(() => undefined);
-      if (!stayInReport) window.location.href = `${paymentRoute.path}?salesOrderNo=${encodeURIComponent(returnedOrderNo)}`;
+      if (!stayInReport) window.location.href = destination?.href ?? `${paymentRoute.path}?salesOrderNo=${encodeURIComponent(returnedOrderNo)}`;
       return confirmation;
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error saving order.";
@@ -2019,6 +2096,7 @@ export function SalesOrderWizard({ session, useSalesBookingTransferReport = fals
     setReportsList([]);
     setSavedOrderId("");
     setSavedOrderNo("");
+    setSavedBookingSteps([]);
     setIsTransferred(false);
     setTransferredData(null);
     setSaveMessage(t(lang, "sales.inputs_cleared_msg", "All inputs and goods listings cleared."));
@@ -3284,11 +3362,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <div className="flex flex-wrap items-center gap-1.5 min-w-0 max-w-full relative" ref={dropdownRef}>
                   {/* phones: the five steps are one swipeable row and the buttons another (they used to wrap and fill the first screen) */}
                   <div className="flex w-full sm:w-auto max-w-[calc(100vw-3rem)] sm:max-w-full !flex-nowrap overflow-x-auto items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 sm:me-2">
-                    <button type="button" onClick={() => setActiveTab("booking")} className={`shrink-0 whitespace-nowrap py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")}</button>
-                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`shrink-0 whitespace-nowrap py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
-                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("shipping"); }} className={`shrink-0 whitespace-nowrap py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${(activeTab === "shipping" || activeTab === "others") ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
-                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("reports_tab"); }} className={`shrink-0 whitespace-nowrap py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
-                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("report"); }} className={`shrink-0 whitespace-nowrap py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
+                    <button type="button" disabled={!canOpenBookingStep("booking")} onClick={() => openBookingStep("booking")} className={`shrink-0 whitespace-nowrap py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")} {savedBookingSteps.includes(1) && <Check className="h-3 w-3" aria-label={t(lang, "cbs.saved_status_word", "Saved")} />}</button>
+                    <button type="button" disabled={!canOpenBookingStep("goods")} onClick={() => openBookingStep("goods")} className={`shrink-0 whitespace-nowrap py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")} {savedBookingSteps.includes(2) && <Check className="h-3 w-3" aria-label={t(lang, "cbs.saved_status_word", "Saved")} />}</button>
+                    <button type="button" disabled={!canOpenBookingStep("shipping")} onClick={() => openBookingStep("shipping")} className={`shrink-0 whitespace-nowrap py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${(activeTab === "shipping" || activeTab === "others") ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")} {savedBookingSteps.includes(3) && <Check className="h-3 w-3" aria-label={t(lang, "cbs.saved_status_word", "Saved")} />}</button>
+                    <button type="button" disabled={!canOpenBookingStep("reports_tab")} onClick={() => openBookingStep("reports_tab")} className={`shrink-0 whitespace-nowrap py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")} {savedBookingSteps.includes(4) && <Check className="h-3 w-3" aria-label={t(lang, "cbs.saved_status_word", "Saved")} />}</button>
+                    <button type="button" disabled={!canOpenBookingStep("report")} onClick={() => openBookingStep("report")} className={`shrink-0 whitespace-nowrap py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")} {savedBookingSteps.includes(5) && <Check className="h-3 w-3" aria-label={t(lang, "cbs.saved_status_word", "Saved")} />}</button>
                   </div>
                   <div className="flex w-full sm:w-auto max-w-[calc(100vw-3rem)] sm:max-w-full !flex-nowrap sm:!flex-wrap items-center gap-1.5 overflow-x-auto sm:overflow-visible [&>*]:shrink-0">
                   <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border border-border/50 me-1">
@@ -3430,7 +3508,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         type="button"
                         onClick={() => {
                           setViewDropdownOpen(false);
-                          handleSaveSalesOrder(false);
+                          saveBookingStep();
                         }}
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
                       >
@@ -3441,7 +3519,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         type="button"
                         onClick={() => {
                           setViewDropdownOpen(false);
-                          handleSaveSalesOrder(true);
+                          saveBookingStep(true);
                         }}
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
                       >
@@ -3470,11 +3548,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               </div>
               <div className="flex items-center gap-1.5 shrink-0 relative" ref={dropdownRef}>
                 <div className="flex items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 me-2">
-                  <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")}</button>
-                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
-                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("shipping"); }} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${(activeTab === "shipping" || activeTab === "others") ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
-                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("reports_tab"); }} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
-                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("report"); }} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
+                  <button type="button" disabled={!canOpenBookingStep("booking")} onClick={() => openBookingStep("booking")} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")} {savedBookingSteps.includes(1) && <Check className="h-3 w-3" aria-label={t(lang, "cbs.saved_status_word", "Saved")} />}</button>
+                  <button type="button" disabled={!canOpenBookingStep("goods")} onClick={() => openBookingStep("goods")} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")} {savedBookingSteps.includes(2) && <Check className="h-3 w-3" aria-label={t(lang, "cbs.saved_status_word", "Saved")} />}</button>
+                  <button type="button" disabled={!canOpenBookingStep("shipping")} onClick={() => openBookingStep("shipping")} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${(activeTab === "shipping" || activeTab === "others") ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")} {savedBookingSteps.includes(3) && <Check className="h-3 w-3" aria-label={t(lang, "cbs.saved_status_word", "Saved")} />}</button>
+                  <button type="button" disabled={!canOpenBookingStep("reports_tab")} onClick={() => openBookingStep("reports_tab")} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")} {savedBookingSteps.includes(4) && <Check className="h-3 w-3" aria-label={t(lang, "cbs.saved_status_word", "Saved")} />}</button>
+                  <button type="button" disabled={!canOpenBookingStep("report")} onClick={() => openBookingStep("report")} className={`py-1 px-1.5 rounded-sm text-[11px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")} {savedBookingSteps.includes(5) && <Check className="h-3 w-3" aria-label={t(lang, "cbs.saved_status_word", "Saved")} />}</button>
                 </div>
                 <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border border-border/50 me-1">
                   <span className="relative flex h-2 w-2 ms-1">
@@ -3596,7 +3674,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       type="button"
                       onClick={() => {
                         setViewDropdownOpen(false);
-                        handleSaveSalesOrder(false);
+                        saveBookingStep();
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
                     >
@@ -3607,7 +3685,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       type="button"
                       onClick={() => {
                         setViewDropdownOpen(false);
-                        handleSaveSalesOrder(true);
+                        saveBookingStep(true);
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
                     >
@@ -3677,7 +3755,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <div className="hidden sm:flex flex-wrap items-center justify-center gap-1.5 bg-slate-900/90 p-1.5 rounded-2xl sm:rounded-full border border-slate-800 max-w-full">
                   <button
                     type="button"
-                    onClick={() => setActiveTab("booking")}
+                    disabled={!canOpenBookingStep("booking")}
+                    onClick={() => openBookingStep("booking")}
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all",
                       activeTab === "booking"
@@ -3685,16 +3764,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         : "text-slate-400 hover:text-white"
                     )}
                   >
-                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[11px] font-black", activeTab === "booking" ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>1</span>
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[11px] font-black", activeTab === "booking" ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>{savedBookingSteps.includes(1) ? <Check className="h-3 w-3" aria-label={t(lang, "cbs.saved_status_word", "Saved")} /> : 1}</span>
                     <span>{t(lang, "sales.tab_booking", "Booking")}</span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => {
-                      if (activeTab === "booking" && !validateStep1Ownership()) return;
-                      setActiveTab("goods");
-                    }}
+                    disabled={!canOpenBookingStep("goods")}
+                    onClick={() => openBookingStep("goods")}
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all",
                       activeTab === "goods"
@@ -3702,16 +3779,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         : "text-slate-400 hover:text-white"
                     )}
                   >
-                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[11px] font-black", activeTab === "goods" ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>2</span>
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[11px] font-black", activeTab === "goods" ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>{savedBookingSteps.includes(2) ? <Check className="h-3 w-3" aria-label={t(lang, "cbs.saved_status_word", "Saved")} /> : 2}</span>
                     <span>{t(lang, "sales.tab_goods", "Items")}</span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => {
-                      if (activeTab === "booking" && !validateStep1Ownership()) return;
-                      setActiveTab("shipping");
-                    }}
+                    disabled={!canOpenBookingStep("shipping")}
+                    onClick={() => openBookingStep("shipping")}
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all",
                       (activeTab === "shipping" || activeTab === "others")
@@ -3719,16 +3794,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         : "text-slate-400 hover:text-white"
                     )}
                   >
-                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[11px] font-black", (activeTab === "shipping" || activeTab === "others") ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>3</span>
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[11px] font-black", (activeTab === "shipping" || activeTab === "others") ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>{savedBookingSteps.includes(3) ? <Check className="h-3 w-3" aria-label={t(lang, "cbs.saved_status_word", "Saved")} /> : 3}</span>
                     <span>{t(lang, "purchase.tab3_shipping_payment", "Shipping & Payment")}</span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => {
-                      if (activeTab === "booking" && !validateStep1Ownership()) return;
-                      setActiveTab("review");
-                    }}
+                    disabled={!canOpenBookingStep("review")}
+                    onClick={() => openBookingStep("review")}
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all",
                       (activeTab === "review" || activeTab === "reports_tab")
@@ -3736,16 +3809,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         : "text-slate-400 hover:text-white"
                     )}
                   >
-                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[11px] font-black", (activeTab === "review" || activeTab === "reports_tab") ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>4</span>
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[11px] font-black", (activeTab === "review" || activeTab === "reports_tab") ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>{savedBookingSteps.includes(4) ? <Check className="h-3 w-3" aria-label={t(lang, "cbs.saved_status_word", "Saved")} /> : 4}</span>
                     <span>{t(lang, "sales.tab_reports", "Review")}</span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => {
-                      if (activeTab === "booking" && !validateStep1Ownership()) return;
-                      setActiveTab("finalize");
-                    }}
+                    disabled={!canOpenBookingStep("finalize")}
+                    onClick={() => openBookingStep("finalize")}
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all",
                       (activeTab === "finalize" || activeTab === "report")
@@ -3753,13 +3824,19 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         : "text-slate-400 hover:text-white"
                     )}
                   >
-                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[11px] font-black", (activeTab === "finalize" || activeTab === "report") ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>5</span>
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[11px] font-black", (activeTab === "finalize" || activeTab === "report") ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>{savedBookingSteps.includes(5) ? <Check className="h-3 w-3" aria-label={t(lang, "cbs.saved_status_word", "Saved")} /> : 5}</span>
                     <span>{t(lang, "sales.tab_verify", "Finalize")}</span>
                   </button>
                 </div>
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-2">
+                  {SALES_BOOKING_STEPS[activeTab] <= 3 && !isTransferred && (
+                    <Button type="button" disabled={savingOrder} onClick={() => saveBookingStep()} className="bg-blue-600 text-white text-xs font-bold">
+                      <Save className="h-3.5 w-3.5" />
+                      {t(lang, "pb.save_draft", "Save Draft")}
+                    </Button>
+                  )}
                   {(activeTab === "finalize" || activeTab === "report") ? (
                     <>
                       <Button
@@ -3878,18 +3955,16 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   onCurrencyChange={updateBookingCurrency}
                   currencyReadOnly={isTransferred}
                   onNext={() => {
-                    if (!validateStep1Ownership()) return;
                     if (form.bookingCurrencyConfigured && !getBookingCurrencies(form).rate.ok) {
-                      setSaveMessage(t(lang, "purchase.exchange_rate", "Exchange Rate"));
+                      alert(t(lang, "purchase.exchange_rate", "Exchange Rate"));
                       return;
                     }
-                    setActiveTab("goods");
+                    return saveAndOpenBookingStep("goods");
                   }}
                   onEditItem={handleEditGoodsEntry}
                   dbAccounts={dbAccounts}
                   dbCompanies={dbCompanies}
                   applyAccountMaster={applyAccountMaster}
-                  formatAccountDisplayLabel={formatAccountDisplayLabel}
                 />
               )}
 
@@ -3902,7 +3977,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   setGoodsEntries={setGoodsEntries}
                   lang={lang}
                   onBack={() => setActiveTab("booking")}
-                  onNext={() => setActiveTab("shipping")}
+                  onNext={() => saveAndOpenBookingStep("shipping")}
                   availableLots={saleLots}
                   dbCompanies={dbCompanies}
                   dbAccounts={dbAccounts}
@@ -3918,7 +3993,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   setGoodsEntries={setGoodsEntries}
                   lang={lang}
                   onBack={() => setActiveTab("goods")}
-                  onNext={() => setActiveTab("review")}
+                  onNext={() => saveAndOpenBookingStep("review")}
                   onEditItem={handleEditGoodsEntry}
                   dbCompanies={dbCompanies}
                   dbAccounts={dbAccounts}
@@ -3935,8 +4010,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   goodsEntries={goodsEntries}
                   lang={lang}
                   onBack={() => setActiveTab("shipping")}
-                  onNext={() => setActiveTab("finalize")}
-                  onSaveDraft={() => handleSaveSalesOrder(false)}
+                  onNext={() => saveAndOpenBookingStep("finalize")}
+                  onSaveDraft={isTransferred || savingOrder ? undefined : () => saveBookingStep()}
                   onPrint={() => {
                     import("@/lib/reports/print-dom-fragment").then((m) => {
                       if (!m.printDomFragmentViaModal("sales-booking-voucher-root", t(lang, "purchase.print_document_btn", "Print Voucher"), { lang })) {
@@ -3964,7 +4039,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   goodsEntries={goodsEntries}
                   lang={lang}
                   onBack={() => setActiveTab("review")}
-                  onSaveDraft={() => handleSaveSalesOrder(false)}
+                  onSaveDraft={isTransferred || savingOrder ? undefined : () => saveBookingStep()}
                   onConfirmTransfer={useSalesBookingTransferReport ? () => handleTransfer({ stayInReport: true }) : handleTransfer}
                   transferConfirmation={transferredData}
                   useTransferReport={useSalesBookingTransferReport}

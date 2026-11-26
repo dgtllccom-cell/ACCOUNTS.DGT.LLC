@@ -5,10 +5,12 @@ import { uuidSchema } from "@/lib/api/erp-validation";
 import { authorizeApiScope, enforceScopeFilter, sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { withLocalPg } from "@/lib/db/local-postgres";
+import { withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
-import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { parseRegisterPage, splitRegisterPage } from "@/lib/sales/register-pagination";
+import { localSalesSourcePostgrest, sqlLocalSalesSource } from "@/lib/sales/local-sales-source";
+import { localizeRecordFields, localizeRecordNames } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
   id: uuidSchema.optional(),
@@ -46,7 +48,7 @@ async function withTimeout<T>(query: PromiseLike<QueryResult<T>>, label: string,
   }
 }
 
-function normalizeOrder(row: any) {
+function normalizeOrder(row: any, useCountryMaster = false) {
   const data = row.form_data ?? {};
   const form = data.form ?? {};
   const totals = data.totals ?? {};
@@ -81,7 +83,8 @@ function normalizeOrder(row: any) {
 
   const salesCurRaw = form.currencyType ?? form.purchaseCurrency ?? row.currency_code ?? baseCurrency;
   const salesCur = String(salesCurRaw || baseCurrency).split(" ")[0].toUpperCase();
-  const finalCurRaw = form.secondaryCurrency?.split(" ")[0] ?? form.baseCurrency ?? baseCurrency;
+  const masterCurrency = useCountryMaster ? row.countries?.currency_code || row.currency_code : null;
+  const finalCurRaw = form.secondaryCurrency?.split(" ")[0] ?? form.baseCurrency ?? masterCurrency ?? baseCurrency;
   const finalCur = String(finalCurRaw || baseCurrency).split(" ")[0].toUpperCase();
 
   const finalBranchName = form.branchName ?? row.country_branches?.name ?? row.city_branches?.name ?? "-";
@@ -125,6 +128,7 @@ function normalizeOrder(row: any) {
     finalCurrency: finalCur,
     exchange_rate: Number(row.exchange_rate ?? form.exchangeRate ?? 1),
     status: row.sales_status ?? "Draft",
+    ...(row.ledger_posting_status !== undefined ? { ledger_posting_status: row.ledger_posting_status } : {}),
     paymentStatus: row.payment_status ?? "Pending",
     deliveryStatus: row.delivery_status ?? "Pending",
     workflowState: row.workflow_state ?? {},
@@ -153,7 +157,10 @@ function normalizeOrder(row: any) {
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    const page = parseRegisterPage(request.nextUrl.searchParams);
+    const localSale = request.nextUrl.searchParams.get("source") === "local";
     const query = querySchema.parse({
+      id: request.nextUrl.searchParams.get("id") ?? undefined,
       salesOrderNo: request.nextUrl.searchParams.get("salesOrderNo") ?? undefined,
       dateFrom: request.nextUrl.searchParams.get("dateFrom") ?? undefined,
       dateTo: request.nextUrl.searchParams.get("dateTo") ?? undefined,
@@ -164,6 +171,7 @@ export async function GET(request: NextRequest) {
       q: request.nextUrl.searchParams.get("q") ?? undefined
     });
 
+    const fetchLimit = query.limit + Number(page.enabled);
     authorizeApiScope(session, {
       resource: "sales",
       action: "read",
@@ -176,7 +184,7 @@ export async function GET(request: NextRequest) {
     // is not guaranteed to carry a real service-role key that bypasses RLS on its own — read
     // via a direct Postgres connection when available (same proven bypass as
     // banks-repository.ts/customers-repository.ts), falling back to the Supabase client.
-    const viaPg = await withLocalPg(async (sql) => {
+    const viaPg = await (page.enabled ? withReadPg : withLocalPg)(async (sql) => {
       const rows = await sql`
         SELECT so.id, so.country_id, so.country_branch_id, so.city_branch_id, so.customer_account_id,
           so.customer_ledger_id, so.purchase_order_id, so.sales_order_no, so.sales_contract_no, so.order_date,
@@ -185,12 +193,15 @@ export async function GET(request: NextRequest) {
           so.currency_code, so.exchange_rate, so.order_total, so.paid_amount, so.remaining_amount, so.sales_status,
           so.payment_status, so.delivery_status, so.workflow_state, so.form_data, so.super_admin_serial_number,
           so.country_transaction_serial_number, so.branch_transaction_serial_number, so.created_at,
+          ${localSale ? sql`so.ledger_posting_status,` : sql``}
+          ${page.enabled ? sql`to_char(so.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as register_cursor_timestamp,` : sql``}
           to_jsonb(c.*) as countries, to_jsonb(cb.*) as country_branches, to_jsonb(cib.*) as city_branches
         FROM public.sales_orders so
         LEFT JOIN public.countries c ON c.id = so.country_id
         LEFT JOIN public.country_branches cb ON cb.id = so.country_branch_id
         LEFT JOIN public.city_branches cib ON cib.id = so.city_branch_id
         WHERE so.deleted_at IS NULL
+          AND (${localSale ? sqlLocalSalesSource(sql, sql`so.form_data`) : sql`true`})
           AND (${query.id ? sql`so.id = ${query.id}::uuid` : sql`true`})
           AND (${query.salesOrderNo ? sql`so.sales_order_no = ${query.salesOrderNo}` : sql`true`})
           AND ${sqlScopeCondition(sql, sessionSqlScope(session), "so")}
@@ -200,8 +211,9 @@ export async function GET(request: NextRequest) {
           AND (${query.dateFrom ? sql`so.order_date >= ${query.dateFrom}` : sql`true`})
           AND (${query.dateTo ? sql`so.order_date <= ${query.dateTo}` : sql`true`})
           AND (${query.q ? sql`(so.sales_order_no ILIKE ${"%" + query.q + "%"} OR so.customer_name ILIKE ${"%" + query.q + "%"} OR so.account_number ILIKE ${"%" + query.q + "%"} OR so.manual_reference_number ILIKE ${"%" + query.q + "%"})` : sql`true`})
-        ORDER BY so.created_at DESC
-        LIMIT ${query.limit}
+          AND (${page.cursor ? sql`(so.created_at, so.id) < (${page.cursor.at}::timestamptz, ${page.cursor.id}::uuid)` : sql`true`})
+        ORDER BY so.created_at DESC ${page.enabled ? sql`, so.id DESC` : sql``}
+        LIMIT ${fetchLimit}
       `;
       return rows;
     });
@@ -220,6 +232,7 @@ export async function GET(request: NextRequest) {
           currency_code, exchange_rate, order_total, paid_amount, remaining_amount, sales_status, payment_status,
           delivery_status, workflow_state, form_data, super_admin_serial_number, country_transaction_serial_number,
           branch_transaction_serial_number, created_at,
+          ${localSale ? "ledger_posting_status," : ""}
           countries(id, name, iso2, currency_code),
           country_branches(id, name, code),
           city_branches(id, name, code, city_name)
@@ -227,6 +240,12 @@ export async function GET(request: NextRequest) {
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
+      if (localSale) recordsQuery = recordsQuery.or(localSalesSourcePostgrest);
+      if (page.enabled) recordsQuery = recordsQuery.order("id", { ascending: false });
+      if (page.cursor) {
+        const { at, id } = page.cursor;
+        recordsQuery = recordsQuery.or(`created_at.lt.${at},and(created_at.eq.${at},id.lt.${id})`);
+      }
       if (query.id) {
         recordsQuery = recordsQuery.eq("id", query.id);
       }
@@ -255,14 +274,15 @@ export async function GET(request: NextRequest) {
         recordsQuery = recordsQuery.or(`sales_order_no.ilike.${term},customer_name.ilike.${term},account_number.ilike.${term},manual_reference_number.ilike.${term}`);
       }
 
-      const result = await withTimeout<any>(recordsQuery.limit(query.limit), "sales booking report query");
+      const result = await withTimeout<any>(recordsQuery.limit(fetchLimit), "sales booking report query");
       if (result.error) {
         throw new Error(result.error.message);
       }
       data = result.data;
     }
 
-    let normalized = (data ?? []).map(normalizeOrder);
+    const register = splitRegisterPage(data ?? [], query.limit, page.enabled);
+    let normalized = register.rows.map(row => normalizeOrder(row, page.enabled));
 
     // Resolve customerName into the active language — record_translations was written keyed
     // by the DB column name "customer_name" (see the POST handler), but normalizeOrder()
@@ -271,9 +291,21 @@ export async function GET(request: NextRequest) {
     // customers/[id]/route.ts for why skipping that would leak non-English source text.
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     if (normalized.length > 0) {
-      const aliased = normalized.map((r: any) => ({ ...r, customer_name: r.customerName }));
-      const resolved = await localizeRecordNames<any>(aliased, "sales_orders", "customer_name", lang);
-      normalized = resolved.map((r: any) => ({ ...r, customerName: r.customer_name }));
+      const aliased = normalized.map(r => ({
+        ...r, customer_name: r.customerName, product_name: r.productName, sales_account_name: r.salesAccountName,
+        purchase_account_name: r.purchaseAccountName, goods_description: r.goodsDescription,
+      }));
+      if (page.enabled) {
+        const resolved = await localizeRecordFields(aliased, "sales_orders",
+          ["customer_name", "product_name", "sales_account_name", "purchase_account_name", "goods_description"], lang);
+        normalized = resolved.map(r => ({
+          ...r, customerName: r.customer_name, productName: r.product_name, salesAccountName: r.sales_account_name,
+          purchaseAccountName: r.purchase_account_name, goodsDescription: r.goods_description,
+        }));
+      } else {
+        const resolved = await localizeRecordNames<any>(aliased, "sales_orders", "customer_name", lang);
+        normalized = resolved.map(({ product_name, sales_account_name, purchase_account_name, goods_description, ...r }) => ({ ...r, customerName: r.customer_name }));
+      }
     }
 
     // Aggregation summary
@@ -286,7 +318,8 @@ export async function GET(request: NextRequest) {
 
     return apiOk({
       reports: normalized,
-      summary
+      summary,
+      ...(page.enabled ? { nextCursor: register.nextCursor } : {}),
     });
   } catch (error) {
     return handleApiError(error);

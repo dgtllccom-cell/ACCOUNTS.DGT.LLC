@@ -7,7 +7,7 @@
  */
 import { parseJsonish } from "@/lib/stock-journal/model";
 import { resolvePaymentCondition, resolvePurchaseAmounts } from "@/lib/services/purchase-calculation-service";
-import { advanceClearance, loadingPaymentStates, paymentInPurchaseCurrency, type LoadingPaymentState } from "@/lib/purchases/loaded-payable";
+import { advanceClearance, loadingPaymentStates, paymentInPurchaseCurrency, type LoadingPaymentState, type PaymentRowLike } from "@/lib/purchases/loaded-payable";
 import { contractLines, loadingGoodsValue } from "@/lib/purchases/loading-value";
 
 const num = (v: unknown) => {
@@ -48,12 +48,13 @@ export type BillPaymentRow = {
   payment_status?: string | null;
 };
 export type LoadingRow = { id: string; loaded_quantity?: number | string | null; net_weight?: number | string | null; report_payload?: unknown; created_at?: unknown };
-export type RemainingPaymentRow = { amount?: number | string | null; currency_code?: string | null; exchange_rate?: number | string | null; base_currency_amount?: number | string | null; loading_record_id?: string | null };
+export type RemainingPaymentRow = Pick<PaymentRowLike, "amount" | "currency_code" | "exchange_rate" | "base_currency_amount" | "loading_record_id" | "applied_purchase_amount">;
 
 export function buildBillPayment(po: BillPaymentRow, loadingRows: LoadingRow[], remainingRows: RemainingPaymentRow[]): BillPayment {
   const formData = parseJsonish(po.form_data) || {};
   const order = { ...po, form_data: formData } as any;
   const currency = String(po.purchase_currency || po.currency_code || "USD").toUpperCase();
+  const bookingCurrency = String(po.currency_code || po.purchase_currency || "").trim().toUpperCase();
   const baseCurrency = String(po.base_currency || currency).toUpperCase();
   const rate = num(po.exchange_rate) > 0 ? num(po.exchange_rate) : 1;
   const rateToBase = currency === baseCurrency ? 1 : rate;
@@ -78,7 +79,7 @@ export function buildBillPayment(po: BillPaymentRow, loadingRows: LoadingRow[], 
   });
   const payments = (remainingRows || []).map((p) => ({
     amountFC: paymentInPurchaseCurrency(
-      { amount: p.amount, currency_code: p.currency_code, exchange_rate: p.exchange_rate, base_currency_amount: p.base_currency_amount },
+      { ...p, applied_purchase_amount: bookingCurrency === currency ? p.applied_purchase_amount : null },
       currency,
       rateToBase
     ),
