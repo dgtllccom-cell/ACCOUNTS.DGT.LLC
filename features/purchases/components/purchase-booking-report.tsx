@@ -163,7 +163,7 @@ type RemarkProps = {
   suggestion?: string;
   document: boolean;
   editable: boolean;
-  onSave?: (kind: BookingReportRemarkKind, value: string) => Promise<void>;
+  onSave?: (kind: BookingReportRemarkKind, value: string) => Promise<void | false>;
   lang: string;
   rows?: number;
 };
@@ -274,7 +274,10 @@ function RemarkBox({ kind, label, value, suggestion = "", document, editable, on
             if (!editable || !onSave || !note || note === saved || state === "saving") return;
             setState("saving");
             try {
-              await onSave(kind, note);
+              if (await onSave(kind, note) === false) {
+                setState("idle");
+                return;
+              }
               setEditedDraft(null);
               setState("saved");
               setEditing(false);
@@ -298,7 +301,7 @@ export interface PurchaseBookingReportBodyProps {
   lang: string;
   /** "document" = the fixed A4 page (View / Print): fixed columns, remarks as text */
   mode?: "screen" | "document";
-  onSaveRemark?: (kind: BookingReportRemarkKind, value: string) => Promise<void>;
+  onSaveRemark?: (kind: BookingReportRemarkKind, value: string) => Promise<void | false>;
 }
 
 export function PurchaseBookingReportBody({ data, lang, mode = "screen", onSaveRemark }: PurchaseBookingReportBodyProps) {
@@ -736,15 +739,17 @@ export function PurchaseBookingReportScreen({
     // re-read the saved row so only this one remark changes (never a stale copy of amounts / accounts)
     const fresh = await load();
     if (!fresh) throw new Error("load failed");
+    const editReason = window.prompt(t(lang, "purchase.booking_edit_reason", "Enter the reason for this booking correction."))?.trim();
+    if (!editReason) return false as const;
     const res = await doFetch(`/api/erp/purchases/orders/${encodeURIComponent(orderId)}`, {
       method: "PATCH",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(remarkPatchBody(fresh, kind, value)),
+      body: JSON.stringify({ ...remarkPatchBody(fresh, kind, value), expectedUpdatedAt: fresh.updated_at, editReason }),
     });
     const payload = await res.json().catch(() => ({}));
     if (!res.ok || payload?.ok === false) throw new Error("save failed");
-    setRecord((current) => current?.id === fresh.id ? { ...fresh, form_data: remarkPatchBody(fresh, kind, value).formData } : current);
+    setRecord((current) => current?.id === fresh.id ? { ...fresh, updated_at: payload?.data?.updated_at ?? fresh.updated_at, form_data: remarkPatchBody(fresh, kind, value).formData } : current);
   }, [orderId, doFetch, load]);
 
   const steps: { id: BookingWizardStep; label: string }[] = [

@@ -626,6 +626,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
   const [savingOrder, setSavingOrder] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [savedOrderId, setSavedOrderId] = useState("");
+  const [savedOrderVersion, setSavedOrderVersion] = useState("");
   // Serial numbers issued to a loaded bill (row + saved workflow). Shown as saved; never synthesized.
   const [loadedBillSerials, setLoadedBillSerials] = useState(null);
   const [savedOrderNo, setSavedOrderNo] = useState("");
@@ -1456,7 +1457,14 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
         }
       }
 
-      if (poData) {
+      if (poData?.id && !poData.updated_at) {
+        const res = await fetch(`/api/erp/purchases/orders/${encodeURIComponent(poData.id)}?lang=${encodeURIComponent(lang)}`, {
+          credentials: "same-origin", cache: "no-store"
+        });
+        const payload = await res.json().catch(() => ({}));
+        poData = res.ok ? payload.data?.order : null;
+      }
+      if (poData?.id && poData.updated_at) {
         let rawFormData = poData.form_data || {};
         if (typeof rawFormData === "string") {
           try { rawFormData = JSON.parse(rawFormData); } catch (_) {}
@@ -1494,7 +1502,8 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
         const poNumber = poData.purchase_order_no || poData.purchaseBookingOrderNumber || loadedForm.purchaseOrderNo || needle;
         const contractNumber = poData.purchase_contract_no || poData.purchaseContractNo || loadedForm.purchaseContractNo || "";
 
-        setSavedOrderId(poData.id || "");
+        setSavedOrderId(poData.id);
+        setSavedOrderVersion(poData.updated_at);
         setSavedOrderNo(poNumber);
         {
           const wf = (rawFormData && typeof rawFormData === "object" && rawFormData.workflow) || {};
@@ -1537,9 +1546,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
           setSalesSearch(loadedForm.salesAccountName || loadedForm.salesAccountNo || "");
         }
 
-        if (Array.isArray(loadedGoods) && loadedGoods.length) {
-          setGoodsEntries(loadedGoods);
-        }
+        setGoodsEntries(loadedGoods);
 
         if (rawFormData.reports && Array.isArray(rawFormData.reports)) {
           setReportsList(rawFormData.reports);
@@ -2254,8 +2261,8 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
       hsCode: row.hsCode || "",
       qtyName: row.qtyName || "BAGS",
       qtyNo: Number(row.qtyNo || 0),
-      qtyKgs: Number(row.qtyKgs || 0),
-      emptyKgs: Number(row.emptyKgs || 0),
+      qtyKgs: Number(row.qtyKgs ?? (Number(row.grossWeight || 0) / Number(row.qtyNo || 1))),
+      emptyKgs: Number(row.emptyKgs ?? Math.max(0, (Number(row.grossWeight || 0) - Number(row.netWeight || 0)) / Number(row.qtyNo || 1))),
       netWeight: row.netWeight !== undefined ? row.netWeight : "",
       priceType: row.priceType || "P/KGs",
       divideType: row.divideType || "D/KGs",
@@ -2480,7 +2487,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
 
     let allEntries = [...goodsEntries];
     const pendingGoodsName = (form.goodsName || "").trim();
-    if (pendingGoodsName) {
+    if (pendingGoodsName && (!savedOrderId || !goodsEntries.length)) {
       const calculated = calculateItemTotals(form);
       const pendingLot = {
         allotName: form.allotName || "",
@@ -2557,9 +2564,10 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
       totalGoodsUsd: finalPrimaryTotal,
       items: allEntries.map(g => {
         const rateOrig = Number(g.coursePrice || 0);
-        const rateLoc = rateOrig * usdRate;
+        const multiplier = form.operator === "/" ? 1 / usdRate : usdRate;
+        const rateLoc = rateOrig * multiplier;
         const totOrig = Number(g.totalAmount || 0);
-        const totLoc = Number(g.finalAmount || totOrig * usdRate);
+        const totLoc = Number(g.finalAmount ?? totOrig * multiplier);
         return {
           productId: g.productId || null,
           goodsName: g.goodsName,
@@ -2608,6 +2616,22 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
     };
   };
 
+  const buildBookingSavePayload = (ledgerStatus, orderNo) => {
+    const payload = buildPurchaseOrderPayload(ledgerStatus, orderNo);
+    if (!savedOrderId) {
+      if (["id", "purchaseOrderId", "purchaseId", "orderId", "purchaseOrderNo"].some((key) => searchParams.get(key))) {
+        throw new Error(t(lang, "purchase.booking_reload_before_edit", "Reload the saved booking before editing."));
+      }
+      return payload;
+    }
+    if (!savedOrderVersion) {
+      throw new Error(t(lang, "purchase.booking_reload_before_edit", "Reload the saved booking before editing."));
+    }
+    const editReason = window.prompt(t(lang, "purchase.booking_edit_reason", "Enter the reason for this booking correction."))?.trim();
+    if (!editReason) return null;
+    return { ...payload, expectedUpdatedAt: savedOrderVersion, editReason };
+  };
+
   const isSubmittingRef = React.useRef(false);
 
   const handleSavePurchaseOrder = async (shouldClose = false) => {
@@ -2617,10 +2641,12 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
     setSaveMessage("");
     try {
       const nextOrderNo = savedOrderId ? String(form.purchaseOrderNo || "").trim() : "AUTO";
+      const savePayload = buildBookingSavePayload("Pending", nextOrderNo);
+      if (!savePayload) return;
       const response = await fetch(savedOrderId ? `/api/erp/purchases/orders/${savedOrderId}` : "/api/erp/purchases/orders", {
         method: savedOrderId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildPurchaseOrderPayload("Pending", nextOrderNo))
+        body: JSON.stringify(savePayload)
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
@@ -2631,6 +2657,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
       const returnedOrderNo = payload.data?.purchaseOrderNo || savedOrderNo || form.purchaseOrderNo;
       let transferDestination = buildPurchaseBookingTransferUrl(form.paymentType, returnedOrderNo);
       setSavedOrderId(returnedOrderId || "");
+      setSavedOrderVersion(payload.data?.updatedAt || "");
       setSavedOrderNo(returnedOrderNo);
       setSaveMessage(`Successfully saved Purchase Order: ${returnedOrderNo}.`);
       setRegisterRefreshKey((key) => key + 1);
@@ -2657,7 +2684,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
   };
 
   const handleTransfer = async () => {
-    if (isTransferred) {
+    if (isTransferred || loadedBillSerials?.posted) {
       alert(trUi("This booking has already been transferred."));
       return;
     }
@@ -2667,7 +2694,8 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
       const isAccepting = false && form.purchaseOrderNo;
       const ledgerStatus = isAccepting ? "Pending" : "Pending";
       const nextOrderNo = savedOrderId ? String(form.purchaseOrderNo || "").trim() : "AUTO";
-      const transferPayload = buildPurchaseOrderPayload(ledgerStatus, nextOrderNo);
+      const transferPayload = buildBookingSavePayload(ledgerStatus, nextOrderNo);
+      if (!transferPayload) return;
       const response = await fetch(savedOrderId ? `/api/erp/purchases/orders/${savedOrderId}` : "/api/erp/purchases/orders", {
         method: savedOrderId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -2700,6 +2728,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
       }
 
       setSavedOrderId(returnedOrderId || "");
+      setSavedOrderVersion(payload.data?.updatedAt || "");
       setSavedOrderNo(returnedOrderNo);
       setSaveMessage(`Transferred Purchase Order ${returnedOrderNo} to Journal / Payment and ledger posting.`);
       setTransferredData({
@@ -2724,7 +2753,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
   };
 
   const handleTransferEmpty = async () => {
-    if (isTransferred) {
+    if (isTransferred || loadedBillSerials?.posted) {
       alert(trUi("This booking has already been transferred."));
       return;
     }
@@ -2734,7 +2763,8 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
       const isAccepting = false && form.purchaseOrderNo;
       const ledgerStatus = isAccepting ? "Pending" : "Pending";
       const nextOrderNo = savedOrderId ? String(form.purchaseOrderNo || "").trim() : "AUTO";
-      const transferPayload = buildPurchaseOrderPayload(ledgerStatus, nextOrderNo);
+      const transferPayload = buildBookingSavePayload(ledgerStatus, nextOrderNo);
+      if (!transferPayload) return;
       const response = await fetch(savedOrderId ? `/api/erp/purchases/orders/${savedOrderId}` : "/api/erp/purchases/orders", {
         method: savedOrderId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -2766,6 +2796,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
       }
 
       setSavedOrderId(returnedOrderId || "");
+      setSavedOrderVersion(payload.data?.updatedAt || "");
       setSavedOrderNo(returnedOrderNo);
       setSaveMessage(`Transferred Purchase Order ${returnedOrderNo}.`);
       setTransferredData(payload.data || { purchaseOrderNo: returnedOrderNo });
@@ -2884,7 +2915,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
       manualFinalAmount: "",
     });
     setGoodsEntries([]);
-    setSavedOrderId(""); setLoadedBillSerials(null);
+    setSavedOrderId(""); setSavedOrderVersion(""); setLoadedBillSerials(null);
     setSavedOrderNo("");
     setTransferredData(null);
     setIsTransferred(false);
@@ -3754,7 +3785,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
           highlightPurchaseOrderNo={savedOrderNo}
           onNewBooking={() => {
             handleReset();
-            setSavedOrderId(""); setLoadedBillSerials(null);
+            setSavedOrderId(""); setSavedOrderVersion(""); setLoadedBillSerials(null);
             setSavedOrderNo("");
             setIsFormOpen(true);
             setActiveTab("booking");
@@ -6107,7 +6138,7 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
                   {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   {savingOrder ? t(lang, "common.saving", "Saving...") : (savedOrderId ? t(lang, "purchase.update_purchase_order", "Update Purchase Order") : t(lang, "purchase.save_purchase_order", "Save Purchase Order"))}
                 </Button>
-                {!isTransferred && (
+                {!isTransferred && !loadedBillSerials?.posted && (
                   <Button
                     type="button"
                     onClick={handleTransfer}

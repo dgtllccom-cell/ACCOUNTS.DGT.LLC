@@ -391,7 +391,8 @@ export const purchaseOrderCreateSchema = scopeSchema.extend({
 });
 
 export const purchaseOrderUpdateSchema = purchaseOrderCreateSchema.partial().extend({
-  // Allow adjusting totals and details on draft orders.
+  expectedUpdatedAt: z.string().datetime({ offset: true }),
+  editReason: z.string().trim().min(1).max(500),
   supplierCompanyId: optionalUuidSchema,
   currencyCode: currencyCodeSchema.optional(),
   exchangeRate: z.coerce.number().finite().positive().optional(),
