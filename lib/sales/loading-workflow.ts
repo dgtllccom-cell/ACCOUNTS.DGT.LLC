@@ -2,7 +2,7 @@ import { z } from "zod";
 import { convertedSalesAmount, getBookingCurrencies } from "@/lib/sales/booking-currencies";
 import { parseJsonish } from "@/lib/stock-journal/model";
 
-export const CONTAINER_TYPES = ["20 FT", "40 FT", "20 FT Reefer", "40 FT Reefer", "Reefer Container", "Non Reefer", "Open Top", "Flat Rack", "LCL / Bulk"] as const;
+export const CONTAINER_TYPES = ["20 FT", "40 FT", "20 FT Reefer", "40 FT Reefer", "Reefer Container", "Non Reefer", "Open Top", "Flat Rack", "LCL / Bulk", "Truck"] as const;
 const safeText = (length: number) => z.string().trim().max(length).default("");
 const measurement = z.number().finite().positive().max(1e12);
 export const receivingSchema = z.object({
@@ -16,8 +16,14 @@ export const loadContainerSchema = receivingSchema.extend({
   shippingLine: safeText(160), seal: safeText(120), voyage: safeText(120),
   vehicle: safeText(120), driver: safeText(160), driverMobile: safeText(40), flight: safeText(160),
   awb: safeText(120), rail: safeText(120), remarks: safeText(1000),
+  // Truck from the central Truck Registration (registered = picked by id, data filled from the registry) or a temporary truck typed in.
+  truckRegistrationType: z.enum(["registered", "temporary", ""]).default(""),
+  truckId: z.union([z.string().uuid(), z.literal("")]).default(""),
+  truckOwner: safeText(160), transportCompany: safeText(160),
   items: z.array(z.object({ line: z.number().int().min(0), quantity: measurement, gross: measurement, net: measurement })).min(1).max(100),
 }).superRefine((c, ctx) => {
+  if (c.truckRegistrationType === "registered" && !c.truckId) ctx.addIssue({ code: "custom", path: ["truckId"], message: "Select the registered truck" });
+  if (c.truckRegistrationType === "temporary" && !c.vehicle) ctx.addIssue({ code: "custom", path: ["vehicle"], message: "Enter the temporary truck number" });
   if (c.receivedDate && c.receivedDate < c.loadingDate) ctx.addIssue({ code: "custom", path: ["receivedDate"], message: "Received date cannot precede loading date" });
   const seen = new Set<number>();
   c.items.forEach((it, i) => {

@@ -208,9 +208,9 @@ export function SalesBookingTransferReport({
                 <ReportSection title={tr("Loading Records")} className="sm:col-span-2">
                   {loadingRecords.length === 0 ? <p className="p-3 text-slate-600">{tr("No loading recorded yet.")}</p> : <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-[11px]">
-                      <thead className="bg-blue-50"><tr>{["#", "Container No.", "Container Type", "Loading Date", "Received Date", "Qty", "Net Wt (KG)"].map(label => <th className={cell} key={label} scope="col">{tr(label)}</th>)}</tr></thead>
-                      <tbody>{loadingRecords.map((record, i) => <tr key={record.containerNumber + i}>{[i + 1, record.containerNumber, record.containerType, record.loadingDate, record.receivedDate, number(record.quantity, 3), number(record.netWeight, 3)].map((value, col) => <td className={cell} key={col}><bdi>{value || value === 0 ? value : "—"}</bdi></td>)}</tr>)}</tbody>
-                      <tfoot className="bg-amber-50 font-bold"><tr><th colSpan={5} className={cell} scope="row">{tr("Total")}</th>
+                      <thead className="bg-blue-50"><tr>{["#", "Container No.", "Container Type", "Truck No.", "Driver", "Loading Date", "Received Date", "Qty", "Net Wt (KG)"].map(label => <th className={cell} key={label} scope="col">{tr(label)}</th>)}</tr></thead>
+                      <tbody>{loadingRecords.map((record, i) => <tr key={record.containerNumber + i}>{[i + 1, record.containerNumber, record.containerType, record.truck && `${record.truck}${record.truckRegistrationType ? ` (${tr(record.truckRegistrationType === "registered" ? "Registered" : "Temporary")})` : ""}`, record.driver, record.loadingDate, record.receivedDate, number(record.quantity, 3), number(record.netWeight, 3)].map((value, col) => <td className={cell} key={col}><bdi>{value || value === 0 ? value : "—"}</bdi></td>)}</tr>)}</tbody>
+                      <tfoot className="bg-amber-50 font-bold"><tr><th colSpan={7} className={cell} scope="row">{tr("Total")}</th>
                         <td className={cell}>{number(loadingRecords.reduce((s, r) => s + (Number(r.quantity) || 0), 0), 3)}</td>
                         <td className={cell}>{number(loadingRecords.reduce((s, r) => s + (Number(r.netWeight) || 0), 0), 3)}</td></tr></tfoot>
                     </table>

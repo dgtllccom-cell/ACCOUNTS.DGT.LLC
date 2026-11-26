@@ -7,6 +7,9 @@ export type SalesLoadingSummary = {
   receivedDate: string | null;
   quantity: number;
   netWeight: number;
+  truck: string | null;
+  driver: string | null;
+  truckRegistrationType: string | null;
 };
 
 export type SalesTransferContext = {
@@ -43,7 +46,7 @@ export async function readSalesTransferContext(orderId: string, rawFormData: unk
 
   const result = await withLocalPg(async sql => {
     const loading = await sql`
-      select container_number, container_type, loading_date::text as loading_date, received_date::text as received_date, goods
+      select container_number, container_type, loading_date::text as loading_date, received_date::text as received_date, goods, details
       from public.sales_loading_records where sales_order_id = ${orderId}::uuid
       order by loading_date, entry_no`;
     const warehouses = warehouseIds.length
@@ -59,6 +62,9 @@ export async function readSalesTransferContext(orderId: string, rawFormData: unk
       loadingDate: row.loading_date ?? null,
       receivedDate: row.received_date ?? null,
       ...goodsTotals(row.goods),
+      truck: row.details?.vehicle || null,
+      driver: [row.details?.driver, row.details?.driverMobile].filter(Boolean).join(" · ") || null,
+      truckRegistrationType: row.details?.truckRegistrationType || null,
     })),
     warehouseNames: Object.fromEntries((result?.warehouses ?? []).map((w: any) =>
       [w.id, [w.warehouse_name, w.warehouse_code].filter(Boolean).join(" · ")])),

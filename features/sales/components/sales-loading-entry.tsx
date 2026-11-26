@@ -8,19 +8,27 @@ import { Th } from "@/components/ui/translated-th";
 import { LoadingWorkflow, LoadingWorkflowReport, type LoadingWorkflowStep } from "@/components/ui/loading-workflow";
 import { VoiceFormFill } from "@/components/voice-form-fill";
 import { LoadingReceivingCell } from "@/features/journal/components/loading-receiving-cell";
+import { TruckEntryPicker, type TruckEntryValue } from "@/features/clearing-agent/components/truck-entry-picker";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { CONTAINER_TYPES, loadingProgress, type LoadingOrder, type LoadingRecord, type SalesLoadingSource } from "@/lib/sales/loading-workflow";
 
 export type LoadingText = (key: string, fallback: string) => string;
 const input = "w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100";
-const blank = (order: LoadingOrder) => ({
-  containerNumber: "", containerType: "40 FT" as (typeof CONTAINER_TYPES)[number], loadingDate: "", receivedDate: "",
+/** Local Sales and by-road bookings load trucks: the truck comes from the central Truck Registration (or is entered as temporary). */
+export const usesTruckLoading = (source: SalesLoadingSource, shippingMode: string) => source === "local" || /road|truck/i.test(shippingMode || "");
+const blank = (order: LoadingOrder, truck = false) => ({
+  containerNumber: "", containerType: (truck ? "Truck" : "40 FT") as (typeof CONTAINER_TYPES)[number], loadingDate: "", receivedDate: "",
   loadingCountry: order.loadingCountry, loadingPort: order.loadingPort, receivedCountry: order.receivedCountry,
   receivedPort: order.receivedPort, vessel: order.vessel, bl: order.bl, shippingLine: order.shippingLine,
   voyage: order.voyage, seal: "", vehicle: "", driver: "", driverMobile: "", flight: "", awb: "", rail: "", remarks: "",
+  truckRegistrationType: (truck ? "registered" : "") as "registered" | "temporary" | "", truckId: "", truckOwner: "", transportCompany: "",
   items: [] as { line: number; quantity: string; gross: string; net: string }[],
 });
 type Draft = ReturnType<typeof blank>;
+const truckValue = (c: Draft): TruckEntryValue => ({
+  truck_registration_type: c.truckRegistrationType === "temporary" ? "temporary" : "registered", truck_id: c.truckId, truck_number: c.vehicle,
+  truck_driver_name: c.driver, truck_driver_mobile: c.driverMobile, truck_owner_name: c.truckOwner, truck_transport_company: c.transportCompany,
+});
 function label(key: string, name: string): [string, string] { return [key, name]; }
 const operationalFields = {
   loadingDate: label("sales_loading.loading_date", "Loading Date"), receivedDate: label("sales_loading.received_date", "Actual Received Date"),
@@ -37,7 +45,8 @@ export function SalesLoadingEntry({ source = "booking", order, records, tt, onBa
 }) {
   const lang = useActiveLanguage();
   const direction = ["ur", "ar", "fa", "ps"].includes(lang) ? "rtl" : "ltr";
-  const [containers, setContainers] = useState<Draft[]>([blank(order)]);
+  const truckLoading = usesTruckLoading(source, order.shippingMode);
+  const [containers, setContainers] = useState<Draft[]>([blank(order, truckLoading)]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const progress = loadingProgress(order.goods, records);
@@ -52,6 +61,9 @@ export function SalesLoadingEntry({ source = "booking", order, records, tt, onBa
     setError("");
     if (saving) return;
     if (containers.some(c => c.items.length < 1)) { setError(tt("sales_loading.choose_line", "Select at least one goods line in every container.")); return; }
+    if (truckLoading && containers.some(c => c.truckRegistrationType === "registered" ? !c.truckId : !c.vehicle.trim())) {
+      setError(tt("sales_loading.truck_required", "Select a registered truck, or enter the temporary truck number, for every loading.")); return;
+    }
     setSaving(true);
     try {
       const payload = containers.map(c => ({ ...c, receivedDate: c.receivedDate || null, items: c.items.map(it => ({ ...it, quantity: +it.quantity, gross: +it.gross, net: +it.net })) }));
@@ -60,6 +72,7 @@ export function SalesLoadingEntry({ source = "booking", order, records, tt, onBa
       if (!res.ok || !data.ok) {
         const msg = data.error?.code === "OVERLOAD" ? tt("sales_loading.overload", "The quantity exceeds the remaining balance of a goods line.")
           : data.error?.code === "DUPLICATE_CONTAINER" ? tt("sales_loading.duplicate_container", "This container is already on this booking.")
+          : data.error?.code === "TRUCK_NOT_REGISTERED" ? tt("sales_loading.truck_not_registered", "The selected truck is not an active registered truck.")
           : tt("sales_loading.save_error", "Could not save loading. Check the fields and try again.");
         throw new Error(msg);
       }
@@ -85,12 +98,20 @@ export function SalesLoadingEntry({ source = "booking", order, records, tt, onBa
                 items: c.items.length === 1 && Number.isFinite(quantity) && quantity > 0 ? [{ ...c.items[0], quantity: String(quantity) }] : c.items,
               });
             }}/>
+            {truckLoading && <TruckEntryPicker langProp={lang} disabled={saving} value={truckValue(c)} onChange={next => patch(index, {
+              truckRegistrationType: next.truck_registration_type, truckId: next.truck_id, vehicle: next.truck_number.toUpperCase(),
+              driver: next.truck_driver_name, driverMobile: next.truck_driver_mobile, truckOwner: next.truck_owner_name, transportCompany: next.truck_transport_company,
+              // the truck number is the loading's reference unless a container number was typed separately
+              containerNumber: !c.containerNumber || c.containerNumber === c.vehicle.replace(/\s+/g, "") ? next.truck_number.toUpperCase().replace(/\s+/g, "") : c.containerNumber,
+              containerType: c.containerType === "40 FT" && !c.containerNumber ? "Truck" : c.containerType,
+            })}/>}
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="text-xs font-semibold">{tt("plrf.container_no_req", "Container Number *")}<Input autoComplete="off" required maxLength={160} value={c.containerNumber} onChange={e => patch(index, { containerNumber: e.target.value.toUpperCase() })} className={input}/></label>
-              <label className="text-xs font-semibold">{tt("sales_loading.container_type", "Container Type")}<select value={c.containerType} onChange={e => patch(index, { containerType: e.target.value as Draft["containerType"] })} className={input}>{CONTAINER_TYPES.map(v => <option key={v}>{v}</option>)}</select></label>
+              <label className="text-xs font-semibold">{truckLoading ? tt("sales_loading.truck_container_no", "Truck / Container No. *") : tt("plrf.container_no_req", "Container Number *")}<Input autoComplete="off" required maxLength={160} value={c.containerNumber} onChange={e => patch(index, { containerNumber: e.target.value.toUpperCase() })} className={input}/></label>
+              <label className="text-xs font-semibold">{tt("sales_loading.container_type", "Container Type")}<select value={c.containerType} onChange={e => patch(index, { containerType: e.target.value as Draft["containerType"] })} className={input}>{CONTAINER_TYPES.map(v => <option key={v} value={v}>{v === "Truck" ? tt("sales_loading.type_truck", "Truck") : v}</option>)}</select></label>
               {(Object.keys(operationalFields) as (keyof typeof operationalFields)[]).filter(k => {
                 const mode = order.shippingMode.toLowerCase();
-                if (["driver", "vehicle", "driverMobile"].includes(k)) return mode.includes("road") || !mode;
+                // with truck loading the Truck Registration picker above carries the truck, driver and mobile
+                if (["driver", "vehicle", "driverMobile"].includes(k)) return !truckLoading && (mode.includes("road") || !mode);
                 if (["flight", "awb"].includes(k)) return mode.includes("air") || !mode;
                 if (k === "rail") return mode.includes("rail") || !mode;
                 if (["shippingLine", "vessel", "bl", "voyage"].includes(k)) return mode.includes("sea") || !mode;
@@ -112,7 +133,7 @@ export function SalesLoadingEntry({ source = "booking", order, records, tt, onBa
             {containers.length > 1 && <Button type="button" variant="outline" size="sm" className="text-rose-600" onClick={() => setContainers(rows => rows.filter((_, i) => i !== index))}><Trash2 className="me-1 inline h-4 w-4"/>{tt("sales_loading.remove_container", "Remove Container")}</Button>}
           </fieldset>)}
           {error && <p role="alert" className="text-sm font-semibold text-rose-700">{error}</p>}
-          <div className="flex flex-wrap justify-between gap-3"><Button type="button" variant="outline" size="sm" disabled={saving || containers.length >= 30} onClick={() => setContainers(c => [...c, blank(order)])}><Plus className="h-4 w-4" aria-hidden="true"/>{tt("sales_loading.add_container", "Add Container")}</Button><Button type="submit" disabled={saving || progress.status === "loaded"} className="bg-emerald-700 text-white hover:bg-emerald-800">{saving ? tt("plrf.saving", "Saving…") : tt("plrf.save_loading", "Save Loading")}</Button></div>
+          <div className="flex flex-wrap justify-between gap-3"><Button type="button" variant="outline" size="sm" disabled={saving || containers.length >= 30} onClick={() => setContainers(c => [...c, blank(order, truckLoading)])}><Plus className="h-4 w-4" aria-hidden="true"/>{tt("sales_loading.add_container", "Add Container")}</Button><Button type="submit" disabled={saving || progress.status === "loaded"} className="bg-emerald-700 text-white hover:bg-emerald-800">{saving ? tt("plrf.saving", "Saving…") : tt("plrf.save_loading", "Save Loading")}</Button></div>
         </form>;
   const steps: LoadingWorkflowStep[] = [
     { id: "bill", label: tt("plrf.tab_bill_entry", "Bill Entry"), heading: tt("plrf.panel_bill_ro", "Bill Details (Read Only)"), icon: FileText, content: bill, nextLabel: tt("plrf.next_parties", "Next: Parties") },
