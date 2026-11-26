@@ -6,8 +6,8 @@ Prepared 2026-10-10. Everything marked **OWNER** needs a person with authority f
 | Item | Value | Source |
 |---|---|---|
 | Legal name | **DAMAAN GENERAL TRADING L.L.C** (dots included — exactly as on the D-U-N-S record) | D-U-N-S record 850005751 (confirmed 2026-11-26) |
-| Country / emirate / area | United Arab Emirates · Dubai · Al Ras, Deira | your message |
-| Office address | **Office No. 201, Al Ras – Deira, Dubai, AE** (use this exact text in every store form; the older "Al Hathoor/Hathboor Building, Office 2-01" wording is retired) | D-U-N-S record 850005751 |
+| Country / emirate / area | United Arab Emirates · Dubai · Al Ras – Deira | D-U-N-S record; all values in `company-identity.md` |
+| Office address | **Office No. 201, Al Ras – Deira, Dubai, United Arab Emirates** (use this exact text in every store form; the older "Al Hathoor/Hathboor Building, Office 2-01" wording is retired) | D-U-N-S record 850005751 |
 | D-U-N-S number | **850005751** · entity type Corporation | D&B record (owner, 2026-11-26) |
 | Trade licence no. | **1099620** — the ERP shows the same number, expiry **15 Sep 2027** | ERP company master |
 | Tax registration (TRN) | 104127559300001 (not needed for stores) | ERP |
@@ -17,7 +17,7 @@ Prepared 2026-10-10. Everything marked **OWNER** needs a person with authority f
 | Account owner on file | Asmatullah Abdullah (ERP owner field) | ERP |
 | Mail system | dgt.llc already has company mailboxes (Titan mail), so a company-domain address can be created | DNS check |
 
-**Settled 2026-11-26:** the D-U-N-S record (850005751) fixes the legal name as **DAMAAN GENERAL TRADING L.L.C** and the address as **Office No. 201, Al Ras – Deira, Dubai, AE**. Earlier drafts used "LLC" (no dots) and an "Al Hathoor / Hathboor Building, Office 2-01" address — do **not** use those in Apple, Google or Samsung forms; Apple compares the enrolment with the D-U-N-S record character by character. (The Android upload-key certificate subject says "DAMAAN GENERAL TRADING LLC"; it is never shown to users or checked by the stores, so it stays.)
+**Settled 2026-11-26:** the D-U-N-S record (850005751) fixes the legal name as **DAMAAN GENERAL TRADING L.L.C** and the address as **Office No. 201, Al Ras – Deira, Dubai, United Arab Emirates**. Earlier drafts used "LLC" (no dots) and an "Al Hathoor / Hathboor Building, Office 2-01" address — do **not** use those in Apple, Google or Samsung forms; Apple compares the enrolment with the D-U-N-S record character by character. (The Android upload-key certificate subject says "DAMAAN GENERAL TRADING LLC"; it is never shown to users or checked by the stores, so it stays.)
 
 ## 2. Still missing (OWNER)
 1. A scan of the **trade licence** (all pages) and the **owner/manager's passport or Emirates ID** — I do not have copies.
@@ -59,7 +59,7 @@ Passwords, 2-step codes and the signing key must never be sent through chat.
 
 ## 8. iPhone/iPad — remaining steps (no Mac needed: GitHub Actions builds on a cloud Mac)
 Full guide with links: `ios-requirements.md`; store texts, App Privacy, review notes: `app-store-connect.md`. Never paste a key, password or code into chat.
-1. **Enrol** the company in the Apple Developer Program (Organization, USD 99/yr) as **DAMAAN GENERAL TRADING L.L.C**, D-U-N-S **850005751**, address **Office No. 201, Al Ras – Deira, Dubai, AE** — https://developer.apple.com/programs/enroll/
+1. **Enrol** the company in the Apple Developer Program (Organization, USD 99/yr) as **DAMAAN GENERAL TRADING L.L.C**, D-U-N-S **850005751**, address **Office No. 201, Al Ras – Deira, Dubai, United Arab Emirates** — https://developer.apple.com/programs/enroll/
 2. Copy the **Team ID** (Membership details) — https://developer.apple.com/account
 3. **App Store Connect → Apps → +** New App `DGT.llc B`, bundle ID `com.dgtllc.b`, SKU `dgtllc-b` — https://appstoreconnect.apple.com/apps
 4. **API key:** Users and Access → Integrations → App Store Connect API → Team Keys → +, role **Admin**; note Key ID + Issuer ID, download the `.p8` once — https://appstoreconnect.apple.com/access/integrations/api

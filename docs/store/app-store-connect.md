@@ -1,7 +1,7 @@
 # App Store Connect — DGT.llc B (and BS): what to type in each field
 
 Prepared 2026-11-26. Build path: `docs/store/ios-requirements.md` (GitHub Actions → TestFlight, no Mac needed).
-Seller / company: **DAMAAN GENERAL TRADING L.L.C** · Office No. 201, Al Ras – Deira, Dubai, AE · D-U-N-S 850005751.
+Seller / company: **DAMAAN GENERAL TRADING L.L.C** · Office No. 201, Al Ras – Deira, Dubai, United Arab Emirates · D-U-N-S 850005751.
 
 ## 1. App Information
 | Field | Value |

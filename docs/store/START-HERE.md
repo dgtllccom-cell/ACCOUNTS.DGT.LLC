@@ -3,8 +3,8 @@
 Targets you asked for (subject to store approval): **Google Play 25–29 Oct · Samsung Galaxy Store end of October · Apple App Store early November.**
 Everything below is the critical path. Items marked **(you)** cannot be done by anyone else; I prepare everything else.
 
-## Step 1 — D-U-N-S number — **DONE: 850005751** (DAMAAN GENERAL TRADING L.L.C, Office No. 201, Al Ras – Deira, Dubai, AE, Corporation)
-Use that name and address character for character in every form below. The rest of this step is kept for reference only.
+## Step 1 — D-U-N-S number — **DONE: 850005751** (DAMAAN GENERAL TRADING L.L.C, Office No. 201, Al Ras – Deira, Dubai, United Arab Emirates, Corporation)
+Use that name and address character for character in every form below (all values: `company-identity.md`). The rest of this step is kept for reference only.
 **1a. Check if the company already has one**
 * D&B UAE directory / lookup (search by company name or trade licence number **1099620**): start at https://dnbuae.com and use the "DUNS number lookup", or the global directory https://www.dnb.com/duns-number/lookup.html
 * Apple's own lookup (needs any Apple ID, free): https://developer.apple.com/enroll/duns-lookup/ — search the **legal entity name exactly as on the licence**. If the company is listed, write the 9-digit number down. **Done — skip 1b.**
@@ -13,7 +13,7 @@ Use that name and address character for character in every form below. The rest 
 **1b. If it is not listed — request one (free through Apple's page, paid/faster through D&B UAE)**
 * Free route: on Apple's lookup page choose the option to **submit the company to Dun & Bradstreet**. Give: legal entity name (not a trade name), head-office address (Al Ras, Deira, Dubai), mailing address, your work contact. Keep the licence ready — D&B may call. **Up to 5 business days** (Apple says expediting does not shorten the free route); allow **+2 business days** for Apple to receive it.
 * Paid/faster route: D&B UAE (CRIF Gulf) registration form https://dnbuae.com/duns-number-registration-form/ · phone **+971 4 406 9900**. They ask for: trade licence copy, Memorandum of Association, shareholder/ownership details, Emirates ID of the authorised signatory, contact details, company stamp. Standard 5–30 business days; expedited about 3–5 business days at an extra charge.
-* Important: the name and address on the D-U-N-S record must match the trade licence **character for character** — settled: "DAMAAN GENERAL TRADING L.L.C", "Office No. 201, Al Ras – Deira, Dubai, AE".
+* Important: the name and address on the D-U-N-S record must match the trade licence **character for character** — settled: "DAMAAN GENERAL TRADING L.L.C", "Office No. 201, Al Ras – Deira, Dubai, United Arab Emirates".
 
 ## Step 2 — company e-mail addresses (today, ~10 minutes, **you** or whoever manages the dgt.llc mail)
 Create at least: `apple@dgt.llc`, `play@dgt.llc`, `support@dgt.llc` (the domain already has mailboxes). Apple will not accept Gmail for an organisation; Samsung and Google prefer a company address. Turn on 2-step verification for each.
@@ -27,7 +27,7 @@ Create at least: `apple@dgt.llc`, `play@dgt.llc`, `support@dgt.llc` (the domain 
 The person who registers becomes the permanent account owner — use the authorised director. Passwords and 2-step codes stay with you; never send them in chat.
 
 ## Step 4 — tell me (one short message)
-1. ~~D-U-N-S number~~ (done: 850005751). 2. ~~Licence spelling~~ (settled by the D-U-N-S record: "DAMAAN GENERAL TRADING L.L.C", "Office No. 201, Al Ras – Deira, Dubai, AE"). 3. Support e-mail and phone to show in the store. 4. When each registration is submitted (date) and any message the stores send ("needs more documents").
+1. ~~D-U-N-S number~~ (done: 850005751). 2. ~~Licence spelling~~ (settled by the D-U-N-S record: "DAMAAN GENERAL TRADING L.L.C", "Office No. 201, Al Ras – Deira, Dubai, United Arab Emirates"). 3. Support e-mail and phone to show in the store. 4. When each registration is submitted (date) and any message the stores send ("needs more documents").
 I will then put those details into every listing and keep the schedule current.
 
 ## Step 5 — decisions I need from you (a single yes/no each)

@@ -8,7 +8,7 @@ Apple only builds iOS apps on macOS. **The owner does not need a Mac:** the work
 GitHub-hosted Mac (`macos-latest`, current stable Xcode), builds the app, signs it automatically with an App Store Connect API key and
 uploads it to TestFlight. The local script `scripts/ios-build-apps.sh` still works for anyone who has a Mac.
 
-Company on every Apple form (exactly as on the D-U-N-S record): **DAMAAN GENERAL TRADING L.L.C** · **Office No. 201, Al Ras – Deira, Dubai, AE** ·
+Company on every Apple form (exactly as on the D-U-N-S record): **DAMAAN GENERAL TRADING L.L.C** · **Office No. 201, Al Ras – Deira, Dubai, United Arab Emirates** ·
 D-U-N-S **850005751** · Corporation.
 
 ## Owner guide — 6 steps (never paste a key, password or code into chat)
