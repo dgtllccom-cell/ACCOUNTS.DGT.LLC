@@ -363,6 +363,11 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     });
     if (claimRows !== null) {
       if (claimRows.length !== 1) {
+        // An older (pre-atomic) transfer posted the payment but never wrote the final status: say so plainly instead of
+        // "being transferred right now", so nobody retries a posting that already exists.
+        if (String(formData?.workflow?.transferPostedPaymentId || "").trim()) {
+          throw new ApiClientError("This booking was already posted to the Roznamcha; its status was not completed. Do not post it again; ask Accounts to review it.", { status: 409, code: "ALREADY_POSTED" });
+        }
         throw new ApiClientError("This booking has already been transferred or is being transferred right now.", { status: 409, code: "ALREADY_TRANSFERRED" });
       }
       claimedOrderId = params.id;
@@ -833,6 +838,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       paidAmount: existingPaid,
       remainingAmount: newRemainingSales,
       transferVerification: patch.form_data.transferVerification,
+      // which stock left which warehouse / lot in this posting — shown in the transfer report's confirmation notice
+      stockDeductionAudit: patch.form_data.stockDeductionAudit ?? null,
     };
 
     if (idempotencyKey && tenantHash) {
