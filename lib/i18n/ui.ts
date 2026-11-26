@@ -5040,6 +5040,8 @@ export type UiKey =
   | "lpdest.confirm_export"
   | "so.not_found"
   | "so.already_transferred_readonly"
+  | "so.bill_number_immutable"
+  | "so.bill_scope_immutable"
   | "branch.wizard_step1_title"
   | "branch.wizard_step1_desc"
   | "branch.wizard_step2_title"
@@ -19350,6 +19352,8 @@ const en: Dict = {
   "lpdest.confirm_export": "Confirm this bill has been handed over to the Export/Shipping module?",
   "so.not_found": "Sales order not found",
   "so.already_transferred_readonly": "This Sales Order has already been transferred and is read-only.",
+  "so.bill_number_immutable": "The original sales booking number cannot be changed.",
+  "so.bill_scope_immutable": "The issuing country and branches cannot be changed on an existing sales booking.",
   // Tax System
   "nav.tax": "Tax Setup & Rates",
   "nav.tax_settings": "Country Tax Settings",
@@ -46818,6 +46822,8 @@ const ur: Dict = {
   "lpdest.confirm_export": "کیا آپ تصدیق کرتے ہیں کہ یہ بل برآمد/شپنگ ماڈیول کے حوالے کر دیا گیا ہے؟",
   "so.not_found": "سیلز آرڈر نہیں ملا",
   "so.already_transferred_readonly": "یہ سیلز آرڈر پہلے ہی منتقل ہو چکا ہے اور صرف پڑھنے کے لیے ہے۔",
+  "so.bill_number_immutable": "اصل سیلز بکنگ نمبر تبدیل نہیں کیا جا سکتا۔",
+  "so.bill_scope_immutable": "موجودہ سیلز بکنگ کا جاری کرنے والا ملک اور برانچ تبدیل نہیں کی جا سکتی۔",
   // Tax System Urdu
   "nav.tax": "ٹیکس سیٹ اپ اور شرحیں",
   "nav.tax_settings": "ملکی ٹیکس سیٹنگز",
@@ -73866,6 +73872,8 @@ const ar: Dict = {
   "lpdest.confirm_export": "هل تؤكد تسليم هذه الفاتورة إلى وحدة التصدير/الشحن؟",
   "so.not_found": "أمر البيع غير موجود",
   "so.already_transferred_readonly": "تم بالفعل ترحيل أمر البيع هذا وهو للقراءة فقط.",
+  "so.bill_number_immutable": "لا يمكن تغيير رقم حجز المبيعات الأصلي.",
+  "so.bill_scope_immutable": "لا يمكن تغيير البلد والفروع المصدِرة لحجز مبيعات موجود.",
   // Tax System Arabic
   "nav.tax": "إعدادات الضرائب والنسب",
   "nav.tax_settings": "إعدادات ضرائب الدولة",
@@ -100904,6 +100912,8 @@ const fa: Dict = {
   "lpdest.confirm_export": "آیا تأیید می‌کنید که این صورتحساب به واحد صادرات/حمل‌ونقل تحویل داده شده است؟",
   "so.not_found": "سفارش فروش یافت نشد",
   "so.already_transferred_readonly": "این سفارش فروش قبلاً انتقال یافته و فقط قابل خواندن است.",
+  "so.bill_number_immutable": "شماره اصلی رزرو فروش قابل تغییر نیست.",
+  "so.bill_scope_immutable": "کشور و شعبه‌های صادرکننده یک رزرو فروش موجود قابل تغییر نیستند.",
   "nav.account_setup_report": "گزارش تنظیم حساب",
   "nav.account_type": "نوع حساب",
   "nav.account_categories": "دسته‌های حساب",
@@ -127985,6 +127995,8 @@ const ps: Dict = {
   "lpdest.confirm_export": "ایا تاسو تایید کوئ چې دا بېل د صادراتو/بار وړلو برخې ته سپارل شوی؟",
   "so.not_found": "د خرڅلاو امر ونه موندل شو",
   "so.already_transferred_readonly": "دا د خرڅلاو امر مخکې لېږدول شوی او یوازې د لوستلو وړ دی.",
+  "so.bill_number_immutable": "د پلور د بکینګ اصلي شمېره نشي بدلېدای.",
+  "so.bill_scope_immutable": "د موجوده پلور بکینګ صادرونکی هېواد او څانګې نشي بدلېدای.",
   "nav.account_setup_report": "د حساب تنظیم راپور",
   "nav.account_type": "د حساب ډول",
   "nav.account_categories": "د حسابونو کټګورۍ",

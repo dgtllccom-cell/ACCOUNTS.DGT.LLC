@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { releaseForOrder, reserveForOrder } from "@/lib/sales/managed-lot-sales";
+import { changesSalesBookingContent, isSalesBookingEditLocked } from "@/lib/sales/booking-edit-state";
 import { z } from "zod";
 import { ApiClientError, apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
@@ -166,6 +167,24 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const currentStatus = String((before as any).sales_status || "").toLowerCase();
     if (currentStatus === "transferred" || currentStatus === "finalized" || currentStatus === "completed") {
       return NextResponse.json({ ok: false, error: { message: t(session.preferredLanguage, "so.already_transferred_readonly", "This Sales Order has already been transferred and is read-only.") } }, { status: 400 });
+    }
+
+    // A posted, paid or in-transfer booking keeps its goods, amounts, accounts, number and branch (PR #237/#238): only
+    // status moves are allowed, so the ledger and the booking can never disagree.
+    if (changesSalesBookingContent(body as Record<string, unknown>) && isSalesBookingEditLocked(before)) {
+      throw new ApiClientError(t(session.preferredLanguage, "so.already_transferred_readonly", "This Sales Order is read-only."),
+        { status: 409, code: "SALES_BOOKING_EDIT_LOCKED" });
+    }
+    // A saved booking keeps its original number and its issuing country / branches.
+    if (body.salesOrderNo && (before as any).sales_order_no && body.salesOrderNo !== (before as any).sales_order_no) {
+      throw new ApiClientError(t(session.preferredLanguage, "so.bill_number_immutable", "The original sales booking number cannot be changed."), { status: 400, code: "SALES_BILL_NUMBER_IMMUTABLE" });
+    }
+    const sameScope = (incoming: unknown, saved: unknown) => incoming === undefined || (incoming || null) === (saved || null);
+    if (!sameScope(body.countryId, (before as any).country_id) || !sameScope(body.countryBranchId, (before as any).country_branch_id)
+      || !sameScope(body.cityBranchId, (before as any).city_branch_id)) {
+      throw new ApiClientError(t(session.preferredLanguage, "so.bill_scope_immutable", "The issuing country and branches cannot be changed on an existing sales booking."), {
+        status: 400, code: "SALES_BILL_SCOPE_IMMUTABLE"
+      });
     }
 
     authorizeApiScope(session, {
