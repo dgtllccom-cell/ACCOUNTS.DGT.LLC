@@ -271,3 +271,69 @@ it.each(["SB", "LS"] as const)("opens the matching Roznamcha fields and keeps th
   expect(form.getByPlaceholderText("Enter name")).toBeTruthy();
   expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
 });
+
+it.each([
+  ["SB", "stock"],
+  ["SB", "endorse"],
+  ["LS", "local"],
+] as const)("shows channel controls in the actual classic Advance row action for %s / %s", async (source, saleSource) => {
+  const payType = saleSource === "endorse" ? "Endorsement" : "Advance";
+  const { transferTrace: _unused, ...legacyData } = order(source, "LEGACY", payType, 30, 0).form_data;
+  const record = { ...order(source, "LEGACY", payType, 30, 0), form_data: {
+    ...legacyData, form: { ...legacyData.form, saleSource, saleType: saleSource }
+  } };
+  fetchMock.mockImplementation((url: string) => url.startsWith("/api/erp/sales/orders?")
+    ? body({ salesOrders: [record], nextCursor: null }) : body({ payments: [] }));
+  render(await AdvancePage({ searchParams: Promise.resolve({}) }));
+  const bill = await screen.findByRole("button", { name: `S#${source}-LEGACY` });
+  fireEvent.click(within(bill.closest("tr")!).getByRole("button", { name: "Row actions" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Payment Entry", exact: true }));
+  await screen.findByRole("heading", { name: /Payment Entry - PO/ });
+  const form = within(screen.getByLabelText("Roznamcha Type").closest("form")!);
+  const condition = form.getByLabelText("Payment Condition") as HTMLInputElement;
+  const type = form.getByLabelText("Roznamcha Type") as HTMLSelectElement;
+  const channel = form.getByLabelText("Payment Type / Channel") as HTMLSelectElement;
+  expect(condition.readOnly).toBe(true);
+  expect(condition.value).toBe(saleSource === "endorse" ? "Endorsement" : "Advance Payment");
+  expect(form.getByLabelText("Party Name")).toBeTruthy();
+  expect(form.getByLabelText("Mobile No.")).toBeTruthy();
+  expect(form.getByLabelText("Download ID")).toBeTruthy();
+  fireEvent.change(type, { target: { value: "bank_transfer" } });
+  expect(channel.value).toBe("bank_transfer");
+  expect(form.getByText(/Bank Transfer Details/)).toBeTruthy();
+  expect(form.queryByLabelText("Party Name")).toBeNull();
+  expect(condition.value).toBe(saleSource === "endorse" ? "Endorsement" : "Advance Payment");
+  fireEvent.change(channel, { target: { value: "cash" } });
+  expect(type.value).toBe("cash");
+  expect(form.getByLabelText("Party Name")).toBeTruthy();
+  expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
+});
+
+describe.each(["SB", "LS"] as const)("existing %s payment routes", source => {
+  it.each([
+    ["Credit Payment", "Credit", 0, 0, () => CreditPage()],
+    ["Remaining Payment", "Advance", 30, 30, () => RemainingPage({ searchParams: Promise.resolve({}) })],
+    ["Final Payment", "Credit", 0, 0, () => FinalPage()],
+  ] as const)("keeps the %s stage when opening the classic form", async (stage, method, advance, paid, page) => {
+    const original = order(source, "OLD", method, advance, paid);
+    // Classic balances are already expressed in the order total's currency.
+    if (stage === "Remaining Payment") Object.assign(original, { paid_amount: 115, remaining_amount: 252 });
+    const { transferTrace: _unused, ...oldData } = original.form_data;
+    fetchMock.mockImplementation((url: string) => url.startsWith("/api/erp/sales/orders?")
+      ? body({ salesOrders: [{ ...original, form_data: oldData }], nextCursor: null }) :
+        url.startsWith("/api/erp/sales/loading-records?") ? body({ records: [{
+          id: "test-loading", loading_status: "loaded", loading_record_no: "QA-01",
+          report_payload: { loadedQuantity: 1, netWeight: 20, grossWeight: 21, priceRateC1: 100 }
+        }] }) : body({ payments: [] }));
+    render(await page());
+    const bill = await screen.findByRole("button", { name: `S#${source}-OLD` });
+    fireEvent.click(within(bill.closest("tr")!).getByRole("button", { name: "Row actions" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Payment Entry", exact: true }));
+    fireEvent.click(await screen.findByRole("button", { name: "Open Existing Payment Form" }));
+    if (stage === "Remaining Payment") fireEvent.click(await screen.findByRole("button", { name: /Container #QA-01/ }));
+    const channel = await screen.findByLabelText("Payment Type / Channel") as HTMLSelectElement;
+    fireEvent.change(channel, { target: { value: "bank_transfer" } });
+    expect((screen.getByLabelText("Payment Condition") as HTMLInputElement).value).toBe(stage);
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
+  });
+});
