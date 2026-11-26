@@ -225,3 +225,27 @@ it("keeps a zero-balance bill visible for Final reconciliation without a payment
   expect(screen.queryByRole("button", { name: /payment entry/i })).toBeNull();
   expect(screen.queryByRole("dialog")).toBeNull();
 });
+
+it.each(["SB", "LS"] as const)("opens the matching Roznamcha fields and keeps the bill condition for %s", async source => {
+  render(await AdvancePage({ searchParams: Promise.resolve({}) }));
+  fireEvent.click(await screen.findByRole("button", { name: `Payment Entry ${source}-AD` }));
+  const form = within(await screen.findByRole("dialog", { name: "New Roznamcha Entry" }));
+  const condition = form.getByLabelText("Payment Condition") as HTMLInputElement;
+  const type = form.getByLabelText("Roznamcha Type") as HTMLSelectElement;
+  const channel = form.getByLabelText("Payment Type / Channel") as HTMLSelectElement;
+
+  expect(condition.readOnly).toBe(true);
+  expect(condition.value).toBe("Advance Payment");
+  expect([type.value, channel.value]).toEqual(["cash", "cash"]);
+  expect(form.getByPlaceholderText("Enter name")).toBeTruthy();
+  expect(form.queryByText("Bank Account", { exact: true })).toBeNull();
+  fireEvent.change(type, { target: { value: "bank" } });
+  expect([type.value, channel.value]).toEqual(["bank", "bank"]);
+  expect(form.getByText("Bank Account", { exact: true })).toBeTruthy();
+  expect(form.queryByPlaceholderText("Enter name")).toBeNull();
+  expect(condition.value).toBe("Advance Payment");
+  fireEvent.change(channel, { target: { value: "cash" } });
+  expect([type.value, channel.value]).toEqual(["cash", "cash"]);
+  expect(form.getByPlaceholderText("Enter name")).toBeTruthy();
+  expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
+});
