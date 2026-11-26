@@ -162,12 +162,19 @@ const StatusBar = registerPlugin<StatusBarPlugin>("StatusBar");
 
 export async function themeNativeStatusBar(isDark: boolean, brandColor = "#0f3ea8"): Promise<void> {
   if (!isNativeApp()) return;
-  try {
-    await StatusBar.setOverlaysWebView({ overlay: false });
-    await StatusBar.setStyle({ style: isDark ? "DARK" : "LIGHT" });
-    await StatusBar.setBackgroundColor({ color: isDark ? "#0b1220" : brandColor });
-  } catch {
-    /* StatusBar plugin not installed — ignore */
+  // Each call on its own: iOS does not implement every StatusBar method on every version, and one
+  // rejected call must not skip the others. Style "DARK" = light text (for the dark/brand background).
+  const calls: Array<() => Promise<void>> = [
+    () => StatusBar.setOverlaysWebView({ overlay: false }),
+    () => StatusBar.setStyle({ style: "DARK" }),
+    () => StatusBar.setBackgroundColor({ color: isDark ? "#0b1220" : brandColor }),
+  ];
+  for (const call of calls) {
+    try {
+      await call();
+    } catch {
+      /* method / plugin not available on this platform — ignore */
+    }
   }
 }
 
@@ -189,6 +196,9 @@ const Push = registerPlugin<PushPlugin>("PushNotifications");
  */
 export async function initPushNotifications(): Promise<void> {
   if (!isNativeApp()) return;
+  // Android needs a Firebase google-services.json before PushNotifications.register() is safe (without it the
+  // native call crashes the app). Until that file is added to android/app, push registration runs on iOS only (APNs).
+  if (nativePlatform() === "android") return;
   try {
     let perm = await Push.checkPermissions();
     if (perm.receive === "prompt" || perm.receive === "prompt-with-rationale") {

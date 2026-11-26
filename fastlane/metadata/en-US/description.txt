@@ -1,0 +1,10 @@
+DGT.llc B is the mobile front door to the DGT business ERP you already use on the computer. Sign in with your existing ERP account and open the business modules you are authorised for: accounts and ledgers, cash and roznamcha, purchase, sales, inventory and warehouses, customers and CRM, HR and general office, reports with print and PDF.
+
+• One ERP — the same data, login, permissions and country/branch limits as the web version; nothing is copied to the phone.
+• Five languages with full right-to-left layout: English, اردو, العربية, فارسی, پښتو.
+• Photograph invoices, contracts and other documents with the camera and attach them to ERP records.
+• Every phone is activated by your administrator before it can open the ERP.
+• Works on iPhone and iPad, portrait and landscape; a clear offline screen when there is no connection.
+• Secure HTTPS connection to the company ERP only. Accounts are issued by your administrator; there is no public sign-up.
+
+DGT.llc B is published by DAMAAN GENERAL TRADING L.L.C.

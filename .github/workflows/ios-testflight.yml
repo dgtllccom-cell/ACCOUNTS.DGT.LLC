@@ -1,0 +1,177 @@
+# iPhone / iPad build → TestFlight, on a GitHub-hosted Mac (no Mac needed by the owner).
+# Manual only: Actions → "iOS TestFlight" → Run workflow. Signing is automatic (Xcode cloud-managed) using an
+# App Store Connect API key; nothing secret is ever printed. Owner guide: docs/store/ios-requirements.md.
+#
+# Repository secrets (Settings → Secrets and variables → Actions):
+#   ASC_KEY_ID      Key ID of the App Store Connect API key (10 characters)
+#   ASC_ISSUER_ID   Issuer ID shown above the keys list (UUID)
+#   ASC_KEY_P8      full text of the downloaded AuthKey_XXXXXXXXXX.p8 file, including the BEGIN/END lines
+#   APPLE_TEAM_ID   Team ID of the Apple Developer organisation account (10 characters, Membership details)
+name: iOS TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "Which store app to build"
+        type: choice
+        options: [b, bs, both]
+        default: b
+      marketing_version:
+        description: "Version shown in the App Store (CFBundleShortVersionString), e.g. 1.0 — empty keeps the project value"
+        type: string
+        default: ""
+      upload:
+        description: "Upload the .ipa to App Store Connect / TestFlight (off = build + export only)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-testflight
+  cancel-in-progress: false
+
+jobs:
+  testflight:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      # CFBundleVersion must grow with every upload; the run number of this workflow does.
+      BUILD_NUMBER: ${{ github.run_number }}
+      MARKETING_VERSION_INPUT: ${{ inputs.marketing_version }}
+      APP_CHOICE: ${{ inputs.app }}
+    steps:
+      - name: Check required secrets
+        run: |
+          missing=()
+          for name in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 APPLE_TEAM_ID; do
+            if [ -z "${!name}" ]; then missing+=("$name"); fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            for name in "${missing[@]}"; do
+              echo "::error title=Missing secret::Repository secret $name is not set. Add it under Settings → Secrets and variables → Actions (see docs/store/ios-requirements.md)."
+            done
+            exit 1
+          fi
+          if ! printf '%s' "$ASC_KEY_P8" | grep -q 'BEGIN PRIVATE KEY'; then
+            echo "::error title=Invalid secret::ASC_KEY_P8 must contain the whole .p8 file text, including the -----BEGIN PRIVATE KEY----- line."
+            exit 1
+          fi
+          if ! [[ "$APPLE_TEAM_ID" =~ ^[A-Z0-9]{10}$ ]]; then
+            echo "::error title=Invalid secret::APPLE_TEAM_ID must be the 10-character Team ID (Membership details), not the D-U-N-S number or a name."
+            exit 1
+          fi
+          if [ -n "$MARKETING_VERSION_INPUT" ] && ! [[ "$MARKETING_VERSION_INPUT" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
+            echo "::error title=Invalid input::marketing_version must look like 1.0 or 1.0.1"
+            exit 1
+          fi
+          echo "All four secrets are present."
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - name: Xcode version
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Install the App Store Connect API key (file only, never printed)
+        run: |
+          key_dir="$HOME/.appstoreconnect/private_keys"
+          mkdir -p "$key_dir"
+          umask 077
+          printf '%s\n' "$ASC_KEY_P8" > "$key_dir/AuthKey_${ASC_KEY_ID}.p8"
+          chmod 600 "$key_dir/AuthKey_${ASC_KEY_ID}.p8"
+          echo "ASC_KEY_PATH=$key_dir/AuthKey_${ASC_KEY_ID}.p8" >> "$GITHUB_ENV"
+
+      - name: Point the apps at Production (store builds may use https://api.dgt.llc only)
+        run: node scripts/mobile-env.mjs production --release
+
+      - name: Build, sign and export
+        run: |
+          set -euo pipefail
+          mkdir -p build/ios
+          version_args=()
+          if [ -n "$MARKETING_VERSION_INPUT" ]; then version_args+=("MARKETING_VERSION=$MARKETING_VERSION_INPUT"); fi
+          auth_args=(-allowProvisioningUpdates
+                     -authenticationKeyPath "$ASC_KEY_PATH"
+                     -authenticationKeyID "$ASC_KEY_ID"
+                     -authenticationKeyIssuerID "$ASC_ISSUER_ID")
+          build_one() {
+            local key=$1 name=$2 bundle=$3 icon=$4
+            echo "::group::$name ($bundle) build $BUILD_NUMBER"
+            cp "mobile/generated/capacitor.${key}.json" capacitor.config.json
+            npx cap sync ios
+            xcodebuild archive -project ios/App/App.xcodeproj -scheme App -configuration Release \
+              -archivePath "build/ios/${key}.xcarchive" -destination 'generic/platform=iOS' \
+              "${auth_args[@]}" \
+              DEVELOPMENT_TEAM="$APPLE_TEAM_ID" CODE_SIGN_STYLE=Automatic \
+              PRODUCT_BUNDLE_IDENTIFIER="$bundle" APP_DISPLAY_NAME="$name" ASSETCATALOG_COMPILER_APPICON_NAME="$icon" \
+              CURRENT_PROJECT_VERSION="$BUILD_NUMBER" ${version_args[@]+"${version_args[@]}"}
+            cat > "build/ios/ExportOptions-${key}.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>teamID</key><string>${APPLE_TEAM_ID}</string>
+            <key>destination</key><string>export</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          PLIST
+            xcodebuild -exportArchive -archivePath "build/ios/${key}.xcarchive" -exportPath "build/ios/${key}-export" \
+              -exportOptionsPlist "build/ios/ExportOptions-${key}.plist" "${auth_args[@]}"
+            ls -l "build/ios/${key}-export"
+            echo "::endgroup::"
+          }
+          case "$APP_CHOICE" in
+            b)    build_one b  "DGT.llc B"  com.dgtllc.b  AppIcon ;;
+            bs)   build_one bs "DGT.llc BS" com.dgtllc.bs AppIcon-BS ;;
+            both) build_one b  "DGT.llc B"  com.dgtllc.b  AppIcon
+                  build_one bs "DGT.llc BS" com.dgtllc.bs AppIcon-BS ;;
+          esac
+
+      - name: Upload to TestFlight
+        if: ${{ inputs.upload }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          ipas=(build/ios/*-export/*.ipa)
+          if [ ${#ipas[@]} -eq 0 ]; then echo "::error::No .ipa was exported."; exit 1; fi
+          for ipa in "${ipas[@]}"; do
+            echo "Uploading $ipa (build $BUILD_NUMBER)…"
+            # altool finds the key in ~/.appstoreconnect/private_keys/AuthKey_<id>.p8
+            xcrun altool --upload-app --type ios --file "$ipa" \
+              --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID" --output-format normal
+          done
+          {
+            echo "### Uploaded to App Store Connect"
+            echo "Build **$BUILD_NUMBER** — processing takes ~5–30 min, then it appears under TestFlight → iOS builds."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the .ipa (7 days)
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa-${{ github.run_number }}
+          path: build/ios/*-export/*.ipa
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Remove the API key from the runner
+        if: ${{ always() }}
+        run: rm -rf "$HOME/.appstoreconnect/private_keys"

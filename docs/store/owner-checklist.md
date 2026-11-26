@@ -5,9 +5,10 @@ Prepared 2026-10-10. Everything marked **OWNER** needs a person with authority f
 ## 1. Company details we already have
 | Item | Value | Source |
 |---|---|---|
-| Legal name | DAMAAN GENERAL TRADING L.L.C (ERP record: "DAMAAN GENERAL TRADING L.L.C") | your message + ERP company master |
-| Country / emirate / area | United Arab Emirates · Dubai · Al Ras, Deira | your message |
-| Office address | Al Hathoor Building, Office 2-01, Al Ras, Deira, Dubai (ERP record: "Al **Hathboor** Building, Office No. **201**, Al Ras, Dubai – UAE") | your message + ERP |
+| Legal name | **DAMAAN GENERAL TRADING L.L.C** (dots included — exactly as on the D-U-N-S record) | D-U-N-S record 850005751 (confirmed 2026-11-26) |
+| Country / emirate / area | United Arab Emirates · Dubai · Al Ras – Deira | D-U-N-S record; all values in `company-identity.md` |
+| Office address | **Office No. 201, Al Ras – Deira, Dubai, United Arab Emirates** (use this exact text in every store form; the older "Al Hathoor/Hathboor Building, Office 2-01" wording is retired) | D-U-N-S record 850005751 |
+| D-U-N-S number | **850005751** · entity type Corporation | D&B record (owner, 2026-11-26) |
 | Trade licence no. | **1099620** — the ERP shows the same number, expiry **15 Sep 2027** | ERP company master |
 | Tax registration (TRN) | 104127559300001 (not needed for stores) | ERP |
 | Activities | General Trading, Import & Export | your message |
@@ -16,7 +17,7 @@ Prepared 2026-10-10. Everything marked **OWNER** needs a person with authority f
 | Account owner on file | Asmatullah Abdullah (ERP owner field) | ERP |
 | Mail system | dgt.llc already has company mailboxes (Titan mail), so a company-domain address can be created | DNS check |
 
-**Two details differ between your message and the ERP and must be checked against the paper trade licence before any registration:** (a) legal name "LLC" vs "L.L.C", (b) "Hathoor / Office 2-01" vs "Hathboor / Office No. 201". Google, Apple and D&B compare these character by character.
+**Settled 2026-11-26:** the D-U-N-S record (850005751) fixes the legal name as **DAMAAN GENERAL TRADING L.L.C** and the address as **Office No. 201, Al Ras – Deira, Dubai, United Arab Emirates**. Earlier drafts used "LLC" (no dots) and an "Al Hathoor / Hathboor Building, Office 2-01" address — do **not** use those in Apple, Google or Samsung forms; Apple compares the enrolment with the D-U-N-S record character by character. (The Android upload-key certificate subject says "DAMAAN GENERAL TRADING LLC"; it is never shown to users or checked by the stores, so it stays.)
 
 ## 2. Still missing (OWNER)
 1. A scan of the **trade licence** (all pages) and the **owner/manager's passport or Emirates ID** — I do not have copies.
@@ -56,8 +57,16 @@ Passwords, 2-step codes and the signing key must never be sent through chat.
 * Android: two signed release bundles (`DGTllc-B-release.aab`, `DGTllc-BS-release.aab`), signed release APKs for Samsung, rebuilt 2026-10-18 from current code — folder `B:\accounts.dgt.llc.code_project\mobile-builds\release-2026-10-18\` with `SHA256SUMS.txt` (older builds: `archive-2026-10-10-pre-ua-fix`).
 * Listings (5 languages), icons/feature graphics, privacy policy page, data-safety answers, iOS build script and requirements, Production deployment plan with backup/rollback, device-approval system (built and tested on DEV).
 
-## 8. iPhone/iPad — remaining steps (all need a Mac + Apple account)
-1. Create the Apple Developer organisation account (above). 2. Get a Mac (or cloud Mac: MacStadium / Codemagic / Xcode Cloud). 3. Create App IDs `com.dgtllc.b`, `com.dgtllc.bs` and the two App Store Connect records. 4. On the Mac run `APPLE_TEAM_ID=… bash scripts/ios-build-apps.sh all`. 5. Upload with Transporter → TestFlight → test on real iPhone/iPad. 6. Complete App Privacy, screenshots (6.9" iPhone, 13" iPad), reviewer login; submit. Details: `ios-requirements.md`.
+## 8. iPhone/iPad — remaining steps (no Mac needed: GitHub Actions builds on a cloud Mac)
+Full guide with links: `ios-requirements.md`; store texts, App Privacy, review notes: `app-store-connect.md`. Never paste a key, password or code into chat.
+1. **Enrol** the company in the Apple Developer Program (Organization, USD 99/yr) as **DAMAAN GENERAL TRADING L.L.C**, D-U-N-S **850005751**, address **Office No. 201, Al Ras – Deira, Dubai, United Arab Emirates** — https://developer.apple.com/programs/enroll/
+2. Copy the **Team ID** (Membership details) — https://developer.apple.com/account
+3. **App Store Connect → Apps → +** New App `DGT.llc B`, bundle ID `com.dgtllc.b`, SKU `dgtllc-b` — https://appstoreconnect.apple.com/apps
+4. **API key:** Users and Access → Integrations → App Store Connect API → Team Keys → +, role **Admin**; note Key ID + Issuer ID, download the `.p8` once — https://appstoreconnect.apple.com/access/integrations/api
+5. **4 GitHub secrets** `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` (whole `.p8` text), `APPLE_TEAM_ID` — https://github.com/dgtllccom-cell/ACCOUNTS.DGT.LLC/settings/secrets/actions
+6. **Run** Actions → *iOS TestFlight* → Run workflow (app `b`) — https://github.com/dgtllccom-cell/ACCOUNTS.DGT.LLC/actions/workflows/ios-testflight.yml
+7. **TestFlight:** wait for processing → Internal Testing → install the TestFlight app on iPhone/iPad → test.
+8. **Submit:** listing + App Privacy + screenshots (`docs/store/assets/ios/`) + review credentials/notes (needs the Production reviewer login and review pass you approve — `reviewer-accounts.md`) → Add for Review.
 
 ## 9. Submission and approval — what to expect
 | Store | Steps | Typical review time |
