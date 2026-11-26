@@ -17,6 +17,8 @@ export type PaymentRowLike = {
   currency_code?: string | null;
   exchange_rate?: number | string | null;
   base_currency_amount?: number | string | null;
+  /** Explicit amount allocated to the original Purchase Booking currency, not the amount posted to its local ledger. */
+  applied_purchase_amount?: number | string | null;
   posted_to_journal?: boolean | null;
   roznamcha_entry_id?: string | null;
   debit_ledger_id?: string | null;
@@ -30,16 +32,28 @@ const num = (v: unknown): number => {
 };
 const round4 = (n: number) => Math.round(n * 10000) / 10000;
 
+/** The allocation has no separate currency: callers must pass the persisted currency of its original Purchase Booking. */
+export function exactAppliedPurchaseAmount(row: Pick<PaymentRowLike, "applied_purchase_amount">, purchaseCurrency: string): number | null {
+  if (!/^[A-Z]{3}$/.test(String(purchaseCurrency || "").trim().toUpperCase())) return null;
+  const value = row.applied_purchase_amount;
+  if (value == null || (typeof value === "string" && !value.trim())) return null;
+  const amount = Number(value);
+  return Number.isFinite(amount) && amount >= 0 ? amount : null;
+}
+
 /**
  * One payment row expressed in the order's purchase currency — the same rule as the database function:
- * same currency → the amount as stored; otherwise the base-currency amount divided by the order's rate to base.
+ * use the explicitly allocated amount when present; for older rows, same currency → amount as stored;
+ * otherwise the base-currency amount divided by the order's rate to base.
  */
 export function paymentInPurchaseCurrency(
-  row: Pick<PaymentRowLike, "amount" | "currency_code" | "exchange_rate" | "base_currency_amount">,
+  row: Pick<PaymentRowLike, "amount" | "currency_code" | "exchange_rate" | "base_currency_amount" | "applied_purchase_amount">,
   purchaseCurrency: string,
   orderRateToBase: number
 ): number {
   const orderCcy = String(purchaseCurrency || "").trim().toUpperCase();
+  const applied = exactAppliedPurchaseAmount(row, orderCcy);
+  if (applied !== null) return applied;
   const payCcy = String(row.currency_code || orderCcy).trim().toUpperCase();
   const amount = num(row.amount);
   if (payCcy === orderCcy) return amount;

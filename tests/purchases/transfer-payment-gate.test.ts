@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { duplicateTransferReason, transferOutstanding } from "@/lib/services/purchase-lane-service";
+import { assertTransferPaymentSettled, duplicateTransferReason, transferOutstanding } from "@/lib/services/purchase-lane-service";
 
 describe("transfer payment gate: outstanding balance", () => {
   it("is zero only when the full bill is settled", () => {
@@ -30,5 +30,21 @@ describe("transfer duplicate guard", () => {
   it("refuses a second transfer to the same destination", () => {
     const already = { ...fresh, lane_status: "assigned", transfer_destination: "self_managed", owner_country_branch_id: null, owner_city_branch_id: null, owner_agent_id: null, owner_user_id: null };
     expect(duplicateTransferReason(already, req, target)).toMatch(/already at this destination/);
+  });
+});
+
+describe("Purchase Booking transfer settlement", () => {
+  const loading = { source_type: "purchase_booking", purchase_order_id: "po", id: "loading" };
+  const order = { id: "po", purchase_order_no: "PB-EXACT", currency_code: "USD", country_currency: "AED", exchange_rate: 3.6725,
+    order_total: 367.25, total_goods_original: 100, form_data: { form: { totalAmount: 100, currency: "USD", exchangeRate: 3.6725 } } };
+  const row = (kind: string, applied: number) => ({ kind, status: "posted", amount: applied * 3.8, currency_code: "AED", applied_purchase_amount: applied,
+    posted_to_journal: true, roznamcha_entry_id: "R", debit_ledger_id: "D", credit_ledger_id: "C" });
+  const tx = (payments: unknown[]) => async (parts: TemplateStringsArray) => parts.join("?").includes("from public.purchase_orders") ? [order] : payments;
+
+  it("counts exact advance once; 50 USD is not full settlement of 100 USD", async () => {
+    await expect(assertTransferPaymentSettled(tx([row("advance", 50)]) as never, loading))
+      .rejects.toThrow(/still has 50\.00 USD unpaid/);
+    await expect(assertTransferPaymentSettled(tx([row("advance", 50), row("remaining", 50)]) as never, loading))
+      .resolves.toBeUndefined();
   });
 });

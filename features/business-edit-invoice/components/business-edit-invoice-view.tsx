@@ -13,6 +13,8 @@ import { localizeCountryName } from "@/lib/i18n/country-names";
 import { printStore } from "@/lib/store/print-store";
 import { apiGet } from "@/lib/api/client";
 import { UniversalPrintActionButton } from "@/components/reports/universal-print-action-button";
+import { salesInvoiceReceiptHref } from "@/lib/sales/payment-workflow";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { Th } from "@/components/ui/translated-th";
 
 type SessionInfo = {
@@ -32,7 +34,7 @@ type Line = {
   originalUnitPrice?: number | null; originalAmount?: number | null; documentUnitPrice?: number | null; documentAmount?: number | null;
 };
 type Invoice = {
-  id: string; invoiceNo: string; sourceModule: string; originalBillNo?: string | null; originalManualBillNo?: string | null;
+  id: string; invoiceNo: string; sourceModule: string; sourceId?: string; sourceTable?: string; originalBillNo?: string | null; originalManualBillNo?: string | null;
   originalCurrency?: string | null; originalTotalValue?: number | null; docType: string; documentNo?: string | null;
   documentDate?: string | null; documentCurrency?: string | null; documentExchangeRate?: number | null;
   documentTotalValue?: number | null; partyName?: string | null; destination?: string | null; incoterms?: string | null;
@@ -52,6 +54,18 @@ const DOC_TYPES = ["commercial_invoice", "proforma_invoice", "export_invoice", "
 const MODULES = ["purchase_booking", "sales_booking", "local_purchase", "local_sales"] as const;
 const fmt = (n?: number | null) => (n == null ? "0.00" : Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 const fmtD = (d?: string | null) => (d ? String(d).slice(0, 10) : "");
+
+function SalesInvoicePaymentAction({ invoice, lang, compact = false }: { invoice: Invoice; lang: string; compact?: boolean }) {
+  const href = salesInvoiceReceiptHref(invoice);
+  const label = translateHeader(lang, "Payment Entry");
+  return href ? (
+    <Link href={href} aria-label={label} title={label}
+      className={compact ? "rounded p-1 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-slate-800" :
+        "inline-flex items-center gap-1 rounded-lg bg-blue-700 px-2.5 py-1.5 font-bold text-white hover:bg-blue-800"}>
+      <Plus className="h-3.5 w-3.5" aria-hidden="true" />{!compact && label}
+    </Link>
+  ) : null;
+}
 
 type PinnedSalesBill = { id: string; module: string; billNo: string };
 
@@ -564,6 +578,7 @@ export function BusinessEditInvoiceView({ lang: langProp, salesBill }: { lang?: 
                       </td>
                       <td className="px-3 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1 text-slate-400">
+                          <SalesInvoicePaymentAction invoice={r} lang={s.lang} compact />
                           <button
                             type="button"
                             onClick={() => setOpenId(r.id)}
@@ -833,6 +848,7 @@ function InvoiceEditor({ s, id, onClose }: { s: Screen; id: string; onClose: () 
           <button type="button" onClick={() => void preview()} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 font-bold hover:bg-slate-50 dark:border-slate-700">
             <Printer className="h-3.5 w-3.5" />{s.t("print_pdf", "Print / PDF")}
           </button>
+          <SalesInvoicePaymentAction invoice={inv} lang={s.lang} />
           {inv.isManager && inv.status !== "finalized" && <button type="button" onClick={() => void setStatus("finalized")} className="rounded-lg bg-emerald-600 px-2.5 py-1 font-bold text-white">{s.t("finalize", "Finalize")}</button>}
           {inv.isManager && inv.status === "finalized" && <button type="button" onClick={() => void setStatus("draft")} className="rounded-lg border border-amber-300 px-2.5 py-1 font-bold text-amber-700">{s.t("reopen", "Reopen")}</button>}
         </div>
