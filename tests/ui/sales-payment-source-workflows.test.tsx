@@ -157,9 +157,31 @@ it.each([
     expect(screen.queryByRole("button", { name: `S#${source}-ZERO` })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: `Payment Entry ${source}-CENT` }));
     const entry = await screen.findByRole("dialog", { name: "New Roznamcha Entry" });
-    const balance = within(entry).getByText("Outstanding Balance");
+    const form = within(entry);
+    const balance = form.getByText("Outstanding Balance");
     expect(balance.parentElement?.textContent).toMatch(/(?:AED\s*0\.01|0\.01\s*AED)/);
-    fireEvent.click(within(entry).getByRole("button", { name: "Close" }));
+    const type = form.getByLabelText("Roznamcha Type") as HTMLSelectElement;
+    const channel = form.getByLabelText("Payment Type / Channel") as HTMLSelectElement;
+    const condition = form.getByLabelText("Payment Condition") as HTMLInputElement;
+    const locked = lane === "cash" || lane === "account-transfer";
+    expect(condition.value).toBe(lane === "credit" ? "Credit Payment" : "Remaining Payment");
+    expect(condition.readOnly).toBe(true);
+    expect([type.disabled, channel.disabled]).toEqual([locked, locked]);
+    expect([type.value, channel.value]).toEqual(Array(2).fill(lane === "account-transfer" ? "bank" : "cash"));
+    if (!locked) {
+      fireEvent.change(type, { target: { value: "bank" } });
+      expect(channel.value).toBe("bank");
+      expect(form.getByText("Bank Account", { exact: true })).toBeTruthy();
+      expect(form.queryByPlaceholderText("Enter name")).toBeNull();
+      expect(condition.value).toBe(lane === "credit" ? "Credit Payment" : "Remaining Payment");
+    } else if (lane === "cash") {
+      expect(form.getByPlaceholderText("Enter name")).toBeTruthy();
+      expect(form.queryByText("Bank Account", { exact: true })).toBeNull();
+    } else {
+      expect(form.getByText("Bank Account", { exact: true })).toBeTruthy();
+      expect(form.queryByPlaceholderText("Enter name")).toBeNull();
+    }
+    fireEvent.click(form.getByRole("button", { name: "Close" }));
   }
   expect(moduleHeader.mock.calls.at(-1)?.[0]).toEqual(expect.arrayContaining([
     expect.objectContaining({ id: "LS-CENT", due: 0.01, paid: 366.99, total: 367, currency: "AED", settled: false }),
@@ -224,4 +246,28 @@ it("keeps a zero-balance bill visible for Final reconciliation without a payment
   expect(await screen.findByText(/No payment transactions posted yet/)).toBeTruthy();
   expect(screen.queryByRole("button", { name: /payment entry/i })).toBeNull();
   expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+it.each(["SB", "LS"] as const)("opens the matching Roznamcha fields and keeps the bill condition for %s", async source => {
+  render(await AdvancePage({ searchParams: Promise.resolve({}) }));
+  fireEvent.click(await screen.findByRole("button", { name: `Payment Entry ${source}-AD` }));
+  const form = within(await screen.findByRole("dialog", { name: "New Roznamcha Entry" }));
+  const condition = form.getByLabelText("Payment Condition") as HTMLInputElement;
+  const type = form.getByLabelText("Roznamcha Type") as HTMLSelectElement;
+  const channel = form.getByLabelText("Payment Type / Channel") as HTMLSelectElement;
+
+  expect(condition.readOnly).toBe(true);
+  expect(condition.value).toBe("Advance Payment");
+  expect([type.value, channel.value]).toEqual(["cash", "cash"]);
+  expect(form.getByPlaceholderText("Enter name")).toBeTruthy();
+  expect(form.queryByText("Bank Account", { exact: true })).toBeNull();
+  fireEvent.change(type, { target: { value: "bank" } });
+  expect([type.value, channel.value]).toEqual(["bank", "bank"]);
+  expect(form.getByText("Bank Account", { exact: true })).toBeTruthy();
+  expect(form.queryByPlaceholderText("Enter name")).toBeNull();
+  expect(condition.value).toBe("Advance Payment");
+  fireEvent.change(channel, { target: { value: "cash" } });
+  expect([type.value, channel.value]).toEqual(["cash", "cash"]);
+  expect(form.getByPlaceholderText("Enter name")).toBeTruthy();
+  expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
 });
