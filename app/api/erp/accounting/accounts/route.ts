@@ -14,6 +14,8 @@ import { storableLinkedMaster } from "@/lib/services/account-linked-masters";
 import { allowedRowDomains, sqlRowDomainCondition } from "@/lib/permissions/domain-scope";
 import { accountNeedsApprovalChain, initialChainState } from "@/lib/approval/account-approval-chain";
 
+import { alRasDemoReference, demoBranchCode, demoCountry, demoRowSchema } from "@/lib/accounts-demo-import";
+
 function isUuid(value: string | null | undefined) {
   return Boolean(
     value &&
@@ -591,6 +593,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const demoRef = body.manualReferenceNumber?.toUpperCase() ?? "";
+    const reservedDemoRef = alRasDemoReference.test(demoRef);
+    if (reservedDemoRef) {
+      if (!session.isSuperAdmin || requestedDomain !== "business") {
+        throw new ApiClientError("Only Business-authorized Super Admins may create these demo accounts.", { status: 403, code: "DEMO_FORBIDDEN" });
+      }
+      demoRowSchema.parse({ reference: demoRef, name: body.name, category: body.category });
+      if (body.manualReferenceNumber !== demoRef || body.scope !== "city_branch" || body.code !== "AUTO" ||
+          !body.countryId || !body.countryBranchId || !body.cityBranchId || !body.addressCountryId ||
+          body.currency !== "AED" || body.openingBalance !== 0 || body.isControlAccount ||
+          body.kind !== (body.category === "P/S" ? "income" : "asset") ||
+          (body.status && body.status !== "active") || body.customerId || body.parentId || body.companyId ||
+          body.companyIds.length || body.linkedCompanies.length || body.bankId || body.bankIds.length ||
+          body.linkedBanks.length || body.warehouseId || body.warehouseIds.length || body.shippingLineId ||
+          body.linkedCountries.length || body.contacts.length) {
+        throw new ApiClientError("The demo account does not match the authorized Business branch, zero balance, or basic-account fields.", { status: 400, code: "DEMO_FIELDS" });
+      }
+    }
+
     const supabase = await createApiSupabaseClient();
     const issuedCode =
       body.code.trim().toUpperCase() === "AUTO"
@@ -645,6 +666,35 @@ export async function POST(request: NextRequest) {
           throw new ApiClientError(
             "The authenticated user has no profile record. Ask an administrator to provision the user before creating an account."
           );
+        }
+
+        if (reservedDemoRef) {
+          // Serialize all writers using this reference, not only the bulk caller.
+          await tx`select pg_advisory_xact_lock(hashtext(${"account_demo_ref:" + demoRef}));`;
+          const duplicate = await tx`
+            select 1 from public.enterprise_accounts
+            where upper(btrim(manual_reference_number)) = ${demoRef}
+            limit 1
+          `;
+          if (duplicate.length) {
+            throw new ApiClientError("This demo reference already exists; preview it again before retrying.", { status: 409, code: "DEMO_REFERENCE_EXISTS" });
+          }
+          const targets = await tx`
+            select cb.id
+            from public.city_branches cb
+            join public.countries operating on operating.id = cb.country_id
+            join public.countries address on address.id = ${body.addressCountryId}::uuid
+            where cb.id = ${body.cityBranchId}::uuid
+              and cb.country_branch_id = ${body.countryBranchId}::uuid
+              and cb.country_id = ${body.countryId}::uuid
+              and upper(cb.code) = ${demoBranchCode} and upper(cb.local_currency) = 'AED'
+              and cb.status = 'active' and cb.deleted_at is null
+              and upper(operating.iso2) = 'AE' and operating.deleted_at is null
+              and upper(address.iso2) = ${demoCountry(demoRef)} and address.deleted_at is null
+          `;
+          if (targets.length !== 1) {
+            throw new ApiClientError("The approved branch or separate address country is unavailable.", { status: 400, code: "DEMO_TARGET" });
+          }
         }
 
         // 1. Resolve Country Code from master
@@ -1142,6 +1192,11 @@ export async function POST(request: NextRequest) {
         })
         .catch((err) => console.error("Failed to register new account name translations (local-pg path):", err));
       return apiCreated(localPgResult);
+    }
+
+    // Without the PostgreSQL transaction there is no protected demo retry path.
+    if (reservedDemoRef) {
+      throw new ApiClientError("Demo import requires the transactional PostgreSQL connection.", { status: 503, code: "DEMO_DB_REQUIRED" });
     }
 
     // Verify the actorId exists in the profiles table
