@@ -674,6 +674,9 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     const effectiveRoznamchaExchangeRate = bodyRate;
 
     if (orderRow.order_type === "local_purchase") {
+      // The bill conversion rate is used above to apply the payment to the
+      // bill. Tender already in the branch's base currency posts at rate 1.
+      const journalRate = localCcy && bodyCcy === localCcy ? 1 : effectiveRoznamchaExchangeRate;
       // ONE transaction: journal entry + payment row + balance update succeed or fail together (they used to be three separate auto-commits,
       // so a failure midway could leave a posted journal with no payment record).
       const { paymentId } = (await withLocalPg(async (pg) => pg.begin(async (sql) => {
@@ -681,7 +684,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
         if (orderRow.city_branch_id) rozType = "branch";
         else if (orderRow.country_branch_id || orderRow.country_id) rozType = "country";
 
-        const baseAmount = Number(body.amount) * effectiveRoznamchaExchangeRate;
+        const baseAmount = Number(body.amount) * journalRate;
         const lines = [
           {
             ledgerId: resolvedDebitLedgerId,
@@ -690,7 +693,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
             debit: Number(body.amount),
             credit: 0,
             currency: bodyCcy,
-            exchangeRate: effectiveRoznamchaExchangeRate
+            exchangeRate: journalRate
           },
           {
             ledgerId: resolvedCreditLedgerId,
@@ -699,7 +702,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
             debit: 0,
             credit: Number(body.amount),
             currency: bodyCcy,
-            exchangeRate: effectiveRoznamchaExchangeRate
+            exchangeRate: journalRate
           }
         ];
 
@@ -759,7 +762,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
             ${body.entryDate}::date,
             ${body.amount},
             ${body.currencyCode},
-            ${effectiveRoznamchaExchangeRate},
+            ${journalRate},
             ${resolvedDebitLedgerId}::uuid,
             ${resolvedCreditLedgerId}::uuid,
             ${roznamchaEntryId}::uuid,
