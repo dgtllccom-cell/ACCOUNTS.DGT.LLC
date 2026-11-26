@@ -576,14 +576,21 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       `;
 
       if (plannedReceipt) {
+        // Verify the persisted journal and both currencies inside the posting
+        // transaction. Equal numbers on different or missing currencies are
+        // not a balanced receipt, and an unposted journal cannot issue a copy.
+        if (!journalRecord || journalRecord.status !== "posted" || journalRecord.deleted_at) {
+          throw new ApiClientError("The linked Roznamcha receipt is not posted.", { status: 409, code: "SALES_RECEIPT_JOURNAL_UNVERIFIED" });
+        }
         assertBalancedPostedLines({
           label: postingAssertionLabel, lines: journalLines, expectedDebitLedgerId: resolvedDebitLedgerId,
           expectedCreditLedgerId: resolvedCreditLedgerId, expectedAmount: plannedReceipt.postingAmount, expectedExchangeRate: 1,
         });
         if (paymentRecord?.status !== "posted" || String(paymentRecord.currency_code).toUpperCase() !== plannedReceipt.currency
           || Number(paymentRecord.amount) !== plannedReceipt.postingAmount
-          || journalLines.some((line: { debit: unknown; credit: unknown }) =>
-            Number(line.debit || 0) + Number(line.credit || 0) !== plannedReceipt.postingAmount)) {
+          || journalLines.some((line: { debit: unknown; credit: unknown; currency?: unknown }) =>
+            String(line.currency || "").trim().toUpperCase() !== plannedReceipt.currency
+            || Number(line.debit || 0) + Number(line.credit || 0) !== plannedReceipt.postingAmount)) {
           throw new ApiClientError("Receipt did not post in the approved final currency.", { status: 409, code: "SALES_RECEIPT_SETTLEMENT_MISMATCH" });
         }
         await sql`update public.sales_orders set paid_amount = ${plannedReceipt.paid}, remaining_amount = ${plannedReceipt.remaining},

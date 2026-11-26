@@ -885,18 +885,26 @@ function NestedPaymentHistory({
   }, [row.id, currentLanguage]);
 
   const form = row.form_data?.form || {};
+  const frozenSettlement = row.form_data?.transferTrace?.settlement;
+  const approved = reviewedSalesSettlement(frozenSettlement);
+  const frozenForeign = reviewedSalesReceiptCurrencies(frozenSettlement)?.foreign;
   const purchaseCurrency = String(
+    frozenForeign?.currency || approved?.currency ||
     form.currencyType ||
     form.currency ||
     row.currency_code ||
     row.form_data?.goodsEntries?.[0]?.purchaseCurrency ||
     "USD"
   ).toUpperCase();
-  const orderExchangeRate = Number(row.exchange_rate || form.exchangeRate || form.usdRate || 1) || 1;
-  const totalPrice = row.form_data?.goodsEntries?.length
-    ? row.form_data.goodsEntries.reduce((sum: number, g: any) => sum + Number(g.totalAmount || g.amount || 0), 0)
-    : Number(form.totalAmount || row.order_total || 0);
-  const totalPurchaseLocal = totalPrice * orderExchangeRate;
+  // The reviewed receipt's persisted exchange_rate is deliberately 1: it
+  // was already posted in base currency. Use the original bill ratio instead.
+  const orderExchangeRate = approved ? (frozenForeign ? approved.final / approved.original : 1)
+    : (Number(row.exchange_rate || form.exchangeRate || form.usdRate || 1) || 1);
+  const totalPrice = approved ? (frozenForeign ? approved.original : approved.final)
+    : row.form_data?.goodsEntries?.length
+      ? row.form_data.goodsEntries.reduce((sum: number, g: any) => sum + Number(g.totalAmount || g.amount || 0), 0)
+      : Number(form.totalAmount || row.order_total || 0);
+  const totalPurchaseLocal = approved?.final ?? totalPrice * orderExchangeRate;
   const advancePercent = Number(form.advancePercent || 0);
   const totalRequiredAdvanceFC = (totalPrice * advancePercent) / 100;
   
@@ -912,20 +920,31 @@ function NestedPaymentHistory({
 
   let runningPaidForeign = 0;
   let runningPaidLocal = 0;
+  let allReceiptAmountsKnown = true;
 
   const computedHistory = chronological.map((p: any) => {
     const drLedger = ledgers.find((l) => ledgerId(l) === p.debit_ledger_id);
     const crLedger = ledgers.find((l) => ledgerId(l) === p.credit_ledger_id);
-    const localCurrency = (ledgerCurrency(drLedger) || ledgerCurrency(crLedger) || baseCurrency).toUpperCase();
+    const localCurrency = approved?.currency ?? (ledgerCurrency(drLedger) || ledgerCurrency(crLedger) || baseCurrency).toUpperCase();
 
-    const paymentCurrency = String(p.currency_code || purchaseCurrency).toUpperCase();
-    const rate = Number(p.exchange_rate || orderExchangeRate || 1) || 1;
+    const paymentCurrency = String(p.currency_code || (approved ? "" : purchaseCurrency)).toUpperCase();
+    const rate = approved ? orderExchangeRate : (Number(p.exchange_rate || orderExchangeRate || 1) || 1);
     const rawAmount = Number(p.amount || 0);
     const storedLocalAmount = Number(p.local_currency_amount || p.base_currency_amount || 0);
 
     let amtForeign = 0;
     let amtLocal = 0;
-    if (paymentCurrency === purchaseCurrency) {
+    const amountKnown = !approved || (Number.isFinite(rawAmount) && rawAmount > 0 &&
+      (paymentCurrency === approved.currency || (Boolean(frozenForeign) && paymentCurrency === purchaseCurrency)));
+    if (approved) {
+      if (amountKnown && paymentCurrency === approved.currency) {
+        amtLocal = rawAmount;
+        amtForeign = rawAmount / rate;
+      } else if (amountKnown) {
+        amtForeign = rawAmount;
+        amtLocal = rawAmount * rate;
+      }
+    } else if (paymentCurrency === purchaseCurrency) {
       amtForeign = rawAmount;
       amtLocal = storedLocalAmount || rawAmount * rate;
     } else if (paymentCurrency === localCurrency || paymentCurrency === baseCurrency.toUpperCase()) {
@@ -936,8 +955,12 @@ function NestedPaymentHistory({
       amtLocal = storedLocalAmount || rawAmount * rate;
     }
 
-    runningPaidForeign += amtForeign;
-    runningPaidLocal += amtLocal;
+    if (amountKnown) {
+      runningPaidForeign += amtForeign;
+      runningPaidLocal += amtLocal;
+    } else {
+      allReceiptAmountsKnown = false;
+    }
 
     // Remaining balance is calculated in purchase currency first, then converted to local currency.
     const remainingForeign = Math.max(0, totalPrice - runningPaidForeign);
@@ -950,6 +973,9 @@ function NestedPaymentHistory({
       ...p,
       purchaseCurrency,
       paymentCurrency,
+      amountKnown,
+      rawAmount,
+      balancesKnown: allReceiptAmountsKnown,
       exchangeRateUsed: rate,
       amtForeign,
       amtLocal,
@@ -966,7 +992,14 @@ function NestedPaymentHistory({
 
   const latestPaymentState = computedHistory[computedHistory.length - 1];
   const historyWithBalance = [...computedHistory].reverse();
-  const calcs = resolvePurchaseCalculations(row);
+  const legacyCalcs = resolvePurchaseCalculations(row);
+  const calcs = approved ? {
+    ...legacyCalcs, purchCurr: purchaseCurrency, finalCurr: approved.currency, exRate: orderExchangeRate,
+    totalPurchaseFC: totalPrice, totalPurchaseLC: totalPurchaseLocal,
+    advanceAmountFC: totalRequiredAdvanceFC, advanceAmountLC: totalRequiredAdvanceFC * orderExchangeRate,
+    remainingPurchaseFC: Math.max(0, totalPrice - totalRequiredAdvanceFC),
+    remainingPurchaseLC: Math.max(0, totalPurchaseLocal - totalRequiredAdvanceFC * orderExchangeRate),
+  } : legacyCalcs;
   const statementRate = Number(latestPaymentState?.exchangeRateUsed || orderExchangeRate || calcs.exRate || 1) || 1;
 
   // Determine stage context based on activeMode (advance, remaining, credit)
@@ -1111,10 +1144,10 @@ function NestedPaymentHistory({
             {translateHeader(currentLanguage, "Total Received / Paid")}
           </div>
           <div className="mt-0.5 font-mono text-xs font-black text-emerald-600 dark:text-emerald-400">
-            {money(totalPaidForeign, purchaseCurrency)}
+            {allReceiptAmountsKnown ? money(totalPaidForeign, purchaseCurrency) : "—"}
           </div>
           <div className="text-[11px] font-semibold text-slate-500">
-            Local: {money(totalPaidLocal, calcs.finalCurr)}
+            Local: {allReceiptAmountsKnown ? money(totalPaidLocal, calcs.finalCurr) : "—"}
           </div>
         </div>
 
@@ -1129,10 +1162,10 @@ function NestedPaymentHistory({
               stageBalanceForeign <= 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
             )}
           >
-            {stageBalanceForeign <= 0.01 ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
+            {!allReceiptAmountsKnown ? "—" : stageBalanceForeign <= 0.01 ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
           </div>
           <div className="text-[11px] font-semibold text-slate-500">
-            Local: {stageBalanceLocal <= 0.01 ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
+            Local: {!allReceiptAmountsKnown ? "—" : stageBalanceLocal <= 0.01 ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
           </div>
         </div>
 
@@ -1313,29 +1346,29 @@ function NestedPaymentHistory({
                       <div className="font-bold text-slate-800 dark:text-slate-200">{money(requiredTargetForeign, p.purchaseCurrency)}</div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
-                      <div className="font-bold text-emerald-600 dark:text-emerald-400">{money(p.runningPaidForeign, p.purchaseCurrency)}</div>
-                      <div className="text-[11px] text-slate-400">Entry: {money(p.amtForeign, p.purchaseCurrency)}</div>
+                      <div className="font-bold text-emerald-600 dark:text-emerald-400">{p.balancesKnown ? money(p.runningPaidForeign, p.purchaseCurrency) : "—"}</div>
+                      <div className="text-[11px] text-slate-400">Entry: {p.amountKnown ? money(p.amtForeign, p.purchaseCurrency) : p.paymentCurrency && Number.isFinite(p.rawAmount) ? money(p.rawAmount, p.paymentCurrency) : "—"}</div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
                       <div className={cn("font-bold", remainingTargetForeign <= 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
-                        {remainingTargetForeign <= 0.01 ? "Cleared" : money(remainingTargetForeign, p.purchaseCurrency)}
+                        {!p.balancesKnown ? "—" : remainingTargetForeign <= 0.01 ? "Cleared" : money(remainingTargetForeign, p.purchaseCurrency)}
                       </div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-center font-mono text-slate-600 align-top dark:border-slate-800">
                       <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold dark:bg-slate-800 whitespace-nowrap">
-                        {Number(p.exchangeRateUsed || 1).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                        {p.amountKnown ? Number(p.exchangeRateUsed || 1).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : "—"}
                       </span>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
                       <div className="font-bold text-slate-800 dark:text-slate-200">{money(requiredTargetLocal, p.localCurrency)}</div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
-                      <div className="font-bold text-emerald-600 dark:text-emerald-400">{money(p.runningPaidLocal, p.localCurrency)}</div>
-                      <div className="text-[11px] text-slate-400">Entry: {money(p.amtLocal, p.localCurrency)}</div>
+                      <div className="font-bold text-emerald-600 dark:text-emerald-400">{p.balancesKnown ? money(p.runningPaidLocal, p.localCurrency) : "—"}</div>
+                      <div className="text-[11px] text-slate-400">Entry: {p.amountKnown ? money(p.amtLocal, p.localCurrency) : "—"}</div>
                     </td>
                     <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
                       <div className={cn("font-bold", remainingTargetLocal <= 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
-                        {remainingTargetLocal <= 0.01 ? "Cleared" : money(remainingTargetLocal, p.localCurrency)}
+                        {!p.balancesKnown ? "—" : remainingTargetLocal <= 0.01 ? "Cleared" : money(remainingTargetLocal, p.localCurrency)}
                       </div>
                     </td>
                     <td className="px-2.5 py-1.5 text-center align-top">
@@ -1352,20 +1385,20 @@ function NestedPaymentHistory({
                   Total Settled to Date:
                 </td>
                 <td className="px-2.5 py-1.5 text-right text-emerald-600 dark:text-emerald-400">
-                  {money(totalPaidForeign, purchaseCurrency)}
+                  {allReceiptAmountsKnown ? money(totalPaidForeign, purchaseCurrency) : "—"}
                 </td>
                 <td className="px-2.5 py-1.5 text-right text-rose-600 dark:text-rose-400">
-                  {stageBalanceForeign <= 0.01 ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
+                  {!allReceiptAmountsKnown ? "—" : stageBalanceForeign <= 0.01 ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
                 </td>
                 <td className="px-2.5 py-1.5 text-center text-slate-400">⇄</td>
                 <td className="px-2.5 py-1.5 text-right text-slate-400">
                   {money(stageRequiredLocal, calcs.finalCurr)}
                 </td>
                 <td className="px-2.5 py-1.5 text-right text-emerald-600 dark:text-emerald-400">
-                  {money(totalPaidLocal, calcs.finalCurr)}
+                  {allReceiptAmountsKnown ? money(totalPaidLocal, calcs.finalCurr) : "—"}
                 </td>
                 <td className="px-2.5 py-1.5 text-right text-rose-600 dark:text-rose-400">
-                  {stageBalanceLocal <= 0.01 ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
+                  {!allReceiptAmountsKnown ? "—" : stageBalanceLocal <= 0.01 ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
                 </td>
                 <td></td>
               </tr>
@@ -4603,18 +4636,7 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
                     <div className="flex flex-col items-center justify-center gap-2">
                       <FileSpreadsheet className="h-10 w-10 opacity-30" />
                       <span>{t("no_payment_records_found", currentLanguage)}</span>
-                      {activeMode === "remaining" ? (
-                        <div className="max-w-md text-center">
-                          <span className="text-[11px] text-amber-500 font-bold block">
-                            {tGlobal(currentLanguage, "pay.remaining_workflow_warning", "Warning: Workflow Rule: Remaining Payment requires Transfer to Loading first.")}
-                          </span>
-                          <span className="text-[11px] text-slate-400 block mt-1">
-                            {tGlobal(currentLanguage, "pay.remaining_workflow_steps", "Orders only appear here after: Booking â Advance Payment â Transfer to Loading â Loading Confirmation. Ensure the order has been transferred to loading before making a remaining payment.")}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-[11px] text-slate-400">{t("try_adjusting_filters", currentLanguage)}</span>
-                      )}
+                      <span className="text-[11px] text-slate-400">{t("try_adjusting_filters", currentLanguage)}</span>
                     </div>
                   </td>
                 </tr>

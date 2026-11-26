@@ -3,14 +3,14 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/erp/sales/orders/[id]/payments/route";
 import { ApiClientError } from "@/lib/api/response";
 
-const m = vi.hoisted(() => ({ query: vi.fn(), authorize: vi.fn() }));
+const m = vi.hoisted(() => ({ query: vi.fn(), authorize: vi.fn(), commit: vi.fn() }));
 vi.mock("@/lib/auth/session", () => ({ requireErpSession: async () => ({ userId: "test-user" }) }));
 vi.mock("@/lib/api/scope-middleware", () => ({ authorizeApiScope: m.authorize }));
 vi.mock("@/lib/supabase/config", () => ({ isSupabaseConfigured: () => true }));
 vi.mock("@/lib/services/form-serials", () => ({ allocateFormSerials: vi.fn() }));
 vi.mock("@/lib/api/idempotency", () => ({
   acquireIdempotencyLock: async () => ({ acquired: true, idempotencyKey: "mock", tenantHash: "mock" }),
-  commitIdempotencySuccess: vi.fn(async () => undefined), releaseIdempotencyLock: vi.fn(async () => undefined),
+  commitIdempotencySuccess: m.commit, releaseIdempotencyLock: vi.fn(async () => undefined),
   buildReplayedResponse: vi.fn(),
 }));
 vi.mock("@/lib/db/local-postgres", () => {
@@ -86,7 +86,7 @@ it("posts a finalized Local Sales invoice through one balanced Roznamcha receipt
     if (sql.includes("from public.business_edit_invoices")) return [{ id: invoice }];
     if (sql.includes("select post_sales_booking_transfer")) return [{ id: invoice }];
     if (sql.includes("from roznamcha_lines")) return [
-      { ledger_id: dr, debit: 73.4, credit: 0 }, { ledger_id: cr, debit: 0, credit: 73.4 },
+      { ledger_id: dr, debit: 73.4, credit: 0, currency: "AED" }, { ledger_id: cr, debit: 0, credit: 73.4, currency: "AED" },
     ];
     if (sql.includes("from roznamcha_entries")) return [{ id, status: "posted", voucher_no: "V-LOCAL-1", entry_category: "cash", source_reference_no: "T", super_admin_serial_number: "T-01", country_transaction_serial_number: "T-AE-01", branch_transaction_serial_number: "T-DXB-01" }];
     if (sql.includes("from sales_order_payments")) return [voucher];
@@ -131,9 +131,9 @@ it("records the selected Bank / Cheque master reference without copying the full
     if (sql.includes("from public.banks")) return [{ id: invoice, bank_name: "QA Bank", account_number: "QA1200078834" }];
     if (sql.includes("select post_sales_booking_transfer")) return [{ id: invoice }];
     if (sql.includes("from roznamcha_lines")) return [
-      { ledger_id: dr, debit: 73.4, credit: 0 }, { ledger_id: cr, debit: 0, credit: 73.4 },
+      { ledger_id: dr, debit: 73.4, credit: 0, currency: "AED" }, { ledger_id: cr, debit: 0, credit: 73.4, currency: "AED" },
     ];
-    if (sql.includes("from roznamcha_entries")) return [{ id, super_admin_serial_number: "T-01", country_transaction_serial_number: "T-AE-01", branch_transaction_serial_number: "T-DXB-01" }];
+    if (sql.includes("from roznamcha_entries")) return [{ id, status: "posted", super_admin_serial_number: "T-01", country_transaction_serial_number: "T-AE-01", branch_transaction_serial_number: "T-DXB-01" }];
     if (sql.includes("from sales_order_payments")) return [voucher];
     return [];
   });
@@ -167,4 +167,36 @@ it("blocks collecting an existing advance twice or applying more than the bill's
   const duplicate = await send({ kind: "advance", salesInvoiceId: undefined, amount: 1 });
   expect((await duplicate.json()).error.code).toBe("SALES_RECEIPT_QUEUE_MISMATCH");
   expect(m.query.mock.calls.flat().join(" ")).not.toContain("select post_sales_booking_transfer");
+});
+
+
+it.each([
+  { status: "draft", deleted_at: null, debitCurrency: "AED", creditCurrency: "AED", code: "SALES_RECEIPT_JOURNAL_UNVERIFIED" },
+  { status: "posted", deleted_at: "2026-11-25", debitCurrency: "AED", creditCurrency: "AED", code: "SALES_RECEIPT_JOURNAL_UNVERIFIED" },
+  { status: "posted", deleted_at: null, debitCurrency: "USD", creditCurrency: "AED", code: "SALES_RECEIPT_SETTLEMENT_MISMATCH" },
+  { status: "posted", deleted_at: null, debitCurrency: "AED", creditCurrency: null, code: "SALES_RECEIPT_SETTLEMENT_MISMATCH" },
+])("fails in the transaction before updating the original balance when stored voucher verification returns $code", async fixture => {
+  m.query.mockImplementation(async (sql: string, values: unknown[]) => {
+    if (sql.includes("pg_try_advisory_xact_lock")) return [{ got: true }];
+    if (sql.includes("from ledgers")) return [{ id: values[0], currency: "AED", is_active: true }];
+    if (sql.includes("from sales_orders")) return [base];
+    if (sql.includes("from public.business_edit_invoices")) return [{ id: invoice }];
+    if (sql.includes("select post_sales_booking_transfer")) return [{ id: invoice }];
+    if (sql.includes("from roznamcha_lines")) return [
+      { ledger_id: dr, debit: 73.4, credit: 0, currency: fixture.debitCurrency },
+      { ledger_id: cr, debit: 0, credit: 73.4, currency: fixture.creditCurrency },
+    ];
+    if (sql.includes("from roznamcha_entries")) return [{ id, status: fixture.status, deleted_at: fixture.deleted_at }];
+    if (sql.includes("from sales_order_payments")) return [{
+      id: invoice, sales_order_id: id, roznamcha_entry_id: id, currency_code: "AED", amount: 73.4, status: "posted",
+    }];
+    return [];
+  });
+  const response = await send();
+  expect(response.status).toBe(409);
+  expect((await response.json()).error.code).toBe(fixture.code);
+  const statements = m.query.mock.calls.map(([sql]) => sql);
+  expect(statements.filter(sql => sql.includes("select post_sales_booking_transfer"))).toHaveLength(1);
+  expect(statements.some(sql => sql.includes("update public.sales_orders set paid_amount"))).toBe(false);
+  expect(m.commit).not.toHaveBeenCalled();
 });
