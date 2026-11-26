@@ -54,6 +54,7 @@ type Props = {
   disabled: boolean; busy: boolean; canSave: boolean; notice?: ReactNode;
   countryId?: string;
   method: "cash" | "bank";
+  paymentCondition: "Advance Payment" | "Credit Payment" | "Remaining Payment" | "Final Payment";
   methodLocked: boolean;
   cash: { name: string; mobile: string; idDocument: string };
   bank: { id: string; label: string; account: string; mode: string };
@@ -71,6 +72,10 @@ export function LinkedSalesRoznamchaForm(p: Props) {
     value !== null && Number.isFinite(value) && currency ? `${currency} ${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—";
   const foreign = p.receiptInputCurrency === p.foreignCurrency?.currency ? p.foreignCurrency : null;
   const posting = financial(p.postingAmount, p.currency);
+  const channelLocked = lock || p.methodLocked;
+  const onChannel = (value: string) => {
+    if (!channelLocked && (value === "cash" || value === "bank") && value !== p.method) p.onMethod(value);
+  };
   return <>
     {p.notice}
     <section className="mt-2.5 rounded-xl border border-slate-200/80 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-800/40">
@@ -85,16 +90,10 @@ export function LinkedSalesRoznamchaForm(p: Props) {
     <div className="mt-2.5 grid grid-cols-1 items-start gap-3 lg:grid-cols-12">
       <div className="space-y-2 lg:col-span-8">
         <Step number={1} icon={<Layers className="h-4 w-4"/>} title={tr("cef.step1_setup", "Category & Entry Setup")}>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             <Field label={h("Category")}><Value value={h("Sales Payments")}/></Field>
             <Field label={tr("cef.reference_voucher", "Reference / Voucher No.")}>
               {p.method === "bank" ? <Value value={p.reference}/> : <input className={field} disabled={lock} aria-label={h("Receipt Reference")} maxLength={140} value={p.reference} onChange={e => p.onReference(e.target.value)}/>}
-            </Field>
-            <Field label={tr("cef.entry_type", "Entry Type")}>
-              <select className={field} disabled={lock || p.methodLocked} value={p.method} onChange={e => p.onMethod(e.target.value === "bank" ? "bank" : "cash")}>
-                {(p.method === "cash" || !p.methodLocked) && <option value="cash">{h("Cash Roznamcha")}</option>}
-                {(p.method === "bank" || !p.methodLocked) && <option value="bank">{h("Bank")} / {tr("cef.opt_cheque", "Cheque")}</option>}
-              </select>
             </Field>
             <Field label={h("Currency")}>
               <select className={field} aria-label={h("Currency")} disabled={lock || !p.foreignCurrency} value={p.receiptInputCurrency} onChange={e => p.onCurrency(e.target.value)}>
@@ -110,6 +109,23 @@ export function LinkedSalesRoznamchaForm(p: Props) {
           </select></Field>
         </Step>
         <Step number={3} icon={<User className="h-4 w-4"/>} title={p.method === "bank" ? tr("cj.mBankDetails", "Bank Details") : tr("rvp.party_details", "Party / Payee Details")}>
+          <div className="mb-2 grid grid-cols-1 gap-2 rounded-lg bg-slate-50 p-2 sm:grid-cols-3 dark:bg-slate-900/70">
+            <Field label={h("Roznamcha Type")}>
+              <select className={field} disabled={channelLocked} value={p.method} onChange={e => onChannel(e.currentTarget.value)}>
+                <option value="cash">{h("Cash Roznamcha")}</option>
+                <option value="bank">{h("Bank")} / {tr("cef.opt_cheque", "Cheque")}</option>
+              </select>
+            </Field>
+            <Field label={tr("pjt.payment_condition", "Payment Condition")}>
+              <Value value={h(p.paymentCondition)}/>
+            </Field>
+            <Field label={tr("pjt.payment_type_channel", "Payment Type / Channel")}>
+              <select className={field} disabled={channelLocked} value={p.method} onChange={e => onChannel(e.currentTarget.value)}>
+                <option value="cash">{h("Cash in Hand")}</option>
+                <option value="bank">{h("Bank Transfer / TT")}</option>
+              </select>
+            </Field>
+          </div>
           {p.method === "cash" ? (
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <Field label={tr("cef.party_name", "Party Name")}>

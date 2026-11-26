@@ -4770,6 +4770,9 @@ export function SalesOrderPaymentJournal({ mode = "advance", receiptQueue, invoi
             party={reviewedParty}
             countryId={selected.country_id ?? undefined}
             method={reviewedChannel}
+            paymentCondition={selectedLinkedStage?.kind === "advance" ? "Advance Payment" :
+              selectedLinkedStage?.kind === "credit" || activeMode === "credit" ? "Credit Payment" :
+              activeMode === "final" ? "Final Payment" : "Remaining Payment"}
             methodLocked={Boolean(paymentQueue)}
             cash={reviewedDraft.cash}
             bank={reviewedDraft.bank}
