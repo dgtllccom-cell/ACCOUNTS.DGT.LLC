@@ -683,10 +683,10 @@ export async function POST(request: NextRequest) {
             select cb.id
             from public.city_branches cb
             join public.countries operating on operating.id = cb.country_id
-            join public.countries address on address.id = ${body.addressCountryId}::uuid
-            where cb.id = ${body.cityBranchId}::uuid
-              and cb.country_branch_id = ${body.countryBranchId}::uuid
-              and cb.country_id = ${body.countryId}::uuid
+            join public.countries address on address.id = ${body.addressCountryId ?? null}::uuid
+            where cb.id = ${body.cityBranchId ?? null}::uuid
+              and cb.country_branch_id = ${body.countryBranchId ?? null}::uuid
+              and cb.country_id = ${body.countryId ?? null}::uuid
               and upper(cb.code) = ${demoBranchCode} and upper(cb.local_currency) = 'AED'
               and cb.status = 'active' and cb.deleted_at is null
               and upper(operating.iso2) = 'AE' and operating.deleted_at is null
