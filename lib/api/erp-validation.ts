@@ -1,3 +1,4 @@
+import { isExactPurchaseAppliedAmount } from "@/lib/purchases/payment-request";
 import { z } from "zod";
 import { approvalActions, approvalStatuses } from "@/lib/approval/approval-actions";
 import { paymentEntryTypes, roznamchaTypes } from "@/lib/accounting/roznamcha-flow";
@@ -390,7 +391,8 @@ export const purchaseOrderCreateSchema = scopeSchema.extend({
 });
 
 export const purchaseOrderUpdateSchema = purchaseOrderCreateSchema.partial().extend({
-  // Allow adjusting totals and details on draft orders.
+  expectedUpdatedAt: z.string().datetime({ offset: true }),
+  editReason: z.string().trim().min(1).max(500),
   supplierCompanyId: optionalUuidSchema,
   currencyCode: currencyCodeSchema.optional(),
   exchangeRate: z.coerce.number().finite().positive().optional(),
@@ -401,6 +403,9 @@ export const purchaseOrderPaymentPostSchema = scopeSchema.extend({
   kind: purchaseOrderPaymentKindSchema,
   entryDate: z.string().date(),
   amount: z.coerce.number().finite().positive(),
+  purchaseAppliedAmount: z.number().finite().positive().refine(isExactPurchaseAppliedAmount, {
+    message: "Use an original bill amount with up to four decimal places."
+  }).optional(),
   currencyCode: currencyCodeSchema.default("USD"),
   exchangeRate: z.coerce.number().finite().positive().default(1),
   debitLedgerId: uuidSchema,

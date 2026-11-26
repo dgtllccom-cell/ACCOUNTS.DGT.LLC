@@ -163,19 +163,20 @@ type RemarkProps = {
   suggestion?: string;
   document: boolean;
   editable: boolean;
-  onSave?: (kind: BookingReportRemarkKind, value: string) => Promise<void>;
+  onSave?: (kind: BookingReportRemarkKind, value: string) => Promise<void | false>;
   lang: string;
   rows?: number;
 };
 
 function RemarkBox({ kind, label, value, suggestion = "", document, editable, onSave, lang, rows = 2 }: RemarkProps) {
   const saved = value.trim();
-  // nothing saved yet: start from the auto draft so one click on Save keeps it
-  const initial = saved ? value : suggestion;
-  const [draft, setDraft] = useState(initial);
-  const [editing, setEditing] = useState(!saved);
+  // The suggestion stays live until someone writes their own note. A refreshed
+  // bill or language may change the suggestion, but neither may replace typing.
+  const [editedDraft, setEditedDraft] = useState<string | null>(null);
+  const draft = editedDraft ?? (saved ? value : suggestion);
+  const [editing, setEditing] = useState(false);
   const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  useEffect(() => { setDraft(saved ? value : suggestion); setEditing(!saved); }, [value, suggestion, saved]);
+  const textarea = useRef<HTMLTextAreaElement>(null);
 
   const header = (
     <div className="flex items-center justify-between gap-2">
@@ -205,7 +206,7 @@ function RemarkBox({ kind, label, value, suggestion = "", document, editable, on
   }
 
   // a saved report reads as a written note; Edit opens it again
-  if (saved && !editing) {
+  if (saved && !editing && editedDraft === null) {
     return (
       <div className="mt-auto space-y-1.5 border-t border-dashed border-slate-200 pt-2 dark:border-slate-700" data-testid={`remark-card-${kind}`}>
         {header}
@@ -234,12 +235,13 @@ function RemarkBox({ kind, label, value, suggestion = "", document, editable, on
     <div className="mt-auto space-y-1 border-t border-dashed border-slate-200 pt-2 dark:border-slate-700">
       <label htmlFor={`pbrep-remark-${kind}`} className="block">{header}</label>
       <textarea
+        ref={textarea}
         id={`pbrep-remark-${kind}`}
         data-testid={`remark-${kind}`}
         value={draft}
         rows={Math.max(rows, 3)}
         disabled={!editable || state === "saving"}
-        onChange={(e) => { setDraft(e.target.value); setState("idle"); }}
+        onChange={(e) => { setEditedDraft(e.currentTarget.value); setState("idle"); }}
         placeholder={t(lang, "pbrep.remark_ph", "Type remarks here…")}
         className={cn(
           "w-full resize-y rounded-lg border p-2 text-[11px] font-medium leading-relaxed text-slate-900 outline-none focus:border-sky-500 disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100",
@@ -255,7 +257,7 @@ function RemarkBox({ kind, label, value, suggestion = "", document, editable, on
         {saved && editable && (
           <button
             type="button"
-            onClick={() => { setDraft(value); setEditing(false); setState("idle"); }}
+            onClick={() => { setEditedDraft(null); setEditing(false); setState("idle"); }}
             className="inline-flex h-7 items-center rounded-md px-2 text-[11px] font-bold text-slate-500 hover:text-slate-800"
           >
             {t(lang, "common.cancel", "Cancel")}
@@ -266,9 +268,22 @@ function RemarkBox({ kind, label, value, suggestion = "", document, editable, on
           data-testid={`remark-save-${kind}`}
           disabled={!editable || !dirty || !draft.trim() || state === "saving" || !onSave}
           onClick={async () => {
-            if (!onSave) return;
+            // Capture the editor's displayed text before the fresh bill read
+            // or any subsequent report refresh.
+            const note = (textarea.current?.value ?? draft).trim();
+            if (!editable || !onSave || !note || note === saved || state === "saving") return;
             setState("saving");
-            try { await onSave(kind, draft.trim()); setState("saved"); setEditing(false); } catch { setState("error"); }
+            try {
+              if (await onSave(kind, note) === false) {
+                setState("idle");
+                return;
+              }
+              setEditedDraft(null);
+              setState("saved");
+              setEditing(false);
+            } catch {
+              setState("error");
+            }
           }}
           className="inline-flex h-7 items-center gap-1 rounded-md bg-emerald-600 px-3 text-[11px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
         >
@@ -286,7 +301,7 @@ export interface PurchaseBookingReportBodyProps {
   lang: string;
   /** "document" = the fixed A4 page (View / Print): fixed columns, remarks as text */
   mode?: "screen" | "document";
-  onSaveRemark?: (kind: BookingReportRemarkKind, value: string) => Promise<void>;
+  onSaveRemark?: (kind: BookingReportRemarkKind, value: string) => Promise<void | false>;
 }
 
 export function PurchaseBookingReportBody({ data, lang, mode = "screen", onSaveRemark }: PurchaseBookingReportBodyProps) {
@@ -688,7 +703,7 @@ export function PurchaseBookingReportScreen({
     const res = await doFetch(`/api/erp/purchases/orders/${encodeURIComponent(orderId)}?lang=${encodeURIComponent(lang)}`, { credentials: "same-origin" });
     const payload = await res.json().catch(() => ({}));
     const order = payload?.data?.order ?? payload?.order ?? null;
-    if (!res.ok || !order) throw new Error("load failed");
+    if (!res.ok || !order || String(order.id).toLowerCase() !== orderId.toLowerCase()) throw new Error("load failed");
     return order as AnyRec;
   }, [orderId, doFetch, lang]);
 
@@ -704,7 +719,8 @@ export function PurchaseBookingReportScreen({
     return () => { alive = false; };
   }, [orderId, load, reloadToken]);
 
-  const source = orderId ? record : draftRecord ?? null;
+  // Do not show or edit the old bill's note while a different bill is loading.
+  const source = orderId ? (record && String(record.id).toLowerCase() === orderId.toLowerCase() ? record : null) : draftRecord ?? null;
   const data = useMemo(() => buildPurchaseBookingReport(source, { userName, userRole }), [source, userName, userRole]);
   const fdForm = (source?.form_data && typeof source.form_data === "object" ? source.form_data.form : null) || {};
   const scopeIds = [
@@ -723,15 +739,17 @@ export function PurchaseBookingReportScreen({
     // re-read the saved row so only this one remark changes (never a stale copy of amounts / accounts)
     const fresh = await load();
     if (!fresh) throw new Error("load failed");
+    const editReason = window.prompt(t(lang, "purchase.booking_edit_reason", "Enter the reason for this booking correction."))?.trim();
+    if (!editReason) return false as const;
     const res = await doFetch(`/api/erp/purchases/orders/${encodeURIComponent(orderId)}`, {
       method: "PATCH",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(remarkPatchBody(fresh, kind, value)),
+      body: JSON.stringify({ ...remarkPatchBody(fresh, kind, value), expectedUpdatedAt: fresh.updated_at, editReason }),
     });
     const payload = await res.json().catch(() => ({}));
     if (!res.ok || payload?.ok === false) throw new Error("save failed");
-    setRecord({ ...fresh, form_data: remarkPatchBody(fresh, kind, value).formData });
+    setRecord((current) => current?.id === fresh.id ? { ...fresh, updated_at: payload?.data?.updated_at ?? fresh.updated_at, form_data: remarkPatchBody(fresh, kind, value).formData } : current);
   }, [orderId, doFetch, load]);
 
   const steps: { id: BookingWizardStep; label: string }[] = [
@@ -794,7 +812,7 @@ export function PurchaseBookingReportScreen({
         ))}
       </ol>
 
-      {loading && !record ? (
+      {orderId && !source && (loading || !loadError) ? (
         <div className="flex items-center justify-center gap-2 p-12 text-sm font-semibold text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> {t(lang, "common.loading", "Loading...")}</div>
       ) : loadError ? (
         <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-700">{t(lang, "pbrep.load_failed", "Could not load this booking. Please try again.")}</p>
@@ -805,7 +823,7 @@ export function PurchaseBookingReportScreen({
               <User className="h-3.5 w-3.5" /> {t(lang, "pbrep.unsaved_note", "Not saved yet — this report shows the booking being entered. Save it to keep remarks.")}
             </p>
           )}
-          <PurchaseBookingReportBody data={data} lang={lang} onSaveRemark={orderId ? saveRemark : undefined} />
+          <PurchaseBookingReportBody key={orderId || "unsaved"} data={data} lang={lang} onSaveRemark={orderId ? saveRemark : undefined} />
         </>
       )}
 

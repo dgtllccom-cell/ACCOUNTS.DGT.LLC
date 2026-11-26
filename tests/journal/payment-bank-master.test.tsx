@@ -26,3 +26,25 @@ it("uses scoped Settings masters and retains the selected bank UUID without an I
   expect(screen.queryByText(/IBAN|BRM|Bank Account/i)).toBeNull();
   expect(mocks.post).not.toHaveBeenCalled();
 });
+
+it("gives linked Sales the exact bank record and masked display label without changing the shared callback", async () => {
+  const selectedBank = { ...bank, account_number: "000005589" };
+  const otherBank = { ...bank, id: "22222222-2222-4222-8222-222222222222", account_number: "000003327" };
+  const select = vi.fn();
+  const setName = vi.fn();
+  mocks.get.mockResolvedValueOnce({ banks: [selectedBank, otherBank] });
+  render(<TransferDetailsSection bankName="" onBankNameChange={setName} onBankRecordChange={mocks.record}
+    onBankSelectionChange={select} transferMode="" onTransferModeChange={vi.fn()} transactionReference=""
+    onTransactionReferenceChange={vi.fn()} countryId="PK" allowMasterChanges={false} lang="en" />);
+  fireEvent.click(await screen.findByRole("button", { name: "Select bank" }));
+  fireEvent.click(screen.getByRole("button", { name: "Saved Test Bank · •••• 5589" }));
+  expect(mocks.record).toHaveBeenCalledExactlyOnceWith(selectedBank);
+  expect(select).toHaveBeenCalledExactlyOnceWith(selectedBank, "Saved Test Bank · •••• 5589");
+  fireEvent.click(screen.getByRole("button", { name: "Select bank" }));
+  fireEvent.click(screen.getByRole("button", { name: "Saved Test Bank · •••• 3327" }));
+  expect(mocks.record).toHaveBeenNthCalledWith(2, otherBank);
+  expect(select).toHaveBeenNthCalledWith(2, otherBank, "Saved Test Bank · •••• 3327");
+  expect(setName).toHaveBeenNthCalledWith(2, "Saved Test Bank · •••• 3327");
+  expect(screen.queryByText(/add a new one/i)).toBeNull();
+  expect(mocks.post).not.toHaveBeenCalled();
+});

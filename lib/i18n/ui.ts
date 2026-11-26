@@ -5040,6 +5040,8 @@ export type UiKey =
   | "lpdest.confirm_export"
   | "so.not_found"
   | "so.already_transferred_readonly"
+  | "so.bill_number_immutable"
+  | "so.bill_scope_immutable"
   | "branch.wizard_step1_title"
   | "branch.wizard_step1_desc"
   | "branch.wizard_step2_title"
@@ -6855,6 +6857,9 @@ export type UiKey =
   | "purchase.wiz_account_not_found" | "purchase.wiz_account_loaded" | "purchase.wiz_type_purchase" | "purchase.wiz_type_sales" | "purchase.wiz_country_name_required" | "purchase.wiz_goods_hscode_required" | "purchase.wiz_account_name_code_required" | "purchase.wiz_company_name_required"
   | "purchase.wiz_err_account_lookup" | "purchase.wiz_err_country_req" | "purchase.wiz_err_branch_req" | "purchase.wiz_err_purchase_acct_req" | "purchase.wiz_err_sales_acct_req" | "purchase.wiz_err_booking_lookup" | "purchase.wiz_err_load_order_by_id" | "purchase.wiz_err_create_port" | "purchase.wiz_err_order_save" | "purchase.wiz_err_roznamcha_transfer" | "purchase.wiz_err_delete_booking" | "purchase.wiz_err_create_country" | "purchase.wiz_err_create_good" | "purchase.wiz_err_create_account" | "purchase.wiz_err_create_company" | "purchase.wiz_err_create_good_master" | "purchase.wiz_err_save_variation" | "purchase.wiz_err_update_hs_code"
   | "purchase.wiz_add_good_variation" | "purchase.wiz_specify_size_brand" | "purchase.wiz_control_account" | "purchase.wiz_create_new_report" | "purchase.wiz_create_and_save" | "purchase.wiz_create_new_company" | "purchase.wiz_adding_to_company_registry" | "purchase.wiz_transfer_to_payment_module"
+  | "purchase.booking_adjusted_posting"
+  | "purchase.booking_edit_reason"
+  | "purchase.booking_reload_before_edit"
   | "purchase.wiz_ph_country_example" | "purchase.wiz_ph_goods_name_example" | "purchase.wiz_ph_brand_example" | "purchase.wiz_ph_size_example" | "purchase.wiz_ph_account_name_example" | "purchase.wiz_ph_auto" | "purchase.wiz_ph_report_name_example" | "purchase.wiz_ph_optional_description" | "purchase.wiz_ph_additional_notes" | "purchase.wiz_ph_company_example" | "purchase.wiz_ph_company_legal_example" | "purchase.wiz_confirm_delete_booking" | "purchase.wiz_deleted_reverted" | "purchase.wiz_fill_brand_size" | "purchase.wiz_email_triggered" | "purchase.wiz_whatsapp_triggered" | "purchase.wiz_checkup_triggered"
   | "hr.pp_search_placeholder"
   | "hr.pp_no_matches"
@@ -19347,6 +19352,8 @@ const en: Dict = {
   "lpdest.confirm_export": "Confirm this bill has been handed over to the Export/Shipping module?",
   "so.not_found": "Sales order not found",
   "so.already_transferred_readonly": "This Sales Order has already been transferred and is read-only.",
+  "so.bill_number_immutable": "The original sales booking number cannot be changed.",
+  "so.bill_scope_immutable": "The issuing country and branches cannot be changed on an existing sales booking.",
   // Tax System
   "nav.tax": "Tax Setup & Rates",
   "nav.tax_settings": "Country Tax Settings",
@@ -20091,6 +20098,9 @@ const en: Dict = {
   "purchase.wiz_ph_additional_notes": "Additional notes for this report",
   "purchase.wiz_ph_company_example": "e.g. Apex Trading LLC",
   "purchase.wiz_ph_company_legal_example": "e.g. Apex Imports (Optional)",
+  "purchase.booking_adjusted_posting": "Net posting after adjustment",
+  "purchase.booking_edit_reason": "Enter the reason for this booking correction.",
+  "purchase.booking_reload_before_edit": "Reload the saved booking before editing.",
   "purchase.wiz_confirm_delete_booking": "Are you sure you want to permanently delete this booking? All associated ledger transfers will be reverted.",
   "purchase.wiz_deleted_reverted": "Booking successfully deleted and transfers reverted.",
   "purchase.wiz_fill_brand_size": "Please fill both Brand and Size.",
@@ -45685,6 +45695,9 @@ const ur: Dict = {
   "purchase.wiz_ph_additional_notes": "اس رپورٹ کے لیے اضافی نوٹس",
   "purchase.wiz_ph_company_example": "مثال کے طور پر Apex Trading LLC",
   "purchase.wiz_ph_company_legal_example": "مثال کے طور پر Apex Imports (اختیاری)",
+  "purchase.booking_adjusted_posting": "ایڈجسٹمنٹ کے بعد خالص اندراج",
+  "purchase.booking_edit_reason": "اس بکنگ کی تصحیح کی وجہ درج کریں۔",
+  "purchase.booking_reload_before_edit": "ترمیم سے پہلے محفوظ بکنگ دوبارہ لوڈ کریں۔",
   "purchase.wiz_confirm_delete_booking": "کیا آپ واقعی اس بکنگ کو مستقل طور پر حذف کرنا چاہتے ہیں؟ اس سے منسلک تمام لیجر منتقلیاں واپس ہو جائیں گی۔",
   "purchase.wiz_deleted_reverted": "بکنگ کامیابی سے حذف ہو گئی اور منتقلیاں واپس ہو گئیں۔",
   "purchase.wiz_fill_brand_size": "براہ کرم برانڈ اور سائز دونوں پُر کریں۔",
@@ -46809,6 +46822,8 @@ const ur: Dict = {
   "lpdest.confirm_export": "کیا آپ تصدیق کرتے ہیں کہ یہ بل برآمد/شپنگ ماڈیول کے حوالے کر دیا گیا ہے؟",
   "so.not_found": "سیلز آرڈر نہیں ملا",
   "so.already_transferred_readonly": "یہ سیلز آرڈر پہلے ہی منتقل ہو چکا ہے اور صرف پڑھنے کے لیے ہے۔",
+  "so.bill_number_immutable": "اصل سیلز بکنگ نمبر تبدیل نہیں کیا جا سکتا۔",
+  "so.bill_scope_immutable": "موجودہ سیلز بکنگ کا جاری کرنے والا ملک اور برانچ تبدیل نہیں کی جا سکتی۔",
   // Tax System Urdu
   "nav.tax": "ٹیکس سیٹ اپ اور شرحیں",
   "nav.tax_settings": "ملکی ٹیکس سیٹنگز",
@@ -72750,6 +72765,9 @@ const ar: Dict = {
   "purchase.wiz_ph_additional_notes": "ملاحظات إضافية لهذا التقرير",
   "purchase.wiz_ph_company_example": "مثال: Apex Trading LLC",
   "purchase.wiz_ph_company_legal_example": "مثال: Apex Imports (اختياري)",
+  "purchase.booking_adjusted_posting": "صافي القيد بعد التسوية",
+  "purchase.booking_edit_reason": "أدخل سبب تصحيح هذا الحجز.",
+  "purchase.booking_reload_before_edit": "أعد تحميل الحجز المحفوظ قبل تعديله.",
   "purchase.wiz_confirm_delete_booking": "هل أنت متأكد أنك تريد حذف هذا الحجز نهائيًا؟ سيتم التراجع عن جميع تحويلات دفتر الأستاذ المرتبطة به.",
   "purchase.wiz_deleted_reverted": "تم حذف الحجز بنجاح وتم التراجع عن التحويلات.",
   "purchase.wiz_fill_brand_size": "يرجى تعبئة كل من العلامة التجارية والحجم.",
@@ -73854,6 +73872,8 @@ const ar: Dict = {
   "lpdest.confirm_export": "هل تؤكد تسليم هذه الفاتورة إلى وحدة التصدير/الشحن؟",
   "so.not_found": "أمر البيع غير موجود",
   "so.already_transferred_readonly": "تم بالفعل ترحيل أمر البيع هذا وهو للقراءة فقط.",
+  "so.bill_number_immutable": "لا يمكن تغيير رقم حجز المبيعات الأصلي.",
+  "so.bill_scope_immutable": "لا يمكن تغيير البلد والفروع المصدِرة لحجز مبيعات موجود.",
   // Tax System Arabic
   "nav.tax": "إعدادات الضرائب والنسب",
   "nav.tax_settings": "إعدادات ضرائب الدولة",
@@ -99862,6 +99882,9 @@ const fa: Dict = {
   "purchase.wiz_ph_additional_notes": "یادداشت‌های اضافی برای این گزارش",
   "purchase.wiz_ph_company_example": "مثال: Apex Trading LLC",
   "purchase.wiz_ph_company_legal_example": "مثال: Apex Imports (اختیاری)",
+  "purchase.booking_adjusted_posting": "خالص ثبت پس از تعدیل",
+  "purchase.booking_edit_reason": "دلیل اصلاح این رزرو را وارد کنید.",
+  "purchase.booking_reload_before_edit": "پیش از ویرایش، رزرو ذخیره‌شده را دوباره بارگیری کنید.",
   "purchase.wiz_confirm_delete_booking": "آیا مطمئن هستید که می‌خواهید این رزرو را برای همیشه حذف کنید؟ تمام انتقال‌های دفتر کل مرتبط بازگردانده خواهند شد.",
   "purchase.wiz_deleted_reverted": "رزرو با موفقیت حذف شد و انتقال‌ها بازگردانده شدند.",
   "purchase.wiz_fill_brand_size": "لطفاً هم برند و هم اندازه را پر کنید.",
@@ -100889,6 +100912,8 @@ const fa: Dict = {
   "lpdest.confirm_export": "آیا تأیید می‌کنید که این صورتحساب به واحد صادرات/حمل‌ونقل تحویل داده شده است؟",
   "so.not_found": "سفارش فروش یافت نشد",
   "so.already_transferred_readonly": "این سفارش فروش قبلاً انتقال یافته و فقط قابل خواندن است.",
+  "so.bill_number_immutable": "شماره اصلی رزرو فروش قابل تغییر نیست.",
+  "so.bill_scope_immutable": "کشور و شعبه‌های صادرکننده یک رزرو فروش موجود قابل تغییر نیستند.",
   "nav.account_setup_report": "گزارش تنظیم حساب",
   "nav.account_type": "نوع حساب",
   "nav.account_categories": "دسته‌های حساب",
@@ -126968,6 +126993,9 @@ const ps: Dict = {
   "purchase.wiz_ph_additional_notes": "د دې راپور لپاره اضافي یادښتونه",
   "purchase.wiz_ph_company_example": "بېلګه: Apex Trading LLC",
   "purchase.wiz_ph_company_legal_example": "بېلګه: Apex Imports (اختیاري)",
+  "purchase.booking_adjusted_posting": "له تعدیل وروسته خالص ثبت",
+  "purchase.booking_edit_reason": "د دې بکینګ د سمون دلیل ولیکئ.",
+  "purchase.booking_reload_before_edit": "له سمون مخکې خوندي بکینګ بیا پورته کړئ.",
   "purchase.wiz_confirm_delete_booking": "ایا تاسو ډاډه یاست چې غواړئ دا بکنګ د تل لپاره ړنګ کړئ؟ ټول اړوند لیجر لېږدونه به بېرته شي.",
   "purchase.wiz_deleted_reverted": "بکنګ په بریالیتوب سره ړنګ شو او لېږدونه بېرته شول.",
   "purchase.wiz_fill_brand_size": "مهرباني وکړئ دواړه برانډ او اندازه ډک کړئ.",
@@ -127967,6 +127995,8 @@ const ps: Dict = {
   "lpdest.confirm_export": "ایا تاسو تایید کوئ چې دا بېل د صادراتو/بار وړلو برخې ته سپارل شوی؟",
   "so.not_found": "د خرڅلاو امر ونه موندل شو",
   "so.already_transferred_readonly": "دا د خرڅلاو امر مخکې لېږدول شوی او یوازې د لوستلو وړ دی.",
+  "so.bill_number_immutable": "د پلور د بکینګ اصلي شمېره نشي بدلېدای.",
+  "so.bill_scope_immutable": "د موجوده پلور بکینګ صادرونکی هېواد او څانګې نشي بدلېدای.",
   "nav.account_setup_report": "د حساب تنظیم راپور",
   "nav.account_type": "د حساب ډول",
   "nav.account_categories": "د حسابونو کټګورۍ",

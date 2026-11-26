@@ -9,6 +9,7 @@
  * Scope: every query is filtered in SQL by the one scope rule (sessionSqlScope / sqlScopeCondition), single-record reads use
  * assertRecordAccess — never a front-end filter.
  */
+import { exactAppliedPurchaseAmount } from "@/lib/purchases/loaded-payable";
 import { localPurchaseBillNo, localPurchaseContractRef } from "@/lib/purchases/local-purchase-number";
 import type { ErpSession } from "@/lib/auth/session";
 import { ApiClientError } from "@/lib/api/response";
@@ -342,7 +343,8 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
       : [];
 
     const payments = poIds.length || lpIds.length
-      ? await sql`select pay.id, pay.purchase_order_id, pay.local_purchase_id, pay.kind, pay.entry_date, pay.amount, pay.base_currency_amount, pay.currency_code, pay.exchange_rate, pay.status::text as status, pay.reference_no,
+      ? await sql`select pay.id, pay.purchase_order_id, pay.local_purchase_id, pay.kind, pay.entry_date, pay.amount, pay.base_currency_amount, pay.currency_code,
+                         case when pay.purchase_order_id is not null and pay.local_purchase_id is null then to_jsonb(pay)->>'applied_purchase_amount' end applied_purchase_amount, pay.exchange_rate, pay.status::text as status, pay.reference_no,
                          coalesce(ea.name, l.name) as method
                   from public.purchase_order_payments pay
                   left join public.ledgers l on l.id = pay.credit_ledger_id left join public.enterprise_accounts ea on ea.id = l.enterprise_account_id
@@ -388,7 +390,7 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
 
   const bills: BalanceBill[] = [];
 
-  const finishBill = (b: BalanceBill, rawTreatments: any[], rawPayments: any[], billAmount: number | null, billCurrency: string, paymentStatus: string) => {
+  const finishBill = (b: BalanceBill, rawTreatments: any[], rawPayments: any[], billAmount: number | null, billCurrency: string, paymentStatus: string, bookingCurrency = "") => {
     // treatment register → per entry + bill list. A treatment's LOSS is a stock adjustment; treated goods stay in their lot (no double count).
     const trByEntry = groupBy(rawTreatments, (t: any) => `${t.lot_no}||${t.entry_key}`);
     for (const e of b.entries) {
@@ -423,6 +425,8 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
     const posted = rawPayments.filter((p: any) => str(p.status) === "posted" && str(p.kind) !== "booking");
     const billRate = Number(b.exchangeRate) || 0;
     const inBillCcy = (p: any): number | null => {
+      const exact = billCurrency.toUpperCase() === bookingCurrency ? exactAppliedPurchaseAmount(p, bookingCurrency) : null;
+      if (exact !== null) return exact;
       const pc = str(p.currency_code);
       if (!billCurrency || !pc || pc === billCurrency) return num(p.amount);
       if (billRate > 0) return num(p.base_currency_amount != null ? p.base_currency_amount : num(p.amount) * (num(p.exchange_rate) || 1)) / billRate;
@@ -544,7 +548,7 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
       originCountry: str(form.origin || form.originCountry || extras[0]?.origin), currency, exchangeRate: po.exchange_rate == null ? null : num(po.exchange_rate), remarks: str(form.remarks),
       amount: null, totals: totalsOf([]), entries, sales, unallocatedSales: unallocated, payments: [], paid: null, pending: null, mixedCurrency: false, treatments: [], paymentStatus: str(po.payment_status),
     };
-    bills.push(finishBill(bill, trByPo.get(po.id) ?? [], payByPo.get(po.id) ?? [], num(po.total_goods_original) || num(po.order_total) || null, currency, str(po.payment_status)));
+    bills.push(finishBill(bill, trByPo.get(po.id) ?? [], payByPo.get(po.id) ?? [], num(po.total_goods_original) || num(po.order_total) || null, currency, str(po.payment_status), str(po.currency_code || po.purchase_currency).trim().toUpperCase()));
   }
 
   // ── Local Purchases (lots live in purchase_lots / lot_stock; sales + transfers in the Goods Transfer Journal) ──

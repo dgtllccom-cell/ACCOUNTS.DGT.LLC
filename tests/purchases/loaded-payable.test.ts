@@ -233,3 +233,24 @@ describe("pending placeholder loading (REGRESSION: the record opened after the a
     expect(500000 > p.loadedOutstandingFC + 0.05).toBe(true);
   });
 });
+
+describe("exact allocations on foreign Purchase Booking settlements", () => {
+  const tender = { amount: 380, currency_code: "AED", exchange_rate: 1, base_currency_amount: 380 };
+  it("keeps 100 USD applied when manual-rate tender is AED 380 and leaves null/absent historical rows on the exact legacy path", () => {
+    expect(paymentInPurchaseCurrency({ ...tender, applied_purchase_amount: "100.0000" }, "USD", RATE)).toBe(100);
+    const unchanged = paymentInPurchaseCurrency(tender, "USD", RATE);
+    expect(unchanged).toBeCloseTo(103.4717, 4);
+    for (const invalid of [null, "", "   ", Number.NaN, -1]) {
+      expect(paymentInPurchaseCurrency({ ...tender, applied_purchase_amount: invalid }, "USD", RATE)).toBe(unchanged);
+    }
+    expect(paymentInPurchaseCurrency({ ...tender, applied_purchase_amount: 100 }, "", RATE)).toBe(unchanged);
+  });
+  it("counts only fully ledger-posted exact payments, and a lower settlement FX rate does not leave false advance dues", () => {
+    const cleared = aedAdvance(40000, { amount: 140000, base_currency_amount: 140000, applied_purchase_amount: "40000.0000" });
+    expect(resolveLoadingEligibility(advanceOrder as any, verifiedPaid([cleared], "USD", RATE).advanceFC).eligible).toBe(true);
+    expect(resolveLoadingEligibility(advanceOrder as any,
+      verifiedPaid([{ ...cleared, applied_purchase_amount: null }], "USD", RATE).advanceFC).eligible).toBe(false);
+    expect(verifiedPaid([{ ...cleared, roznamcha_entry_id: null }, { ...cleared, status: "cancelled" }], "USD", RATE))
+      .toEqual({ advanceFC: 0, settledFC: 0, ledgerGaps: 1 });
+  });
+});

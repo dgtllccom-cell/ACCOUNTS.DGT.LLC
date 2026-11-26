@@ -1,12 +1,24 @@
+import { ApiClientError } from "@/lib/api/response";
+
+function assertLegacyReversalCanProceed(payments: { applied_purchase_amount?: unknown }[] | null) {
+  if (payments?.some(payment => payment.applied_purchase_amount != null)) {
+    throw new ApiClientError("This bill contains an exact-currency payment. Review it in Accounts before reversing the purchase.", {
+      status: 409, code: "EXACT_PURCHASE_PAYMENT_REVIEW_REQUIRED"
+    });
+  }
+}
+
 export async function revertOrderBookingTransfer(orderId: string, supabase: any, adminSupabase: any) {
   // Find ALL existing purchase order payments of kind 'booking' or 'credit' (the transfer records)
-  const { data: existingPayments } = await supabase
+  const { data: existingPayments, error } = await supabase
     .from("purchase_order_payments")
-    .select("id, roznamcha_entry_id, entry_date")
+    .select("*")
     .eq("purchase_order_id", orderId)
     .in("kind", ["booking", "credit"])
     .eq("status", "posted");
 
+  if (error) throw new Error(error.message);
+  assertLegacyReversalCanProceed(existingPayments);
   if (!existingPayments || existingPayments.length === 0) {
     return;
   }
@@ -96,13 +108,15 @@ export async function revertOrderBookingTransfer(orderId: string, supabase: any,
 
 export async function revertAllOrderPayments(orderId: string, supabase: any, adminSupabase: any) {
   // Find ALL posted payments for this order
-  const { data: payments } = await supabase
+  const { data: payments, error } = await supabase
     .from("purchase_order_payments")
-    .select("id, roznamcha_entry_id, entry_date")
+    .select("*")
     .eq("purchase_order_id", orderId)
     .eq("status", "posted")
     .not("roznamcha_entry_id", "is", null);
 
+  if (error) throw new Error(error.message);
+  assertLegacyReversalCanProceed(payments);
   if (!payments || payments.length === 0) {
     return;
   }

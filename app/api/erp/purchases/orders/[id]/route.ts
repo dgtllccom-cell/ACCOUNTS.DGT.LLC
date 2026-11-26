@@ -7,17 +7,9 @@ import { authorizeApiScope, authorizeApiScopeEither } from "@/lib/api/scope-midd
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { revertOrderBookingTransfer, revertAllOrderPayments } from "@/lib/services/purchase-payment-reversal";
-import {
-  safeInsertPurchaseOrderItems,
-  safeDeletePurchaseOrderItems,
-  safeInsertPurchaseOrderExpenses,
-  safeDeletePurchaseOrderExpenses
-} from "@/lib/services/purchase-table-manager";
-import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
-import { purchaseOrderTranslationFields } from "@/lib/i18n/purchase-order-translations";
+import { editPurchaseBooking } from "@/lib/services/purchase-booking-edit";
 import { revalidatePath } from "next/cache";
-import { canEditTransferredPurchaseBooking } from "@/lib/services/purchase-booking-transfer-routing";
-import { getDbUrl, withLocalPg, withReadPg } from "@/lib/db/local-postgres";
+import { getDbUrl, withLocalPg } from "@/lib/db/local-postgres";
 import { trustedTranslationMap } from "@/lib/i18n/localize-records";
 
 const paramsSchema = z.object({
@@ -45,6 +37,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
               po.supplier_company_id,
               to_jsonb(comp.*) as companies,
               po.currency_code,
+              po.payment_currency,
               po.exchange_rate,
               po.order_total,
               po.advance_paid,
@@ -55,7 +48,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
               po.ledger_posting_status,
               po.form_data,
               po.created_at,
-              po.updated_at
+              to_char(po.updated_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as updated_at
             from purchase_orders po
             left join companies comp on comp.id = po.supplier_company_id
             where po.id = ${params.id}::uuid
@@ -70,7 +63,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
             return supabase
               .from("purchase_orders")
               .select(
-                "id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id, dest_country_id, dest_country_branch_id, dest_city_branch_id, supplier_company_id, companies(name), currency_code, exchange_rate, order_total, advance_paid, remaining_paid, credit_amount, remaining_due, payment_status, ledger_posting_status, form_data, created_at, updated_at"
+                "id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id, dest_country_id, dest_country_branch_id, dest_city_branch_id, supplier_company_id, companies(name), currency_code, payment_currency, exchange_rate, order_total, advance_paid, remaining_paid, credit_amount, remaining_due, payment_status, ledger_posting_status, form_data, created_at, updated_at"
               )
               .eq("id", params.id)
               .is("deleted_at", null)
@@ -152,356 +145,11 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const params = paramsSchema.parse(await context.params);
     const body = purchaseOrderUpdateSchema.parse(await request.json());
 
-    const supabase = (await createApiSupabaseClient()) as any;
-    const viaPgBefore = getDbUrl()
-      ? await withReadPg(async (sql) => {
-          const rows = await sql`
-            select id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id,
-                   supplier_company_id, currency_code, exchange_rate, order_total, form_data, created_at, ledger_posting_status
-            from public.purchase_orders
-            where id = ${params.id} and deleted_at is null
-            limit 1
-          `;
-          return rows?.[0] ?? null;
-        })
-      : null;
-    const before = viaPgBefore
-      ? viaPgBefore
-      : await requireSupabaseData(
-          supabase
-            .from("purchase_orders")
-            .select(
-              "id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id, supplier_company_id, currency_code, exchange_rate, order_total, form_data, created_at, ledger_posting_status"
-            )
-            .eq("id", params.id)
-            .is("deleted_at", null)
-            .maybeSingle()
-        );
-
-    authorizeApiScope(session, {
-      resource: "purchases",
-      action: "update",
-      countryId: (before as any)?.country_id ?? null,
-      countryBranchId: (before as any)?.country_branch_id ?? null,
-      cityBranchId: (before as any)?.city_branch_id ?? null
-    });
-
-    // --- ENFORCE STRICT LOCK ON TRANSFERRED ORDERS ---
-    if ((before as any)?.ledger_posting_status === "transferred" || (before as any)?.ledger_posting_status === "posted") {
-      const canAuthorizeTransferredEdit = canEditTransferredPurchaseBooking(session);
-      if (!canAuthorizeTransferredEdit) {
-        return apiError(
-          "TRANSFERRED_BOOKING_EDIT_FORBIDDEN",
-          "Transferred bookings can only be edited by an Admin or Country Admin.",
-          403
-        );
-      }
-    }
-    // -------------------------------------------------
-
-    const isAlreadyPostedOrTransferred = (before as any)?.ledger_posting_status === "posted" || (before as any)?.ledger_posting_status === "transferred";
-    const isRevertingOrEditing = isAlreadyPostedOrTransferred && (
-      body.ledgerPostingStatus === "draft" ||
-      body.ledgerPostingStatus === "pending" ||
-      body.ledgerPostingStatus === "cancelled" ||
-      body.orderTotal !== undefined ||
-      body.formData !== undefined ||
-      body.items !== undefined
-    );
-
-    if (isRevertingOrEditing) {
-      const adminSupabase = createSupabaseAdminClient() as any;
-
-      // 1. Revert the booking transfer Roznamcha entry if it exists
-      const { data: existingRoz } = await supabase
-        .from("roznamcha_entries")
-        .select("id")
-        .eq("journal_no", (before as any).purchase_order_no)
-        .is("deleted_at", null)
-        .maybeSingle();
-
-      if (existingRoz) {
-        const { data: lines } = await supabase
-          .from("roznamcha_lines")
-          .select("ledger_id, enterprise_account_id, debit, credit")
-          .eq("roznamcha_entry_id", existingRoz.id);
-
-        if (lines && lines.length > 0) {
-          for (const line of lines) {
-            const { data: ledger } = await adminSupabase
-              .from("ledgers")
-              .select("debit_total, credit_total, current_balance")
-              .eq("id", line.ledger_id)
-              .maybeSingle();
-            if (ledger) {
-              await adminSupabase
-                .from("ledgers")
-                .update({
-                  debit_total: Number(ledger.debit_total || 0) - Number(line.debit || 0),
-                  credit_total: Number(ledger.credit_total || 0) - Number(line.credit || 0),
-                  current_balance: Number(ledger.current_balance || 0) - Number(line.debit || 0) + Number(line.credit || 0),
-                  updated_at: new Date().toISOString()
-                })
-                .eq("id", line.ledger_id);
-            }
-
-            if (line.enterprise_account_id) {
-              const { data: entAcc } = await adminSupabase
-                .from("enterprise_accounts")
-                .select("current_balance")
-                .eq("id", line.enterprise_account_id)
-                .maybeSingle();
-              if (entAcc) {
-                await adminSupabase
-                  .from("enterprise_accounts")
-                  .update({
-                    current_balance: Number(entAcc.current_balance || 0) - Number(line.debit || 0) + Number(line.credit || 0),
-                    updated_at: new Date().toISOString()
-                  })
-                  .eq("id", line.enterprise_account_id);
-              }
-            }
-          }
-        }
-
-        await adminSupabase
-          .from("roznamcha_entries")
-          .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-          .eq("id", existingRoz.id);
-      }
-
-      // 2. Revert ALL payments and their ledger/roznamcha entries
-      await revertAllOrderPayments(params.id, supabase, adminSupabase);
-
-      // 3. Soft-delete the payments records
-      await supabase
-        .from("purchase_order_payments")
-        .update({ 
-          deleted_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq("purchase_order_id", params.id);
-    }
-
-    const patch: Record<string, unknown> = {};
-    if (isRevertingOrEditing) {
-      patch.advance_paid = 0;
-      patch.remaining_paid = 0;
-      patch.credit_amount = 0;
-      patch.remaining_due = body.orderTotal !== undefined ? body.orderTotal : (before as any).order_total;
-      patch.payment_status = "pending";
-    }
-    if (body.countryId !== undefined) patch.country_id = body.countryId ?? null;
-    if (body.countryBranchId !== undefined) patch.country_branch_id = body.countryBranchId ?? null;
-    if (body.cityBranchId !== undefined) patch.city_branch_id = body.cityBranchId ?? null;
-    if (body.supplierCompanyId !== undefined) patch.supplier_company_id = body.supplierCompanyId ?? null;
-    if (body.purchaseContractNo !== undefined) patch.purchase_contract_no = body.purchaseContractNo?.trim() || null;
-    if (body.currencyCode !== undefined) {
-      patch.currency_code = body.currencyCode;
-      patch.purchase_currency = body.currencyCode;
-    }
-    if (body.paymentCurrencyCode !== undefined) patch.payment_currency = body.paymentCurrencyCode;
-    if (body.exchangeRate !== undefined) patch.exchange_rate = body.exchangeRate;
-    if (body.orderTotal !== undefined) patch.order_total = body.orderTotal;
-    if (body.totalGoodsOriginal !== undefined) patch.total_goods_original = body.totalGoodsOriginal;
-    if (body.totalGoodsLocal !== undefined) patch.total_goods_local = body.totalGoodsLocal;
-    if (body.totalGoodsUsd !== undefined) patch.total_goods_usd = body.totalGoodsUsd;
-    if (body.totalExpensesOriginal !== undefined) patch.total_expenses_original = body.totalExpensesOriginal;
-    if (body.totalExpensesLocal !== undefined) patch.total_expenses_local = body.totalExpensesLocal;
-    if (body.totalExpensesUsd !== undefined) patch.total_expenses_usd = body.totalExpensesUsd;
-    if (body.landedCostOriginal !== undefined) patch.landed_cost_original = body.landedCostOriginal;
-    if (body.landedCostLocal !== undefined) patch.landed_cost_local = body.landedCostLocal;
-    if (body.landedCostUsd !== undefined) patch.landed_cost_usd = body.landedCostUsd;
-    if (body.formData !== undefined) patch.form_data = body.formData ?? null;
-    if (body.ledgerPostingStatus !== undefined) {
-      const s = String(body.ledgerPostingStatus).toLowerCase();
-      patch.ledger_posting_status = s === "posted" ? "posted" : s === "transferred" ? "transferred" : s === "cancelled" ? "cancelled" : "draft";
-    }
-    if (body.paymentStatus !== undefined) {
-      const s = String(body.paymentStatus).toLowerCase();
-      patch.payment_status = ["pending", "partial", "completed", "cancelled"].includes(s) ? s : "pending";
-    }
-    
-    // Only set as edited if this isn't the transfer status update itself
-    if (body.ledgerPostingStatus !== "Posted" && body.ledgerPostingStatus !== "posted" && body.ledgerPostingStatus !== "transferred") {
-      patch.is_edited_since_transfer = true;
-    }
-    
-    patch.updated_at = new Date().toISOString();
-
-    const isOrderAlreadyPosted = (before as any)?.ledger_posting_status === "posted";
-    const shouldPost =
-      (patch.ledger_posting_status === "posted" && !isOrderAlreadyPosted) ||
-      (isOrderAlreadyPosted && (body.ledgerPostingStatus === "posted" || body.orderTotal !== undefined || body.formData !== undefined));
-
-    // Ledger posting has been removed from Purchase Booking.
-    // Booking must remain only in the Purchase Booking Register until transferred and paid.
-    
-    // We do NOT update advance_paid automatically here.
-    // Advance amounts are managed through actual payment records.
-    if (body.orderTotal !== undefined) {
-      // If the order total changes, we should ideally fetch current paid amounts to calculate remaining due.
-      // For now, let's keep it simple and not overwrite advance_paid.
-    }
-
-    // Schema is applied via supabase/migrations, not per-request. This used to
-    // retry through a ~23-statement ensure-schema DDL block on any error whose
-    // message merely contained "column"/"currency"/etc — every purchase_orders
-    // column it (re)creates already exists, so that retry only added 50+s of
-    // catalog-lock overhead per save while masking the real error underneath.
-    //
-    // Separately, going through the Supabase JS client (PostgREST) for this
-    // specific update was itself slow in this environment (measured 56-60s on
-    // a real save, independent of the DDL above) — same direct-pg fast path
-    // already used for creating a purchase order (see POST above), same
-    // fallback-to-Supabase-client if DATABASE_URL/local pg isn't available.
-    // No change to what gets written or which columns are touched.
-    let updated;
-    const viaPgUpdate = await withLocalPg(async (sql) => {
-      const rows = await sql`UPDATE public.purchase_orders SET ${sql(patch as any)} WHERE id = ${params.id} RETURNING id`;
-      return rows[0] ?? null;
-    });
-    if (viaPgUpdate) {
-      updated = viaPgUpdate;
-    } else {
-      try {
-        updated = await requireSupabaseData(
-          supabase.from("purchase_orders").update(patch).eq("id", params.id).select("id").single()
-        );
-      } catch (e: any) {
-        return apiError("UPDATE_FAILED", e.message || String(e), 400);
-      }
-    }
-
-    // CASCADE BILL NUMBER TO PAYMENTS
-    if (body.purchaseContractNo !== undefined && body.purchaseContractNo?.trim()) {
-      const adminSupabase = createSupabaseAdminClient() as any;
-      await adminSupabase
-        .from("purchase_order_payments")
-        .update({ reference_no: body.purchaseContractNo.trim() })
-        .eq("purchase_order_id", params.id);
-    }
-
-    if (body.items !== undefined) {
-      await safeDeletePurchaseOrderItems(supabase, params.id);
-      if (body.items && body.items.length > 0) {
-        const itemsPayload = body.items.map((it: any) => {
-          const totalLocal = Number(it.totalLocal || 0);
-          const isTaxable = it.isTaxable !== false;
-          const vatRate = Number(it.vatRate ?? 5) || 0;
-          const taxableAmount = isTaxable ? totalLocal : 0;
-          const vatAmount = isTaxable ? Math.round(taxableAmount * (vatRate / 100) * 100) / 100 : 0;
-          return {
-            purchase_order_id: params.id,
-            product_id: it.productId || null,
-            goods_name: it.goodsName || "Unknown",
-            hs_code: it.hsCode || null,
-            size: it.size || null,
-            brand: it.brand || null,
-            origin: it.origin || null,
-            quantity: it.quantity || 0,
-            unit_name: it.unitName || "pcs",
-            unit_weight: it.unitWeight || 0,
-            gross_weight: it.grossWeight || 0,
-            net_weight: it.netWeight || 0,
-            rate_original: it.rateOriginal || 0,
-            rate_local: it.rateLocal || 0,
-            rate_usd: it.rateUsd || 0,
-            total_original: it.totalOriginal || 0,
-            total_local: totalLocal,
-            total_usd: it.totalUsd || 0,
-            is_taxable: isTaxable,
-            tax_code_id: it.taxCodeId || null,
-            vat_rate: vatRate,
-            taxable_amount: taxableAmount,
-            vat_amount: vatAmount,
-          };
-        });
-        await safeInsertPurchaseOrderItems(supabase, itemsPayload);
-      }
-    }
-
-    if (body.expenses !== undefined) {
-      await safeDeletePurchaseOrderExpenses(supabase, params.id);
-      if (body.expenses && body.expenses.length > 0) {
-        const expPayload = body.expenses.map((ex: any) => ({
-          purchase_order_id: params.id,
-          expense_type: ex.expenseType,
-          ledger_id: ex.ledgerId || null,
-          description: ex.description || null,
-          // expense_currency: ex.expenseCurrency || "USD",
-          exchange_rate: ex.exchangeRate || 1,
-          // amount_original: ex.amountOriginal || 0,
-          // amount_local: ex.amountLocal || 0,
-          // amount_usd: ex.amountUsd || 0
-        }));
-        await safeInsertPurchaseOrderExpenses(supabase, expPayload);
-      }
-    }
-
-    // Refresh the existing central translation rows for every field affected by
-    // this update. Missing languages remain explicitly pending.
-    let translationSummary: { status: "complete" | "pending"; fields: Record<string, unknown> } | null = null;
-    if (body.formData !== undefined || body.items !== undefined) {
-      try {
-        const adminSupabase = createSupabaseAdminClient() as any;
-        const effectiveFormData = body.formData ?? (before as any)?.form_data ?? {};
-        const effectiveItems = body.items ?? (effectiveFormData as any)?.goodsEntries ?? [];
-        const supplied = body.translations || {};
-        const fields = purchaseOrderTranslationFields(effectiveFormData, effectiveItems).map((field) => ({
-          ...field,
-          translations: supplied[field.fieldName]
-        }));
-        const originalLanguage = body.originalLanguage
-          ?? (effectiveFormData as any).translationOriginalLanguage
-          ?? (before as any)?.form_data?.translationOriginalLanguage
-          ?? "en";
-        const translationResults = await saveVerifiedEnterpriseRecordTranslations({
-          recordTable: "purchase_orders",
-          recordId: params.id,
-          originalLanguage,
-          fields,
-          source: "auto"
-        });
-
-        const currentFormData = patch.form_data || (before as any)?.form_data || {};
-        const updatedFormData = {
-          ...currentFormData,
-          translations: Object.fromEntries(translationResults.map((result) => [result.fieldName, result.translations])),
-          translationStatus: {
-            status: translationResults.every((result) => result.status === "complete") ? "complete" : "pending",
-            fields: Object.fromEntries(translationResults.map((result) => [result.fieldName, {
-              status: result.status,
-              missingLanguages: result.missingLanguages
-            }]))
-          },
-          translationOriginalLanguage: originalLanguage
-        };
-        translationSummary = updatedFormData.translationStatus as typeof translationSummary;
-
-        await adminSupabase
-          .from("purchase_orders")
-          .update({ form_data: updatedFormData })
-          .eq("id", params.id);
-      } catch (transErr) {
-        console.warn("Purchase-order translations remain pending after PATCH persistence failure:", transErr);
-      }
-    }
-
-    await writeAuditLog({
-      action: "update",
-      entityTable: "purchase_orders",
-      entityId: (updated as any).id ?? params.id,
-      before,
-      after: patch,
-      ipAddress: request.headers.get("x-forwarded-for") ?? null
-    });
-
-    // Requirement 9 & 11: Real-time Synchronization
-    revalidatePath("/dashboard/purchases", "layout");
+    const result = await editPurchaseBooking({ session, orderId: params.id, body,
+      ipAddress: request.headers.get("x-forwarded-for") });
+    revalidatePath("/dashboard/purchase", "layout");
     revalidatePath("/dashboard/reports", "layout");
-
-    return apiOk({ purchaseOrderId: params.id, translationStatus: translationSummary });
+    return apiOk(result);
   } catch (error) {
     return handleApiError(error);
   }
@@ -901,7 +549,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     const row = getDbUrl()
       ? await withLocalPg(async (sql) => {
           const rows = await sql`
-            select id, purchase_order_no, country_id, country_branch_id, city_branch_id, ledger_posting_status, payment_status
+            select id, purchase_order_no, country_id, country_branch_id, city_branch_id, ledger_posting_status, payment_status, form_data
             from purchase_orders
             where id = ${params.id}::uuid and deleted_at is null
             limit 1
@@ -911,7 +559,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
       : await requireSupabaseData(
           supabase
             .from("purchase_orders")
-            .select("id, purchase_order_no, country_id, country_branch_id, city_branch_id, ledger_posting_status, payment_status")
+            .select("id, purchase_order_no, country_id, country_branch_id, city_branch_id, ledger_posting_status, payment_status, form_data")
             .eq("id", params.id)
             .is("deleted_at", null)
             .maybeSingle()
@@ -933,6 +581,12 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
       countryBranchId: (row as any)?.country_branch_id ?? null,
       cityBranchId: (row as any)?.city_branch_id ?? null
     });
+
+    const rawForm = (row as any).form_data;
+    const formData = typeof rawForm === "string" ? JSON.parse(rawForm) : rawForm;
+    if (formData?.workflow?.lastBookingAdjustment) {
+      return apiError("BOOKING_CORRECTION_REQUIRED", "A booking with journal adjustments requires a controlled cancellation.", 409);
+    }
 
     const adminSupabase = createSupabaseAdminClient() as any;
 
