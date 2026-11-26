@@ -1348,6 +1348,10 @@ export type UiKey =
   | "sales_loading.driver"
   | "sales_loading.driver_mobile"
   | "sales_loading.duplicate_container"
+  | "sales_loading.truck_required"
+  | "sales_loading.truck_not_registered"
+  | "sales_loading.truck_container_no"
+  | "sales_loading.type_truck"
   | "sales_loading.empty"
   | "sales_loading.entry_no"
   | "sales_loading.entry_title"
@@ -17222,6 +17226,10 @@ const en: Dict = {
   "sales_loading.driver": "Driver Name",
   "sales_loading.driver_mobile": "Driver Mobile",
   "sales_loading.duplicate_container": "This container is already on this booking.",
+  "sales_loading.truck_required": "Select a registered truck, or enter the temporary truck number, for every loading.",
+  "sales_loading.truck_not_registered": "The selected truck is not an active registered truck.",
+  "sales_loading.truck_container_no": "Truck / Container No. *",
+  "sales_loading.type_truck": "Truck",
   "sales_loading.empty": "No matching sales loading records",
   "sales_loading.entry_no": "Loading Entry No. / Date",
   "sales_loading.entry_title": "New Sales Loading Entry",
@@ -45817,6 +45825,10 @@ const ur: Dict = {
   "sales_loading.driver": "ڈرائیور کا نام",
   "sales_loading.driver_mobile": "ڈرائیور کا موبائل",
   "sales_loading.duplicate_container": "یہ کنٹینر اس بکنگ میں پہلے سے شامل ہے۔",
+  "sales_loading.truck_required": "ہر لوڈنگ کے لیے رجسٹرڈ ٹرک منتخب کریں، یا عارضی ٹرک کا نمبر درج کریں۔",
+  "sales_loading.truck_not_registered": "منتخب کردہ ٹرک فعال رجسٹرڈ ٹرک نہیں ہے۔",
+  "sales_loading.truck_container_no": "ٹرک / کنٹینر نمبر *",
+  "sales_loading.type_truck": "ٹرک",
   "sales_loading.empty": "سیلز لوڈنگ کا کوئی متعلقہ ریکارڈ نہیں ملا",
   "sales_loading.entry_no": "لوڈنگ اندراج نمبر / تاریخ",
   "sales_loading.entry_title": "نیا سیلز لوڈنگ اندراج",
@@ -72889,6 +72901,10 @@ const ar: Dict = {
   "sales_loading.driver": "اسم السائق",
   "sales_loading.driver_mobile": "هاتف السائق",
   "sales_loading.duplicate_container": "هذه الحاوية مسجلة في هذا الحجز بالفعل.",
+  "sales_loading.truck_required": "اختر شاحنة مسجلة، أو أدخل رقم الشاحنة المؤقتة، لكل عملية تحميل.",
+  "sales_loading.truck_not_registered": "الشاحنة المختارة ليست شاحنة مسجلة نشطة.",
+  "sales_loading.truck_container_no": "رقم الشاحنة / الحاوية *",
+  "sales_loading.type_truck": "شاحنة",
   "sales_loading.empty": "لا توجد سجلات مطابقة لتحميل المبيعات",
   "sales_loading.entry_no": "رقم إدخال التحميل / التاريخ",
   "sales_loading.entry_title": "إدخال تحميل مبيعات جديد",
@@ -100017,6 +100033,10 @@ const fa: Dict = {
   "sales_loading.driver": "نام راننده",
   "sales_loading.driver_mobile": "موبایل راننده",
   "sales_loading.duplicate_container": "این کانتینر قبلاً در این رزرو ثبت شده است.",
+  "sales_loading.truck_required": "برای هر بارگیری یک کامیون ثبت\u200cشده انتخاب کنید یا شماره کامیون موقت را وارد کنید.",
+  "sales_loading.truck_not_registered": "کامیون انتخاب\u200cشده یک کامیون ثبت\u200cشده فعال نیست.",
+  "sales_loading.truck_container_no": "شماره کامیون / کانتینر *",
+  "sales_loading.type_truck": "کامیون",
   "sales_loading.empty": "رکورد مطابقی برای بارگیری فروش یافت نشد",
   "sales_loading.entry_no": "شماره ثبت بارگیری / تاریخ",
   "sales_loading.entry_title": "ثبت بارگیری جدید فروش",
@@ -127126,6 +127146,10 @@ const ps: Dict = {
   "sales_loading.driver": "د موټرچلوونکي نوم",
   "sales_loading.driver_mobile": "د چلوونکي موبایل",
   "sales_loading.duplicate_container": "دا کانټینر په دې بکینګ کې مخکې ثبت شوی دی.",
+  "sales_loading.truck_required": "د هر بار لپاره ثبت شوی ټرک وټاکئ، یا د لنډمهاله ټرک شمېره ولیکئ.",
+  "sales_loading.truck_not_registered": "ټاکل شوی ټرک فعال ثبت شوی ټرک نه دی.",
+  "sales_loading.truck_container_no": "د ټرک / کانټینر شمېره *",
+  "sales_loading.type_truck": "ټرک",
   "sales_loading.empty": "د پلور بارولو سمون لرونکی ریکارډ نشته",
   "sales_loading.entry_no": "د بارولو شمېره / نېټه",
   "sales_loading.entry_title": "د پلور بارولو نوی ثبت",

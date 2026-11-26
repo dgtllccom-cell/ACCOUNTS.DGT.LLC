@@ -193,6 +193,22 @@ export async function POST(req: NextRequest) {
       const existing = await tx<Pick<LoadingRecord, "goods" | "container_number">[]>`
         select goods, container_number from public.sales_loading_records where sales_order_id = ${orderId}::uuid`;
       const planned = planSalesLoading(toLoadingOrder(order, false).goods, existing, containers);
+      // A registered truck must be an active truck of the central Truck Registration; its number, driver and owner are
+      // taken from the registry (never trusted from the form). A temporary truck keeps what the operator typed.
+      const truckIds = [...new Set(planned.filter(c => c.truckRegistrationType === "registered").map(c => c.truckId))];
+      if (truckIds.length) {
+        const trucks = await tx<{ id: string; truck_number: string; driver_name: string | null; driver_mobile: string | null; owner_name: string | null; transport_company: string | null }[]>`
+          select id::text as id, truck_number, driver_name, driver_mobile, owner_name, transport_company
+          from public.trucks where id = any(${truckIds}::uuid[]) and status = 'active' and coalesce(is_active, true)`;
+        const byId = new Map(trucks.map(t => [t.id, t]));
+        for (const c of planned) {
+          if (c.truckRegistrationType !== "registered") continue;
+          const t = byId.get(c.truckId);
+          if (!t) throw new ApiClientError("The selected truck is not an active registered truck.", { status: 409, code: "TRUCK_NOT_REGISTERED" });
+          Object.assign(c, { vehicle: t.truck_number, driver: t.driver_name || c.driver, driverMobile: t.driver_mobile || c.driverMobile,
+            truckOwner: t.owner_name || "", transportCompany: t.transport_company || "" });
+        }
+      }
       const saved = [];
       for (const { items, containerNumber, containerType, loadingDate, receivedDate, ...details } of planned) {
         const [row] = await tx`
