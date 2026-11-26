@@ -1,0 +1,21 @@
+import React, { act } from "react";
+import { it, expect, vi } from "vitest";
+import { createRoot } from "react-dom/client";
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push() {}, replace() {}, refresh() {}, back() {} }), usePathname: () => "/dashboard/sales/new-sales-booking-order", useSearchParams: () => new URLSearchParams("source=local&mode=new") }));
+import { SalesOrderWizard } from "@/features/sales/components/sales-order-wizard.jsx";
+Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true, React });
+globalThis.fetch = vi.fn(async () => new Response(JSON.stringify({ ok: true, data: {} }), { status: 200, headers: { "content-type": "application/json" } })) as any;
+it("renders New Sales Booking without a runtime error", async () => {
+  const errors: unknown[] = [];
+  const spy = vi.spyOn(console, "error").mockImplementation((...a) => { errors.push(a); });
+  const c = document.createElement("div"); document.body.appendChild(c);
+  const root = createRoot(c);
+  await act(async () => { root.render(<SalesOrderWizard session={{ userId: "u1", roles: ["super_admin"], permissions: [], canViewFinancials: true }} />); });
+  await act(async () => { await new Promise(r => setTimeout(r, 300)); });
+  const text = c.textContent || "";
+  spy.mockRestore();
+  const fatal = errors.map(e => String((e as any[])[0]?.message ?? (e as any[])[0])).filter(m => /is not defined|is not a function|Cannot read prop/.test(m));
+  expect(fatal).toEqual([]);
+  expect(text).not.toContain("is not defined");
+  act(() => root.unmount());
+});

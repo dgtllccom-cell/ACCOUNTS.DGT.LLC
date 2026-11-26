@@ -1,0 +1,14 @@
+DGT.llc B is the mobile client of the company ERP of DAMAAN GENERAL TRADING L.L.C (accounts, purchase, sales, stock, shipping documents). Accounts are issued by the company administrator; there is no public sign-up and there are no purchases.
+
+How to sign in:
+1. Open the app. The first screen is "Activate this device" (every phone must be approved by the company administrator).
+2. Enter any name and phone number, the ERP e-mail from the sign-in information above, and in "Store review code" enter: <REVIEW-CODE>
+   Tap "Request activation". The review code activates the device immediately (no waiting for the administrator).
+3. Sign in with the user name and password above. The review account is read-only and limited to a review scope, so lists may be empty.
+
+Native features to check:
+- AI Document Intake > "Capture via Scanner / Camera": takes a document photo with the camera (or picks one from Photos) and attaches it.
+- Notification permission is requested after sign-in; the device registers for push notifications.
+- Turn on Airplane Mode: the app shows an offline screen / banner in the user's language; "Retry" reconnects.
+- Swipe from the left edge to go back; the app works in portrait and landscape on iPhone and iPad.
+- Five languages (English, Urdu, Arabic, Persian, Pashto) with full right-to-left layout; language menu on the sign-in screen.

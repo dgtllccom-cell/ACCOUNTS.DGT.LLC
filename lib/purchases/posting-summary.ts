@@ -30,6 +30,7 @@ export type PostingSummary = {
   debit: PostingSide;
   credit: PostingSide;
   balanced: boolean;
+  adjustment?: { serial: string; delta: number; currency: string };
   /** why it was not posted (status "not_posted") */
   reason?: string;
 };

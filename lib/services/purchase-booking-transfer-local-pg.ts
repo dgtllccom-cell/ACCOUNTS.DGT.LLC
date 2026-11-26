@@ -131,6 +131,11 @@ export async function transferPurchaseBookingViaLocalPg(input: {
       const formData = normalizeJsonObject(orderRow.form_data);
       const form = formData.form || {};
       const workflow = formData.workflow || {};
+      if (!dryRun && workflow.lastBookingAdjustment) {
+        throw new ApiClientError("This booking is already posted and has a journal adjustment.", {
+          status: 409, code: "BOOKING_ALREADY_POSTED"
+        });
+      }
       const systemBillNumber = String(orderRow.purchase_order_no || form.purchaseOrderNo || "").trim();
       const manualBillNumber = String(form.manualBillNumber || form.manual_bill_number || form.billNo || form.purchaseContractNo || orderRow.purchase_contract_no || "").trim();
       // post_purchase_booking_transfer / post_purchase_order_payment expects p_amount in

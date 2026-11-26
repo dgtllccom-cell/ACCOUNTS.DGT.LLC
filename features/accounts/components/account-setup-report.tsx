@@ -1,5 +1,7 @@
 "use client";
 
+import { AlRasDemoImport } from "./al-ras-demo-import";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
@@ -955,6 +957,8 @@ export function AccountSetupReport({
           </div>
         </div>
       </div>
+
+      {isSuperAdminUser && <AlRasDemoImport lang={lang} />}
 
       {/* ── 4 KPI SUMMARY CARDS ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">

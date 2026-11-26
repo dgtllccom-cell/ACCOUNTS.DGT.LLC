@@ -91,6 +91,7 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/sales/sales-confirm": ["sales:read", "sales:update", "route:/dashboard/sales/sales-confirm"],
   "/dashboard/sales/sales-booking-journal-report": ["sales:read", "reports:read", "route:/dashboard/sales/sales-booking-journal-report"],
   "/dashboard/sales/local-sales": ["sales:read", "sales:create", "route:/dashboard/sales/local-sales"],
+  "/dashboard/sales/sales-loading": ["sales:read"],
   "/dashboard/sales/sales-order": ["sales:read", "sales:create", "route:/dashboard/sales/sales-order"],
   "/dashboard/purchase/country-transfer": ["purchases:read", "shipping_transfers:read", "route:/dashboard/purchase/country-transfer"],
   "/dashboard/inter-country-transfers": ["purchases:read", "shipping_records:read", "shipping_transfers:read", "route:/dashboard/inter-country-transfers"],

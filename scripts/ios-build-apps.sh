@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# macOS ONLY (needs Xcode + an Apple Developer team). Builds both store apps from the one iOS project:
+# macOS ONLY (needs Xcode + an Apple Developer team). No Mac? Use the GitHub Actions workflow .github/workflows/ios-testflight.yml. Builds both store apps from the one iOS project:
 #   DGT.llc B  (com.dgtllc.b)   and   DGT.llc BS  (com.dgtllc.bs)
 # Both talk to the ONE ERP (https://api.dgt.llc, EPS Production). Usage:
 #   APPLE_TEAM_ID=ABCDE12345 bash scripts/ios-build-apps.sh [b|bs|all]      (default: all)

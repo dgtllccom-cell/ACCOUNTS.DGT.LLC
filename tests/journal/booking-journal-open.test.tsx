@@ -24,15 +24,25 @@ const due = { id: order.id, billNo: order.purchase_order_no, currency: "USD", ex
 let localRecords: any[] = [];
 let dueFailure = false;
 let batches = due.loadings;
+let postedPayload: Record<string, any> | null = null;
+let permitFixturePayment = false;
+const ledgers = [
+  { id: "ae2c732c-2dea-4e4e-b5a4-475702ce88a0", name: "Payable Supplier", code: "CR-1", currency: "USD", account_type: "liability" },
+  { id: "9b091cfb-4514-493f-9ad1-4b153d5656aa", name: "Cash AED", code: "CASH-1", currency: "AED", account_type: "asset" },
+];
 beforeEach(() => {
   configure({ asyncUtilTimeout: 10000 });
   window.history.replaceState({}, "", "/dashboard/journal/purchase-order-payment/remaining");
-  localRecords = []; dueFailure = false; batches = due.loadings;
+  localRecords = []; dueFailure = false; batches = due.loadings; postedPayload = null; permitFixturePayment = false;
   vi.stubGlobal("React", React);
   vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
   HTMLElement.prototype.scrollIntoView = vi.fn();
   vi.stubGlobal("fetch", vi.fn(async (input: string, options?: RequestInit) => {
-    if (options?.method === "POST") throw new Error("No writes expected");
+    if (options?.method === "POST") {
+      if (!permitFixturePayment || !input.includes("/payments")) throw new Error("No writes expected");
+      postedPayload = JSON.parse(String((options.body as FormData).get("payload")));
+      return { ok: false, json: async () => ({ ok: false, error: { message: "Fixture captured without posting." } }) };
+    }
     let data: any = {};
     if (input.includes("remaining-due")) {
       if (dueFailure && input.includes("orderNo=")) return { ok: false, json: async () => ({ ok: false, error: { message: "Verified loading service unavailable" } }) };
@@ -44,7 +54,7 @@ beforeEach(() => {
     else if (input.includes("orders?")) data = { orders: [order] };
     else if (input.includes("auth/session")) data = { id: "user", isSuperAdmin: true, scopes: { isSuperAdmin: true } };
     else if (input.includes("countries")) data = { countries: [] };
-    else if (input.includes("ledgers")) data = { ledgers: [] };
+    else if (input.includes("ledgers")) data = { ledgers: permitFixturePayment ? ledgers : [] };
     return { ok: true, json: async () => ({ ok: true, data }) };
   }));
 });
@@ -128,3 +138,25 @@ it("returns a settled loading to the Remaining register and clears stale entry U
   await waitFor(() => expect(screen.queryByTestId("payment-entry-shell")).toBeNull());
   expect(vi.mocked(fetch).mock.calls.some(([, options]) => options?.method === "POST")).toBe(false);
 }, 20000); // the redesigned remaining register renders heavier than the 5s default in jsdom
+
+
+it("keeps the typed original allocation and separately submits divided local tender from the real Remaining entry", async () => {
+  permitFixturePayment = true;
+  render(<PurchaseOrderPaymentJournal mode="remaining" paymentPage />);
+  openNewEntry(within((await screen.findByText("AE-001-0007")).closest("tr")!));
+  expect(await screen.findByTestId("ppe-selected-loading-summary")).toBeTruthy();
+  await waitFor(() => expect((screen.getByLabelText(/purchase amount.*USD/i) as HTMLInputElement).value).toBe("104287.5000"));
+  const rateInput = () => screen.getByLabelText(/exchange rate.*manual/i) as HTMLInputElement;
+  expect(rateInput().value).toBe("");
+  fireEvent.click(screen.getByTestId("ppe-save"));
+  expect(postedPayload).toBeNull();
+  fireEvent.change(screen.getByLabelText(/purchase amount.*USD/i), { target: { value: "123.4567" } });
+  fireEvent.change(rateInput(), { target: { value: "0.25" } });
+  fireEvent.change(screen.getByLabelText("Operation"), { target: { value: "div" } });
+  await waitFor(() => expect((screen.getByLabelText(/final local amount.*AED/i) as HTMLInputElement).value).toBe("493.8268"));
+  fireEvent.click(screen.getByTestId("ppe-save"));
+  await waitFor(() => expect(postedPayload).toMatchObject({
+    purchaseAppliedAmount: 123.4567, amount: 493.8268, amountLocal: 493.8268,
+    currencyCode: "AED", exchangeRate: 4, kind: "remaining", typeDetails: { loadingRecordId: loading.id },
+  }));
+});

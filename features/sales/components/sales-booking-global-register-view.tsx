@@ -28,11 +28,17 @@ import {
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { cn } from "@/lib/utils";
-import { apiGet, apiPost } from "@/lib/api/client";
+import { apiFetch, apiGet } from "@/lib/api/client";
+import { newIdempotencyKey } from "@/lib/api/idempotency-client";
+import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
 import { InvoiceDocumentView } from "@/components/invoices/invoice-document-view";
 import { EntryMethodSelector } from "@/features/document-intelligence/components/entry-method-selector";
 import { SalesOrderWizard } from "@/features/sales/components/sales-order-wizard.jsx";
 
+import { AdvancedRegisterSearch } from "@/components/purchase-ui/advanced-register-search";
+import { bookingSearchFields, bookingSearchRow } from "@/lib/sales/booking-register-search";
+import { loadScopedRegister, registerPageParams, type RegisterCursor } from "@/lib/sales/register-pagination";
+import { matchesRegisterSearch } from "@/lib/sales/register-search";
 import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 // @ts-expect-error JSX view module
 import { SalesBookingTransferReport } from "./sales-booking-transfer-report.jsx";
@@ -73,6 +79,9 @@ export function SalesBookingGlobalRegisterView({
   const lotParam = searchParams.get("lotId") || initialLotId;
 
   const isLocalSalesPage = sourceParam.toLowerCase() === "local";
+  const canVerifyLocalTransfer = session?.isSuperAdmin || session?.canViewFinancials === true;
+  const canPostReviewedTransfer = canVerifyLocalTransfer && (session?.isSuperAdmin
+    || ["sales:post", "sales:*", "*:*"].some(permission => session?.permissions?.includes(permission)));
 
   // Show Table/Register by default; enter Form/Gate mode only when clicking + New or editing an existing order / lot
   const [isFormMode, setIsFormMode] = useState<boolean>(
@@ -97,7 +106,7 @@ export function SalesBookingGlobalRegisterView({
   const [activeRowMenuId, setActiveRowMenuId] = useState<string | null>(null);
   const [invoiceRow, setInvoiceRow] = useState<any | null>(null);
 
-  const [review, setReview] = useState<{ id: string; allowPost: boolean } | null>(null);
+  const [review, setReview] = useState<{ id: string; allowPost: boolean; local: boolean; requestKey: string } | null>(null);
   const [reviewOrder, setReviewOrder] = useState<any>(null);
   const [reviewConfirmation, setReviewConfirmation] = useState<any>(null);
   const [reviewError, setReviewError] = useState("");
@@ -108,19 +117,19 @@ export function SalesBookingGlobalRegisterView({
     if (!review?.id) return;
     const id = review.id;
     let current = true;
-    apiGet<{ order: any }>(`/api/erp/sales/orders/${encodeURIComponent(id)}`)
+    apiGet<{ order: any }>(`/api/erp/sales/orders/${encodeURIComponent(id)}${review.local || review.allowPost ? `?transfer=1${review.local ? "&source=local" : ""}` : ""}`)
       .then(({ order }) => { if (current) setReviewOrder(order); })
       .catch((error: Error) => { if (current) setReviewError(error.message); })
       .finally(() => { if (current) setReviewBusy(false); });
     return () => { current = false; };
-  }, [review?.id]);
+  }, [review?.id, review?.local, review?.allowPost]);
 
-  const openReview = (id: string, allowPost: boolean) => {
+  const openReview = (id: string, allowPost: boolean, local = false) => {
     setReviewOrder(null);
     setReviewConfirmation(null);
     setReviewError("");
     setReviewBusy(true);
-    setReview({ id, allowPost });
+    setReview({ id, allowPost, local, requestKey: newIdempotencyKey(local ? "local-sales-transfer" : "sales-booking-transfer", id) });
   };
 
   // Pagination (replaces bottom yellow total bar per owner design standard)
@@ -129,16 +138,10 @@ export function SalesBookingGlobalRegisterView({
 
   // Filters
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<Record<string, string>>({});
   const [filterCountry, setFilterCountry] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [localScopeFilter, setLocalScopeFilter] = useState<"local" | "all">(
-    isLocalSalesPage ? "local" : "all"
-  );
-
-  useEffect(() => {
-    setLocalScopeFilter(isLocalSalesPage ? "local" : "all");
-  }, [isLocalSalesPage]);
-
   const [reportsOpen, setReportsOpen] = useState<boolean>(false);
   const reportsRef = useRef<HTMLDivElement>(null);
 
@@ -159,20 +162,32 @@ export function SalesBookingGlobalRegisterView({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const requests = useRef(0);
+  const [reportCoverage, setReportCoverage] = useState(true);
   const loadReports = useCallback(async () => {
+    const request = ++requests.current;
+    const current = () => request === requests.current;
     setLoading(true);
     setError("");
     try {
-      const res = await apiGet<{ reports: any[] }>(
-        `/api/erp/sales/booking-journal-report?limit=500&lang=${encodeURIComponent(lang)}`
-      );
-      setReports(Array.isArray(res?.reports) ? res.reports : []);
+      const result = await loadScopedRegister(async (cursor) => {
+        const params = registerPageParams(cursor);
+        params.set("limit", "250");
+        params.set("lang", lang);
+        if (isLocalSalesPage) params.set("source", "local");
+        const res = await apiGet<{ reports: any[]; nextCursor?: RegisterCursor | null }>(`/api/erp/sales/booking-journal-report?${params}`);
+        return { rows: res.reports || [], nextCursor: res.nextCursor };
+      }, { current });
+      if (current()) { setReports(result.rows); setReportCoverage(result.complete); }
     } catch (err: any) {
-      setError(err?.message || "Failed to load sales booking register");
+      if (current()) {
+        setReports([]);
+        setError(err?.message || "Failed to load sales booking register");
+      }
     } finally {
-      setLoading(false);
+      if (current()) setLoading(false);
     }
-  }, [lang]);
+  }, [isLocalSalesPage, lang]);
 
   useEffect(() => {
     if (!isFormMode) {
@@ -186,8 +201,19 @@ export function SalesBookingGlobalRegisterView({
     setReviewBusy(true);
     setReviewError("");
     try {
-      const result = await apiPost<unknown>(`/api/erp/sales/orders/${encodeURIComponent(review.id)}/transfer`, {});
+      const url = `/api/erp/sales/orders/${encodeURIComponent(review.id)}/transfer`;
+      const result = await apiFetch<unknown>(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Idempotency-Key": review.requestKey },
+        body: JSON.stringify({ transferRegister: true, ...(review.local ? { source: "local" } : {}) }),
+      });
       setReviewConfirmation(result);
+      if (review.local) {
+        // Confirmation was already successful: receipt evidence can refresh without risking a second write.
+        void apiGet<{ order: any }>(`/api/erp/sales/orders/${encodeURIComponent(review.id)}?transfer=1&source=local`)
+          .then(({ order }) => setReviewOrder((current: any) => current?.id === order?.id ? order : current))
+          .catch(() => undefined);
+      }
       void loadReports();
     } catch (error) {
       setReviewError(error instanceof Error ? error.message : tr("Transfer failed."));
@@ -197,29 +223,19 @@ export function SalesBookingGlobalRegisterView({
     }
   };
 
-  const isRowLocalSale = useCallback((r: any) => {
-    const form = r?.form_data?.form || {};
-    const src = String(form.saleSource || "").toLowerCase();
-    const sm = String(form.saleMode || "").toLowerCase();
-    return src === "local" || sm === "local";
-  }, []);
+  const isRowLocalSale = useCallback((row: any) => isLocalSalesFormData(row?.form_data), []);
 
   const isRowTransferred = useCallback((r: any) => {
     const form = r?.form_data?.form || {};
     const wf = r?.workflowState || r?.workflow_state || {};
     const st = String(r?.status || "").toLowerCase();
+    if (isLocalSalesPage) return ["posted", "transferred"].includes(String(r?.ledger_posting_status || "").toLowerCase())
+      || r?.form_data?.workflow?.transferStatus === "transferred" || Boolean(form.transferAudit);
     return Boolean(
-      r?.is_transferred ||
-        r?.isTransferred ||
-        form?.isTransferred ||
-        wf?.isTransferred ||
-        wf?.transferredAt ||
-        st === "transferred" ||
-        st === "completed" ||
-        st === "confirmed" ||
-        st === "posted"
+      r?.is_transferred || r?.isTransferred || form?.isTransferred || wf?.isTransferred || wf?.transferredAt
+      || ["transferred", "completed", "confirmed", "posted"].includes(st)
     );
-  }, []);
+  }, [isLocalSalesPage]);
 
   const availableCountries = useMemo(() => {
     const set = new Set<string>();
@@ -229,10 +245,13 @@ export function SalesBookingGlobalRegisterView({
     return Array.from(set).sort();
   }, [reports]);
 
+  const searchRows = useMemo(() => reports.map(r => bookingSearchRow(r, isRowTransferred(r))), [reports, isRowTransferred]);
+  const searchFields = useMemo(() => bookingSearchFields(searchRows, tr), [searchRows, tr]);
   const filteredRows = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return reports.filter((r) => {
-      if (localScopeFilter === "local" && !isRowLocalSale(r)) return false;
+    return reports.filter((r, index) => {
+      if (!isLocalSalesPage && !matchesRegisterSearch(searchRows[index], advancedFilters)) return false;
+      if (isLocalSalesPage && !isRowLocalSale(r)) return false;
       if (filterCountry !== "all" && r.countryName !== filterCountry) return false;
       if (filterStatus !== "all") {
         const transferred = isRowTransferred(r);
@@ -260,12 +279,12 @@ export function SalesBookingGlobalRegisterView({
       }
       return true;
     });
-  }, [reports, localScopeFilter, isRowLocalSale, filterCountry, filterStatus, isRowTransferred, searchQuery]);
+  }, [reports, isRowLocalSale, filterCountry, filterStatus, isRowTransferred, searchQuery, isLocalSalesPage, searchRows, advancedFilters]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filterCountry, filterStatus, localScopeFilter]);
+  }, [searchQuery, filterCountry, filterStatus, isLocalSalesPage, advancedFilters]);
 
   // Awaiting transfer in red at top, transferred in black at bottom (matching Purchase Booking)
   const sortedRows = useMemo(() => {
@@ -646,6 +665,8 @@ export function SalesBookingGlobalRegisterView({
                     setReportsOpen(false);
                     handleExportCsv();
                   }}
+                  disabled={!reportCoverage || loading}
+                  title={!reportCoverage ? tr("Register limit reached; displayed results and totals are incomplete.") : undefined}
                   className="w-full text-start rounded-lg px-3 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:text-slate-200 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
                 >
                   <Download className="h-3.5 w-3.5" />
@@ -667,6 +688,16 @@ export function SalesBookingGlobalRegisterView({
             />
           </div>
 
+          {!isLocalSalesPage && <>
+            <button type="button" onClick={() => setAdvancedOpen(true)} aria-haspopup="dialog" aria-expanded={advancedOpen}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-bold text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200">
+              <Search className="h-4 w-4" aria-hidden="true" />{tr("Advanced Search & Filter")}
+              {Object.keys(advancedFilters).length > 0 && <span>({Object.keys(advancedFilters).length})</span>}
+            </button>
+            <AdvancedRegisterSearch open={advancedOpen} onClose={() => setAdvancedOpen(false)} onApply={setAdvancedFilters}
+              value={advancedFilters} fields={searchFields} lang={lang} />
+          </>}
+          {isLocalSalesPage && <>
           {/* Country filter */}
           <select
             value={filterCountry}
@@ -692,34 +723,13 @@ export function SalesBookingGlobalRegisterView({
             <option value="transferred">{tr("Transferred")}</option>
           </select>
 
-          {/* Local Sales scope toggle */}
-          {isLocalSalesPage && (
-            <div className="inline-flex rounded-lg border border-amber-200 bg-amber-50/70 p-0.5 dark:border-amber-800 dark:bg-amber-950/40">
-              <button
-                type="button"
-                onClick={() => setLocalScopeFilter("local")}
-                className={cn(
-                  "rounded-md px-2.5 py-1 text-[11px] font-bold transition cursor-pointer",
-                  localScopeFilter === "local"
-                    ? "bg-amber-600 text-white shadow-2xs"
-                    : "text-amber-800 hover:bg-amber-100 dark:text-amber-300"
-                )}
-              >
-                {tr("Local Sales")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setLocalScopeFilter("all")}
-                className={cn(
-                  "rounded-md px-2.5 py-1 text-[11px] font-bold transition cursor-pointer",
-                  localScopeFilter === "all"
-                    ? "bg-amber-600 text-white shadow-2xs"
-                    : "text-amber-800 hover:bg-amber-100 dark:text-amber-300"
-                )}
-              >
-                {tr("All Sales")}
-              </button>
-            </div>
+          </>}
+
+          {isLocalSalesPage && canVerifyLocalTransfer && (
+            <a href="/dashboard/sales/sales-order?transfer=1&source=local"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 text-xs font-bold text-amber-900">
+              <ArrowRightLeft className="h-3.5 w-3.5" />{tr("Local Sales Transfer Payment")}
+            </a>
           )}
 
           {/* Refresh */}
@@ -852,6 +862,7 @@ export function SalesBookingGlobalRegisterView({
         </div>
       </div>
 
+      {!reportCoverage && <p role="status" className="rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900">{tr("Register limit reached; displayed results and totals are incomplete.")}</p>}
       {/* 3. Main Register Table */}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className={cn("flex items-center justify-between px-4 py-2.5 text-white", accentHeaderBg)}>
@@ -961,8 +972,8 @@ export function SalesBookingGlobalRegisterView({
                         </td>
                         <td className={cell}>{stacked(form.mainBranchName || r.countryName, r.branchName || form.branchName)}</td>
                         <td className={cell}>{form.transferAudit?.userName || r.postedByName || r.createdByName || form.createdByName || "—"}</td>
-                        <td className={cell}>{stacked(form.customerAccountNo, form.customerAccountName || r.customerName)}</td>
-                        <td className={cell}>{stacked(form.salesAccountNo || r.salesAccountNumber, form.salesAccountName || r.salesAccountName)}</td>
+                        <td className={cell}>{stacked(form.customerAccountNo, r.customerName || form.customerAccountName)}</td>
+                        <td className={cell}>{stacked(form.salesAccountNo || r.salesAccountNumber, r.salesAccountName || form.salesAccountName)}</td>
                         <td className={cell}>{stacked(r.productName || goods0.goodsName, [brand, size, goods0.hsCode].filter(Boolean).join(" · "))}</td>
                         <td className={cn(cell, "font-mono")}>{lots.join(", ") || goods0.stockLotNo || goods0.lotNo || "—"}</td>
                         <td className={cn(cell, "whitespace-nowrap text-end tabular-nums")}>{stacked(Number(r.quantity || 0).toLocaleString(lang), r.unit)}</td>
@@ -984,7 +995,7 @@ export function SalesBookingGlobalRegisterView({
                             {(close) => (
                               <>
                                 <button type="button" className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-start font-bold text-blue-700 hover:bg-blue-50 disabled:opacity-50 dark:text-blue-400 dark:hover:bg-slate-800"
-                                  disabled={Boolean(form.transferAudit) || r.form_data?.workflow?.transferStatus === "transferred" || !r.id}
+                                  disabled={!canPostReviewedTransfer || Boolean(form.transferAudit) || r.form_data?.workflow?.transferStatus === "transferred" || !r.id}
                                   onClick={() => { close(); openReview(r.id, true); }}>
                                   <ArrowRightLeft className="h-4 w-4" />{tr("Transfer / Post")}
                                 </button>
@@ -1216,6 +1227,7 @@ export function SalesBookingGlobalRegisterView({
                               setActiveRowMenuId((curr) => (curr === rowKey ? null : rowKey));
                             }}
                             title={tr("Actions")}
+                            aria-label={`${tr("Actions")} ${billNo}`}
                             className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 cursor-pointer"
                           >
                             <MoreVertical className="h-3.5 w-3.5" />
@@ -1223,6 +1235,13 @@ export function SalesBookingGlobalRegisterView({
 
                           {activeRowMenuId === rowKey && (
                             <div className="absolute end-0 top-full mt-1 z-50 w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 text-start text-xs">
+                              {r.id && canVerifyLocalTransfer && (transferred || canPostReviewedTransfer) && (
+                                <button type="button"
+                                  onClick={() => { setActiveRowMenuId(null); openReview(r.id, !transferred && canPostReviewedTransfer, true); }}
+                                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-start font-semibold text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-slate-800">
+                                  <ArrowRightLeft className="h-3.5 w-3.5" />{tr(transferred ? "Local Sales Transfer Verification Report" : "Transfer")}
+                                </button>
+                              )}
                               <button
                                 type="button"
                                 onClick={() => {
@@ -1314,16 +1333,16 @@ export function SalesBookingGlobalRegisterView({
       </div>
 
       {/* Full A4 Sales Invoice View Modal */}
-      {review?.allowPost && <SalesBookingTransferReport
+      {review && (review.allowPost || review.local) && <SalesBookingTransferReport
         open onClose={() => setReview(null)} lang={lang} order={reviewOrder ?? undefined}
         form={reviewOrder?.form_data?.form} goods={Array.isArray(reviewOrder?.form_data?.goodsEntries) ? reviewOrder.form_data.goodsEntries : []}
-        confirmation={reviewConfirmation} busy={reviewBusy} error={reviewError}
-        onPost={reviewOrder ? postReviewedOrder : undefined}
-        onDocument={reviewOrder ? () => {
+        confirmation={reviewConfirmation} busy={reviewBusy} error={reviewError} localSale={review.local}
+        onPost={reviewOrder && review.allowPost && !reviewConfirmation && reviewOrder.sales_status && !["draft", "cancelled", "canceled", "void"].includes(String(reviewOrder.sales_status).toLowerCase()) ? postReviewedOrder : undefined}
+        onDocument={!review.local && reviewOrder ? () => {
           setReview({ ...review, allowPost: false });
         } : undefined}
       />}
-      {review && !review.allowPost && <SalesBookingDocumentView
+      {review && !review.allowPost && !review.local && <SalesBookingDocumentView
         open onClose={() => setReview(null)} lang={lang} order={reviewOrder ?? undefined} busy={reviewBusy} error={reviewError}
         onInvoice={reviewOrder ? () => { setInvoiceRow(reviewOrder); setReview(null); } : undefined}
       />}

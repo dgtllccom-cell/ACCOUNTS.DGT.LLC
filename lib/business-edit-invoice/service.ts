@@ -1,3 +1,4 @@
+import { salesWorkflowPayment } from "@/lib/sales/payment-workflow";
 import type { ErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { ApiClientError } from "@/lib/api/response";
@@ -55,7 +56,7 @@ const SOURCE_TABLE: Record<BeiSourceModule, string> = {
 };
 
 // ── available finalized bills (from the shared bill_expenses register) ──────
-export async function listAvailableBills(session: ErpSession, opts: { module?: string; q?: string; countryId?: string; branchId?: string; limit?: number }) {
+export async function listAvailableBills(session: ErpSession, opts: { module?: string; q?: string; sourceId?: string; countryId?: string; branchId?: string; limit?: number }) {
   assertUse(session);
   const { effectiveCountryId, effectiveBranchId } = scopeParams(session, opts.countryId, opts.branchId);
   const moduleFilter = BEI_SOURCE_MODULES.includes((opts.module ?? "") as BeiSourceModule) ? opts.module : null;
@@ -75,7 +76,10 @@ export async function listAvailableBills(session: ErpSession, opts: { module?: s
     left join public.country_branches cb on cb.id = be.country_branch_id
     left join public.city_branches cib on cib.id = be.city_branch_id
     where be.deleted_at is null and be.eligibility = 'active'
-      ${moduleFilter ? sql`and be.source_module = ${moduleFilter}` : sql``}
+      ${opts.sourceId && (moduleFilter === "local_sales" || moduleFilter === "sales_booking")
+        ? sql`and be.source_table = 'sales_orders' and be.source_module in ('sales_booking','local_sales')`
+        : moduleFilter ? sql`and be.source_module = ${moduleFilter}` : sql``}
+      ${opts.sourceId ? sql`and be.source_id = ${opts.sourceId}::uuid` : sql``}
       ${effectiveCountryId ? sql`and be.country_id = ${effectiveCountryId}` : sql``}
       ${effectiveBranchId ? sql`and be.city_branch_id = ${effectiveBranchId}` : sql``}
       ${q ? sql`and (be.bill_no ilike ${`%${q}%`} or be.manual_bill_no ilike ${`%${q}%`} or be.party_name ilike ${`%${q}%`})` : sql``}
@@ -158,7 +162,21 @@ export async function createFromBill(session: ErpSession, input: CreateBeiInput)
   };
   const billDate = dayOf(mapped.docDate) || dayOf(src.created_at);
 
-  const row = await withLocalPg(async (sql) => {
+  const persist = async (sql: any) => {
+    if (input.salesWorkflow) {
+      const current = await sql`select id, ledger_posting_status, form_data from public.sales_orders where id = ${input.sourceId}::uuid and deleted_at is null for update`;
+      const linked = current[0];
+      if (SOURCE_TABLE[sourceModule] !== "sales_orders" || !linked || !/^(posted|transferred)$/i.test(linked.ledger_posting_status || "")
+        || (salesWorkflowPayment(linked.form_data?.workflow?.paymentKind) ?? salesWorkflowPayment(linked.form_data?.form?.paymentType)) !== "invoice"
+        || !["commercial_invoice", "export_invoice", "tax_invoice"].includes(docType)) {
+        throw new ApiClientError("Only a transferred Invoice sale can use this action.", { status: 409, code: "SALES_INVOICE_NOT_READY" });
+      }
+      const existing = await sql`select * from public.business_edit_invoices
+        where source_table = 'sales_orders' and source_id = ${input.sourceId}::uuid and txn_kind = 'sales'
+          and doc_type = ${docType} and deleted_at is null and status not in ('cancelled', 'void')
+        order by created_at asc limit 1`;
+      if (existing[0]) return existing[0];
+    }
     const inserted = (await sql`
       insert into public.business_edit_invoices (
         source_module, source_id, source_table, original_bill_no, original_manual_bill_no,
@@ -208,7 +226,8 @@ export async function createFromBill(session: ErpSession, input: CreateBeiInput)
       values (${inv.id}::uuid, 1, ${JSON.stringify({ header: inv, lines: mapped.goods })}::jsonb, ${originalTotal}, ${session.userId ?? null}, 'created from bill')
     `;
     return inv;
-  });
+  };
+  const row = await withLocalPg(sql => input.salesWorkflow ? sql.begin(tx => persist(tx)) : persist(sql));
 
   if (!row) throw new ApiClientError("Could not create the invoice.", { status: 500, code: "DB" });
 

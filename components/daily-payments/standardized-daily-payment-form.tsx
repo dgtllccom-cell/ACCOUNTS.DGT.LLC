@@ -40,6 +40,7 @@ import { BankPicker } from "@/features/banks/components/bank-picker";
 import { getBankById, listBanks, type BankRecord } from "@/features/banks/bank-api";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { t as tGlobal } from "@/lib/i18n/ui";
 import { rtlLanguages } from "@/lib/i18n/languages";
 import { openPaymentVoucherPrintReport } from "@/lib/reports/open-payment-voucher-print";
 import { cn } from "@/lib/utils";
@@ -104,6 +105,10 @@ export function StandardizedDailyPaymentForm({
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
 
   // Method-Specific Details
+  const selectedSalesMethod = useRef(false);
+  const [cashPartyName, setCashPartyName] = useState("");
+  const [cashMobile, setCashMobile] = useState("");
+  const [cashId, setCashId] = useState("");
   const [bankId, setBankId] = useState<string>("");
   const [selectedBankRecord, setSelectedBankRecord] = useState<BankRecord | null>(null);
   const [availableCountryBanks, setAvailableCountryBanks] = useState<BankRecord[]>([]);
@@ -327,6 +332,8 @@ export function StandardizedDailyPaymentForm({
       setCurrency(String(selectedSourceLedger.currency).toUpperCase());
     }
 
+    if (scope === "sales" && selectedSalesMethod.current) return;
+
     const name = String(selectedSourceLedger.name || "").toLowerCase();
     const code = String(selectedSourceLedger.code || "").toLowerCase();
     const type = String(selectedSourceLedger.account_type || selectedSourceLedger.type || "").toLowerCase();
@@ -380,6 +387,29 @@ export function StandardizedDailyPaymentForm({
     if (isSameCurrency) return numericAmount;
     return Math.round(numericAmount * (numericRate > 0 ? numericRate : 1) * 100) / 100;
   }, [isSameCurrency, numericAmount, numericRate]);
+
+  function chooseMethod(method: PaymentMethodType) {
+    if (scope === "sales") selectedSalesMethod.current = true;
+    setPaymentMethod(method);
+  }
+
+  const paymentMethods: { id: PaymentMethodType; label: string; icon: typeof Wallet }[] = [
+    { id: "cash", label: th("Cash in Hand"), icon: Wallet },
+    { id: "bank_transfer", label: th("Bank Transfer"), icon: Landmark },
+    { id: "tt_swift", label: th("TT / SWIFT"), icon: Building2 },
+    { id: "mobile_wallet", label: th("Mobile Wallet"), icon: Smartphone },
+    { id: "cheque", label: th("Cheque"), icon: CreditCard },
+    { id: "internal_transfer", label: th("Internal Transfer"), icon: RefreshCw },
+  ];
+  const conditionLabels: Record<PaymentConditionType, string> = {
+    advance: "Advance Payment", endorsement: "Endorsement", credit: "Credit Payment",
+    remaining: "Remaining Payment", final: "Final Payment",
+  };
+
+  // Endorsed sales keep their existing Advance posting route; the label is display-only.
+  const displayedCondition = scope === "sales" && condition === "advance" &&
+    /endorse/i.test(String(orderFormData.paymentType || orderFormData.paymentCondition || ""))
+    ? "Endorsement" : conditionLabels[condition];
 
   // Submit Handler
   async function handleSubmit(e: React.FormEvent) {
@@ -459,6 +489,11 @@ export function StandardizedDailyPaymentForm({
         methodDetailsPayload.senderBeneficiaryRef = senderBeneficiaryRef.trim() || null;
       } else if (paymentMethod === "cash") {
         methodDetailsPayload.cashReceiptNo = referenceNo.trim() || null;
+        if (scope === "sales") {
+          methodDetailsPayload.cashPartyName = cashPartyName.trim() || null;
+          methodDetailsPayload.cashMobile = cashMobile.trim() || null;
+          methodDetailsPayload.cashIdTail = cashId.trim().slice(-4) || null;
+        }
       } else if (paymentMethod === "mobile_wallet") {
         methodDetailsPayload.walletProvider = walletProvider;
         methodDetailsPayload.walletAccount = walletAccount.trim();
@@ -518,6 +553,9 @@ export function StandardizedDailyPaymentForm({
       setChequeNumber("");
       setTransactionId("");
       setNarration("");
+      setCashPartyName("");
+      setCashMobile("");
+      setCashId("");
       setAttachmentFile(null);
 
       if (onSuccess) {
@@ -743,7 +781,31 @@ export function StandardizedDailyPaymentForm({
             <span className="text-[11px] font-bold text-slate-400">Dynamic Fields Engine</span>
           </div>
 
-          {!paymentSourceLedgerId ? (
+          {scope === "sales" && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <label className="space-y-1 text-xs font-semibold">
+                <span>{th("Roznamcha Type")}</span>
+                <select className="h-9 w-full rounded-md border bg-background px-2" value={paymentMethod} onChange={e => chooseMethod(e.target.value as PaymentMethodType)}>
+                  {paymentMethods.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+                </select>
+              </label>
+              <label className="space-y-1 text-xs font-semibold">
+                <span>{tGlobal(currentLang, "pjt.payment_condition", "Payment Condition")}</span>
+                <Input className="h-9" value={th(displayedCondition)} readOnly />
+              </label>
+              <label className="space-y-1 text-xs font-semibold">
+                <span>{tGlobal(currentLang, "pjt.payment_type_channel", "Payment Type / Channel")}</span>
+                <select className="h-9 w-full rounded-md border bg-background px-2" value={paymentMethod} onChange={e => chooseMethod(e.target.value as PaymentMethodType)}>
+                  {paymentMethods.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+                </select>
+              </label>
+            </div>
+          )}
+
+          {scope === "sales" && !paymentSourceLedgerId && (
+            <p className="text-xs text-amber-800 dark:text-amber-300">{th("Select DR Receiving Account")}</p>
+          )}
+          {scope === "purchase" && !paymentSourceLedgerId ? (
             <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
               <Info className="h-4 w-4 shrink-0 text-amber-600" />
               <span>Please select the CR Source Account in Step 2 above to proceed with channel fields.</span>
@@ -751,22 +813,15 @@ export function StandardizedDailyPaymentForm({
           ) : (
             <>
               {/* Method Selector Tabs */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-                {[
-                  { id: "cash", label: th("Cash in Hand"), icon: Wallet },
-                  { id: "bank_transfer", label: th("Bank Transfer"), icon: Landmark },
-                  { id: "tt_swift", label: th("TT / SWIFT"), icon: Building2 },
-                  { id: "mobile_wallet", label: th("Mobile Wallet"), icon: Smartphone },
-                  { id: "cheque", label: th("Cheque"), icon: CreditCard },
-                  { id: "internal_transfer", label: th("Internal Transfer"), icon: RefreshCw },
-                ].map((m) => {
+              {scope === "purchase" && <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                {paymentMethods.map((m) => {
                   const Icon = m.icon;
                   const isSelected = paymentMethod === m.id;
                   return (
                     <button
                       key={m.id}
                       type="button"
-                      onClick={() => setPaymentMethod(m.id as PaymentMethodType)}
+                      onClick={() => chooseMethod(m.id)}
                       className={cn(
                         "flex flex-col items-center justify-center p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer",
                         isSelected
@@ -779,17 +834,31 @@ export function StandardizedDailyPaymentForm({
                     </button>
                   );
                 })}
-              </div>
+              </div>}
 
               {/* ── METHOD 1: CASH IN HAND ── */}
               {paymentMethod === "cash" && (
                 <div className="p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/40 dark:bg-emerald-950/20 text-xs space-y-2 animate-in fade-in">
                   <div className="font-black text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
-                    <Wallet className="h-4 w-4" /> {th("Cash in Hand Disbursement")}
+                    <Wallet className="h-4 w-4" /> {scope === "sales" ? th("Cash Receipt") : th("Cash in Hand Disbursement")}
                   </div>
-                  <p className="text-slate-600 dark:text-slate-400 text-[11px]">
-                    Direct branch cash payment. Bank, IBAN, and TT fields are hidden. Currency defaulted to account currency ({currency}).
-                  </p>
+                  {scope === "sales" ? (
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <label className="space-y-1">{tGlobal(currentLang, "cef.party_name", "Party Name")}
+                        <Input className="h-8 text-xs" value={cashPartyName} maxLength={120} onChange={e => setCashPartyName(e.target.value)} />
+                      </label>
+                      <label className="space-y-1">{tGlobal(currentLang, "cef.mobile_no", "Mobile No.")}
+                        <Input className="h-8 text-xs" type="tel" value={cashMobile} maxLength={35} onChange={e => setCashMobile(e.target.value)} />
+                      </label>
+                      <label className="space-y-1">{tGlobal(currentLang, "cef.download_id", "Download ID")}
+                        <Input className="h-8 text-xs" value={cashId} maxLength={80} onChange={e => setCashId(e.target.value)} />
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="text-slate-600 dark:text-slate-400 text-[11px]">
+                      Direct branch cash payment. Bank, IBAN, and TT fields are hidden. Currency defaulted to account currency ({currency}).
+                    </p>
+                  )}
                 </div>
               )}
 
