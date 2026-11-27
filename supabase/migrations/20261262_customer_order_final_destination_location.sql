@@ -8,6 +8,6 @@ ALTER TABLE public.clearing_customer_orders
   ADD COLUMN IF NOT EXISTS final_destination_state text,
   ADD COLUMN IF NOT EXISTS final_destination_city text,
   ADD COLUMN IF NOT EXISTS final_destination_address text,
-  ADD COLUMN IF NOT EXISTS final_destination_state_province_id uuid REFERENCES public.state_provinces(id) ON DELETE RESTRICT,
+  ADD COLUMN IF NOT EXISTS final_destination_state_province_id uuid REFERENCES public.states_provinces(id) ON DELETE RESTRICT,
   ADD COLUMN IF NOT EXISTS final_destination_district_id uuid REFERENCES public.districts(id) ON DELETE RESTRICT,
   ADD COLUMN IF NOT EXISTS final_destination_city_id uuid REFERENCES public.cities(id) ON DELETE RESTRICT;
