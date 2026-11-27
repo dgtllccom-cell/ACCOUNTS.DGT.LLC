@@ -54,6 +54,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VoiceFormFill } from "@/components/voice-form-fill";
 import {
+  invalidateLocationCache,
   listCountries,
   listStates,
   listCities,
@@ -61,6 +62,8 @@ import {
   type LocationState,
   type LocationCity
 } from "@/features/locations/location-api";
+import { LocationQuickCreateModal } from "@/features/locations/components/location-hierarchy-select";
+import { activeAddressChoices, findAddressDuplicate } from "./account-address-locations";
 import { apiPost, apiPatch } from "@/lib/api/client";
 import { CustomerPicker } from "@/features/customers/components/customer-picker";
 import { CustomerAccountCard } from "@/components/erp/customer-account-card";
@@ -514,7 +517,9 @@ export function NewAccountSetup({
   const [addressStateId, setAddressStateId] = useState("");
   const [addressCityId, setAddressCityId] = useState("");
   const [addressPostalCode, setAddressPostalCode] = useState("");
+  const autoAddressPostalCode = useRef("");
   const [fullAddress, setFullAddress] = useState("");
+  const [addressLocationEditor, setAddressLocationEditor] = useState<"country" | "state" | "city" | null>(null);
   const [addressStatesLoading, setAddressStatesLoading] = useState(false);
   const [addressCitiesLoading, setAddressCitiesLoading] = useState(false);
 
@@ -1052,18 +1057,14 @@ export function NewAccountSetup({
     return () => { cancelled = true; };
   }, [linkedCompanyId, lang, addressCountryId]);
 
-  // Keep addressCountries synced with location master
+  // Address geography is independent of the operational branch/country lists.
   useEffect(() => {
-    if (countries.length > 0) {
-      setAddressCountries(countries);
-    } else {
-      listCountries({ all: true, lang })
-        .then((res) => {
-          if (Array.isArray(res)) setAddressCountries(res);
-        })
-        .catch(() => null);
-    }
-  }, [countries, lang]);
+    let cancelled = false;
+    listCountries({ all: true, lang }).then((rows) => {
+      if (!cancelled) setAddressCountries(rows);
+    }).catch(() => null);
+    return () => { cancelled = true; };
+  }, [lang]);
 
   // Default address country to operational country if empty
   useEffect(() => {
@@ -1084,7 +1085,7 @@ export function NewAccountSetup({
     listStates({ countryId: addressCountryId, lang })
       .then((res) => {
         if (!cancelled) {
-          setAddressStates(Array.isArray(res) ? res : []);
+          setAddressStates(activeAddressChoices(res, addressCountryId));
           setAddressStatesLoading(false);
         }
       })
@@ -1109,7 +1110,7 @@ export function NewAccountSetup({
     })
       .then((res) => {
         if (!cancelled) {
-          setAddressCities(Array.isArray(res) ? res : []);
+          setAddressCities(activeAddressChoices(res, addressCountryId, addressStateId || undefined));
           setAddressCitiesLoading(false);
         }
       })
@@ -1763,8 +1764,79 @@ export function NewAccountSetup({
     });
   }
 
+  const canCreateAddressCountry = erpScope.isSuperAdmin;
+  const canCreateAddressChild = Boolean(addressCountryId) && (erpScope.isSuperAdmin ||
+    (erpScope.roles.includes("country_admin") && erpScope.countryIds.includes(addressCountryId)));
+
+  async function loadAddressChoices(kind: "country" | "state" | "city", language: SupportedLanguage = lang, includeInactive = false) {
+    invalidateLocationCache();
+    if (kind === "country") return listCountries({ all: true, lang: language });
+    if (kind === "state") return activeAddressChoices(await listStates({ countryId: addressCountryId, lang: language }), addressCountryId, undefined, includeInactive);
+    return activeAddressChoices(await listCities({ countryId: addressCountryId, stateProvinceId: addressStateId, lang: language }), addressCountryId, addressStateId, includeInactive);
+  }
+
+  function applyAddressCityPostalCode(postalCode: string | null | undefined) {
+    const previousAutomaticCode = autoAddressPostalCode.current;
+    if (addressPostalCode && addressPostalCode !== previousAutomaticCode) return;
+    const next = postalCode || "";
+    autoAddressPostalCode.current = next;
+    setAddressPostalCode(next);
+  }
+
+  function selectAddressLocation(kind: "country" | "state" | "city", item: LocationCountry | LocationState | LocationCity) {
+    const replace = <T extends { id: string }>(rows: T[], row: T) =>
+      rows.some((entry) => entry.id === row.id) ? rows.map((entry) => entry.id === row.id ? row : entry) : [...rows, row];
+    if (kind === "country" && "iso2" in item) {
+      setAddressCountries((rows) => replace(rows, item));
+      if (item.id !== addressCountryId) {
+        setAddressCountryId(item.id);
+        setAddressStateId("");
+        setAddressCityId("");
+      }
+    } else if (kind === "state" && "country_id" in item && !("state_province_id" in item)) {
+      setAddressStates((rows) => replace(rows, item));
+      if (item.id !== addressStateId) {
+        setAddressStateId(item.id);
+        setAddressCityId("");
+      }
+    } else if (kind === "city" && "state_province_id" in item) {
+      setAddressCities((rows) => replace(rows, item));
+      setAddressCityId(item.id);
+      // A city can have many postal addresses; use only its explicit default.
+      applyAddressCityPostalCode(item.zip_code);
+    }
+    setAddressLocationEditor(null);
+  }
+
   return (
     <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
+      {addressLocationEditor && (
+        <LocationQuickCreateModal
+          key={addressLocationEditor}
+          type={addressLocationEditor}
+          countryId={addressCountryId}
+          stateProvinceId={addressStateId}
+          countryName={addressCountries.find((row) => row.id === addressCountryId)?.name}
+          stateName={addressStates.find((row) => row.id === addressStateId)?.name}
+          onClose={() => setAddressLocationEditor(null)}
+          requireCountryMetadata
+          requireChildCode
+          resolveExisting={async ({ name, code }) => {
+            const canonical = await loadAddressChoices(addressLocationEditor, "en", true);
+            const displayed = lang === "en" ? canonical : await loadAddressChoices(addressLocationEditor, lang, true);
+            const match = findAddressDuplicate([...displayed, ...canonical], name, code, addressLocationEditor === "country");
+            if (match && !match.is_active) throw new Error(t(lang, "lfix.err_save_generic"));
+            return match;
+          }}
+          confirmSaved={async (item, input) => {
+            const saved = (await loadAddressChoices(addressLocationEditor)).find((row) =>
+              row.id === item.id && row.is_active && (!("iso2" in item) || ("iso2" in row && row.iso2 === input.code.toUpperCase())));
+            if (!saved) throw new Error(t(lang, "lfix.err_save_generic"));
+            return saved;
+          }}
+          onCreated={(_id, item) => selectAddressLocation(addressLocationEditor, item)}
+        />
+      )}
       {/* ── Breadcrumb & Page Header ────────────────────────────────── */}
       <div className="space-y-3 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
@@ -2878,6 +2950,12 @@ export function NewAccountSetup({
                         </option>
                       ))}
                     </select>
+                    {!initialAccountId && (canCreateAddressCountry) && (
+                      <Button type="button" size="sm" variant="outline" onClick={() => setAddressLocationEditor("country")}>
+                        <Plus className="h-3.5 w-3.5" aria-hidden />
+                        {t(lang, "lochier.newCountry", "New Country")}
+                      </Button>
+                    )}
                   </div>
 
                   <div className="space-y-1">
@@ -2906,6 +2984,12 @@ export function NewAccountSetup({
                         </option>
                       ))}
                     </select>
+                    {!initialAccountId && (canCreateAddressChild) && (
+                      <Button type="button" size="sm" variant="outline" onClick={() => setAddressLocationEditor("state")}>
+                        <Plus className="h-3.5 w-3.5" aria-hidden />
+                        {t(lang, "lochier.newState", "New State")}
+                      </Button>
+                    )}
                   </div>
                 </div>
 
@@ -2918,7 +3002,12 @@ export function NewAccountSetup({
                     <select
                       id="addressCity"
                       value={addressCityId}
-                      onChange={(e) => setAddressCityId(e.target.value)}
+                      onChange={(e) => {
+                        const id = e.target.value;
+                        setAddressCityId(id);
+                        const postalCode = addressCities.find((city) => city.id === id)?.zip_code;
+                        applyAddressCityPostalCode(postalCode);
+                      }}
                       disabled={!addressCountryId}
                       className={selectClass() + " h-9 text-xs"}
                     >
@@ -2933,6 +3022,12 @@ export function NewAccountSetup({
                         </option>
                       ))}
                     </select>
+                    {!initialAccountId && (canCreateAddressChild && Boolean(addressStateId)) && (
+                      <Button type="button" size="sm" variant="outline" onClick={() => setAddressLocationEditor("city")}>
+                        <Plus className="h-3.5 w-3.5" aria-hidden />
+                        {t(lang, "lochier.newCity", "New City")}
+                      </Button>
+                    )}
                   </div>
 
                   <div className="space-y-1">
@@ -2943,7 +3038,10 @@ export function NewAccountSetup({
                       id="addressPostalCode"
                       dir="ltr"
                       value={addressPostalCode}
-                      onChange={(e) => setAddressPostalCode(e.target.value)}
+                      onChange={(e) => {
+                        autoAddressPostalCode.current = "";
+                        setAddressPostalCode(e.target.value);
+                      }}
                       placeholder={getLabel("postalCodePlaceholder", lang)}
                       className="h-9 text-xs font-mono text-left"
                     />
