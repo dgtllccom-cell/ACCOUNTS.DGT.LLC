@@ -68,6 +68,7 @@ import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { TruckAttachments } from "@/features/clearing-agent/components/truck-attachments";
 import { Th } from "@/components/ui/translated-th";
 import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
+import { postalCodeAfterCityChange } from "@/features/locations/address-postal-code";
 
 /**
  * Clearing Truck Registration (Shipping & Clearing). Table: trucks.
@@ -326,6 +327,7 @@ const EMPTY_FORM = {
   driverStateId: "",
   driverDistrictId: "",
   driverCityId: "",
+  driverPostal: { value: "", suggestion: "" },
   remarks: "",
   status: "active",
   registrationDate: new Date().toISOString().slice(0, 10),
@@ -1183,6 +1185,7 @@ export function TruckRecreationWizard({
         driverStateId: row.driver_state_province_id || "",
         driverDistrictId: row.driver_district_id || "",
         driverCityId: row.driver_city_id || "",
+        driverPostal: { value: extraNotes.driverPostalCode ?? extraNotes.driverLocation?.postalCode ?? "", suggestion: "" },
         remarks: String(extraNotes.userNotes !== undefined ? (extraNotes.userNotes ?? "") : row.notes || ""),
         status: row.status || "active",
         registrationDate: (row.created_at || "").slice(0, 10) || new Date().toISOString().slice(0, 10),
@@ -1308,6 +1311,7 @@ export function TruckRecreationWizard({
         driverCountry: tempDriverLocation ? form.driverCountry || null : null,
         driverState: tempDriverLocation ? form.driverState || null : null,
         driverCity: tempDriverLocation ? form.driverCity || null : null,
+        driverPostalCode: tempDriverLocation ? form.driverPostal.value.trim() || null : null,
         userNotes: form.remarks.trim() || null,
       };
 
@@ -4022,8 +4026,18 @@ export function TruckRecreationWizard({
                                   driverCountry: meta.country?.name ?? (v.countryId ? p.driverCountry : ""),
                                   driverState: meta.state?.name ?? (v.stateProvinceId ? p.driverState : ""),
                                   driverCity: meta.city?.name ?? (v.cityId ? p.driverCity : ""),
+                                  driverPostal: postalCodeAfterCityChange(p.driverPostal.value, p.driverPostal.suggestion, meta.city?.zip_code),
                                 }))}
                               />
+                              <label className="space-y-1 text-xs">
+                                <span className="font-bold text-slate-600 dark:text-slate-400">{tt("locedit.postal_code", "Postal Code")}</span>
+                                <input
+                                  dir="ltr"
+                                  value={form.driverPostal.value}
+                                  onChange={(e) => setForm((p) => ({ ...p, driverPostal: { value: e.target.value, suggestion: "" } }))}
+                                  className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-700 dark:bg-slate-800"
+                                />
+                              </label>
                               <label className="space-y-1 text-xs">
                                 <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.address", "Full Address")}</span>
                                 <input
