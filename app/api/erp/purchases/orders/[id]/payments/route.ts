@@ -1,3 +1,4 @@
+import { assertPayableBankId } from "@/lib/services/payment-bank-guard";
 import { billFxOperator, effectiveFxRate } from "@/lib/purchases/fx-operator";
 import { NextRequest } from "next/server";
 import type postgres from "postgres";
@@ -425,6 +426,8 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
     } else {
       body = purchaseOrderPaymentPostSchema.parse(await request.json());
     }
+
+    await assertPayableBankId(body.typeDetails?.bankId);
 
     if (!isSupabaseConfigured()) {
       throw new Error("Supabase is not configured. Purchase posting requires a real Supabase login.");

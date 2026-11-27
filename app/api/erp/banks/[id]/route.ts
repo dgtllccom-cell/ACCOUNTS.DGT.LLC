@@ -1,7 +1,8 @@
+import { isDemoBankAccountNumber } from "@/lib/services/demo-bank-identity";
 import { NextRequest } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
-import { apiOk, handleApiError } from "@/lib/api/response";
+import { ApiClientError, apiOk, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { banksService } from "@/lib/services/banks-service";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
@@ -221,6 +222,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     // The assigned country is the bank's access scope. A physical-address edit
     // (e.g. an India branch address) must never move the bank to another country.
     assertAssignedCountryUnchanged(existing.country_id, body.countryId);
+    const existingDemo = isDemoBankAccountNumber(existing.account_number);
+    if (body.accountNumber != null && isDemoBankAccountNumber(body.accountNumber) !== existingDemo) {
+      throw new ApiClientError("An existing bank cannot be converted to or from a demo bank.", { status: 422, code: "DEMO_BANK_CLASS_IMMUTABLE" });
+    }
     const touchesGeography = ["addressCountryId", "stateProvinceId", "districtId", "cityId"].some((k) => body[k] !== undefined);
     if (touchesGeography) {
       await assertGeoHierarchy({
@@ -247,10 +252,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           short_name = COALESCE(${body.shortName ?? null}, short_name),
           account_title = COALESCE(${body.accountTitle ?? null}, account_title),
           account_number = COALESCE(${body.accountNumber ?? null}, account_number),
-          iban_number = COALESCE(${body.ibanNumber ?? body.iban ?? null}, iban_number),
-          swift_bic = COALESCE(${body.swiftBic ?? body.swiftCode ?? null}, swift_bic),
+          iban_number = CASE WHEN ${existingDemo} THEN NULL ELSE COALESCE(${body.ibanNumber ?? body.iban ?? null}, iban_number) END,
+          swift_bic = CASE WHEN ${existingDemo} THEN NULL ELSE COALESCE(${body.swiftBic ?? body.swiftCode ?? null}, swift_bic) END,
           currency = COALESCE(${body.currency ?? body.currencyCode ?? null}, currency),
-          account_status = COALESCE(${body.accountStatus ?? null}, account_status),
+          account_status = CASE WHEN ${existingDemo} THEN 'Inactive' ELSE COALESCE(${body.accountStatus ?? null}, account_status) END,
           address_country_id = CASE WHEN ${body.addressCountryId !== undefined} THEN ${body.addressCountryId || null}::uuid ELSE address_country_id END,
           state_province_id = CASE WHEN ${body.stateProvinceId !== undefined} THEN ${body.stateProvinceId || null}::uuid ELSE state_province_id END,
           district_id = CASE WHEN ${body.districtId !== undefined} THEN ${body.districtId || null}::uuid ELSE district_id END,
@@ -260,7 +265,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           email = COALESCE(${body.email ?? null}, email),
           website = COALESCE(${body.website ?? null}, website),
           remarks = COALESCE(${body.remarks ?? null}, remarks),
-          is_active = COALESCE(${body.isActive !== undefined ? body.isActive : null}, is_active),
+          is_active = CASE WHEN ${existingDemo} THEN false ELSE COALESCE(${body.isActive !== undefined ? body.isActive : null}, is_active) END,
           updated_at = ${new Date().toISOString()}
         WHERE id = ${id}::uuid AND deleted_at IS NULL
       `;

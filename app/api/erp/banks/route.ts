@@ -1,3 +1,4 @@
+import { isDemoBankAccountNumber } from "@/lib/services/demo-bank-identity";
 import { NextRequest } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -184,6 +185,7 @@ export async function GET(request: NextRequest) {
 
     const search = (request.nextUrl.searchParams.get("search") || request.nextUrl.searchParams.get("q") || "").trim().toLowerCase();
     const status = request.nextUrl.searchParams.get("status");
+    const excludeDemo = request.nextUrl.searchParams.get("excludeDemo") === "1";
     const limit = Number(request.nextUrl.searchParams.get("limit") || "500");
     const offset = Number(request.nextUrl.searchParams.get("offset") || "0");
     const requestedCountryId = request.nextUrl.searchParams.get("countryId") || "";
@@ -201,6 +203,7 @@ export async function GET(request: NextRequest) {
       ? scoped.filter((bank) => bank.country_id === requestedCountryId)
       : scoped;
     const filtered = countryFiltered.filter((bank) => {
+      if (excludeDemo && isDemoBankAccountNumber(bank.account_number)) return false;
       if (status === "Active" && !bank.is_active) return false;
       if (status === "Inactive" && bank.is_active) return false;
       if (!search) return true;
@@ -240,6 +243,8 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { bankName, bankCode, branchName, countryId, accountTitle, accountNumber, iban, swiftCode, currencyCode, isActive } = body;
+
+    const demoBank = isDemoBankAccountNumber(accountNumber);
 
     if (!bankName) {
       return new Response(JSON.stringify({ error: "bankName is required" }), {
@@ -290,9 +295,9 @@ export async function POST(request: NextRequest) {
           ${body.shortName || bankName.slice(0, 16)},
           ${accountTitle || null},
           ${accountNumber || null},
-          ${iban || null},
+          ${demoBank ? null : (iban || null)},
           ${currencyCode || "USD"},
-          ${body.accountStatus || (isActive === false ? "Inactive" : "Active")},
+          ${demoBank ? "Inactive" : (body.accountStatus || (isActive === false ? "Inactive" : "Active"))},
           ${resolvedCountryId}::uuid,
           ${addressCountryId}::uuid,
           ${body.stateProvinceId || null}::uuid,
@@ -301,10 +306,10 @@ export async function POST(request: NextRequest) {
           ${body.fullAddress || body.bankAddress || body.address || null},
           ${body.phone || null},
           ${body.email || null},
-          ${swiftCode || body.swiftBic || body.swift || null},
+          ${demoBank ? null : (swiftCode || body.swiftBic || body.swift || null)},
           ${body.website || null},
           ${body.remarks || null},
-          ${isActive !== false},
+          ${!demoBank && isActive !== false},
           ${new Date().toISOString()},
           ${new Date().toISOString()}
         )

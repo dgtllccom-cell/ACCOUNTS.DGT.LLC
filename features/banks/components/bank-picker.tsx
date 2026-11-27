@@ -1,3 +1,4 @@
+import { isDemoBankAccountNumber } from "@/lib/services/demo-bank-identity";
 import { useEffect, useMemo, useState } from "react";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
@@ -50,7 +51,9 @@ export function BankPicker({
   onValueChange,
   disabled,
   placeholder,
-  countryId
+  countryId,
+  searchAll = false,
+  includeDemoBanks = false,
 }: {
   label: string;
   value: string;
@@ -62,16 +65,34 @@ export function BankPicker({
    * banks, instead of every country's banks mixed together. Omit to fall
    * back to the caller's own session-scoped default (unchanged behavior). */
   countryId?: string;
+  /** Search the complete permitted master rather than only the initially loaded page. */
+  searchAll?: boolean;
+  /** Profile linking only; never enable for a payment or settlement picker. */
+  includeDemoBanks?: boolean;
 }) {
   const lang = useActiveLanguage();
   const [loading, setLoading] = useState(false);
   const [banks, setBanks] = useState<BankRecord[]>([]);
   const [openCreate, setOpenCreate] = useState(false);
+  const [bankQuery, setBankQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<{ countryId?: string; query: string; rows: BankRecord[] } | null>(null);
+
+  useEffect(() => {
+    const q = bankQuery.trim();
+    if (!searchAll || !q) return;
+    let active = true;
+    const timer = setTimeout(() => {
+      listBanks({ q, countryId: countryId || undefined, limit: 100, excludeDemo: !includeDemoBanks }).then((rows) => {
+        if (active) setSearchResults({ countryId, query: q, rows });
+      }).catch(() => null);
+    }, 250);
+    return () => { active = false; clearTimeout(timer); };
+  }, [bankQuery, countryId, searchAll, includeDemoBanks]);
 
   async function loadList() {
     setLoading(true);
     try {
-      const rows = await listBanks({ limit: 100, countryId: countryId || undefined });
+      const rows = await listBanks({ limit: 100, countryId: countryId || undefined, excludeDemo: !includeDemoBanks });
       setBanks(rows);
     } finally {
       setLoading(false);
@@ -81,7 +102,7 @@ export function BankPicker({
   useEffect(() => {
     loadList().catch(() => null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countryId]);
+  }, [countryId, includeDemoBanks]);
 
   // If a value is selected but not in the current list, fetch it individually
   useEffect(() => {
@@ -109,7 +130,14 @@ export function BankPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
-  const options: SearchSelectOption[] = useMemo(() => banks.map((b) => toOption(b, lang)), [banks, lang]);
+  const visibleBanks = useMemo(() => {
+    if (!searchAll || !bankQuery.trim() || !searchResults || searchResults.query !== bankQuery.trim() || searchResults.countryId !== countryId) return banks;
+    const selected = banks.find((row) => row.id === value);
+    return selected && !searchResults.rows.some((row) => row.id === value)
+      ? [selected, ...searchResults.rows]
+      : searchResults.rows;
+  }, [bankQuery, banks, countryId, searchAll, searchResults, value]);
+  const options: SearchSelectOption[] = useMemo(() => visibleBanks.filter((b) => includeDemoBanks || !isDemoBankAccountNumber(b.account_number)).map((b) => toOption(b, lang)), [visibleBanks, lang, includeDemoBanks]);
   const [viewBank, setViewBank] = useState<BankRecord | null>(null);
   const [editBankId, setEditBankId] = useState<string | null>(null);
 
@@ -122,13 +150,15 @@ export function BankPicker({
         disabled={disabled || loading}
         options={options}
         onValueChange={onValueChange}
+        onSearchValueChange={searchAll ? setBankQuery : undefined}
+        onOpenChange={searchAll ? (open) => { if (!open) { setBankQuery(""); setSearchResults(null); } } : undefined}
         createLabel={t(lang, "bankreg.bankreg_new_bank", "New Bank")}
         createButtonPlacement="both"
         onCreateNew={async () => setOpenCreate(true)}
         viewTitle={t(lang, "bankreg.bp_view_bank_details", "View Bank Details")}
         editTitle={t(lang, "bankreg.bp_edit_bank_master", "Edit Bank Master")}
         onViewOption={(bankId) => {
-          const found = banks.find((b) => b.id === bankId);
+          const found = visibleBanks.find((b) => b.id === bankId);
           if (found) setViewBank(found);
         }}
         onEditOption={(bankId) => {

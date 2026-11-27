@@ -200,3 +200,17 @@ it.each([
   expect(statements.some(sql => sql.includes("update public.sales_orders set paid_amount"))).toBe(false);
   expect(m.commit).not.toHaveBeenCalled();
 });
+
+it("refuses a demo Bank Master before posting even if the bank row is marked active", async () => {
+  m.query.mockImplementation(async (sql: string) => {
+    if (sql.includes("pg_try_advisory_xact_lock")) return [{ got: true }];
+    if (sql.includes("from sales_orders")) return [{ ...base, country_id: dr }];
+    if (sql.includes("from public.banks")) return [{ id: invoice, bank_name: "QA Bank", account_number: "DEMO-NONPAY-AE-1", is_active: true }];
+    return [];
+  });
+  const res = await send({ receiptDetails: { channel: "bank", bankId: invoice } });
+  expect(res.status).toBe(422);
+  expect((await res.json()).error.code).toBe("DEMO_BANK_NOT_PAYABLE");
+  expect(m.query.mock.calls.flat().join(" ")).not.toContain("select post_sales_booking_transfer");
+  expect(m.commit).not.toHaveBeenCalled();
+});

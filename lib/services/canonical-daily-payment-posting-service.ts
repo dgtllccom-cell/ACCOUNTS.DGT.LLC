@@ -1,3 +1,4 @@
+import { assertPayableBankId } from "@/lib/services/payment-bank-guard";
 import { withLocalPg } from "../db/local-postgres";
 import { allocateFormSerials } from "./form-serials";
 import { assertDistinctBookingLedgers, assertBalancedPostedLines, assertPostedRoznamchaTrace } from "./posting-verification";
@@ -129,7 +130,8 @@ export async function postCanonicalDailyPayment(
 
     // 4. Duplicate TT Reference & Bank Account + TT Reference Check
     const effectiveTtRef = String(methodDetails?.ttReference || (method === "tt_swift" ? referenceNo : "") || "").trim();
-    const effectiveBankId = methodDetails?.bankId && isValidUuid(methodDetails.bankId) ? String(methodDetails.bankId).trim() : null;
+    await assertPayableBankId(methodDetails?.bankId, sql);
+    const effectiveBankId = methodDetails?.bankId ? String(methodDetails.bankId).trim() : null;
 
     if (effectiveTtRef && effectiveTtRef.length > 2) {
       // Check duplicate Bank Account + TT Reference in roznamcha_entries

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { assertPayableBankId } from "@/lib/services/payment-bank-guard";
 import { recordInSessionScope } from "@/lib/api/scope-middleware";
 import { ErpPermissionError, hasRolePermission } from "@/lib/permissions/middleware";
 import { NextRequest } from "next/server";
@@ -31,7 +32,7 @@ export async function POST(
     const result = await withLocalPg(async (sql) => {
       // 1. Fetch current transaction record
       const rows = await sql`
-        SELECT id, status, audit_trail, debit, credit, ledger_id, counter_ledger_id, particulars,
+        SELECT id, status, audit_trail, debit, credit, ledger_id, counter_ledger_id, particulars, bank_id,
                country_id, country_branch_id, city_branch_id
         FROM public.bank_cheque_transactions
         WHERE id = ${id} AND deleted_at IS NULL
@@ -45,6 +46,8 @@ export async function POST(
       if (!recordInSessionScope(session, current as any)) {
         throw new ErpPermissionError("This cheque is outside your authorized scope.");
       }
+
+      if (action === "clear" || action === "present") await assertPayableBankId(current.bank_id, sql);
 
       let newStatus = current.status;
       let clearedAt = null;
