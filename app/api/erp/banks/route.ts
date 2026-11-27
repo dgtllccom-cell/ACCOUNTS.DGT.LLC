@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { assertGeoHierarchy } from "@/lib/services/geo-hierarchy-validator";
+import { geographyCountryForValidation } from "@/lib/services/physical-address-scope";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { localizeRecordFields, wantsRawRecord } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
@@ -259,13 +261,22 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Physical branch address (Location Management) is independent of the assigned country.
+    const addressCountryId: string | null = body.addressCountryId || null;
+    await assertGeoHierarchy({
+      countryId: geographyCountryForValidation(addressCountryId, resolvedCountryId),
+      stateProvinceId: body.stateProvinceId || null,
+      districtId: body.districtId || null,
+      cityId: body.cityId || null,
+    });
+
     const bank = await withLocalPg(async (sql) => {
       const rows = await sql<BankRow[]>`
         INSERT INTO public.banks (
           owner_person_id, owner_company_id,
           bank_type, account_type, bank_name, branch_name, branch_code, branch_code_type,
           short_name, account_title, account_number, iban_number, currency, account_status,
-          country_id, state_province_id, district_id, city_id, full_address, phone, email,
+          country_id, address_country_id, state_province_id, district_id, city_id, full_address, phone, email,
           swift_bic, website, remarks, is_active, created_at, updated_at
         ) VALUES (
           ${body.ownerPersonId || null}::uuid,
@@ -283,6 +294,7 @@ export async function POST(request: NextRequest) {
           ${currencyCode || "USD"},
           ${body.accountStatus || (isActive === false ? "Inactive" : "Active")},
           ${resolvedCountryId}::uuid,
+          ${addressCountryId}::uuid,
           ${body.stateProvinceId || null}::uuid,
           ${body.districtId || null}::uuid,
           ${body.cityId || null}::uuid,

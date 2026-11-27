@@ -61,6 +61,7 @@ export async function GET(request: NextRequest) {
         localizeRecordFields<any>(rawCustomers, "customers", ["company_name", "contact_person"], lang),
         localizeJoinedNames<any>(rawCustomers, lang, [
           { idField: "country_id", nameField: "country_name", table: "countries" },
+          { idField: "address_country_id", nameField: "address_country_name", table: "countries" },
           { idField: "state_province_id", nameField: "state_province_name", table: "states_provinces" },
           { idField: "district_id", nameField: "district_name", table: "districts" },
           { idField: "city_id", nameField: "city_name", table: "cities" },
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
           companies_count: raw.companies_count ?? (raw.linked_companies?.length ?? 0),
           linked_branches: raw.linked_branches ?? [],
           branches_count: raw.branches_count ?? (raw.linked_branches?.length ?? 0),
-          ...(j ? { country_name: j.country_name, state_province_name: j.state_province_name, district_name: j.district_name, city_name: j.city_name } : {})
+          ...(j ? { country_name: j.country_name, address_country_name: j.address_country_name, state_province_name: j.state_province_name, district_name: j.district_name, city_name: j.city_name } : {})
         };
       });
     }
@@ -103,17 +104,25 @@ export async function POST(request: NextRequest) {
       throw new ApiClientError("Truck trial access may register truck owners and drivers only.", { status: 403 });
     }
 
+    const assignedCountryId = body.addressCountryId !== undefined
+      ? (body.countryId || (session.countryIds.length === 1 ? session.countryIds[0] : null))
+      : body.countryId;
+    if (body.addressCountryId !== undefined && !assignedCountryId) {
+      throw new ApiClientError("Select an assigned country before saving the customer.", { status: 400 });
+    }
+
     authorizeApiScope(session, {
       resource: "customers",
       action: "create",
-      countryId: body.countryId,
+      countryId: assignedCountryId,
       countryBranchId: body.countryBranchId,
       cityBranchId: body.cityBranchId
     });
 
     const customerId = await customersService.create(
       {
-        countryId: body.countryId || session.countryIds?.[0] || "",
+        countryId: assignedCountryId || session.countryIds?.[0] || "",
+        addressCountryId: body.addressCountryId,
         stateProvinceId: body.stateProvinceId ?? null,
         districtId: body.districtId ?? null,
         cityId: body.cityId ?? null,
@@ -143,7 +152,7 @@ export async function POST(request: NextRequest) {
       entityTable: "customers",
       entityId: customerId,
       after: {
-        countryId: body.countryId,
+        countryId: assignedCountryId,
         customerName: body.customerName,
         companyName: body.companyName ?? null,
         email: body.email ?? null,

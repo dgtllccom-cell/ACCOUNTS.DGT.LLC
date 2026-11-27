@@ -6,6 +6,7 @@ import { assertGeoHierarchy } from "@/lib/services/geo-hierarchy-validator";
 
 export type CustomerInput = {
   countryId: string;
+  addressCountryId?: string | null;
   stateProvinceId?: string | null;
   districtId?: string | null;
   cityId?: string | null;
@@ -42,7 +43,7 @@ export class CustomersService {
 
   async create(input: CustomerInput, actorId?: string | null) {
     await assertGeoHierarchy({
-      countryId: input.countryId,
+      countryId: input.addressCountryId ?? input.countryId,
       stateProvinceId: input.stateProvinceId,
       districtId: input.districtId,
       cityId: input.cityId,
@@ -50,6 +51,7 @@ export class CustomersService {
     });
     const customerId = await customersRepository.create({
       countryId: input.countryId,
+      addressCountryId: input.addressCountryId,
       stateProvinceId: input.stateProvinceId ?? null,
       districtId: input.districtId ?? null,
       cityId: input.cityId ?? null,
@@ -107,13 +109,16 @@ export class CustomersService {
     actorId?: string | null
   ) {
     const before = await customersRepository.getById(id);
-    await assertGeoHierarchy({
-      countryId: "countryId" in input ? input.countryId : before?.country_id ?? null,
-      stateProvinceId: "stateProvinceId" in input ? input.stateProvinceId : before?.state_province_id ?? null,
-      districtId: "districtId" in input ? input.districtId : before?.district_id ?? null,
-      cityId: "cityId" in input ? input.cityId : before?.city_id ?? null,
-      areaLocationId: "areaLocationId" in input ? input.areaLocationId : before?.area_location_id ?? null,
-    });
+    if (["addressCountryId", "stateProvinceId", "districtId", "cityId", "areaLocationId"]
+      .some((key) => Object.prototype.hasOwnProperty.call(input, key))) {
+      await assertGeoHierarchy({
+        countryId: (input.addressCountryId !== undefined ? input.addressCountryId : before?.address_country_id) ?? before?.country_id,
+        stateProvinceId: "stateProvinceId" in input ? input.stateProvinceId : before?.state_province_id ?? null,
+        districtId: "districtId" in input ? input.districtId : before?.district_id ?? null,
+        cityId: "cityId" in input ? input.cityId : before?.city_id ?? null,
+        areaLocationId: "areaLocationId" in input ? input.areaLocationId : before?.area_location_id ?? null,
+      });
+    }
     // Build the patch with ONLY the keys the caller actually supplied. The previous version
     // always emitted every key (assigning JS `undefined` when a field was absent) — an object
     // literal keeps a key once written, even when its value is `undefined`, so the repository's
@@ -122,6 +127,7 @@ export class CustomersService {
     // That crashed any update that legitimately omitted a field (e.g. editing only the
     // address, without first/last name in the request body).
     const patch: Record<string, unknown> = {};
+    if ("addressCountryId" in input) patch.addressCountryId = input.addressCountryId ?? null;
     if ("stateProvinceId" in input) patch.stateProvinceId = input.stateProvinceId ?? null;
     if ("districtId" in input) patch.districtId = input.districtId ?? null;
     if ("cityId" in input) patch.cityId = input.cityId ?? null;

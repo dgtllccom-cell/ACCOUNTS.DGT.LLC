@@ -18,6 +18,8 @@ import { formatErpDate } from "@/lib/datetime/erp-date";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { t as centralT } from "@/lib/i18n/ui";
 import { locName } from "./location-translations";
+import { ExternalLocationPicker, emptyExternalLocation, type ExternalLocationSelection } from "./external-location-picker";
+import { postalCodeAfterCityChange } from "@/features/locations/address-postal-code";
 import {
   Shield,
   Globe,
@@ -547,6 +549,7 @@ export function ExtFormClient({ token }: { token: string }) {
     formType: string;
     createdByName: string | null;
     status: string;
+    centralAddress?: boolean;
   } | null>(null);
   const [pageError, setPageError] = useState<string | null>(null);
 
@@ -590,6 +593,8 @@ export function ExtFormClient({ token }: { token: string }) {
   const [city, setCity] = useState("Karachi");
   const [postalCode, setPostalCode] = useState("74000");
   const [fullAddress, setFullAddress] = useState("");
+  const [masterAddress, setMasterAddress] = useState<ExternalLocationSelection>(emptyExternalLocation);
+  const autoPostalCode = useRef("");
 
   // Step 4: Photo & Submission
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -615,6 +620,14 @@ export function ExtFormClient({ token }: { token: string }) {
         const linkInfo = data?.data || data?.link;
         if (data?.ok && linkInfo) {
           setLinkMeta(linkInfo);
+          if (linkInfo.centralAddress) {
+            setMasterAddress(emptyExternalLocation);
+            setCountry("");
+            setStateProvince("");
+            setCity("");
+            setPostalCode("");
+            autoPostalCode.current = "";
+          }
           if (linkInfo.status === "used" || linkInfo.status === "submitted") {
             // Restore submission data if available and display the Digital Receipt Card
             if (linkInfo.submissionData) {
@@ -761,7 +774,7 @@ export function ExtFormClient({ token }: { token: string }) {
           if (match) setDocType(match.value);
         }
 
-        if (ext.country) {
+        if (ext.country && !linkMeta?.centralAddress) {
           const cMatch = Object.keys(LOCATION_HIERARCHY).find(
             (c) => c.toLowerCase() === ext.country.toLowerCase() || ext.country.toLowerCase().includes(c.toLowerCase())
           );
@@ -1044,6 +1057,11 @@ export function ExtFormClient({ token }: { token: string }) {
 
   // Final Submit
   const handleFinalSubmit = async () => {
+    if (linkMeta?.centralAddress && (!masterAddress.country || !masterAddress.city)) {
+      setCurrentStep(3);
+      setSubmitError(centralT(lang, "lochier.selectCity", "Select city"));
+      return;
+    }
     setSubmitting(true);
     setSubmitError(null);
 
@@ -1091,6 +1109,11 @@ export function ExtFormClient({ token }: { token: string }) {
       city,
       postalCode,
       address: fullAddress,
+      ...(linkMeta?.centralAddress ? {
+        addressCountryId: masterAddress.country?.id,
+        stateProvinceId: masterAddress.state?.id ?? null,
+        cityId: masterAddress.city?.id,
+      } : {}),
       documents: finalDocs,
       contracts,
       photo: photoPreview,
@@ -2070,6 +2093,17 @@ export function ExtFormClient({ token }: { token: string }) {
                   </div>
 
                   <div className="space-y-3 pt-1">
+                    {linkMeta?.centralAddress ? (
+                      <ExternalLocationPicker token={token} lang={lang} value={masterAddress} onChange={(next) => {
+                        const postal = postalCodeAfterCityChange(postalCode, autoPostalCode.current, next.city?.postalCode);
+                        autoPostalCode.current = postal.suggestion;
+                        setPostalCode(postal.value);
+                        setMasterAddress(next);
+                        setCountry(next.country?.name ?? "");
+                        setStateProvince(next.state?.name ?? "");
+                        setCity(next.city?.name ?? "");
+                      }} />
+                    ) : <>
                     {/* Country Selector (100% Localized) */}
                     <div className="space-y-1">
                       <label className="text-[11px] font-bold text-slate-700">
@@ -2124,6 +2158,8 @@ export function ExtFormClient({ token }: { token: string }) {
                       </select>
                     </div>
 
+                    </>}
+
                     {/* Postal Code (Auto-filled) */}
                     <div className="space-y-1">
                       <label className="text-[11px] font-bold text-slate-700">
@@ -2134,7 +2170,7 @@ export function ExtFormClient({ token }: { token: string }) {
                         <input
                           type="text"
                           value={postalCode}
-                          onChange={(e) => setPostalCode(e.target.value)}
+                          onChange={(e) => { autoPostalCode.current = ""; setPostalCode(e.target.value); }}
                           placeholder={t("postalCodeShort", lang)}
                           className="w-full bg-slate-100/70 border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-bold text-slate-800 font-mono"
                         />

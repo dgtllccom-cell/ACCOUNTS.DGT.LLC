@@ -50,12 +50,26 @@ describe("Account address quick create dialog", () => {
     render(<LocationQuickCreateModal type="city" countryId="in" stateProvinceId="mh"
       countryName="India" stateName="Maharashtra" onClose={vi.fn()} onCreated={onCreated} confirmSaved={confirmSaved}/>);
     fireEvent.change(screen.getByLabelText(/City.*Name/i), { target: { value: "Mumbai" } });
+    fireEvent.change(screen.getByLabelText(/City.*Code/i), { target: { value: "MUM" } });
     fireEvent.click(screen.getByRole("button", { name: /Save City/i }));
     await waitFor(() => expect(apiPost).toHaveBeenCalledWith("/api/erp/locations/cities",
-      expect.objectContaining({ countryId: "in", stateProvinceId: "mh", name: "Mumbai" })));
+      expect.objectContaining({ countryId: "in", stateProvinceId: "mh", name: "Mumbai", code: "MUM" })));
     expect(onCreated).not.toHaveBeenCalled();
     complete(city);
     await waitFor(() => expect(onCreated).toHaveBeenCalledWith("mum", city));
+  });
+
+  it("requires a real City Code; ZIP or whitespace does not satisfy it", async () => {
+    const onCreated = vi.fn();
+    render(<LocationQuickCreateModal type="city" countryId="in" stateProvinceId="mh"
+      onClose={vi.fn()} onCreated={onCreated}/>);
+    fireEvent.change(screen.getByLabelText(/City.*Name/i), { target: { value: "Mumbai" } });
+    fireEvent.change(screen.getByLabelText(/Zip/i), { target: { value: "400001" } });
+    fireEvent.change(screen.getByLabelText(/City.*Code/i), { target: { value: "  " } });
+    fireEvent.click(screen.getByRole("button", { name: /Save City/i }));
+    expect(screen.getByRole("alert").textContent).toMatch(/City.*Code/i);
+    expect(apiPost).not.toHaveBeenCalled();
+    expect(onCreated).not.toHaveBeenCalled();
   });
 
   it("keeps the dialog and does not select a location when readback fails", async () => {
@@ -64,6 +78,7 @@ describe("Account address quick create dialog", () => {
     render(<LocationQuickCreateModal type="city" countryId="in" stateProvinceId="mh"
       onClose={vi.fn()} onCreated={onCreated} confirmSaved={vi.fn().mockRejectedValue(new Error("Location not found after save"))}/>);
     fireEvent.change(screen.getByLabelText(/City.*Name/i), { target: { value: "Mumbai" } });
+    fireEvent.change(screen.getByLabelText(/City.*Code/i), { target: { value: "MUM" } });
     fireEvent.click(screen.getByRole("button", { name: /Save City/i }));
     await waitFor(() => expect(screen.getByRole("alert").textContent).toContain("Location not found after save"));
     expect(onCreated).not.toHaveBeenCalled();

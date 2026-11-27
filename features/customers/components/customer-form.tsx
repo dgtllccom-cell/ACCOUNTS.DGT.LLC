@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { CustomerAssignedCountry } from "./customer-assigned-country";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { postalCodeAfterCityChange } from "@/features/locations/address-postal-code";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import { Building2, Save, X, RefreshCcw, CheckCircle2, User, MapPin, Phone, FileText, Info, Paperclip, Send, ArrowLeft, Camera, Upload, ChevronRight, Eye, Bookmark } from "lucide-react";
@@ -27,6 +30,12 @@ import { VoiceFormFill } from "@/components/voice-form-fill";
 type CustomerRow = {
   id: string;
   country_id: string;
+  address_country_id?: string | null;
+  address_country_name?: string | null;
+  country_name?: string | null;
+  state_province_name?: string | null;
+  district_name?: string | null;
+  city_name?: string | null;
   state_province_id: string | null;
   district_id: string | null;
   city_id: string | null;
@@ -96,8 +105,11 @@ export function CustomerForm({
   const [businessName, setBusinessName] = useState("");
   const [passportPicture, setPassportPicture] = useState("");
 
+  const [assignedCountryId, setAssignedCountryId] = useState(initialCountryId || "");
+  const [addressEdited, setAddressEdited] = useState(false);
+  const [savedAddressNames, setSavedAddressNames] = useState<string[]>([]);
   const [location, setLocation] = useState<LocationHierarchyValue>({
-    countryId: initialCountryId || "",
+    countryId: "",
     stateProvinceId: "",
     districtId: "",
     cityId: "",
@@ -112,6 +124,7 @@ export function CustomerForm({
   });
   const [address, setAddress] = useState("");
   const [cityCode, setCityCode] = useState("");
+  const autoCityCode = useRef("");
 
   // Dynamic Contacts List
   const [contacts, setContacts] = useState<Array<{ type: string; value: string }>>([
@@ -178,8 +191,22 @@ export function CustomerForm({
         if (!c) return;
 
         setAddress(c.address || "");
+        setAssignedCountryId(c.country_id || "");
+        setAddressEdited(false);
+        // Some legacy records used the assigned country for their address. Use it
+        // only when saved geography indicates a legacy address, not for a new blank address.
+        let notesCountry = "";
+        try {
+          const legacyMeta = typeof c.notes === "string" ? JSON.parse(c.notes) : c.notes;
+          if (legacyMeta && typeof legacyMeta === "object" && typeof legacyMeta.country === "string") {
+            notesCountry = legacyMeta.country.trim();
+          }
+        } catch { /* Plain-text notes carry no address country. */ }
+        const hasLegacyPlace = Boolean(c.state_province_id || c.district_id || c.city_id || c.area_location_id || notesCountry);
+        const names = [c.address_country_name || notesCountry || (hasLegacyPlace ? c.country_name : "") || "", c.state_province_name || "", c.district_name || "", c.city_name || "", ""];
+        setSavedAddressNames(names);
         setLocation({
-          countryId: c.country_id || "",
+          countryId: c.address_country_id || (hasLegacyPlace ? c.country_id : "") || "",
           stateProvinceId: c.state_province_id || "",
           districtId: c.district_id || "",
           cityId: c.city_id || "",
@@ -193,8 +220,13 @@ export function CustomerForm({
           try {
             const parsed = typeof c.notes === "string" ? JSON.parse(c.notes) : c.notes;
             if (parsed && typeof parsed === "object") {
+              const fallbacks = [parsed.country, parsed.stateProvince, parsed.district, parsed.city, parsed.areaName];
+              setSavedAddressNames(names.map((label, index) => label || String(fallbacks[index] ?? "")));
               if (parsed.customerType) setCustomerType(parsed.customerType);
-              if (parsed.cityCode) setCityCode(parsed.cityCode);
+              if (parsed.cityCode) {
+                autoCityCode.current = "";
+                setCityCode(parsed.cityCode);
+              }
               if (parsed.status) setStatus(parsed.status);
               if (parsed.remarks) setRemarks(parsed.remarks);
               if (parsed.photoUrl) setPassportPicture(parsed.photoUrl);
@@ -260,20 +292,13 @@ export function CustomerForm({
     })();
   }, [effectiveCustomerId, lang]);
 
-  const country = locationMeta.country?.name ?? "";
-  const stateName = locationMeta.state?.name ?? "";
-  const districtName = locationMeta.district?.name ?? "";
-  const city = locationMeta.city?.name ?? "";
-  const areaName = locationMeta.area?.name ?? "";
+  const country = locationMeta.country?.name ?? (!addressEdited ? savedAddressNames[0] || "" : "");
+  const stateName = locationMeta.state?.name ?? (!addressEdited ? savedAddressNames[1] || "" : "");
+  const districtName = locationMeta.district?.name ?? (!addressEdited ? savedAddressNames[2] || "" : "");
+  const city = locationMeta.city?.name ?? (!addressEdited ? savedAddressNames[3] || "" : "");
+  const areaName = locationMeta.area?.name ?? (!addressEdited ? savedAddressNames[4] || "" : "");
 
   const isBusiness = customerType === "Corporate / Business Company" || customerType === "Business";
-
-  // Auto-fill City Code when city selects
-  useEffect(() => {
-    if (locationMeta.city?.zip_code) {
-      setCityCode(locationMeta.city.zip_code);
-    }
-  }, [locationMeta.city]);
 
   // Auto-fill Country phone prefix when country selects
   useEffect(() => {
@@ -291,7 +316,7 @@ export function CustomerForm({
   }, [locationMeta.country]);
 
   const ready = Boolean(
-    (isBusiness ? businessName.trim() : (firstName.trim() || lastName.trim()))
+    assignedCountryId && (isBusiness ? businessName.trim() : (firstName.trim() || lastName.trim()))
   );
 
   const previewLocation = useMemo(() => {
@@ -344,11 +369,14 @@ export function CustomerForm({
       : ([firstName, lastName].filter(Boolean).join(" ").trim() || "New Person");
 
     const payload = {
-      countryId: location.countryId || null,
-      stateProvinceId: location.stateProvinceId || null,
-      districtId: location.districtId || null,
-      cityId: location.cityId || null,
-      areaLocationId: location.areaId || null,
+      countryId: assignedCountryId,
+      ...(!effectiveCustomerId || addressEdited ? {
+        addressCountryId: location.countryId || null,
+        stateProvinceId: location.stateProvinceId || null,
+        districtId: location.districtId || null,
+        cityId: location.cityId || null,
+        areaLocationId: location.areaId || null,
+      } : {}),
       customerName: resolvedCustomerName,
       firstName: firstName.trim() || null,
       lastName: lastName.trim() || null,
@@ -360,7 +388,7 @@ export function CustomerForm({
       mobile: firstMobile || null,
       whatsapp: firstWhatsapp || null,
       email: firstEmail || null,
-      address: address || (city ? `${city}, ${country || ""}`.trim() : "-"),
+      address: address.trim() || null,
       notes: JSON.stringify(notesJson),
       // Only stamp the entry language when CREATING. On edit we must not relabel
       // an existing record's original language (or overwrite its source text) just
@@ -508,6 +536,11 @@ export function CustomerForm({
           </Button>
         </div>
       </div>
+
+      {!effectiveCustomerId && <div className="max-w-md rounded-xl border bg-card p-3">
+        <CustomerAssignedCountry lang={lang} value={assignedCountryId}
+          onChange={setAssignedCountryId} fixedCountryId={initialCountryId} />
+      </div>}
 
       {/* 4-Step Horizontal Stepper matching Screenshot 3 */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-2.5 shadow-xs flex items-center justify-between gap-2 overflow-x-auto">
@@ -822,6 +855,12 @@ export function CustomerForm({
                   <LocationHierarchySelect
                     value={location}
                     onChange={(next, meta) => {
+                      setAddressEdited(true);
+                      if (next.cityId !== location.cityId) {
+                        const code = postalCodeAfterCityChange(cityCode, autoCityCode.current, meta.city?.zip_code);
+                        autoCityCode.current = code.suggestion;
+                        setCityCode(code.value);
+                      }
                       setLocation(next);
                       setLocationMeta(meta);
                     }}
@@ -831,7 +870,7 @@ export function CustomerForm({
                   <div className="grid gap-3 grid-cols-2">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{getLabel("cityCode", lang)}</Label>
-                      <Input value={cityCode} onChange={(e) => setCityCode(e.target.value)} placeholder={getLabel("cityZipCodePlaceholder", lang)} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl font-mono" />
+                      <Input value={cityCode} onChange={(e) => { autoCityCode.current = ""; setCityCode(e.target.value); }} placeholder={getLabel("cityZipCodePlaceholder", lang)} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl font-mono" />
                     </div>
                   </div>
                   <div className="space-y-1.5">

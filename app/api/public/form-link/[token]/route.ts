@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { customersService } from "@/lib/services/customers-service";
 import { companiesService } from "@/lib/services/companies-service";
+import { externalAddressIds, resolveExternalAddress, usesCentralExternalAddress } from "@/lib/services/external-form-address";
 
 export const dynamic = "force-dynamic";
 
@@ -99,6 +100,7 @@ export async function GET(
       submittedRecordId: link.submitted_record_id ?? null,
       submissionData: link.submission_data ?? null,
       notes: link.notes ?? null,
+      centralAddress: usesCentralExternalAddress(link),
     };
 
     return NextResponse.json({
@@ -149,18 +151,40 @@ export async function POST(
       };
     }
 
-    const body = await request.json().catch(() => null);
+    let body = await request.json().catch(() => null);
     if (!body) return err("Invalid request body", 400);
 
     let submittedRecordId: string | null = null;
     const formType: string = link.form_type;
 
     // ── Location Resolver: Map text names to DB UUIDs ─────────────────────────
+    const centralAddress = !isTestToken && usesCentralExternalAddress(link);
+    if (!isTestToken && link.central_address && !centralAddress) return err("This form link is not available", 410);
+    let addressCountryId: string | undefined;
     let resolvedCountryId: string | null = body.countryId ?? null;
     let resolvedStateId: string | null = body.stateProvinceId ?? null;
     let resolvedCityId: string | null = body.cityId ?? null;
 
-    await withLocalPg(async (sql) => {
+    if (centralAddress) {
+      const selection = externalAddressIds.safeParse(body);
+      if (!selection.success) return err("Select a country and city from Location Management.");
+      const ids = selection.data;
+      const place = await resolveExternalAddress(ids, link.country_id);
+      if (!place) return err("Select locations that belong together.");
+      // Only the persisted link supplies operational scope. The submitted geography is the physical address.
+      resolvedCountryId = link.country_id;
+      addressCountryId = ids.addressCountryId;
+      resolvedStateId = ids.stateProvinceId ?? null;
+      resolvedCityId = ids.cityId;
+      body = {
+        ...body, ...place,
+        countryId: resolvedCountryId, addressCountryId,
+        stateProvinceId: resolvedStateId, cityId: resolvedCityId,
+        districtId: null, areaLocationId: null,
+        countryBranchId: link.country_branch_id ?? null,
+        cityBranchId: link.city_branch_id ?? null,
+      };
+    } else await withLocalPg(async (sql) => {
       // 1. Resolve Country
       const countryRaw = (body.country || body.countryName || "").trim();
       if (!resolvedCountryId && countryRaw) {
@@ -291,6 +315,7 @@ export async function POST(
       submittedRecordId = await customersService.create(
         {
           countryId:       resolvedCountryId ?? "",
+          addressCountryId,
           stateProvinceId: resolvedStateId ?? null,
           districtId:      body.districtId ?? null,
           cityId:          resolvedCityId ?? null,
@@ -307,7 +332,13 @@ export async function POST(
           whatsapp:        primaryWhatsapp,
           email:           primaryEmail,
           address:         body.address ?? null,
-          notes:           `[External Form Submission] ${body.notes ?? ""}`.trim(),
+          notes: centralAddress
+            ? JSON.stringify({
+                source: "External Form Submission", remarks: body.notes ?? "",
+                country: body.country, stateProvince: body.stateProvince, city: body.city,
+                cityCode: typeof body.postalCode === "string" ? body.postalCode.trim().slice(0, 40) : "",
+              })
+            : `[External Form Submission] ${body.notes ?? ""}`.trim(),
           originalLanguage: body.originalLanguage ?? "en",
           contacts,
           registrations,

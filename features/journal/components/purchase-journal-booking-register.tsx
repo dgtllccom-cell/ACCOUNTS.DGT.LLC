@@ -10,7 +10,7 @@
  *   - Supports partial sales and multiple sales against the same purchase without duplicate stock calculations
  */
 
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { Boxes, ChevronDown, ChevronRight, Loader2, Search, ShoppingCart, X } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
@@ -22,14 +22,12 @@ import {
 } from "@/features/stock/components/stock-advanced-search-modal";
 import type { PsFilterOptionSet } from "@/lib/services/ps-stock-journal-service";
 import {
-  addUnitQty,
   formatUnitQty,
   hasNegativeUnit,
   type BookingStockSideBySideRow,
   type PsAdvancedFilters,
   type PsCardSummary,
   type StockRoleTier,
-  type UnitQty,
 } from "@/lib/stock/ps-journal-model";
 
 interface BookingStockApiResponse {
@@ -109,30 +107,6 @@ export function PurchaseJournalBookingRegister({ lang: langProp }: { lang?: stri
   const rows = data?.rows ?? [];
   const cards = data?.cards;
   const activeCount = countActivePsFilters(filters, data?.filterOptions);
-
-  const pageTotals = useMemo(() => {
-    const pQty: UnitQty = {};
-    const sQty: UnitQty = {};
-    const remQty: UnitQty = {};
-    let pGross = 0;
-    let pNet = 0;
-    let sGross = 0;
-    let sNet = 0;
-    let remGross = 0;
-    let remNet = 0;
-    for (const r of rows) {
-      addUnitQty(pQty, r.unit, r.pQty);
-      addUnitQty(sQty, r.unit, r.sQty);
-      addUnitQty(remQty, r.unit, r.remQty);
-      pGross += r.pGrossKg;
-      pNet += r.pNetKg;
-      sGross += r.sGrossKg;
-      sNet += r.sNetKg;
-      remGross += r.remGrossKg;
-      remNet += r.remNetKg;
-    }
-    return { pQty, sQty, remQty, pGross, pNet, sGross, sNet, remGross, remNet };
-  }, [rows]);
 
   const reportConfig = () => ({
     moduleType: "register" as const,
@@ -419,7 +393,7 @@ export function PurchaseJournalBookingRegister({ lang: langProp }: { lang?: stri
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1380px] border-collapse text-xs" data-testid="jbs-side-by-side-table">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-100/90 text-[11px] font-black text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+              <tr className="divide-x divide-slate-200 border-b border-slate-200 bg-slate-100/90 text-[11px] font-black text-slate-700 dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
                 <th className="px-2.5 py-2 text-center">#</th>
                 <th className="px-2.5 py-2 text-start">{s.t("col_p_bill", "P. Bill No.")}</th>
                 <th className="px-2.5 py-2 text-start">{s.t("col_bl_no", "B/L No.")}</th>
@@ -460,7 +434,7 @@ export function PurchaseJournalBookingRegister({ lang: langProp }: { lang?: stri
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
               {loading && rows.length === 0 ? (
                 <tr>
                   <td colSpan={17} className="p-10 text-center text-slate-400">
@@ -480,7 +454,7 @@ export function PurchaseJournalBookingRegister({ lang: langProp }: { lang?: stri
                   const isOpen = Boolean(expandedRows[r.rowId]);
                   return (
                     <Fragment key={r.rowId}>
-                      <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
+                      <tr className="divide-x divide-slate-200 hover:bg-slate-50/80 dark:divide-slate-800 dark:hover:bg-slate-800/40">
                         <td className="px-2.5 py-2 text-center font-mono text-[11px] text-slate-500">{rowNum}</td>
                         <td className="whitespace-nowrap px-2.5 py-2 font-mono font-bold text-slate-900 dark:text-white" dir="ltr">
                           <div>{r.purchaseBillNo}</div>
@@ -565,7 +539,7 @@ export function PurchaseJournalBookingRegister({ lang: langProp }: { lang?: stri
                       {/* Multiple sales breakdown sub-rows (does NOT duplicate purchase or remaining totals) */}
                       {multiSales && isOpen &&
                         r.salesItems.map((si) => (
-                          <tr key={si.id} className="bg-rose-50/25 text-[11px] dark:bg-rose-950/15">
+                          <tr key={si.id} className="divide-x divide-slate-200 bg-rose-50/25 text-[11px] dark:divide-slate-800 dark:bg-rose-950/15">
                             <td colSpan={10} className="px-4 py-1.5 text-end font-semibold text-slate-500">
                               {s.t("multi_sale_split", "Partial / Linked Sale")} ({si.date || "—"} · {si.accountName})
                             </td>
@@ -591,59 +565,6 @@ export function PurchaseJournalBookingRegister({ lang: langProp }: { lang?: stri
                 })
               )}
             </tbody>
-
-            {rows.length > 0 && (
-              <tfoot>
-                <tr className="border-t-2 border-amber-300 bg-amber-50/90 font-black text-slate-900 dark:border-amber-800 dark:bg-amber-950/35 dark:text-white">
-                  <td colSpan={7} className="px-3 py-2 text-center">
-                    {s.t("lbl_total", "Total")}
-                  </td>
-                  <td className="px-2.5 py-2 text-end font-mono text-emerald-800 dark:text-emerald-300" dir="ltr">
-                    {formatUnitQty(pageTotals.pQty)}
-                  </td>
-                  <td className="px-2.5 py-2 text-end font-mono text-emerald-900 dark:text-emerald-200" dir="ltr">
-                    {fmtNum(pageTotals.pGross)}
-                  </td>
-                  <td className="px-2.5 py-2 text-end font-mono text-emerald-900 dark:text-emerald-200" dir="ltr">
-                    {fmtNum(pageTotals.pNet)}
-                  </td>
-                  <td className="px-2.5 py-2 text-center text-slate-400">—</td>
-                  <td className="px-2.5 py-2 text-end font-mono text-rose-800 dark:text-rose-300" dir="ltr">
-                    {formatUnitQty(pageTotals.sQty)}
-                  </td>
-                  <td className="px-2.5 py-2 text-end font-mono text-rose-900 dark:text-rose-200" dir="ltr">
-                    {fmtNum(pageTotals.sGross)}
-                  </td>
-                  <td className="px-2.5 py-2 text-end font-mono text-rose-900 dark:text-rose-200" dir="ltr">
-                    {fmtNum(pageTotals.sNet)}
-                  </td>
-                  <td
-                    className={`px-2.5 py-2 text-end font-mono ${
-                      hasNegativeUnit(pageTotals.remQty) ? "text-rose-700 dark:text-rose-300" : "text-blue-800 dark:text-blue-300"
-                    }`}
-                    dir="ltr"
-                  >
-                    {formatUnitQty(pageTotals.remQty)}
-                  </td>
-                  <td
-                    className={`px-2.5 py-2 text-end font-mono ${
-                      pageTotals.remGross < 0 ? "text-rose-700 dark:text-rose-300" : "text-blue-900 dark:text-blue-200"
-                    }`}
-                    dir="ltr"
-                  >
-                    {fmtNum(pageTotals.remGross)}
-                  </td>
-                  <td
-                    className={`px-2.5 py-2 text-end font-mono ${
-                      pageTotals.remNet < 0 ? "text-rose-700 dark:text-rose-300" : "text-blue-900 dark:text-blue-200"
-                    }`}
-                    dir="ltr"
-                  >
-                    {fmtNum(pageTotals.remNet)}
-                  </td>
-                </tr>
-              </tfoot>
-            )}
           </table>
         </div>
 
