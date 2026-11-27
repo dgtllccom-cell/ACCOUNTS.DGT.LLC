@@ -114,6 +114,7 @@ export function CustomersManagement() {
         countryBranchId: null,
         cityBranchId: null,
         stateProvinceId: location.stateProvinceId || null,
+        districtId: location.districtId || null,
         cityId: location.cityId || null,
         areaLocationId: location.areaId || null,
         customerName: customerName.trim(),

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { postalCodeAfterCityChange } from "@/features/locations/address-postal-code";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import { Building2, Save, X, RefreshCcw, CheckCircle2, User, MapPin, Phone, FileText, Info, Paperclip, Send, ArrowLeft, Camera, Upload, ChevronRight, Eye, Bookmark } from "lucide-react";
@@ -112,6 +113,7 @@ export function CustomerForm({
   });
   const [address, setAddress] = useState("");
   const [cityCode, setCityCode] = useState("");
+  const autoCityCode = useRef("");
 
   // Dynamic Contacts List
   const [contacts, setContacts] = useState<Array<{ type: string; value: string }>>([
@@ -194,7 +196,10 @@ export function CustomerForm({
             const parsed = typeof c.notes === "string" ? JSON.parse(c.notes) : c.notes;
             if (parsed && typeof parsed === "object") {
               if (parsed.customerType) setCustomerType(parsed.customerType);
-              if (parsed.cityCode) setCityCode(parsed.cityCode);
+              if (parsed.cityCode) {
+                autoCityCode.current = "";
+                setCityCode(parsed.cityCode);
+              }
               if (parsed.status) setStatus(parsed.status);
               if (parsed.remarks) setRemarks(parsed.remarks);
               if (parsed.photoUrl) setPassportPicture(parsed.photoUrl);
@@ -267,13 +272,6 @@ export function CustomerForm({
   const areaName = locationMeta.area?.name ?? "";
 
   const isBusiness = customerType === "Corporate / Business Company" || customerType === "Business";
-
-  // Auto-fill City Code when city selects
-  useEffect(() => {
-    if (locationMeta.city?.zip_code) {
-      setCityCode(locationMeta.city.zip_code);
-    }
-  }, [locationMeta.city]);
 
   // Auto-fill Country phone prefix when country selects
   useEffect(() => {
@@ -822,6 +820,11 @@ export function CustomerForm({
                   <LocationHierarchySelect
                     value={location}
                     onChange={(next, meta) => {
+                      if (next.cityId !== location.cityId) {
+                        const code = postalCodeAfterCityChange(cityCode, autoCityCode.current, meta.city?.zip_code);
+                        autoCityCode.current = code.suggestion;
+                        setCityCode(code.value);
+                      }
                       setLocation(next);
                       setLocationMeta(meta);
                     }}
@@ -831,7 +834,7 @@ export function CustomerForm({
                   <div className="grid gap-3 grid-cols-2">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{getLabel("cityCode", lang)}</Label>
-                      <Input value={cityCode} onChange={(e) => setCityCode(e.target.value)} placeholder={getLabel("cityZipCodePlaceholder", lang)} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl font-mono" />
+                      <Input value={cityCode} onChange={(e) => { autoCityCode.current = ""; setCityCode(e.target.value); }} placeholder={getLabel("cityZipCodePlaceholder", lang)} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-10 rounded-xl font-mono" />
                     </div>
                   </div>
                   <div className="space-y-1.5">
