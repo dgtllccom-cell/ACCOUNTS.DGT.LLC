@@ -3,10 +3,12 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { ApiClientError, rethrowIfNextControlFlow } from "@/lib/api/response";
+import { assertGeoHierarchy } from "@/lib/services/geo-hierarchy-validator";
+import { assertAssignedCountryUnchanged, geographyCountryForValidation } from "@/lib/services/physical-address-scope";
 
 const COLS =
-  "id, country_id, state_province_id, district_id, city_id, area_id, owner_name, owner_person_id, responsible_person_id, warehouse_code, warehouse_name, warehouse_type, full_address, contact_number, status, description, is_active, created_at, updated_at";
+  "id, country_id, address_country_id, state_province_id, district_id, city_id, area_id, owner_name, owner_person_id, responsible_person_id, warehouse_code, warehouse_name, warehouse_type, full_address, contact_number, status, description, is_active, created_at, updated_at";
 
 /** Warehouses master — update + soft-delete (secure-by-default). */
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
@@ -18,7 +20,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     const adminForScope = createSupabaseAdminClient() as any;
     const { data: existing } = await adminForScope
       .from("warehouses")
-      .select("country_id")
+      .select("country_id, address_country_id, state_province_id, district_id, city_id")
       .eq("id", id)
       .is("deleted_at", null)
       .single();
@@ -30,6 +32,24 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       countryId: existing.country_id
     });
 
+    // An address edit must never move the warehouse to another country's scope.
+    try {
+      assertAssignedCountryUnchanged(existing.country_id, body.country_id);
+      if (["address_country_id", "state_province_id", "district_id", "city_id"].some((k) => body[k] !== undefined)) {
+        await assertGeoHierarchy({
+          countryId: geographyCountryForValidation(
+            body.address_country_id !== undefined ? body.address_country_id : existing.address_country_id,
+            existing.country_id),
+          stateProvinceId: body.state_province_id !== undefined ? body.state_province_id : existing.state_province_id,
+          districtId: body.district_id !== undefined ? body.district_id : existing.district_id,
+          cityId: body.city_id !== undefined ? body.city_id : existing.city_id,
+        });
+      }
+    } catch (scopeError) {
+      if (scopeError instanceof ApiClientError) return NextResponse.json({ error: scopeError.message, code: scopeError.code }, { status: scopeError.status });
+      throw scopeError;
+    }
+
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     const setStr = (k: string, col: string) => { if (body[k] !== undefined) patch[col] = body[k] ? String(body[k]).trim() : null; };
     setStr("warehouse_name", "warehouse_name");
@@ -40,7 +60,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     setStr("description", "description");
     if (body.contact_number !== undefined) patch.contact_number = body.contact_number ?? null;
     if (body.status !== undefined) patch.status = body.status ? String(body.status).trim() : "Active";
-    if (body.country_id !== undefined) patch.country_id = body.country_id ?? null;
+    if (body.address_country_id !== undefined) patch.address_country_id = body.address_country_id || null;
     if (body.state_province_id !== undefined) patch.state_province_id = body.state_province_id ?? null;
     if (body.district_id !== undefined) patch.district_id = body.district_id ?? null;
     if (body.city_id !== undefined) patch.city_id = body.city_id ?? null;

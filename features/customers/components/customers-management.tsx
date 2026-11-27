@@ -1,5 +1,7 @@
 "use client";
 
+import { CustomerAssignedCountry } from "./customer-assigned-country";
+
 import { useEffect, useMemo, useState } from "react";
 import { Building2, Save, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,6 +40,7 @@ export function CustomersManagement() {
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
   const [loadingList, setLoadingList] = useState(false);
 
+  const [assignedCountryId, setAssignedCountryId] = useState("");
   const [location, setLocation] = useState<LocationHierarchyValue>({
     countryId: "",
     stateProvinceId: "",
@@ -72,7 +75,7 @@ export function CustomersManagement() {
     return parts.length ? parts.join(" \u00b7 ") : "-";
   }, [locationMeta]);
 
-  const canSave = Boolean(location.countryId && customerName.trim().length >= 2);
+  const canSave = Boolean(assignedCountryId && location.countryId && customerName.trim().length >= 2);
 
   useEffect(() => {
     let cancelled = false;
@@ -83,7 +86,7 @@ export function CustomersManagement() {
         const qp = new URLSearchParams();
         const q = search.trim();
         if (q) qp.set("q", q);
-        if (location.countryId) qp.set("countryId", location.countryId);
+        if (assignedCountryId) qp.set("countryId", assignedCountryId);
         qp.set("limit", "20");
 
         const data = await apiGet<{ customers: CustomerRow[] }>(`/api/erp/customers?${qp.toString()}`);
@@ -98,7 +101,7 @@ export function CustomersManagement() {
     return () => {
       cancelled = true;
     };
-  }, [search, location.countryId]);
+  }, [search, assignedCountryId]);
 
   async function onSave() {
     setBanner(null);
@@ -110,10 +113,12 @@ export function CustomersManagement() {
     setSaving(true);
     try {
       await apiPost<{ customerId: string }>(`/api/erp/customers`, {
-        countryId: location.countryId,
+        countryId: assignedCountryId,
+        addressCountryId: location.countryId,
         countryBranchId: null,
         cityBranchId: null,
         stateProvinceId: location.stateProvinceId || null,
+        districtId: location.districtId || null,
         cityId: location.cityId || null,
         areaLocationId: location.areaId || null,
         customerName: customerName.trim(),
@@ -182,6 +187,7 @@ export function CustomersManagement() {
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="space-y-3">
+              <CustomerAssignedCountry lang={lang} value={assignedCountryId} onChange={setAssignedCountryId} />
               <LocationHierarchySelect
                 value={location}
                 onChange={(next, meta) => {

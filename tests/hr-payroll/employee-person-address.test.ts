@@ -5,7 +5,8 @@ describe("Employee addresses come from the linked Person Master", () => {
   it("uses the saved person's address rather than their employment branch", () => {
     expect(employeePersonAddress({ id: "1", address: "  12 Main Road, Mumbai  ", city_name: "Mumbai" })).toBe("12 Main Road, Mumbai");
     expect(employeePersonAddress({ id: "1", city_name: "Mumbai", state_province_name: "Maharashtra", country_name: "India" })).toBe("Mumbai, Maharashtra, India");
-    expect(employeePersonAddress({ id: "1" })).toBeNull();
+    expect(employeePersonAddress({ id: "1", city_name: "Mumbai", country_name: "UAE", address_country_name: "India" })).toBe("Mumbai, India");
+    expect(employeePersonAddress({ id: "1", address: "-", country_name: "UAE" })).toBeNull();
   });
 
   it("does not display a previously loaded person's address after changing person", () => {
