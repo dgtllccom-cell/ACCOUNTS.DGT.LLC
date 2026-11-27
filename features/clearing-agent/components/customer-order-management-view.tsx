@@ -403,6 +403,8 @@ export type CustomerOrderGoodsItem = {
   facilityCountryId?: string;
   facilityStateProvinceId?: string;
   facilityCityId?: string;
+  facilityPostalCode?: string;
+  facilityAddressDetail?: string;
   contactPerson?: string;
   contactPhone?: string;
   photoUrl?: string;
@@ -2381,6 +2383,8 @@ export function CustomerOrderManagementView() {
               facilityCountryId: row.facility_country_id || "",
               facilityStateProvinceId: row.facility_state_province_id || "",
               facilityCityId: row.facility_city_id || "",
+              facilityPostalCode: row.facility_postal_code || "",
+              facilityAddressDetail: row.facility_address_detail ?? undefined,
               remarks: row.remarks || ""
             };
           })
@@ -2875,6 +2879,8 @@ export function CustomerOrderManagementView() {
         facilityCountryId: g.warehouseSourceType === "company_warehouse" ? null : g.facilityCountryId || null,
         facilityStateProvinceId: g.warehouseSourceType === "company_warehouse" ? null : g.facilityStateProvinceId || null,
         facilityCityId: g.warehouseSourceType === "company_warehouse" ? null : g.facilityCityId || null,
+        facilityPostalCode: g.warehouseSourceType === "company_warehouse" ? null : g.facilityPostalCode || null,
+        facilityAddressDetail: g.warehouseSourceType === "company_warehouse" ? null : g.facilityAddressDetail ?? null,
         quantity: Number(g.quantity) || 0,
         unit: g.unit || "Bags",
         remarks: `${g.goodsName || 'Goods'}${g.kgPerQty ? ` (${g.kgPerQty} kg/${g.unit || 'unit'})` : ""} • Total: ${g.totalKg || 0} kg`
@@ -10291,6 +10297,8 @@ function Step1BookingCustomer({
           facilityCountryId: draftGoodsItem.facilityCountryId,
           facilityStateProvinceId: draftGoodsItem.facilityStateProvinceId,
           facilityCityId: draftGoodsItem.facilityCityId,
+          facilityPostalCode: draftGoodsItem.facilityPostalCode,
+          facilityAddressDetail: draftGoodsItem.facilityAddressDetail,
           contactPerson: draftGoodsItem.contactPerson,
           contactPhone: draftGoodsItem.contactPhone,
           remarks: draftGoodsItem.remarks
@@ -10304,6 +10312,8 @@ function Step1BookingCustomer({
           handleDraftGoodsChange("facilityCountryId", data.facilityCountryId || "");
           handleDraftGoodsChange("facilityStateProvinceId", data.facilityStateProvinceId || "");
           handleDraftGoodsChange("facilityCityId", data.facilityCityId || "");
+          handleDraftGoodsChange("facilityPostalCode", data.facilityPostalCode || "");
+          handleDraftGoodsChange("facilityAddressDetail", data.facilityAddressDetail);
           if (data.contactPerson) handleDraftGoodsChange("contactPerson", data.contactPerson);
           if (data.contactPhone) handleDraftGoodsChange("contactPhone", data.contactPhone);
           if (data.remarks) handleDraftGoodsChange("remarks", data.remarks);

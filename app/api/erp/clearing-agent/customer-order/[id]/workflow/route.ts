@@ -880,6 +880,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
             insert into public.clearing_customer_order_loading_allocations (
               order_id, row_serial, warehouse_id, source_location_text,
               facility_country_id, facility_state_province_id, facility_city_id,
+              facility_postal_code, facility_address_detail,
               quantity, unit, remarks, created_at, updated_at
             ) values (
               ${id}::uuid,
@@ -889,6 +890,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
               ${facilityUuid(g.facilityCountryId)}::uuid,
               ${facilityUuid(g.facilityStateProvinceId)}::uuid,
               ${facilityUuid(g.facilityCityId)}::uuid,
+              ${typeof g.facilityPostalCode === "string" ? g.facilityPostalCode.trim() || null : null},
+              ${typeof g.facilityAddressDetail === "string" ? g.facilityAddressDetail.trim() : null},
               ${r.quantity},
               ${r.unit},
               ${`${r.name}${r.brand ? ` [Brand: ${r.brand}]` : ""} (${g.kgPerQty || ""} kg/${r.unit}) • Total: ${r.gross} kg • Gross: ${r.gross} kg • Net: ${r.net} kg`},
