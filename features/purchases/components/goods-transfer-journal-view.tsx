@@ -49,6 +49,7 @@ import {
 } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
+import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
 
 type Json = any;
 
@@ -1926,6 +1927,8 @@ function TransferForm({
   const [pName, setPName] = useState("");
   const [pCity, setPCity] = useState("");
   const [pAddr, setPAddr] = useState("");
+  // third-party warehouse location: the shared Location Management master (pCity keeps the printed city name)
+  const [pLoc, setPLoc] = useState({ countryId: "", stateProvinceId: "", districtId: "", cityId: "" });
   const [pRef, setPRef] = useState("");
   const [pCharge, setPCharge] = useState("");
   const [pCur, setPCur] = useState(lot.currency_code || "");
@@ -2017,6 +2020,9 @@ function TransferForm({
               name: pName,
               city: pCity,
               address: pAddr,
+              countryId: pLoc.countryId || null,
+              stateProvinceId: pLoc.stateProvinceId || null,
+              cityId: pLoc.cityId || null,
               contractRef: pRef,
               storageCharge: pCharge === "" ? null : Number(pCharge),
               chargeCurrency: pCur,
@@ -2298,9 +2304,17 @@ function TransferForm({
             <Field s={s} label={s.t("contract", "Contract / reference")}>
               <input className={inputCls} value={pRef} onChange={(e) => setPRef(e.target.value)} />
             </Field>
-            <Field s={s} label={s.t("city", "City")}>
-              <input className={inputCls} value={pCity} onChange={(e) => setPCity(e.target.value)} />
-            </Field>
+            <div className="sm:col-span-2" data-testid="third-party-warehouse-location">
+              <LocationHierarchySelect
+                lang={s.lang}
+                showDistrict={false}
+                value={pLoc}
+                onChange={(v, meta) => {
+                  setPLoc({ countryId: v.countryId, stateProvinceId: v.stateProvinceId, districtId: "", cityId: v.cityId });
+                  setPCity(meta.city?.name ?? "");
+                }}
+              />
+            </div>
             <Field s={s} label={s.t("address", "Address")}>
               <input className={inputCls} value={pAddr} onChange={(e) => setPAddr(e.target.value)} />
             </Field>

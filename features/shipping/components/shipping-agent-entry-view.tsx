@@ -12,6 +12,7 @@ import { ShippingLinePicker, type ShippingLineRow as ShippingLinePickerRow } fro
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { apiGet } from "@/lib/api/client";
 import { VoiceDictateButton } from "@/components/voice-dictate-button";
+import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
 
 type ShippingAgentRow = {
   id: string;
@@ -25,6 +26,9 @@ type ShippingAgentRow = {
   phone: string | null;
   city_name: string | null;
   country_name: string | null;
+  address_country_id?: string | null;
+  state_province_id?: string | null;
+  city_id?: string | null;
   status: "active" | "inactive";
   remarks: string | null;
   created_at: string;
@@ -42,6 +46,9 @@ const EMPTY_AGENT: any = {
   phone: "",
   city_name: "",
   country_name: "",
+  address_country_id: "",
+  state_province_id: "",
+  city_id: "",
   status: "active",
   remarks: "",
 };
@@ -284,28 +291,22 @@ export function ShippingAgentEntryView({ lang: langProp, clearingMenuOnly = fals
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("common.city", "City")}</label>
-              <input
-                type="text"
-                placeholder={tt("sag.city_ph", "e.g. Karachi / Dubai")}
-                value={form.city_name}
-                onChange={(e) => setForm({ ...form, city_name: e.target.value })}
-                className="w-full bg-background border border-border/80 rounded-xl px-4 py-2.5 text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("common.country", "Country")}</label>
-              <input
-                type="text"
-                placeholder={tt("sag.country_ph", "e.g. Pakistan / United Arab Emirates")}
-                value={form.country_name}
-                onChange={(e) => setForm({ ...form, country_name: e.target.value })}
-                className="w-full bg-background border border-border/80 rounded-xl px-4 py-2.5 text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-              />
-            </div>
+          {/* Office location: country → state → city from the shared Location Management master (names kept for reports) */}
+          <div data-testid="shipping-agent-location">
+            <LocationHierarchySelect
+              lang={lang}
+              showDistrict={false}
+              value={{ countryId: form.address_country_id || "", stateProvinceId: form.state_province_id || "", districtId: "", cityId: form.city_id || "" }}
+              onChange={(v, meta) => setForm((f: any) => ({
+                ...f,
+                address_country_id: v.countryId, state_province_id: v.stateProvinceId, city_id: v.cityId,
+                country_name: meta.country?.name ?? (v.countryId ? f.country_name : ""),
+                city_name: meta.city?.name ?? (v.cityId ? f.city_name : ""),
+              }))}
+            />
+            {!form.city_id && form.city_name ? (
+              <p className="mt-1 text-[11px] text-muted-foreground">{tt("loc.saved_name_not_in_master", "Saved name (not in Location Management)")}: {[form.city_name, form.country_name].filter(Boolean).join(", ")}</p>
+            ) : null}
           </div>
 
           <div>
