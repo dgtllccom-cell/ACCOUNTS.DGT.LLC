@@ -11,7 +11,7 @@
  *   by_rail -> railway_terminal
  */
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { SearchSelect } from "@/components/ui/search-select";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -50,7 +50,20 @@ export type LocationPickerProps = {
   addNewLabel?: string;
   enableQuickCreate?: boolean;
   refreshKey?: number | string;
+  /**
+   * Legacy records that saved only a NAME (no id): the picker preselects the option whose
+   * name matches (case-insensitive, canonical or localized) and reports it via onResolveName.
+   * If nothing matches, the saved name is still shown so old bookings display unchanged.
+   */
+  valueName?: string;
+  onResolveName?: (locationId: string, name: string) => void;
+  /** Report the canonical (unlocalized) master name in onChange instead of the display label. */
+  canonicalNames?: boolean;
+  testId?: string;
 };
+
+export const LEGACY_LOCATION_PREFIX = "legacy:";
+const norm = (v: string | null | undefined) => String(v ?? "").trim().toLowerCase();
 
 export function LocationPicker({
   countryId,
@@ -63,10 +76,15 @@ export function LocationPicker({
   onAddNew,
   addNewLabel,
   enableQuickCreate = true,
-  refreshKey
+  refreshKey,
+  valueName,
+  onResolveName,
+  canonicalNames = false,
+  testId
 }: LocationPickerProps) {
   const lang = useActiveLanguage();
   const [options, setOptions] = useState<LocationOption[]>([]);
+  const [rawNames, setRawNames] = useState<Record<string, string>>({});
   const [cities, setCities] = useState<LocationCity[]>([]);
   const [loading, setLoading] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
@@ -83,15 +101,21 @@ export function LocationPicker({
       setLoading(true);
       try {
         const types = TYPES_BY_MODE[transportMode as LegTransportMode] || [];
-        const results = await Promise.all(
-          types.map(async (type) => {
-            const res = await fetch(`/api/erp/location-master?type=${type}&countryId=${countryId}&status=active`);
-            const json = await res.json();
-            return (json?.data?.locations || []) as LocationOption[];
-          })
-        );
+        const fetchType = async (type: string, raw: boolean) => {
+          const res = await fetch(`/api/erp/location-master?type=${type}&countryId=${countryId}&status=active${raw ? "&raw=1" : ""}`);
+          const json = await res.json();
+          return (json?.data?.locations || []) as LocationOption[];
+        };
+        const [results, rawResults] = await Promise.all([
+          Promise.all(types.map((type) => fetchType(type, false))),
+          canonicalNames && lang !== "en" ? Promise.all(types.map((type) => fetchType(type, true))) : Promise.resolve(null)
+        ]);
         if (cancelled) return;
-        setOptions(results.flat());
+        const flat = results.flat();
+        setOptions(flat);
+        const names: Record<string, string> = {};
+        for (const o of rawResults ? rawResults.flat() : flat) names[o.id] = o.name;
+        setRawNames(names);
 
         if (includeCities && transportMode === "by_road") {
           const cityRows = await listCities({ countryId });
@@ -102,6 +126,7 @@ export function LocationPicker({
       } catch {
         if (!cancelled) {
           setOptions([]);
+          setRawNames({});
           setCities([]);
         }
       } finally {
@@ -112,9 +137,28 @@ export function LocationPicker({
     return () => {
       cancelled = true;
     };
-  }, [countryId, transportMode, includeCities, refreshKey, localRefresh]);
+  }, [countryId, transportMode, includeCities, refreshKey, localRefresh, canonicalNames, lang]);
+
+  const nameOf = (o: LocationOption) => (canonicalNames ? rawNames[o.id] || o.name : o.name);
+  const legacyName = !value && valueName ? valueName.trim() : "";
+  const legacyMatch = legacyName
+    ? options.find((o) => norm(o.name) === norm(legacyName) || norm(rawNames[o.id]) === norm(legacyName))
+    : undefined;
+  const resolvedFor = useRef("");
+  useEffect(() => {
+    if (!legacyMatch || !onResolveName) return;
+    const key = `${legacyName}|${legacyMatch.id}`;
+    if (resolvedFor.current === key) return;
+    resolvedFor.current = key;
+    onResolveName(legacyMatch.id, legacyName);
+  }, [legacyMatch, legacyName, onResolveName]);
+  const legacyValue = legacyName && !legacyMatch ? `${LEGACY_LOCATION_PREFIX}${legacyName}` : "";
+  const effectiveValue = value || legacyMatch?.id || legacyValue;
 
   const searchOptions = [
+    ...(legacyValue
+      ? [{ value: legacyValue, label: legacyName, description: t(lang, "locmaster.route_saved_legacy", "Saved name (not in Location Master)") }]
+      : []),
     ...options.map((o) => ({
       value: o.id,
       label: o.name,
@@ -141,9 +185,10 @@ export function LocationPicker({
 
   return (
     <>
+      <span data-testid={testId} className="contents">
       <SearchSelect
         label={label ?? t(lang, "locmaster.picker_label", "Location")}
-        value={value ?? ""}
+        value={effectiveValue ?? ""}
         options={searchOptions}
         loading={loading}
         disabled={disabled || !countryId || !transportMode}
@@ -163,10 +208,15 @@ export function LocationPicker({
             onChange(val, cityMatch.name);
             return;
           }
+          if (val.startsWith(LEGACY_LOCATION_PREFIX)) {
+            onChange("", val.slice(LEGACY_LOCATION_PREFIX.length));
+            return;
+          }
           const match = options.find((o) => o.id === val);
-          onChange(val, match?.name ?? "");
+          onChange(val, match ? nameOf(match) : "");
         }}
       />
+      </span>
 
       {quickCreateOpen && (
         <QuickLocationModal

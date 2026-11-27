@@ -1,5 +1,6 @@
 "use client";
 
+import { BookingRouteFields } from "@/features/location-master/components/booking-route-fields";
 import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { PapFilters, PapMenu, PapRefresh, PapSearch } from "@/components/purchase-ui/purchase-approved-header";
@@ -277,6 +278,14 @@ export function LoadDetailsModal({ record, onClose, onSaved }: { record: Loading
   const [loadingPortState, setLoadingPortState] = useState(loadingPort !== "-" ? loadingPort : "");
   const [receivingCountryState, setReceivingCountryState] = useState(receivingCountry !== "-" ? receivingCountry : "");
   const [receivingPortState, setReceivingPortState] = useState(receivingPort !== "-" ? receivingPort : "");
+  // Route & Location Master ids (defaulted from the booking; the names above stay the readers' source).
+  const bookingRouteIds = {
+    loadingCountryId: String(form.loadingCountryId || ""),
+    loadingLocationId: record.loading_location && record.loading_location !== form.loadingPort ? "" : String(form.loadingLocationId || ""),
+    receivingCountryId: String(form.receivedCountryId || ""),
+    receivingLocationId: record.receiving_location && record.receiving_location !== form.receivedPort ? "" : String(form.receivedLocationId || "")
+  };
+  const [routeIds, setRouteIds] = useState(bookingRouteIds);
   const [receivingDateState, setReceivingDateState] = useState(form.receivedDate || form.arrivalDate || "");
   const [vesselName, setVesselName] = useState("");
   // Country-to-Country Purchase — Transportation.
@@ -506,6 +515,12 @@ export function LoadDetailsModal({ record, onClose, onSaved }: { record: Loading
     setContainerCount(String(h.report_payload?.containerCount || h.loadedContainers || 1));
     setLoadingCountryState(h.report_payload?.loadingCountry || "");
     setLoadingPortState(h.report_payload?.loadingPort || h.loading_location || "");
+    setRouteIds({
+      loadingCountryId: String(h.report_payload?.loadingCountryId || ""),
+      loadingLocationId: String(h.report_payload?.loadingLocationId || ""),
+      receivingCountryId: String(h.report_payload?.receivingCountryId || ""),
+      receivingLocationId: String(h.report_payload?.receivingLocationId || "")
+    });
     setNewLoadingDate(h.report_payload?.loadingDate || (h.loaded_at ? h.loaded_at.slice(0, 10) : new Date().toISOString().slice(0, 10)));
     setReceivingCountryState(h.report_payload?.receivingCountry || "");
     setReceivingPortState(h.report_payload?.receivingPort || h.receiving_location || "");
@@ -817,6 +832,10 @@ export function LoadDetailsModal({ record, onClose, onSaved }: { record: Loading
             currentContainerIndex,
             loadingCountry: loadingCountryState,
             loadingPort: loadingPortState,
+            loadingCountryId: routeIds.loadingCountryId || null,
+            loadingLocationId: routeIds.loadingLocationId || null,
+            receivingCountryId: routeIds.receivingCountryId || null,
+            receivingLocationId: routeIds.receivingLocationId || null,
             loadingDate: newLoadingDate,
             receivingCountry: receivingCountryState,
             receivingPort: receivingPortState,
@@ -870,6 +889,7 @@ export function LoadDetailsModal({ record, onClose, onSaved }: { record: Loading
         setSealNumberInput("");
         setLoadingCountryState(loadingCountry !== "-" ? loadingCountry : "");
         setLoadingPortState(loadingPort !== "-" ? loadingPort : "");
+        setRouteIds(bookingRouteIds);
         setReceivingCountryState(receivingCountry !== "-" ? receivingCountry : "");
         setReceivingPortState(receivingPort !== "-" ? receivingPort : "");
         setReceivingDateState(form.receivedDate || form.arrivalDate || "");
@@ -934,6 +954,7 @@ export function LoadDetailsModal({ record, onClose, onSaved }: { record: Loading
                const dTransportMode = (form.shippingMode as TransportModeUi) || "By Sea";
 
                setLoadingCountryState(loadingCountry !== "-" ? loadingCountry : (form.loadingCountry || ""));
+               setRouteIds(bookingRouteIds);
                setLoadingPortState(loadingPort !== "-" ? loadingPort : (form.loadingPort || ""));
                setReceivingCountryState(receivingCountry !== "-" ? receivingCountry : (form.receivedCountry || form.destinationCountry || ""));
                setReceivingPortState(receivingPort !== "-" ? receivingPort : (form.receivedPort || form.destinationPort || ""));
@@ -1098,76 +1119,34 @@ export function LoadDetailsModal({ record, onClose, onSaved }: { record: Loading
                           </select>
                         </label>
 
-                        <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                          {tt("plr.loading_country", "Loading Country")}
-                          <SearchableSelect
-                            value={loadingCountryState}
-                            onChange={(val) => {
-                              if (val === "__ADD_NEW__") {
-                                void handleAddNewLocationItem("country", "loadingCountry");
-                              } else {
-                                setLoadingCountryState(val);
-                                setLoadingPortState("");
-                              }
-                            }}
-                            options={allCountries.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
-                            placeholder={tt("plr.sel_country", "Select Country")}
-                            addOptionLabel={tt("plr.add_country", "Add New Country")}
-                          />
-                        </label>
-                        <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                          {tt("plr.loading_port", "Loading Port / Border")}
-                          <SearchableSelect
-                            value={loadingPortState}
-                            onChange={(val) => {
-                              if (val === "__ADD_NEW__") {
-                                void handleAddNewLocationItem("port", "loadingPort");
-                              } else {
-                                setLoadingPortState(val);
-                              }
-                            }}
-                            options={currentLoadingPorts.map((p) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
-                            placeholder={form.shippingMode === "By Road" ? tt("plr.sel_border", "Select Border") : tt("plr.sel_port", "Select Port")}
-                            addOptionLabel={form.shippingMode === "By Road" ? tt("plr.add_border", "Add New Border") : tt("plr.add_port", "Add New Port")}
-                            disabled={!loadingCountryState && currentLoadingPorts.length === 0}
-                          />
-                        </label>
+                        {/* Loading / receiving route from the Route & Location Master — defaulted from the booking */}
+                        <BookingRouteFields
+                          side="loading"
+                          testId="purchase-loading-route"
+                          className="col-span-2 grid grid-cols-2 gap-3"
+                          shippingMode={transportMode || form.shippingMode || "By Sea"}
+                          countryLabel={tt("plr.loading_country", "Loading Country")}
+                          value={{ countryId: routeIds.loadingCountryId, countryName: loadingCountryState, locationId: routeIds.loadingLocationId, locationName: loadingPortState }}
+                          onChange={(leg) => {
+                            setLoadingCountryState(leg.countryName);
+                            setLoadingPortState(leg.locationName);
+                            setRouteIds((prev) => ({ ...prev, loadingCountryId: leg.countryId, loadingLocationId: leg.locationId }));
+                          }}
+                        />
+                        <BookingRouteFields
+                          side="receiving"
+                          testId="purchase-receiving-route"
+                          className="col-span-2 grid grid-cols-2 gap-3"
+                          shippingMode={transportMode || form.shippingMode || "By Sea"}
+                          countryLabel={tt("plr.receiving_country", "Receiving Country")}
+                          value={{ countryId: routeIds.receivingCountryId, countryName: receivingCountryState, locationId: routeIds.receivingLocationId, locationName: receivingPortState }}
+                          onChange={(leg) => {
+                            setReceivingCountryState(leg.countryName);
+                            setReceivingPortState(leg.locationName);
+                            setRouteIds((prev) => ({ ...prev, receivingCountryId: leg.countryId, receivingLocationId: leg.locationId }));
+                          }}
+                        />
 
-                        <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                          {tt("plr.receiving_country", "Receiving Country")}
-                          <SearchableSelect
-                            value={receivingCountryState}
-                            onChange={(val) => {
-                              if (val === "__ADD_NEW__") {
-                                void handleAddNewLocationItem("country", "receivingCountry");
-                              } else {
-                                setReceivingCountryState(val);
-                                setReceivingPortState("");
-                              }
-                            }}
-                            options={allCountries.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
-                            placeholder={tt("plr.sel_country", "Select Country")}
-                            addOptionLabel={tt("plr.add_country", "Add New Country")}
-                          />
-                        </label>
-                        <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                          {tt("plr.receiving_port", "Receiving Port / Border")}
-                          <SearchableSelect
-                            value={receivingPortState}
-                            onChange={(val) => {
-                              if (val === "__ADD_NEW__") {
-                                void handleAddNewLocationItem("port", "receivingPort");
-                              } else {
-                                setReceivingPortState(val);
-                              }
-                            }}
-                            options={currentReceivedPorts.map((p) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
-                            placeholder={form.shippingMode === "By Road" ? tt("plr.sel_border", "Select Border") : tt("plr.sel_port", "Select Port")}
-                            addOptionLabel={form.shippingMode === "By Road" ? tt("plr.add_border", "Add New Border") : tt("plr.add_port", "Add New Port")}
-                            disabled={!receivingCountryState && currentReceivedPorts.length === 0}
-                          />
-                        </label>
-                        
                         <label className="space-y-1 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                           {tt("plr.loading_date", "Loading Date")}
                           <input

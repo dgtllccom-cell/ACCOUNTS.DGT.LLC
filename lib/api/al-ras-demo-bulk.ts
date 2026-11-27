@@ -5,8 +5,21 @@ import { sessionInDomain, type ErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { demoAccountPayload, demoBranchCode, demoCountry, demoRequestSchema, type DemoRowResult } from "@/lib/accounts-demo-import";
 import { POST as createSingleAccount } from "@/app/api/erp/accounting/accounts/route";
+import { getProdRef, refFromDatabaseUrl, refFromSupabaseUrl } from "@/lib/env/environment";
+
+/** Demo accounts belong in TESTING only (CLAUDE.md: no demo data in Production). True when this server talks to the Production database. */
+export function demoImportBlockedHere(): boolean {
+  const prod = getProdRef();
+  return (process.env.APP_ENV || "").trim().toLowerCase() === "production"
+    || refFromDatabaseUrl(process.env.DATABASE_URL) === prod
+    || refFromSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL) === prod
+    || refFromSupabaseUrl(process.env.SUPABASE_URL) === prod;
+}
 
 export async function processAlRasDemoBulk(session: ErpSession, input: unknown) {
+  if (demoImportBlockedHere()) {
+    return apiError("DEMO_NOT_IN_PRODUCTION", "Demo accounts can only be created in the TESTING database, never in Production.", 403);
+  }
   if (!session.isSuperAdmin || !sessionInDomain(session, "business")) {
     return apiError("DEMO_FORBIDDEN", "This demo import is for Business-authorized Super Admins only.", 403);
   }
