@@ -17,3 +17,11 @@ it("requires complete nonfinancial account details and exactly one ID per master
  expect(validQuettaDemoFields({...safe, addressCityId:null})).toBe(false);
  expect(validQuettaDemoFields({...safe, contacts:[]})).toBe(false);
 });
+
+it("rejects attempts to preassign an account number or omit any master record",()=>{
+ expect(validQuettaDemoFields({...safe, code:"ALREADY-ASSIGNED"})).toBe(false);
+ for (const key of ["customerId","companyId","bankId"] as const) {
+   expect(validQuettaDemoFields({...safe,[key]:null})).toBe(false);
+ }
+ expect(validQuettaDemoFields({...safe, isControlAccount:true})).toBe(false);
+});
