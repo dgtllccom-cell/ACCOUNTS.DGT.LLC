@@ -34,35 +34,46 @@ it("keeps Dubai ownership and the draft while selecting foreign Location Managem
       ? { data: { cityBranches: [{ id: "dubai", name: "Dubai City Branch", code: "ARE-AEDU-001" }] } }
       : { ok: true, data: {} },
   })));
+  vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
+  HTMLElement.prototype.scrollIntoView = vi.fn();
   render(<NewAccountSetup initialCountryId="ae" initialBranchId="dubai" initialBranchType="City" />);
-  const source = (id: string) => document.getElementById(id) as HTMLSelectElement;
-  const address = source("addressCountry");
+  const country = () => screen.getByRole<HTMLButtonElement>("button", { name: "Country" });
+  const province = () => screen.getByRole<HTMLButtonElement>("button", { name: /State.*Province/i });
+  const cityDropdown = () => screen.getByRole<HTMLButtonElement>("button", { name: "City" });
+  const openNew = async (trigger: () => HTMLButtonElement, name: string) => {
+    await waitFor(() => expect(trigger().disabled).toBe(false));
+    expect(screen.queryByRole("button", { name })).toBeNull();
+    fireEvent.click(trigger());
+    const popup = screen.getByRole("dialog");
+    fireEvent.click(within(popup).getByRole("button", { name }));
+  };
   const accountName = screen.getByRole("textbox", { name: /^Account Name/i }) as HTMLInputElement;
   fireEvent.change(accountName, { target: { value: "Unfinished draft" } });
   const postal = screen.getByRole("textbox", { name: /ZIP.*Postal Code/i }) as HTMLInputElement;
   fireEvent.change(postal, { target: { value: "400999" } });
-  await waitFor(() => expect(within(address).getByRole("option", { name: /India/ })).toBeTruthy());
-  const ownership = screen.getAllByRole("combobox", { name: /^Country \*/i }).find((entry) => entry !== address) as HTMLSelectElement;
+  const ownership = screen.getByRole("combobox", { name: /^Country \*/i }) as HTMLSelectElement;
   const branch = screen.getByRole("combobox", { name: /City Branch/i }) as HTMLSelectElement;
   await waitFor(() => expect(branch.value).toBe("dubai"));
   expect(ownership.value).toBe("ae");
   expect(within(ownership).queryByRole("option", { name: /India/ })).toBeNull();
 
-  fireEvent.click(screen.getByRole("button", { name: "New Country" }));
+  await openNew(country, "New Country");
   fireEvent.change(screen.getByLabelText(/Country Name/i), { target: { value: "India" } });
   fireEvent.change(screen.getByLabelText(/ISO2/i), { target: { value: "IN" } });
   fireEvent.click(screen.getByRole("button", { name: /Save Country/i }));
-  await waitFor(() => expect(address.value).toBe("in"));
+  await waitFor(() => expect(country().textContent).toContain("India (IN)"));
 
-  fireEvent.click(screen.getByRole("button", { name: "New State" }));
+  await openNew(province, "New State");
   fireEvent.change(screen.getByLabelText(/State.*Name/i), { target: { value: "Maharashtra" } });
+  fireEvent.change(screen.getByLabelText(/State.*Code/i), { target: { value: "MH" } });
   fireEvent.click(screen.getByRole("button", { name: /Save State/i }));
-  await waitFor(() => expect(source("addressState").value).toBe("mh"));
+  await waitFor(() => expect(province().textContent).toContain("Maharashtra (MH)"));
 
-  fireEvent.click(screen.getByRole("button", { name: "New City" }));
+  await openNew(cityDropdown, "New City");
   fireEvent.change(screen.getByLabelText(/City.*Name/i), { target: { value: "Mumbai" } });
+  fireEvent.change(screen.getByLabelText(/City.*Code/i), { target: { value: "MUM" } });
   fireEvent.click(screen.getByRole("button", { name: /Save City/i }));
-  await waitFor(() => expect(source("addressCity").value).toBe("mum"));
+  await waitFor(() => expect(cityDropdown().textContent).toContain("Mumbai (MUM)"));
   expect(accountName.value).toBe("Unfinished draft");
   expect(postal.value).toBe("400999");
   expect(ownership.value).toBe("ae");
