@@ -1174,9 +1174,9 @@ export function LocalPurchaseGlobalRegisterView({
       <div className="rounded-xl border border-slate-200 shadow-xs overflow-hidden dark:border-slate-800 bg-white dark:bg-slate-900">
         <div className="overflow-x-auto">
           <table data-lp-bill-table className="w-full text-xs text-start border-collapse whitespace-nowrap print:whitespace-normal">
-            {/* Approved Light Amber Header (#ffd257) with dark bold text */}
+            {/* Approved Light Amber Header (#ffd257) with dark bold text & full grid lines */}
             <thead className="bg-[#ffd257] text-slate-900 border-b border-amber-300 text-[11px] font-black uppercase tracking-tight">
-              <tr>
+              <tr className="divide-x divide-amber-400/60">
                 <th className="py-2.5 px-2 text-center w-8">#</th>
                 <th className="py-2.5 px-3 text-start">{tr("BILL NO. / DATE")}</th>
                 <th className="py-2.5 px-3 text-start">{tr("Country / Branch")}</th>
@@ -1248,7 +1248,7 @@ export function LocalPurchaseGlobalRegisterView({
                   return (
                     <tr
                       key={rowKey}
-                      className="hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors"
+                      className="divide-x divide-slate-200/80 dark:divide-slate-800 hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors"
                     >
                       {/* Col 1: # */}
                       <td className="py-2.5 px-2 text-center font-mono text-slate-400 text-[11px]">
@@ -1528,48 +1528,6 @@ export function LocalPurchaseGlobalRegisterView({
                 })
               )}
             </tbody>
-
-            {/* Approved Summary Footer Row (#ffd257) with per-currency totals */}
-            <tfoot className="bg-[#ffd257] text-slate-900 border-t-2 border-amber-300 font-mono text-xs font-black">
-              <tr>
-                <td colSpan={5} className="py-2.5 px-3 text-start font-sans font-black">
-                  {tr("Total")} ({filteredRows.length} {filteredRows.length === 1 ? tr("Bill") : tr("Bills")})
-                </td>
-                <td className="py-2.5 px-2 text-center font-bold">
-                  {fmtInt(filteredRows.reduce((acc, r) => acc + Number(r.quantity_kgs || r.numbers || 0), 0))} MT
-                </td>
-                <td className="py-2.5 px-2 text-end font-bold">
-                  <div>G.W. {fmt(filteredRows.reduce((acc, r) => acc + Number(r.total_gross_weight || 0), 0))}</div>
-                  <div className="text-[10px]">N.W. {fmt(filteredRows.reduce((acc, r) => acc + Number(r.net_weight || 0), 0))}</div>
-                </td>
-                <td colSpan={3} />
-                {/* Total Purchase Amount (Per Currency, never combined) */}
-                <td className="py-2.5 px-2 text-end">
-                  {Object.entries(summaryMetrics.purchaseByCurr).map(([c, amt]) => (
-                    <div key={c}>{c} {fmt(amt)}</div>
-                  ))}
-                </td>
-                {/* Total Final Amount (Per Currency, never combined) */}
-                <td className="py-2.5 px-2 text-end font-semibold text-slate-800">
-                  {Object.entries(summaryMetrics.finalByCurr).map(([c, amt]) => (
-                    <div key={c}>{c} {fmt(amt)}</div>
-                  ))}
-                </td>
-                {/* Total Paid Amount */}
-                <td className="py-2.5 px-2 text-end text-emerald-800">
-                  {Object.entries(summaryMetrics.paidByCurr).map(([c, amt]) => (
-                    <div key={c}>{c} {fmt(amt)}</div>
-                  ))}
-                </td>
-                {/* Total Balance (bold red font) */}
-                <td className="py-2.5 px-2 text-end text-rose-700">
-                  {Object.entries(summaryMetrics.balanceByCurr).map(([c, amt]) => (
-                    <div key={c}>{c} {fmt(amt)}</div>
-                  ))}
-                </td>
-                <td colSpan={2} />
-              </tr>
-            </tfoot>
           </table>
         </div>
       </div>

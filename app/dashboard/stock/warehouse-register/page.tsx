@@ -2,7 +2,9 @@
 
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { SavedText } from "@/components/i18n/saved-text";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { translateValue } from "@/lib/i18n/table-values";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { branchCodeLabel, groupRegister, type RegisterGroup, type WarehouseBalanceRow } from "@/lib/stock/warehouse-register";
@@ -287,7 +289,7 @@ export default function WarehouseStockRegisterPage() {
   const isCountryAdmin = role === "country_admin";
   const showBranch = isSuperAdmin || isCountryAdmin;
   const totalCols = 12 + (showBranch ? 1 : 0);
-  const preColspan = 6 + (showBranch ? 1 : 0);
+  const uLabel = (u: string) => (u ? translateValue(lang, u) : DASH);
 
   const toggleDest = (key: string) =>
     setOpenDest((prev) => {
@@ -535,25 +537,25 @@ export default function WarehouseStockRegisterPage() {
           {/* SUPER ADMIN PANEL */}
           {role === "super_admin" && (
             <Panel title={`${t("SUPER ADMIN")} — ${t("ALL COUNTRIES")}`}>
-              <table className="w-full text-[11px]">
+              <table className="w-full border-collapse text-[11px]">
                 <thead className="bg-slate-100 text-[10px] font-black uppercase text-slate-700">
-                  <tr>
-                    <th className="px-2 py-1 text-start">{t("STOCK TYPE")}</th>
-                    <th className="px-2 py-1 text-end">{t("QUANTITY")}</th>
+                  <tr className="divide-x divide-slate-200 border-b border-slate-200">
+                    <th className="px-2.5 py-1.5 text-start">{t("STOCK TYPE")}</th>
+                    <th className="px-2.5 py-1.5 text-end">{t("QUANTITY")}</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr className="border-t border-slate-100">
-                    <td className="px-2 py-1 text-black">{t("ON HAND")}</td>
-                    <td className="px-2 py-1 text-end font-mono text-black">{fmt(totals.onHand)}</td>
+                <tbody className="divide-y divide-slate-200">
+                  <tr className="divide-x divide-slate-200">
+                    <td className="px-2.5 py-1 text-black">{t("ON HAND")}</td>
+                    <td className="px-2.5 py-1 text-end font-mono text-black">{fmt(totals.onHand)}</td>
                   </tr>
-                  <tr className="border-t border-slate-100">
-                    <td className="px-2 py-1 text-black">{t("RESERVED")}</td>
-                    <td className="px-2 py-1 text-end font-mono text-black">{fmt(totals.reserved)}</td>
+                  <tr className="divide-x divide-slate-200">
+                    <td className="px-2.5 py-1 text-black">{t("RESERVED")}</td>
+                    <td className="px-2.5 py-1 text-end font-mono text-black">{fmt(totals.reserved)}</td>
                   </tr>
-                  <tr className="border-t border-emerald-200 bg-emerald-100 font-black">
-                    <td className="px-2 py-1 text-black">{t("AVAILABLE")}</td>
-                    <td className="px-2 py-1 text-end font-mono text-black">{fmt(totals.available)}</td>
+                  <tr className="divide-x divide-emerald-200 border-t border-emerald-200 bg-emerald-100 font-black">
+                    <td className="px-2.5 py-1 text-black">{t("AVAILABLE")}</td>
+                    <td className="px-2.5 py-1 text-end font-mono text-black">{fmt(totals.available)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -563,28 +565,28 @@ export default function WarehouseStockRegisterPage() {
           {/* COUNTRY ADMIN PANEL */}
           {(role === "super_admin" || role === "country_admin") && (
             <Panel title={t("COUNTRY ADMIN")}>
-              <table className="w-full text-[11px]">
+              <table className="w-full border-collapse text-[11px]">
                 <thead className="bg-slate-100 text-[10px] font-black uppercase text-slate-700">
-                  <tr>
-                    <th className="px-2 py-1 text-start">{t("COUNTRY")}</th>
-                    <th className="px-2 py-1 text-end">{t("AVAILABLE")}</th>
+                  <tr className="divide-x divide-slate-200 border-b border-slate-200">
+                    <th className="px-2.5 py-1.5 text-start">{t("COUNTRY")}</th>
+                    <th className="px-2.5 py-1.5 text-end">{t("AVAILABLE")}</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-200">
                   {countryGroups.length === 0 && (
                     <tr>
-                      <td colSpan={2} className="px-2 py-3 text-center text-slate-500">{emptyText}</td>
+                      <td colSpan={2} className="px-2.5 py-3 text-center text-slate-500">{emptyText}</td>
                     </tr>
                   )}
                   {countryGroups.map((g) => (
-                    <tr key={g.key} className="border-t border-slate-100">
-                      <td className="px-2 py-1 text-black">{g.label}</td>
-                      <td className="px-2 py-1 text-end font-mono text-black">{fmt(g.available)}</td>
+                    <tr key={g.key} className="divide-x divide-slate-200">
+                      <td className="px-2.5 py-1 text-black">{g.label}</td>
+                      <td className="px-2.5 py-1 text-end font-mono text-black">{fmt(g.available)}</td>
                     </tr>
                   ))}
-                  <tr className="border-t border-emerald-200 bg-emerald-100 font-black">
-                    <td className="px-2 py-1 text-black">{t("TOTAL")}</td>
-                    <td className="px-2 py-1 text-end font-mono text-black">{fmt(totals.available)}</td>
+                  <tr className="divide-x divide-emerald-200 border-t border-emerald-200 bg-emerald-100 font-black">
+                    <td className="px-2.5 py-1 text-black">{t("TOTAL")}</td>
+                    <td className="px-2.5 py-1 text-end font-mono text-black">{fmt(totals.available)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -593,28 +595,28 @@ export default function WarehouseStockRegisterPage() {
 
           {/* BRANCH SUMMARY PANEL */}
           <Panel title={t("BRANCH SUMMARY")}>
-            <table className="w-full text-[11px]">
+            <table className="w-full border-collapse text-[11px]">
               <thead className="bg-slate-100 text-[10px] font-black uppercase text-slate-700">
-                <tr>
-                  <th className="px-2 py-1 text-start">{t("BRANCH (MAIN / CITY)")}</th>
-                  <th className="px-2 py-1 text-end">{t("AVAILABLE")}</th>
+                <tr className="divide-x divide-slate-200 border-b border-slate-200">
+                  <th className="px-2.5 py-1.5 text-start">{t("BRANCH (MAIN / CITY)")}</th>
+                  <th className="px-2.5 py-1.5 text-end">{t("AVAILABLE")}</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-200">
                 {branchGroups.length === 0 && (
                   <tr>
-                    <td colSpan={2} className="px-2 py-3 text-center text-slate-500">{emptyText}</td>
+                    <td colSpan={2} className="px-2.5 py-3 text-center text-slate-500">{emptyText}</td>
                   </tr>
                 )}
                 {branchGroups.map((g) => (
-                  <tr key={g.key} className="border-t border-slate-100">
-                    <td className="px-2 py-1 text-black">{g.label}</td>
-                    <td className="px-2 py-1 text-end font-mono text-black">{fmt(g.available)}</td>
+                  <tr key={g.key} className="divide-x divide-slate-200">
+                    <td className="px-2.5 py-1 text-black">{g.label}</td>
+                    <td className="px-2.5 py-1 text-end font-mono text-black">{fmt(g.available)}</td>
                   </tr>
                 ))}
-                <tr className="border-t border-emerald-200 bg-emerald-100 font-black">
-                  <td className="px-2 py-1 text-black">{t("TOTAL")}</td>
-                  <td className="px-2 py-1 text-end font-mono text-black">{fmt(totals.available)}</td>
+                <tr className="divide-x divide-emerald-200 border-t border-emerald-200 bg-emerald-100 font-black">
+                  <td className="px-2.5 py-1 text-black">{t("TOTAL")}</td>
+                  <td className="px-2.5 py-1 text-end font-mono text-black">{fmt(totals.available)}</td>
                 </tr>
               </tbody>
             </table>
@@ -622,49 +624,73 @@ export default function WarehouseStockRegisterPage() {
         </section>
       )}
 
-      {/* ══ VIEW TABS ══ */}
-      <nav className="flex gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1" role="tablist">
-        {(["purchase", "destination"] as const).map((v) => (
-          <button
-            key={v}
-            type="button"
-            role="tab"
-            aria-selected={view === v}
-            onClick={() => setView(v)}
-            className={`rounded-lg px-3 py-2 text-[11px] font-black uppercase transition ${view === v ? "bg-teal-800 text-white shadow-sm" : "text-slate-600 hover:bg-white"}`}
-          >
-            {v === "purchase" ? t("PURCHASE STOCK DETAILS") : t("DESTINATION & RE-EXPORT STOCK")}
-          </button>
-        ))}
-      </nav>
+      {view === "destination" && (
+        <section className="grid grid-cols-2 gap-2 md:grid-cols-5">
+          {DESTINATION_CATEGORIES.map((c) => (
+            <Kpi key={c} label={t(CATEGORY_LABEL[c])} value={fmt(destTotals[c] ?? 0)} unit={unitLabel} tone={CATEGORY_TONE[c]} />
+          ))}
+        </section>
+      )}
 
-      {/* ══ PURCHASE STOCK DETAILS TABLE ══ */}
-      {view === "purchase" && (
-        <section className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xs">
-          <div className="max-h-[640px] overflow-auto">
-            <table className="w-full min-w-[1340px] text-[11px]">
-              <thead className="sticky top-0 z-10 bg-teal-900 text-[10px] font-black uppercase tracking-wide text-white">
-                <tr>
-                  <th className="px-2 py-2 text-start w-10">#</th>
-                  <th className="px-2.5 py-2 text-start">{t("PURCHASE NO.")} / {t("PURCHASE DATE")}</th>
-                  <th className="px-2.5 py-2 text-start">{t("BUYER / SUPPLIER")}</th>
+      {/* ══ UNIFIED REGISTER CARD (FLUSH TITLE TABS + COMPACT FULL-GRID TABLE) ══ */}
+      <section className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-slate-300 bg-white shadow-2xs">
+        <nav
+          className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-300 bg-slate-100 px-2.5 py-1.5"
+          role="tablist"
+        >
+          <div className="flex items-center gap-1">
+            {(["purchase", "destination"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                role="tab"
+                aria-selected={view === v}
+                onClick={() => setView(v)}
+                className={`rounded-lg px-3 py-1.5 text-[11px] font-black uppercase tracking-wide transition ${
+                  view === v ? "bg-teal-800 text-white shadow-xs" : "text-slate-600 hover:bg-white"
+                }`}
+              >
+                {v === "purchase" ? t("PURCHASE STOCK DETAILS") : t("DESTINATION & RE-EXPORT STOCK")}
+              </button>
+            ))}
+          </div>
+          <span className="pe-1 font-mono text-[10px] font-bold text-slate-600">
+            {view === "purchase" ? `${shownPurchases.length} ${t("BILLS")}` : `${shownDestinations.length}`}
+          </span>
+        </nav>
+
+        {/* ══ PURCHASE STOCK DETAILS TABLE ══ */}
+        {view === "purchase" && (
+          <div className="max-h-[660px] overflow-auto">
+            <table className="w-full min-w-[1140px] border-collapse text-[10.5px]">
+              <thead className="sticky top-0 z-10 bg-teal-900 text-[9.5px] font-black uppercase tracking-tight text-white">
+                <tr className="divide-x divide-teal-700/80 border-b border-teal-950">
+                  <th className="w-8 px-1.5 py-1.5 text-center">#</th>
+                  <th className="w-[126px] px-2 py-1.5 text-start leading-tight">
+                    <span className="block">{t("PURCHASE NO.")}</span>
+                    <span className="block text-[8.5px] font-bold text-teal-200">{t("PURCHASE DATE")}</span>
+                  </th>
+                  <th className="w-[190px] px-2 py-1.5 text-start">{t("BUYER / SUPPLIER")}</th>
                   {showBranch && (
-                    <th className="px-2 py-2 text-start">
+                    <th className="w-[104px] px-1.5 py-1.5 text-start">
                       {isSuperAdmin ? t("MAIN / CITY BRANCH") : t("CITY BRANCH")}
                     </th>
                   )}
-                  <th className="px-2 py-2 text-center">NC / {t("ENTRY NO.")}</th>
-                  <th className="px-2 py-2 text-start">{t("LOT (NAME & NO.)")}</th>
-                  <th className="px-2.5 py-2 text-start">{t("GOODS (BRAND · SIZE)")}</th>
-                  <th className="px-2 py-2 text-end">{t("QTY")}</th>
-                  <th className="px-2 py-2 text-end">{t("GROSS / NET (KG)")}</th>
-                  <th className="px-2 py-2 text-end">{t("LOADING (DATE · QTY · WT)")}</th>
-                  <th className="px-2 py-2 text-start">{t("DESTINATION")}</th>
-                  <th className="px-2.5 py-2 text-end">{t("REMAINING BALANCE (QTY · WT)")}</th>
-                  <th className="px-2 py-2 text-center">{t("VIEW")}</th>
+                  <th className="w-14 px-1.5 py-1.5 text-center leading-tight">
+                    <span className="block">NC</span>
+                    <span className="block text-[8.5px] font-bold text-teal-200">{t("ENTRY NO.")}</span>
+                  </th>
+                  <th className="w-[112px] px-2 py-1.5 text-start">{t("LOT (NAME & NO.)")}</th>
+                  <th className="w-[138px] px-2 py-1.5 text-start">{t("GOODS (BRAND · SIZE)")}</th>
+                  <th className="w-[76px] px-1.5 py-1.5 text-end">{t("QTY")}</th>
+                  <th className="w-[116px] px-2 py-1.5 text-end">{t("GROSS / NET (KG)")}</th>
+                  <th className="w-[126px] px-2 py-1.5 text-end">{t("LOADING (DATE · QTY · WT)")}</th>
+                  <th className="w-[104px] px-2 py-1.5 text-start">{t("DESTINATION")}</th>
+                  <th className="w-[130px] px-2 py-1.5 text-end">{t("REMAINING BALANCE (QTY · WT)")}</th>
+                  <th className="w-12 px-1.5 py-1.5 text-center">{t("VIEW")}</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-200">
                 {loading && (
                   <tr>
                     <td colSpan={totalCols} className="px-2 py-4 text-center text-slate-500">{t("LOADING")}</td>
@@ -677,50 +703,56 @@ export default function WarehouseStockRegisterPage() {
                 )}
                 {shownPurchases.map((p, idx) => {
                   const showEntries = p.entries.length > 1;
+                  const topLotName = p.entries[0]?.lotName || p.entries[0]?.lot || DASH;
+                  const topLotNo = p.entries[0]?.lotNo || DASH;
                   return (
                     <Fragment key={p.key}>
-                      <tr className="border-t border-slate-200 bg-slate-50/80 font-semibold transition hover:bg-teal-50/60">
+                      <tr className="divide-x divide-slate-200 bg-white font-semibold transition hover:bg-teal-50/50">
                         {/* 1. # with Serial hover popup */}
-                        <td className="whitespace-nowrap px-2 py-2 text-slate-500">
+                        <td className="whitespace-nowrap px-1.5 py-1.5 text-center text-slate-500">
                           <SerialTooltip purchase={p} rowIdx={idx + 1} t={t} />
                         </td>
 
-                        {/* 2. Purchase No. / Date */}
-                        <td className="whitespace-nowrap px-2.5 py-2 text-black">
-                          <button type="button" onClick={() => setSerialPurchase(p)} className="group text-start" title={t("DETAILS")}>
-                            <span className="flex items-center gap-1.5">
-                              <span className={`grid h-5 min-w-5 place-items-center rounded-md px-1 text-[10px] font-black ${p.billType === "booking" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`}>
+                        {/* 2. Purchase No. / Date (compact) */}
+                        <td className="whitespace-nowrap px-2 py-1.5 text-black">
+                          <button type="button" onClick={() => setSerialPurchase(p)} className="group text-start leading-tight" title={t("DETAILS")}>
+                            <span className="flex items-center gap-1">
+                              <span className={`grid h-4 min-w-4 place-items-center rounded px-1 text-[9px] font-black ${p.billType === "booking" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`}>
                                 {p.billType === "booking" ? "B" : "L"}
                               </span>
-                              <span className="font-mono font-black text-teal-900 underline decoration-dotted underline-offset-2 group-hover:text-teal-600">{p.purchaseNo}</span>
+                              <span className="font-mono text-[10px] font-black text-teal-900 underline decoration-dotted underline-offset-2 group-hover:text-teal-600" dir="ltr">
+                                {p.purchaseNo}
+                              </span>
                             </span>
-                            <span className="mt-0.5 block ps-6.5 font-mono text-[10px] font-medium text-slate-500">{p.purchaseDate || DASH}</span>
+                            <span className="mt-0.5 block ps-5 font-mono text-[9px] font-medium text-slate-500" dir="ltr">
+                              {p.purchaseDate || DASH}
+                            </span>
                           </button>
                         </td>
 
                         {/* 3. Account (Buyer / Supplier) */}
-                        <td className="px-2.5 py-1.5 text-[10px] min-w-[140px]">
-                          <div className="flex flex-col gap-0.5" title={`Buyer: ${p.buyerAccount.name} (${p.buyerAccount.number})\nSupplier: ${p.supplierAccount.name} (${p.supplierAccount.number})`}>
+                        <td className="max-w-[200px] px-2 py-1.5 text-[9.5px] leading-snug">
+                          <div className="flex flex-col gap-0.5" title={`B: ${p.buyerAccount.name} (${p.buyerAccount.number})\nS: ${p.supplierAccount.name} (${p.supplierAccount.number})`}>
                             <div className="truncate">
                               <span className="font-bold text-slate-400">B: </span>
-                              <span className="font-semibold text-slate-900">{p.buyerAccount.name || DASH}</span>
-                              {p.buyerAccount.number && <span className="font-mono text-[9px] text-slate-500"> ({p.buyerAccount.number})</span>}
+                              <SavedText value={p.buyerAccount.name} lang={lang} kind="name" fallback={DASH} className="font-semibold text-slate-900" />
+                              {p.buyerAccount.number && <span className="font-mono text-[8.5px] text-slate-500" dir="ltr"> ({p.buyerAccount.number})</span>}
                             </div>
                             <div className="truncate">
                               <span className="font-bold text-slate-400">S: </span>
-                              <span className="font-semibold text-slate-800">{p.supplierAccount.name || DASH}</span>
-                              {p.supplierAccount.number && <span className="font-mono text-[9px] text-slate-500"> ({p.supplierAccount.number})</span>}
+                              <SavedText value={p.supplierAccount.name} lang={lang} kind="name" fallback={DASH} className="font-semibold text-slate-800" />
+                              {p.supplierAccount.number && <span className="font-mono text-[8.5px] text-slate-500" dir="ltr"> ({p.supplierAccount.number})</span>}
                             </div>
                           </div>
                         </td>
 
                         {/* 4. Branch (Role-based) */}
                         {showBranch && (
-                          <td className="whitespace-nowrap px-2 py-1.5 font-mono text-[10px]">
+                          <td className="whitespace-nowrap px-1.5 py-1.5 font-mono text-[9.5px] leading-tight" dir="ltr">
                             {isSuperAdmin ? (
                               <div className="flex flex-col">
                                 <span className="font-black text-slate-900">{p.mainBranchCode || DASH}</span>
-                                <span className="text-[9px] text-slate-500">{p.cityBranchCode || DASH}</span>
+                                <span className="text-[8.5px] text-slate-500">{p.cityBranchCode || DASH}</span>
                               </div>
                             ) : (
                               <span className="font-black text-slate-900">{p.cityBranchCode || DASH}</span>
@@ -729,68 +761,76 @@ export default function WarehouseStockRegisterPage() {
                         )}
 
                         {/* 5. NC / Entry No. */}
-                        <td className="px-2 py-1.5 font-mono text-center text-slate-600 text-[10px]">
-                          <span className="inline-block rounded bg-slate-100 px-1.5 py-0.5 font-bold">
+                        <td className="px-1.5 py-1.5 text-center font-mono text-[9.5px] text-slate-700">
+                          <span className="inline-block rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-bold">
                             {p.entries.length}
                           </span>
                         </td>
 
                         {/* 6. Lot (Name & No.) */}
-                        <td className="px-2 py-1.5 text-[10px] min-w-[110px]">
+                        <td className="max-w-[125px] px-2 py-1.5 text-[9.5px] leading-tight">
                           <div className="flex flex-col">
-                            <span className="font-bold text-slate-900 truncate">{p.entries[0]?.lotName || p.entries[0]?.lot || DASH}</span>
-                            <span className="font-mono text-[9px] text-slate-500">{p.entries[0]?.lotNo || DASH}</span>
+                            <span className="truncate font-mono font-bold text-slate-900" dir="ltr">{topLotName}</span>
+                            {topLotNo !== DASH && topLotNo !== topLotName && (
+                              <span className="truncate font-mono text-[8.5px] text-slate-500" dir="ltr">{topLotNo}</span>
+                            )}
                           </div>
                         </td>
 
                         {/* 7. Goods (Brand · Size) */}
-                        <td className="px-2.5 py-1.5 text-[10px] min-w-[130px]">
+                        <td className="max-w-[155px] px-2 py-1.5 text-[9.5px] leading-tight">
                           <div className="flex flex-col">
-                            <span className="font-black text-slate-900">{p.goodsNames.join(", ") || DASH}</span>
-                            <span className="text-[9px] text-slate-500">
-                              {[p.entries[0]?.brand, p.entries[0]?.size].filter(Boolean).join(" · ") || DASH}
+                            <span className="truncate font-black text-slate-900">{p.goodsNames.join(", ") || DASH}</span>
+                            <span className="truncate text-[8.5px] text-slate-500">
+                              {[p.entries[0]?.brand, p.entries[0]?.size].filter((v) => v && v !== DASH).join(" · ") || DASH}
                             </span>
                           </div>
                         </td>
 
                         {/* 8. Qty (Qty / Unit) */}
-                        <td className="whitespace-nowrap px-2 py-1.5 text-end font-mono">
-                          <span className="block text-[11px] font-black text-slate-950">{fmt(p.qty)}</span>
-                          <span className="block text-[9px] font-bold text-slate-500 uppercase">{p.unit || DASH}</span>
+                        <td className="whitespace-nowrap px-1.5 py-1.5 text-end font-mono tabular-nums leading-tight">
+                          <span className="block text-[10.5px] font-black text-slate-950" dir="ltr">{fmt(p.qty)}</span>
+                          <span className="block text-[8.5px] font-bold uppercase text-slate-500">{uLabel(p.unit)}</span>
                         </td>
 
                         {/* 9. Gross / Net (KG) */}
-                        <td className="whitespace-nowrap px-2 py-1.5 text-end font-mono text-[10px]">
-                          <span className="block font-bold text-slate-900">G: {fmt(p.gross)}</span>
-                          <span className="block text-[9px] text-slate-600">N: {fmt(p.net)}</span>
+                        <td className="whitespace-nowrap px-2 py-1.5 text-end font-mono text-[9.5px] tabular-nums leading-tight" dir="ltr">
+                          <div className="flex items-center justify-end gap-1 font-bold text-slate-900">
+                            <span className="text-[8.5px] font-black text-slate-400">G:</span>
+                            <span>{fmt(p.gross)}</span>
+                          </div>
+                          <div className="flex items-center justify-end gap-1 text-[9px] text-slate-600">
+                            <span className="text-[8.5px] font-bold text-slate-400">N:</span>
+                            <span>{fmt(p.net)}</span>
+                          </div>
                         </td>
 
                         {/* 10. Loading (Date · Qty · Wt) */}
-                        <td className="whitespace-nowrap px-2 py-1.5 text-end font-mono text-[10px]">
+                        <td className="whitespace-nowrap px-2 py-1.5 text-end font-mono text-[9.5px] tabular-nums leading-tight" dir="ltr">
                           <div className="flex flex-col items-end">
                             <span className="font-bold text-slate-900">{p.loadingDate || DASH} · {fmt(p.loadedQty)}</span>
-                            <span className="text-[9px] text-slate-500">G: {fmt(p.loadedGross)} | N: {fmt(p.loadedNet)}</span>
+                            <span className="text-[8.5px] text-slate-500">G: {fmt(p.loadedGross)} | N: {fmt(p.loadedNet)}</span>
                           </div>
                         </td>
 
                         {/* 11. Destination */}
-                        <td className="px-2 py-1.5 text-[10px] text-slate-800 max-w-[120px] truncate">
+                        <td className="max-w-[112px] truncate px-2 py-1.5 text-[9.5px] text-slate-800">
                           {p.entries[0]?.destination || DASH}
                         </td>
 
                         {/* 12. Remaining Balance (Qty · Wt) */}
-                        <td className="whitespace-nowrap px-2.5 py-1.5 text-end font-mono text-[10px]">
-                          <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-black ${p.remaining > 0 ? "bg-rose-100 text-rose-800" : "bg-emerald-100 text-emerald-800"}`}>
-                            {fmt(p.remaining)} {p.unit}
+                        <td className="whitespace-nowrap px-2 py-1.5 text-end font-mono text-[9.5px] tabular-nums leading-tight">
+                          <span className={`inline-block rounded px-1.5 py-0.5 text-[9.5px] font-black ${p.remaining > 0 ? "bg-rose-100 text-rose-800" : "bg-emerald-100 text-emerald-800"}`} dir="ltr">
+                            {fmt(p.remaining)} {uLabel(p.unit)}
                           </span>
-                          <span className="mt-0.5 block text-[9px] text-slate-500">
+                          <span className="mt-0.5 block text-[8.5px] text-slate-500" dir="ltr">
                             G: {fmt(p.remainingGross)} | N: {fmt(p.remainingNet)}
                           </span>
                         </td>
 
                         {/* 13. View */}
-                        <td className="whitespace-nowrap px-2 py-1.5 text-center">
-                          <Link href={billHref(p)} className="inline-block rounded-lg border border-teal-300 bg-teal-50 px-2 py-1 text-[10px] font-black text-teal-900 hover:bg-teal-100 transition shadow-2xs">
+                        <td className="whitespace-nowrap px-1.5 py-1.5 text-center">
+                          <Link href={billHref(p)} className="inline-block rounded-md border border-teal-300 bg-teal-50 px-1.5 py-0.5 text-[9.5px] font-black text-teal-900 shadow-2xs transition hover:bg-teal-100">
                             {t("VIEW")}
                           </Link>
                         </td>
@@ -798,97 +838,105 @@ export default function WarehouseStockRegisterPage() {
 
                       {/* SUB-ENTRIES ROWS */}
                       {showEntries &&
-                        p.entries.map((e, k) => (
-                          <tr key={e.id} className="border-t border-slate-100 bg-slate-50/40 text-[10px]">
-                            <td className="px-2 py-1.5 text-slate-500 font-mono">{`${idx + 1}.${k + 1}`}</td>
-                            <td className="whitespace-nowrap px-2.5 py-1.5 text-slate-500">
-                              <span className="font-mono text-slate-700">{p.purchaseNo}</span>
-                              <span className="block font-mono text-[9px] text-slate-400">{p.purchaseDate || DASH}</span>
-                            </td>
-                            <td className="px-2.5 py-1.5 text-[9px] text-slate-500">
-                              <div className="truncate">{p.buyerAccount.name || DASH}</div>
-                              <div className="truncate">{p.supplierAccount.name || DASH}</div>
-                            </td>
-                            {showBranch && (
-                              <td className="whitespace-nowrap px-2 py-1.5 font-mono text-[9px] text-slate-500">
-                                {isSuperAdmin ? (
-                                  <div>{p.mainBranchCode} / {p.cityBranchCode}</div>
-                                ) : (
-                                  <div>{p.cityBranchCode}</div>
+                        p.entries.map((e, k) => {
+                          const subLotName = e.lotName || e.lot || DASH;
+                          const subLotNo = e.lotNo || DASH;
+                          return (
+                            <tr key={e.id} className="divide-x divide-slate-200 bg-slate-50/70 text-[9.5px]">
+                              <td className="px-1.5 py-1 text-center font-mono text-slate-500">{`${idx + 1}.${k + 1}`}</td>
+                              <td className="whitespace-nowrap px-2 py-1 text-slate-500 leading-tight" dir="ltr">
+                                <span className="font-mono text-slate-700">{p.purchaseNo}</span>
+                                <span className="block font-mono text-[8.5px] text-slate-400">{p.purchaseDate || DASH}</span>
+                              </td>
+                              <td className="max-w-[200px] px-2 py-1 text-[9px] text-slate-500 leading-tight">
+                                <div className="truncate"><SavedText value={p.buyerAccount.name} lang={lang} kind="name" fallback={DASH} /></div>
+                                <div className="truncate"><SavedText value={p.supplierAccount.name} lang={lang} kind="name" fallback={DASH} /></div>
+                              </td>
+                              {showBranch && (
+                                <td className="whitespace-nowrap px-1.5 py-1 font-mono text-[9px] text-slate-500" dir="ltr">
+                                  {isSuperAdmin ? (
+                                    <div>{p.mainBranchCode} / {p.cityBranchCode}</div>
+                                  ) : (
+                                    <div>{p.cityBranchCode}</div>
+                                  )}
+                                </td>
+                              )}
+                              <td className="whitespace-nowrap px-1.5 py-1 text-center font-mono font-bold text-slate-700">{e.entryNo}</td>
+                              <td className="px-2 py-1 text-[9.5px] leading-tight">
+                                <div className="font-mono font-bold text-slate-800" dir="ltr">{subLotName}</div>
+                                {subLotNo !== DASH && subLotNo !== subLotName && (
+                                  <div className="font-mono text-[8.5px] text-slate-400" dir="ltr">{subLotNo}</div>
                                 )}
                               </td>
-                            )}
-                            <td className="whitespace-nowrap px-2 py-1.5 font-mono text-center text-slate-700 font-bold">{e.entryNo}</td>
-                            <td className="px-2 py-1.5 text-[10px]">
-                              <div className="font-bold text-slate-800">{e.lotName || e.lot}</div>
-                              <div className="font-mono text-[9px] text-slate-400">{e.lotNo}</div>
-                            </td>
-                            <td className="px-2.5 py-1.5 text-slate-900">
-                              <div className="font-semibold">{e.goodsName}</div>
-                              <div className="text-[9px] text-slate-500">{[e.brand, e.size].filter(Boolean).join(" · ") || DASH}</div>
-                            </td>
-                            <td className="whitespace-nowrap px-2 py-1.5 text-end font-mono text-black">
-                              <span className="font-bold">{fmt(e.qty)}</span>
-                              <span className="block text-[9px] text-slate-500 uppercase">{e.unit}</span>
-                            </td>
-                            <td className="whitespace-nowrap px-2 py-1.5 text-end font-mono text-[9px]">
-                              <div>G: {fmt(e.gross)}</div>
-                              <div className="text-slate-500">N: {fmt(e.net)}</div>
-                            </td>
-                            <td className="whitespace-nowrap px-2 py-1.5 text-end font-mono text-[9px]">
-                              <div>{e.loadingDate || DASH} · {fmt(e.loadedQty)}</div>
-                              <div className="text-slate-500">G: {fmt(e.loadedGross)} | N: {fmt(e.loadedNet)}</div>
-                            </td>
-                            <td className="px-2 py-1.5 text-slate-700 truncate max-w-[120px]">{e.destination}</td>
-                            <td className="whitespace-nowrap px-2.5 py-1.5 text-end font-mono">
-                              <span className={`inline-block rounded px-1 py-0.5 text-[9px] font-bold ${e.remaining > 0 ? "text-rose-700 bg-rose-50" : "text-emerald-700 bg-emerald-50"}`}>
-                                {fmt(e.remaining)} {e.unit}
-                              </span>
-                              <span className="block text-[9px] text-slate-400">G: {fmt(e.remainingGross)} | N: {fmt(e.remainingNet)}</span>
-                            </td>
-                            <td className="whitespace-nowrap px-2 py-1.5 text-center">
-                              <Link href={billHref(p)} className="rounded border border-teal-200 bg-teal-50 px-1.5 py-0.5 text-[9px] font-bold text-teal-800">{t("VIEW")}</Link>
-                            </td>
-                          </tr>
-                        ))}
+                              <td className="px-2 py-1 text-slate-900 leading-tight">
+                                <div className="font-semibold">{e.goodsName}</div>
+                                <div className="text-[8.5px] text-slate-500">{[e.brand, e.size].filter((v) => v && v !== DASH).join(" · ") || DASH}</div>
+                              </td>
+                              <td className="whitespace-nowrap px-1.5 py-1 text-end font-mono tabular-nums text-black leading-tight">
+                                <span className="font-bold" dir="ltr">{fmt(e.qty)}</span>
+                                <span className="block text-[8.5px] uppercase text-slate-500">{uLabel(e.unit)}</span>
+                              </td>
+                              <td className="whitespace-nowrap px-2 py-1 text-end font-mono text-[9px] tabular-nums leading-tight" dir="ltr">
+                                <div>G: {fmt(e.gross)}</div>
+                                <div className="text-slate-500">N: {fmt(e.net)}</div>
+                              </td>
+                              <td className="whitespace-nowrap px-2 py-1 text-end font-mono text-[9px] tabular-nums leading-tight" dir="ltr">
+                                <div>{e.loadingDate || DASH} · {fmt(e.loadedQty)}</div>
+                                <div className="text-slate-500">G: {fmt(e.loadedGross)} | N: {fmt(e.loadedNet)}</div>
+                              </td>
+                              <td className="max-w-[112px] truncate px-2 py-1 text-slate-700">{e.destination}</td>
+                              <td className="whitespace-nowrap px-2 py-1 text-end font-mono tabular-nums leading-tight">
+                                <span className={`inline-block rounded px-1 py-0.5 text-[9px] font-bold ${e.remaining > 0 ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"}`} dir="ltr">
+                                  {fmt(e.remaining)} {uLabel(e.unit)}
+                                </span>
+                                <span className="block text-[8.5px] text-slate-400" dir="ltr">G: {fmt(e.remainingGross)} | N: {fmt(e.remainingNet)}</span>
+                              </td>
+                              <td className="whitespace-nowrap px-1.5 py-1 text-center">
+                                <Link href={billHref(p)} className="rounded border border-teal-200 bg-teal-50 px-1.5 py-0.5 text-[9px] font-bold text-teal-800">{t("VIEW")}</Link>
+                              </td>
+                            </tr>
+                          );
+                        })}
 
                       {/* MOVEMENTS ROWS */}
                       {p.movements.length > 0 && (
-                        <tr className="border-t border-slate-200 bg-teal-50/60">
-                          <td colSpan={totalCols} className="px-3 py-1 text-[10px] font-black uppercase text-teal-900 tracking-wider">
+                        <tr className="bg-teal-50/70">
+                          <td colSpan={totalCols} className="px-2.5 py-1 text-[9.5px] font-black uppercase tracking-wider text-teal-900">
                             {t("LOADING & STOCK TRANSFER ENTRIES")}
                           </td>
                         </tr>
                       )}
                       {p.movements.map((m) => (
-                        <tr key={m.id} className="border-t border-slate-100 bg-teal-50/20 text-[10px]">
-                          <td className="px-2 py-1">
-                            <span className={`rounded px-1.5 py-0.5 text-[9px] font-black uppercase ${m.kind === "loading" ? "bg-amber-100 text-amber-800" : "bg-violet-100 text-violet-800"}`}>
+                        <tr key={m.id} className="divide-x divide-slate-200 bg-teal-50/25 text-[9.5px]">
+                          <td className="px-1.5 py-1 text-center">
+                            <span className={`rounded px-1 py-0.5 text-[8.5px] font-black uppercase ${m.kind === "loading" ? "bg-amber-100 text-amber-800" : "bg-violet-100 text-violet-800"}`}>
                               {m.kind === "loading" ? t("LOADING") : t("TRANSFER")}
                             </span>
                           </td>
-                          <td className="whitespace-nowrap px-2.5 py-1 text-slate-500">
+                          <td className="whitespace-nowrap px-2 py-1 text-slate-500 leading-tight" dir="ltr">
                             <span className="font-mono text-slate-700">{p.purchaseNo}</span>
-                            <span className="block font-mono text-[9px] text-slate-400">{p.purchaseDate || DASH}</span>
+                            <span className="block font-mono text-[8.5px] text-slate-400">{p.purchaseDate || DASH}</span>
                           </td>
-                          <td className="px-2.5 py-1 text-[9px] text-slate-500 truncate">{p.buyerAccount.name || DASH}</td>
+                          <td className="max-w-[200px] truncate px-2 py-1 text-[9px] text-slate-500">
+                            <SavedText value={p.buyerAccount.name} lang={lang} kind="name" fallback={DASH} />
+                          </td>
                           {showBranch && (
-                            <td className="whitespace-nowrap px-2 py-1 font-mono text-[9px] text-slate-500">
+                            <td className="whitespace-nowrap px-1.5 py-1 font-mono text-[9px] text-slate-500" dir="ltr">
                               {p.mainBranchCode} / {p.cityBranchCode}
                             </td>
                           )}
-                          <td className="whitespace-nowrap px-2 py-1 font-mono text-black font-semibold text-center">{m.refNo}</td>
-                          <td className="px-2 py-1 text-slate-700 font-mono text-[9px]">{m.lot || DASH}</td>
-                          <td className="px-2.5 py-1 text-slate-900 font-medium">{m.goodsName}</td>
-                          <td className="whitespace-nowrap px-2 py-1 text-end font-mono text-black">{fmt(m.qty)} {m.unit}</td>
-                          <td className="px-2 py-1 text-end font-mono text-[9px]">G: {fmt(m.gross)} | N: {fmt(m.net)}</td>
-                          <td className="px-2 py-1 text-end font-mono text-[9px]">{m.date || DASH}</td>
+                          <td className="whitespace-nowrap px-1.5 py-1 text-center font-mono font-semibold text-black">{m.refNo}</td>
+                          <td className="px-2 py-1 font-mono text-[9px] text-slate-700" dir="ltr">{m.lot || DASH}</td>
+                          <td className="px-2 py-1 font-medium text-slate-900">{m.goodsName}</td>
+                          <td className="whitespace-nowrap px-1.5 py-1 text-end font-mono tabular-nums text-black" dir="ltr">{fmt(m.qty)} {uLabel(m.unit)}</td>
+                          <td className="px-2 py-1 text-end font-mono text-[9px] tabular-nums" dir="ltr">G: {fmt(m.gross)} | N: {fmt(m.net)}</td>
+                          <td className="px-2 py-1 text-end font-mono text-[9px]" dir="ltr">{m.date || DASH}</td>
                           <td className="px-2 py-1 text-slate-800">
                             <span className="font-semibold">{t(CATEGORY_LABEL[m.category])}</span>
                             {m.destination !== DASH && <span className="text-slate-600"> · {m.destination}</span>}
                           </td>
-                          <td className="px-2.5 py-1 text-end text-[10px] uppercase font-bold text-slate-600">{statusLabel(m.status)}</td>
-                          <td className="whitespace-nowrap px-2 py-1 text-center">
+                          <td className="px-2 py-1 text-end text-[9.5px] font-bold uppercase text-slate-600">{statusLabel(m.status)}</td>
+                          <td className="whitespace-nowrap px-1.5 py-1 text-center">
                             <Link href={movementHref(p, m)} className="rounded border border-teal-300 bg-teal-50 px-1.5 py-0.5 text-[9px] font-black text-teal-900">{t("VIEW")}</Link>
                           </td>
                         </tr>
@@ -896,142 +944,103 @@ export default function WarehouseStockRegisterPage() {
                     </Fragment>
                   );
                 })}
-
-                {/* ══ GRAND TOTAL ROW ══ */}
-                {shownPurchases.length > 0 && (
-                  <tr className="border-t-2 border-emerald-300 bg-emerald-100 font-black text-[10px]">
-                    <td className="px-2.5 py-2 text-slate-950 font-black" colSpan={preColspan}>
-                      {t("GRAND TOTAL")}
-                    </td>
-                    <td className="whitespace-nowrap px-2 py-2 text-end font-mono">
-                      <span className="block text-[11px] font-black text-black">{fmt(purchaseGrand.qty)}</span>
-                      <span className="block text-[9px] font-bold text-slate-700 uppercase">{unitLabel}</span>
-                    </td>
-                    <td className="whitespace-nowrap px-2 py-2 text-end font-mono">
-                      <span className="block font-bold text-black">G: {fmt(purchaseGrand.gross)}</span>
-                      <span className="block text-[9px] text-slate-700">N: {fmt(purchaseGrand.net)}</span>
-                    </td>
-                    <td className="whitespace-nowrap px-2 py-2 text-end font-mono">
-                      <span className="block font-bold text-black">{fmt(purchaseGrand.loadedQty)}</span>
-                      <span className="block text-[9px] text-slate-700">G: {fmt(purchaseGrand.loadedGross)} | N: {fmt(purchaseGrand.loadedNet)}</span>
-                    </td>
-                    <td className="px-2 py-2" />
-                    <td className="whitespace-nowrap px-2.5 py-2 text-end font-mono">
-                      <span className="block text-[11px] font-black text-black">{fmt(purchaseGrand.remaining)}</span>
-                      <span className="block text-[9px] text-slate-700">G: {fmt(purchaseGrand.remainingGross)} | N: {fmt(purchaseGrand.remainingNet)}</span>
-                    </td>
-                    <td className="px-2 py-2" />
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>
-        </section>
-      )}
+        )}
 
-      {/* ══ DESTINATION & RE-EXPORT VIEW ══ */}
-      {view === "destination" && (
-        <>
-          <section className="grid grid-cols-2 gap-2 md:grid-cols-5">
-            {DESTINATION_CATEGORIES.map((c) => (
-              <Kpi key={c} label={t(CATEGORY_LABEL[c])} value={fmt(destTotals[c] ?? 0)} unit={unitLabel} tone={CATEGORY_TONE[c]} />
-            ))}
-          </section>
-          <section className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xs">
-            <div className="max-h-[640px] overflow-auto">
-              <table className="w-full min-w-[1400px] text-[11px]">
-                <thead className="sticky top-0 z-10 bg-teal-50 text-[10px] font-black uppercase text-slate-700">
+        {/* ══ DESTINATION & RE-EXPORT VIEW ══ */}
+        {view === "destination" && (
+          <div className="max-h-[660px] overflow-auto">
+            <table className="w-full min-w-[1220px] border-collapse text-[10.5px]">
+              <thead className="sticky top-0 z-10 bg-teal-900 text-[9.5px] font-black uppercase text-white">
+                <tr className="divide-x divide-teal-700/80 border-b border-teal-950">
+                  <th className="px-2 py-1.5 text-start">#</th>
+                  <th className="px-2 py-1.5 text-start">{t("DESTINATION")}</th>
+                  <th className="px-2 py-1.5 text-start">{t("PURCHASE NO.")}</th>
+                  <th className="px-2 py-1.5 text-start">{t("PURCHASE DATE")}</th>
+                  <th className="px-2 py-1.5 text-start">{t("ENTRY NO.")}</th>
+                  <th className="px-2 py-1.5 text-start">{t("DATE")}</th>
+                  <th className="px-2 py-1.5 text-start">{t("GOODS NAME")}</th>
+                  <th className="px-2 py-1.5 text-start">{t("BRAND")}</th>
+                  <th className="px-2 py-1.5 text-start">{t("SIZE")}</th>
+                  <th className="px-2 py-1.5 text-start">{t("LOT NAME")}</th>
+                  <th className="px-2 py-1.5 text-end">{t("QTY")}</th>
+                  <th className="px-2 py-1.5 text-end">{t("GROSS WT (KG)")}</th>
+                  <th className="px-2 py-1.5 text-end">{t("NET WT (KG)")}</th>
+                  <th className="px-2 py-1.5 text-start">{t("STATUS")}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {loading && (
                   <tr>
-                    <th className="px-2 py-1 text-start">#</th>
-                    <th className="px-2 py-1 text-start">{t("DESTINATION")}</th>
-                    <th className="px-2 py-1 text-start">{t("PURCHASE NO.")}</th>
-                    <th className="px-2 py-1 text-start">{t("PURCHASE DATE")}</th>
-                    <th className="px-2 py-1 text-start">{t("ENTRY NO.")}</th>
-                    <th className="px-2 py-1 text-start">{t("DATE")}</th>
-                    <th className="px-2 py-1 text-start">{t("GOODS NAME")}</th>
-                    <th className="px-2 py-1 text-start">{t("BRAND")}</th>
-                    <th className="px-2 py-1 text-start">{t("SIZE")}</th>
-                    <th className="px-2 py-1 text-start">{t("LOT NAME")}</th>
-                    <th className="px-2 py-1 text-end">{t("QTY")}</th>
-                    <th className="px-2 py-1 text-end">{t("GROSS WT (KG)")}</th>
-                    <th className="px-2 py-1 text-end">{t("NET WT (KG)")}</th>
-                    <th className="px-2 py-1 text-start">{t("STATUS")}</th>
+                    <td colSpan={14} className="px-2 py-4 text-center text-slate-500">{t("LOADING")}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {loading && (
-                    <tr>
-                      <td colSpan={14} className="px-2 py-4 text-center text-slate-500">{t("LOADING")}</td>
-                    </tr>
-                  )}
-                  {!loading && !failed && shownDestinations.length === 0 && (
-                    <tr>
-                      <td colSpan={14} className="px-2 py-4 text-center text-slate-500">{t("NO LOADING OR TRANSFER ENTRIES FOUND")}</td>
-                    </tr>
-                  )}
-                  {shownDestinations.map((g, idx) => {
-                    const key = `${g.category}|${g.destination}`;
-                    const open = openDest.has(key);
-                    return (
-                      <Fragment key={key}>
-                        <tr className="border-t border-slate-200 bg-slate-50 font-semibold">
-                          <td className="whitespace-nowrap px-2 py-1">
-                            <button
-                              type="button"
-                              onClick={() => toggleDest(key)}
-                              aria-expanded={open}
-                              aria-label={g.destination}
-                              className="me-1 inline-flex h-5 w-5 items-center justify-center rounded border border-slate-300 bg-white text-[11px] font-black text-black"
-                            >
-                              {open ? "−" : "+"}
-                            </button>
-                            {idx + 1}
-                          </td>
-                          <td className="px-2 py-1 font-black text-black" colSpan={9}>
-                            {t(CATEGORY_LABEL[g.category])}
-                            {g.destination !== DASH && <span className="font-semibold text-slate-700"> · {g.destination}</span>}
-                            <span className="ms-2 text-[10px] font-normal text-slate-500">({g.rows.length})</span>
-                          </td>
-                          <td className="px-2 py-1 text-end font-mono text-black">{fmt(g.qty)}</td>
-                          <td className="px-2 py-1 text-end font-mono text-black">{fmt(g.gross)}</td>
-                          <td className="px-2 py-1 text-end font-mono text-black">{fmt(g.net)}</td>
-                          <td className="px-2 py-1" />
-                        </tr>
-                        {open &&
-                          g.rows.map((r, k) => (
-                            <tr key={r.id} className="border-t border-slate-100">
-                              <td className="px-2 py-1 text-slate-500">{`${idx + 1}.${k + 1}`}</td>
-                              <td className="px-2 py-1">
-                                <span className={`rounded px-1 text-[9px] font-black uppercase ${r.kind === "loading" ? "bg-amber-100 text-amber-800" : "bg-violet-100 text-violet-800"}`}>
-                                  {r.kind === "loading" ? t("LOADING") : t("TRANSFER")}
-                                </span>
-                              </td>
-                              <td className="whitespace-nowrap px-2 py-1 font-semibold text-black">{r.purchaseNo}</td>
-                              <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{r.purchaseDate || DASH}</td>
-                              <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{r.refNo}</td>
-                              <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{r.date || DASH}</td>
-                              <td className="px-2 py-1 text-black">{r.goodsName}</td>
-                              <td className="px-2 py-1 text-black">{r.brand}</td>
-                              <td className="px-2 py-1 text-black">{r.size}</td>
-                              <td className="px-2 py-1 text-black">{r.lot}</td>
-                              <td className="whitespace-nowrap px-2 py-1 text-end font-mono text-black">{fmt(r.qty)} {r.unit}</td>
-                              <td className="px-2 py-1 text-end font-mono text-black">{fmt(r.gross)}</td>
-                              <td className="px-2 py-1 text-end font-mono text-black">{fmt(r.net)}</td>
-                              <td className="px-2 py-1 text-[10px] uppercase text-slate-600">{statusLabel(r.status)}</td>
-                            </tr>
-                          ))}
-                      </Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </>
-      )}
+                )}
+                {!loading && !failed && shownDestinations.length === 0 && (
+                  <tr>
+                    <td colSpan={14} className="px-2 py-4 text-center text-slate-500">{t("NO LOADING OR TRANSFER ENTRIES FOUND")}</td>
+                  </tr>
+                )}
+                {shownDestinations.map((g, idx) => {
+                  const key = `${g.category}|${g.destination}`;
+                  const open = openDest.has(key);
+                  return (
+                    <Fragment key={key}>
+                      <tr className="divide-x divide-slate-200 bg-slate-50 font-semibold">
+                        <td className="whitespace-nowrap px-2 py-1">
+                          <button
+                            type="button"
+                            onClick={() => toggleDest(key)}
+                            aria-expanded={open}
+                            aria-label={g.destination}
+                            className="me-1 inline-flex h-5 w-5 items-center justify-center rounded border border-slate-300 bg-white text-[11px] font-black text-black"
+                          >
+                            {open ? "−" : "+"}
+                          </button>
+                          {idx + 1}
+                        </td>
+                        <td className="px-2 py-1 font-black text-black" colSpan={9}>
+                          {t(CATEGORY_LABEL[g.category])}
+                          {g.destination !== DASH && <span className="font-semibold text-slate-700"> · {g.destination}</span>}
+                          <span className="ms-2 text-[10px] font-normal text-slate-500">({g.rows.length})</span>
+                        </td>
+                        <td className="px-2 py-1 text-end font-mono tabular-nums text-black">{fmt(g.qty)}</td>
+                        <td className="px-2 py-1 text-end font-mono tabular-nums text-black">{fmt(g.gross)}</td>
+                        <td className="px-2 py-1 text-end font-mono tabular-nums text-black">{fmt(g.net)}</td>
+                        <td className="px-2 py-1" />
+                      </tr>
+                      {open &&
+                        g.rows.map((r, k) => (
+                          <tr key={r.id} className="divide-x divide-slate-200">
+                            <td className="px-2 py-1 text-slate-500">{`${idx + 1}.${k + 1}`}</td>
+                            <td className="px-2 py-1">
+                              <span className={`rounded px-1 text-[9px] font-black uppercase ${r.kind === "loading" ? "bg-amber-100 text-amber-800" : "bg-violet-100 text-violet-800"}`}>
+                                {r.kind === "loading" ? t("LOADING") : t("TRANSFER")}
+                              </span>
+                            </td>
+                            <td className="whitespace-nowrap px-2 py-1 font-semibold text-black">{r.purchaseNo}</td>
+                            <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{r.purchaseDate || DASH}</td>
+                            <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{r.refNo}</td>
+                            <td className="whitespace-nowrap px-2 py-1 font-mono text-black">{r.date || DASH}</td>
+                            <td className="px-2 py-1 text-black">{r.goodsName}</td>
+                            <td className="px-2 py-1 text-black">{r.brand}</td>
+                            <td className="px-2 py-1 text-black">{r.size}</td>
+                            <td className="px-2 py-1 text-black">{r.lot}</td>
+                            <td className="whitespace-nowrap px-2 py-1 text-end font-mono tabular-nums text-black">{fmt(r.qty)} {uLabel(r.unit)}</td>
+                            <td className="px-2 py-1 text-end font-mono tabular-nums text-black">{fmt(r.gross)}</td>
+                            <td className="px-2 py-1 text-end font-mono tabular-nums text-black">{fmt(r.net)}</td>
+                            <td className="px-2 py-1 text-[10px] uppercase text-slate-600">{statusLabel(r.status)}</td>
+                          </tr>
+                        ))}
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       <p className="text-[10px] text-slate-500">{t("STOCK ENTERS THIS REGISTER ONLY THROUGH A CONFIRMED WAREHOUSE TRANSFER.")}</p>
-      {serialPurchase && <SerialDetails purchase={serialPurchase} onClose={() => setSerialPurchase(null)} t={t} />}
-    </div>
-  );
-}
+      {serialPurchase && <SerialDetails purchase={serialPurchase} onClose={() => setSerialPurchase(null)} t={t} 
