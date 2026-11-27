@@ -175,5 +175,5 @@ export function SalesLoadingEntry({ source = "booking", order, records, tt, onBa
       </tbody></table></div>
     </LoadingWorkflowReport>
   </>;
-  return <div data-testid="sales-loading-entry"><LoadingWorkflow heading={source === "local" ? tt("", "New Local Sales Loading Entry") : tt("sales_loading.entry_title", "New Sales Loading Entry")} bookingNo={order.bookingNo} backLabel={tt("plrf.back_to_dashboard", "Dashboard")} previousLabel={tt("common.back", "Back")} direction={direction} steps={steps} report={report} onBack={onBack}/></div>;
+  return <div data-testid="sales-loading-entry"><LoadingWorkflow heading={source === "local" ? tt("sales_loading.local_entry_title", "New Local Sales Loading Entry") : tt("sales_loading.entry_title", "New Sales Loading Entry")} bookingNo={order.bookingNo} backLabel={tt("plrf.back_to_dashboard", "Dashboard")} previousLabel={tt("common.back", "Back")} direction={direction} steps={steps} report={report} onBack={onBack}/></div>;
 }

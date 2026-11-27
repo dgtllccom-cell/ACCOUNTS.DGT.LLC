@@ -1355,6 +1355,7 @@ export type UiKey =
   | "sales_loading.empty"
   | "sales_loading.entry_no"
   | "sales_loading.entry_title"
+  | "sales_loading.local_entry_title"
   | "sales_loading.entry_unavailable"
   | "sales_loading.filter"
   | "sales_loading.flight"
@@ -17265,6 +17266,7 @@ const en: Dict = {
   "sales_loading.empty": "No matching sales loading records",
   "sales_loading.entry_no": "Loading Entry No. / Date",
   "sales_loading.entry_title": "New Sales Loading Entry",
+  "sales_loading.local_entry_title": "New Local Sales Loading Entry",
   "sales_loading.entry_unavailable": "Loading is not available for this Sales Booking.",
   "sales_loading.filter": "Advanced Search & Filter",
   "sales_loading.flight": "Flight Details",
@@ -45884,6 +45886,7 @@ const ur: Dict = {
   "sales_loading.empty": "سیلز لوڈنگ کا کوئی متعلقہ ریکارڈ نہیں ملا",
   "sales_loading.entry_no": "لوڈنگ اندراج نمبر / تاریخ",
   "sales_loading.entry_title": "نیا سیلز لوڈنگ اندراج",
+  "sales_loading.local_entry_title": "نیا لوکل سیلز لوڈنگ اندراج",
   "sales_loading.entry_unavailable": "اس سیلز بکنگ کے لیے لوڈنگ دستیاب نہیں ہے۔",
   "sales_loading.filter": "تفصیلی تلاش اور فلٹر",
   "sales_loading.flight": "پرواز کی تفصیل",
@@ -72980,6 +72983,7 @@ const ar: Dict = {
   "sales_loading.empty": "لا توجد سجلات مطابقة لتحميل المبيعات",
   "sales_loading.entry_no": "رقم إدخال التحميل / التاريخ",
   "sales_loading.entry_title": "إدخال تحميل مبيعات جديد",
+  "sales_loading.local_entry_title": "إدخال تحميل مبيعات محلية جديد",
   "sales_loading.entry_unavailable": "التحميل غير متاح لحجز المبيعات هذا.",
   "sales_loading.filter": "البحث والتصفية المتقدمة",
   "sales_loading.flight": "تفاصيل الرحلة الجوية",
@@ -100132,6 +100136,7 @@ const fa: Dict = {
   "sales_loading.empty": "رکورد مطابقی برای بارگیری فروش یافت نشد",
   "sales_loading.entry_no": "شماره ثبت بارگیری / تاریخ",
   "sales_loading.entry_title": "ثبت بارگیری جدید فروش",
+  "sales_loading.local_entry_title": "ثبت بارگیری جدید فروش محلی",
   "sales_loading.entry_unavailable": "بارگیری برای این رزرو فروش در دسترس نیست.",
   "sales_loading.filter": "جستجو و فیلتر پیشرفته",
   "sales_loading.flight": "مشخصات پرواز",
@@ -127265,6 +127270,7 @@ const ps: Dict = {
   "sales_loading.empty": "د پلور بارولو سمون لرونکی ریکارډ نشته",
   "sales_loading.entry_no": "د بارولو شمېره / نېټه",
   "sales_loading.entry_title": "د پلور بارولو نوی ثبت",
+  "sales_loading.local_entry_title": "د سیمه ییز پلور بارولو نوی ثبت",
   "sales_loading.entry_unavailable": "د دې پلور بکینګ لپاره بارول نشته.",
   "sales_loading.filter": "پرمختللې پلټنه او چاڼ",
   "sales_loading.flight": "د الوتنې جزیات",
