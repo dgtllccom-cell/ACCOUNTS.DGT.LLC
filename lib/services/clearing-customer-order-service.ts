@@ -153,6 +153,8 @@ export type LoadingAllocationInput = {
   facilityCountryId?: string | null;
   facilityStateProvinceId?: string | null;
   facilityCityId?: string | null;
+  facilityPostalCode?: string | null;
+  facilityAddressDetail?: string | null;
   quantity?: number | null;
   unit?: string | null;
   remarks?: string | null;
@@ -454,6 +456,8 @@ function normalizeLoadingAllocations(rows: LoadingAllocationInput[] | undefined 
       facilityCountryId: uuidOrNull(row.facilityCountryId),
       facilityStateProvinceId: uuidOrNull(row.facilityStateProvinceId),
       facilityCityId: uuidOrNull(row.facilityCityId),
+      facilityPostalCode: trimOrNull(row.facilityPostalCode),
+      facilityAddressDetail: typeof row.facilityAddressDetail === "string" ? row.facilityAddressDetail.trim() : null,
       quantity: typeof row.quantity === "number" ? row.quantity : 0,
       unit: trimOrNull(row.unit),
       remarks: trimOrNull(row.remarks)
@@ -1315,6 +1319,8 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             facility_country_id: alloc.facilityCountryId ?? null,
             facility_state_province_id: alloc.facilityStateProvinceId ?? null,
             facility_city_id: alloc.facilityCityId ?? null,
+            facility_postal_code: alloc.facilityPostalCode ?? null,
+            facility_address_detail: alloc.facilityAddressDetail ?? null,
             quantity: alloc.quantity,
             unit: alloc.unit,
             remarks: alloc.remarks,

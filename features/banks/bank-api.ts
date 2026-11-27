@@ -48,9 +48,11 @@ export async function listBanks(params?: {
   q?: string;
   countryId?: string;
   limit?: number;
+  excludeDemo?: boolean;
 }) {
   const qp = new URLSearchParams();
   if (params?.q) qp.set("q", params.q);
+  if (params?.excludeDemo) qp.set("excludeDemo", "1");
   if (params?.countryId) qp.set("countryId", params.countryId);
   if (params?.limit) qp.set("limit", String(params.limit));
   const res = await apiGet<{ banks: BankRecord[] }>(

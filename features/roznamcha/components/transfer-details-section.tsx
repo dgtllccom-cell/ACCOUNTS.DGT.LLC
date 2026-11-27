@@ -119,6 +119,7 @@ export function TransferDetailsSection({
       const qp = new URLSearchParams();
       qp.set("limit", "500");
       qp.set("status", "Active");
+      qp.set("excludeDemo", "1");
       if (countryId) qp.set("countryId", countryId);
       const res: any = await apiGet(`/api/erp/banks?${qp.toString()}`);
       const list = Array.isArray(res?.banks) ? res.banks : Array.isArray(res) ? res : [];

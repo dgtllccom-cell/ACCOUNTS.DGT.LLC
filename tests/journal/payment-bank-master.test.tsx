@@ -16,7 +16,13 @@ it("uses scoped Settings masters and retains the selected bank UUID without an I
   render(<Form />);
   fireEvent.click(await screen.findByRole("button", { name: "Select bank" }));
   fireEvent.click(screen.getByRole("button", { name: "Saved Test Bank" }));
-  expect(mocks.get).toHaveBeenCalledWith("/api/erp/banks?limit=500&status=Active&countryId=PK");
+  const bankRequest = mocks.get.mock.calls
+    .map(([path]) => new URL(path, "https://erp.test"))
+    .find((url) => url.pathname === "/api/erp/banks");
+  expect(bankRequest?.pathname).toBe("/api/erp/banks");
+  expect(Object.fromEntries(bankRequest!.searchParams)).toMatchObject({
+    limit: "500", status: "Active", countryId: "PK", excludeDemo: "1"
+  });
   expect(mocks.record).toHaveBeenCalledWith(bank);
   fireEvent.click(await screen.findByRole("button", { name: "Select mode" }));
   fireEvent.click(screen.getByRole("button", { name: "Cheque" }));

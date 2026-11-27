@@ -1,3 +1,5 @@
+import { assertPayableBankId } from "@/lib/services/payment-bank-guard";
+import { ApiClientError } from "@/lib/api/response";
 import { NextResponse } from "next/server";
 import { getCurrentErpSession, type ErpSession } from "@/lib/auth/session";
 import { hasRolePermission, isGlobalSession } from "@/lib/permissions/middleware";
@@ -70,6 +72,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const parsed = moneyExchangePayloadSchema.parse(body);
+    await assertPayableBankId(parsed.receiptBankId);
     const serialNo = parsed.serialNo || (await nextMoneyExchangeSerial());
     if (!serialNo) return NextResponse.json({ error: "Could not allocate a money exchange serial." }, { status: 500 });
     const writable = moneyExchangeBranches(session);
@@ -178,6 +181,7 @@ export async function POST(req: NextRequest) {
       await releaseIdempotencyLock(idempotencyKey, tenantHash);
     }
     console.error("Money Exchange POST Error:", err);
+    if (err instanceof ApiClientError) return NextResponse.json({ error: err.message, code: err.code }, { status: err.status });
     return NextResponse.json({ error: err.message || "Failed to save exchange entry" }, { status: 500 });
   }
 }
