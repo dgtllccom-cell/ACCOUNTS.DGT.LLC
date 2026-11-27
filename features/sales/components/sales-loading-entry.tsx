@@ -9,6 +9,7 @@ import { LoadingWorkflow, LoadingWorkflowReport, type LoadingWorkflowStep } from
 import { VoiceFormFill } from "@/components/voice-form-fill";
 import { LoadingReceivingCell } from "@/features/journal/components/loading-receiving-cell";
 import { TruckEntryPicker, type TruckEntryValue } from "@/features/clearing-agent/components/truck-entry-picker";
+import { BookingRouteFields } from "@/features/location-master/components/booking-route-fields";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { CONTAINER_TYPES, loadingProgress, type LoadingOrder, type LoadingRecord, type SalesLoadingSource } from "@/lib/sales/loading-workflow";
 
@@ -19,7 +20,8 @@ export const usesTruckLoading = (source: SalesLoadingSource, shippingMode: strin
 const blank = (order: LoadingOrder, truck = false) => ({
   containerNumber: "", containerType: (truck ? "Truck" : "40 FT") as (typeof CONTAINER_TYPES)[number], loadingDate: "", receivedDate: "",
   loadingCountry: order.loadingCountry, loadingPort: order.loadingPort, receivedCountry: order.receivedCountry,
-  receivedPort: order.receivedPort, vessel: order.vessel, bl: order.bl, shippingLine: order.shippingLine,
+  receivedPort: order.receivedPort, loadingCountryId: order.loadingCountryId, loadingLocationId: order.loadingLocationId,
+  receivedCountryId: order.receivedCountryId, receivedLocationId: order.receivedLocationId, vessel: order.vessel, bl: order.bl, shippingLine: order.shippingLine,
   voyage: order.voyage, seal: "", vehicle: "", driver: "", driverMobile: "", flight: "", awb: "", rail: "", remarks: "",
   truckRegistrationType: (truck ? "registered" : "") as "registered" | "temporary" | "", truckId: "", truckOwner: "", transportCompany: "",
   items: [] as { line: number; quantity: string; gross: string; net: string }[],
@@ -32,8 +34,6 @@ const truckValue = (c: Draft): TruckEntryValue => ({
 function label(key: string, name: string): [string, string] { return [key, name]; }
 const operationalFields = {
   loadingDate: label("sales_loading.loading_date", "Loading Date"), receivedDate: label("sales_loading.received_date", "Actual Received Date"),
-  loadingCountry: label("sales_loading.loading_country", "Loading Country"), loadingPort: label("sales_loading.loading_port", "Loading Port"),
-  receivedCountry: label("sales_loading.received_country", "Receiving Country"), receivedPort: label("sales_loading.received_port", "Receiving Port"),
   vessel: label("sales_loading.vessel", "Vessel Name"), bl: label("sales_loading.bl", "B/L Number"),
   shippingLine: label("sales_loading.shipping_line", "Shipping Line"), voyage: label("sales_loading.voyage", "Voyage No."), seal: label("sales_loading.seal", "Seal Number"),
   vehicle: label("sales_loading.vehicle", "Vehicle No."), driver: label("sales_loading.driver", "Driver Name"), driverMobile: label("sales_loading.driver_mobile", "Driver Mobile"),
@@ -105,6 +105,17 @@ export function SalesLoadingEntry({ source = "booking", order, records, tt, onBa
               containerNumber: !c.containerNumber || c.containerNumber === c.vehicle.replace(/\s+/g, "") ? next.truck_number.toUpperCase().replace(/\s+/g, "") : c.containerNumber,
               containerType: c.containerType === "40 FT" && !c.containerNumber ? "Truck" : c.containerType,
             })}/>}
+            {/* Loading / receiving route — defaulted from the booking, changeable per container via the Route & Location Master */}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <BookingRouteFields side="loading" testId={`sales-loading-route-${index}`} className="grid gap-2" shippingMode={order.shippingMode || (truckLoading ? "By Road" : "By Sea")}
+                countryLabel={tt("sales_loading.loading_country", "Loading Country")} disabled={saving}
+                value={{ countryId: c.loadingCountryId, countryName: c.loadingCountry, locationId: c.loadingLocationId, locationName: c.loadingPort }}
+                onChange={leg => patch(index, { loadingCountryId: leg.countryId, loadingCountry: leg.countryName, loadingLocationId: leg.locationId, loadingPort: leg.locationName })}/>
+              <BookingRouteFields side="receiving" testId={`sales-receiving-route-${index}`} className="grid gap-2" shippingMode={order.shippingMode || (truckLoading ? "By Road" : "By Sea")}
+                countryLabel={tt("sales_loading.received_country", "Receiving Country")} disabled={saving}
+                value={{ countryId: c.receivedCountryId, countryName: c.receivedCountry, locationId: c.receivedLocationId, locationName: c.receivedPort }}
+                onChange={leg => patch(index, { receivedCountryId: leg.countryId, receivedCountry: leg.countryName, receivedLocationId: leg.locationId, receivedPort: leg.locationName })}/>
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="text-xs font-semibold">{truckLoading ? tt("sales_loading.truck_container_no", "Truck / Container No. *") : tt("plrf.container_no_req", "Container Number *")}<Input autoComplete="off" required maxLength={160} value={c.containerNumber} onChange={e => patch(index, { containerNumber: e.target.value.toUpperCase() })} className={input}/></label>
               <label className="text-xs font-semibold">{tt("sales_loading.container_type", "Container Type")}<select value={c.containerType} onChange={e => patch(index, { containerType: e.target.value as Draft["containerType"] })} className={input}>{CONTAINER_TYPES.map(v => <option key={v} value={v}>{v === "Truck" ? tt("sales_loading.type_truck", "Truck") : v}</option>)}</select></label>

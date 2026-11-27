@@ -4,6 +4,9 @@ import { Ship, Globe2, CreditCard, ChevronLeft, ChevronRight } from "lucide-reac
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { Button } from "@/components/ui/button";
 import { SalesBookingGoodsReport } from "./sales-booking-goods-report";
+import { BookingRouteFields } from "@/features/location-master/components/booking-route-fields";
+import { t } from "@/lib/i18n/ui";
+import { translateOptionLabel } from "@/lib/i18n/option-labels";
 
 function ShippingOption({ id, label, value, options, onChange, tr }) {
   const [adding, setAdding] = useState(false);
@@ -80,17 +83,17 @@ export function SalesBookingStep3({
             <div className="grid grid-cols-2 gap-2.5">
               <div className="space-y-1">
                 <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  Shipping Mode <span className="text-red-500">*</span>
+                  {t(lang, "purchase.shipping_mode_label", "Shipping Mode")} <span className="text-red-500">*</span>
                 </label>
                 <select
+                  aria-label={t(lang, "purchase.shipping_mode_label", "Shipping Mode")}
                   value={form.shippingMode || "By Sea"}
                   onChange={(e) => setForm((p) => ({ ...p, shippingMode: e.target.value, shipmentType: e.target.value }))}
                   className="w-full h-8 px-2 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
                 >
-                  <option value="By Sea">By Sea</option>
-                  <option value="By Air">By Air</option>
-                  <option value="By Road">By Road</option>
-                  <option value="By Train">By Train</option>
+                  {["By Sea", "By Air", "By Road", "By Train"].map(mode => (
+                    <option key={mode} value={mode}>{translateOptionLabel(lang, mode)}</option>
+                  ))}
                 </select>
               </div>
 
@@ -135,50 +138,65 @@ export function SalesBookingStep3({
               </div>
             </div>
 
-            {/* Loading Country * & Loading Port */}
+            {/* Loading route: country → port / border / airport from the Route & Location Master */}
+            <BookingRouteFields
+              side="loading"
+              testId="sales-booking-loading-route"
+              className="grid grid-cols-2 gap-2.5"
+              shippingMode={form.shippingMode || "By Sea"}
+              value={{
+                countryId: form.loadingCountryId || "",
+                countryName: form.loadingCountry || "",
+                locationId: form.loadingLocationId || "",
+                locationName: form.loadingPort || form.airportName || form.loadingBorder || ""
+              }}
+              onChange={leg => setForm(p => {
+                const mode = p.shippingMode || "By Sea";
+                return {
+                  ...p,
+                  loadingCountryId: leg.countryId, loadingCountry: leg.countryName,
+                  loadingLocationId: leg.locationId, loadingPort: leg.locationName, loadingLocation: leg.locationName,
+                  ...(mode === "By Air" ? { airportName: leg.locationName } : {}),
+                  ...(mode === "By Road" ? { loadingBorder: leg.locationName } : {}),
+                };
+              })}
+            />
+
+            {/* Receiving route */}
+            <BookingRouteFields
+              side="receiving"
+              testId="sales-booking-receiving-route"
+              className="grid grid-cols-2 gap-2.5"
+              shippingMode={form.shippingMode || "By Sea"}
+              value={{
+                countryId: form.receivedCountryId || "",
+                countryName: form.receivedCountry || form.destinationCountry || "",
+                locationId: form.receivedLocationId || "",
+                locationName: form.receivedPort || form.receivingPort || form.destinationPort || ""
+              }}
+              onChange={leg => setForm(p => {
+                const mode = p.shippingMode || "By Sea";
+                return {
+                  ...p,
+                  receivedCountryId: leg.countryId, receivedCountry: leg.countryName, receivingCountry: leg.countryName,
+                  // the destination country follows the receiving country until the user sets it separately
+                  destinationCountry: !p.destinationCountry || p.destinationCountry === (p.receivedCountry || "") ? leg.countryName : p.destinationCountry,
+                  receivedLocationId: leg.locationId, receivedPort: leg.locationName, receivingPort: leg.locationName,
+                  receivedPortName: leg.locationName,
+                  ...(mode === "By Air" ? { destinationAirportName: leg.locationName } : {}),
+                  ...(mode === "By Road" ? { receivingBorder: leg.locationName } : {}),
+                };
+              })}
+            />
+
+            {/* Loading Date & Receiving Date */}
             <div className="grid grid-cols-2 gap-2.5">
               <div className="space-y-1">
-                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  Loading Country <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={form.loadingCountry || "United Arab Emirates"}
-                  onChange={(e) => setForm((p) => ({ ...p, loadingCountry: e.target.value }))}
-                  className="w-full h-8 px-2 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
-                >
-                  <option value="United Arab Emirates">United Arab Emirates</option>
-                  <option value="Pakistan">Pakistan</option>
-                  <option value="Saudi Arabia">Saudi Arabia</option>
-                  <option value="USA">USA</option>
-                  <option value="China">China</option>
-                  <option value="India">India</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  Loading Port
-                </label>
-                <select
-                  value={form.loadingPort || "Jebel Ali Port"}
-                  onChange={(e) => setForm((p) => ({ ...p, loadingPort: e.target.value }))}
-                  className="w-full h-8 px-2 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
-                >
-                  <option value="Jebel Ali Port">Jebel Ali Port</option>
-                  <option value="Port Rashid">Port Rashid</option>
-                  <option value="Sharjah Port">Sharjah Port</option>
-                  <option value="Abu Dhabi Port">Abu Dhabi Port</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Loading Date & Receiving Country * */}
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="space-y-1">
-                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  Loading Date
+                <label htmlFor="sales-booking-loading-date" className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  {t(lang, "sales_loading.loading_date", "Loading Date")}
                 </label>
                 <input
+                  id="sales-booking-loading-date"
                   type="date"
                   value={form.loadingDate || ""}
                   onChange={(e) => setForm((p) => ({ ...p, loadingDate: e.target.value }))}
@@ -187,47 +205,11 @@ export function SalesBookingStep3({
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  Receiving Country <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={form.receivedCountry || form.destinationCountry || "Pakistan"}
-                  onChange={(e) => setForm((p) => ({ ...p, receivedCountry: e.target.value, destinationCountry: e.target.value }))}
-                  className="w-full h-8 px-2 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
-                >
-                  <option value="Pakistan">Pakistan</option>
-                  <option value="United Arab Emirates">United Arab Emirates</option>
-                  <option value="Afghanistan">Afghanistan</option>
-                  <option value="Saudi Arabia">Saudi Arabia</option>
-                  <option value="Oman">Oman</option>
-                  <option value="Turkey">Turkey</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Receiving Port & Receiving Date */}
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="space-y-1">
-                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  Receiving Port
-                </label>
-                <select
-                  value={form.receivedPort || "Karachi Port"}
-                  onChange={(e) => setForm((p) => ({ ...p, receivedPort: e.target.value }))}
-                  className="w-full h-8 px-2 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
-                >
-                  <option value="Karachi Port">Karachi Port</option>
-                  <option value="Port Qasim">Port Qasim</option>
-                  <option value="Gwadar Port">Gwadar Port</option>
-                  <option value="Jeddah Port">Jeddah Port</option>
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  Receiving Date
+                <label htmlFor="sales-booking-received-date" className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  {t(lang, "plr.receiving_date", "Receiving Date")}
                 </label>
                 <input
+                  id="sales-booking-received-date"
                   type="date"
                   value={form.receivedDate || ""}
                   onChange={(e) => setForm((p) => ({ ...p, receivedDate: e.target.value }))}
