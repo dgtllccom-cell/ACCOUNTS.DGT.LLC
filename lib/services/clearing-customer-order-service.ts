@@ -137,6 +137,10 @@ export type ClearingCustomerOrderInput = {
   finalDestinationCountryName?: string | null;
   finalDestinationState?: string | null;
   finalDestinationCity?: string | null;
+  /** Location Management master ids for the final destination (names above are kept for reports) */
+  finalDestinationStateProvinceId?: string | null;
+  finalDestinationDistrictId?: string | null;
+  finalDestinationCityId?: string | null;
   finalDestinationAddress?: string | null;
 };
 
@@ -801,6 +805,9 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
         final_destination_country_name: trimOrNull(input.finalDestinationCountryName),
         final_destination_state: trimOrNull(input.finalDestinationState),
         final_destination_city: trimOrNull(input.finalDestinationCity),
+        final_destination_state_province_id: trimOrNull(input.finalDestinationStateProvinceId),
+        final_destination_district_id: trimOrNull(input.finalDestinationDistrictId),
+        final_destination_city_id: trimOrNull(input.finalDestinationCityId),
         final_destination_address: trimOrNull(input.finalDestinationAddress),
         cargo_details: trimOrNull(input.cargoDetails),
         expected_loading_date: input.expectedLoadingDate || new Date().toISOString(),
@@ -970,6 +977,14 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
               receiving_district_id = ${orderPayload.receiving_district_id}::uuid,
               receiving_city_id = ${orderPayload.receiving_city_id}::uuid,
               receiving_area_id = ${orderPayload.receiving_area_id}::uuid,
+              final_destination_country_id = ${orderPayload.final_destination_country_id}::uuid,
+              final_destination_country_name = ${orderPayload.final_destination_country_name},
+              final_destination_state = ${orderPayload.final_destination_state},
+              final_destination_city = ${orderPayload.final_destination_city},
+              final_destination_address = ${orderPayload.final_destination_address},
+              final_destination_state_province_id = ${orderPayload.final_destination_state_province_id}::uuid,
+              final_destination_district_id = ${orderPayload.final_destination_district_id}::uuid,
+              final_destination_city_id = ${orderPayload.final_destination_city_id}::uuid,
               loading_source_warehouse_id = ${orderPayload.loading_source_warehouse_id}::uuid,
               loading_source_container_ref = ${orderPayload.loading_source_container_ref},
               goods_quantity = ${orderPayload.goods_quantity},
@@ -1021,6 +1036,8 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             super_admin_serial, country_serial, branch_serial, entry_serial,
             load_type, loading_state_province_id, loading_district_id, loading_city_id, loading_area_id,
             receiving_state_province_id, receiving_district_id, receiving_city_id, receiving_area_id,
+            final_destination_country_id, final_destination_country_name, final_destination_state, final_destination_city,
+            final_destination_address, final_destination_state_province_id, final_destination_district_id, final_destination_city_id,
             loading_source_warehouse_id, loading_source_container_ref,
             goods_quantity, goods_unit, goods_bags_cartons, goods_gross_weight, goods_empty_weight, goods_net_weight,
             current_stage, rejected_reason,
@@ -1052,6 +1069,10 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             ${orderPayload.loading_city_id}::uuid, ${orderPayload.loading_area_id}::uuid,
             ${orderPayload.receiving_state_province_id}::uuid, ${orderPayload.receiving_district_id}::uuid,
             ${orderPayload.receiving_city_id}::uuid, ${orderPayload.receiving_area_id}::uuid,
+            ${orderPayload.final_destination_country_id}::uuid, ${orderPayload.final_destination_country_name},
+            ${orderPayload.final_destination_state}, ${orderPayload.final_destination_city}, ${orderPayload.final_destination_address},
+            ${orderPayload.final_destination_state_province_id}::uuid, ${orderPayload.final_destination_district_id}::uuid,
+            ${orderPayload.final_destination_city_id}::uuid,
             ${orderPayload.loading_source_warehouse_id}::uuid, ${orderPayload.loading_source_container_ref},
             ${orderPayload.goods_quantity}, ${orderPayload.goods_unit}, ${orderPayload.goods_bags_cartons},
             ${orderPayload.goods_gross_weight}, ${orderPayload.goods_empty_weight}, ${orderPayload.goods_net_weight},

@@ -1451,6 +1451,7 @@ export type UiKey =
   | "il.border"
   | "il.origin"
   | "il.dest_country"
+  | "loc.final_destination_master"
   | "il.agent"
   | "il.remarks"
   | "il.add"
@@ -17414,6 +17415,7 @@ const en: Dict = {
   "il.border": "Border Crossing",
   "il.origin": "Country of Origin",
   "il.dest_country": "Destination Country",
+  "loc.final_destination_master": "Final Destination (Location Management)",
   "il.agent": "Clearing Agent",
   "il.remarks": "Remarks",
   "il.add": "New Import",
@@ -46025,6 +46027,7 @@ const ur: Dict = {
   "il.border": "بارڈر",
   "il.origin": "ملکِ اصل",
   "il.dest_country": "منزل ملک",
+  "loc.final_destination_master": "حتمی منزل (لوکیشن مینجمنٹ)",
   "il.agent": "کلیئرنگ ایجنٹ",
   "il.remarks": "تفصیل",
   "il.add": "نیا امپورٹ",
@@ -73120,6 +73123,7 @@ const ar: Dict = {
   "il.border": "المعبر الحدودي",
   "il.origin": "بلد المنشأ",
   "il.dest_country": "بلد الوجهة",
+  "loc.final_destination_master": "الوجهة النهائية (إدارة المواقع)",
   "il.agent": "وكيل التخليص",
   "il.remarks": "ملاحظات",
   "il.add": "استيراد جديد",
@@ -100273,6 +100277,7 @@ const fa: Dict = {
   "il.border": "گذرگاه مرزی",
   "il.origin": "کشور مبدأ",
   "il.dest_country": "کشور مقصد",
+  "loc.final_destination_master": "مقصد نهایی (مدیریت مکان‌ها)",
   "il.agent": "کارگزار ترخیص",
   "il.remarks": "ملاحظات",
   "il.add": "واردات جدید",
@@ -127407,6 +127412,7 @@ const ps: Dict = {
   "il.border": "سرحدي معبر",
   "il.origin": "د اصل هېواد",
   "il.dest_country": "د منزل هېواد",
+  "loc.final_destination_master": "وروستی منزل (د ځایونو مدیریت)",
   "il.agent": "د پاکولو استازی",
   "il.remarks": "یادښتونه",
   "il.add": "نوی واردات",
