@@ -116,7 +116,7 @@ export function SearchSelect({
   createLabel?: string;
   onCreateNew?: () => void | Promise<void>;
   onCreateWithSearch?: (query: string) => void | Promise<void>;
-  createButtonPlacement?: "modal" | "trigger" | "both" | "below" | "inside";
+  createButtonPlacement?: "modal" | "trigger" | "both" | "below" | "inside" | "footer";
   triggerClassName?: string;
   className?: string;
   searchPlaceholder?: string;
@@ -131,6 +131,8 @@ export function SearchSelect({
   accountCards?: boolean;
   pageSize?: number;
 }) {
+  const footerCreate = createButtonPlacement === "footer";
+  const labelId = React.useId();
   const language = useActiveLanguage();
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -210,12 +212,13 @@ export function SearchSelect({
 
   return (
     <div className={cn("flex flex-col w-full", label && "space-y-1.5", className)}>
-      {label && <Label className="text-[11px] font-semibold text-muted-foreground">{label}</Label>}
+      {label && <Label id={labelId} className="text-[11px] font-semibold text-muted-foreground">{label}</Label>}
       <Popover open={open} onOpenChange={setOpenSafe}>
         <PopoverTrigger asChild>
           <button
             type="button"
             disabled={disabled}
+            aria-labelledby={footerCreate && label ? labelId : undefined}
             title={selectedLabel || resolvedPlaceholder}
             className={cn(
               "group flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background py-2 ps-3 pe-1.5 text-xs shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
@@ -297,7 +300,7 @@ export function SearchSelect({
               <CommandEmpty>
                 <div className="py-3 px-3 text-center space-y-2">
                   <div className="text-xs text-muted-foreground">{resolvedEmptyLabel}</div>
-                  {(onCreateWithSearch || onCreateNew) && searchQuery.trim() && (
+                  {(onCreateWithSearch || (onCreateNew && !footerCreate)) && searchQuery.trim() && (
                     <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                       <button
                         type="button"
@@ -579,7 +582,7 @@ export function SearchSelect({
                     .replace("{total}", String(matchingOptions.length))}
                 </div>
               )}
-              {(onCreateWithSearch || onCreateNew) && searchQuery.trim() && !uniqueOptions.some(o => o.label.toLowerCase() === searchQuery.trim().toLowerCase()) && (
+              {(onCreateWithSearch || (onCreateNew && !footerCreate)) && searchQuery.trim() && !uniqueOptions.some(o => o.label.toLowerCase() === searchQuery.trim().toLowerCase()) && (
                 <>
                   <div className="h-px bg-border my-1" />
                   <CommandGroup>
@@ -605,7 +608,7 @@ export function SearchSelect({
                   </CommandGroup>
                 </>
               )}
-              {onCreateNew && (
+              {onCreateNew && !footerCreate && (
                 <>
                   <div className="h-px bg-border my-1" />
                   <CommandGroup>
@@ -624,6 +627,21 @@ export function SearchSelect({
               )}
             </CommandList>
           </Command>
+          {footerCreate && onCreateNew && (
+            <div className="border-t border-border bg-background p-1">
+              <button
+                type="button"
+                onClick={async () => {
+                  setOpenSafe(false);
+                  await onCreateNew();
+                }}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-start text-xs font-bold text-primary hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <span aria-hidden>+</span>
+                {resolvedCreateLabel}
+              </button>
+            </div>
+          )}
         </PopoverContent>
       </Popover>
 
