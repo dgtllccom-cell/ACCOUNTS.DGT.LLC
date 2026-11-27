@@ -3541,6 +3541,7 @@ export function NewAccountSetup({
                     <BankPicker
                       label={getLabel("bankMaster", lang)}
                       value={pickerBankId}
+                      searchAll
                       onValueChange={(val) => {
                         setPickerBankId(val || "");
                         if (!val) {
@@ -3561,7 +3562,7 @@ export function NewAccountSetup({
                   <Button
                     type="button"
                     onClick={() => {
-                      if (!pickerBankId) return;
+                      if (!pickerBankId || pickerBankRecord?.id !== pickerBankId) return;
                       if (linkedBanks.some((b) => b.id === pickerBankId)) {
                         setMessage(lang === "ur" ? "یہ بینک پہلے ہی شامل ہے!" : "Bank already linked!");
                         return;
@@ -3595,7 +3596,7 @@ export function NewAccountSetup({
                       setPickerBankRecord(null);
                       setMessage("");
                     }}
-                    disabled={!pickerBankId}
+                    disabled={!pickerBankId || pickerBankRecord?.id !== pickerBankId}
                     className="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs shrink-0 cursor-pointer disabled:opacity-50"
                   >
                     <Plus className="h-4 w-4 mr-1.5" />
