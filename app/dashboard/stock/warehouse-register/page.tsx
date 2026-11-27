@@ -1043,4 +1043,7 @@ export default function WarehouseStockRegisterPage() {
       </section>
 
       <p className="text-[10px] text-slate-500">{t("STOCK ENTERS THIS REGISTER ONLY THROUGH A CONFIRMED WAREHOUSE TRANSFER.")}</p>
-      {serialPurchase && <SerialDetails purchase={serialPurchase} onClose={() => setSerialPurchase(null)} t={t} 
+      {serialPurchase && <SerialDetails purchase={serialPurchase} onClose={() => setSerialPurchase(null)} t={t} />}
+    </div>
+  );
+}

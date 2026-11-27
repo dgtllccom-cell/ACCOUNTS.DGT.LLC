@@ -9,6 +9,8 @@ import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields, localizeJoinedNames, wantsRawRecord } from "@/lib/i18n/localize-records";
 import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
 import { isUuid } from "@/lib/utils";
+import { assertAssignedCountryUnchanged, geographyCountryForValidation } from "@/lib/services/physical-address-scope";
+import { assertGeoHierarchy } from "@/lib/services/geo-hierarchy-validator";
 
 type BankRow = {
   id: string;
@@ -28,6 +30,7 @@ type BankRow = {
   currency: string;
   account_status: string;
   country_id: string | null;
+  address_country_id?: string | null;
   state_province_id: string | null;
   district_id: string | null;
   city_id: string | null;
@@ -54,6 +57,7 @@ type LegacyBankRecord = {
   bank_name: string;
   branch_name: string | null;
   country_id: string | null;
+  address_country_id?: string | null;
   account_title: string | null;
   account_number: string | null;
   iban: string | null;
@@ -113,6 +117,7 @@ function mapBank(row: BankRow): LegacyBankRecord {
     swift_bic: row.swift_bic ?? null,
     currency: row.currency ?? "USD",
     account_status: row.account_status ?? null,
+    address_country_id: row.address_country_id ?? null,
     state_province_id: row.state_province_id ?? null,
     district_id: row.district_id ?? null,
     city_id: row.city_id ?? null,
@@ -153,6 +158,7 @@ async function getBankById(id: string): Promise<LegacyBankRecord | null> {
         b.currency,
         b.account_status,
         b.country_id,
+        b.address_country_id,
         b.state_province_id,
         b.district_id,
         b.city_id,
@@ -212,6 +218,20 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (!session.isSuperAdmin && existing.country_id && !session.countryIds.includes(existing.country_id)) {
       throw new Error("Not authorized");
     }
+    // The assigned country is the bank's access scope. A physical-address edit
+    // (e.g. an India branch address) must never move the bank to another country.
+    assertAssignedCountryUnchanged(existing.country_id, body.countryId);
+    const touchesGeography = ["addressCountryId", "stateProvinceId", "districtId", "cityId"].some((k) => body[k] !== undefined);
+    if (touchesGeography) {
+      await assertGeoHierarchy({
+        countryId: geographyCountryForValidation(
+          body.addressCountryId !== undefined ? body.addressCountryId : existing.address_country_id,
+          existing.country_id),
+        stateProvinceId: body.stateProvinceId !== undefined ? body.stateProvinceId : existing.state_province_id,
+        districtId: body.districtId !== undefined ? body.districtId : existing.district_id,
+        cityId: body.cityId !== undefined ? body.cityId : existing.city_id,
+      });
+    }
 
     const bank = await withLocalPg(async (sql) => {
       await sql`
@@ -231,10 +251,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           swift_bic = COALESCE(${body.swiftBic ?? body.swiftCode ?? null}, swift_bic),
           currency = COALESCE(${body.currency ?? body.currencyCode ?? null}, currency),
           account_status = COALESCE(${body.accountStatus ?? null}, account_status),
-          country_id = COALESCE(${body.countryId !== undefined ? (body.countryId || null) : null}::uuid, country_id),
-          state_province_id = COALESCE(${body.stateProvinceId !== undefined ? (body.stateProvinceId || null) : null}::uuid, state_province_id),
-          district_id = COALESCE(${body.districtId !== undefined ? (body.districtId || null) : null}::uuid, district_id),
-          city_id = COALESCE(${body.cityId !== undefined ? (body.cityId || null) : null}::uuid, city_id),
+          address_country_id = CASE WHEN ${body.addressCountryId !== undefined} THEN ${body.addressCountryId || null}::uuid ELSE address_country_id END,
+          state_province_id = CASE WHEN ${body.stateProvinceId !== undefined} THEN ${body.stateProvinceId || null}::uuid ELSE state_province_id END,
+          district_id = CASE WHEN ${body.districtId !== undefined} THEN ${body.districtId || null}::uuid ELSE district_id END,
+          city_id = CASE WHEN ${body.cityId !== undefined} THEN ${body.cityId || null}::uuid ELSE city_id END,
           full_address = COALESCE(${body.fullAddress ?? null}, full_address),
           phone = COALESCE(${body.phone ?? null}, phone),
           email = COALESCE(${body.email ?? null}, email),
@@ -260,6 +280,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           b.currency,
           b.account_status,
           b.country_id,
+          b.address_country_id,
           b.state_province_id,
           b.district_id,
           b.city_id,

@@ -50,6 +50,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { SearchSelect } from "@/components/ui/search-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VoiceFormFill } from "@/components/voice-form-fill";
@@ -63,6 +64,7 @@ import {
   type LocationCity
 } from "@/features/locations/location-api";
 import { LocationQuickCreateModal } from "@/features/locations/components/location-hierarchy-select";
+import { postalCodeAfterCityChange } from "@/features/locations/address-postal-code";
 import { activeAddressChoices, findAddressDuplicate } from "./account-address-locations";
 import { apiPost, apiPatch } from "@/lib/api/client";
 import { CustomerPicker } from "@/features/customers/components/customer-picker";
@@ -1776,11 +1778,9 @@ export function NewAccountSetup({
   }
 
   function applyAddressCityPostalCode(postalCode: string | null | undefined) {
-    const previousAutomaticCode = autoAddressPostalCode.current;
-    if (addressPostalCode && addressPostalCode !== previousAutomaticCode) return;
-    const next = postalCode || "";
-    autoAddressPostalCode.current = next;
-    setAddressPostalCode(next);
+    const next = postalCodeAfterCityChange(addressPostalCode, autoAddressPostalCode.current, postalCode);
+    autoAddressPostalCode.current = next.suggestion;
+    setAddressPostalCode(next.value);
   }
 
   function selectAddressLocation(kind: "country" | "state" | "city", item: LocationCountry | LocationState | LocationCity) {
@@ -1792,12 +1792,14 @@ export function NewAccountSetup({
         setAddressCountryId(item.id);
         setAddressStateId("");
         setAddressCityId("");
+        applyAddressCityPostalCode(null);
       }
     } else if (kind === "state" && "country_id" in item && !("state_province_id" in item)) {
       setAddressStates((rows) => replace(rows, item));
       if (item.id !== addressStateId) {
         setAddressStateId(item.id);
         setAddressCityId("");
+        applyAddressCityPostalCode(null);
       }
     } else if (kind === "city" && "state_province_id" in item) {
       setAddressCities((rows) => replace(rows, item));
@@ -2926,109 +2928,64 @@ export function NewAccountSetup({
                   </span>
                 </div>
 
-                {/* Row 1: Country * | State / Province * */}
+                {/* Physical address only; operational country and branch are separate. */}
                 <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
-                  <div className="space-y-1">
-                    <Label htmlFor="addressCountry" className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                      {getLabel("country", lang)} *
-                    </Label>
-                    <select
-                      id="addressCountry"
-                      value={addressCountryId}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setAddressCountryId(val);
-                        setAddressStateId("");
-                        setAddressCityId("");
-                      }}
-                      className={selectClass() + " h-9 text-xs"}
-                    >
-                      <option value="">{getLabel("selectCountry", lang)}</option>
-                      {addressCountries.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name} {c.iso2 ? `(${c.iso2})` : ""}
-                        </option>
-                      ))}
-                    </select>
-                    {!initialAccountId && (canCreateAddressCountry) && (
-                      <Button type="button" size="sm" variant="outline" onClick={() => setAddressLocationEditor("country")}>
-                        <Plus className="h-3.5 w-3.5" aria-hidden />
-                        {t(lang, "lochier.newCountry", "New Country")}
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label htmlFor="addressState" className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                      {getLabel("stateProvince", lang)} *
-                    </Label>
-                    <select
-                      id="addressState"
-                      value={addressStateId}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setAddressStateId(val);
-                        setAddressCityId("");
-                      }}
-                      disabled={!addressCountryId}
-                      className={selectClass() + " h-9 text-xs"}
-                    >
-                      <option value="">
-                        {addressStatesLoading
-                          ? getLabel("loading", lang)
-                          : getLabel("selectStateProvince", lang) || "-- Select State / Province --"}
-                      </option>
-                      {addressStates.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name} {s.code ? `(${s.code})` : ""}
-                        </option>
-                      ))}
-                    </select>
-                    {!initialAccountId && (canCreateAddressChild) && (
-                      <Button type="button" size="sm" variant="outline" onClick={() => setAddressLocationEditor("state")}>
-                        <Plus className="h-3.5 w-3.5" aria-hidden />
-                        {t(lang, "lochier.newState", "New State")}
-                      </Button>
-                    )}
-                  </div>
+                  <SearchSelect
+                    label={getLabel("country", lang)}
+                    value={addressCountryId}
+                    placeholder={getLabel("selectCountry", lang)}
+                    options={addressCountries.map((row) => ({
+                      value: row.id, label: row.iso2 ? `${row.name} (${row.iso2})` : row.name,
+                    }))}
+                    onValueChange={(id) => {
+                      setAddressCountryId(id);
+                      setAddressStateId("");
+                      setAddressCityId("");
+                      applyAddressCityPostalCode(null);
+                    }}
+                    createButtonPlacement="footer"
+                    createLabel={t(lang, "lochier.newCountry", "New Country")}
+                    onCreateNew={canCreateAddressCountry ? () => setAddressLocationEditor("country") : undefined}
+                  />
+                  <SearchSelect
+                    label={getLabel("stateProvince", lang)}
+                    value={addressStateId}
+                    placeholder={addressStatesLoading ? getLabel("loading", lang) : getLabel("selectStateProvince", lang)}
+                    disabled={!addressCountryId || addressStatesLoading}
+                    loading={addressStatesLoading}
+                    options={addressStates.map((row) => ({
+                      value: row.id, label: row.code ? `${row.name} (${row.code})` : row.name,
+                    }))}
+                    onValueChange={(id) => {
+                      setAddressStateId(id);
+                      setAddressCityId("");
+                      applyAddressCityPostalCode(null);
+                    }}
+                    createButtonPlacement="footer"
+                    createLabel={t(lang, "lochier.newState", "New State")}
+                    onCreateNew={canCreateAddressChild ? () => setAddressLocationEditor("state") : undefined}
+                  />
                 </div>
 
-                {/* Row 2: City * | ZIP / Postal Code */}
+                {/* City Code is shown with the city; its ZIP is a separate suggestion. */}
                 <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
-                  <div className="space-y-1">
-                    <Label htmlFor="addressCity" className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                      {getLabel("city", lang)} *
-                    </Label>
-                    <select
-                      id="addressCity"
-                      value={addressCityId}
-                      onChange={(e) => {
-                        const id = e.target.value;
-                        setAddressCityId(id);
-                        const postalCode = addressCities.find((city) => city.id === id)?.zip_code;
-                        applyAddressCityPostalCode(postalCode);
-                      }}
-                      disabled={!addressCountryId}
-                      className={selectClass() + " h-9 text-xs"}
-                    >
-                      <option value="">
-                        {addressCitiesLoading
-                          ? getLabel("loading", lang)
-                          : getLabel("selectCity", lang) || "-- Select City --"}
-                      </option>
-                      {addressCities.map((ct) => (
-                        <option key={ct.id} value={ct.id}>
-                          {ct.name} {ct.code ? `(${ct.code})` : ""}
-                        </option>
-                      ))}
-                    </select>
-                    {!initialAccountId && (canCreateAddressChild && Boolean(addressStateId)) && (
-                      <Button type="button" size="sm" variant="outline" onClick={() => setAddressLocationEditor("city")}>
-                        <Plus className="h-3.5 w-3.5" aria-hidden />
-                        {t(lang, "lochier.newCity", "New City")}
-                      </Button>
-                    )}
-                  </div>
+                  <SearchSelect
+                    label={getLabel("city", lang)}
+                    value={addressCityId}
+                    placeholder={addressCitiesLoading ? getLabel("loading", lang) : getLabel("selectCity", lang)}
+                    disabled={!addressCountryId || addressCitiesLoading}
+                    loading={addressCitiesLoading}
+                    options={addressCities.map((row) => ({
+                      value: row.id, label: row.code ? `${row.name} (${row.code})` : row.name,
+                    }))}
+                    onValueChange={(id) => {
+                      setAddressCityId(id);
+                      applyAddressCityPostalCode(addressCities.find((city) => city.id === id)?.zip_code);
+                    }}
+                    createButtonPlacement="footer"
+                    createLabel={t(lang, "lochier.newCity", "New City")}
+                    onCreateNew={canCreateAddressChild && addressStateId ? () => setAddressLocationEditor("city") : undefined}
+                  />
 
                   <div className="space-y-1">
                     <Label htmlFor="addressPostalCode" className="text-xs font-medium text-slate-700 dark:text-slate-300">
