@@ -379,6 +379,7 @@ export function BranchOwnerPicker({
           <CustomerForm
             lang={guessOriginalLanguage()}
             mode="embedded"
+            initialCountryId={countryId}
             onSave={(newCustomerId) => {
               (async () => {
                 try {

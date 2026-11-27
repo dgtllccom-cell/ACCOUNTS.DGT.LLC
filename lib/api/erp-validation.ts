@@ -443,6 +443,7 @@ export const customerRegistrationInputSchema = z.object({
 
 export const customerCreateSchema = scopeSchema.extend({
   countryId: optionalUuidSchema,
+  addressCountryId: uuidSchema.nullable().optional(),
   stateProvinceId: optionalUuidSchema,
   districtId: optionalUuidSchema,
   cityId: optionalUuidSchema,
