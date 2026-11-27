@@ -606,7 +606,11 @@ export function LocationQuickCreateModal({
   districtName,
   cityName,
   onClose,
-  onCreated
+  onCreated,
+  resolveExisting,
+  confirmSaved,
+  requireCountryMetadata = false,
+  requireChildCode = false
 }: {
   type: "country" | "state" | "district" | "city" | "area" | null;
   countryId?: string;
@@ -619,6 +623,10 @@ export function LocationQuickCreateModal({
   cityName?: string;
   onClose: () => void;
   onCreated: (newId: string, item: any) => void;
+  resolveExisting?: (input: { name: string; code: string }) => Promise<LocationCountry | LocationState | LocationCity | null>;
+  confirmSaved?: (item: LocationCountry | LocationState | LocationCity, input: { name: string; code: string }) => Promise<LocationCountry | LocationState | LocationCity>;
+  requireCountryMetadata?: boolean;
+  requireChildCode?: boolean;
 }) {
   const lang = useActiveLanguage();
   const [name, setName] = useState("");
@@ -629,6 +637,8 @@ export function LocationQuickCreateModal({
 
   // Country-specific fields
   const [iso2, setIso2] = useState("");
+  const [iso3, setIso3] = useState("");
+  const [currencyCode, setCurrencyCode] = useState("");
 
   // State/District/City/Area-specific fields
   const [code, setCode] = useState("");
@@ -666,12 +676,34 @@ export function LocationQuickCreateModal({
     if (requiredMessage || missingParentMessage) return;
     setSaving(true);
     try {
+      const input = { name: name.trim(), code: (type === "country" ? iso2 : code).trim() };
+      if (type === "country" && requireCountryMetadata && !/^[A-Z]{2}$/.test(input.code)) {
+        throw new Error(t(lang, "lfix.err_iso2_required"));
+      }
+      if (resolveExisting) {
+        const existing = await resolveExisting(input);
+        if (existing) {
+          onCreated(existing.id, existing);
+          return;
+        }
+      }
+      if (requireChildCode && (type === "state" || type === "city") && !input.code) {
+        throw new Error(`${typeLabel} · ${t(lang, "lfix.label_code", "Code")} *`);
+      }
+      const finish = async (item: LocationCountry | LocationState | LocationCity) => {
+        const saved = confirmSaved ? await confirmSaved(item, input) : item;
+        onCreated(saved.id, saved);
+      };
       if (type === "country") {
+        if (requireCountryMetadata && (!/^[A-Z]{3}$/.test(iso3.trim()) || !/^[A-Z]{3}$/.test(currencyCode.trim()))) {
+          throw new Error(`${t(lang, "locsetup.country_iso3")} · ${t(lang, "common.currency")}`);
+        }
         const res = await apiPost<{ country: LocationCountry }>("/api/erp/locations/countries", {
           name: name.trim(),
-          iso2: iso2.trim()
+          iso2: iso2.trim(),
+          ...(requireCountryMetadata ? { iso3: iso3.trim(), currencyCode: currencyCode.trim() } : {})
         });
-        onCreated(res.country.id, res.country);
+        await finish(res.country);
       } else if (type === "state") {
         if (!countryId) {
           throw new Error("Unable to create state. The selected country could not be verified. Please re-select the country and try again.");
@@ -681,7 +713,7 @@ export function LocationQuickCreateModal({
           name: name.trim(),
           code: code.trim() || null
         });
-        onCreated(res.state.id, res.state);
+        await finish(res.state);
       } else if (type === "district") {
         const res = await apiPost<{ district: LocationDistrict }>("/api/erp/locations/districts", {
           countryId,
@@ -699,7 +731,7 @@ export function LocationQuickCreateModal({
           code: code.trim() || null,
           zipCode: zipCode.trim() || null
         });
-        onCreated(res.city.id, res.city);
+        await finish(res.city);
       } else if (type === "area") {
         const res = await apiPost<{ area: LocationArea }>("/api/erp/locations/areas", {
           countryId,
@@ -732,7 +764,7 @@ export function LocationQuickCreateModal({
   const title = `${t(lang, "lqm.new_word")} ${typeLabel}`;
 
   return (
-    <SimpleModal title={title} onClose={onClose} className="max-w-md">
+    <SimpleModal title={title} onClose={() => { if (!saving) onClose(); }} className="max-w-md">
       {missingParentMessage ? (
         <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800 flex items-center gap-2 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300">
           <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
@@ -760,8 +792,9 @@ export function LocationQuickCreateModal({
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label>{typeLabel} {t(lang, "lqm.name_field")}</Label>
+          <Label htmlFor="location-create-name">{typeLabel} {t(lang, "lqm.name_field")}</Label>
           <Input
+            id="location-create-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={`${t(lang, "lqm.enter_name_ph")}`}
@@ -772,8 +805,9 @@ export function LocationQuickCreateModal({
 
         {type === "country" && (
           <div className="space-y-2">
-            <Label>{t(lang, "lqm.iso2_label")}</Label>
+            <Label htmlFor="location-create-iso2">{t(lang, "lqm.iso2_label")}</Label>
             <Input
+              id="location-create-iso2"
               maxLength={2}
               value={iso2}
               onChange={(e) => setIso2(e.target.value.toUpperCase())}
@@ -782,10 +816,26 @@ export function LocationQuickCreateModal({
           </div>
         )}
 
+        {type === "country" && requireCountryMetadata && (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="location-create-iso3">{t(lang, "locsetup.country_iso3")}</Label>
+              <Input id="location-create-iso3" maxLength={3} value={iso3} dir="ltr"
+                onChange={(event) => setIso3(event.target.value.toUpperCase())} placeholder="IND" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="location-create-currency">{t(lang, "common.currency")}</Label>
+              <Input id="location-create-currency" maxLength={3} value={currencyCode} dir="ltr"
+                onChange={(event) => setCurrencyCode(event.target.value.toUpperCase())} placeholder="INR" />
+            </div>
+          </div>
+        )}
+
         {(type === "state" || type === "district" || type === "city" || type === "area") && (
           <div className="space-y-2">
-            <Label>{type === "area" ? t(lang, "lqm.area_code_label") : `${typeLabel} ${t(lang, "lfix.label_code", "Code")}`}</Label>
+            <Label htmlFor="location-create-code">{type === "area" ? t(lang, "lqm.area_code_label") : `${typeLabel} ${t(lang, "lfix.label_code", "Code")}`}</Label>
             <Input
+              id="location-create-code"
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder={type === "area" ? t(lang, "lqm.road_code_ph") : t(lang, "lqm.code_ph")}
@@ -795,8 +845,9 @@ export function LocationQuickCreateModal({
 
         {(type === "city" || type === "area") && (
           <div className="space-y-2">
-            <Label>{t(lang, "lqm.zip_label")}</Label>
+            <Label htmlFor="location-create-postal">{t(lang, "lqm.zip_label")}</Label>
             <Input
+              id="location-create-postal"
               value={zipCode}
               onChange={(e) => setZipCode(e.target.value)}
               placeholder={t(lang, "lqm.zip_ph")}
