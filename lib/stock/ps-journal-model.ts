@@ -83,12 +83,16 @@ export interface PsStockChunk {
   countryCode: string;
   countryBranchId: string | null;
   cityBranchId: string | null;
+  countryBranchCode?: string;
+  cityBranchCode?: string;
   branchId: string | null;
   branchName: string;
   warehouseId: string | null;
   warehouseName: string;
   lotKey: string;
   lotName: string;
+  entryNo?: number;
+  hasExplicitLot?: boolean;
   blNo: string;
   containerNo: string;
   supplierAccountNo: string;
@@ -144,6 +148,10 @@ export interface PsPlaceSummaryRow {
 export interface PsLotRow {
   lotKey: string;
   lotName: string;
+  lotDisplayName: string;
+  purchaseDate: string | null;
+  entryCount: number;
+  branchCode: string;
   sourceKind: PsStockChunk["sourceKind"];
   countryId: string | null;
   countryName: string;
@@ -696,9 +704,21 @@ export function buildPsJournalView(allChunks: PsStockChunk[], filters: PsAdvance
           : "Recorded sales or stock issues exceed the recorded purchased/loaded quantity on this lot.";
     }
 
+    const branchCode =
+      [head.countryBranchCode, head.cityBranchCode].filter(Boolean).join(" / ") ||
+      head.branchName ||
+      "—";
+    const firstDate = list.map((c) => c.purchaseDate).find(Boolean) ?? null;
+    const entryCount = list.length > 1 ? list.length : (head.entryNo ?? 1);
+    const lotDisplayName = head.hasExplicitLot === false ? "—" : (head.lotName || lotKey);
+
     allLotRows.push({
       lotKey,
       lotName: head.lotName || lotKey,
+      lotDisplayName,
+      purchaseDate: firstDate,
+      entryCount,
+      branchCode,
       sourceKind: head.sourceKind,
       countryId: head.countryId,
       countryName: head.countryName || "—",

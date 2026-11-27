@@ -277,7 +277,7 @@ let vocabularyIndex: Map<string, Map<string, VocabCandidate[]>> | null = null;
 let vocabularyBuiltWithUi = false;
 const registeredVocabulary: Array<{ entry: Partial<VocabularyEntry>; weight: number }> = [];
 
-const ACRONYMS = new Set(["VAT", "BL", "B/L", "CNIC", "NTN", "USD", "AED", "PKR", "AFN", "IRR", "SAR", "ID", "PO", "SO", "GD", "LC", "TT", "HR", "IT", "UAE", "KSA", "UK", "USA", "PDF", "SMS", "CEO", "ERP", "QR", "OTP", "KG", "MT", "CBM", "FOB", "CIF", "CFR"]);
+const ACRONYMS = new Set(["DGT", "LLC", "DGT.LLC", "VAT", "BL", "B/L", "CNIC", "NTN", "USD", "AED", "PKR", "AFN", "IRR", "SAR", "ID", "PO", "SO", "GD", "LC", "TT", "HR", "IT", "UAE", "KSA", "UK", "USA", "PDF", "SMS", "CEO", "ERP", "QR", "OTP", "KG", "MT", "CBM", "FOB", "CIF", "CFR"]);
 function displayEnglish(key: string): string {
   if (/[a-z]/.test(key)) return key;
   return key.split(" ").map((word) => (ACRONYMS.has(word) || /\d/.test(word) ? word : word.charAt(0) + word.slice(1).toLowerCase())).join(" ");
