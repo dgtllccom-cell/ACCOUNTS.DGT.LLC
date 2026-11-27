@@ -12,6 +12,8 @@ import { rethrowIfNextControlFlow } from "@/lib/api/response";
 // environment, so the Supabase admin client can get silently RLS-filtered to zero
 // rows / blocked writes — same root cause already fixed for warehouses. Reads/writes
 // go through a direct Postgres connection (withLocalPg) when available.
+const geoId = (v: unknown) => (typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v.trim()) ? v.trim() : null);
+
 export async function GET(req: NextRequest) {
   try {
     const session = await requireErpSession();
@@ -57,6 +59,9 @@ export async function POST(req: NextRequest) {
       phone,
       city_name,
       country_name,
+      address_country_id,
+      state_province_id,
+      city_id,
       status = "active",
       remarks,
     } = body;
@@ -71,6 +76,10 @@ export async function POST(req: NextRequest) {
       phone: phone ? String(phone).trim() : null,
       city_name: city_name ? String(city_name).trim() : null,
       country_name: country_name ? String(country_name).trim() : null,
+      // Location Management master ids (names above stay for reports)
+      address_country_id: geoId(address_country_id),
+      state_province_id: geoId(state_province_id),
+      city_id: geoId(city_id),
       status: status || "active",
       remarks: remarks ? String(remarks).trim() : null,
     };
@@ -84,12 +93,15 @@ export async function POST(req: NextRequest) {
       const rows = await sql`
         INSERT INTO public.shipping_agent_entries (
           agent_code, agent_name, clearing_agent_id, shipping_line_name, shipping_line_id,
-          contact_person, email, phone, city_name, country_name, status, remarks
+          contact_person, email, phone, city_name, country_name,
+          address_country_id, state_province_id, city_id, status, remarks
         ) VALUES (
           ${autoCode}, ${payload.agent_name}, ${payload.clearing_agent_id}::uuid,
           ${payload.shipping_line_name}, ${payload.shipping_line_id}::uuid,
           ${payload.contact_person}, ${payload.email}, ${payload.phone},
-          ${payload.city_name}, ${payload.country_name}, ${payload.status}, ${payload.remarks}
+          ${payload.city_name}, ${payload.country_name},
+          ${payload.address_country_id}::uuid, ${payload.state_province_id}::uuid, ${payload.city_id}::uuid,
+          ${payload.status}, ${payload.remarks}
         )
         RETURNING *
       `;
@@ -164,6 +176,7 @@ export async function PATCH(req: NextRequest) {
     if (body.email !== undefined && body.email) patch.email = String(body.email).trim().toLowerCase();
     if (body.clearing_agent_id !== undefined) patch.clearing_agent_id = clearingAgentForWrite(session, body.clearing_agent_id);
     if (body.shipping_line_id !== undefined) patch.shipping_line_id = body.shipping_line_id || null;
+    for (const key of ["address_country_id", "state_province_id", "city_id"]) if (body[key] !== undefined) patch[key] = geoId(body[key]);
 
     const viaPg = await withLocalPg(async (sql) => {
       const rows = await sql`

@@ -714,6 +714,15 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                       </div>
                     </div>
 
+                    {/* Final destination: the shared Location Management master (country → state → district → city) */}
+                    <div data-testid="truck-loading-destination" className="space-y-1">
+                      <span className="text-[11px] font-black uppercase tracking-wide text-slate-500">{t(lang, "loc.final_destination_master", "Final Destination (Location Management)")}</span>
+                      <LocationHierarchySelect
+                        value={{ countryId: form.dest_country_id ?? "", stateProvinceId: form.dest_state_province_id ?? "", districtId: form.dest_district_id ?? "", cityId: form.dest_city_id ?? "" }}
+                        onChange={(v) => setForm((f: any) => ({ ...f, dest_country_id: v.countryId || null, dest_state_province_id: v.stateProvinceId || null, dest_district_id: v.districtId || null, dest_city_id: v.cityId || null }))}
+                      />
+                    </div>
+
                     <div className="flex justify-end pt-2">
                       <button
                         type="button"

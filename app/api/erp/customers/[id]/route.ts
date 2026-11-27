@@ -53,6 +53,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       );
       [row] = await localizeJoinedNames([row], lang, [
         { idField: "country_id", nameField: "country_name", table: "countries" },
+        { idField: "address_country_id", nameField: "address_country_name", table: "countries" },
         { idField: "state_province_id", nameField: "state_province_name", table: "states_provinces" },
         { idField: "district_id", nameField: "district_name", table: "districts" },
         { idField: "city_id", nameField: "city_name", table: "cities" },
@@ -78,6 +79,13 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       countryBranchId: body.countryBranchId,
       cityBranchId: body.cityBranchId
     });
+
+    // Physical geography is not authority to edit a Person Master record.
+    if (body.addressCountryId !== undefined) {
+      const { customer } = await customersService.getById(id);
+      if (!customer) throw new ApiClientError("Customer not found", { status: 404 });
+      authorizeApiScope(session, { resource: "customers", action: "update", countryId: customer.country_id });
+    }
 
     // Scope selectors are for authorization only, not fields on the person patch.
     // Omitted keys must stay omitted: HR can update a person's name without erasing

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Building2,
   CheckCircle2,
@@ -27,6 +27,8 @@ import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { PersonPicker } from "@/components/erp/person-picker";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
+import { AssignedCountrySelect } from "@/features/locations/components/assigned-country-select";
+import { physicalAddressCountryId } from "@/lib/locations/physical-address";
 
 const DEFAULT_BANK_TYPES = [
   "Commercial Bank",
@@ -146,7 +148,10 @@ type BankFormState = {
   ibanNumber: string;
   currency: string;
   accountStatus: string;
+  /** Assigned (access-scope) country — never set from the address picker. */
   countryId: string;
+  /** Physical branch address country (Location Management). */
+  addressCountryId: string;
   stateProvinceId: string;
   districtId: string;
   cityId: string;
@@ -172,6 +177,7 @@ const emptyForm: BankFormState = {
   currency: "USD",
   accountStatus: "Active",
   countryId: "",
+  addressCountryId: "",
   stateProvinceId: "",
   districtId: "",
   cityId: "",
@@ -228,6 +234,10 @@ export function BankForm({
     districtId: "",
     cityId: ""
   });
+  const [assignedCountryName, setAssignedCountryName] = useState("");
+  const setAssignedCountry = useCallback((id: string) => {
+    setForm((prev) => (prev.countryId === id ? prev : { ...prev, countryId: id }));
+  }, []);
   const [ownerType, setOwnerType] = useState<"person" | "company" | "none">("none");
   const [ownerPersonId, setOwnerPersonId] = useState("");
   const [ownerCompanyId, setOwnerCompanyId] = useState("");
@@ -254,6 +264,7 @@ export function BankForm({
           currency: bank.currency ?? "USD",
           accountStatus: bank.account_status ?? "Active",
           countryId: bank.country_id ?? "",
+          addressCountryId: physicalAddressCountryId(bank),
           stateProvinceId: bank.state_province_id ?? "",
           districtId: bank.district_id ?? "",
           cityId: bank.city_id ?? "",
@@ -264,8 +275,9 @@ export function BankForm({
           website: bank.website ?? "",
           remarks: bank.remarks ?? ""
         });
+        setAssignedCountryName((bank as { country?: { name?: string } | null }).country?.name ?? "");
         setLocation({
-          countryId: bank.country_id ?? "",
+          countryId: physicalAddressCountryId(bank),
           stateProvinceId: bank.state_province_id ?? "",
           districtId: bank.district_id ?? "",
           cityId: bank.city_id ?? ""
@@ -324,7 +336,7 @@ export function BankForm({
       }
       return {
         ...prev,
-        countryId: next.countryId,
+        addressCountryId: next.countryId,
         stateProvinceId: next.stateProvinceId,
         districtId: next.districtId,
         cityId: next.cityId,
@@ -341,7 +353,8 @@ export function BankForm({
     form.shortName &&
     form.accountTitle &&
     form.accountNumber &&
-    form.currency;
+    form.currency &&
+    (isEditMode || form.countryId);
 
   async function handleSave() {
     if (!isReady) {
@@ -367,7 +380,10 @@ export function BankForm({
         ibanNumber: form.ibanNumber || null,
         currency: form.currency,
         accountStatus: form.accountStatus,
-        countryId: form.countryId || null,
+        // Assigned country is chosen once at creation; edits never send it, so an
+        // address change cannot move the bank to another country's scope.
+        ...(isEditMode ? {} : { countryId: form.countryId || null }),
+        addressCountryId: form.addressCountryId || null,
         stateProvinceId: form.stateProvinceId || null,
         districtId: form.districtId || null,
         cityId: form.cityId || null,
@@ -399,6 +415,7 @@ export function BankForm({
         currency: form.currency,
         account_status: form.accountStatus,
         country_id: form.countryId || null,
+        address_country_id: form.addressCountryId || null,
         state_province_id: form.stateProvinceId || null,
         district_id: form.districtId || null,
         city_id: form.cityId || null,
@@ -730,11 +747,25 @@ export function BankForm({
               <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{tr("bank.section_contact_address", "Contact & Address Information")}</h2>
             </div>
 
-            <LocationHierarchySelect
-              value={location}
-              onChange={handleLocationChange}
-              showArea={false}
+            <AssignedCountrySelect
+              lang={lang}
+              value={form.countryId}
+              onChange={setAssignedCountry}
+              fixedCountryId={isEditMode ? form.countryId || null : null}
+              locked={isEditMode}
+              fixedCountryName={assignedCountryName}
+              hint={tr("addr.assigned_country_hint", "Assigned country controls access, branch and ledger scope. Changing the address never moves it.")}
             />
+
+            <div className="space-y-2 rounded-md border border-dashed p-3">
+              <p className="text-xs font-semibold">{tr("addr.physical_address_title", "Physical Address (Location Management)")}</p>
+              <p className="text-[11px] text-muted-foreground">{tr("addr.physical_address_hint", "Where the record is physically located. It can be in another country without changing ownership, permissions, currency or ledger.")}</p>
+              <LocationHierarchySelect
+                value={location}
+                onChange={handleLocationChange}
+                showArea={false}
+              />
+            </div>
 
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">{tr("bank.full_address", "Full Address")}</Label>

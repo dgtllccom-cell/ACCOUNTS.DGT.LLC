@@ -7,6 +7,8 @@ import { isAuthorizedNameTranslation } from "@/lib/i18n/customer-name";
 export type CustomerRow = {
   id: string;
   country_id: string;
+  address_country_id?: string | null;
+  address_country_name?: string | null;
   state_province_id: string | null;
   district_id: string | null;
   city_id: string | null;
@@ -95,7 +97,7 @@ export type CustomerRegistrationRow = {
 };
 
 const CUSTOMER_COLUMNS = [
-  "id", "country_id", "state_province_id", "district_id", "city_id", "area_location_id",
+  "id", "country_id", "address_country_id", "state_province_id", "district_id", "city_id", "area_location_id",
   "customer_name", "first_name", "last_name", "father_name", "gender", "photo_url", "person_code",
   "company_name", "contact_person", "mobile", "whatsapp", "email", "address",
   "notes", "original_language_code", "is_active", "created_at", "updated_at"
@@ -143,7 +145,7 @@ export class CustomersRepository {
     const viaPg = await withReadPg(async (sql) => {
       const rows = await sql`
         SELECT 
-          c.id, c.country_id, c.state_province_id, c.district_id, c.city_id, c.area_location_id,
+          c.id, c.country_id, c.address_country_id, c.state_province_id, c.district_id, c.city_id, c.area_location_id,
           c.customer_name,
           c.customer_name as original_customer_name,
           name_trans.english_text as customer_name_en,
@@ -164,7 +166,7 @@ export class CustomersRepository {
           c.first_name, c.last_name, c.father_name, c.gender, c.photo_url, c.person_code,
           c.company_name, c.contact_person, c.mobile, c.whatsapp, c.email, c.address,
           c.notes, c.original_language_code, c.is_active, c.created_at, c.updated_at,
-          cnt.name as country_name,
+          cnt.name as country_name, addr_country.name as address_country_name,
           sp.name as state_province_name,
           di.name as district_name,
           ct.name as city_name,
@@ -203,6 +205,7 @@ export class CustomersRepository {
           LIMIT 1
         ) name_trans ON true
         LEFT JOIN public.countries cnt ON c.country_id = cnt.id
+        LEFT JOIN public.countries addr_country ON c.address_country_id = addr_country.id
         LEFT JOIN public.states_provinces sp ON c.state_province_id = sp.id
         LEFT JOIN public.districts di ON c.district_id = di.id
         LEFT JOIN public.cities ct ON c.city_id = ct.id
@@ -349,7 +352,7 @@ export class CustomersRepository {
       return (await withReadPg(async (sql) => {
         const rows = await sql`
           SELECT
-            c.id, c.country_id, c.state_province_id, c.district_id, c.city_id, c.area_location_id,
+            c.id, c.country_id, c.address_country_id, c.state_province_id, c.district_id, c.city_id, c.area_location_id,
             c.customer_name,
             c.customer_name as original_customer_name,
             name_trans.english_text as customer_name_en,
@@ -370,7 +373,7 @@ export class CustomersRepository {
             c.first_name, c.last_name, c.father_name, c.gender, c.photo_url, c.person_code,
             c.company_name, c.contact_person, c.mobile, c.whatsapp, c.email, c.address,
             c.notes, c.original_language_code, c.is_active, c.created_at, c.updated_at,
-            cnt.name as country_name,
+            cnt.name as country_name, addr_country.name as address_country_name,
             sp.name as state_province_name,
             di.name as district_name,
             ct.name as city_name,
@@ -401,6 +404,7 @@ export class CustomersRepository {
             LIMIT 1
           ) name_trans ON true
           LEFT JOIN public.countries cnt ON c.country_id = cnt.id
+          LEFT JOIN public.countries addr_country ON c.address_country_id = addr_country.id
           LEFT JOIN public.states_provinces sp ON c.state_province_id = sp.id
           LEFT JOIN public.districts di ON c.district_id = di.id
           LEFT JOIN public.cities ct ON c.city_id = ct.id
@@ -524,6 +528,7 @@ export class CustomersRepository {
 
   async create(input: {
     countryId?: string | null;
+    addressCountryId?: string | null;
     stateProvinceId?: string | null;
     districtId?: string | null;
     cityId?: string | null;
@@ -551,6 +556,9 @@ export class CustomersRepository {
       if (input.countryId) {
         const [c] = await sql`SELECT id FROM public.countries WHERE id = ${input.countryId}::uuid LIMIT 1`;
         if (c) resolvedCountryId = c.id;
+      }
+      if (!resolvedCountryId && input.addressCountryId !== undefined) {
+        throw new Error("Assigned customer country is invalid.");
       }
       if (!resolvedCountryId) {
         const [c] = await sql`SELECT id FROM public.countries WHERE is_active = true ORDER BY name ASC LIMIT 1`;
@@ -612,6 +620,7 @@ export class CustomersRepository {
 
       const insertRow = {
         country_id: resolvedCountryId,
+        address_country_id: input.addressCountryId ?? null,
         state_province_id: validStateId,
         district_id: validDistrictId,
         city_id: validCityId,
@@ -640,7 +649,7 @@ export class CustomersRepository {
       const createdId = (rows[0] as any).id as string;
 
       try {
-        const serials = await allocateFormSerials("customers", { countryId: resolvedCountryId, branchKey: input.cityId ?? null });
+        const serials = await allocateFormSerials("customers", { countryId: resolvedCountryId, branchKey: !input.addressCountryId || input.addressCountryId === resolvedCountryId ? input.cityId ?? null : null });
         const serialPatch = {
           super_admin_serial: serials.superAdminSerial,
           country_serial: serials.countrySerial,
@@ -717,6 +726,7 @@ export class CustomersRepository {
   async update(
     id: string,
     input: Partial<{
+      addressCountryId: string | null;
       stateProvinceId: string | null;
       districtId: string | null;
       cityId: string | null;
@@ -739,6 +749,7 @@ export class CustomersRepository {
     }>
   ) {
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if ("addressCountryId" in input) patch.address_country_id = input.addressCountryId;
     if ("stateProvinceId" in input) patch.state_province_id = input.stateProvinceId;
     if ("districtId" in input) patch.district_id = input.districtId;
     if ("cityId" in input) patch.city_id = input.cityId;

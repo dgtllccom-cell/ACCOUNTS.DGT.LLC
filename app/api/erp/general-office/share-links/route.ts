@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
         ? new Date(Date.now() + expiryHours * 3_600_000).toISOString()
         : null;
 
+    const centralAddress = (formType === "customer" || formType === "employee") && session.countryIds.length === 1;
     const link = await withLocalPg(async (sql) => {
       // Ensure table exists (idempotent — migration may not have run yet)
       await sql`
@@ -108,6 +109,7 @@ export async function POST(request: NextRequest) {
           submitted_record_id uuid,
           submission_data jsonb,
           notes          text,
+          central_address boolean not null default false,
           updated_at     timestamptz not null default now()
         )
       `.catch(() => null); // ignore if already exists
@@ -115,13 +117,13 @@ export async function POST(request: NextRequest) {
       const [row] = await sql<any[]>`
         insert into external_form_links
           (form_type, status, created_by, created_by_name,
-           country_id, country_branch_id, city_branch_id, expires_at, notes)
+           country_id, country_branch_id, city_branch_id, expires_at, notes, central_address)
         values (
           ${formType}, 'active', ${session.userId}, ${(session as any).fullName ?? session.userId},
           ${session.countryIds?.[0] ?? null},
           ${session.countryBranchIds?.[0] ?? null},
           ${session.cityBranchIds?.[0] ?? null},
-          ${expiresAt}, ${body.notes ?? null}
+          ${expiresAt}, ${body.notes ?? null}, ${centralAddress}
         )
         returning *
       `;
