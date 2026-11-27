@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isAssignedCountryChange } from "@/lib/locations/physical-address";
 import { createCityBranchSchema } from "@/features/branch-management/validation";
 import { ErpAuthError, requireErpSession, sessionInDomain } from "@/lib/auth/session";
 import { allowedRowDomains, rowInSessionDomain, sqlRowDomainCondition } from "@/lib/permissions/domain-scope";
@@ -532,6 +533,20 @@ export async function PUT(request: Request) {
 
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
+
+    // The city branch's country and main branch are its identity (scope, permissions, currency, ledger).
+    // An address edit must never move it — refuse a change instead of silently re-scoping.
+    const lockedScope = await withLocalPg(async (sql) => {
+      const rows = await sql`select country_id, country_branch_id from public.city_branches where id = ${id} and deleted_at is null limit 1`;
+      return (rows as any[])[0] ?? null;
+    });
+    if (lockedScope && (isAssignedCountryChange(lockedScope.country_id, parsed.data.countryId)
+      || isAssignedCountryChange(lockedScope.country_branch_id, parsed.data.countryBranchId))) {
+      return NextResponse.json(
+        { error: { code: "ASSIGNED_COUNTRY_LOCKED", message: "A city branch's country and main branch cannot be changed from an address edit." } },
+        { status: 409 }
+      );
     }
 
     if (!session.isSuperAdmin && !hasRolePermission(session, "city_branches", "update") && !hasRolePermission(session, "city_branches", "create")) {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isAssignedCountryChange } from "@/lib/locations/physical-address";
 import { createCountryBranchSchema } from "@/features/branch-management/validation";
 import { ErpAuthError, requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -353,6 +354,19 @@ export async function PUT(request: Request) {
     const parsed = createCountryBranchSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
+
+    // A branch's country is its identity (scope, permissions, currency, ledger). Editing the branch's
+    // address must never move it to another country — refuse instead of silently re-scoping.
+    const existingBranch = await withLocalPg(async (sql) => {
+      const rows = await sql`select country_id from public.country_branches where id = ${id}::uuid and deleted_at is null limit 1`;
+      return rows[0] ?? null;
+    });
+    if (existingBranch && isAssignedCountryChange(existingBranch.country_id, parsed.data.countryId)) {
+      return NextResponse.json(
+        { error: { code: "ASSIGNED_COUNTRY_LOCKED", message: "A branch's country cannot be changed from an address edit. Create a branch in the other country instead." } },
+        { status: 409 }
+      );
     }
 
     const supabase = createSupabaseAdminClient() as any;
