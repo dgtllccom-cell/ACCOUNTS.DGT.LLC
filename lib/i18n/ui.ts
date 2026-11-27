@@ -1355,6 +1355,7 @@ export type UiKey =
   | "sales_loading.empty"
   | "sales_loading.entry_no"
   | "sales_loading.entry_title"
+  | "sales_loading.local_entry_title"
   | "sales_loading.entry_unavailable"
   | "sales_loading.filter"
   | "sales_loading.flight"
@@ -12669,6 +12670,18 @@ export type UiKey =
   | "locmaster.office_name_lbl"
   | "locmaster.office_code_lbl"
   | "locmaster.save_office"
+  | "locmaster.route_loading_country"
+  | "locmaster.route_receiving_country"
+  | "locmaster.route_loading_port"
+  | "locmaster.route_loading_border"
+  | "locmaster.route_loading_airport"
+  | "locmaster.route_loading_rail"
+  | "locmaster.route_receiving_port"
+  | "locmaster.route_receiving_border"
+  | "locmaster.route_receiving_airport"
+  | "locmaster.route_receiving_rail"
+  | "locmaster.route_select_country"
+  | "locmaster.route_saved_legacy"
   | "clearing.print_route_transit_details"
   | "clearing.col_stage"
   | "clearing.col_country"
@@ -13504,6 +13517,18 @@ const en: Dict = {
   "locmaster.office_name_lbl": "Customs Office Name",
   "locmaster.office_code_lbl": "Office Code / Station Code",
   "locmaster.save_office": "Save Office",
+  "locmaster.route_loading_country": "Loading Country",
+  "locmaster.route_receiving_country": "Receiving Country",
+  "locmaster.route_loading_port": "Loading Port",
+  "locmaster.route_loading_border": "Loading Border",
+  "locmaster.route_loading_airport": "Loading Airport",
+  "locmaster.route_loading_rail": "Loading Rail Terminal",
+  "locmaster.route_receiving_port": "Receiving Port",
+  "locmaster.route_receiving_border": "Receiving Border",
+  "locmaster.route_receiving_airport": "Receiving Airport",
+  "locmaster.route_receiving_rail": "Receiving Rail Terminal",
+  "locmaster.route_select_country": "Select Country",
+  "locmaster.route_saved_legacy": "Saved name (not in Location Master)",
   "clearing.print_route_transit_details": "Route & Multi-Stage Transit Details",
   "clearing.col_stage": "Stage",
   "clearing.col_country": "Country",
@@ -17247,6 +17272,7 @@ const en: Dict = {
   "sales_loading.empty": "No matching sales loading records",
   "sales_loading.entry_no": "Loading Entry No. / Date",
   "sales_loading.entry_title": "New Sales Loading Entry",
+  "sales_loading.local_entry_title": "New Local Sales Loading Entry",
   "sales_loading.entry_unavailable": "Loading is not available for this Sales Booking.",
   "sales_loading.filter": "Advanced Search & Filter",
   "sales_loading.flight": "Flight Details",
@@ -40667,6 +40693,18 @@ const ur: Dict = {
   "locmaster.office_name_lbl": "کسٹمز آفس کا نام",
   "locmaster.office_code_lbl": "آفس کوڈ / اسٹیشن کوڈ",
   "locmaster.save_office": "آفس محفوظ کریں",
+  "locmaster.route_loading_country": "لوڈنگ ملک",
+  "locmaster.route_receiving_country": "وصولی ملک",
+  "locmaster.route_loading_port": "لوڈنگ بندرگاہ",
+  "locmaster.route_loading_border": "لوڈنگ سرحد",
+  "locmaster.route_loading_airport": "لوڈنگ ہوائی اڈہ",
+  "locmaster.route_loading_rail": "لوڈنگ ریلوے ٹرمینل",
+  "locmaster.route_receiving_port": "وصولی بندرگاہ",
+  "locmaster.route_receiving_border": "وصولی سرحد",
+  "locmaster.route_receiving_airport": "وصولی ہوائی اڈہ",
+  "locmaster.route_receiving_rail": "وصولی ریلوے ٹرمینل",
+  "locmaster.route_select_country": "ملک منتخب کریں",
+  "locmaster.route_saved_legacy": "محفوظ نام (لوکیشن ماسٹر میں نہیں)",
   "clearing.print_route_transit_details": "روٹ اور ملٹی اسٹیج ٹرانزٹ کی تفصیلات",
   "clearing.col_stage": "مرحلہ",
   "clearing.col_country": "ملک",
@@ -45857,6 +45895,7 @@ const ur: Dict = {
   "sales_loading.empty": "سیلز لوڈنگ کا کوئی متعلقہ ریکارڈ نہیں ملا",
   "sales_loading.entry_no": "لوڈنگ اندراج نمبر / تاریخ",
   "sales_loading.entry_title": "نیا سیلز لوڈنگ اندراج",
+  "sales_loading.local_entry_title": "نیا لوکل سیلز لوڈنگ اندراج",
   "sales_loading.entry_unavailable": "اس سیلز بکنگ کے لیے لوڈنگ دستیاب نہیں ہے۔",
   "sales_loading.filter": "تفصیلی تلاش اور فلٹر",
   "sales_loading.flight": "پرواز کی تفصیل",
@@ -67799,6 +67838,18 @@ const ar: Dict = {
   "locmaster.office_name_lbl": "اسم المكتب الجمركي",
   "locmaster.office_code_lbl": "رمز المكتب / رمز المحطة",
   "locmaster.save_office": "حفظ المكتب",
+  "locmaster.route_loading_country": "بلد التحميل",
+  "locmaster.route_receiving_country": "بلد الاستلام",
+  "locmaster.route_loading_port": "ميناء التحميل",
+  "locmaster.route_loading_border": "منفذ التحميل الحدودي",
+  "locmaster.route_loading_airport": "مطار التحميل",
+  "locmaster.route_loading_rail": "محطة قطارات التحميل",
+  "locmaster.route_receiving_port": "ميناء الاستلام",
+  "locmaster.route_receiving_border": "منفذ الاستلام الحدودي",
+  "locmaster.route_receiving_airport": "مطار الاستلام",
+  "locmaster.route_receiving_rail": "محطة قطارات الاستلام",
+  "locmaster.route_select_country": "اختر الدولة",
+  "locmaster.route_saved_legacy": "الاسم المحفوظ (غير موجود في سجل المواقع)",
   "clearing.print_route_transit_details": "تفاصيل المسار والترانزيت متعدد المراحل",
   "clearing.col_stage": "المرحلة",
   "clearing.col_country": "الدولة",
@@ -72944,6 +72995,7 @@ const ar: Dict = {
   "sales_loading.empty": "لا توجد سجلات مطابقة لتحميل المبيعات",
   "sales_loading.entry_no": "رقم إدخال التحميل / التاريخ",
   "sales_loading.entry_title": "إدخال تحميل مبيعات جديد",
+  "sales_loading.local_entry_title": "إدخال تحميل مبيعات محلية جديد",
   "sales_loading.entry_unavailable": "التحميل غير متاح لحجز المبيعات هذا.",
   "sales_loading.filter": "البحث والتصفية المتقدمة",
   "sales_loading.flight": "تفاصيل الرحلة الجوية",
@@ -94932,6 +94984,18 @@ const fa: Dict = {
   "locmaster.office_name_lbl": "نام اداره گمرک",
   "locmaster.office_code_lbl": "کد اداره / کد ایستگاه",
   "locmaster.save_office": "ذخیره اداره",
+  "locmaster.route_loading_country": "کشور بارگیری",
+  "locmaster.route_receiving_country": "کشور تحویل",
+  "locmaster.route_loading_port": "بندر بارگیری",
+  "locmaster.route_loading_border": "مرز بارگیری",
+  "locmaster.route_loading_airport": "فرودگاه بارگیری",
+  "locmaster.route_loading_rail": "پایانه ریلی بارگیری",
+  "locmaster.route_receiving_port": "بندر تحویل",
+  "locmaster.route_receiving_border": "مرز تحویل",
+  "locmaster.route_receiving_airport": "فرودگاه تحویل",
+  "locmaster.route_receiving_rail": "پایانه ریلی تحویل",
+  "locmaster.route_select_country": "کشور را انتخاب کنید",
+  "locmaster.route_saved_legacy": "نام ذخیره‌شده (در فهرست مکان‌ها نیست)",
   "clearing.print_route_transit_details": "جزئیات مسیر و ترانزیت چند مرحله‌ای",
   "clearing.col_stage": "مرحله",
   "clearing.col_country": "کشور",
@@ -100087,6 +100151,7 @@ const fa: Dict = {
   "sales_loading.empty": "رکورد مطابقی برای بارگیری فروش یافت نشد",
   "sales_loading.entry_no": "شماره ثبت بارگیری / تاریخ",
   "sales_loading.entry_title": "ثبت بارگیری جدید فروش",
+  "sales_loading.local_entry_title": "ثبت بارگیری جدید فروش محلی",
   "sales_loading.entry_unavailable": "بارگیری برای این رزرو فروش در دسترس نیست.",
   "sales_loading.filter": "جستجو و فیلتر پیشرفته",
   "sales_loading.flight": "مشخصات پرواز",
@@ -122064,6 +122129,18 @@ const ps: Dict = {
   "locmaster.office_name_lbl": "د ګمرک دفتر نوم",
   "locmaster.office_code_lbl": "د دفتر کوډ / د سټیشن کوډ",
   "locmaster.save_office": "دفتر خوندي کړئ",
+  "locmaster.route_loading_country": "د بارولو هېواد",
+  "locmaster.route_receiving_country": "د ترلاسه کولو هېواد",
+  "locmaster.route_loading_port": "د بارولو بندر",
+  "locmaster.route_loading_border": "د بارولو سرحد",
+  "locmaster.route_loading_airport": "د بارولو هوايي ډګر",
+  "locmaster.route_loading_rail": "د بارولو د اورګاډي ترمینل",
+  "locmaster.route_receiving_port": "د ترلاسه کولو بندر",
+  "locmaster.route_receiving_border": "د ترلاسه کولو سرحد",
+  "locmaster.route_receiving_airport": "د ترلاسه کولو هوايي ډګر",
+  "locmaster.route_receiving_rail": "د ترلاسه کولو د اورګاډي ترمینل",
+  "locmaster.route_select_country": "هېواد وټاکئ",
+  "locmaster.route_saved_legacy": "خوندي شوی نوم (د ځای په ماسټر کې نشته)",
   "clearing.print_route_transit_details": "د لارې او څو مرحلې ټرانزیټ توضیحات",
   "clearing.col_stage": "مرحله",
   "clearing.col_country": "هیواد",
@@ -127211,6 +127288,7 @@ const ps: Dict = {
   "sales_loading.empty": "د پلور بارولو سمون لرونکی ریکارډ نشته",
   "sales_loading.entry_no": "د بارولو شمېره / نېټه",
   "sales_loading.entry_title": "د پلور بارولو نوی ثبت",
+  "sales_loading.local_entry_title": "د سیمه ییز پلور بارولو نوی ثبت",
   "sales_loading.entry_unavailable": "د دې پلور بکینګ لپاره بارول نشته.",
   "sales_loading.filter": "پرمختللې پلټنه او چاڼ",
   "sales_loading.flight": "د الوتنې جزیات",

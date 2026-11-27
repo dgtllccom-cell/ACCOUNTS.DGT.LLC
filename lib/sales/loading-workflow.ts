@@ -13,6 +13,8 @@ export const loadContainerSchema = receivingSchema.extend({
   containerNumber: z.string().trim().min(1).max(160).transform(s => s.toUpperCase().replace(/\s+/g, "")),
   containerType: z.enum(CONTAINER_TYPES), loadingDate: z.string().date(),
   loadingCountry: safeText(160), loadingPort: safeText(160), vessel: safeText(160), bl: safeText(120),
+  // Route & Location Master ids (country + port / border / airport); the names above stay the readers' source.
+  loadingCountryId: safeText(80), loadingLocationId: safeText(80), receivedCountryId: safeText(80), receivedLocationId: safeText(80),
   shippingLine: safeText(160), seal: safeText(120), voyage: safeText(120),
   vehicle: safeText(120), driver: safeText(160), driverMobile: safeText(40), flight: safeText(160),
   awb: safeText(120), rail: safeText(120), remarks: safeText(1000),
@@ -79,8 +81,10 @@ export function toLoadingOrder(row: Record<string, unknown>, viewFinancials: boo
     purchaseDR: viewFinancials ? [text(form.purchaseAccountNo), text(form.purchaseAccountName)].filter(Boolean) : [],
     salesCR: viewFinancials ? [text(form.salesAccountNo), text(form.salesAccountName)].filter(Boolean) : [],
     notify: text(form.notifyPartyName) || text(form.notifyParty), supplier: text(form.supplierName), shipper: text(form.exporterName),
-    loadingCountry: text(form.loadingCountry), loadingPort: text(form.loadingPort),
-    receivedCountry: text(form.receivedCountry) || text(form.destinationCountry), receivedPort: text(form.receivedPort),
+    loadingCountry: text(form.loadingCountry), loadingPort: text(form.loadingPort) || text(form.airportName) || text(form.loadingBorder),
+    receivedCountry: text(form.receivedCountry) || text(form.destinationCountry), receivedPort: text(form.receivedPort) || text(form.receivingPort) || text(form.destinationPort),
+    loadingCountryId: text(form.loadingCountryId), loadingLocationId: text(form.loadingLocationId),
+    receivedCountryId: text(form.receivedCountryId), receivedLocationId: text(form.receivedLocationId),
     shippingMode: text(form.shippingMode), shippingLine: text(form.shippingLine), vessel: text(form.vesselName),
     voyage: text(form.voyageNo), bl: text(form.blNumber) || text(form.billOfLadingNo), finalCurrency, goods,
   };

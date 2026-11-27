@@ -55,7 +55,9 @@ it("opens the Purchase-style sales form from the row and saves a container with 
   const post = mockedFetch.mock.calls.find(([, init]) => init?.method === "POST");
   expect(JSON.parse(String(post?.[1]?.body))).toMatchObject({ orderId: order.id, containers: [{ containerNumber: "QA123456789", items: [{ line: 0, quantity: 200, gross: 5000, net: 4900 }] }] });
   expect(await screen.findByText("Sales Loading saved")).toBeTruthy();
-  expect(mockedFetch.mock.calls.every(([path]) => path.startsWith("/api/erp/sales/loading"))).toBe(true);
+  // Only Sales Loading APIs plus read-only Route & Location Master lookups (country → port/border picker).
+  expect(mockedFetch.mock.calls.every(([path, init]) => path.startsWith("/api/erp/sales/loading")
+    || ((path.startsWith("/api/erp/locations/countries") || path.startsWith("/api/erp/location-master")) && !init?.method))).toBe(true);
 });
 
 it("keeps search and scoped filters in one popup, applies them together, and clears them together", async () => {
