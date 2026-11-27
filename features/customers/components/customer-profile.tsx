@@ -44,6 +44,7 @@ type CustomerRow = {
   customer_type?: string | null;
   country_name?: string | null;
   address_country_name?: string | null;
+  district_name?: string | null;
   state_province_name?: string | null;
   city_name?: string | null;
 };
