@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { SavedText } from "@/components/i18n/saved-text";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { UniversalPrintActionButton } from "@/components/reports/universal-print-action-button";
 import {
@@ -82,6 +83,7 @@ const fmtQtyPlain = (qty: number, unit: string) => {
 
 export function PsJournalPurchaseSalesView({ lang: langProp }: { lang?: string }) {
   const s = useErpScreen("psj", langProp);
+  const th = (label: string) => translateHeader(s.lang, label);
   const [data, setData] = useState<PsJournalListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -201,8 +203,13 @@ export function PsJournalPurchaseSalesView({ lang: langProp }: { lang?: string }
         ]
       : [],
     columns: [
+      { key: "billNo", label: th("BILL NO.") },
+      { key: "date", label: th("DATE") },
+      { key: "entry", label: th("ENTRY") },
       { key: "lotName", label: s.t("col_lot_name", "Lot Name") },
+      { key: "branchCode", label: th("BRANCH CODE") },
       { key: "goodsName", label: s.t("col_goods_name", "Goods Name") },
+      { key: "brandSize", label: `${s.t("col_brand", "Brand")} / ${s.t("col_size", "Size")}` },
       { key: "origin", label: s.t("col_origin", "Origin") },
       { key: "pQty", label: s.t("col_p_qty", "P Qty"), align: "right" as const },
       { key: "pGross", label: s.t("col_p_gross", "P Gross (Kg)"), align: "right" as const },
@@ -215,8 +222,13 @@ export function PsJournalPurchaseSalesView({ lang: langProp }: { lang?: string }
       { key: "balNet", label: s.t("col_bal_net", "Bal Net (Kg)"), align: "right" as const },
     ],
     rows: lots.map((l) => ({
-      lotName: l.lotName,
+      billNo: l.purchaseBills.join(", ") || "—",
+      date: l.purchaseDate || "—",
+      entry: String(l.entryCount || 1),
+      lotName: l.lotDisplayName || l.lotName,
+      branchCode: l.branchCode,
       goodsName: l.goodsName,
+      brandSize: [l.brand, l.size].filter(Boolean).join(" · ") || "—",
       origin: l.origin,
       pQty: formatUnitQty(l.pQtyByUnit),
       pGross: fmtNum(l.pGrossKg),
@@ -1011,66 +1023,81 @@ export function PsJournalPurchaseSalesView({ lang: langProp }: { lang?: string }
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1120px] border-collapse text-xs" data-testid="psj-lot-table">
+          <table className="w-full min-w-[1380px] border-collapse text-[11px]" data-testid="psj-lot-table">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-100 text-[11px] font-black dark:border-slate-700 dark:bg-slate-800">
-                <th rowSpan={2} className="w-10 border-e border-slate-200 px-2 py-2 text-center dark:border-slate-700">
+              <tr className="border-b border-slate-300 bg-slate-100 text-[10.5px] font-black uppercase tracking-tight text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                <th rowSpan={2} className="w-8 border-e border-slate-300 px-1.5 py-2 text-center dark:border-slate-700">
                   #
                 </th>
-                <th rowSpan={2} className="border-e border-slate-200 px-3 py-2 text-start dark:border-slate-700">
+                <th rowSpan={2} className="border-e border-slate-300 px-2 py-2 text-start dark:border-slate-700">
+                  {th("BILL NO.")}
+                </th>
+                <th rowSpan={2} className="border-e border-slate-300 px-2 py-2 text-center dark:border-slate-700">
+                  {th("DATE")}
+                </th>
+                <th rowSpan={2} className="w-12 border-e border-slate-300 px-1.5 py-2 text-center dark:border-slate-700">
+                  {th("ENTRY")}
+                </th>
+                <th rowSpan={2} className="border-e border-slate-300 px-2 py-2 text-start dark:border-slate-700">
                   {s.t("col_lot_name", "Lot Name")}
                 </th>
-                <th rowSpan={2} className="border-e border-slate-200 px-3 py-2 text-start dark:border-slate-700">
+                <th rowSpan={2} className="border-e border-slate-300 px-2 py-2 text-start dark:border-slate-700">
+                  {th("BRANCH CODE")}
+                </th>
+                <th rowSpan={2} className="border-e border-slate-300 px-2 py-2 text-start dark:border-slate-700">
                   {s.t("col_goods_name", "Goods Name")}
                 </th>
-                <th rowSpan={2} className="border-e border-slate-200 px-3 py-2 text-start dark:border-slate-700">
+                <th rowSpan={2} className="border-e border-slate-300 px-2 py-2 text-start dark:border-slate-700">
+                  {s.t("col_brand", "Brand")} / {s.t("col_size", "Size")}
+                </th>
+                <th rowSpan={2} className="border-e border-slate-300 px-2 py-2 text-start dark:border-slate-700">
                   {s.t("col_origin", "Origin")}
                 </th>
                 <th
                   colSpan={3}
-                  className="border-e border-emerald-200 bg-emerald-100/90 px-3 py-1.5 text-center text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300"
+                  className="border-e border-emerald-200 bg-emerald-100/90 px-2 py-1.5 text-center text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300"
                 >
                   {s.t("band_purchase", "Purchase (P)")}
                 </th>
                 <th
                   colSpan={3}
-                  className="border-e border-rose-200 bg-rose-100/80 px-3 py-1.5 text-center text-rose-900 dark:border-rose-900 dark:bg-rose-950/60 dark:text-rose-300"
+                  className="border-e border-rose-200 bg-rose-100/80 px-2 py-1.5 text-center text-rose-900 dark:border-rose-900 dark:bg-rose-950/60 dark:text-rose-300"
                 >
                   {s.t("band_sales", "Sales (S)")}
                 </th>
                 <th
                   colSpan={3}
-                  className="bg-blue-100/90 px-3 py-1.5 text-center text-blue-900 dark:bg-blue-950/60 dark:text-blue-300"
+                  className="bg-blue-100/90 px-2 py-1.5 text-center text-blue-900 dark:bg-blue-950/60 dark:text-blue-300"
                 >
                   {s.t("band_balance", "Balance")}
                 </th>
               </tr>
-              <tr className="border-b border-slate-200 bg-slate-50 text-[10px] font-black uppercase text-slate-600 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300">
-                <th className="border-e border-emerald-200/70 bg-emerald-50/70 px-2.5 py-1.5 text-end text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300">
+              <tr className="border-b border-slate-300 bg-slate-50 text-[9.5px] font-black uppercase text-slate-600 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300">
+                <th className="border-e border-emerald-200/80 bg-emerald-50/70 px-2 py-1 text-end text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300">
                   {s.t("lbl_qty", "Qty")}
                 </th>
-                <th className="border-e border-emerald-200/70 bg-emerald-50/70 px-2.5 py-1.5 text-end text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300">
+                <th className="border-e border-emerald-200/80 bg-emerald-50/70 px-2 py-1 text-end text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300">
                   {s.t("col_gross_kg_short", "Gross (Kg)")}
                 </th>
-                <th className="border-e border-emerald-200 bg-emerald-50/70 px-2.5 py-1.5 text-end text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300">
+                <th className="border-e border-emerald-200 bg-emerald-50/70 px-2 py-1 text-end text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300">
                   {s.t("col_net_kg_short", "Net (Kg)")}
                 </th>
-                <th className="border-e border-rose-200/70 bg-rose-50/70 px-2.5 py-1.5 text-end text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">
+                <th className="border-e border-rose-200/80 bg-rose-50/70 px-2 py-1 text-end text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">
                   {s.t("lbl_qty", "Qty")}
                 </th>
-                <th className="border-e border-rose-200/70 bg-rose-50/70 px-2.5 py-1.5 text-end text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">
+                <th className="border-e border-rose-200/80 bg-rose-50/70 px-2 py-1 text-end text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">
                   {s.t("col_gross_kg_short", "Gross (Kg)")}
                 </th>
-                <th className="border-e border-rose-200 bg-rose-50/70 px-2.5 py-1.5 text-end text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">
+                <th className="border-e border-rose-200 bg-rose-50/70 px-2 py-1 text-end text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">
                   {s.t("col_net_kg_short", "Net (Kg)")}
                 </th>
-                <th className="border-e border-blue-200/70 bg-blue-50/70 px-2.5 py-1.5 text-end text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300">
+                <th className="border-e border-blue-200/80 bg-blue-50/70 px-2 py-1 text-end text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300">
                   {s.t("lbl_qty", "Qty")}
                 </th>
-                <th className="border-e border-blue-200/70 bg-blue-50/70 px-2.5 py-1.5 text-end text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300">
+                <th className="border-e border-blue-200/80 bg-blue-50/70 px-2 py-1 text-end text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300">
                   {s.t("col_gross_kg_short", "Gross (Kg)")}
                 </th>
-                <th className="bg-blue-50/70 px-2.5 py-1.5 text-end text-blue-800 dark:bg-blue-950/30 dark:text-blue-300">
+                <th className="bg-blue-50/70 px-2 py-1 text-end text-blue-800 dark:bg-blue-950/30 dark:text-blue-300">
                   {s.t("col_net_kg_short", "Net (Kg)")}
                 </th>
               </tr>
@@ -1079,21 +1106,36 @@ export function PsJournalPurchaseSalesView({ lang: langProp }: { lang?: string }
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
               {loading && lots.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="p-10 text-center text-slate-400">
+                  <td colSpan={18} className="p-10 text-center text-slate-400">
                     <Loader2 className="mx-auto h-5 w-5 animate-spin" />
                   </td>
                 </tr>
               ) : lots.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="p-10 text-center font-medium text-slate-400" data-testid="psj-empty">
+                  <td colSpan={18} className="p-10 text-center font-medium text-slate-400" data-testid="psj-empty">
                     {s.t("empty_records", "No stock records match the selected filters in your authorized scope.")}
                   </td>
                 </tr>
               ) : (
                 lots.map((l, idx) => (
                   <tr key={l.lotKey} className="divide-x divide-slate-200 hover:bg-slate-50/80 dark:divide-slate-800 dark:hover:bg-slate-800/40">
-                    <td className="px-2 py-2 text-center font-mono text-slate-500">{startIdx + idx}</td>
-                    <td className="whitespace-nowrap px-3 py-2">
+                    <td className="px-1.5 py-1.5 text-center font-mono text-[10.5px] text-slate-500">{startIdx + idx}</td>
+                    <td className="whitespace-nowrap px-2 py-1.5 font-mono font-black text-slate-900 dark:text-white" dir="ltr">
+                      <button
+                        type="button"
+                        onClick={() => setActiveLotKey(l.lotKey)}
+                        className="cursor-pointer underline decoration-dotted underline-offset-2 hover:text-blue-700 dark:hover:text-blue-300"
+                      >
+                        {l.purchaseBills.join(", ") || "—"}
+                      </button>
+                    </td>
+                    <td className="whitespace-nowrap px-2 py-1.5 text-center font-mono text-[10.5px] text-slate-600 dark:text-slate-300" dir="ltr">
+                      {l.purchaseDate || "—"}
+                    </td>
+                    <td className="whitespace-nowrap px-1.5 py-1.5 text-center font-mono text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
+                      {l.entryCount || 1}
+                    </td>
+                    <td className="whitespace-nowrap px-2 py-1.5">
                       <button
                         type="button"
                         data-testid="psj-lot-link"
@@ -1101,41 +1143,46 @@ export function PsJournalPurchaseSalesView({ lang: langProp }: { lang?: string }
                         className="cursor-pointer font-mono font-black text-blue-700 underline decoration-blue-400 underline-offset-2 hover:text-blue-900 dark:text-blue-300 dark:hover:text-blue-200"
                         dir="ltr"
                       >
-                        {l.lotName}
+                        {l.lotDisplayName || l.lotName}
                       </button>
-                      <div className="text-[10px] text-slate-400">
+                    </td>
+                    <td className="whitespace-nowrap px-2 py-1.5 leading-tight">
+                      <div className="font-mono text-[10px] font-black text-slate-800 dark:text-slate-200" dir="ltr">
+                        {l.branchCode}
+                      </div>
+                      <div className="text-[9px] text-slate-400">
                         {l.countryName} · {l.branchName}
                       </div>
                     </td>
-                    <td className="px-3 py-2 font-bold text-slate-900 dark:text-slate-100">
-                      <div>{l.goodsName}</div>
-                      {(l.brand || l.size) && (
-                        <div className="text-[10px] font-normal text-slate-400">
-                          {[l.brand, l.size].filter(Boolean).join(" · ")}
-                        </div>
-                      )}
+                    <td className="px-2 py-1.5 font-bold text-slate-900 dark:text-slate-100">
+                      {l.goodsName}
                     </td>
-                    <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{l.origin}</td>
-                    <td className="whitespace-nowrap bg-emerald-50/35 px-2.5 py-2 text-end font-mono font-black text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-300" dir="ltr">
+                    <td className="whitespace-nowrap px-2 py-1.5 text-[10.5px] font-semibold text-slate-600 dark:text-slate-300">
+                      {[l.brand, l.size].filter(Boolean).join(" · ") || "—"}
+                    </td>
+                    <td className="whitespace-nowrap px-2 py-1.5 text-[10.5px] text-slate-600 dark:text-slate-300">
+                      {l.origin}
+                    </td>
+                    <td className="whitespace-nowrap bg-emerald-50/35 px-2 py-1.5 text-end font-mono font-black text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-300" dir="ltr">
                       {formatUnitQty(l.pQtyByUnit)}
                     </td>
-                    <td className="whitespace-nowrap bg-emerald-50/35 px-2.5 py-2 text-end font-mono tabular-nums dark:bg-emerald-950/20" dir="ltr">
+                    <td className="whitespace-nowrap bg-emerald-50/35 px-2 py-1.5 text-end font-mono tabular-nums dark:bg-emerald-950/20" dir="ltr">
                       {fmtNum(l.pGrossKg)}
                     </td>
-                    <td className="whitespace-nowrap bg-emerald-50/35 px-2.5 py-2 text-end font-mono tabular-nums dark:bg-emerald-950/20" dir="ltr">
+                    <td className="whitespace-nowrap bg-emerald-50/35 px-2 py-1.5 text-end font-mono tabular-nums dark:bg-emerald-950/20" dir="ltr">
                       {fmtNum(l.pNetKg)}
                     </td>
-                    <td className="whitespace-nowrap bg-rose-50/35 px-2.5 py-2 text-end font-mono font-black text-rose-700 dark:bg-rose-950/20 dark:text-rose-300" dir="ltr">
+                    <td className="whitespace-nowrap bg-rose-50/35 px-2 py-1.5 text-end font-mono font-black text-rose-700 dark:bg-rose-950/20 dark:text-rose-300" dir="ltr">
                       {formatUnitQty(l.sQtyByUnit)}
                     </td>
-                    <td className="whitespace-nowrap bg-rose-50/35 px-2.5 py-2 text-end font-mono tabular-nums dark:bg-rose-950/20" dir="ltr">
+                    <td className="whitespace-nowrap bg-rose-50/35 px-2 py-1.5 text-end font-mono tabular-nums dark:bg-rose-950/20" dir="ltr">
                       {fmtNum(l.sGrossKg)}
                     </td>
-                    <td className="whitespace-nowrap bg-rose-50/35 px-2.5 py-2 text-end font-mono tabular-nums dark:bg-rose-950/20" dir="ltr">
+                    <td className="whitespace-nowrap bg-rose-50/35 px-2 py-1.5 text-end font-mono tabular-nums dark:bg-rose-950/20" dir="ltr">
                       {fmtNum(l.sNetKg)}
                     </td>
                     <td
-                      className={`whitespace-nowrap bg-blue-50/35 px-2.5 py-2 text-end font-mono font-black dark:bg-blue-950/20 ${
+                      className={`whitespace-nowrap bg-blue-50/35 px-2 py-1.5 text-end font-mono font-black dark:bg-blue-950/20 ${
                         l.hasNegativeBalance ? "text-rose-600 dark:text-rose-400" : "text-blue-700 dark:text-blue-300"
                       }`}
                       dir="ltr"
@@ -1143,7 +1190,7 @@ export function PsJournalPurchaseSalesView({ lang: langProp }: { lang?: string }
                       {formatUnitQty(l.balQtyByUnit)}
                     </td>
                     <td
-                      className={`whitespace-nowrap bg-blue-50/35 px-2.5 py-2 text-end font-mono font-bold tabular-nums dark:bg-blue-950/20 ${
+                      className={`whitespace-nowrap bg-blue-50/35 px-2 py-1.5 text-end font-mono font-bold tabular-nums dark:bg-blue-950/20 ${
                         l.balGrossKg < 0 ? "text-rose-600 dark:text-rose-400" : "text-blue-800 dark:text-blue-200"
                       }`}
                       dir="ltr"
@@ -1151,7 +1198,7 @@ export function PsJournalPurchaseSalesView({ lang: langProp }: { lang?: string }
                       {fmtNum(l.balGrossKg)}
                     </td>
                     <td
-                      className={`whitespace-nowrap bg-blue-50/35 px-2.5 py-2 text-end font-mono font-bold tabular-nums dark:bg-blue-950/20 ${
+                      className={`whitespace-nowrap bg-blue-50/35 px-2 py-1.5 text-end font-mono font-bold tabular-nums dark:bg-blue-950/20 ${
                         l.balNetKg < 0 ? "text-rose-600 dark:text-rose-400" : "text-blue-800 dark:text-blue-200"
                       }`}
                       dir="ltr"

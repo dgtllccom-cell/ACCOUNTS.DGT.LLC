@@ -645,12 +645,9 @@ export async function loadCanonicalPsStockChunks(
 
       for (const lc of lineLoaded) {
         const plr = plrById.get(lc.loadingId);
-        const lotName =
-          cleanDash(plr?.lot_name) ||
-          bookedLot ||
-          cleanDash(plr?.loading_record_no) ||
-          `${poBillNo}-L${idx + 1}`;
-        const lotKey = `LOT:${lotName.toUpperCase()}`;
+        const explicitPlrLot = cleanDash(plr?.lot_name) || bookedLot || cleanDash(plr?.loading_record_no);
+        const lotName = explicitPlrLot || `${poBillNo}-L${idx + 1}`;
+        const lotKey = `LOT:${poBillNo.toUpperCase()}:${lotName.toUpperCase()}`;
         const whId = plr?.receiving_warehouse_id || null;
         const whName = (whId && whNameMap.get(whId)) || "";
         const blNo = cleanDash(plr?.bl_number) || formBl;
@@ -739,12 +736,16 @@ export async function loadCanonicalPsStockChunks(
           countryCode: str(po.country_code),
           countryBranchId: po.country_branch_id,
           cityBranchId: po.city_branch_id,
+          countryBranchCode: str(po.country_branch_code),
+          cityBranchCode: str(po.city_branch_code),
           branchId,
           branchName,
           warehouseId: whId,
           warehouseName: whName,
           lotKey,
           lotName,
+          entryNo: idx + 1,
+          hasExplicitLot: Boolean(explicitPlrLot),
           blNo,
           containerNo,
           supplierAccountNo: supplierNo,
@@ -785,7 +786,7 @@ export async function loadCanonicalPsStockChunks(
       if (unloadedQty > EPS || lineLoaded.length === 0) {
         const uW = lineLoaded.length === 0 && unloadedQty <= EPS ? { gross: lineGross, net: lineNet } : weightFor(unloadedQty);
         const lotName = bookedLot || (effectiveLines.length > 1 ? `${poBillNo}#${idx + 1}` : poBillNo);
-        const lotKey = `LOT:${lotName.toUpperCase()}`;
+        const lotKey = `LOT:${poBillNo.toUpperCase()}:${lotName.toUpperCase()}`;
         const chunk: PsStockChunk = {
           chunkId: `po:${po.id}:book:${line.lineKey}`,
           sourceKind: "purchase_booking",
@@ -800,12 +801,16 @@ export async function loadCanonicalPsStockChunks(
           countryCode: str(po.country_code),
           countryBranchId: po.country_branch_id,
           cityBranchId: po.city_branch_id,
+          countryBranchCode: str(po.country_branch_code),
+          cityBranchCode: str(po.city_branch_code),
           branchId,
           branchName,
           warehouseId: null,
           warehouseName: "",
           lotKey,
           lotName,
+          entryNo: idx + 1,
+          hasExplicitLot: Boolean(bookedLot),
           blNo: formBl,
           containerNo: formContainer,
           supplierAccountNo: supplierNo,
@@ -880,9 +885,10 @@ export async function loadCanonicalPsStockChunks(
             },
           ];
 
-    for (const lot of lotUnits) {
-      const lotName = cleanDash(lot.lot_no) || cleanDash(lot.lot_ref) || lpBillNo;
-      const lotKey = `LOT:${lotName.toUpperCase()}`;
+    for (const [lotIdx, lot] of lotUnits.entries()) {
+      const explicitLpLot = cleanDash(lot.lot_no) || cleanDash(lot.lot_ref);
+      const lotName = explicitLpLot || lpBillNo;
+      const lotKey = `LOT:${lpBillNo.toUpperCase()}:${lotName.toUpperCase()}`;
       const qty = q4(num(lot.qty_purchased));
       const gross = q4(num(lot.gross_weight_kg));
       const net = q4(num(lot.net_weight_kg));
@@ -973,12 +979,16 @@ export async function loadCanonicalPsStockChunks(
         countryCode: str(lp.country_code),
         countryBranchId: lp.country_branch_id,
         cityBranchId: lp.city_branch_id,
+        countryBranchCode: str(lp.country_branch_code),
+        cityBranchCode: str(lp.city_branch_code),
         branchId,
         branchName,
         warehouseId: activeWhId,
         warehouseName: whName,
         lotKey,
         lotName,
+        entryNo: lotIdx + 1,
+        hasExplicitLot: Boolean(explicitLpLot),
         blNo: "",
         containerNo: cleanDash(lp.truck_no),
         supplierAccountNo: supplierNo,
