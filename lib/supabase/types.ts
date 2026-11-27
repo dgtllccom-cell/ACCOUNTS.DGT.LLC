@@ -2395,6 +2395,7 @@ export type Database = {
       companies: {
         Row: {
           address: string | null
+          address_country_id: string | null
           area_location_id: string | null
           area_name: string | null
           base_currency: string
@@ -2422,6 +2423,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          address_country_id?: string | null
           area_location_id?: string | null
           area_name?: string | null
           base_currency?: string
@@ -2449,6 +2451,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          address_country_id?: string | null
           area_location_id?: string | null
           area_name?: string | null
           base_currency?: string

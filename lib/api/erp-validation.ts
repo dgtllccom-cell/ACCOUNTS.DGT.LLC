@@ -509,6 +509,7 @@ export const companyCreateSchema = z.object({
   countryBranchId: optionalUuidSchema,
   cityBranchId: optionalUuidSchema,
   isBranchOperative: z.boolean().default(false),
+  addressCountryId: optionalUuidSchema,
   stateProvinceId: optionalUuidSchema,
   districtId: optionalUuidSchema,
   cityId: optionalUuidSchema,
