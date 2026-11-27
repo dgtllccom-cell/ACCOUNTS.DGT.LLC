@@ -160,7 +160,32 @@ export async function POST(
     let resolvedStateId: string | null = body.stateProvinceId ?? null;
     let resolvedCityId: string | null = body.cityId ?? null;
 
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (resolvedCountryId && !UUID_RE.test(String(resolvedCountryId))) resolvedCountryId = null;
+    if (resolvedStateId && !UUID_RE.test(String(resolvedStateId))) resolvedStateId = null;
+    if (resolvedCityId && !UUID_RE.test(String(resolvedCityId))) resolvedCityId = null;
+
     await withLocalPg(async (sql) => {
+      // 0. Ids picked from the Location Master (the form reads /locations): accept them only when they are active
+      //    master rows that belong together (state inside the country, city inside that country / state).
+      if (resolvedCountryId) {
+        const c = await sql<any[]>`SELECT 1 FROM public.countries WHERE id = ${resolvedCountryId}::uuid AND deleted_at IS NULL AND is_active = true`;
+        if (!c.length) { resolvedCountryId = null; resolvedStateId = null; resolvedCityId = null; }
+      }
+      if (resolvedStateId) {
+        const s = resolvedCountryId
+          ? await sql<any[]>`SELECT 1 FROM public.states_provinces WHERE id = ${resolvedStateId}::uuid AND country_id = ${resolvedCountryId}::uuid AND deleted_at IS NULL AND is_active = true`
+          : [];
+        if (!s.length) { resolvedStateId = null; resolvedCityId = null; }
+      }
+      if (resolvedCityId) {
+        const ci = resolvedCountryId
+          ? await sql<any[]>`SELECT 1 FROM public.cities WHERE id = ${resolvedCityId}::uuid AND country_id = ${resolvedCountryId}::uuid
+              ${resolvedStateId ? sql`AND state_province_id = ${resolvedStateId}::uuid` : sql``} AND deleted_at IS NULL AND is_active = true`
+          : [];
+        if (!ci.length) resolvedCityId = null;
+      }
+
       // 1. Resolve Country
       const countryRaw = (body.country || body.countryName || "").trim();
       if (!resolvedCountryId && countryRaw) {

@@ -739,6 +739,8 @@ export const bankCreateSchema = z.object({
   currency: z.string().trim().length(3).transform((v) => v.toUpperCase()),
   accountStatus: z.enum(["Active", "Inactive", "Frozen", "Closed"]).default("Active"),
   countryId: optionalUuidSchema,
+  // Physical address country (Location Management Master). Never changes the operational country_id after creation.
+  addressCountryId: optionalUuidSchema,
   stateProvinceId: optionalUuidSchema,
   districtId: optionalUuidSchema,
   cityId: optionalUuidSchema,

@@ -22,6 +22,7 @@ export type BankRow = {
   currency: string;
   account_status: string;
   country_id: string | null;
+  address_country_id: string | null;
   state_province_id: string | null;
   district_id: string | null;
   city_id: string | null;
@@ -37,7 +38,7 @@ export type BankRow = {
 };
 
 const BANK_COLUMNS =
-  "id, account_code, owner_person_id, owner_company_id, bank_type, account_type, bank_name, branch_name, branch_code, branch_code_type, short_name, account_title, account_number, iban_number, currency, account_status, country_id, state_province_id, district_id, city_id, full_address, phone, email, swift_bic, website, remarks, is_active, created_at, updated_at";
+  "id, account_code, owner_person_id, owner_company_id, bank_type, account_type, bank_name, branch_name, branch_code, branch_code_type, short_name, account_title, account_number, iban_number, currency, account_status, country_id, address_country_id, state_province_id, district_id, city_id, full_address, phone, email, swift_bic, website, remarks, is_active, created_at, updated_at";
 
 function cleanQuery(value: string) {
   return value.trim().replace(/\s+/g, " ");
@@ -143,6 +144,7 @@ export class BanksRepository {
     currency: string;
     accountStatus: string;
     countryId?: string | null;
+    addressCountryId?: string | null;
     stateProvinceId?: string | null;
     districtId?: string | null;
     cityId?: string | null;
@@ -170,6 +172,7 @@ export class BanksRepository {
       currency: input.currency || "USD",
       account_status: input.accountStatus || "Active",
       country_id: input.countryId ?? null,
+      address_country_id: input.addressCountryId ?? input.countryId ?? null,
       state_province_id: input.stateProvinceId ?? null,
       district_id: input.districtId ?? null,
       city_id: input.cityId ?? null,
@@ -263,6 +266,7 @@ export class BanksRepository {
     currency: string;
     accountStatus: string;
     countryId: string | null;
+    addressCountryId: string | null;
     stateProvinceId: string | null;
     districtId: string | null;
     cityId: string | null;
@@ -291,6 +295,7 @@ export class BanksRepository {
     if ("currency" in input) patch.currency = input.currency;
     if ("accountStatus" in input) patch.account_status = input.accountStatus;
     if ("countryId" in input) patch.country_id = input.countryId;
+    if ("addressCountryId" in input) patch.address_country_id = input.addressCountryId;
     if ("stateProvinceId" in input) patch.state_province_id = input.stateProvinceId;
     if ("districtId" in input) patch.district_id = input.districtId;
     if ("cityId" in input) patch.city_id = input.cityId;

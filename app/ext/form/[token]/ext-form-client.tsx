@@ -185,254 +185,11 @@ const cntLabel = (v: string, lang: string) => centralT(lang as never, ("extform.
 // LOCATION_TRANSLATIONS + locName() moved to ./location-translations.ts
 
 
-interface CityData {
-  name: string;
-  postalCode: string;
-  cityCode: string;
-}
-
-interface StateData {
-  cities: CityData[];
-}
-
-interface CountryData {
-  code: string;
-  phoneCode: string;
-  states: Record<string, StateData>;
-}
-
-const LOCATION_HIERARCHY: Record<string, CountryData> = {
-  Pakistan: {
-    code: "PK",
-    phoneCode: "+92",
-    states: {
-      Sindh: {
-        cities: [
-          { name: "Karachi", postalCode: "74000", cityCode: "KHI" },
-          { name: "Hyderabad", postalCode: "71000", cityCode: "HYD" },
-          { name: "Sukkur", postalCode: "65200", cityCode: "SKR" },
-          { name: "Larkana", postalCode: "77150", cityCode: "LRK" },
-          { name: "Mirpur Khas", postalCode: "69000", cityCode: "MPK" },
-          { name: "Nawabshah", postalCode: "67450", cityCode: "NBS" },
-        ],
-      },
-      Punjab: {
-        cities: [
-          { name: "Lahore", postalCode: "54000", cityCode: "LHE" },
-          { name: "Rawalpindi", postalCode: "46000", cityCode: "RWP" },
-          { name: "Faisalabad", postalCode: "38000", cityCode: "FSD" },
-          { name: "Multan", postalCode: "60000", cityCode: "MUX" },
-          { name: "Gujranwala", postalCode: "52250", cityCode: "GUJ" },
-          { name: "Sialkot", postalCode: "51310", cityCode: "SKT" },
-          { name: "Bahawalpur", postalCode: "63100", cityCode: "BWP" },
-          { name: "Sargodha", postalCode: "40100", cityCode: "SGD" },
-          { name: "Sheikhupura", postalCode: "39350", cityCode: "SKP" },
-          { name: "Rahim Yar Khan", postalCode: "64200", cityCode: "RYK" },
-        ],
-      },
-      "Khyber Pakhtunkhwa": {
-        cities: [
-          { name: "Peshawar", postalCode: "25000", cityCode: "PEW" },
-          { name: "Mardan", postalCode: "23200", cityCode: "MDN" },
-          { name: "Abbottabad", postalCode: "22010", cityCode: "ABT" },
-          { name: "Swat (Mingora)", postalCode: "19130", cityCode: "SWT" },
-          { name: "Dera Ismail Khan", postalCode: "29050", cityCode: "DIK" },
-          { name: "Kohat", postalCode: "26000", cityCode: "KHT" },
-          { name: "Bannu", postalCode: "28100", cityCode: "BNU" },
-        ],
-      },
-      Balochistan: {
-        cities: [
-          { name: "Quetta", postalCode: "87300", cityCode: "UET" },
-          { name: "Gwadar", postalCode: "91200", cityCode: "GWD" },
-          { name: "Chaman (Border)", postalCode: "86000", cityCode: "CHM" },
-          { name: "Turbat", postalCode: "92600", cityCode: "TBT" },
-          { name: "Hub Industrial", postalCode: "90150", cityCode: "HUB" },
-          { name: "Sibi", postalCode: "82000", cityCode: "SBI" },
-          { name: "Khuzdar", postalCode: "89100", cityCode: "KZD" },
-        ],
-      },
-      "Islamabad Capital Territory": {
-        cities: [{ name: "Islamabad", postalCode: "44000", cityCode: "ISB" }],
-      },
-      "Azad Jammu & Kashmir": {
-        cities: [
-          { name: "Muzaffarabad", postalCode: "13100", cityCode: "MZD" },
-          { name: "Mirpur", postalCode: "10250", cityCode: "MPR" },
-        ],
-      },
-    },
-  },
-  "United Arab Emirates": {
-    code: "AE",
-    phoneCode: "+971",
-    states: {
-      Dubai: {
-        cities: [
-          { name: "Dubai (Deira / Port Rashid)", postalCode: "00000", cityCode: "DXB" },
-          { name: "Jebel Ali Free Zone (JAFZA)", postalCode: "00000", cityCode: "JAF" },
-          { name: "Bur Dubai", postalCode: "00000", cityCode: "BDB" },
-          { name: "Al Quoz Industrial", postalCode: "00000", cityCode: "AQZ" },
-        ],
-      },
-      "Abu Dhabi": {
-        cities: [
-          { name: "Abu Dhabi City", postalCode: "00000", cityCode: "AUH" },
-          { name: "Musaffah Industrial", postalCode: "00000", cityCode: "MSF" },
-          { name: "Khalifa Port (KIZAD)", postalCode: "00000", cityCode: "KHD" },
-          { name: "Al Ain", postalCode: "00000", cityCode: "AAN" },
-        ],
-      },
-      Sharjah: {
-        cities: [
-          { name: "Sharjah City", postalCode: "00000", cityCode: "SHJ" },
-          { name: "Hamriyah Free Zone", postalCode: "00000", cityCode: "HFZ" },
-          { name: "Khor Fakkan", postalCode: "00000", cityCode: "KLF" },
-        ],
-      },
-      Ajman: {
-        cities: [{ name: "Ajman Free Zone / City", postalCode: "00000", cityCode: "AJM" }],
-      },
-    },
-  },
-  Afghanistan: {
-    code: "AF",
-    phoneCode: "+93",
-    states: {
-      Kabul: {
-        cities: [{ name: "Kabul City", postalCode: "1001", cityCode: "KBL" }],
-      },
-      Kandahar: {
-        cities: [
-          { name: "Kandahar City", postalCode: "3801", cityCode: "KDH" },
-          { name: "Spin Boldak Border Crossing", postalCode: "3805", cityCode: "SBD" },
-        ],
-      },
-      Herat: {
-        cities: [
-          { name: "Herat City", postalCode: "3001", cityCode: "HEA" },
-          { name: "Islam Qala Border Crossing", postalCode: "3005", cityCode: "ISQ" },
-          { name: "Torghundi Border", postalCode: "3006", cityCode: "TGH" },
-        ],
-      },
-      Nangarhar: {
-        cities: [
-          { name: "Jalalabad City", postalCode: "2601", cityCode: "JAA" },
-          { name: "Torkham Border Crossing", postalCode: "2605", cityCode: "TKM" },
-        ],
-      },
-      Balkh: {
-        cities: [
-          { name: "Mazar-i-Sharif", postalCode: "1701", cityCode: "MZR" },
-          { name: "Hairatan Port / Border", postalCode: "1705", cityCode: "HRT" },
-        ],
-      },
-      Nimruz: {
-        cities: [{ name: "Zaranj (Milak Border)", postalCode: "8501", cityCode: "ZRJ" }],
-      },
-    },
-  },
-  "Saudi Arabia": {
-    code: "SA",
-    phoneCode: "+966",
-    states: {
-      Riyadh: {
-        cities: [{ name: "Riyadh City", postalCode: "11564", cityCode: "RUH" }],
-      },
-      Makkah: {
-        cities: [{ name: "Jeddah Islamic Port / City", postalCode: "21589", cityCode: "JED" }],
-      },
-      "Eastern Province": {
-        cities: [{ name: "King Abdulaziz Port (Dammam)", postalCode: "31411", cityCode: "DMM" }],
-      },
-    },
-  },
-  China: {
-    code: "CN",
-    phoneCode: "+86",
-    states: {
-      Zhejiang: {
-        cities: [{ name: "Yiwu (International Trade City)", postalCode: "322000", cityCode: "YIW" }],
-      },
-      Guangdong: {
-        cities: [{ name: "Guangzhou (Huangpu / Nansha Port)", postalCode: "510000", cityCode: "CAN" }],
-      },
-      Shanghai: {
-        cities: [{ name: "Shanghai Port", postalCode: "200000", cityCode: "SHA" }],
-      },
-    },
-  },
-  Turkey: {
-    code: "TR",
-    phoneCode: "+90",
-    states: {
-      Istanbul: {
-        cities: [{ name: "Istanbul (Ambarli Port)", postalCode: "34000", cityCode: "IST" }],
-      },
-      Mersin: {
-        cities: [{ name: "Mersin International Port", postalCode: "33000", cityCode: "MER" }],
-      },
-    },
-  },
-  Iran: {
-    code: "IR",
-    phoneCode: "+98",
-    states: {
-      Hormozgan: {
-        cities: [{ name: "Bandar Abbas (Shahid Rajaee)", postalCode: "79177", cityCode: "BND" }],
-      },
-      "Sistan & Baluchestan": {
-        cities: [
-          { name: "Chabahar (Beheshti Port)", postalCode: "99717", cityCode: "CHB" },
-          { name: "Zahedan / Mirjaveh Border", postalCode: "98135", cityCode: "ZAH" },
-        ],
-      },
-      Tehran: {
-        cities: [{ name: "Tehran", postalCode: "11369", cityCode: "THR" }],
-      },
-    },
-  },
-  Oman: {
-    code: "OM",
-    phoneCode: "+968",
-    states: {
-      Muscat: {
-        cities: [{ name: "Muscat / Port Sultan Qaboos", postalCode: "100", cityCode: "MCT" }],
-      },
-      "Al Batinah": {
-        cities: [{ name: "Sohar Port & Freezone", postalCode: "311", cityCode: "SOH" }],
-      },
-    },
-  },
-  "United Kingdom": {
-    code: "GB",
-    phoneCode: "+44",
-    states: {
-      England: {
-        cities: [
-          { name: "London", postalCode: "EC1A 1BB", cityCode: "LON" },
-          { name: "Felixstowe Port", postalCode: "IP11 3SY", cityCode: "FXT" },
-          { name: "Southampton Port", postalCode: "SO14 2AQ", cityCode: "SOU" },
-        ],
-      },
-    },
-  },
-  "United States": {
-    code: "US",
-    phoneCode: "+1",
-    states: {
-      California: {
-        cities: [{ name: "Los Angeles / Long Beach Port", postalCode: "90001", cityCode: "LAX" }],
-      },
-      Texas: {
-        cities: [{ name: "Houston Port / City", postalCode: "77001", cityCode: "HOU" }],
-      },
-      "New York": {
-        cities: [{ name: "New York / Port of NY & NJ", postalCode: "10001", cityCode: "NYC" }],
-      },
-    },
-  },
-};
+// Country → State / Province → City come from the central Location Management Master
+// (GET /api/public/form-link/[token]/locations) — the same master every ERP address form uses. No local list.
+type MasterCountry = { id: string; name: string; iso2?: string | null; phone_code?: string | null };
+type MasterState = { id: string; name: string; code?: string | null; postal_code?: string | null };
+type MasterCity = { id: string; name: string; code?: string | null; zip_code?: string | null };
 
 // ─── Document & Contract & Contact Types with 5-Language Labels ───────────────
 
@@ -585,10 +342,16 @@ export function ExtFormClient({ token }: { token: string }) {
   const [contracts, setContracts] = useState<ContractItem[]>([]);
 
   // Step 2: Address Info (Cascading Location)
-  const [country, setCountry] = useState("Pakistan");
-  const [stateProvince, setStateProvince] = useState("Sindh");
-  const [city, setCity] = useState("Karachi");
-  const [postalCode, setPostalCode] = useState("74000");
+  const [country, setCountry] = useState("");
+  const [stateProvince, setStateProvince] = useState("");
+  const [city, setCity] = useState("");
+  const [countryId, setCountryId] = useState("");
+  const [stateProvinceId, setStateProvinceId] = useState("");
+  const [cityId, setCityId] = useState("");
+  const [masterCountries, setMasterCountries] = useState<MasterCountry[]>([]);
+  const [masterStates, setMasterStates] = useState<MasterState[]>([]);
+  const [masterCities, setMasterCities] = useState<MasterCity[]>([]);
+  const [postalCode, setPostalCode] = useState("");
   const [fullAddress, setFullAddress] = useState("");
 
   // Step 4: Photo & Submission
@@ -627,6 +390,9 @@ export function ExtFormClient({ token }: { token: string }) {
               if (sub.country) setCountry(sub.country);
               if (sub.stateProvince) setStateProvince(sub.stateProvince);
               if (sub.city) setCity(sub.city);
+              if (sub.countryId) setCountryId(sub.countryId);
+              if (sub.stateProvinceId) setStateProvinceId(sub.stateProvinceId);
+              if (sub.cityId) setCityId(sub.cityId);
               if (sub.postalCode) setPostalCode(sub.postalCode);
               if (sub.address) setFullAddress(sub.address);
               if (sub.photo) setPhotoPreview(sub.photo);
@@ -659,46 +425,55 @@ export function ExtFormClient({ token }: { token: string }) {
     checkToken();
   }, [token]);
 
-  // Update State when Country changes
-  const handleCountryChange = (newCountry: string) => {
-    setCountry(newCountry);
-    const countryObj = LOCATION_HIERARCHY[newCountry];
-    if (countryObj) {
-      const firstState = Object.keys(countryObj.states)[0] || "";
-      setStateProvince(firstState);
-      if (firstState && countryObj.states[firstState]) {
-        const firstCity = countryObj.states[firstState].cities[0];
-        if (firstCity) {
-          setCity(firstCity.name);
-          setPostalCode(firstCity.postalCode);
-        }
-      }
+  // ── Location Management Master (shared with every ERP address form) ──────────
+  const fetchMaster = useCallback(async <T,>(query: string): Promise<T[]> => {
+    try {
+      const res = await fetch(`/api/public/form-link/${token}/locations?${query}`);
+      const json = await res.json();
+      return json?.ok && Array.isArray(json.data) ? (json.data as T[]) : [];
+    } catch {
+      return [];
     }
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    fetchMaster<MasterCountry>("level=countries").then(setMasterCountries);
+  }, [token, fetchMaster]);
+
+  const handleCountryChange = async (newCountryId: string) => {
+    const picked = masterCountries.find((c) => c.id === newCountryId);
+    setCountryId(newCountryId);
+    setCountry(picked?.name ?? "");
+    setStateProvinceId("");
+    setStateProvince("");
+    setCityId("");
+    setCity("");
+    setMasterStates([]);
+    setMasterCities([]);
+    if (!newCountryId) return;
+    setMasterStates(await fetchMaster<MasterState>(`level=states&countryId=${encodeURIComponent(newCountryId)}`));
   };
 
-  // Update City & Postal Code when State changes
-  const handleStateChange = (newState: string) => {
-    setStateProvince(newState);
-    const countryObj = LOCATION_HIERARCHY[country];
-    if (countryObj && countryObj.states[newState]) {
-      const firstCity = countryObj.states[newState].cities[0];
-      if (firstCity) {
-        setCity(firstCity.name);
-        setPostalCode(firstCity.postalCode);
-      }
-    }
+  const handleStateChange = async (newStateId: string) => {
+    const picked = masterStates.find((st) => st.id === newStateId);
+    setStateProvinceId(newStateId);
+    setStateProvince(picked?.name ?? "");
+    setCityId("");
+    setCity("");
+    setMasterCities([]);
+    if (picked?.postal_code) setPostalCode(picked.postal_code);
+    if (!newStateId || !countryId) return;
+    setMasterCities(await fetchMaster<MasterCity>(
+      `level=cities&countryId=${encodeURIComponent(countryId)}&stateId=${encodeURIComponent(newStateId)}`
+    ));
   };
 
-  // Update Postal Code when City changes
-  const handleCityChange = (newCityName: string) => {
-    setCity(newCityName);
-    const countryObj = LOCATION_HIERARCHY[country];
-    if (countryObj && stateProvince && countryObj.states[stateProvince]) {
-      const foundCity = countryObj.states[stateProvince].cities.find((c) => c.name === newCityName);
-      if (foundCity) {
-        setPostalCode(foundCity.postalCode);
-      }
-    }
+  const handleCityChange = (newCityId: string) => {
+    const picked = masterCities.find((c) => c.id === newCityId);
+    setCityId(newCityId);
+    setCity(picked?.name ?? "");
+    if (picked?.zip_code) setPostalCode(picked.zip_code);
   };
 
   // Contact list handlers
@@ -762,10 +537,11 @@ export function ExtFormClient({ token }: { token: string }) {
         }
 
         if (ext.country) {
-          const cMatch = Object.keys(LOCATION_HIERARCHY).find(
-            (c) => c.toLowerCase() === ext.country.toLowerCase() || ext.country.toLowerCase().includes(c.toLowerCase())
+          const scanned = String(ext.country).trim().toLowerCase();
+          const cMatch = masterCountries.find(
+            (c) => c.name.toLowerCase() === scanned || (c.iso2 ?? "").toLowerCase() === scanned
           );
-          if (cMatch) handleCountryChange(cMatch);
+          if (cMatch) void handleCountryChange(cMatch.id);
         }
 
         const summary = [ext.fullName || `${ext.firstName} ${ext.lastName}`.trim(), ext.documentNumber].filter(Boolean).join(" • ");
@@ -1089,6 +865,9 @@ export function ExtFormClient({ token }: { token: string }) {
       country,
       stateProvince,
       city,
+      countryId: countryId || undefined,
+      stateProvinceId: stateProvinceId || undefined,
+      cityId: cityId || undefined,
       postalCode,
       address: fullAddress,
       documents: finalDocs,
@@ -1123,12 +902,7 @@ export function ExtFormClient({ token }: { token: string }) {
   const isCnic = docType === "CNIC" || docType === "ID Card";
   const isPassport = docType === "Passport";
 
-  const currentCountryObj = LOCATION_HIERARCHY[country];
-  const availableStates = currentCountryObj ? Object.keys(currentCountryObj.states) : [];
-  const availableCities =
-    currentCountryObj && stateProvince && currentCountryObj.states[stateProvince]
-      ? currentCountryObj.states[stateProvince].cities
-      : [];
+  // (State / City options are the master rows loaded for the selected Country / State.)
 
   return (
     <div
@@ -2076,13 +1850,15 @@ export function ExtFormClient({ token }: { token: string }) {
                         {t("country", lang)} <span className="text-red-500">*</span>
                       </label>
                       <select
-                        value={country}
-                        onChange={(e) => handleCountryChange(e.target.value)}
+                        value={countryId}
+                        data-testid="ext-country"
+                        onChange={(e) => { void handleCountryChange(e.target.value); }}
                         className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
                       >
-                        {Object.keys(LOCATION_HIERARCHY).map((cKey) => (
-                          <option key={cKey} value={cKey}>
-                            {locName(cKey, lang)}
+                        <option value="">{centralT(lang as never, "common.select", "Select")}</option>
+                        {masterCountries.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {locName(c.name, lang)}
                           </option>
                         ))}
                       </select>
@@ -2094,13 +1870,16 @@ export function ExtFormClient({ token }: { token: string }) {
                         {t("stateProvince", lang)} <span className="text-red-500">*</span>
                       </label>
                       <select
-                        value={stateProvince}
-                        onChange={(e) => handleStateChange(e.target.value)}
+                        value={stateProvinceId}
+                        data-testid="ext-state"
+                        disabled={!countryId}
+                        onChange={(e) => { void handleStateChange(e.target.value); }}
                         className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
                       >
-                        {availableStates.map((stKey) => (
-                          <option key={stKey} value={stKey}>
-                            {locName(stKey, lang)}
+                        <option value="">{centralT(lang as never, "common.select", "Select")}</option>
+                        {masterStates.map((st) => (
+                          <option key={st.id} value={st.id}>
+                            {locName(st.name, lang)}
                           </option>
                         ))}
                       </select>
@@ -2112,12 +1891,15 @@ export function ExtFormClient({ token }: { token: string }) {
                         {t("city", lang)} <span className="text-red-500">*</span>
                       </label>
                       <select
-                        value={city}
+                        value={cityId}
+                        data-testid="ext-city"
+                        disabled={!stateProvinceId}
                         onChange={(e) => handleCityChange(e.target.value)}
                         className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
                       >
-                        {availableCities.map((c) => (
-                          <option key={c.name} value={c.name}>
+                        <option value="">{centralT(lang as never, "common.select", "Select")}</option>
+                        {masterCities.map((c) => (
+                          <option key={c.id} value={c.id}>
                             {locName(c.name, lang)}
                           </option>
                         ))}
@@ -2171,8 +1953,10 @@ export function ExtFormClient({ token }: { token: string }) {
                   </button>
                   <button
                     type="button"
+                    data-testid="ext-address-next"
                     onClick={() => setCurrentStep(4)}
-                    className="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                    disabled={!countryId || (masterStates.length > 0 && !stateProvinceId) || (masterCities.length > 0 && !cityId)}
+                    className="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span>{t("nextPhotoBtn", lang)}</span>
                   </button>

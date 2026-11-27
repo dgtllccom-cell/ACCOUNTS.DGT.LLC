@@ -12,6 +12,7 @@ export type WarehouseRecord = {
   responsible_person_id?: string | null;
   warehouse_type: string;
   country_id: string | null;
+  address_country_id?: string | null;
   country_name?: string | null;
   state_province_id: string | null;
   district_id: string | null;

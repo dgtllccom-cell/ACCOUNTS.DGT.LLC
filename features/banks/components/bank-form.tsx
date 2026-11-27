@@ -253,7 +253,7 @@ export function BankForm({
           ibanNumber: bank.iban_number ?? "",
           currency: bank.currency ?? "USD",
           accountStatus: bank.account_status ?? "Active",
-          countryId: bank.country_id ?? "",
+          countryId: bank.address_country_id ?? bank.country_id ?? "",
           stateProvinceId: bank.state_province_id ?? "",
           districtId: bank.district_id ?? "",
           cityId: bank.city_id ?? "",
@@ -265,7 +265,7 @@ export function BankForm({
           remarks: bank.remarks ?? ""
         });
         setLocation({
-          countryId: bank.country_id ?? "",
+          countryId: bank.address_country_id ?? bank.country_id ?? "",
           stateProvinceId: bank.state_province_id ?? "",
           districtId: bank.district_id ?? "",
           cityId: bank.city_id ?? ""
@@ -367,7 +367,10 @@ export function BankForm({
         ibanNumber: form.ibanNumber || null,
         currency: form.currency,
         accountStatus: form.accountStatus,
-        countryId: form.countryId || null,
+        // The address country never rewrites the bank's operational country (serial numbering, country scope, access).
+        // On create it also seeds it; on edit only address_country_id changes.
+        ...(isEditMode ? {} : { countryId: form.countryId || null }),
+        addressCountryId: form.countryId || null,
         stateProvinceId: form.stateProvinceId || null,
         districtId: form.districtId || null,
         cityId: form.cityId || null,
@@ -399,6 +402,7 @@ export function BankForm({
         currency: form.currency,
         account_status: form.accountStatus,
         country_id: form.countryId || null,
+        address_country_id: form.countryId || null,
         state_province_id: form.stateProvinceId || null,
         district_id: form.districtId || null,
         city_id: form.cityId || null,

@@ -18,6 +18,7 @@ export type BankInput = {
   currency: string;
   accountStatus: string;
   countryId?: string | null;
+  addressCountryId?: string | null;
   stateProvinceId?: string | null;
   districtId?: string | null;
   cityId?: string | null;

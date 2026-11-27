@@ -145,6 +145,11 @@ export type LoadingAllocationInput = {
   rowSerial?: number | null;
   warehouseId?: string | null;
   sourceLocationText?: string | null;
+  // Location Management Master ids of a facility / delivery address (optional, additive)
+  sourceCountryId?: string | null;
+  sourceStateProvinceId?: string | null;
+  sourceCityId?: string | null;
+  sourcePostalCode?: string | null;
   quantity?: number | null;
   unit?: string | null;
   remarks?: string | null;
@@ -441,6 +446,10 @@ function normalizeLoadingAllocations(rows: LoadingAllocationInput[] | undefined 
       rowSerial: row.rowSerial && row.rowSerial > 0 ? row.rowSerial : index + 1,
       warehouseId: trimOrNull(row.warehouseId),
       sourceLocationText: trimOrNull(row.sourceLocationText),
+      sourceCountryId: trimOrNull(row.sourceCountryId),
+      sourceStateProvinceId: trimOrNull(row.sourceStateProvinceId),
+      sourceCityId: trimOrNull(row.sourceCityId),
+      sourcePostalCode: trimOrNull(row.sourcePostalCode),
       quantity: typeof row.quantity === "number" ? row.quantity : 0,
       unit: trimOrNull(row.unit),
       remarks: trimOrNull(row.remarks)
@@ -1285,7 +1294,17 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             quantity: alloc.quantity,
             unit: alloc.unit,
             remarks: alloc.remarks,
-            updated_at: now
+            updated_at: now,
+            // Facility address from the Location Management Master (migration 20261261). Written only when a facility
+            // location was picked, so saving orders never depends on those columns otherwise.
+            ...(alloc.sourceCountryId || alloc.sourceStateProvinceId || alloc.sourceCityId || alloc.sourcePostalCode
+              ? {
+                  source_country_id: alloc.sourceCountryId ?? null,
+                  source_state_province_id: alloc.sourceStateProvinceId ?? null,
+                  source_city_id: alloc.sourceCityId ?? null,
+                  source_postal_code: alloc.sourcePostalCode ?? null
+                }
+              : {})
           };
           if (alloc.id && existingAllocationIds.includes(alloc.id)) {
             keptAllocationIds.add(alloc.id);

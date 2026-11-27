@@ -6,7 +6,7 @@ import { translateMasterRecord } from "@/lib/services/translation-trigger-servic
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 const COLS =
-  "id, country_id, state_province_id, district_id, city_id, area_id, owner_name, owner_person_id, responsible_person_id, warehouse_code, warehouse_name, warehouse_type, full_address, contact_number, status, description, is_active, created_at, updated_at";
+  "id, country_id, address_country_id, state_province_id, district_id, city_id, area_id, owner_name, owner_person_id, responsible_person_id, warehouse_code, warehouse_name, warehouse_type, full_address, contact_number, status, description, is_active, created_at, updated_at";
 
 /** Warehouses master — update + soft-delete (secure-by-default). */
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
@@ -41,6 +41,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     if (body.contact_number !== undefined) patch.contact_number = body.contact_number ?? null;
     if (body.status !== undefined) patch.status = body.status ? String(body.status).trim() : "Active";
     if (body.country_id !== undefined) patch.country_id = body.country_id ?? null;
+    if (body.address_country_id !== undefined) patch.address_country_id = body.address_country_id ?? null;
     if (body.state_province_id !== undefined) patch.state_province_id = body.state_province_id ?? null;
     if (body.district_id !== undefined) patch.district_id = body.district_id ?? null;
     if (body.city_id !== undefined) patch.city_id = body.city_id ?? null;

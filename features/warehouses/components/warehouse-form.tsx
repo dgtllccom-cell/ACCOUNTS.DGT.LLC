@@ -137,7 +137,7 @@ export function WarehouseForm({
       warehouseName: initialWarehouse.warehouse_name || "",
       ownerName: initialWarehouse.owner_name || "",
       warehouseType: initialWarehouse.warehouse_type || "Normal Storage",
-      countryId: initialWarehouse.country_id || "",
+      countryId: initialWarehouse.address_country_id || initialWarehouse.country_id || "",
       stateProvinceId: initialWarehouse.state_province_id || "",
       districtId: initialWarehouse.district_id || "",
       cityId: initialWarehouse.city_id || "",
@@ -147,7 +147,7 @@ export function WarehouseForm({
       status: initialWarehouse.status || "Active"
     });
     setLocation({
-      countryId: initialWarehouse.country_id || "",
+      countryId: initialWarehouse.address_country_id || initialWarehouse.country_id || "",
       stateProvinceId: initialWarehouse.state_province_id || "",
       districtId: initialWarehouse.district_id || "",
       cityId: initialWarehouse.city_id || "",
@@ -225,7 +225,10 @@ export function WarehouseForm({
         owner_person_id: ownerPersonId || null,
         responsible_person_id: responsiblePersonId || null,
         warehouse_type: form.warehouseType,
-        country_id: form.countryId || null,
+        // The address country never rewrites the warehouse's operational country (user country scope, serials).
+        // On create it also seeds it; on edit only address_country_id changes.
+        ...(initialWarehouse?.id ? {} : { country_id: form.countryId || null }),
+        address_country_id: form.countryId || null,
         state_province_id: form.stateProvinceId || null,
         district_id: form.districtId || null,
         city_id: form.cityId || null,
@@ -250,6 +253,7 @@ export function WarehouseForm({
           owner_name: form.ownerName,
           warehouse_type: form.warehouseType,
           country_id: form.countryId || null,
+          address_country_id: form.countryId || null,
           state_province_id: form.stateProvinceId || null,
           district_id: form.districtId || null,
           city_id: form.cityId || null,

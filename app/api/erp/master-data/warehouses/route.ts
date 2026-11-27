@@ -16,7 +16,7 @@ import { rethrowIfNextControlFlow } from "@/lib/api/response";
  * so no duplicate UI/logic. Table: migration 20260730_warehouses_master.sql.
  */
 const COLS =
-  "id, country_id, state_province_id, district_id, city_id, area_id, owner_name, owner_person_id, responsible_person_id, warehouse_code, warehouse_name, warehouse_type, full_address, contact_number, status, description, is_active, created_at, updated_at";
+  "id, country_id, address_country_id, state_province_id, district_id, city_id, area_id, owner_name, owner_person_id, responsible_person_id, warehouse_code, warehouse_name, warehouse_type, full_address, contact_number, status, description, is_active, created_at, updated_at";
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const countryIds = !session.isSuperAdmin ? session.countryIds : null;
     const rows = await withLocalPg(async (sql) => {
       return sql`
-        select id, country_id, state_province_id, district_id, city_id, area_id, owner_name,
+        select id, country_id, address_country_id, state_province_id, district_id, city_id, area_id, owner_name,
                owner_person_id, responsible_person_id,
                warehouse_code, warehouse_name, warehouse_type, full_address, contact_number,
                status, description, is_active, created_at, updated_at
@@ -70,6 +70,8 @@ export async function POST(req: Request) {
       .from("warehouses")
       .insert({
         country_id: countryId,
+        // Physical address country (Location Management Master) — separate from the operational country_id above
+        address_country_id: body.address_country_id ?? body.country_id ?? null,
         state_province_id: body.state_province_id ?? null,
         district_id: body.district_id ?? null,
         city_id: body.city_id ?? null,
