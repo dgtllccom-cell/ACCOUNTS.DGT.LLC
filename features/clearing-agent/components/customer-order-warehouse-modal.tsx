@@ -79,7 +79,8 @@ export function CustomerOrderWarehouseModal({
   const activeLang = useActiveLanguage();
   const lang = langProp && langProp !== "en" ? langProp : activeLang;
   const isRtl = lang === "ar" || lang === "ur" || lang === "fa" || lang === "ps";
-  const tt = (key: string, fallback: string) => t(lang as any, key as any, fallback);
+  // every popup label lives in the central dictionary under cowm.* (ported from #296: it rendered English in every language)
+  const tt = (key: string, fallback: string) => t(lang as any, (key.includes(".") ? key : `cowm.${key}`) as any, fallback);
 
   const initialType =
     initialValues.warehouseSourceType === "customer_warehouse"

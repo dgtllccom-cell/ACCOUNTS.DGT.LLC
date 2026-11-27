@@ -1453,6 +1453,62 @@ export type UiKey =
   | "il.dest_country"
   | "loc.final_destination_master"
   | "loc.saved_name_not_in_master"
+  | "cowm.active"
+  | "cowm.cancel"
+  | "cowm.loading"
+  | "cowm.adhoc_saved"
+  | "cowm.adhoc_yard_preview"
+  | "cowm.apply_customer_address"
+  | "cowm.apply_warehouse_location"
+  | "cowm.close"
+  | "cowm.company_wh_desc"
+  | "cowm.contact"
+  | "cowm.contact_line"
+  | "cowm.contact_mobile"
+  | "cowm.other_contact_mobile"
+  | "cowm.contact_mobile_ph"
+  | "cowm.contact_person"
+  | "cowm.other_contact_person"
+  | "cowm.contact_person_ph"
+  | "cowm.customer_address_ph"
+  | "cowm.customer_facility_name"
+  | "cowm.customer_facility_preview"
+  | "cowm.customer_registered_address"
+  | "cowm.customer_warehouse_label"
+  | "cowm.customer_warehouse_title"
+  | "cowm.customer_wh_desc"
+  | "cowm.customer_wh_name_ph"
+  | "cowm.customers_available"
+  | "cowm.delivery_facility_address"
+  | "cowm.dgt_verified_facility"
+  | "cowm.enter_adhoc_address"
+  | "cowm.facilities_available"
+  | "cowm.facility_type"
+  | "cowm.filter_warehouses"
+  | "cowm.no_customer_accounts_found"
+  | "cowm.no_warehouses_match"
+  | "cowm.order_active_customer"
+  | "cowm.other_warehouse_address_label"
+  | "cowm.other_warehouse_label"
+  | "cowm.other_warehouse_name_label"
+  | "cowm.other_warehouse_title"
+  | "cowm.other_wh_address_ph"
+  | "cowm.other_wh_desc"
+  | "cowm.other_wh_name_ph"
+  | "cowm.own_company_warehouse"
+  | "cowm.own_warehouse_title"
+  | "cowm.registered_destination_address"
+  | "cowm.responsible_person"
+  | "cowm.search_customer_accounts_ph"
+  | "cowm.select_company_warehouse_dropdown"
+  | "cowm.select_customer_facility_label"
+  | "cowm.select_warehouse_location"
+  | "cowm.selected_source"
+  | "cowm.verified_client"
+  | "cowm.warehouse_address"
+  | "cowm.warehouse_modal_desc"
+  | "cowm.warehouse_remarks"
+  | "cowm.warehouse_remarks_ph"
   | "il.agent"
   | "il.remarks"
   | "il.add"
@@ -40614,6 +40670,62 @@ const en: Dict = {
   "psj.st_not_loaded": "Not Loaded",
   "psj.st_partial": "Partially Sold",
   "psj.st_sold_out": "Sold Out (Zero Balance)",
+  "cowm.active": "Active",
+  "cowm.cancel": "Cancel",
+  "cowm.loading": "Loading warehouses...",
+  "cowm.adhoc_saved": "Saved to Order",
+  "cowm.adhoc_yard_preview": "Ad-Hoc / Third-Party External Facility",
+  "cowm.apply_customer_address": "Use Registered Address",
+  "cowm.apply_warehouse_location": "Apply Warehouse Location",
+  "cowm.close": "Close",
+  "cowm.company_wh_desc": "From DGT central or branch warehouse master",
+  "cowm.contact": "Contact",
+  "cowm.contact_line": "Contact Line",
+  "cowm.contact_mobile": "Contact Mobile / WhatsApp",
+  "cowm.other_contact_mobile": "Contact Mobile / Phone",
+  "cowm.contact_mobile_ph": "+971 50 ... / +92 300 ...",
+  "cowm.contact_person": "Contact Person / Site In-Charge",
+  "cowm.other_contact_person": "Contact Person / Yard In-Charge",
+  "cowm.contact_person_ph": "e.g. Tariq Khan",
+  "cowm.customer_address_ph": "Full Address / Plot / Gate #",
+  "cowm.customer_facility_name": "Customer Facility / Yard Name",
+  "cowm.customer_facility_preview": "Customer Registered Facility",
+  "cowm.customer_registered_address": "Customer Registered Address",
+  "cowm.customer_warehouse_label": "Customer Warehouse",
+  "cowm.customer_warehouse_title": "Customer Warehouse",
+  "cowm.customer_wh_desc": "Search by Customer Account # & registered address",
+  "cowm.customer_wh_name_ph": "e.g. Client Yard #1 (Industrial Area)",
+  "cowm.customers_available": "registered clients",
+  "cowm.delivery_facility_address": "Delivery / Facility Address",
+  "cowm.dgt_verified_facility": "DGT Verified Corporate Storage Facility",
+  "cowm.enter_adhoc_address": "Specify external location address and gate handling details above. This information is saved directly to this cargo manifest entry.",
+  "cowm.facilities_available": "facilities available",
+  "cowm.facility_type": "Facility Type",
+  "cowm.filter_warehouses": "Filter warehouse...",
+  "cowm.no_customer_accounts_found": "No matching customers found.",
+  "cowm.no_warehouses_match": "No warehouses match search",
+  "cowm.order_active_customer": "Order Customer",
+  "cowm.other_warehouse_address_label": "Detailed Address (Plot / Street / Gate)",
+  "cowm.other_warehouse_label": "Other / 3rd-Party",
+  "cowm.other_warehouse_name_label": "Warehouse / Yard Name",
+  "cowm.other_warehouse_title": "Other Warehouse",
+  "cowm.other_wh_address_ph": "Plot No, Street, Gate / Port Area",
+  "cowm.other_wh_desc": "Custom third-party yard, port terminal or depot",
+  "cowm.other_wh_name_ph": "e.g. Al-Falah Logistics Yard, Gate 4",
+  "cowm.own_company_warehouse": "Company Warehouse",
+  "cowm.own_warehouse_title": "Own Warehouse",
+  "cowm.registered_destination_address": "Client destination facility for delivery and unloading.",
+  "cowm.responsible_person": "Facility In-Charge",
+  "cowm.search_customer_accounts_ph": "Search customer by name, code, company, city...",
+  "cowm.select_company_warehouse_dropdown": "Company Warehouse Account / Facility",
+  "cowm.select_customer_facility_label": "Select Customer / Account Facility",
+  "cowm.select_warehouse_location": "Select Warehouse Location",
+  "cowm.selected_source": "Source",
+  "cowm.verified_client": "Registered Client",
+  "cowm.warehouse_address": "Facility Full Address",
+  "cowm.warehouse_modal_desc": "Configure warehouse facility where cargo is stored or delivered.",
+  "cowm.warehouse_remarks": "Handling Instructions / Gate Entry Notes",
+  "cowm.warehouse_remarks_ph": "e.g. Weighbridge required, offloading crane at berth",
 };
 
 const ur: Dict = {
@@ -67761,6 +67873,62 @@ const ur: Dict = {
   "psj.st_not_loaded": "ابھی لوڈ نہیں ہوا",
   "psj.st_partial": "جزوی فروخت شدہ",
   "psj.st_sold_out": "مکمل فروخت شدہ (صفر بیلنس)",
+  "cowm.active": "فعال",
+  "cowm.cancel": "منسوخ کریں",
+  "cowm.loading": "گودام لوڈ ہو رہے ہیں...",
+  "cowm.adhoc_saved": "آرڈر میں محفوظ",
+  "cowm.adhoc_yard_preview": "عارضی / تیسرے فریق کی بیرونی سہولت",
+  "cowm.apply_customer_address": "رجسٹرڈ پتہ استعمال کریں",
+  "cowm.apply_warehouse_location": "گودام کا مقام لاگو کریں",
+  "cowm.close": "بند کریں",
+  "cowm.company_wh_desc": "DGT کے مرکزی یا برانچ گودام ماسٹر سے",
+  "cowm.contact": "رابطہ",
+  "cowm.contact_line": "رابطہ لائن",
+  "cowm.contact_mobile": "رابطہ موبائل / واٹس ایپ",
+  "cowm.other_contact_mobile": "رابطہ موبائل / فون",
+  "cowm.contact_mobile_ph": "+971 50 ... / +92 300 ...",
+  "cowm.contact_person": "رابطہ شخص / سائٹ انچارج",
+  "cowm.other_contact_person": "رابطہ شخص / یارڈ انچارج",
+  "cowm.contact_person_ph": "مثلاً طارق خان",
+  "cowm.customer_address_ph": "مکمل پتہ / پلاٹ / گیٹ نمبر",
+  "cowm.customer_facility_name": "کسٹمر سہولت / یارڈ کا نام",
+  "cowm.customer_facility_preview": "کسٹمر کی رجسٹرڈ سہولت",
+  "cowm.customer_registered_address": "کسٹمر کا رجسٹرڈ پتہ",
+  "cowm.customer_warehouse_label": "کسٹمر گودام",
+  "cowm.customer_warehouse_title": "کسٹمر گودام",
+  "cowm.customer_wh_desc": "کسٹمر اکاؤنٹ نمبر اور رجسٹرڈ پتے سے تلاش کریں",
+  "cowm.customer_wh_name_ph": "مثلاً کلائنٹ یارڈ نمبر 1 (صنعتی علاقہ)",
+  "cowm.customers_available": "رجسٹرڈ کلائنٹس",
+  "cowm.delivery_facility_address": "ڈیلیوری / سہولت کا پتہ",
+  "cowm.dgt_verified_facility": "DGT سے تصدیق شدہ کارپوریٹ ذخیرہ سہولت",
+  "cowm.enter_adhoc_address": "اوپر بیرونی مقام کا پتہ اور گیٹ پر ہینڈلنگ کی تفصیل درج کریں۔ یہ معلومات براہِ راست اس کارگو مینی فیسٹ اندراج میں محفوظ ہوتی ہے۔",
+  "cowm.facilities_available": "دستیاب سہولیات",
+  "cowm.facility_type": "سہولت کی قسم",
+  "cowm.filter_warehouses": "گودام فلٹر کریں...",
+  "cowm.no_customer_accounts_found": "کوئی مماثل کسٹمر نہیں ملا۔",
+  "cowm.no_warehouses_match": "تلاش سے کوئی گودام مطابقت نہیں رکھتا",
+  "cowm.order_active_customer": "آرڈر کا کسٹمر",
+  "cowm.other_warehouse_address_label": "تفصیلی پتہ (پلاٹ / گلی / گیٹ)",
+  "cowm.other_warehouse_label": "دیگر / تیسرا فریق",
+  "cowm.other_warehouse_name_label": "گودام / یارڈ کا نام",
+  "cowm.other_warehouse_title": "دیگر گودام",
+  "cowm.other_wh_address_ph": "پلاٹ نمبر، گلی، گیٹ / پورٹ ایریا",
+  "cowm.other_wh_desc": "حسبِ ضرورت تیسرے فریق کا یارڈ، پورٹ ٹرمینل یا ڈپو",
+  "cowm.other_wh_name_ph": "مثلاً الفلاح لاجسٹکس یارڈ، گیٹ 4",
+  "cowm.own_company_warehouse": "کمپنی گودام",
+  "cowm.own_warehouse_title": "اپنا گودام",
+  "cowm.registered_destination_address": "ڈیلیوری اور ان لوڈنگ کے لیے کلائنٹ کی منزلی سہولت۔",
+  "cowm.responsible_person": "سہولت انچارج",
+  "cowm.search_customer_accounts_ph": "نام، کوڈ، کمپنی، شہر سے کسٹمر تلاش کریں...",
+  "cowm.select_company_warehouse_dropdown": "کمپنی گودام اکاؤنٹ / سہولت",
+  "cowm.select_customer_facility_label": "کسٹمر / اکاؤنٹ کی سہولت منتخب کریں",
+  "cowm.select_warehouse_location": "گودام کا مقام منتخب کریں",
+  "cowm.selected_source": "ماخذ",
+  "cowm.verified_client": "رجسٹرڈ کلائنٹ",
+  "cowm.warehouse_address": "سہولت کا مکمل پتہ",
+  "cowm.warehouse_modal_desc": "وہ گودام سہولت ترتیب دیں جہاں کارگو ذخیرہ یا ڈیلیور ہوتا ہے۔",
+  "cowm.warehouse_remarks": "ہینڈلنگ ہدایات / گیٹ انٹری نوٹس",
+  "cowm.warehouse_remarks_ph": "مثلاً وزن پل ضروری، برتھ پر آف لوڈنگ کرین",
 };
 
 const ar: Dict = {
@@ -94909,6 +95077,62 @@ const ar: Dict = {
   "psj.st_not_loaded": "غير محمّل بعد",
   "psj.st_partial": "مبيع جزئياً",
   "psj.st_sold_out": "نفد المخزون (رصيد صفر)",
+  "cowm.active": "نشط",
+  "cowm.cancel": "إلغاء",
+  "cowm.loading": "جارٍ تحميل المستودعات...",
+  "cowm.adhoc_saved": "محفوظ في الطلب",
+  "cowm.adhoc_yard_preview": "منشأة خارجية مؤقتة / تابعة لطرف ثالث",
+  "cowm.apply_customer_address": "استخدام العنوان المسجل",
+  "cowm.apply_warehouse_location": "تطبيق موقع المستودع",
+  "cowm.close": "إغلاق",
+  "cowm.company_wh_desc": "من سجل المستودعات المركزي أو الفرعي لـ DGT",
+  "cowm.contact": "جهة الاتصال",
+  "cowm.contact_line": "خط الاتصال",
+  "cowm.contact_mobile": "هاتف الاتصال / واتساب",
+  "cowm.other_contact_mobile": "هاتف الاتصال / الجوال",
+  "cowm.contact_mobile_ph": "+971 50 ... / +92 300 ...",
+  "cowm.contact_person": "جهة الاتصال / مسؤول الموقع",
+  "cowm.other_contact_person": "جهة الاتصال / مسؤول الساحة",
+  "cowm.contact_person_ph": "مثلاً طارق خان",
+  "cowm.customer_address_ph": "العنوان الكامل / القطعة / رقم البوابة",
+  "cowm.customer_facility_name": "اسم منشأة / ساحة العميل",
+  "cowm.customer_facility_preview": "المنشأة المسجلة للعميل",
+  "cowm.customer_registered_address": "العنوان المسجل للعميل",
+  "cowm.customer_warehouse_label": "مستودع العميل",
+  "cowm.customer_warehouse_title": "مستودع العميل",
+  "cowm.customer_wh_desc": "البحث برقم حساب العميل والعنوان المسجل",
+  "cowm.customer_wh_name_ph": "مثلاً ساحة العميل رقم 1 (المنطقة الصناعية)",
+  "cowm.customers_available": "عملاء مسجلون",
+  "cowm.delivery_facility_address": "عنوان التسليم / المنشأة",
+  "cowm.dgt_verified_facility": "منشأة تخزين مؤسسية موثقة من DGT",
+  "cowm.enter_adhoc_address": "حدد أعلاه عنوان الموقع الخارجي وتفاصيل المناولة عند البوابة. تُحفظ هذه المعلومات مباشرة في قيد بيان الشحنة هذا.",
+  "cowm.facilities_available": "منشآت متاحة",
+  "cowm.facility_type": "نوع المنشأة",
+  "cowm.filter_warehouses": "تصفية المستودعات...",
+  "cowm.no_customer_accounts_found": "لم يتم العثور على عملاء مطابقين.",
+  "cowm.no_warehouses_match": "لا توجد مستودعات مطابقة للبحث",
+  "cowm.order_active_customer": "عميل الطلب",
+  "cowm.other_warehouse_address_label": "العنوان التفصيلي (القطعة / الشارع / البوابة)",
+  "cowm.other_warehouse_label": "أخرى / طرف ثالث",
+  "cowm.other_warehouse_name_label": "اسم المستودع / الساحة",
+  "cowm.other_warehouse_title": "مستودع آخر",
+  "cowm.other_wh_address_ph": "رقم القطعة، الشارع، البوابة / منطقة الميناء",
+  "cowm.other_wh_desc": "ساحة طرف ثالث أو محطة ميناء أو مستودع مخصص",
+  "cowm.other_wh_name_ph": "مثلاً ساحة الفلاح للخدمات اللوجستية، البوابة 4",
+  "cowm.own_company_warehouse": "مستودع الشركة",
+  "cowm.own_warehouse_title": "المستودع الخاص",
+  "cowm.registered_destination_address": "منشأة وجهة العميل للتسليم والتفريغ.",
+  "cowm.responsible_person": "مسؤول المنشأة",
+  "cowm.search_customer_accounts_ph": "ابحث عن العميل بالاسم أو الرمز أو الشركة أو المدينة...",
+  "cowm.select_company_warehouse_dropdown": "حساب / منشأة مستودع الشركة",
+  "cowm.select_customer_facility_label": "اختر منشأة العميل / الحساب",
+  "cowm.select_warehouse_location": "اختر موقع المستودع",
+  "cowm.selected_source": "المصدر",
+  "cowm.verified_client": "عميل مسجل",
+  "cowm.warehouse_address": "العنوان الكامل للمنشأة",
+  "cowm.warehouse_modal_desc": "اضبط منشأة المستودع التي يُخزَّن فيها الشحن أو يُسلَّم إليها.",
+  "cowm.warehouse_remarks": "تعليمات المناولة / ملاحظات دخول البوابة",
+  "cowm.warehouse_remarks_ph": "مثلاً الميزان الجسري مطلوب، رافعة التفريغ عند الرصيف",
 };
 
 const fa: Dict = {
@@ -122056,6 +122280,62 @@ const fa: Dict = {
   "psj.st_not_loaded": "بارگیری‌نشده",
   "psj.st_partial": "فروش جزئی",
   "psj.st_sold_out": "اتمام موجودی (مانده صفر)",
+  "cowm.active": "فعال",
+  "cowm.cancel": "لغو",
+  "cowm.loading": "در حال بارگذاری انبارها...",
+  "cowm.adhoc_saved": "ذخیره در سفارش",
+  "cowm.adhoc_yard_preview": "مرکز بیرونی موقت / شخص ثالث",
+  "cowm.apply_customer_address": "استفاده از نشانی ثبت‌شده",
+  "cowm.apply_warehouse_location": "اعمال موقعیت انبار",
+  "cowm.close": "بستن",
+  "cowm.company_wh_desc": "از فهرست اصلی انبار مرکزی یا شعبه DGT",
+  "cowm.contact": "تماس",
+  "cowm.contact_line": "خط تماس",
+  "cowm.contact_mobile": "موبایل تماس / واتس‌اپ",
+  "cowm.other_contact_mobile": "موبایل / تلفن تماس",
+  "cowm.contact_mobile_ph": "+971 50 ... / +92 300 ...",
+  "cowm.contact_person": "شخص تماس / مسئول محل",
+  "cowm.other_contact_person": "شخص تماس / مسئول محوطه",
+  "cowm.contact_person_ph": "مثلاً طارق خان",
+  "cowm.customer_address_ph": "نشانی کامل / قطعه / شماره دروازه",
+  "cowm.customer_facility_name": "نام مرکز / محوطه مشتری",
+  "cowm.customer_facility_preview": "مرکز ثبت‌شده مشتری",
+  "cowm.customer_registered_address": "نشانی ثبت‌شده مشتری",
+  "cowm.customer_warehouse_label": "انبار مشتری",
+  "cowm.customer_warehouse_title": "انبار مشتری",
+  "cowm.customer_wh_desc": "جستجو با شماره حساب مشتری و نشانی ثبت‌شده",
+  "cowm.customer_wh_name_ph": "مثلاً محوطه مشتری شماره 1 (منطقه صنعتی)",
+  "cowm.customers_available": "مشتریان ثبت‌شده",
+  "cowm.delivery_facility_address": "نشانی تحویل / مرکز",
+  "cowm.dgt_verified_facility": "مرکز ذخیره‌سازی سازمانی تأییدشده DGT",
+  "cowm.enter_adhoc_address": "نشانی محل بیرونی و جزئیات جابه‌جایی در دروازه را در بالا مشخص کنید. این اطلاعات مستقیماً در همین ردیف مانیفست بار ذخیره می‌شود.",
+  "cowm.facilities_available": "مراکز موجود",
+  "cowm.facility_type": "نوع مرکز",
+  "cowm.filter_warehouses": "فیلتر انبار...",
+  "cowm.no_customer_accounts_found": "مشتری مطابقی یافت نشد.",
+  "cowm.no_warehouses_match": "هیچ انباری با جستجو مطابقت ندارد",
+  "cowm.order_active_customer": "مشتری سفارش",
+  "cowm.other_warehouse_address_label": "نشانی تفصیلی (قطعه / خیابان / دروازه)",
+  "cowm.other_warehouse_label": "سایر / شخص ثالث",
+  "cowm.other_warehouse_name_label": "نام انبار / محوطه",
+  "cowm.other_warehouse_title": "انبار دیگر",
+  "cowm.other_wh_address_ph": "شماره قطعه، خیابان، دروازه / محدوده بندر",
+  "cowm.other_wh_desc": "محوطه شخص ثالث، پایانه بندری یا دپوی سفارشی",
+  "cowm.other_wh_name_ph": "مثلاً محوطه لجستیک الفلاح، دروازه 4",
+  "cowm.own_company_warehouse": "انبار شرکت",
+  "cowm.own_warehouse_title": "انبار خودی",
+  "cowm.registered_destination_address": "مرکز مقصد مشتری برای تحویل و تخلیه.",
+  "cowm.responsible_person": "مسئول مرکز",
+  "cowm.search_customer_accounts_ph": "جستجوی مشتری با نام، کد، شرکت، شهر...",
+  "cowm.select_company_warehouse_dropdown": "حساب / مرکز انبار شرکت",
+  "cowm.select_customer_facility_label": "انتخاب مرکز مشتری / حساب",
+  "cowm.select_warehouse_location": "انتخاب موقعیت انبار",
+  "cowm.selected_source": "منبع",
+  "cowm.verified_client": "مشتری ثبت‌شده",
+  "cowm.warehouse_address": "نشانی کامل مرکز",
+  "cowm.warehouse_modal_desc": "مرکز انباری را که بار در آن ذخیره یا تحویل می‌شود تنظیم کنید.",
+  "cowm.warehouse_remarks": "دستورالعمل جابه‌جایی / یادداشت ورود دروازه",
+  "cowm.warehouse_remarks_ph": "مثلاً باسکول لازم است، جرثقیل تخلیه در اسکله",
 };
 
 const ps: Dict = {
@@ -149210,6 +149490,62 @@ const ps: Dict = {
   "psj.st_not_loaded": "لا بار شوی نه دی",
   "psj.st_partial": "نیمه پلورل شوی",
   "psj.st_sold_out": "بشپړ پلورل شوی (صفر بیلانس)",
+  "cowm.active": "فعال",
+  "cowm.cancel": "لغوه کړئ",
+  "cowm.loading": "ګودامونه بارېږي...",
+  "cowm.adhoc_saved": "په امر کې خوندي",
+  "cowm.adhoc_yard_preview": "لنډمهاله / د دریم اړخ بهرنۍ تسهیلات",
+  "cowm.apply_customer_address": "ثبت شوی پته وکاروئ",
+  "cowm.apply_warehouse_location": "د ګودام ځای ومنئ",
+  "cowm.close": "بندول",
+  "cowm.company_wh_desc": "د DGT له مرکزي یا څانګې د ګودام ماسټر څخه",
+  "cowm.contact": "اړیکه",
+  "cowm.contact_line": "د اړیکې کرښه",
+  "cowm.contact_mobile": "د اړیکې موبایل / واټساپ",
+  "cowm.other_contact_mobile": "د اړیکې موبایل / تلیفون",
+  "cowm.contact_mobile_ph": "+971 50 ... / +92 300 ...",
+  "cowm.contact_person": "د اړیکې شخص / د ځای مسؤل",
+  "cowm.other_contact_person": "د اړیکې شخص / د یارډ مسؤل",
+  "cowm.contact_person_ph": "لکه طارق خان",
+  "cowm.customer_address_ph": "بشپړه پته / پلاټ / د دروازې شمېره",
+  "cowm.customer_facility_name": "د پېرودونکي د تسهیلاتو / یارډ نوم",
+  "cowm.customer_facility_preview": "د پېرودونکي ثبت شوې تسهیلات",
+  "cowm.customer_registered_address": "د پېرودونکي ثبت شوې پته",
+  "cowm.customer_warehouse_label": "د پېرودونکي ګودام",
+  "cowm.customer_warehouse_title": "د پېرودونکي ګودام",
+  "cowm.customer_wh_desc": "د پېرودونکي حساب شمېرې او ثبت شوې پتې له مخې لټون",
+  "cowm.customer_wh_name_ph": "لکه د پېرودونکي یارډ شمېره 1 (صنعتي سیمه)",
+  "cowm.customers_available": "ثبت شوي پېرودونکي",
+  "cowm.delivery_facility_address": "د تسلیمۍ / تسهیلاتو پته",
+  "cowm.dgt_verified_facility": "د DGT لخوا تایید شوې کارپوریټ زېرمتون تسهیلات",
+  "cowm.enter_adhoc_address": "پورته د بهرني ځای پته او د دروازې د اداره کولو جزییات ولیکئ. دا معلومات مستقیم د دې بار مانیفیسټ ننوتنې کې خوندي کېږي.",
+  "cowm.facilities_available": "شته تسهیلات",
+  "cowm.facility_type": "د تسهیلاتو ډول",
+  "cowm.filter_warehouses": "ګودام فلټر کړئ...",
+  "cowm.no_customer_accounts_found": "هیڅ سمون لرونکی پېرودونکی ونه موندل شو.",
+  "cowm.no_warehouses_match": "له لټون سره هیڅ ګودام سمون نه خوري",
+  "cowm.order_active_customer": "د امر پېرودونکی",
+  "cowm.other_warehouse_address_label": "تفصيلي پته (پلاټ / کوڅه / دروازه)",
+  "cowm.other_warehouse_label": "نور / دریم اړخ",
+  "cowm.other_warehouse_name_label": "د ګودام / یارډ نوم",
+  "cowm.other_warehouse_title": "بل ګودام",
+  "cowm.other_wh_address_ph": "د پلاټ شمېره، کوڅه، دروازه / د بندر سیمه",
+  "cowm.other_wh_desc": "د دریم اړخ دودیز یارډ، د بندر ترمینل یا ډیپو",
+  "cowm.other_wh_name_ph": "لکه د الفلاح لوژستیک یارډ، دروازه 4",
+  "cowm.own_company_warehouse": "د شرکت ګودام",
+  "cowm.own_warehouse_title": "خپل ګودام",
+  "cowm.registered_destination_address": "د تسلیمۍ او خالي کولو لپاره د پېرودونکي د منزل تسهیلات.",
+  "cowm.responsible_person": "د تسهیلاتو مسؤل",
+  "cowm.search_customer_accounts_ph": "پېرودونکی د نوم، کوډ، شرکت، ښار له مخې ولټوئ...",
+  "cowm.select_company_warehouse_dropdown": "د شرکت د ګودام حساب / تسهیلات",
+  "cowm.select_customer_facility_label": "د پېرودونکي / حساب تسهیلات وټاکئ",
+  "cowm.select_warehouse_location": "د ګودام ځای وټاکئ",
+  "cowm.selected_source": "سرچینه",
+  "cowm.verified_client": "ثبت شوی پېرودونکی",
+  "cowm.warehouse_address": "د تسهیلاتو بشپړه پته",
+  "cowm.warehouse_modal_desc": "هغه ګودام تسهیلات تنظیم کړئ چېرته چې بار زېرمه یا تسلیمېږي.",
+  "cowm.warehouse_remarks": "د اداره کولو لارښوونې / د دروازې د ننوتلو یادښتونه",
+  "cowm.warehouse_remarks_ph": "لکه تله ضروري ده، په بندر کې د خالي کولو کرین",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
