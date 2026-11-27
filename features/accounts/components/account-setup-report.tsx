@@ -1,5 +1,8 @@
 "use client";
 
+import { AlRasDemoImport } from "./al-ras-demo-import";
+import { getAppEnvironment } from "@/lib/env/environment";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
@@ -519,6 +522,9 @@ export function AccountSetupReport({
   const reportSeed = filtered[0] ?? rows[0] ?? null;
   
   const isSuperAdminUser = Boolean(sessionInfo?.scopes?.isSuperAdmin);
+  // the demo importer is a TESTING-only tool (no demo data in Production); decided after mount so SSR and client agree
+  const [demoImportAllowed, setDemoImportAllowed] = useState(false);
+  useEffect(() => { setDemoImportAllowed(getAppEnvironment() !== "production"); }, []);
 
   const reportColumns: GenericReportColumn[] = [
     { key: "accountCode", label: t(lang, "asr.col_account_number", "Account Number") },
@@ -955,6 +961,8 @@ export function AccountSetupReport({
           </div>
         </div>
       </div>
+
+      {isSuperAdminUser && demoImportAllowed && <AlRasDemoImport lang={lang} />}
 
       {/* ── 4 KPI SUMMARY CARDS ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">

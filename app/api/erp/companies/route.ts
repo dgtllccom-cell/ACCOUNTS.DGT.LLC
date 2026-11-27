@@ -163,6 +163,7 @@ export async function POST(request: NextRequest) {
         countryBranchId: body.countryBranchId ?? null,
         cityBranchId: body.cityBranchId ?? null,
         isBranchOperative: body.isBranchOperative ?? false,
+        addressCountryId: body.addressCountryId ?? null,
         stateProvinceId: body.stateProvinceId ?? null,
         districtId: body.districtId ?? null,
         cityId: body.cityId ?? null,

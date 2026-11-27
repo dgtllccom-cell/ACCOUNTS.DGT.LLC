@@ -17,6 +17,7 @@ export type CompanyInput = {
   countryBranchId?: string | null;
   cityBranchId?: string | null;
   isBranchOperative?: boolean;
+  addressCountryId?: string | null;
   stateProvinceId?: string | null;
   districtId?: string | null;
   cityId?: string | null;
@@ -55,7 +56,7 @@ export class CompaniesService {
 
   async create(input: CompanyInput, actorId?: string | null) {
     await assertGeoHierarchy({
-      countryId: input.countryId,
+      countryId: input.addressCountryId ?? input.countryId,
       stateProvinceId: input.stateProvinceId,
       districtId: input.districtId,
       cityId: input.cityId,
@@ -73,6 +74,7 @@ export class CompaniesService {
       countryBranchId: input.countryBranchId ?? null,
       cityBranchId: input.cityBranchId ?? null,
       isBranchOperative: input.isBranchOperative ?? false,
+      addressCountryId: input.addressCountryId ?? null,
       stateProvinceId: input.stateProvinceId ?? null,
       districtId: input.districtId ?? null,
       cityId: input.cityId ?? null,
@@ -130,13 +132,19 @@ export class CompaniesService {
     actorId?: string | null
   ) {
     const before = await companiesRepository.getById(id);
-    await assertGeoHierarchy({
-      countryId: "countryId" in input ? input.countryId : before?.country_id ?? null,
-      stateProvinceId: "stateProvinceId" in input ? input.stateProvinceId : before?.state_province_id ?? null,
-      districtId: "districtId" in input ? input.districtId : before?.district_id ?? null,
-      cityId: "cityId" in input ? input.cityId : before?.city_id ?? null,
-      areaLocationId: "areaLocationId" in input ? input.areaLocationId : before?.area_location_id ?? null,
-    });
+    // Unchanged legacy addresses aren't rewritten on unrelated profile edits.
+    const physicalKeys = ["addressCountryId", "stateProvinceId", "districtId", "cityId", "areaLocationId"] as const;
+    if (physicalKeys.some((key) => input[key] !== undefined) ||
+        (input.countryId !== undefined && input.countryId !== before?.country_id && !before?.address_country_id)) {
+      const addressCountryId = input.addressCountryId !== undefined ? input.addressCountryId : before?.address_country_id;
+      await assertGeoHierarchy({
+        countryId: addressCountryId ?? (input.countryId !== undefined ? input.countryId : before?.country_id),
+        stateProvinceId: input.stateProvinceId !== undefined ? input.stateProvinceId : before?.state_province_id,
+        districtId: input.districtId !== undefined ? input.districtId : before?.district_id,
+        cityId: input.cityId !== undefined ? input.cityId : before?.city_id,
+        areaLocationId: input.areaLocationId !== undefined ? input.areaLocationId : before?.area_location_id,
+      });
+    }
     await companiesRepository.update(id, input);
     await companiesRepository.updateLegalProfile(id, pickLegal(input));
     const after = await companiesRepository.getById(id);

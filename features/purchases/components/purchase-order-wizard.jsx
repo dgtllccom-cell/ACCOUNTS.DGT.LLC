@@ -1,4 +1,5 @@
 "use client";
+import { BookingRouteFields } from "@/features/location-master/components/booking-route-fields";
 import { A4DocumentViewer } from "@/components/ui/a4-document-viewer";
 import React, { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -5528,46 +5529,34 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
                                 <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.loading_departure_title", "Loading / Departure")}</h5>
                               </div>
                               <div className="space-y-2">
-                                <div>
-                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.loading_country_label", "1. Loading Country")}</label>
-                                  <SearchableSelect
-                                    value={form.loadingCountry || ""}
-                                    onChange={(val) => {
-                                      if (val === "__ADD_NEW__") {
-                                        handleAddNewLocationItem("country", "loadingCountry");
-                                      } else {
-                                        setValue("loadingCountry", val);
-                                        setValue("originCountry", val);
-                                        setValue("origin", val);
-                                        setValue("loadingPort", "");
-                                        setValue("loadingLocation", "");
-                                      }
-                                    }}
-                                    options={masterCountryOptions.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
-                                    placeholder={t(lang, "purchase.select_country_placeholder", "Select Country")}
-                                    addOptionLabel={t(lang, "purchase.add_new_country_label", "Add New Country")}
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.loading_port_label", "2. Loading Port / Terminal")}</label>
-                                  <SearchableSelect
-                                    value={form.loadingPort || form.airportName || form.loadingBorder || ""}
-                                    onChange={(val) => {
-                                      if (val === "__ADD_NEW__") {
-                                        handleAddNewLocationItem("port", "loadingPort");
-                                      } else {
-                                        setValue("loadingPort", val);
-                                        setValue("loadingLocation", val);
-                                        if (form.shippingMode === "By Air") setValue("airportName", val);
-                                        if (form.shippingMode === "By Road") setValue("loadingBorder", val);
-                                      }
-                                    }}
-                                    options={currentLoadingPorts.map((p, idx) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
-                                    placeholder={t(lang, "purchase.select_port_placeholder", "Select Port")}
-                                    addOptionLabel={t(lang, "purchase.add_new_port_label", "Add New Port")}
-                                    disabled={!form.loadingCountry && currentLoadingPorts.length === 0}
-                                  />
-                                </div>
+                                <BookingRouteFields
+                                  side="loading"
+                                  testId="purchase-booking-loading-route"
+                                  className="space-y-2"
+                                  shippingMode={form.shippingMode || "By Sea"}
+                                  countryLabel={t(lang, "purchase.loading_country_label", "1. Loading Country")}
+                                  value={{
+                                    countryId: form.loadingCountryId || "",
+                                    countryName: form.loadingCountry || form.originCountry || "",
+                                    locationId: form.loadingLocationId || "",
+                                    locationName: form.loadingPort || form.airportName || form.loadingBorder || ""
+                                  }}
+                                  onChange={(leg) => setForm((prev) => {
+                                    const mode = prev.shippingMode || "By Sea";
+                                    const countryChanged = (prev.loadingCountry || prev.originCountry || "") !== leg.countryName;
+                                    return {
+                                      ...prev,
+                                      loadingCountryId: leg.countryId,
+                                      loadingCountry: leg.countryName,
+                                      ...(countryChanged ? { originCountry: leg.countryName, origin: leg.countryName } : {}),
+                                      loadingLocationId: leg.locationId,
+                                      loadingPort: leg.locationName,
+                                      loadingLocation: leg.locationName,
+                                      ...(mode === "By Air" ? { airportName: leg.locationName } : {}),
+                                      ...(mode === "By Road" ? { loadingBorder: leg.locationName } : {})
+                                    };
+                                  })}
+                                />
                                 <div>
                                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.loading_date_label", "3. Loading Date")}</label>
                                   <input
@@ -5587,48 +5576,36 @@ export function PurchaseOrderWizard({ session, startOnForm = false }) {
                                 <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.receiving_arrival_title", "Receiving / Arrival")}</h5>
                               </div>
                               <div className="space-y-2">
-                                <div>
-                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.receiving_country_label", "1. Receiving Country")}</label>
-                                  <SearchableSelect
-                                    value={form.receivingCountry || form.destinationCountry || form.receivedCountry || ""}
-                                    onChange={(val) => {
-                                      if (val === "__ADD_NEW__") {
-                                        handleAddNewLocationItem("country", "receivingCountry");
-                                      } else {
-                                        setValue("receivingCountry", val);
-                                        setValue("receivedCountry", val);
-                                        setValue("destinationCountry", val);
-                                        setValue("receivingPort", "");
-                                        setValue("destinationPort", "");
-                                        setValue("receivedPort", "");
-                                      }
-                                    }}
-                                    options={masterCountryOptions.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
-                                    placeholder={t(lang, "purchase.select_country_placeholder", "Select Country")}
-                                    addOptionLabel={t(lang, "purchase.add_new_country_label", "Add New Country")}
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.receiving_port_label", "2. Receiving Port / Terminal")}</label>
-                                  <SearchableSelect
-                                    value={form.receivingPort || form.destinationPort || form.receivedPort || ""}
-                                    onChange={(val) => {
-                                      if (val === "__ADD_NEW__") {
-                                        handleAddNewLocationItem("port", "receivingPort");
-                                      } else {
-                                        setValue("receivingPort", val);
-                                        setValue("destinationPort", val);
-                                        setValue("receivedPort", val);
-                                        if (form.shippingMode === "By Air") setValue("destinationAirportName", val);
-                                        if (form.shippingMode === "By Road") setValue("receivingBorder", val);
-                                      }
-                                    }}
-                                    options={currentReceivedPorts.map((p, idx) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
-                                    placeholder={t(lang, "purchase.select_port_placeholder", "Select Port")}
-                                    addOptionLabel={t(lang, "purchase.add_new_port_label", "Add New Port")}
-                                    disabled={!(form.receivingCountry || form.destinationCountry || form.receivedCountry) && currentReceivedPorts.length === 0}
-                                  />
-                                </div>
+                                <BookingRouteFields
+                                  side="receiving"
+                                  testId="purchase-booking-receiving-route"
+                                  className="space-y-2"
+                                  shippingMode={form.shippingMode || "By Sea"}
+                                  countryLabel={t(lang, "purchase.receiving_country_label", "1. Receiving Country")}
+                                  value={{
+                                    countryId: form.receivedCountryId || "",
+                                    countryName: form.receivingCountry || form.destinationCountry || form.receivedCountry || "",
+                                    locationId: form.receivedLocationId || "",
+                                    locationName: form.receivingPort || form.destinationPort || form.receivedPort || ""
+                                  }}
+                                  onChange={(leg) => setForm((prev) => {
+                                    const mode = prev.shippingMode || "By Sea";
+                                    return {
+                                      ...prev,
+                                      receivedCountryId: leg.countryId,
+                                      receivingCountry: leg.countryName,
+                                      receivedCountry: leg.countryName,
+                                      destinationCountry: leg.countryName,
+                                      receivedLocationId: leg.locationId,
+                                      receivingPort: leg.locationName,
+                                      destinationPort: leg.locationName,
+                                      receivedPort: leg.locationName,
+                                      receivedPortName: leg.locationName,
+                                      ...(mode === "By Air" ? { destinationAirportName: leg.locationName } : {}),
+                                      ...(mode === "By Road" ? { receivingBorder: leg.locationName } : {})
+                                    };
+                                  })}
+                                />
                                 <div>
                                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.receiving_date_label", "3. Receiving Date")}</label>
                                   <input

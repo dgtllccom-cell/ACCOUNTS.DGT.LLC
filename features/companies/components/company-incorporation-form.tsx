@@ -184,6 +184,12 @@ export function CompanyIncorporationForm({
   // location
   const [countries, setCountries] = useState<Array<{ id: string; name: string; currency_code?: string | null }>>([]);
   const [countryId, setCountryId] = useState("");
+  const [addressCountryId, setAddressCountryId] = useState("");
+  const [addressCountryName, setAddressCountryName] = useState("");
+  const [addressLocationEdited, setAddressLocationEdited] = useState(false);
+  const [districtName, setDistrictName] = useState("");
+  const [areaName, setAreaName] = useState("");
+  const [areaId, setAreaId] = useState("");
   const [stateName, setStateName] = useState("");
   const [cityName, setCityName] = useState("");
   // Location Management master ids (Country → State → District → City). Names above are kept for display/back-compat + dedup.
@@ -197,6 +203,7 @@ export function CompanyIncorporationForm({
   const [cityBranches, setCityBranches] = useState<BranchOption[]>([]);
   const [linkedMain, setLinkedMain] = useState<string[]>([]);
   const [linkedCity, setLinkedCity] = useState<string[]>([]);
+  const [branchLinksEdited, setBranchLinksEdited] = useState(false);
   // contacts
   const [contacts, setContacts] = useState<CompanyContactItem[]>([]);
   // save / duplicates
@@ -398,6 +405,14 @@ export function CompanyIncorporationForm({
         setCompanyStatus(c.company_status || "active");
         setBaseCurrency(c.base_currency || "");
         setCountryId(c.country_id || "");
+        // Older records used the operational country for the address hierarchy.
+        const legacyGeo = c.state_province_id || c.district_id || c.city_id || c.area_location_id || c.country_name;
+        setAddressCountryId(c.address_country_id || (legacyGeo ? c.country_id : "") || "");
+        setAddressCountryName(c.country_name || "");
+        setAddressLocationEdited(false);
+        setDistrictName(c.district_name || "");
+        setAreaName(c.area_name || "");
+        setAreaId(c.area_location_id || "");
         setStateName(c.state_name || "");
         setCityName(c.city_name || "");
         setStateProvinceId(c.state_province_id || "");
@@ -485,7 +500,6 @@ export function CompanyIncorporationForm({
       return;
     }
     setSaving(true);
-    const country = countries.find((c) => c.id === countryId);
 
     const primaryReg =
       taxRegs.find((r) => ["license", "registration", "trade_license"].includes(r.type))?.value?.trim() ||
@@ -518,12 +532,18 @@ export function CompanyIncorporationForm({
       companyStatus,
       baseCurrency,
       countryId,
-      countryName: country?.name ?? null,
-      stateName: stateName.trim() || null,
-      cityName: cityName.trim() || null,
-      stateProvinceId: stateProvinceId || null,
-      districtId: districtId || null,
-      cityId: cityId || null,
+      ...(!savedId || addressLocationEdited ? {
+        addressCountryId: addressCountryId || null,
+        countryName: addressCountryName || null,
+        stateName: stateName || null,
+        districtName: districtName || null,
+        cityName: cityName || null,
+        areaName: areaName || null,
+        stateProvinceId: stateProvinceId || null,
+        districtId: districtId || null,
+        cityId: cityId || null,
+        areaLocationId: areaId || null,
+      } : {}),
       address: address.trim() || null,
       zipCode: zipCode.trim() || null,
       isBranchOperative: companyType === "internal",
@@ -535,7 +555,7 @@ export function CompanyIncorporationForm({
       contracts: [],
       acknowledgeDuplicates,
     };
-    if (companyType === "internal") {
+    if (companyType === "internal" && (!savedId || branchLinksEdited)) {
       payload.linkedCountryBranchIds = linkedMain;
       payload.linkedCityBranchIds = linkedCity;
     }
@@ -572,7 +592,7 @@ export function CompanyIncorporationForm({
         natureOfBusiness,
         countryId,
         isBranchOperative: companyType === "internal",
-        country: country?.name ?? "",
+        country: addressCountryName,
         state: stateName,
         city: cityName,
         address,
@@ -613,7 +633,7 @@ export function CompanyIncorporationForm({
     <h2>${esc(s.t("existing_linked", "Existing Linked Companies"))} (${sisters.length})</h2>
     <table class="lnk"><thead><tr><th>${esc(s.t("company_name_lbl", "Company Name"))}</th><th>${esc(s.t("company_code", "Company Code"))}</th><th>${esc(s.t("registration_number", "Registration / License Number"))}</th><th>${esc(s.t("country", "Country"))}</th></tr></thead><tbody>${sistersHtml}</tbody></table>
     <h2>${esc(s.t("new_draft", "New Company Draft"))}</h2>
-    <div class="draft"><table class="grid">${row(s.t("company_name_lbl", "Company Name"), legalName || tradeName)}${row(s.t("nature_label", "Company Type / Business Nature"), natureOfBusiness)}${row(s.t("sum_registrations", "Tax registrations"), String(regCount))}${row(s.t("location", "Location"), [cityName, stateName, countries.find((c) => c.id === countryId)?.name].filter(Boolean).join(", "))}${row(s.t("sum_contacts", "Contact methods"), String(contacts.filter((c) => c.value.trim()).length))}</table></div>
+    <div class="draft"><table class="grid">${row(s.t("company_name_lbl", "Company Name"), legalName || tradeName)}${row(s.t("nature_label", "Company Type / Business Nature"), natureOfBusiness)}${row(s.t("sum_registrations", "Tax registrations"), String(regCount))}${row(s.t("location", "Location"), [cityName, stateName, addressCountryName].filter(Boolean).join(", "))}${row(s.t("sum_contacts", "Contact methods"), String(contacts.filter((c) => c.value.trim()).length))}</table></div>
     ${contactsHtml ? `<h2>${esc(s.t("sec_contact_methods", "Contact Methods"))}</h2><table class="grid">${contactsHtml}</table>` : ""}
     </body></html>`;
     // Prefer a separate window (nicer for "Save as PDF"); fall back to a hidden iframe when
@@ -645,7 +665,7 @@ export function CompanyIncorporationForm({
         iframe.remove();
       }
     }
-  }, [accounts, accountId, countries, owner, sisters, legalName, tradeName, natureOfBusiness, registrationNumber, taxNumber, taxRegs, contacts, cityName, stateName, countryId, savedId, s]);
+  }, [accounts, accountId, countries, owner, sisters, legalName, tradeName, natureOfBusiness, registrationNumber, taxNumber, taxRegs, contacts, cityName, stateName, addressCountryName, savedId, s]);
 
   const branchLinkedElsewhere = (b: BranchOption) => Boolean(b.company_id && b.company_id !== savedId);
 
@@ -1040,7 +1060,7 @@ export function CompanyIncorporationForm({
         <h3 className="mb-3 text-sm font-bold text-slate-900 dark:text-white">{s.t("sec_location", "Country, Address & Branches")}</h3>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <label className={label}>{s.t("country", "Country")} *</label>
+            <label className={label}>{tt("hr.f_assigned_country", "Assigned Country")} *</label>
             <select
               data-testid="country"
               className={field}
@@ -1049,12 +1069,7 @@ export function CompanyIncorporationForm({
                 setCountryId(e.target.value);
                 setLinkedMain([]);
                 setLinkedCity([]);
-                // Reset the location cascade so no stale state/district/city carries across countries.
-                setStateProvinceId("");
-                setDistrictId("");
-                setCityId("");
-                setStateName("");
-                setCityName("");
+                setBranchLinksEdited(true);
               }}
             >
               <option value="">{s.t("select", "— Select —")}</option>
@@ -1064,18 +1079,24 @@ export function CompanyIncorporationForm({
             </select>
           </div>
           <div className="sm:col-span-2">
-            {/* Location Management master: State → District → City cascade from the country above, with built-in "+ New" / Manage links. */}
+            <h4 className={label}>{tt("com.registered_address", "Registered Address")}</h4>
             <LocationHierarchySelect
               lang={s.lang}
-              showCountry={false}
               showDistrict
-              value={{ countryId, stateProvinceId, districtId, cityId }}
+              showArea
+              value={{ countryId: addressCountryId, stateProvinceId, districtId, cityId, areaId }}
               onChange={(next, meta) => {
+                setAddressLocationEdited(true);
+                setAddressCountryId(next.countryId);
+                setAddressCountryName(meta.country?.name || "");
                 setStateProvinceId(next.stateProvinceId);
                 setDistrictId(next.districtId);
                 setCityId(next.cityId);
                 setStateName(meta.state?.name || "");
                 setCityName(meta.city?.name || "");
+                setDistrictName(meta.district?.name || "");
+                setAreaName(meta.area?.name || "");
+                setAreaId(next.areaId || "");
               }}
             />
           </div>
@@ -1101,10 +1122,12 @@ export function CompanyIncorporationForm({
               <div className="grid gap-1.5 sm:grid-cols-2">
                 {[...mainBranches.map((b) => ({ ...b, lvl: "main" as const })), ...cityBranches.map((b) => ({ ...b, lvl: "city" as const }))].map((b) => {
                   const checked = b.lvl === "main" ? linkedMain.includes(b.id) : linkedCity.includes(b.id);
-                  const toggle = () =>
-                    b.lvl === "main"
+                  const toggle = () => {
+                    setBranchLinksEdited(true);
+                    return b.lvl === "main"
                       ? setLinkedMain((p) => (p.includes(b.id) ? p.filter((x) => x !== b.id) : [...p, b.id]))
                       : setLinkedCity((p) => (p.includes(b.id) ? p.filter((x) => x !== b.id) : [...p, b.id]));
+                  };
                   return (
                     <label key={b.id} className="flex cursor-pointer items-start gap-2 rounded-lg border border-slate-200 p-2 text-xs hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
                       <input type="checkbox" data-testid="branch-link" data-branch-id={b.id} className="mt-0.5" checked={checked} onChange={toggle} />
@@ -1335,7 +1358,7 @@ export function CompanyIncorporationForm({
                     <Row k={s.t("company_name_lbl", "Company Name")} v={legalName || tradeName} />
                     <Row k={s.t("nature_label", "Company Type / Business Nature")} v={natureOfBusiness} />
                     <Row k={s.t("sum_registrations", "Tax registrations")} v={String(regCount)} />
-                    <Row k={s.t("location", "Location")} v={[cityName, stateName, countries.find((c) => c.id === countryId)?.name].filter(Boolean).join(", ")} />
+                    <Row k={s.t("location", "Location")} v={[cityName, stateName, addressCountryName].filter(Boolean).join(", ")} />
                     <Row k={s.t("sum_contacts", "Contact methods")} v={String(contacts.filter((c) => c.value.trim()).length)} />
                   </div>
                   {contacts.some((c) => c.value.trim()) && (

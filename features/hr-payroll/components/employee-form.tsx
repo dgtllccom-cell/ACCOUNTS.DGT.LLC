@@ -1,5 +1,7 @@
 "use client";
 
+import { resolveEmployeePerson, employeePersonAddress } from "@/features/hr-payroll/employee-person-address";
+
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
@@ -557,14 +559,13 @@ export function EmployeeForm({
           setLastName(parts.slice(1).join(" ") || "");
         }
         if (p.gender) setGender(p.gender);
-        if (p.country_id && !countryId) setCountryId(p.country_id);
       })
       .catch(() => {});
     return () => { alive = false; };
   }, [personMasterId, lang]);
 
   const selectedPersonObj = useMemo(() => {
-    return loadedPerson || personsList.find((p) => p.id === personMasterId) || null;
+    return resolveEmployeePerson(personMasterId, loadedPerson, personsList);
   }, [loadedPerson, personsList, personMasterId]);
   const selectedCountryObj = useMemo(() => countries.find((c) => c.id === countryId) ?? null, [countries, countryId]);
   const selectedMainBranchObj = useMemo(() => branches.find((b) => b.id === countryBranchId) ?? null, [branches, countryBranchId]);
@@ -685,7 +686,7 @@ export function EmployeeForm({
     try {
       // Persist the structured identity back to the person master (customers) so First/Last/Full
       // Name stay canonical and synced across the selector, wizard, table and Print/PDF (item 4).
-      const personCountryId = selectedPersonObj?.country_id || countryId;
+      const personCountryId = selectedPersonObj?.country_id;
       if (personMasterId && personCountryId && (firstName.trim() || lastName.trim())) {
         try {
           await apiPatch(`/api/erp/customers/${personMasterId}`, {
@@ -818,7 +819,7 @@ export function EmployeeForm({
         mobile: selectedPersonObj?.mobile || null,
         whatsapp: selectedPersonObj?.whatsapp || null,
         email: selectedPersonObj?.email || null,
-        address: selectedPersonObj?.address || null,
+        address: employeePersonAddress(selectedPersonObj),
       },
       scope: {
         countryId: countryId || undefined,
@@ -1718,7 +1719,7 @@ export function EmployeeForm({
                   <div className="flex justify-between"><span className="text-slate-500">{th("Gender")}:</span><span className="font-semibold">{gender || selectedPersonObj?.gender || th("Male")}</span></div>
                   <div className="flex justify-between" dir="ltr"><span className="text-slate-500">{th("Mobile Phone")}:</span><span className="font-mono font-bold text-emerald-600">{selectedPersonObj?.mobile || "-"}</span></div>
                   <div className="flex justify-between" dir="ltr"><span className="text-slate-500">{th("Email Address")}:</span><span className="font-medium text-blue-600 truncate">{selectedPersonObj?.email || "-"}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">{th("Address / City")}:</span><span className="font-medium truncate text-slate-700 dark:text-slate-300">{selectedPersonObj?.address || selectedCityBranchObj?.name || "-"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">{th("Address / City")}:</span><span className="font-medium truncate text-slate-700 dark:text-slate-300">{employeePersonAddress(selectedPersonObj) || "-"}</span></div>
                 </div>
               </div>
 
