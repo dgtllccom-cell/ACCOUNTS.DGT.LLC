@@ -28,6 +28,7 @@ export type BankRecord = {
   currency: string;
   account_status: string;
   country_id: string | null;
+  /** Physical branch-address country; country_id stays the assigned/access country. */
   address_country_id?: string | null;
   state_province_id: string | null;
   district_id: string | null;

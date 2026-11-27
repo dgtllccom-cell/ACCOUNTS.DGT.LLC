@@ -63,6 +63,7 @@ import {
   type LocationCity
 } from "@/features/locations/location-api";
 import { LocationQuickCreateModal } from "@/features/locations/components/location-hierarchy-select";
+import { postalCodeAfterCityChange } from "@/features/locations/address-postal-code";
 import { activeAddressChoices, findAddressDuplicate } from "./account-address-locations";
 import { apiPost, apiPatch } from "@/lib/api/client";
 import { CustomerPicker } from "@/features/customers/components/customer-picker";
@@ -1776,11 +1777,9 @@ export function NewAccountSetup({
   }
 
   function applyAddressCityPostalCode(postalCode: string | null | undefined) {
-    const previousAutomaticCode = autoAddressPostalCode.current;
-    if (addressPostalCode && addressPostalCode !== previousAutomaticCode) return;
-    const next = postalCode || "";
-    autoAddressPostalCode.current = next;
-    setAddressPostalCode(next);
+    const next = postalCodeAfterCityChange(addressPostalCode, autoAddressPostalCode.current, postalCode);
+    autoAddressPostalCode.current = next.suggestion;
+    setAddressPostalCode(next.value);
   }
 
   function selectAddressLocation(kind: "country" | "state" | "city", item: LocationCountry | LocationState | LocationCity) {
@@ -1792,12 +1791,14 @@ export function NewAccountSetup({
         setAddressCountryId(item.id);
         setAddressStateId("");
         setAddressCityId("");
+        applyAddressCityPostalCode(null);
       }
     } else if (kind === "state" && "country_id" in item && !("state_province_id" in item)) {
       setAddressStates((rows) => replace(rows, item));
       if (item.id !== addressStateId) {
         setAddressStateId(item.id);
         setAddressCityId("");
+        applyAddressCityPostalCode(null);
       }
     } else if (kind === "city" && "state_province_id" in item) {
       setAddressCities((rows) => replace(rows, item));
@@ -2940,6 +2941,7 @@ export function NewAccountSetup({
                         setAddressCountryId(val);
                         setAddressStateId("");
                         setAddressCityId("");
+                        applyAddressCityPostalCode(null);
                       }}
                       className={selectClass() + " h-9 text-xs"}
                     >
@@ -2969,6 +2971,7 @@ export function NewAccountSetup({
                         const val = e.target.value;
                         setAddressStateId(val);
                         setAddressCityId("");
+                        applyAddressCityPostalCode(null);
                       }}
                       disabled={!addressCountryId}
                       className={selectClass() + " h-9 text-xs"}

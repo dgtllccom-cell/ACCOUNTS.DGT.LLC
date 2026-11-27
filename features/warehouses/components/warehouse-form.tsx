@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2,
   Globe,
@@ -17,6 +17,8 @@ import {
 } from "@/features/locations/components/location-hierarchy-select";
 import { createWarehouse, updateWarehouse, type WarehouseRecord } from "@/features/warehouses/warehouse-api";
 import { PersonPicker } from "@/components/erp/person-picker";
+import { AssignedCountrySelect } from "@/features/locations/components/assigned-country-select";
+import { physicalAddressCountryId } from "@/lib/locations/physical-address";
 import { apiGet } from "@/lib/api/client";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -51,7 +53,10 @@ type WarehouseFormState = {
   warehouseName: string;
   ownerName: string;
   warehouseType: string;
+  /** Assigned (access-scope) country — never set from the address picker. */
   countryId: string;
+  /** Physical facility address country (Location Management). */
+  addressCountryId: string;
   stateProvinceId: string;
   districtId: string;
   cityId: string;
@@ -66,6 +71,7 @@ const emptyForm: WarehouseFormState = {
   ownerName: "",
   warehouseType: "Normal Storage",
   countryId: "",
+  addressCountryId: "",
   stateProvinceId: "",
   districtId: "",
   cityId: "",
@@ -106,6 +112,11 @@ export function WarehouseForm({
   const [ownerDetails, setOwnerDetails] = useState<any | null>(null);
   const [responsiblePersonId, setResponsiblePersonId] = useState("");
 
+  const isEditMode = Boolean(initialWarehouse?.id);
+  const setAssignedCountry = useCallback((id: string) => {
+    setForm((prev) => (prev.countryId === id ? prev : { ...prev, countryId: id }));
+  }, []);
+
   function set(field: keyof WarehouseFormState, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
@@ -137,7 +148,8 @@ export function WarehouseForm({
       warehouseName: initialWarehouse.warehouse_name || "",
       ownerName: initialWarehouse.owner_name || "",
       warehouseType: initialWarehouse.warehouse_type || "Normal Storage",
-      countryId: initialWarehouse.address_country_id || initialWarehouse.country_id || "",
+      countryId: initialWarehouse.country_id || "",
+      addressCountryId: physicalAddressCountryId(initialWarehouse),
       stateProvinceId: initialWarehouse.state_province_id || "",
       districtId: initialWarehouse.district_id || "",
       cityId: initialWarehouse.city_id || "",
@@ -147,7 +159,7 @@ export function WarehouseForm({
       status: initialWarehouse.status || "Active"
     });
     setLocation({
-      countryId: initialWarehouse.address_country_id || initialWarehouse.country_id || "",
+      countryId: physicalAddressCountryId(initialWarehouse),
       stateProvinceId: initialWarehouse.state_province_id || "",
       districtId: initialWarehouse.district_id || "",
       cityId: initialWarehouse.city_id || "",
@@ -199,7 +211,7 @@ export function WarehouseForm({
       }
       return {
         ...prev,
-        countryId: next.countryId,
+        addressCountryId: next.countryId,
         stateProvinceId: next.stateProvinceId,
         districtId: next.districtId || "",
         cityId: next.cityId,
@@ -209,7 +221,7 @@ export function WarehouseForm({
     });
   }
 
-  const isReady = form.warehouseName && form.warehouseType && form.status;
+  const isReady = form.warehouseName && form.warehouseType && form.status && (isEditMode || form.countryId);
 
   async function handleSave() {
     if (!isReady) {
@@ -225,10 +237,10 @@ export function WarehouseForm({
         owner_person_id: ownerPersonId || null,
         responsible_person_id: responsiblePersonId || null,
         warehouse_type: form.warehouseType,
-        // The address country never rewrites the warehouse's operational country (user country scope, serials).
-        // On create it also seeds it; on edit only address_country_id changes.
-        ...(initialWarehouse?.id ? {} : { country_id: form.countryId || null }),
-        address_country_id: form.countryId || null,
+        // Assigned country is set once at creation; an edit never sends it, so an
+        // address change cannot move the warehouse to another country's scope.
+        ...(isEditMode ? {} : { country_id: form.countryId || null }),
+        address_country_id: form.addressCountryId || null,
         state_province_id: form.stateProvinceId || null,
         district_id: form.districtId || null,
         city_id: form.cityId || null,
@@ -253,7 +265,7 @@ export function WarehouseForm({
           owner_name: form.ownerName,
           warehouse_type: form.warehouseType,
           country_id: form.countryId || null,
-          address_country_id: form.countryId || null,
+          address_country_id: form.addressCountryId || null,
           state_province_id: form.stateProvinceId || null,
           district_id: form.districtId || null,
           city_id: form.cityId || null,
@@ -450,12 +462,26 @@ export function WarehouseForm({
                 <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t(lang, "whf.location_contact")}</h2>
               </div>
 
-              <LocationHierarchySelect
-                value={location}
-                onChange={handleLocationChange}
-                showDistrict={false}
-                showArea={true}
+              <AssignedCountrySelect
+                lang={lang}
+                value={form.countryId}
+                onChange={setAssignedCountry}
+                fixedCountryId={isEditMode ? form.countryId || null : null}
+                locked={isEditMode}
+                fixedCountryName={initialWarehouse?.country_name ?? null}
+                hint={t(lang, "addr.assigned_country_hint", "Assigned country controls access, branch and ledger scope. Changing the address never moves it.")}
               />
+
+              <div className="space-y-2 rounded-md border border-dashed p-3">
+                <p className="text-xs font-semibold">{t(lang, "addr.physical_address_title", "Physical Address (Location Management)")}</p>
+                <p className="text-[11px] text-muted-foreground">{t(lang, "addr.physical_address_hint", "Where the record is physically located. It can be in another country without changing ownership, permissions, currency or ledger.")}</p>
+                <LocationHierarchySelect
+                  value={location}
+                  onChange={handleLocationChange}
+                  showDistrict={false}
+                  showArea={true}
+                />
+              </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">{t(lang, "cbs.full_address")}</Label>

@@ -8,7 +8,9 @@ import { allocateFormSerials } from "@/lib/services/form-serials";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { ApiClientError, rethrowIfNextControlFlow } from "@/lib/api/response";
+import { assertGeoHierarchy } from "@/lib/services/geo-hierarchy-validator";
+import { geographyCountryForValidation } from "@/lib/services/physical-address-scope";
 
 /**
  * Warehouses master — list + create (secure-by-default).
@@ -60,6 +62,24 @@ export async function POST(req: Request) {
     if (!warehouseName) return NextResponse.json({ error: "warehouse_name is required" }, { status: 400 });
 
     const countryId = body.country_id ?? (session.isSuperAdmin ? null : session.countryIds?.[0] ?? null);
+    // country_id is the warehouse's ASSIGNED (access-scope) country: a non-super-admin may
+    // only file a warehouse under a country they are assigned to. The facility's physical
+    // address (address_country_id) may be anywhere in Location Management.
+    if (!session.isSuperAdmin && countryId && !session.countryIds.includes(countryId)) {
+      return NextResponse.json({ error: "Not authorized for this country" }, { status: 403 });
+    }
+    const addressCountryId: string | null = body.address_country_id || null;
+    try {
+      await assertGeoHierarchy({
+        countryId: geographyCountryForValidation(addressCountryId, countryId),
+        stateProvinceId: body.state_province_id || null,
+        districtId: body.district_id || null,
+        cityId: body.city_id || null,
+      });
+    } catch (geoError) {
+      if (geoError instanceof ApiClientError) return NextResponse.json({ error: geoError.message }, { status: geoError.status });
+      throw geoError;
+    }
 
     // Cast to any: the generated Supabase types don't yet know about warehouses.
     // owner_person_id/responsible_person_id (Person Master Phase 2 migration) —
@@ -70,8 +90,7 @@ export async function POST(req: Request) {
       .from("warehouses")
       .insert({
         country_id: countryId,
-        // Physical address country (Location Management Master) — separate from the operational country_id above
-        address_country_id: body.address_country_id ?? body.country_id ?? null,
+        address_country_id: addressCountryId,
         state_province_id: body.state_province_id ?? null,
         district_id: body.district_id ?? null,
         city_id: body.city_id ?? null,

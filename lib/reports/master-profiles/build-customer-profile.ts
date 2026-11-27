@@ -38,6 +38,7 @@ export type CustomerProfileRecord = {
   district_name?: string | null;
   city_name?: string | null;
   country_name?: string | null;
+  address_country_name?: string | null;
   country_id?: string | null;
   country_branch_id?: string | null;
   city_branch_id?: string | null;
@@ -83,7 +84,7 @@ export function buildCustomerProfileConfig(
     }),
     section(tt("pdoc.sec_location", "Location & Branch"), (rows) => {
       pushRow(rows, tt("pdoc.address", "Address"), r.address);
-      pushRow(rows, tt("pdoc.country", "Country"), r.country_name || branding.countryName);
+      pushRow(rows, tt("pdoc.country", "Country"), r.address_country_name ?? (r.country_name || branding.countryName));
       pushRow(rows, tt("pdoc.state_province", "State / Province"), r.state_province_name);
       pushRow(rows, tt("pdoc.district", "District"), r.district_name);
       pushRow(rows, tt("pdoc.city", "City"), r.city_name);
