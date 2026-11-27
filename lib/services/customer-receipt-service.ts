@@ -1,3 +1,4 @@
+import { assertPayableBankId } from "@/lib/services/payment-bank-guard";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { postRoznamchaWithErpSession } from "@/app/api/erp/roznamcha/posting";
 import { ensureCustomerShippingLedger, ensureUnallocatedSuspenseLedger } from "@/lib/services/clearing-bill-customer-charge-service";
@@ -48,6 +49,7 @@ function assertAllocationsBalance(input: CreateCustomerReceiptInput) {
 export async function createReceipt(input: CreateCustomerReceiptInput) {
   assertAllocationsBalance(input);
   const receipt = await withLocalPg(async (sql) => {
+    await assertPayableBankId(input.bankId, sql);
     await sql`BEGIN`;
     try {
       const receiptRows = await sql`
@@ -120,6 +122,7 @@ export async function postReceipt(
 
   if (!receipt) throw new Error("Receipt not found.");
   if (receipt.status === "posted") throw new Error("This receipt is already posted.");
+  await assertPayableBankId(receipt.bank_id);
   if (Number(receipt.amount) <= 0) throw new Error("A zero-amount receipt cannot be posted.");
 
   const creditLines: Array<{ ledgerId: string; amount: number; description: string }> = [];

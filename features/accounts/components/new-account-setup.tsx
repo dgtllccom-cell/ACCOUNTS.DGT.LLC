@@ -649,21 +649,30 @@ export function NewAccountSetup({
           const name = json?.data?.customer?.customer_name ?? json?.customer?.customer_name ?? json?.data?.customer_name ?? "";
           if (!cancelled && name) setLinkedCustomerName(name);
         }
-        if (acc.company_id) {
-          const json = await fetch(`/api/erp/companies/${acc.company_id}?lang=${lang}`).then((r) => r.json()).catch(() => null);
-          const name = json?.company?.name ?? json?.company?.legal_name ?? "";
-          if (!cancelled && name) {
-            setLinkedCompanyName(name);
-            setLinkedCompanies((prev) => prev.map((c) => (c.id === acc.company_id ? { ...c, name } : c)));
-          }
-        }
-        if (acc.bank_id) {
-          const json = await fetch(`/api/erp/banks/${acc.bank_id}?lang=${lang}`).then((r) => r.json()).catch(() => null);
-          const name = json?.data?.bank?.bank_name ?? json?.bank?.bank_name ?? json?.bank_name ?? "";
-          if (!cancelled && name) {
-            setLinkedBankName(name);
-            setLinkedBanks((prev) => prev.map((b) => (b.id === acc.bank_id ? { ...b, name } : b)));
-          }
+        // Refresh all saved labels, by ID, without changing unsaved selections or ordering.
+        const companyNames = new Map<string, string>(
+          (Array.isArray(acc.companies) ? acc.companies : [])
+            .filter((row: any) => row.id && row.name)
+            .map((row: any) => [row.id, row.name])
+        );
+        const bankNames = new Map<string, string>(
+          (Array.isArray(acc.banks) ? acc.banks : [])
+            .filter((row: any) => row.id && row.name)
+            .map((row: any) => [row.id, row.name])
+        );
+        if (!cancelled) {
+          setLinkedCompanies((prev) => prev.map((row) => {
+            const name = companyNames.get(row.id);
+            return name ? { ...row, name } : row;
+          }));
+          setLinkedBanks((prev) => prev.map((row) => {
+            const name = bankNames.get(row.id);
+            return name ? { ...row, name } : row;
+          }));
+          const companyName = companyNames.get(linkedCompanyId ?? "");
+          const bankName = bankNames.get(linkedBankId ?? "");
+          if (companyName) setLinkedCompanyName(companyName);
+          if (bankName) setLinkedBankName(bankName);
         }
         if (acc.shipping_line_id) {
           const json = await fetch(`/api/erp/shipping-lines/${acc.shipping_line_id}?lang=${lang}`).then((r) => r.json()).catch(() => null);
@@ -758,7 +767,8 @@ export function NewAccountSetup({
               fetch(`/api/erp/companies/${acc.company_id}?lang=${lang}`)
                 .then((r) => r.json())
                 .then((json) => {
-                  const name = json?.company?.name ?? json?.company?.legal_name ?? "";
+                  const company = json?.data?.company ?? json?.company;
+                  const name = company?.name ?? company?.legal_name ?? "";
                   if (!cancelled) {
                     setLinkedCompanyName(name);
                     setLinkedCompanies([{ id: acc.company_id, name, isPrimary: true }]);
@@ -3296,6 +3306,7 @@ export function NewAccountSetup({
                       value={pickerCompanyId}
                       onValueChange={(val) => {
                         setPickerCompanyId(val || "");
+                        setPickerCompanyRecord(null);
                         if (!val) {
                           setPickerCompanyRecord(null);
                           return;
@@ -3303,7 +3314,7 @@ export function NewAccountSetup({
                         fetch(`/api/erp/companies/${val}?lang=${lang}`)
                           .then((r) => r.json())
                           .then((json) => {
-                            const comp = json?.company || json?.data || null;
+                            const comp = json?.data?.company ?? json?.company ?? null;
                             setPickerCompanyRecord(comp);
                           })
                           .catch(() => null);
@@ -3315,7 +3326,7 @@ export function NewAccountSetup({
                   <Button
                     type="button"
                     onClick={() => {
-                      if (!pickerCompanyId) return;
+                      if (!pickerCompanyId || pickerCompanyRecord?.id !== pickerCompanyId) return;
                       if (linkedCompanies.some((c) => c.id === pickerCompanyId)) {
                         setMessage(lang === "ur" ? "یہ کمپنی پہلے ہی شامل ہے!" : "Company already linked!");
                         return;
@@ -3348,7 +3359,7 @@ export function NewAccountSetup({
                       setPickerCompanyRecord(null);
                       setMessage("");
                     }}
-                    disabled={!pickerCompanyId}
+                    disabled={!pickerCompanyId || pickerCompanyRecord?.id !== pickerCompanyId}
                     className="h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs shrink-0 cursor-pointer disabled:opacity-50"
                   >
                     <Plus className="h-4 w-4 mr-1.5" />
@@ -3530,6 +3541,8 @@ export function NewAccountSetup({
                     <BankPicker
                       label={getLabel("bankMaster", lang)}
                       value={pickerBankId}
+                      searchAll
+                      includeDemoBanks
                       onValueChange={(val) => {
                         setPickerBankId(val || "");
                         if (!val) {
@@ -3550,7 +3563,7 @@ export function NewAccountSetup({
                   <Button
                     type="button"
                     onClick={() => {
-                      if (!pickerBankId) return;
+                      if (!pickerBankId || pickerBankRecord?.id !== pickerBankId) return;
                       if (linkedBanks.some((b) => b.id === pickerBankId)) {
                         setMessage(lang === "ur" ? "یہ بینک پہلے ہی شامل ہے!" : "Bank already linked!");
                         return;
@@ -3584,7 +3597,7 @@ export function NewAccountSetup({
                       setPickerBankRecord(null);
                       setMessage("");
                     }}
-                    disabled={!pickerBankId}
+                    disabled={!pickerBankId || pickerBankRecord?.id !== pickerBankId}
                     className="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs shrink-0 cursor-pointer disabled:opacity-50"
                   >
                     <Plus className="h-4 w-4 mr-1.5" />

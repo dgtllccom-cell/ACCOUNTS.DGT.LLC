@@ -14,6 +14,7 @@ import { storableLinkedMaster } from "@/lib/services/account-linked-masters";
 import { allowedRowDomains, sqlRowDomainCondition } from "@/lib/permissions/domain-scope";
 import { accountNeedsApprovalChain, initialChainState } from "@/lib/approval/account-approval-chain";
 
+import { isQuettaDemoReference, validQuettaDemoFields } from "@/lib/quetta-demo-account";
 import { alRasDemoReference, demoBranchCode, demoCountry, demoRowSchema } from "@/lib/accounts-demo-import";
 
 function isUuid(value: string | null | undefined) {
@@ -595,6 +596,16 @@ export async function POST(request: NextRequest) {
 
     const demoRef = body.manualReferenceNumber?.toUpperCase() ?? "";
     const reservedDemoRef = alRasDemoReference.test(demoRef);
+    const quettaDemoRef = isQuettaDemoReference(demoRef);
+    if (quettaDemoRef) {
+      if (requestedDomain !== "business") {
+        throw new ApiClientError("This Quetta demo batch must stay in Business.", { status: 403, code: "DEMO_FORBIDDEN" });
+      }
+      if (!validQuettaDemoFields(body)) {
+        throw new ApiClientError("Use the approved Quetta PKR profile with one customer, company and bank, full address and contacts, and zero opening balance.", { status: 422, code: "QUETTA_DEMO_FIELDS" });
+      }
+    }
+
     if (reservedDemoRef) {
       if (!session.isSuperAdmin || requestedDomain !== "business") {
         throw new ApiClientError("Only Business-authorized Super Admins may create these demo accounts.", { status: 403, code: "DEMO_FORBIDDEN" });
@@ -666,6 +677,41 @@ export async function POST(request: NextRequest) {
           throw new ApiClientError(
             "The authenticated user has no profile record. Ask an administrator to provision the user before creating an account."
           );
+        }
+
+        if (quettaDemoRef) {
+          // Same normalized reference is serialized, including competing requests and retries.
+          await tx`select pg_advisory_xact_lock(hashtext(${"account_demo_ref:" + demoRef}));`;
+          const duplicate = await tx`
+            select 1 from public.enterprise_accounts where upper(btrim(manual_reference_number)) = ${demoRef} limit 1
+          `;
+          if (duplicate.length) {
+            throw new ApiClientError("This Quetta reference already exists; reopen it instead of creating another account.", { status: 409, code: "DEMO_REFERENCE_EXISTS" });
+          }
+          const target = await tx`
+            select cb.id from public.city_branches cb
+            join public.countries operating on operating.id = cb.country_id
+            where cb.id = ${body.cityBranchId ?? null}::uuid
+              and cb.country_branch_id = ${body.countryBranchId ?? null}::uuid
+              and cb.country_id = ${body.countryId ?? null}::uuid
+              and upper(cb.code) = 'PAK-QUE-001' and upper(cb.local_currency) = 'PKR'
+              and cb.status = 'active' and cb.deleted_at is null
+              and upper(operating.iso2) = 'PK' and operating.deleted_at is null
+          `;
+          if (target.length !== 1) {
+            throw new ApiClientError("The approved Pakistan Business Quetta PKR branch is unavailable.", { status: 422, code: "QUETTA_DEMO_TARGET" });
+          }
+          const address = await tx`
+            select ci.id from public.cities ci
+            join public.states_provinces st on st.id = ci.state_province_id
+            join public.countries physical on physical.id = ci.country_id
+            where ci.id = ${body.addressCityId ?? null}::uuid
+              and st.id = ${body.addressStateId ?? null}::uuid and st.country_id = physical.id
+              and physical.id = ${body.addressCountryId ?? null}::uuid and physical.deleted_at is null
+          `;
+          if (address.length !== 1) {
+            throw new ApiClientError("Select matching country, state and city from Location Management.", { status: 422, code: "QUETTA_DEMO_ADDRESS" });
+          }
         }
 
         if (reservedDemoRef) {
@@ -829,6 +875,18 @@ export async function POST(request: NextRequest) {
 
         let validBankId = null;
         const targetBankId = body.bankId || (body.linkedBanks?.find((b: any) => b.isPrimary)?.id || body.linkedBanks?.[0]?.id || body.bankIds?.[0]) || null;
+        if (quettaDemoRef) {
+          const bank = await tx`
+            select id from public.banks
+            where id = ${targetBankId}::uuid and deleted_at is null and is_active = false
+              and upper(btrim(account_number)) = ${'DEMO-NONPAY-PK-QTA-' + String(Number(demoRef.slice(5)) - 500).padStart(4, '0')}
+              and nullif(btrim(iban_number), '') is null and nullif(btrim(swift_bic), '') is null
+          `;
+          const company = await tx`select id from public.companies where id = ${targetCompanyId}::uuid and deleted_at is null limit 1`;
+          if (!validCustomerId || company.length !== 1 || bank.length !== 1) {
+            throw new ApiClientError("The linked customer, company or non-payable Quetta bank could not be verified.", { status: 422, code: "QUETTA_DEMO_LINKS" });
+          }
+        }
         if (targetBankId) {
           try {
             const rows = await tx`select id from banks where id = ${targetBankId}::uuid limit 1;`;
@@ -1195,7 +1253,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Without the PostgreSQL transaction there is no protected demo retry path.
-    if (reservedDemoRef) {
+    if (reservedDemoRef || quettaDemoRef) {
       throw new ApiClientError("Demo import requires the transactional PostgreSQL connection.", { status: 503, code: "DEMO_DB_REQUIRED" });
     }
 
