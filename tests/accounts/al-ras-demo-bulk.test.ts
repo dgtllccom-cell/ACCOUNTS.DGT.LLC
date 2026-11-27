@@ -96,3 +96,17 @@ describe("Al Ras demo import", () => {
     expect(stub.create).toHaveBeenCalledTimes(2);
   });
 });
+
+describe("Al Ras demo import is TESTING-only", () => {
+  const saved = { ...process.env };
+  it("refuses before touching the database when connected to Production", async () => {
+    process.env.DATABASE_URL = "postgresql://postgres.inmayhrxucimxqhgseqi:x@aws-0.pooler.supabase.com:6543/postgres";
+    try {
+      const res = await processAlRasDemoBulk(session, request("create"));
+      expect(res.status).toBe(403);
+      expect((await res.json()).error?.code ?? "").toContain("DEMO_NOT_IN_PRODUCTION");
+      expect(stub.query).not.toHaveBeenCalled();
+      expect(stub.create).not.toHaveBeenCalled();
+    } finally { process.env = { ...saved }; }
+  });
+});
