@@ -22,6 +22,7 @@ import {
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { fetchWarehouses, type WarehouseRecord } from "@/features/warehouses/warehouse-api";
+import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
 
 export type WarehouseSelectionData = {
   warehouseSourceType: "company_warehouse" | "customer_warehouse" | "other";
@@ -29,6 +30,10 @@ export type WarehouseSelectionData = {
   warehouseAccountId?: string;
   warehouseName: string;
   warehouseAddressText: string;
+  /** customer premises / third-party facility location from the Location Management master */
+  facilityCountryId?: string;
+  facilityStateProvinceId?: string;
+  facilityCityId?: string;
   contactPerson?: string;
   contactPhone?: string;
   remarks?: string;
@@ -44,6 +49,9 @@ interface CustomerOrderWarehouseModalProps {
     warehouseAccountId?: string;
     warehouseName?: string;
     warehouseAddressText?: string;
+    facilityCountryId?: string;
+    facilityStateProvinceId?: string;
+    facilityCityId?: string;
     contactPerson?: string;
     contactPhone?: string;
     remarks?: string;
@@ -163,6 +171,34 @@ export function CustomerOrderWarehouseModal({
     initialType === "other" ? initialValues.contactPhone || "" : ""
   );
   const [otherRemarks, setOtherRemarks] = useState(initialValues.remarks || "");
+  // Delivery / facility location (customer premises or third-party facility): the shared Location Management master
+  const [facilityLoc, setFacilityLoc] = useState({
+    countryId: initialValues.facilityCountryId || "",
+    stateProvinceId: initialValues.facilityStateProvinceId || "",
+    districtId: "",
+    cityId: initialValues.facilityCityId || "",
+  });
+  const [facilityNames, setFacilityNames] = useState<{ city: string; country: string }>({ city: "", country: "" });
+  const facilityPlace = [facilityNames.city, facilityNames.country].filter(Boolean).join(", ");
+  const withPlace = (street: string) => {
+    const s = street.trim();
+    if (!facilityPlace) return s;
+    return s && s.toLowerCase().includes(facilityNames.city.toLowerCase()) ? s : [s, facilityPlace].filter(Boolean).join(", ");
+  };
+  const facilityIds = { facilityCountryId: facilityLoc.countryId, facilityStateProvinceId: facilityLoc.stateProvinceId, facilityCityId: facilityLoc.cityId };
+  const facilityPicker = (testId: string) => (
+    <div data-testid={testId} className="sm:col-span-2">
+      <LocationHierarchySelect
+        lang={lang}
+        showDistrict={false}
+        value={facilityLoc}
+        onChange={(v, meta) => {
+          setFacilityLoc({ countryId: v.countryId, stateProvinceId: v.stateProvinceId, districtId: "", cityId: v.cityId });
+          setFacilityNames({ city: meta.city?.name ?? "", country: meta.country?.name ?? "" });
+        }}
+      />
+    </div>
+  );
 
   // Filtered company warehouses for dropdown & search
   const filteredCompanyWarehouses = useMemo(() => {
@@ -233,7 +269,8 @@ export function CustomerOrderWarehouseModal({
         warehouseId: "",
         warehouseAccountId: selectedCustAccountId,
         warehouseName: custWhName.trim() || tt("customer_warehouse_title", "Customer Warehouse"),
-        warehouseAddressText: custWhAddress.trim() || "Customer Premises / Yard",
+        warehouseAddressText: withPlace(custWhAddress) || "Customer Premises / Yard",
+        ...facilityIds,
         contactPerson: custContactPerson.trim(),
         contactPhone: custContactPhone.trim(),
       });
@@ -242,7 +279,8 @@ export function CustomerOrderWarehouseModal({
         warehouseSourceType: "other",
         warehouseId: "",
         warehouseName: otherWhName.trim() || tt("other_warehouse_title", "Other Warehouse"),
-        warehouseAddressText: otherWhAddress.trim() || "Third-Party Facility",
+        warehouseAddressText: withPlace(otherWhAddress) || "Third-Party Facility",
+        ...facilityIds,
         contactPerson: otherContactPerson.trim(),
         contactPhone: otherContactPhone.trim(),
         remarks: otherRemarks.trim(),
@@ -602,6 +640,7 @@ export function CustomerOrderWarehouseModal({
                     className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
+                {facilityPicker("customer-facility-location")}
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                     {tt("delivery_facility_address", "Delivery / Facility Address")} *
@@ -680,6 +719,7 @@ export function CustomerOrderWarehouseModal({
                     className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold dark:border-slate-700 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
+                {facilityPicker("other-facility-location")}
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                     {tt("other_warehouse_address_label", "Location / Port / Full Address")} *

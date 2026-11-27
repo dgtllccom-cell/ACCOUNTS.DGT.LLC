@@ -399,6 +399,10 @@ export type CustomerOrderGoodsItem = {
   warehouseAccountId?: string;
   warehouseName: string;
   warehouseAddressText: string;
+  /** delivery / facility location ids from the Location Management master */
+  facilityCountryId?: string;
+  facilityStateProvinceId?: string;
+  facilityCityId?: string;
   contactPerson?: string;
   contactPhone?: string;
   photoUrl?: string;
@@ -2374,6 +2378,9 @@ export function CustomerOrderManagementView() {
               warehouseId: row.warehouse_id || "",
               warehouseName: row.warehouse_name || "",
               warehouseAddressText: row.source_location_text || "",
+              facilityCountryId: row.facility_country_id || "",
+              facilityStateProvinceId: row.facility_state_province_id || "",
+              facilityCityId: row.facility_city_id || "",
               remarks: row.remarks || ""
             };
           })
@@ -2865,6 +2872,9 @@ export function CustomerOrderManagementView() {
         warehouseId: g.warehouseId || formData.loading_source_warehouse_id || null,
         warehouseName: g.warehouseName || (g.warehouseSourceType === "customer_warehouse" ? "Customer Warehouse" : "Company Warehouse"),
         sourceLocationText: g.warehouseAddressText || g.warehouseName || formData.loading_source_name || null,
+        facilityCountryId: g.warehouseSourceType === "company_warehouse" ? null : g.facilityCountryId || null,
+        facilityStateProvinceId: g.warehouseSourceType === "company_warehouse" ? null : g.facilityStateProvinceId || null,
+        facilityCityId: g.warehouseSourceType === "company_warehouse" ? null : g.facilityCityId || null,
         quantity: Number(g.quantity) || 0,
         unit: g.unit || "Bags",
         remarks: `${g.goodsName || 'Goods'}${g.kgPerQty ? ` (${g.kgPerQty} kg/${g.unit || 'unit'})` : ""} • Total: ${g.totalKg || 0} kg`
@@ -10278,6 +10288,9 @@ function Step1BookingCustomer({
           warehouseAccountId: draftGoodsItem.warehouseAccountId,
           warehouseName: draftGoodsItem.warehouseName,
           warehouseAddressText: draftGoodsItem.warehouseAddressText,
+          facilityCountryId: draftGoodsItem.facilityCountryId,
+          facilityStateProvinceId: draftGoodsItem.facilityStateProvinceId,
+          facilityCityId: draftGoodsItem.facilityCityId,
           contactPerson: draftGoodsItem.contactPerson,
           contactPhone: draftGoodsItem.contactPhone,
           remarks: draftGoodsItem.remarks
@@ -10288,6 +10301,9 @@ function Step1BookingCustomer({
           if (data.warehouseAccountId) handleDraftGoodsChange("warehouseAccountId", data.warehouseAccountId);
           handleDraftGoodsChange("warehouseName", data.warehouseName);
           handleDraftGoodsChange("warehouseAddressText", data.warehouseAddressText);
+          handleDraftGoodsChange("facilityCountryId", data.facilityCountryId || "");
+          handleDraftGoodsChange("facilityStateProvinceId", data.facilityStateProvinceId || "");
+          handleDraftGoodsChange("facilityCityId", data.facilityCityId || "");
           if (data.contactPerson) handleDraftGoodsChange("contactPerson", data.contactPerson);
           if (data.contactPhone) handleDraftGoodsChange("contactPhone", data.contactPhone);
           if (data.remarks) handleDraftGoodsChange("remarks", data.remarks);

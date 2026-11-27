@@ -6,6 +6,9 @@
 // inter_country_transfers, user_tasks, user_task_notifications, erp_activity_events.
 // Single Order ID and serials throughout all stages.
 
+// delivery / facility location ids (Location Management master) carried on each goods line
+const facilityUuid = (v: unknown) => (typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v.trim()) ? v.trim() : null);
+
 export const dynamic = "force-dynamic";
 
 import { NextResponse, type NextRequest } from "next/server";
@@ -876,12 +879,16 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
           await sql`
             insert into public.clearing_customer_order_loading_allocations (
               order_id, row_serial, warehouse_id, source_location_text,
+              facility_country_id, facility_state_province_id, facility_city_id,
               quantity, unit, remarks, created_at, updated_at
             ) values (
               ${id}::uuid,
               ${i + 1},
               ${g.warehouseId || null}::uuid,
               ${g.warehouseAddressText || g.warehouseName || (order as any).loading_source_name || null},
+              ${facilityUuid(g.facilityCountryId)}::uuid,
+              ${facilityUuid(g.facilityStateProvinceId)}::uuid,
+              ${facilityUuid(g.facilityCityId)}::uuid,
               ${r.quantity},
               ${r.unit},
               ${`${r.name}${r.brand ? ` [Brand: ${r.brand}]` : ""} (${g.kgPerQty || ""} kg/${r.unit}) • Total: ${r.gross} kg • Gross: ${r.gross} kg • Net: ${r.net} kg`},

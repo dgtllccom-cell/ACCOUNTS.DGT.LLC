@@ -149,6 +149,10 @@ export type LoadingAllocationInput = {
   rowSerial?: number | null;
   warehouseId?: string | null;
   sourceLocationText?: string | null;
+  /** delivery / facility location from the Location Management master (customer premises or third-party facility) */
+  facilityCountryId?: string | null;
+  facilityStateProvinceId?: string | null;
+  facilityCityId?: string | null;
   quantity?: number | null;
   unit?: string | null;
   remarks?: string | null;
@@ -438,6 +442,8 @@ export function assertRouteContinuity(legs: OrderLegInput[]): void {
   }
 }
 
+const uuidOrNull = (v: unknown) => (typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v.trim()) ? v.trim() : null);
+
 function normalizeLoadingAllocations(rows: LoadingAllocationInput[] | undefined | null): LoadingAllocationInput[] {
   return (rows ?? [])
     .map((row, index) => ({
@@ -445,6 +451,9 @@ function normalizeLoadingAllocations(rows: LoadingAllocationInput[] | undefined 
       rowSerial: row.rowSerial && row.rowSerial > 0 ? row.rowSerial : index + 1,
       warehouseId: trimOrNull(row.warehouseId),
       sourceLocationText: trimOrNull(row.sourceLocationText),
+      facilityCountryId: uuidOrNull(row.facilityCountryId),
+      facilityStateProvinceId: uuidOrNull(row.facilityStateProvinceId),
+      facilityCityId: uuidOrNull(row.facilityCityId),
       quantity: typeof row.quantity === "number" ? row.quantity : 0,
       unit: trimOrNull(row.unit),
       remarks: trimOrNull(row.remarks)
@@ -1303,6 +1312,9 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             row_serial: alloc.rowSerial,
             warehouse_id: alloc.warehouseId,
             source_location_text: alloc.sourceLocationText,
+            facility_country_id: alloc.facilityCountryId ?? null,
+            facility_state_province_id: alloc.facilityStateProvinceId ?? null,
+            facility_city_id: alloc.facilityCityId ?? null,
             quantity: alloc.quantity,
             unit: alloc.unit,
             remarks: alloc.remarks,

@@ -1452,6 +1452,7 @@ export type UiKey =
   | "il.origin"
   | "il.dest_country"
   | "loc.final_destination_master"
+  | "loc.saved_name_not_in_master"
   | "il.agent"
   | "il.remarks"
   | "il.add"
@@ -17422,6 +17423,7 @@ const en: Dict = {
   "il.origin": "Country of Origin",
   "il.dest_country": "Destination Country",
   "loc.final_destination_master": "Final Destination (Location Management)",
+  "loc.saved_name_not_in_master": "Saved name (not in Location Management)",
   "il.agent": "Clearing Agent",
   "il.remarks": "Remarks",
   "il.add": "New Import",
@@ -46037,6 +46039,7 @@ const ur: Dict = {
   "il.origin": "ملکِ اصل",
   "il.dest_country": "منزل ملک",
   "loc.final_destination_master": "حتمی منزل (لوکیشن مینجمنٹ)",
+  "loc.saved_name_not_in_master": "محفوظ نام (لوکیشن مینجمنٹ میں نہیں)",
   "il.agent": "کلیئرنگ ایجنٹ",
   "il.remarks": "تفصیل",
   "il.add": "نیا امپورٹ",
@@ -73136,6 +73139,7 @@ const ar: Dict = {
   "il.origin": "بلد المنشأ",
   "il.dest_country": "بلد الوجهة",
   "loc.final_destination_master": "الوجهة النهائية (إدارة المواقع)",
+  "loc.saved_name_not_in_master": "اسم محفوظ (غير موجود في إدارة المواقع)",
   "il.agent": "وكيل التخليص",
   "il.remarks": "ملاحظات",
   "il.add": "استيراد جديد",
@@ -100293,6 +100297,7 @@ const fa: Dict = {
   "il.origin": "کشور مبدأ",
   "il.dest_country": "کشور مقصد",
   "loc.final_destination_master": "مقصد نهایی (مدیریت مکان‌ها)",
+  "loc.saved_name_not_in_master": "نام ذخیره‌شده (در مدیریت مکان‌ها نیست)",
   "il.agent": "کارگزار ترخیص",
   "il.remarks": "ملاحظات",
   "il.add": "واردات جدید",
@@ -127431,6 +127436,7 @@ const ps: Dict = {
   "il.origin": "د اصل هېواد",
   "il.dest_country": "د منزل هېواد",
   "loc.final_destination_master": "وروستی منزل (د ځایونو مدیریت)",
+  "loc.saved_name_not_in_master": "خوندي شوی نوم (د ځایونو په مدیریت کې نشته)",
   "il.agent": "د پاکولو استازی",
   "il.remarks": "یادښتونه",
   "il.add": "نوی واردات",
