@@ -1,3 +1,4 @@
+import { isDemoBankAccountNumber } from "@/lib/services/demo-bank-identity";
 import { useEffect, useMemo, useState } from "react";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
@@ -52,6 +53,7 @@ export function BankPicker({
   placeholder,
   countryId,
   searchAll = false,
+  includeDemoBanks = false,
 }: {
   label: string;
   value: string;
@@ -65,6 +67,8 @@ export function BankPicker({
   countryId?: string;
   /** Search the complete permitted master rather than only the initially loaded page. */
   searchAll?: boolean;
+  /** Profile linking only; never enable for a payment or settlement picker. */
+  includeDemoBanks?: boolean;
 }) {
   const lang = useActiveLanguage();
   const [loading, setLoading] = useState(false);
@@ -78,17 +82,17 @@ export function BankPicker({
     if (!searchAll || !q) return;
     let active = true;
     const timer = setTimeout(() => {
-      listBanks({ q, countryId: countryId || undefined, limit: 100 }).then((rows) => {
+      listBanks({ q, countryId: countryId || undefined, limit: 100, excludeDemo: !includeDemoBanks }).then((rows) => {
         if (active) setSearchResults({ countryId, query: q, rows });
       }).catch(() => null);
     }, 250);
     return () => { active = false; clearTimeout(timer); };
-  }, [bankQuery, countryId, searchAll]);
+  }, [bankQuery, countryId, searchAll, includeDemoBanks]);
 
   async function loadList() {
     setLoading(true);
     try {
-      const rows = await listBanks({ limit: 100, countryId: countryId || undefined });
+      const rows = await listBanks({ limit: 100, countryId: countryId || undefined, excludeDemo: !includeDemoBanks });
       setBanks(rows);
     } finally {
       setLoading(false);
@@ -98,7 +102,7 @@ export function BankPicker({
   useEffect(() => {
     loadList().catch(() => null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countryId]);
+  }, [countryId, includeDemoBanks]);
 
   // If a value is selected but not in the current list, fetch it individually
   useEffect(() => {
@@ -133,7 +137,7 @@ export function BankPicker({
       ? [selected, ...searchResults.rows]
       : searchResults.rows;
   }, [bankQuery, banks, countryId, searchAll, searchResults, value]);
-  const options: SearchSelectOption[] = useMemo(() => visibleBanks.map((b) => toOption(b, lang)), [visibleBanks, lang]);
+  const options: SearchSelectOption[] = useMemo(() => visibleBanks.filter((b) => includeDemoBanks || !isDemoBankAccountNumber(b.account_number)).map((b) => toOption(b, lang)), [visibleBanks, lang, includeDemoBanks]);
   const [viewBank, setViewBank] = useState<BankRecord | null>(null);
   const [editBankId, setEditBankId] = useState<string | null>(null);
 

@@ -17,7 +17,7 @@ it("searches past the first 100 without widening the country",async()=>{
  expect(screen.queryByText("DEMO BANK 300 — TEST")).toBeNull();
  fireEvent.change(screen.getByRole("textbox",{name:"search"}),{target:{value:"300"}});
  await screen.findByText("DEMO BANK 300 — TEST");
- expect(list).toHaveBeenCalledWith({q:"300",countryId:"approved-country",limit:100});
+ expect(list).toHaveBeenCalledWith({q:"300",countryId:"approved-country",limit:100,excludeDemo:true});
 });
 it("keeps existing consumers on their current initial list",async()=>{
  list.mockResolvedValue([bank("1")]);
@@ -25,4 +25,13 @@ it("keeps existing consumers on their current initial list",async()=>{
  await screen.findByText("DEMO BANK 1 — TEST");
  fireEvent.change(screen.getByRole("textbox",{name:"search"}),{target:{value:"300"}});
  await waitFor(()=>expect(list).toHaveBeenCalledTimes(1));
+});
+it("hides a demo bank from payment pickers but makes it available for profile linking",async()=>{
+ const demo={...bank("1"),account_number:"DEMO-NONPAY-AE-0001"};
+ list.mockResolvedValue([demo,bank("2")]);
+ const {rerender}=render(<BankPicker label="Bank" value="" onValueChange={()=>{}}/>);
+ await screen.findByText("DEMO BANK 2 — TEST");
+ expect(screen.queryByText("DEMO BANK 1 — TEST")).toBeNull();
+ rerender(<BankPicker label="Bank" value="" includeDemoBanks onValueChange={()=>{}}/>);
+ await screen.findByText("DEMO BANK 1 — TEST");
 });

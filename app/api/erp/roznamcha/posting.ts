@@ -2,6 +2,7 @@
 // Roznamcha posting engine — extracted from route.ts so the route module only
 // exports Next.js route handlers (a non-handler export from route.ts fails the
 // generated .next/types route-shape check).
+import { assertPayableBankId } from "@/lib/services/payment-bank-guard";
 import { roznamchaPostingSchema } from "@/lib/api/erp-validation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
@@ -328,6 +329,7 @@ export async function postRoznamchaWithErpSession(input: {
 }) {
   const viaPg = await withLocalPg((sql) => postRoznamchaWithErpSessionPg(sql, input));
   if (viaPg) return viaPg;
+  await assertPayableBankId((input.body as any).bankId ?? (input.body.paymentDetails as any)?.bankId);
   return postRoznamchaWithErpSessionSupabase(input);
 }
 
@@ -537,6 +539,8 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
 }) {
   const actorId = await resolveProfileActorPg(sql, input.sessionUserId);
   const body = input.body;
+  const bankId = (body as any).bankId ?? (body.paymentDetails as any)?.bankId ?? null;
+  await assertPayableBankId(bankId, sql);
   if (input.requireBalanced) {
     const totalDebit = body.lines.reduce((sum, l) => sum + toNumber(l.debit), 0);
     const totalCredit = body.lines.reduce((sum, l) => sum + toNumber(l.credit), 0);
@@ -554,11 +558,6 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
     | "invoice"
     | "transfer"
     | null;
-
-  // Bank Master FK — the Cash Entry form's bank payment branch sends this
-  // as body.paymentDetails.bankId once a real bank is selected via
-  // BankPicker (see features/roznamcha/components/cash-entry-form.tsx).
-  const bankId = (body as any).bankId ?? (body.paymentDetails as any)?.bankId ?? null;
 
   // Business/Shipping domain visibility: roznamcha_entries.operational_domain existed as a
   // column (20261122_shipping_billing_receipts_approval.sql) but was never populated or read

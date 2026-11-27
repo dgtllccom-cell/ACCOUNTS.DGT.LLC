@@ -354,7 +354,7 @@ export function StandardizedDailyPaymentForm({
 
   // Load banks scoped to the active country
   useEffect(() => {
-    listBanks({ countryId: countryId || undefined, limit: 100 })
+    listBanks({ countryId: countryId || undefined, limit: 100, excludeDemo: true })
       .then((rows) => setAvailableCountryBanks(rows))
       .catch(() => setAvailableCountryBanks([]));
   }, [countryId]);

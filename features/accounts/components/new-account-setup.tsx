@@ -3542,6 +3542,7 @@ export function NewAccountSetup({
                       label={getLabel("bankMaster", lang)}
                       value={pickerBankId}
                       searchAll
+                      includeDemoBanks
                       onValueChange={(val) => {
                         setPickerBankId(val || "");
                         if (!val) {

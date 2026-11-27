@@ -1,3 +1,4 @@
+import { assertBankRecordNotDemo, assertPayableBankId } from "@/lib/services/payment-bank-guard";
 import { issuedSalesPaymentReceipt } from "@/lib/sales/payment-receipt";
 import { convertReviewedSalesReceipt, linkedSalesAdvanceReceipt, linkedSalesBalanceReceipt, matchesSalesReceiptQueue, planSalesWorkflowReceipt, reviewedSalesSettlement, salesReceiptPaymentKind, SALES_RECEIPT_INVOICE_TYPES } from "@/lib/sales/payment-workflow";
 import { isLocalSalesFormData } from "@/lib/sales/local-sales-source";
@@ -248,7 +249,6 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       try { input = JSON.parse(raw); } catch { return apiError("VALIDATION", "Sales receipt payload is invalid.", 400); }
     } else input = await request.json();
     const body = salesOrderPaymentPostSchema.parse(input);
-
     const lockRes = await acquireIdempotencyLock({
       req: request,
       scopeModule: "SALES_PAYMENT",
@@ -317,6 +317,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       receiptDetailSummary = `Cash | Receiver/Sender: ${cleanDetail(receiptDetails.partyName)} | Mobile: ${cleanDetail(receiptDetails.mobile)}` +
         (receiptDetails.idTail ? ` | ID: •••• ${cleanDetail(receiptDetails.idTail)}` : "");
     }
+    if (!body.linkedBalanceReceipt) await assertPayableBankId(body.typeDetails?.bankId);
     if (receiptDetails?.channel === "bank") {
       // Take bank identity from the existing master, never from a client-supplied name or account number.
       const bank = orderRow.country_id ? await withLocalPg(async sql => {
@@ -328,6 +329,7 @@ async function postPaymentHandler(request: NextRequest, context: { params: Promi
       if (!bank || !String(bank.account_number || bank.iban_number || "").trim()) {
         throw new ApiClientError("Select an active bank with an account number in the sales country.", { status: 409, code: "SALES_RECEIPT_BANK_MISMATCH" });
       }
+      assertBankRecordNotDemo(bank);
       receiptBankId = bank.id;
       const ending = String(bank.account_number || bank.iban_number).trim().slice(-4);
       receiptDetailSummary = `Bank: ${cleanDetail(bank.bank_name)} | Bank Account: •••• ${cleanDetail(ending)}` +

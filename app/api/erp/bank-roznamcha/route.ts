@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { assertPayableBankId } from "@/lib/services/payment-bank-guard";
 import { NextRequest } from "next/server";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-middleware";
@@ -288,6 +289,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const result = await withLocalPg(async (sql) => {
+      await assertPayableBankId(body.bankId, sql);
       // 1. Generate Next Entry Serial
       const lastRows = await sql`
         SELECT entry_serial_number
