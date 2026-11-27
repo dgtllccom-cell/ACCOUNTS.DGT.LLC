@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { apiOk, handleApiError } from "@/lib/api/response";
+import { ApiClientError, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { locationsRepository } from "@/lib/repositories/locations-repository";
 import { getRequestLanguage } from "@/lib/i18n/server";
@@ -61,6 +61,11 @@ export async function POST(request: NextRequest) {
       throw new Error("countryId and name are required");
     }
 
+    const code = typeof body.code === "string" ? body.code.trim() : "";
+    if (!code) {
+      throw new ApiClientError("City Code is required.", { code: "CITY_CODE_REQUIRED" });
+    }
+
     const resolvedCountryId = await locationsRepository.resolveCountryUuid(body.countryId);
     const resolvedStateId = body.stateProvinceId ? await locationsRepository.resolveStateUuid(body.stateProvinceId, resolvedCountryId) : null;
     const resolvedDistrictId = body.districtId ? await locationsRepository.resolveDistrictUuid(body.districtId, resolvedStateId ?? undefined) : null;
@@ -74,7 +79,7 @@ export async function POST(request: NextRequest) {
       stateProvinceId: resolvedStateId,
       districtId: resolvedDistrictId,
       name: body.name,
-      code: body.code ?? null,
+      code,
       zipCode: body.zipCode ?? null,
       createdBy: isUuid(session.userId) ? session.userId : null,
       originalLanguage: session.preferredLanguage ?? "en"

@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { apiPost } from "@/lib/api/client";
 import {
+  invalidateLocationCache,
   listAreas,
   listCities,
   listCountries,
@@ -380,7 +381,7 @@ export function LocationHierarchySelect({
                   });
                 }}
                 createLabel={loc("newCountry")}
-                createButtonPlacement="both"
+                createButtonPlacement="footer"
                 onCreateNew={async () => setOpenCreateType("country")}
               />
 
@@ -421,7 +422,7 @@ export function LocationHierarchySelect({
                 });
               }}
               createLabel={loc("newState")}
-              createButtonPlacement="both"
+              createButtonPlacement="footer"
               onCreateNew={async () => setOpenCreateType("state")}
             />
           )}
@@ -490,7 +491,7 @@ export function LocationHierarchySelect({
                 });
               }}
               createLabel={loc("newCity")}
-              createButtonPlacement="both"
+              createButtonPlacement="footer"
               onCreateNew={async () => setOpenCreateType("city")}
             />
           )}
@@ -660,14 +661,16 @@ export function LocationQuickCreateModal({
   }, [type, countryId, stateProvinceId, cityId, lang]);
 
   // Required-field message shown next to the Save button (not disabled silently).
+  const needsCode = type === "city" || (requireChildCode && type === "state");
   const requiredMessage = useMemo(() => {
     if (!name.trim()) {
       if (type === "area") return t(lang, "lfix.err_area_name_required", "Area name is required.");
       return t(lang, "lfix.err_name_required", "{0} name is required.").split("{0}").join(typeLabel);
     }
     if (type === "country" && !iso2.trim()) return t(lang, "lfix.err_iso2_required", "ISO2 country code is required.");
+    if (needsCode && !code.trim()) return `${typeLabel} · ${t(lang, "lfix.label_code", "Code")} *`;
     return null;
-  }, [type, name, iso2, typeLabel, lang]);
+  }, [type, name, iso2, code, needsCode, typeLabel, lang]);
 
   async function handleSave() {
     if (!type) return;
@@ -687,10 +690,8 @@ export function LocationQuickCreateModal({
           return;
         }
       }
-      if (requireChildCode && (type === "state" || type === "city") && !input.code) {
-        throw new Error(`${typeLabel} · ${t(lang, "lfix.label_code", "Code")} *`);
-      }
       const finish = async (item: LocationCountry | LocationState | LocationCity) => {
+        invalidateLocationCache();
         const saved = confirmSaved ? await confirmSaved(item, input) : item;
         onCreated(saved.id, saved);
       };
@@ -833,9 +834,10 @@ export function LocationQuickCreateModal({
 
         {(type === "state" || type === "district" || type === "city" || type === "area") && (
           <div className="space-y-2">
-            <Label htmlFor="location-create-code">{type === "area" ? t(lang, "lqm.area_code_label") : `${typeLabel} ${t(lang, "lfix.label_code", "Code")}`}</Label>
+            <Label htmlFor="location-create-code">{type === "area" ? t(lang, "lqm.area_code_label") : `${typeLabel} ${t(lang, "lfix.label_code", "Code")}${needsCode ? " *" : ""}`}</Label>
             <Input
               id="location-create-code"
+              required={needsCode}
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder={type === "area" ? t(lang, "lqm.road_code_ph") : t(lang, "lqm.code_ph")}

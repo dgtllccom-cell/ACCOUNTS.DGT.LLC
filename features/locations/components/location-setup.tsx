@@ -249,13 +249,14 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
   async function addCity() {
     if (!countryId || !stateId) return;
     const name = normalizeText(newCityName);
-    if (!name) return;
+    const code = newCityCode.trim();
+    if (!name || !code) return;
     setBanner(null);
     const res = await apiPost<{ city: CityRow }>("/api/erp/locations/cities", {
       countryId,
       stateProvinceId: stateId,
       name,
-      code: newCityCode || null,
+      code,
       zipCode: newCityZip || null
     });
     setCities((current) =>
@@ -581,8 +582,8 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>{tt("locsetup.city_code", "City Code (optional)")}</Label>
-              <Input value={newCityCode} onChange={(e) => setNewCityCode(e.target.value)} placeholder="CHM" />
+              <Label>{tt("lfix.level_city", "City")} {tt("lfix.label_code", "Code")} *</Label>
+              <Input required value={newCityCode} onChange={(e) => setNewCityCode(e.target.value)} placeholder="CHM" />
             </div>
             <div className="space-y-2">
               <Label>{tt("locsetup.city_zip", "Zip / Postal Code (optional)")}</Label>
@@ -597,7 +598,7 @@ export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLangu
               type="button"
               className="btn-primary bg-[#1e40af] hover:bg-[#1d4ed8] text-white font-semibold shadow-md border-0"
               onClick={addCity}
-              disabled={!newCityName.trim()}
+              disabled={!newCityName.trim() || !newCityCode.trim()}
             >
               {tt("locsetup.save_city", "Save City")}
             </Button>
