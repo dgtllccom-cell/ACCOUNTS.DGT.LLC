@@ -58,6 +58,7 @@ import { SavedText } from "@/components/i18n/saved-text";
 import { localizeName } from "@/lib/i18n/transliteration";
 import "./truck-registration.css";
 import { PersonPicker } from "@/components/erp/person-picker";
+import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
 import { Party360Modal } from "@/features/customers/components/party-360-modal";
 import { viewTruckReport, printTruckReport, downloadTruckPdf } from "@/lib/reports/master-profiles/truck-report-actions";
@@ -315,6 +316,11 @@ const EMPTY_FORM = {
   driverState: "",
   driverCity: "",
   driverAddress: "",
+  // Location Management Master ids for the temporary driver's address (names above stay for display / reports)
+  driverCountryId: "",
+  driverStateId: "",
+  driverCityId: "",
+  driverPostalCode: "",
   remarks: "",
   status: "active",
   registrationDate: new Date().toISOString().slice(0, 10),
@@ -1164,10 +1170,14 @@ export function TruckRecreationWizard({
         driverIssuingAuthority: extraNotes.driverIssuingAuthority || "",
         driverMaritalStatus: extraNotes.driverMaritalStatus || "",
         addDriverLocation: "yes",
-        driverCountry: "",
-        driverState: "",
-        driverCity: "",
-        driverAddress: "",
+        driverCountry: extraNotes.driverLocation?.country || "",
+        driverState: extraNotes.driverLocation?.state || "",
+        driverCity: extraNotes.driverLocation?.city || "",
+        driverAddress: extraNotes.driverLocation?.address || "",
+        driverCountryId: extraNotes.driverLocation?.countryId || "",
+        driverStateId: extraNotes.driverLocation?.stateProvinceId || "",
+        driverCityId: extraNotes.driverLocation?.cityId || "",
+        driverPostalCode: extraNotes.driverLocation?.postalCode || "",
         remarks: String(extraNotes.userNotes !== undefined ? (extraNotes.userNotes ?? "") : row.notes || ""),
         status: row.status || "active",
         registrationDate: (row.created_at || "").slice(0, 10) || new Date().toISOString().slice(0, 10),
@@ -1288,6 +1298,22 @@ export function TruckRecreationWizard({
         driverIssuingAuthority: form.driverIssuingAuthority.trim() || null,
         driverMaritalStatus: form.driverMaritalStatus || null,
         userNotes: form.remarks.trim() || null,
+        // Temporary driver's physical address: Country / State / City picked from the Location Management Master.
+        // Address only — it never changes the truck's branch, ownership or any accounting record.
+        driverLocation:
+          form.driverType !== "permanent" && form.addDriverLocation === "yes" &&
+          (form.driverCountryId || form.driverAddress.trim())
+            ? {
+                countryId: form.driverCountryId || null,
+                country: form.driverCountry || null,
+                stateProvinceId: form.driverStateId || null,
+                state: form.driverState || null,
+                cityId: form.driverCityId || null,
+                city: form.driverCity || null,
+                postalCode: form.driverPostalCode.trim() || null,
+                address: form.driverAddress.trim() || null,
+              }
+            : null,
       };
 
       const payload = {
@@ -3986,30 +4012,32 @@ export function TruckRecreationWizard({
 
                           {form.addDriverLocation === "yes" && (
                             <div className="grid grid-cols-1 sm:grid-cols-4 lg:grid-cols-2 gap-2.5">
-                              <label className="space-y-1 text-xs">
-                                <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.country", "Country")}</span>
-                                <input
-                                  value={form.driverCountry}
-                                  onChange={(e) => setForm((p) => ({ ...p, driverCountry: e.target.value }))}
-                                  placeholder={tt("lp.country_label", "Country")}
-                                  className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                              <div className="sm:col-span-4 lg:col-span-2" data-testid="driver-location-master">
+                                <LocationHierarchySelect
+                                  lang={activeLang}
+                                  showDistrict={false}
+                                  value={{ countryId: form.driverCountryId, stateProvinceId: form.driverStateId, districtId: "", cityId: form.driverCityId }}
+                                  onChange={(next, meta) =>
+                                    setForm((p) => ({
+                                      ...p,
+                                      driverCountryId: next.countryId,
+                                      driverStateId: next.stateProvinceId,
+                                      driverCityId: next.cityId,
+                                      driverCountry: meta.country?.name ?? (next.countryId ? p.driverCountry : ""),
+                                      driverState: meta.state?.name ?? (next.stateProvinceId ? p.driverState : ""),
+                                      driverCity: meta.city?.name ?? (next.cityId ? p.driverCity : ""),
+                                      driverPostalCode: meta.city?.zip_code || p.driverPostalCode,
+                                    }))
+                                  }
                                 />
-                              </label>
+                              </div>
                               <label className="space-y-1 text-xs">
-                                <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.w_state_province", "State / Province")}</span>
+                                <span className="font-bold text-slate-600 dark:text-slate-400">{tt("locedit.postal_code", "Postal Code")}</span>
                                 <input
-                                  value={form.driverState}
-                                  onChange={(e) => setForm((p) => ({ ...p, driverState: e.target.value }))}
-                                  placeholder={tt("branch.row_state_province", "State / province")}
-                                  className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                                />
-                              </label>
-                              <label className="space-y-1 text-xs">
-                                <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.city", "City")}</span>
-                                <input
-                                  value={form.driverCity}
-                                  onChange={(e) => setForm((p) => ({ ...p, driverCity: e.target.value }))}
-                                  placeholder={tt("lp.city", "City")}
+                                  value={form.driverPostalCode}
+                                  onChange={(e) => setForm((p) => ({ ...p, driverPostalCode: e.target.value }))}
+                                  placeholder={tt("locedit.postal_code", "Postal Code")}
+                                  dir="ltr"
                                   className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                                 />
                               </label>

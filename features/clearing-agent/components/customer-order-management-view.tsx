@@ -398,6 +398,11 @@ export type CustomerOrderGoodsItem = {
   warehouseAccountId?: string;
   warehouseName: string;
   warehouseAddressText: string;
+  // Location Management Master ids of an "other / third-party" facility address (optional)
+  warehouseCountryId?: string;
+  warehouseStateId?: string;
+  warehouseCityId?: string;
+  warehousePostalCode?: string;
   contactPerson?: string;
   contactPhone?: string;
   photoUrl?: string;
@@ -2370,6 +2375,10 @@ export function CustomerOrderManagementView() {
               warehouseId: row.warehouse_id || "",
               warehouseName: row.warehouse_name || "",
               warehouseAddressText: row.source_location_text || "",
+              warehouseCountryId: row.source_country_id || "",
+              warehouseStateId: row.source_state_province_id || "",
+              warehouseCityId: row.source_city_id || "",
+              warehousePostalCode: row.source_postal_code || "",
               remarks: row.remarks || ""
             };
           })
@@ -2858,6 +2867,10 @@ export function CustomerOrderManagementView() {
         warehouseId: g.warehouseId || formData.loading_source_warehouse_id || null,
         warehouseName: g.warehouseName || (g.warehouseSourceType === "customer_warehouse" ? "Customer Warehouse" : "Company Warehouse"),
         sourceLocationText: g.warehouseAddressText || g.warehouseName || formData.loading_source_name || null,
+        sourceCountryId: g.warehouseSourceType === "other" ? g.warehouseCountryId || null : null,
+        sourceStateProvinceId: g.warehouseSourceType === "other" ? g.warehouseStateId || null : null,
+        sourceCityId: g.warehouseSourceType === "other" ? g.warehouseCityId || null : null,
+        sourcePostalCode: g.warehouseSourceType === "other" ? g.warehousePostalCode || null : null,
         quantity: Number(g.quantity) || 0,
         unit: g.unit || "Bags",
         remarks: `${g.goodsName || 'Goods'}${g.kgPerQty ? ` (${g.kgPerQty} kg/${g.unit || 'unit'})` : ""} • Total: ${g.totalKg || 0} kg`
@@ -10297,6 +10310,10 @@ function Step1BookingCustomer({
           warehouseAccountId: draftGoodsItem.warehouseAccountId,
           warehouseName: draftGoodsItem.warehouseName,
           warehouseAddressText: draftGoodsItem.warehouseAddressText,
+          warehouseCountryId: draftGoodsItem.warehouseCountryId,
+          warehouseStateId: draftGoodsItem.warehouseStateId,
+          warehouseCityId: draftGoodsItem.warehouseCityId,
+          warehousePostalCode: draftGoodsItem.warehousePostalCode,
           contactPerson: draftGoodsItem.contactPerson,
           contactPhone: draftGoodsItem.contactPhone,
           remarks: draftGoodsItem.remarks
@@ -10307,6 +10324,10 @@ function Step1BookingCustomer({
           if (data.warehouseAccountId) handleDraftGoodsChange("warehouseAccountId", data.warehouseAccountId);
           handleDraftGoodsChange("warehouseName", data.warehouseName);
           handleDraftGoodsChange("warehouseAddressText", data.warehouseAddressText);
+          handleDraftGoodsChange("warehouseCountryId", data.warehouseCountryId || "");
+          handleDraftGoodsChange("warehouseStateId", data.warehouseStateId || "");
+          handleDraftGoodsChange("warehouseCityId", data.warehouseCityId || "");
+          handleDraftGoodsChange("warehousePostalCode", data.warehousePostalCode || "");
           if (data.contactPerson) handleDraftGoodsChange("contactPerson", data.contactPerson);
           if (data.contactPhone) handleDraftGoodsChange("contactPhone", data.contactPhone);
           if (data.remarks) handleDraftGoodsChange("remarks", data.remarks);

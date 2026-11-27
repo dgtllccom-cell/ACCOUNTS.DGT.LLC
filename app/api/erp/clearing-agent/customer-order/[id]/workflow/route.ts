@@ -28,6 +28,10 @@ import {
   validateGoodsItems
 } from "@/lib/services/clearing-customer-order-workflow-rules";
 
+
+const isUuid = (v: unknown): v is string =>
+  typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+
 // Response envelope. Every browser caller of this endpoint (confirm truck, complete goods,
 // stage assignment, return-for-correction, activity timeline) tests `json.success` and shows
 // `json.error` as text. The generic apiOk() envelope is { ok, data } and apiError() puts an
@@ -873,21 +877,38 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
         for (let i = 0; i < goodsItems.length; i++) {
           const g = goodsItems[i];
           const r = rows[i];
-          await sql`
-            insert into public.clearing_customer_order_loading_allocations (
-              order_id, row_serial, warehouse_id, source_location_text,
-              quantity, unit, remarks, created_at, updated_at
-            ) values (
-              ${id}::uuid,
-              ${i + 1},
-              ${g.warehouseId || null}::uuid,
-              ${g.warehouseAddressText || g.warehouseName || (order as any).loading_source_name || null},
-              ${r.quantity},
-              ${r.unit},
-              ${`${r.name}${r.brand ? ` [Brand: ${r.brand}]` : ""} (${g.kgPerQty || ""} kg/${r.unit}) • Total: ${r.gross} kg • Gross: ${r.gross} kg • Net: ${r.net} kg`},
-              now(), now()
-            )
-          `;
+          const facility = {
+            countryId: isUuid(g.warehouseCountryId) ? g.warehouseCountryId : null,
+            stateId: isUuid(g.warehouseStateId) ? g.warehouseStateId : null,
+            cityId: isUuid(g.warehouseCityId) ? g.warehouseCityId : null,
+            postal: typeof g.warehousePostalCode === "string" && g.warehousePostalCode.trim() ? g.warehousePostalCode.trim() : null,
+          };
+          const sourceText = g.warehouseAddressText || g.warehouseName || (order as any).loading_source_name || null;
+          const remarksText = `${r.name}${r.brand ? ` [Brand: ${r.brand}]` : ""} (${g.kgPerQty || ""} kg/${r.unit}) • Total: ${r.gross} kg • Gross: ${r.gross} kg • Net: ${r.net} kg`;
+          if (facility.countryId || facility.stateId || facility.cityId || facility.postal) {
+            // Facility address from the Location Management Master (migration 20261261)
+            await sql`
+              insert into public.clearing_customer_order_loading_allocations (
+                order_id, row_serial, warehouse_id, source_location_text,
+                source_country_id, source_state_province_id, source_city_id, source_postal_code,
+                quantity, unit, remarks, created_at, updated_at
+              ) values (
+                ${id}::uuid, ${i + 1}, ${g.warehouseId || null}::uuid, ${sourceText},
+                ${facility.countryId}::uuid, ${facility.stateId}::uuid, ${facility.cityId}::uuid, ${facility.postal},
+                ${r.quantity}, ${r.unit}, ${remarksText}, now(), now()
+              )
+            `;
+          } else {
+            await sql`
+              insert into public.clearing_customer_order_loading_allocations (
+                order_id, row_serial, warehouse_id, source_location_text,
+                quantity, unit, remarks, created_at, updated_at
+              ) values (
+                ${id}::uuid, ${i + 1}, ${g.warehouseId || null}::uuid, ${sourceText},
+                ${r.quantity}, ${r.unit}, ${remarksText}, now(), now()
+              )
+            `;
+          }
         }
 
         // Insert goods verification record

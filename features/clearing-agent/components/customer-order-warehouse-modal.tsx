@@ -22,6 +22,8 @@ import {
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { fetchWarehouses, type WarehouseRecord } from "@/features/warehouses/warehouse-api";
+import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
+import { composeFacilityAddress, splitFacilityAddress } from "@/features/clearing-agent/facility-address";
 
 export type WarehouseSelectionData = {
   warehouseSourceType: "company_warehouse" | "customer_warehouse" | "other";
@@ -29,6 +31,11 @@ export type WarehouseSelectionData = {
   warehouseAccountId?: string;
   warehouseName: string;
   warehouseAddressText: string;
+  /** Location Management Master ids of an "other / third-party" facility (empty for company / customer warehouses). */
+  warehouseCountryId?: string;
+  warehouseStateId?: string;
+  warehouseCityId?: string;
+  warehousePostalCode?: string;
   contactPerson?: string;
   contactPhone?: string;
   remarks?: string;
@@ -44,6 +51,10 @@ interface CustomerOrderWarehouseModalProps {
     warehouseAccountId?: string;
     warehouseName?: string;
     warehouseAddressText?: string;
+    warehouseCountryId?: string;
+    warehouseStateId?: string;
+    warehouseCityId?: string;
+    warehousePostalCode?: string;
     contactPerson?: string;
     contactPhone?: string;
     remarks?: string;
@@ -71,7 +82,7 @@ export function CustomerOrderWarehouseModal({
   const activeLang = useActiveLanguage();
   const lang = langProp && langProp !== "en" ? langProp : activeLang;
   const isRtl = lang === "ar" || lang === "ur" || lang === "fa" || lang === "ps";
-  const tt = (key: string, fallback: string) => t(lang as any, key as any, fallback);
+  const tt = (key: string, fallback: string) => t(lang as any, (key.includes(".") ? key : `cowm.${key}`) as any, fallback);
 
   const initialType =
     initialValues.warehouseSourceType === "customer_warehouse"
@@ -153,8 +164,22 @@ export function CustomerOrderWarehouseModal({
   const [otherWhName, setOtherWhName] = useState(
     initialType === "other" ? initialValues.warehouseName || "" : ""
   );
+  // The saved text is "<detailed address> | <city, state, postal, country>": only the detail goes back into the input.
   const [otherWhAddress, setOtherWhAddress] = useState(
-    initialType === "other" ? initialValues.warehouseAddressText || "" : ""
+    initialType === "other" ? splitFacilityAddress(initialValues.warehouseAddressText || "").detail : ""
+  );
+  const [otherLocation, setOtherLocation] = useState({
+    countryId: initialType === "other" ? initialValues.warehouseCountryId || "" : "",
+    stateProvinceId: initialType === "other" ? initialValues.warehouseStateId || "" : "",
+    districtId: "",
+    cityId: initialType === "other" ? initialValues.warehouseCityId || "" : "",
+  });
+  const [otherPlaceNames, setOtherPlaceNames] = useState(() => {
+    const line = initialType === "other" ? splitFacilityAddress(initialValues.warehouseAddressText || "").place : "";
+    return { line, country: "", state: "", city: "" };
+  });
+  const [otherPostalCode, setOtherPostalCode] = useState(
+    initialType === "other" ? initialValues.warehousePostalCode || "" : ""
   );
   const [otherContactPerson, setOtherContactPerson] = useState(
     initialType === "other" ? initialValues.contactPerson || "" : ""
@@ -242,7 +267,19 @@ export function CustomerOrderWarehouseModal({
         warehouseSourceType: "other",
         warehouseId: "",
         warehouseName: otherWhName.trim() || tt("other_warehouse_title", "Other Warehouse"),
-        warehouseAddressText: otherWhAddress.trim() || "Third-Party Facility",
+        warehouseAddressText:
+          composeFacilityAddress({
+            detail: otherWhAddress,
+            city: otherPlaceNames.city,
+            state: otherPlaceNames.state,
+            postalCode: otherPostalCode,
+            country: otherPlaceNames.country,
+            fallbackPlaceLine: otherLocation.countryId ? otherPlaceNames.line : "",
+          }) || "Third-Party Facility",
+        warehouseCountryId: otherLocation.countryId,
+        warehouseStateId: otherLocation.stateProvinceId,
+        warehouseCityId: otherLocation.cityId,
+        warehousePostalCode: otherPostalCode.trim(),
         contactPerson: otherContactPerson.trim(),
         contactPhone: otherContactPhone.trim(),
         remarks: otherRemarks.trim(),
@@ -682,11 +719,11 @@ export function CustomerOrderWarehouseModal({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("other_warehouse_address_label", "Location / Port / Full Address")} *
+                    {tt("other_warehouse_address_label", "Detailed Address (Plot / Street / Gate)")} *
                   </label>
                   <input
                     type="text"
-                    placeholder={tt("other_wh_address_ph", "Plot No, Street, Port Area, City")}
+                    placeholder={tt("other_wh_address_ph", "Plot No, Street, Gate / Port Area")}
                     value={otherWhAddress}
                     onChange={(e) => setOtherWhAddress(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold dark:border-slate-700 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-amber-500"
@@ -694,10 +731,42 @@ export function CustomerOrderWarehouseModal({
                 </div>
               </div>
 
+              {/* Country → State / Province → City from the central Location Management Master (no separate list) */}
+              <div className="rounded-xl border border-slate-200 p-2.5 dark:border-slate-700" data-testid="facility-location-master">
+                <LocationHierarchySelect
+                  lang={lang as any}
+                  showDistrict={false}
+                  value={otherLocation}
+                  onChange={(next, meta) => {
+                    setOtherLocation(next);
+                    setOtherPlaceNames((prev) => ({
+                      line: next.countryId ? prev.line : "",
+                      country: meta.country?.name ?? "",
+                      state: meta.state?.name ?? "",
+                      city: meta.city?.name ?? "",
+                    }));
+                    if (meta.city?.zip_code) setOtherPostalCode(meta.city.zip_code);
+                  }}
+                />
+                <div className="mt-2 sm:w-1/2">
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {tt("locedit.postal_code", "Postal Code")}
+                  </label>
+                  <input
+                    type="text"
+                    dir="ltr"
+                    value={otherPostalCode}
+                    onChange={(e) => setOtherPostalCode(e.target.value)}
+                    placeholder={tt("locedit.postal_code", "Postal Code")}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("contact_person", "Contact Person / Yard In-Charge")}
+                    {tt("other_contact_person", "Contact Person / Yard In-Charge")}
                   </label>
                   <input
                     type="text"
@@ -709,7 +778,7 @@ export function CustomerOrderWarehouseModal({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("contact_mobile", "Contact Mobile / Phone")}
+                    {tt("other_contact_mobile", "Contact Mobile / Phone")}
                   </label>
                   <input
                     type="text"
