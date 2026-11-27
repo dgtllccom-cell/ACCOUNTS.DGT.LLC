@@ -3999,6 +3999,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   dbAccounts={dbAccounts}
                   countries={allCountries.length ? allCountries : countries}
                   ports={[...dbLoadingPorts, ...dbReceivedPorts]}
+                  isLocalSale={isLocalSale}
                 />
               )}
 
