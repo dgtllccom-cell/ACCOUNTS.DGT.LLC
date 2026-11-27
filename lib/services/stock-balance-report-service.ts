@@ -16,6 +16,7 @@ import { ApiClientError } from "@/lib/api/response";
 import { assertExplicitScopeAllowed, authorizeApiScope, sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { translateValue } from "@/lib/i18n/table-values";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { hasRolePermission, isGlobalSession } from "@/lib/permissions/middleware";
 import { assertRecordAccess } from "@/lib/services/stock-journal-service";
@@ -136,8 +137,10 @@ export interface BalanceBill {
   date: string | null;
   purchaseAccountName: string;
   purchaseAccountDetails: string;
+  buyerAccountId?: string | null;
   buyerAccountName?: string;
   buyerAccountNo?: string;
+  supplierAccountId?: string | null;
   supplierAccountName?: string;
   supplierAccountNo?: string;
   companyId: string | null;
@@ -221,7 +224,11 @@ function bookingExtras(formData: unknown, lineCount: number) {
     const gross = num(g.grossWeight);
     const price = num(g.coursePrice ?? g.rate ?? g.priceRateC1 ?? g.unitPrice);
     const amount = num(g.finalAmount ?? g.totalAmount ?? g.amount);
+    const lotName =
+      str(g.allotName ?? g.lotName ?? g.lot_name ?? g.lotNo ?? g.lot_no ?? g.stockLotNo ?? g.lotNumber) ||
+      str(form.allotName ?? form.lotName ?? form.lot_name ?? form.lotNo ?? form.lotNumber);
     return {
+      lotName,
       origin: str(g.origin) || str(form.origin) || str(form.originCountry),
       gross: gross > 0 ? gross : 0,
       net: net > 0 ? net : 0,
@@ -298,7 +305,12 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
         select lp.id, lp.goods_id, lp.goods_name, lp.supplier_name, lp.supplier_person_id, lp.quantity_name, lp.quantity_kgs, lp.numbers, lp.net_weight, lp.total_gross_weight, lp.purchase_currency, lp.exchange_rate,
                lp.final_cost, lp.status, lp.manual_bill_no, lp.journal_serial_no, lp.contract_no, lp.origin_country_name, lp.remarks, lp.country_id, lp.country_branch_id, lp.city_branch_id, lp.created_at,
                lp.super_admin_serial, lp.country_serial, lp.country_serial_no, lp.branch_serial, lp.branch_serial_no, lp.entry_serial,
-               lp.purchase_account_no, lp.sales_account_no, c.name as country_name, c.iso2 as country_code, cb.name as country_branch_name, cb.code as country_branch_code, cib.city_name as city_name, cib.code as city_branch_code,
+               lp.purchase_account_no, lp.sales_account_no,
+               to_jsonb(lp)->>'purchase_account_name' as purchase_account_name,
+               to_jsonb(lp)->>'sales_account_name' as sales_account_name,
+               to_jsonb(lp)->>'purchase_account_id' as purchase_account_id,
+               to_jsonb(lp)->>'sales_account_id' as sales_account_id,
+               c.name as country_name, c.iso2 as country_code, cb.name as country_branch_name, cb.code as country_branch_code, cib.city_name as city_name, cib.code as city_branch_code,
                coalesce(lp.company_id, cib.company_id, cb.company_id) as company_id
         from public.local_purchases lp
         left join public.countries c on c.id = lp.country_id
@@ -401,7 +413,7 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
         const w = { qty: sp.loss, gross: proportional(e.purchased.gross, sp.loss, e.purchased.qty), net: proportional(e.purchased.net, sp.loss, e.purchased.qty) };
         e.adjusted = add(e.adjusted, w);
         e.remaining = remainingOf(e.purchased, e.sold, e.transferred, e.adjusted);
-        e.status = statusOf(e, e.lotNo === NOT_LOADED);
+        e.status = statusOf(e, e.status === "not_loaded" || e.lotNo === NOT_LOADED);
       }
     }
     b.treatments = rawTreatments.map((t: any) => {
@@ -476,7 +488,7 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
       const lineChunks = chunks.filter((c) => c.lineKey === line.lineKey);
       for (const ch of lineChunks) {
         const lf = factById.get(ch.loadingId)!;
-        const lotNo = lotNameById.get(ch.loadingId) || lf.no || NOT_LOADED;
+        const lotNo = lotNameById.get(ch.loadingId) || extras[idx]?.lotName || lf.no || NOT_LOADED;
         const e = mkEntry(lotNo, idx, ch.loaded, { loadingRecordId: lf.id, lotRef: lf.no, warehouseId: lf.receivingWarehouseId, warehouseName: lf.receivingWarehouseId ? whName.get(lf.receivingWarehouseId) ?? null : null });
         const ex = extras[idx] ?? extras[0];
         const w = (q: number): Weighted => ({ qty: q4(q), gross: proportional(ex.gross, q, line.booked), net: proportional(ex.net, q, line.booked) });
@@ -502,7 +514,8 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
       }
       const loaded = lineChunks.reduce((s, c) => s + c.loaded, 0);
       const rest = q4(line.booked - loaded);
-      if (rest > EPS) entries.push(mkEntry(NOT_LOADED, idx, rest, { status: "not_loaded" }));
+      const bookedLot = extras[idx]?.lotName || "";
+      if (rest > EPS) entries.push(mkEntry(bookedLot || NOT_LOADED, idx, rest, { lotName: bookedLot || NOT_LOADED, status: "not_loaded" }));
     }
     // legacy: sales tied to the booking itself, not to a lot (shown in Sales Details, counted once in the bill totals)
     const linkedNos = new Set(issued.map((j: any) => str(j.sales_order_no)).filter(Boolean));
@@ -523,16 +536,22 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
       });
     }
     const manual = str(form.manualBillNumber || form.billNo || po.purchase_contract_no);
-    const purchaserAcct = str(form.purchaserAccountName || form.buyerAccountName || form.purchaserName || form.buyerName || form.customerAccountName || form.customerName);
-    const purchaserNo = str(form.purchaserAccountNo || form.buyerAccountNo || form.customerAccountNo);
-    const supplierAcct = str(form.salesAccountName || form.supplierName || form.supplierAccountName || form.purchaseAccountName || form.sellerName);
-    const supplierNo = str(form.salesAccountNo || form.supplierAccountNo || form.purchaseAccountNo);
+    const buyerAccountId = str(form.purchaseAccountId || form.purchaserAccountId) || null;
+    const supplierAccountId = str(form.salesAccountId || form.supplierAccountId) || null;
+    const supplierAcct = str(form.salesAccountName || form.supplierAccountName || form.supplierName || form.sellerName);
+    const supplierNo = str(form.salesAccountNo || form.supplierAccountNo);
+    const rawPurchaserAcct = str(form.purchaseAccountName || form.purchaserAccountName || form.buyerAccountName || form.purchaserName || form.buyerName);
+    const fallbackCustomerAcct = str(form.customerAccountName || form.customerName);
+    const purchaserAcct = rawPurchaserAcct || (fallbackCustomerAcct && fallbackCustomerAcct !== supplierAcct ? fallbackCustomerAcct : "");
+    const purchaserNo = str(form.purchaseAccountNo || form.purchaserAccountNo || form.buyerAccountNo || (!rawPurchaserAcct ? form.customerAccountNo : ""));
     const acctName = supplierAcct || purchaserAcct;
     const bill: BalanceBill = {
       id: po.id, type: "booking", billNo: str(po.purchase_order_no) || "-", manualBillNo: manual && manual !== po.purchase_order_no ? manual : "", date: dateOnly(form.purchaseDate || form.receiptDate || po.created_at),
       purchaseAccountName: acctName, purchaseAccountDetails: [str(form.salesAccountNo || form.purchaseAccountNo), str(form.supplierAddress), str(form.supplierPhone)].filter(Boolean).join(" · "),
+      buyerAccountId,
       buyerAccountName: purchaserAcct,
       buyerAccountNo: purchaserNo,
+      supplierAccountId,
       supplierAccountName: supplierAcct,
       supplierAccountNo: supplierNo,
       companyId: po.company_id ?? null, companyName: po.company_id ? companyName.get(po.company_id) ?? "" : "", countryId: po.country_id, countryName: po.country_name || "", countryCode: po.country_code || "",
@@ -599,15 +618,19 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
     }
     const systemNo = localPurchaseBillNo(lp);
     const contractRef = localPurchaseContractRef(lp);
-    const lpPurchaserAcct = str(lp.buyer_account_name || lp.purchaser_account_name || lp.buyer_name || "");
-    const lpPurchaserNo = str(lp.buyer_account_no || lp.purchaser_account_no || "");
-    const lpSupplierAcct = str(lp.supplier_name);
-    const lpSupplierNo = str(lp.purchase_account_no || lp.supplier_account_no || "");
+    const lpPurchaserId = str(lp.purchase_account_id) || null;
+    const lpSupplierId = str(lp.sales_account_id) || null;
+    const lpPurchaserAcct = str(lp.purchase_account_name || lp.buyer_account_name || lp.purchaser_account_name || lp.buyer_name || "");
+    const lpPurchaserNo = str(lp.purchase_account_no || lp.buyer_account_no || lp.purchaser_account_no || "");
+    const lpSupplierAcct = str(lp.supplier_name || lp.sales_account_name);
+    const lpSupplierNo = str(lp.sales_account_no || lp.supplier_account_no || (!lpPurchaserAcct ? lp.purchase_account_no : "") || "");
     const bill: BalanceBill = {
       id: lp.id, type: "local", billNo: systemNo, manualBillNo: (str(lp.manual_bill_no) && str(lp.manual_bill_no) !== systemNo ? str(lp.manual_bill_no) : "") || contractRef, date: dateOnly(lp.created_at),
       purchaseAccountName: lpSupplierAcct, purchaseAccountDetails: lpSupplierNo,
+      buyerAccountId: lpPurchaserId,
       buyerAccountName: lpPurchaserAcct,
       buyerAccountNo: lpPurchaserNo,
+      supplierAccountId: lpSupplierId,
       supplierAccountName: lpSupplierAcct,
       supplierAccountNo: lpSupplierNo,
       companyId: lp.company_id ?? null, companyName: lp.company_id ? companyName.get(lp.company_id) ?? "" : "",
@@ -655,12 +678,33 @@ export async function loadBalance(session: ErpSession, f: BalanceFilters) {
   return { bills: out, unlinkedSales, cards: cardsOf(out, perms.money), perms, warehouses: data.warehouses, companies: data.companies };
 }
 
-/** Product and warehouse NAMES are master data: shown in the viewer's language, the stored text is never changed. */
+/** Product, warehouse, account, brand, and origin names are localized in the viewer's language; stored text is never modified. */
 async function localizeBills(bills: BalanceBill[], sales: BalanceSale[], warehouses: any[], lang?: SupportedLanguage) {
   if (!lang) return;
   try {
     const goodsIds = new Map<string, { id: string; goods_name: string }>();
-    for (const b of bills) for (const e of b.entries) if (e.goodsId && e.goodsName) goodsIds.set(e.goodsId, { id: e.goodsId, goods_name: e.goodsName });
+    const acctIds = new Map<string, { id: string; name: string }>();
+    for (const b of bills) {
+      if (b.buyerAccountId && b.buyerAccountName) acctIds.set(b.buyerAccountId, { id: b.buyerAccountId, name: b.buyerAccountName });
+      if (b.supplierAccountId && b.supplierAccountName) acctIds.set(b.supplierAccountId, { id: b.supplierAccountId, name: b.supplierAccountName });
+      for (const e of b.entries) {
+        if (e.goodsId && e.goodsName) goodsIds.set(e.goodsId, { id: e.goodsId, goods_name: e.goodsName });
+        if (e.brand && e.brand !== NOT_LOADED) e.brand = translateValue(lang, e.brand);
+        if (e.origin && e.origin !== NOT_LOADED) e.origin = translateValue(lang, e.origin);
+      }
+      if (b.originCountry) b.originCountry = translateValue(lang, b.originCountry);
+    }
+    if (acctIds.size > 0) {
+      const al = await localizeRecordNames([...acctIds.values()], "enterprise_accounts", "name", lang, { phraseFallback: true });
+      const aMap = new Map(al.map((a) => [a.id, a.name]));
+      for (const b of bills) {
+        if (b.buyerAccountId && aMap.get(b.buyerAccountId)) b.buyerAccountName = aMap.get(b.buyerAccountId);
+        if (b.supplierAccountId && aMap.get(b.supplierAccountId)) {
+          b.supplierAccountName = aMap.get(b.supplierAccountId);
+          b.purchaseAccountName = aMap.get(b.supplierAccountId)!;
+        }
+      }
+    }
     const gl = await localizeRecordNames([...goodsIds.values()], "goods", "goods_name", lang);
     const gMap = new Map(gl.map((g) => [g.id, g.goods_name]));
     const nameMap = new Map<string, string>();
