@@ -43,6 +43,8 @@ type CustomerRow = {
   // joined display fields returned by GET /api/erp/customers/[id]
   customer_type?: string | null;
   country_name?: string | null;
+  address_country_name?: string | null;
+  district_name?: string | null;
   state_province_name?: string | null;
   city_name?: string | null;
 };
@@ -132,7 +134,10 @@ export function CustomerProfile({
     }
 
     if (!meta.fatherName && customer.father_name) meta.fatherName = customer.father_name;
-    if (!meta.country && customer.country_name) meta.country = customer.country_name;
+    if (customer.address_country_name) meta.country = customer.address_country_name;
+    else if (!meta.country && customer.country_name && (customer.city_name || customer.state_province_name || customer.district_name)) {
+      meta.country = customer.country_name;
+    }
     if (!meta.stateProvince && customer.state_province_name) meta.stateProvince = customer.state_province_name;
     if (!meta.city && customer.city_name) meta.city = customer.city_name;
 
@@ -228,6 +233,7 @@ export function CustomerProfile({
         district_name: c.district_name,
         city_name: c.city_name || m.city,
         country_name: c.country_name || m.country,
+        address_country_name: c.address_country_name || m.country,
         country_id: c.country_id,
         country_branch_id: c.country_branch_id,
         city_branch_id: c.city_branch_id,
@@ -413,7 +419,7 @@ export function CustomerProfile({
               {/* Location Badge */}
               <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/60 px-3 py-2 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
                 <MapPin className="h-4 w-4 text-rose-500 shrink-0" />
-                <span>{[customer.city_name || parsedMeta.city, customer.state_province_name || parsedMeta.stateProvince, customer.country_name || parsedMeta.country].filter(Boolean).join(", ") || "-"}</span>
+                <span>{[customer.city_name || parsedMeta.city, customer.state_province_name || parsedMeta.stateProvince, customer.address_country_name || parsedMeta.country].filter(Boolean).join(", ") || "-"}</span>
               </div>
             </div>
           </div>
@@ -461,7 +467,7 @@ export function CustomerProfile({
               <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
                   <span className="text-slate-500 font-medium">{getLabel("country", lang)}</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{customer.country_name || parsedMeta.country || "-"}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{customer.address_country_name || parsedMeta.country || "-"}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
                   <span className="text-slate-500 font-medium">{t(lang, "branch.state_label", "State / Province")}</span>
@@ -804,7 +810,7 @@ export function CustomerProfile({
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
                     <span className="text-slate-500">{getLabel("country", lang)}</span>
-                    <span className="font-bold text-slate-800">{customer.country_name || parsedMeta.country || "-"}</span>
+                    <span className="font-bold text-slate-800">{customer.address_country_name || parsedMeta.country || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
                     <span className="text-slate-500">{t(lang, "branch.state_label", "State / Province")}</span>

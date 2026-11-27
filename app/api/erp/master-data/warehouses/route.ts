@@ -8,7 +8,9 @@ import { allocateFormSerials } from "@/lib/services/form-serials";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { ApiClientError, rethrowIfNextControlFlow } from "@/lib/api/response";
+import { assertGeoHierarchy } from "@/lib/services/geo-hierarchy-validator";
+import { geographyCountryForValidation } from "@/lib/services/physical-address-scope";
 
 /**
  * Warehouses master — list + create (secure-by-default).
@@ -16,7 +18,7 @@ import { rethrowIfNextControlFlow } from "@/lib/api/response";
  * so no duplicate UI/logic. Table: migration 20260730_warehouses_master.sql.
  */
 const COLS =
-  "id, country_id, state_province_id, district_id, city_id, area_id, owner_name, owner_person_id, responsible_person_id, warehouse_code, warehouse_name, warehouse_type, full_address, contact_number, status, description, is_active, created_at, updated_at";
+  "id, country_id, address_country_id, state_province_id, district_id, city_id, area_id, owner_name, owner_person_id, responsible_person_id, warehouse_code, warehouse_name, warehouse_type, full_address, contact_number, status, description, is_active, created_at, updated_at";
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,7 +32,7 @@ export async function GET(request: NextRequest) {
     const countryIds = !session.isSuperAdmin ? session.countryIds : null;
     const rows = await withLocalPg(async (sql) => {
       return sql`
-        select id, country_id, state_province_id, district_id, city_id, area_id, owner_name,
+        select id, country_id, address_country_id, state_province_id, district_id, city_id, area_id, owner_name,
                owner_person_id, responsible_person_id,
                warehouse_code, warehouse_name, warehouse_type, full_address, contact_number,
                status, description, is_active, created_at, updated_at
@@ -60,6 +62,24 @@ export async function POST(req: Request) {
     if (!warehouseName) return NextResponse.json({ error: "warehouse_name is required" }, { status: 400 });
 
     const countryId = body.country_id ?? (session.isSuperAdmin ? null : session.countryIds?.[0] ?? null);
+    // country_id is the warehouse's ASSIGNED (access-scope) country: a non-super-admin may
+    // only file a warehouse under a country they are assigned to. The facility's physical
+    // address (address_country_id) may be anywhere in Location Management.
+    if (!session.isSuperAdmin && countryId && !session.countryIds.includes(countryId)) {
+      return NextResponse.json({ error: "Not authorized for this country" }, { status: 403 });
+    }
+    const addressCountryId: string | null = body.address_country_id || null;
+    try {
+      await assertGeoHierarchy({
+        countryId: geographyCountryForValidation(addressCountryId, countryId),
+        stateProvinceId: body.state_province_id || null,
+        districtId: body.district_id || null,
+        cityId: body.city_id || null,
+      });
+    } catch (geoError) {
+      if (geoError instanceof ApiClientError) return NextResponse.json({ error: geoError.message }, { status: geoError.status });
+      throw geoError;
+    }
 
     // Cast to any: the generated Supabase types don't yet know about warehouses.
     // owner_person_id/responsible_person_id (Person Master Phase 2 migration) —
@@ -70,6 +90,7 @@ export async function POST(req: Request) {
       .from("warehouses")
       .insert({
         country_id: countryId,
+        address_country_id: addressCountryId,
         state_province_id: body.state_province_id ?? null,
         district_id: body.district_id ?? null,
         city_id: body.city_id ?? null,

@@ -6183,6 +6183,9 @@ export type UiKey =
   | "bank.account_status"
   | "bank.section_contact_address"
   | "bank.full_address"
+  | "addr.assigned_country_hint"
+  | "addr.physical_address_title"
+  | "addr.physical_address_hint"
   | "bank.enter_full_address"
   | "bank.phone_number"
   | "bank.enter_phone_optional"
@@ -16235,6 +16238,9 @@ const en: Dict = {
   "bank.account_status": "Account Status",
   "bank.section_contact_address": "Contact & Address Information",
   "bank.full_address": "Full Address",
+  "addr.assigned_country_hint": "Assigned country controls access, branch and ledger scope. Changing the address never moves it.",
+  "addr.physical_address_title": "Physical Address (Location Management)",
+  "addr.physical_address_hint": "Where the record is physically located. It can be in another country without changing ownership, permissions, currency or ledger.",
   "bank.enter_full_address": "Enter full address",
   "bank.phone_number": "Phone Number",
   "bank.enter_phone_optional": "Enter phone number (optional)",
@@ -44811,6 +44817,9 @@ const ur: Dict = {
   "bank.account_status": "اکاؤنٹ کی حیثیت",
   "bank.section_contact_address": "رابطہ اور پتے کی معلومات",
   "bank.full_address": "مکمل پتہ",
+  "addr.assigned_country_hint": "تفویض شدہ ملک رسائی، برانچ اور لیجر کا دائرہ کار طے کرتا ہے۔ پتہ بدلنے سے یہ کبھی تبدیل نہیں ہوتا۔",
+  "addr.physical_address_title": "جسمانی پتہ (لوکیشن مینجمنٹ)",
+  "addr.physical_address_hint": "ریکارڈ کی اصل جگہ۔ یہ ملکیت، اجازتوں، کرنسی یا لیجر کو بدلے بغیر کسی دوسرے ملک میں ہو سکتی ہے۔",
   "bank.enter_full_address": "مکمل پتہ درج کریں",
   "bank.phone_number": "فون نمبر",
   "bank.enter_phone_optional": "فون نمبر درج کریں (اختیاری)",
@@ -71907,6 +71916,9 @@ const ar: Dict = {
   "bank.account_status": "حالة الحساب",
   "bank.section_contact_address": "معلومات الاتصال والعنوان",
   "bank.full_address": "العنوان الكامل",
+  "addr.assigned_country_hint": "الدولة المعيّنة تحدد نطاق الوصول والفرع ودفتر الأستاذ. تغيير العنوان لا ينقلها أبدًا.",
+  "addr.physical_address_title": "العنوان الفعلي (إدارة المواقع)",
+  "addr.physical_address_hint": "الموقع الفعلي للسجل. يمكن أن يكون في دولة أخرى دون تغيير الملكية أو الصلاحيات أو العملة أو دفتر الأستاذ.",
   "bank.enter_full_address": "أدخل العنوان الكامل",
   "bank.phone_number": "رقم الهاتف",
   "bank.enter_phone_optional": "أدخل رقم الهاتف (اختياري)",
@@ -99050,6 +99062,9 @@ const fa: Dict = {
   "bank.account_status": "وضعیت حساب",
   "bank.section_contact_address": "اطلاعات تماس و آدرس",
   "bank.full_address": "آدرس کامل",
+  "addr.assigned_country_hint": "کشور تخصیص‌یافته دامنه دسترسی، شعبه و دفتر کل را تعیین می‌کند. تغییر آدرس هرگز آن را جابه‌جا نمی‌کند.",
+  "addr.physical_address_title": "نشانی فیزیکی (مدیریت مکان‌ها)",
+  "addr.physical_address_hint": "محل فیزیکی رکورد. می‌تواند در کشور دیگری باشد بدون تغییر مالکیت، مجوزها، ارز یا دفتر کل.",
   "bank.enter_full_address": "آدرس کامل را وارد کنید",
   "bank.phone_number": "شماره تلفن",
   "bank.enter_phone_optional": "شماره تلفن را وارد کنید (اختیاری)",
@@ -126187,6 +126202,9 @@ const ps: Dict = {
   "bank.account_status": "د حساب حالت",
   "bank.section_contact_address": "د اړیکې او پتې معلومات",
   "bank.full_address": "بشپړه پته",
+  "addr.assigned_country_hint": "ټاکل شوی هېواد د لاسرسي، څانګې او لیجر ساحه ټاکي. د پتې بدلون یې هېڅکله نه لېږدوي.",
+  "addr.physical_address_title": "فزیکي پته (د ځایونو مدیریت)",
+  "addr.physical_address_hint": "د ریکارډ فزیکي ځای. کېدای شي په بل هېواد کې وي پرته له دې چې ملکیت، اجازې، اسعار یا لیجر بدل شي.",
   "bank.enter_full_address": "بشپړه پته دننه کړئ",
   "bank.phone_number": "د تلیفون شمېره",
   "bank.enter_phone_optional": "د تلیفون شمېره دننه کړئ (اختیاري)",

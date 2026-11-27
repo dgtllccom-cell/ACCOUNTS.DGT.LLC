@@ -61,6 +61,7 @@ type CustomerRow = {
   city_id: string | null;
   area_location_id: string | null;
   country_name?: string | null;
+  address_country_id?: string | null;
   state_province_name?: string | null;
   city_name?: string | null;
   customer_name: string;
@@ -381,6 +382,9 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
       const countryName = c.country_name || meta.country || "";
       const stateName = c.state_province_name || meta.stateProvince || "";
       const cityName = c.city_name || meta.city || "";
+      // Only retain the historical city-as-branch display for legacy rows.
+      const branchNames = c.linked_branches?.map((branch) => branch.name).filter(Boolean) ?? [];
+      if (!branchNames.length && !c.address_country_id && cityName) branchNames.push(cityName);
 
       return {
         ...c,
@@ -394,7 +398,8 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
           phone,
           countryName,
           stateName,
-          cityName
+          cityName,
+          branchNames,
         }
       };
     });
@@ -454,7 +459,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
     // Branch (city) filter
     if (selectedBranchFilter !== "all") {
       list = list.filter(
-        (c) => c.meta.cityName?.toLowerCase() === selectedBranchFilter.toLowerCase()
+        (c) => c.meta.branchNames.some((name: string) => name.toLowerCase() === selectedBranchFilter.toLowerCase())
       );
     }
 
@@ -500,7 +505,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
       Array.from(new Set(vals.filter((v): v is string => !!v))).sort();
     return {
       countries: uniq(parsedCustomers.map((c) => c.meta.countryName)),
-      branches: uniq(parsedCustomers.map((c) => c.meta.cityName)),
+      branches: uniq(parsedCustomers.flatMap((c) => c.meta.branchNames)),
       assignees: uniq(parsedCustomers.map((c) => c.meta.assignedStaff)),
     };
   }, [parsedCustomers]);
@@ -551,7 +556,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
       c.meta.leadStatus || "Active",
       `"${c.meta.assignedStaff}"`,
       `"${c.meta.countryName}"`,
-      `"${c.meta.cityName}"`,
+      `"${c.meta.branchNames.join("; ").replace(/"/g, '""')}"`,
       `"${c.meta.phone}"`,
       new Date(c.created_at).toLocaleDateString()
     ]);
@@ -1468,7 +1473,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   const avatarColor = getAvatarColor(c.customer_name);
                   const leadStatus = c.meta.leadStatus || "Active";
                   const customerId = c.person_code || "—";
-                  const branch = c.meta.cityName ? `${c.meta.cityName} Branch` : "—";
+                  const branch = c.meta.branchNames.join(", ") || "—";
 
                   return (
                     <tr

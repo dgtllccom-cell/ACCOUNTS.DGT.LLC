@@ -13,6 +13,8 @@ export type WarehouseRecord = {
   warehouse_type: string;
   country_id: string | null;
   country_name?: string | null;
+  /** Physical facility-address country; country_id stays the assigned/access country. */
+  address_country_id?: string | null;
   state_province_id: string | null;
   district_id: string | null;
   city_id: string | null;
