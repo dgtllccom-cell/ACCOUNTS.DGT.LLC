@@ -79,32 +79,14 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       cityBranchId: body.cityBranchId
     });
 
-    await customersService.update(
-      id,
-      {
-        stateProvinceId: body.stateProvinceId ?? null,
-        districtId: body.districtId ?? null,
-        cityId: body.cityId ?? null,
-        areaLocationId: body.areaLocationId ?? null,
-        customerName: body.customerName,
-        // Only touch person-identity fields when the caller actually sent them, so unrelated
-        // customer edits never wipe an existing first/last/gender/photo.
-        ...(body.firstName !== undefined ? { firstName: body.firstName ?? null } : {}),
-        ...(body.lastName !== undefined ? { lastName: body.lastName ?? null } : {}),
-        ...(body.fatherName !== undefined ? { fatherName: body.fatherName ?? null } : {}),
-        ...(body.gender !== undefined ? { gender: body.gender ?? null } : {}),
-        ...(body.photoUrl !== undefined ? { photoUrl: body.photoUrl ?? null } : {}),
-        companyName: body.companyName ?? null,
-        contactPerson: body.contactPerson ?? null,
-        mobile: body.mobile ?? null,
-        whatsapp: body.whatsapp ?? null,
-        email: body.email ?? null,
-        address: body.address ?? null,
-        notes: body.notes ?? null,
-        originalLanguage: body.originalLanguage
-      },
-      session.userId
-    );
+    // Scope selectors are for authorization only, not fields on the person patch.
+    // Omitted keys must stay omitted: HR can update a person's name without erasing
+    // their Location Management IDs, address, or contact details.
+    const {
+      countryId: _countryId, countryBranchId: _countryBranchId, cityBranchId: _cityBranchId,
+      contacts: _contacts, registrations: _registrations, ...personPatch
+    } = body;
+    await customersService.update(id, personPatch, session.userId);
 
     await auditApiAction(request, {
       action: "customer.update.api",

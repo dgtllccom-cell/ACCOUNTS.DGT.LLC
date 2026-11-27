@@ -60,6 +60,7 @@ export type CompanyRow = {
   country_branch_id?: string | null;
   city_branch_id?: string | null;
   is_branch_operative?: boolean;
+  address_country_id: string | null;
   state_province_id: string | null;
   district_id: string | null;
   city_id: string | null;
@@ -122,6 +123,7 @@ export type CompanyWriteInput = {
   countryBranchId?: string | null;
   cityBranchId?: string | null;
   isBranchOperative?: boolean;
+  addressCountryId?: string | null;
   stateProvinceId?: string | null;
   districtId?: string | null;
   cityId?: string | null;
@@ -154,6 +156,7 @@ const COMPANY_SELECT = [
   "country_branch_id",
   "city_branch_id",
   "is_branch_operative",
+  "address_country_id",
   "state_province_id",
   "district_id",
   "city_id",
@@ -224,6 +227,7 @@ function mapRawRow(r: any): CompanyRow {
     country_branch_id: r.country_branch_id ?? null,
     city_branch_id: r.city_branch_id ?? null,
     is_branch_operative: r.is_branch_operative ?? false,
+    address_country_id: r.address_country_id ?? null,
     state_province_id: r.state_province_id ?? null,
     district_id: r.district_id ?? null,
     city_id: r.city_id ?? null,
@@ -283,6 +287,7 @@ function toPayload(input: Partial<CompanyWriteInput>) {
   if ("countryBranchId" in input) payload.country_branch_id = input.countryBranchId || null;
   if ("cityBranchId" in input) payload.city_branch_id = input.cityBranchId || null;
   if ("isBranchOperative" in input) payload.is_branch_operative = Boolean(input.isBranchOperative);
+  if (input.addressCountryId !== undefined) payload.address_country_id = input.addressCountryId;
   if ("stateProvinceId" in input) payload.state_province_id = input.stateProvinceId || null;
   if ("districtId" in input) payload.district_id = input.districtId || null;
   if ("cityId" in input) payload.city_id = input.cityId || null;
@@ -423,7 +428,7 @@ export class CompaniesRepository {
           INSERT INTO public.companies (
             name, legal_name, base_currency, owner_name, owner_person_id, manager_person_id, business_type,
             country_id, country_branch_id, city_branch_id, is_branch_operative,
-            state_province_id, district_id, city_id, area_location_id,
+            address_country_id, state_province_id, district_id, city_id, area_location_id,
             country_name, state_name, district_name, city_name, area_name, zip_code, address,
             contacts, registrations, contracts, owner_ids, is_active, created_at, updated_at
           ) VALUES (
@@ -438,6 +443,7 @@ export class CompaniesRepository {
             ${payload.country_branch_id ? String(payload.country_branch_id) : null}::uuid,
             ${payload.city_branch_id ? String(payload.city_branch_id) : null}::uuid,
             ${Boolean(payload.is_branch_operative)},
+            ${payload.address_country_id ? String(payload.address_country_id) : null}::uuid,
             ${payload.state_province_id ? String(payload.state_province_id) : null}::uuid,
             ${payload.district_id ? String(payload.district_id) : null}::uuid,
             ${payload.city_id ? String(payload.city_id) : null}::uuid,
@@ -462,7 +468,8 @@ export class CompaniesRepository {
           try {
             const serials = await allocateFormSerials("companies", {
               countryId: (payload.country_id as string) || null,
-              branchKey: (payload.city_id as string) || null,
+              branchKey: (payload.city_branch_id as string) ||
+          ((!payload.address_country_id || payload.address_country_id === payload.country_id) ? (payload.city_id as string) || null : null),
               prefix: "CMP"
             });
             const serialPatch = {
@@ -495,7 +502,8 @@ export class CompaniesRepository {
     try {
       const serials = await allocateFormSerials("companies", {
         countryId: (payload.country_id as string) || null,
-        branchKey: (payload.city_id as string) || null,
+        branchKey: (payload.city_branch_id as string) ||
+          ((!payload.address_country_id || payload.address_country_id === payload.country_id) ? (payload.city_id as string) || null : null),
         prefix: "CMP"
       });
       await supabase.from("companies").update({
@@ -529,17 +537,18 @@ export class CompaniesRepository {
             manager_person_id = COALESCE(${payload.manager_person_id !== undefined ? (payload.manager_person_id ? String(payload.manager_person_id) : null) : null}::uuid, manager_person_id),
             business_type = COALESCE(${payload.business_type !== undefined ? (payload.business_type as string) : null}, business_type),
             country_id = COALESCE(${payload.country_id !== undefined ? (payload.country_id ? String(payload.country_id) : null) : null}::uuid, country_id),
-            state_province_id = COALESCE(${payload.state_province_id !== undefined ? (payload.state_province_id ? String(payload.state_province_id) : null) : null}::uuid, state_province_id),
-            district_id = COALESCE(${payload.district_id !== undefined ? (payload.district_id ? String(payload.district_id) : null) : null}::uuid, district_id),
-            city_id = COALESCE(${payload.city_id !== undefined ? (payload.city_id ? String(payload.city_id) : null) : null}::uuid, city_id),
-            area_location_id = COALESCE(${payload.area_location_id !== undefined ? (payload.area_location_id ? String(payload.area_location_id) : null) : null}::uuid, area_location_id),
-            country_name = COALESCE(${payload.country_name !== undefined ? (payload.country_name as string) : null}, country_name),
-            state_name = COALESCE(${payload.state_name !== undefined ? (payload.state_name as string) : null}, state_name),
-            district_name = COALESCE(${payload.district_name !== undefined ? (payload.district_name as string) : null}, district_name),
-            city_name = COALESCE(${payload.city_name !== undefined ? (payload.city_name as string) : null}, city_name),
-            area_name = COALESCE(${payload.area_name !== undefined ? (payload.area_name as string) : null}, area_name),
-            zip_code = COALESCE(${payload.zip_code !== undefined ? (payload.zip_code as string) : null}, zip_code),
-            address = COALESCE(${payload.address !== undefined ? (payload.address as string) : null}, address),
+            address_country_id = CASE WHEN ${payload.address_country_id !== undefined} THEN ${(payload.address_country_id as string | null | undefined) ?? null}::uuid ELSE address_country_id END,
+            state_province_id = CASE WHEN ${payload.state_province_id !== undefined} THEN ${(payload.state_province_id as string | null | undefined) ?? null}::uuid ELSE state_province_id END,
+            district_id = CASE WHEN ${payload.district_id !== undefined} THEN ${(payload.district_id as string | null | undefined) ?? null}::uuid ELSE district_id END,
+            city_id = CASE WHEN ${payload.city_id !== undefined} THEN ${(payload.city_id as string | null | undefined) ?? null}::uuid ELSE city_id END,
+            area_location_id = CASE WHEN ${payload.area_location_id !== undefined} THEN ${(payload.area_location_id as string | null | undefined) ?? null}::uuid ELSE area_location_id END,
+            country_name = CASE WHEN ${payload.country_name !== undefined} THEN ${(payload.country_name as string | null | undefined) ?? null} ELSE country_name END,
+            state_name = CASE WHEN ${payload.state_name !== undefined} THEN ${(payload.state_name as string | null | undefined) ?? null} ELSE state_name END,
+            district_name = CASE WHEN ${payload.district_name !== undefined} THEN ${(payload.district_name as string | null | undefined) ?? null} ELSE district_name END,
+            city_name = CASE WHEN ${payload.city_name !== undefined} THEN ${(payload.city_name as string | null | undefined) ?? null} ELSE city_name END,
+            area_name = CASE WHEN ${payload.area_name !== undefined} THEN ${(payload.area_name as string | null | undefined) ?? null} ELSE area_name END,
+            zip_code = CASE WHEN ${payload.zip_code !== undefined} THEN ${(payload.zip_code as string | null | undefined) ?? null} ELSE zip_code END,
+            address = CASE WHEN ${payload.address !== undefined} THEN ${(payload.address as string | null | undefined) ?? null} ELSE address END,
             contacts = COALESCE(${payload.contacts !== undefined ? localSql.json(payload.contacts as any) : null}, contacts),
             registrations = COALESCE(${payload.registrations !== undefined ? localSql.json(payload.registrations as any) : null}, registrations),
             owner_ids = COALESCE(${payload.owner_ids !== undefined ? localSql.json(payload.owner_ids as any) : null}, owner_ids),
