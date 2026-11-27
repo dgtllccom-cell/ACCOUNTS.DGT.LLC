@@ -34,6 +34,9 @@ const truckValue = (c: Draft): TruckEntryValue => ({
 function label(key: string, name: string): [string, string] { return [key, name]; }
 const operationalFields = {
   loadingDate: label("sales_loading.loading_date", "Loading Date"), receivedDate: label("sales_loading.received_date", "Actual Received Date"),
+  // plain route text fields: Local Sales keeps its existing simple form (no Route & Location Master picker)
+  loadingCountry: label("sales_loading.loading_country", "Loading Country"), loadingPort: label("sales_loading.loading_port", "Loading Port"),
+  receivedCountry: label("sales_loading.received_country", "Receiving Country"), receivedPort: label("sales_loading.received_port", "Receiving Port"),
   vessel: label("sales_loading.vessel", "Vessel Name"), bl: label("sales_loading.bl", "B/L Number"),
   shippingLine: label("sales_loading.shipping_line", "Shipping Line"), voyage: label("sales_loading.voyage", "Voyage No."), seal: label("sales_loading.seal", "Seal Number"),
   vehicle: label("sales_loading.vehicle", "Vehicle No."), driver: label("sales_loading.driver", "Driver Name"), driverMobile: label("sales_loading.driver_mobile", "Driver Mobile"),
@@ -106,7 +109,7 @@ export function SalesLoadingEntry({ source = "booking", order, records, tt, onBa
               containerType: c.containerType === "40 FT" && !c.containerNumber ? "Truck" : c.containerType,
             })}/>}
             {/* Loading / receiving route — defaulted from the booking, changeable per container via the Route & Location Master */}
-            <div className="grid gap-3 sm:grid-cols-2">
+            {source !== "local" && <div className="grid gap-3 sm:grid-cols-2">
               <BookingRouteFields side="loading" testId={`sales-loading-route-${index}`} className="grid gap-2" shippingMode={order.shippingMode || (truckLoading ? "By Road" : "By Sea")}
                 countryLabel={tt("sales_loading.loading_country", "Loading Country")} disabled={saving}
                 value={{ countryId: c.loadingCountryId, countryName: c.loadingCountry, locationId: c.loadingLocationId, locationName: c.loadingPort }}
@@ -115,12 +118,13 @@ export function SalesLoadingEntry({ source = "booking", order, records, tt, onBa
                 countryLabel={tt("sales_loading.received_country", "Receiving Country")} disabled={saving}
                 value={{ countryId: c.receivedCountryId, countryName: c.receivedCountry, locationId: c.receivedLocationId, locationName: c.receivedPort }}
                 onChange={leg => patch(index, { receivedCountryId: leg.countryId, receivedCountry: leg.countryName, receivedLocationId: leg.locationId, receivedPort: leg.locationName })}/>
-            </div>
+            </div>}
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="text-xs font-semibold">{truckLoading ? tt("sales_loading.truck_container_no", "Truck / Container No. *") : tt("plrf.container_no_req", "Container Number *")}<Input autoComplete="off" required maxLength={160} value={c.containerNumber} onChange={e => patch(index, { containerNumber: e.target.value.toUpperCase() })} className={input}/></label>
               <label className="text-xs font-semibold">{tt("sales_loading.container_type", "Container Type")}<select value={c.containerType} onChange={e => patch(index, { containerType: e.target.value as Draft["containerType"] })} className={input}>{CONTAINER_TYPES.map(v => <option key={v} value={v}>{v === "Truck" ? tt("sales_loading.type_truck", "Truck") : v}</option>)}</select></label>
               {(Object.keys(operationalFields) as (keyof typeof operationalFields)[]).filter(k => {
                 const mode = order.shippingMode.toLowerCase();
+                if (["loadingCountry", "loadingPort", "receivedCountry", "receivedPort"].includes(k)) return source === "local";
                 // with truck loading the Truck Registration picker above carries the truck, driver and mobile
                 if (["driver", "vehicle", "driverMobile"].includes(k)) return !truckLoading && (mode.includes("road") || !mode);
                 if (["flight", "awb"].includes(k)) return mode.includes("air") || !mode;

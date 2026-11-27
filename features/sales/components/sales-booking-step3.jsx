@@ -53,7 +53,8 @@ export function SalesBookingStep3({
   onBack,
   onEditItem,
   countries = [],
-  ports = []
+  ports = [],
+  isLocalSale = false
 }) {
   const tr = label => translateHeader(lang, label);
   const currency = form.salesCurrency || form.currencyType || "AED";
@@ -138,6 +139,8 @@ export function SalesBookingStep3({
               </div>
             </div>
 
+            {/* Local Sales stays a simple local form: no Loading & Receiving, port or border route (owner rule) */}
+            {!isLocalSale && (<>
             {/* Loading route: country → port / border / airport from the Route & Location Master */}
             <BookingRouteFields
               side="loading"
@@ -188,6 +191,8 @@ export function SalesBookingStep3({
                 };
               })}
             />
+
+            </>)}
 
             {/* Loading Date & Receiving Date */}
             <div className="grid grid-cols-2 gap-2.5">

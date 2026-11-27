@@ -141,3 +141,38 @@ describe("Purchase Loading entry", () => {
     expect((loading.getByLabelText("Loading Country") as HTMLSelectElement).value).toBe("c-ae");
   });
 });
+
+describe("Local Sales stays a simple local form (owner rule: no Loading & Receiving / port / border picker)", () => {
+  it("hides the route pickers on the Local Sales shipping & payment step but keeps payment", () => {
+    render(<SalesBookingStep3 isLocalSale form={{ shippingMode: "By Road" }} setForm={vi.fn()} goodsEntries={[]} />);
+    expect(screen.queryByTestId("sales-booking-loading-route")).toBeNull();
+    expect(screen.queryByTestId("sales-booking-receiving-route")).toBeNull();
+    expect(screen.queryByLabelText(/Loading Border|Receiving Border|Loading Port|Receiving Port/)).toBeNull();
+    expect(screen.getByText("Payment Information")).toBeTruthy();
+  });
+
+  it("keeps the Local Sales loading entry on its existing plain fields — no Route & Location Master picker", () => {
+    const order = toLoadingOrder({ id: "f73b8a60-042e-4ff5-a7e1-fce71c64a502", sales_order_no: "LS-1", order_date: "2026-11-27",
+      form_data: { form: { loadingCountry: "United Arab Emirates", loadingPort: "Al Ras" }, goodsEntries: [{ goodsName: "Walnut kernels", qtyNo: 10, qtyName: "Cartons" }] } }, true);
+    render(<SalesLoadingEntry source="local" order={order} records={[]} tt={(_k, f) => f} onBack={vi.fn()} onSaved={vi.fn()} />);
+    const entry = within(screen.getByTestId("sales-loading-entry"));
+    for (const next of ["Next: Parties", "Next: Goods", "Next: New Loading"]) fireEvent.click(entry.getByRole("button", { name: next }));
+    expect(entry.queryByTestId("sales-loading-route-0")).toBeNull();
+    expect(entry.queryByTestId("sales-receiving-route-0")).toBeNull();
+    expect((entry.getByLabelText("Loading Port") as HTMLInputElement).tagName).toBe("INPUT");
+  });
+});
+
+describe("Local vs booking separation holds in all five languages", () => {
+  for (const lang of ["en", "ur", "ps", "fa", "ar"]) {
+    it(`${lang}: Local Sales has no route picker, Sales Booking keeps it`, () => {
+      const { unmount } = render(<SalesBookingStep3 isLocalSale lang={lang} form={{ shippingMode: "By Sea" }} setForm={vi.fn()} goodsEntries={[]} />);
+      expect(screen.queryByTestId("sales-booking-loading-route")).toBeNull();
+      expect(screen.queryByTestId("sales-booking-receiving-route")).toBeNull();
+      unmount();
+      render(<SalesBookingStep3 lang={lang} form={{ shippingMode: "By Sea" }} setForm={vi.fn()} goodsEntries={[]} />);
+      expect(screen.getByTestId("sales-booking-loading-route")).toBeTruthy();
+      expect(screen.getByTestId("sales-booking-receiving-route")).toBeTruthy();
+    });
+  }
+});
