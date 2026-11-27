@@ -358,11 +358,27 @@ export async function PUT(request: Request) {
 
     // A branch's country is its identity (scope, permissions, currency, ledger). Editing the branch's
     // address must never move it to another country — refuse instead of silently re-scoping.
-    const existingBranch = await withLocalPg(async (sql) => {
+    let existingBranch = await withLocalPg(async (sql) => {
       const rows = await sql`select country_id from public.country_branches where id = ${id}::uuid and deleted_at is null limit 1`;
       return rows[0] ?? null;
     });
-    if (existingBranch && isAssignedCountryChange(existingBranch.country_id, parsed.data.countryId)) {
+    if (!existingBranch) {
+      const supabase = createSupabaseAdminClient() as any;
+      const { data, error } = await supabase
+        .from("country_branches")
+        .select("country_id")
+        .eq("id", id)
+        .is("deleted_at", null)
+        .maybeSingle();
+      if (error) {
+        return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 500 });
+      }
+      existingBranch = data;
+    }
+    if (!existingBranch) {
+      return NextResponse.json({ error: "Country main branch not found." }, { status: 404 });
+    }
+    if (isAssignedCountryChange(existingBranch.country_id, parsed.data.countryId)) {
       return NextResponse.json(
         { error: { code: "ASSIGNED_COUNTRY_LOCKED", message: "A branch's country cannot be changed from an address edit. Create a branch in the other country instead." } },
         { status: 409 }
@@ -406,7 +422,6 @@ export async function PUT(request: Request) {
     }
 
     const payload = {
-      country_id: parsed.data.countryId,
       operational_domain: domain,
       name: parsed.data.name.trim(),
       code: parsed.data.code.trim().toUpperCase(),
@@ -436,7 +451,6 @@ export async function PUT(request: Request) {
       const rows = await sql`
         update public.country_branches
         set
-          country_id = ${payload.country_id}::uuid,
           operational_domain = ${payload.operational_domain},
           name = ${payload.name},
           code = ${payload.code},

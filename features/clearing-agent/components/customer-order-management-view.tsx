@@ -11976,7 +11976,7 @@ function Step4ReviewConfirm({
                 {tt("final_destination_country_field", "Final Destination Country")}
               </span>
               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">
-                {formData.receiving_country_name || "-"}
+                {formData.final_destination_country_name || formData.receiving_country_name || "-"}
               </span>
             </div>
           </div>

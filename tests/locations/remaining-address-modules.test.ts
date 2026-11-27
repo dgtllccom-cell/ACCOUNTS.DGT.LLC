@@ -11,6 +11,7 @@ const branchId = "2a3b4c5d-6e7f-4a8b-9c0d-1e2f3a4b5c6d";
 const h = vi.hoisted(() => ({
   session: { userId: "actor", isSuperAdmin: true, countryIds: [] as string[], cityBranchIds: [] as string[], roles: ["super_admin"], preferredLanguage: "en" },
   existing: {} as Record<string, unknown>,
+  useLocalPg: true,
   patches: [] as Record<string, unknown>[],
   inserts: [] as { text: string; values: unknown[] }[],
 }));
@@ -28,7 +29,7 @@ vi.mock("@/lib/db/local-postgres", () => {
     if (/count\(\*\)/i.test(text)) return Promise.resolve([{ c: 0 }]);
     return Promise.resolve([h.existing]);
   };
-  return { withLocalPg: async (fn: (s: typeof sql) => unknown) => fn(sql), withReadPg: async (fn: (s: typeof sql) => unknown) => fn(sql) };
+  return { withLocalPg: async (fn: (s: typeof sql) => unknown) => h.useLocalPg ? fn(sql) : null, withReadPg: async (fn: (s: typeof sql) => unknown) => fn(sql) };
 });
 
 import { PATCH as patchTruck } from "@/app/api/erp/master-data/trucks/[id]/route";
@@ -39,6 +40,7 @@ beforeEach(() => {
   h.patches.length = 0;
   h.inserts.length = 0;
   h.existing = {};
+  h.useLocalPg = true;
 });
 
 describe("Truck / Driver registration — driver address from Location Management", () => {
@@ -72,6 +74,42 @@ describe("Branch address edits cannot move the branch to another country", () =>
     expect(res.status).toBe(409);
     expect(JSON.stringify(await res.json())).toContain("ASSIGNED_COUNTRY_LOCKED");
     expect(h.inserts).toHaveLength(0);
+  });
+});
+
+describe("Branch address fallback", () => {
+  it.each([
+    { table: "country_branches", countryId: india, parentId: branchId },
+    { table: "city_branches", countryId: uae, parentId: truckId }
+  ])("refuses a scope change through Supabase on $table", async ({ table, countryId, parentId }) => {
+    vi.resetModules();
+    h.useLocalPg = false;
+    const update = vi.fn();
+    const query = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      is: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: { id: branchId, country_id: uae, country_branch_id: branchId }, error: null }),
+      update
+    };
+    const from = vi.fn().mockReturnValue(query);
+    vi.doMock("@/lib/supabase/admin", () => ({ createSupabaseAdminClient: () => ({ from }) }));
+    vi.doMock("@/features/branch-management/validation", async (orig) => {
+      const real: any = await orig();
+      const schema = { safeParse: (body: object) => ({ success: true, data: { ...body, operationalDomain: "business" } }) };
+      return { ...real, createCountryBranchSchema: schema, createCityBranchSchema: schema };
+    });
+    const { PUT } = table === "country_branches"
+      ? await import("@/app/api/branch-management/country-branches/route")
+      : await import("@/app/api/branch-management/city-branches/route");
+    const response = await PUT(new Request("http://localhost/x", {
+      method: "PUT",
+      body: JSON.stringify({ id: branchId, countryId, countryBranchId: parentId })
+    }));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ error: { code: "ASSIGNED_COUNTRY_LOCKED" } });
+    expect(from).toHaveBeenCalledWith(table);
+    expect(update).not.toHaveBeenCalled();
   });
 });
 

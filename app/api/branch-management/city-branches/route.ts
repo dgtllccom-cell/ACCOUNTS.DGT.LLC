@@ -535,20 +535,6 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
 
-    // The city branch's country and main branch are its identity (scope, permissions, currency, ledger).
-    // An address edit must never move it — refuse a change instead of silently re-scoping.
-    const lockedScope = await withLocalPg(async (sql) => {
-      const rows = await sql`select country_id, country_branch_id from public.city_branches where id = ${id} and deleted_at is null limit 1`;
-      return (rows as any[])[0] ?? null;
-    });
-    if (lockedScope && (isAssignedCountryChange(lockedScope.country_id, parsed.data.countryId)
-      || isAssignedCountryChange(lockedScope.country_branch_id, parsed.data.countryBranchId))) {
-      return NextResponse.json(
-        { error: { code: "ASSIGNED_COUNTRY_LOCKED", message: "A city branch's country and main branch cannot be changed from an address edit." } },
-        { status: 409 }
-      );
-    }
-
     if (!session.isSuperAdmin && !hasRolePermission(session, "city_branches", "update") && !hasRolePermission(session, "city_branches", "create")) {
       return NextResponse.json({ error: formatError("Missing permission: city_branches:update", session.isSuperAdmin) }, { status: 403 });
     }
@@ -558,12 +544,28 @@ export async function PUT(request: Request) {
     if (!sessionInDomain(session, parsed.data.operationalDomain)) {
       return NextResponse.json({ error: formatError(`You do not have ${parsed.data.operationalDomain} domain access to update this branch.`, session.isSuperAdmin) }, { status: 403 });
     }
-    // the branch being edited must itself be inside the caller's scope and domain — not only the values it is changed to
+    let existing = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select id, country_id, country_branch_id, operational_domain
+        from public.city_branches where id = ${id} and deleted_at is null limit 1
+      `;
+      return rows[0] ?? null;
+    });
+    if (!existing) {
+      const supabase = createSupabaseAdminClient() as any;
+      const { data, error } = await supabase
+        .from("city_branches")
+        .select("id,country_id,country_branch_id,operational_domain")
+        .eq("id", id)
+        .is("deleted_at", null)
+        .maybeSingle();
+      if (error) {
+        return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 500 });
+      }
+      existing = data;
+    }
+
     if (!session.isSuperAdmin) {
-      const existing = await withLocalPg(async (sql) => {
-        const rows = await sql`select id, country_id, operational_domain from public.city_branches where id = ${id} and deleted_at is null limit 1`;
-        return (rows as any[])[0] ?? null;
-      });
       const ownDomain = domainSuperAdminDomain(session.roles);
       const countryLevel = (session.roles ?? []).some((r) => isCountryLevelRole(r));
       const inScope = existing
@@ -574,6 +576,17 @@ export async function PUT(request: Request) {
       if (!inScope) {
         return NextResponse.json({ error: formatError("This branch is outside your scope.", session.isSuperAdmin) }, { status: 403 });
       }
+    }
+
+    if (!existing) {
+      return NextResponse.json({ error: "City branch not found." }, { status: 404 });
+    }
+    if (isAssignedCountryChange(existing.country_id, parsed.data.countryId)
+      || isAssignedCountryChange(existing.country_branch_id, parsed.data.countryBranchId)) {
+      return NextResponse.json(
+        { error: { code: "ASSIGNED_COUNTRY_LOCKED", message: "A city branch's country and main branch cannot be changed from an address edit." } },
+        { status: 409 }
+      );
     }
 
     let mainBranch: { id: string; country_id: string; local_currency: string; permission_grants: any; operational_domain?: string | null; is_main?: boolean | null } | null = null;
@@ -693,8 +706,6 @@ export async function PUT(request: Request) {
     }
 
     const payload = {
-      country_id: parsed.data.countryId,
-      country_branch_id: parsed.data.countryBranchId,
       operational_domain: parsed.data.operationalDomain,
       city_name: normCityName,
       name: normName,
@@ -733,8 +744,6 @@ export async function PUT(request: Request) {
       const rows = await sql`
         update public.city_branches
         set
-          country_id = ${payload.country_id},
-          country_branch_id = ${payload.country_branch_id},
           operational_domain = ${payload.operational_domain},
           city_name = ${payload.city_name},
           name = ${payload.name},
