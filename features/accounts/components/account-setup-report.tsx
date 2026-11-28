@@ -1,9 +1,11 @@
 "use client";
 
+import { SavedText } from "@/components/i18n/saved-text";
 import { AlRasDemoImport } from "./al-ras-demo-import";
 import { getAppEnvironment } from "@/lib/env/environment";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useCellHoverTitles } from "@/lib/ui/use-cell-hover-titles";
 import { createPortal } from "react-dom";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import {
@@ -205,6 +207,9 @@ export function AccountSetupReport({
   const filterMenuRef = useRef<HTMLDivElement>(null);
   const dateMenuRef = useRef<HTMLDivElement>(null);
   const tableMenuRef = useRef<HTMLDivElement>(null);
+  // Hover any Chart of Accounts cell to see its complete data.
+  const coaTableRef = useRef<HTMLTableElement | null>(null);
+  useCellHoverTitles(coaTableRef);
   const [tableMenuOpen, setTableMenuOpen] = useState(false);
   const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
   const [datePreset, setDatePreset] = useState<"all" | "today" | "week" | "month" | "year" | "custom">("all");
@@ -1163,7 +1168,7 @@ export function AccountSetupReport({
 
         {/* Table Content */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs min-w-[1250px]">
+          <table ref={coaTableRef} data-testid="coa-register-table" className="w-full text-left border-collapse text-xs min-w-[1250px]">
             <thead>
               <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                 <Th className="p-3 w-10 text-center">
@@ -1229,7 +1234,7 @@ export function AccountSetupReport({
                         </button>
                       </td>
                       <td className="p-3">
-                        <span className="font-bold text-slate-900 dark:text-white">{row.accountName}</span>
+                        <SavedText value={row.accountName} lang={lang} kind="name" className="font-bold text-slate-900 dark:text-white" />
                       </td>
                       <td className="p-3">
                         <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 whitespace-nowrap">
