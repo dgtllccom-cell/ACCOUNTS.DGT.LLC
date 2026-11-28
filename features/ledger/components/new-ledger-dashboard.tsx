@@ -1,5 +1,6 @@
 "use client";
 
+import { localizeName } from "@/lib/i18n/transliteration";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -161,9 +162,10 @@ function exportCsv(filename: string, rows: string[][]) {
   URL.revokeObjectURL(url);
 }
 
-function buildLedgerOption(row: LedgerLookupRow): SearchSelectOption {
+function buildLedgerOption(row: LedgerLookupRow, lang = "en"): SearchSelectOption {
   const branch = row.cityBranchName || row.countryBranchName || row.countryName || "";
-  const label = `${row.accountCode || row.ledgerCode} · ${row.accountName || row.ledgerName}${branch ? ` · ${branch}` : ""}`;
+  const shownName = localizeName(row.accountName || row.ledgerName, lang);
+  const label = `${row.accountCode || row.ledgerCode} · ${shownName}${branch ? ` · ${branch}` : ""}`;
   const keywords = [
     row.ledgerCode,
     row.ledgerName,
@@ -183,7 +185,7 @@ function buildLedgerOption(row: LedgerLookupRow): SearchSelectOption {
     ? `${row.ledgerCurrency || ""} ${Number(row.currentBalance).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`.trim()
     : "";
   const details = [
-    [row.accountCode || row.ledgerCode, row.accountName || row.ledgerName].filter(Boolean).join(" · "),
+    [row.accountCode || row.ledgerCode, shownName].filter(Boolean).join(" · "),
     row.ledgerCode && row.ledgerCode !== row.accountCode ? row.ledgerCode : "",
     row.companyName,
     [row.accountKind, row.ledgerCurrency].filter(Boolean).join(" · "),
@@ -272,7 +274,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
     return list;
   }, [rawLedgers, selectedCountry, selectedBranch]);
 
-  const ledgerOptions = useMemo(() => filteredLedgers.map(buildLedgerOption), [filteredLedgers]);
+  const ledgerOptions = useMemo(() => filteredLedgers.map((row) => buildLedgerOption(row, activeLang)), [filteredLedgers, activeLang]);
 
   const linesWithRunningUsd = useMemo(() => {
     let runningUsd = 0;

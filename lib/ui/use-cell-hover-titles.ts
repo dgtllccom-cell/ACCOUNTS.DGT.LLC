@@ -13,6 +13,13 @@ const BUBBLE_ID = "erp-cell-hover-bubble";
 /** Hidden popovers, icons-only overlays and screen-reader-hidden parts never belong in the bubble. */
 const HIDDEN_PARTS = '[hidden], [aria-hidden="true"], [role="tooltip"], .hidden, .invisible, .opacity-0, .sr-only, [data-no-hover-title]';
 
+/** Editable cells (inputs, selects, text areas) show their own value; no bubble — a select's text would list every option. */
+export const EDITABLE_PARTS = 'input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea, [contenteditable="true"]';
+
+export function isEditableCell(cell: Element): boolean {
+  return Boolean(cell.querySelector(EDITABLE_PARTS));
+}
+
 export function cellHoverText(cell: HTMLElement): string {
   let source: HTMLElement = cell;
   if (cell.querySelector(HIDDEN_PARTS)) {
@@ -38,7 +45,7 @@ export function cellHoverText(cell: HTMLElement): string {
 /** Store every data cell's (tbody td) full text; icon-only / empty cells and opted-out cells get none. */
 export function applyCellHoverTitles(container: HTMLElement) {
   container.querySelectorAll<HTMLTableCellElement>("tbody td").forEach((cell) => {
-    const text = cell.hasAttribute("data-no-hover-title") ? "" : cellHoverText(cell);
+    const text = cell.hasAttribute("data-no-hover-title") || isEditableCell(cell) ? "" : cellHoverText(cell);
     if (!text) {
       cell.removeAttribute(HOVER_TEXT_ATTR);
       return;
@@ -153,6 +160,7 @@ export function useCellHoverTitles(ref: RefObject<HTMLElement | null>) {
 
     applyCellHoverTitles(container);
     observer.observe(container, { childList: true, subtree: true, characterData: true });
+    container.setAttribute("data-hover-owned", ""); // the ERP-wide GlobalHoverDetails leaves this area to us
     container.addEventListener("mouseover", over);
     container.addEventListener("mouseout", out);
     window.addEventListener("scroll", hide, true);
@@ -165,6 +173,7 @@ export function useCellHoverTitles(ref: RefObject<HTMLElement | null>) {
         container.removeEventListener("mouseover", over);
         container.removeEventListener("mouseout", out);
         window.removeEventListener("scroll", hide, true);
+        container.removeAttribute("data-hover-owned");
         hideCellBubble();
       }
     };

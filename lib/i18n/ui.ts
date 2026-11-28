@@ -12740,6 +12740,8 @@ export type UiKey =
   | "locmaster.route_receiving_rail"
   | "locmaster.route_select_country"
   | "locmaster.route_saved_legacy"
+  | "tr.auto_name_chip"
+  | "tr.auto_name_title"
   | "clearing.print_route_transit_details"
   | "clearing.col_stage"
   | "clearing.col_country"
@@ -13587,6 +13589,8 @@ const en: Dict = {
   "locmaster.route_receiving_rail": "Receiving Rail Terminal",
   "locmaster.route_select_country": "Select Country",
   "locmaster.route_saved_legacy": "Saved name (not in Location Master)",
+  "tr.auto_name_chip": "auto",
+  "tr.auto_name_title": "Converted automatically from the saved name: {name}",
   "clearing.print_route_transit_details": "Route & Multi-Stage Transit Details",
   "clearing.col_stage": "Stage",
   "clearing.col_country": "Country",
@@ -40821,6 +40825,8 @@ const ur: Dict = {
   "locmaster.route_receiving_rail": "وصولی ریلوے ٹرمینل",
   "locmaster.route_select_country": "ملک منتخب کریں",
   "locmaster.route_saved_legacy": "محفوظ نام (لوکیشن ماسٹر میں نہیں)",
+  "tr.auto_name_chip": "خودکار",
+  "tr.auto_name_title": "محفوظ نام سے خودکار طور پر تبدیل کیا گیا: {name}",
   "clearing.print_route_transit_details": "روٹ اور ملٹی اسٹیج ٹرانزٹ کی تفصیلات",
   "clearing.col_stage": "مرحلہ",
   "clearing.col_country": "ملک",
@@ -68024,6 +68030,8 @@ const ar: Dict = {
   "locmaster.route_receiving_rail": "محطة قطارات الاستلام",
   "locmaster.route_select_country": "اختر الدولة",
   "locmaster.route_saved_legacy": "الاسم المحفوظ (غير موجود في سجل المواقع)",
+  "tr.auto_name_chip": "تلقائي",
+  "tr.auto_name_title": "تم التحويل تلقائيًا من الاسم المحفوظ: {name}",
   "clearing.print_route_transit_details": "تفاصيل المسار والترانزيت متعدد المراحل",
   "clearing.col_stage": "المرحلة",
   "clearing.col_country": "الدولة",
@@ -95228,6 +95236,8 @@ const fa: Dict = {
   "locmaster.route_receiving_rail": "پایانه ریلی تحویل",
   "locmaster.route_select_country": "کشور را انتخاب کنید",
   "locmaster.route_saved_legacy": "نام ذخیره‌شده (در فهرست مکان‌ها نیست)",
+  "tr.auto_name_chip": "خودکار",
+  "tr.auto_name_title": "به‌طور خودکار از نام ذخیره‌شده تبدیل شد: {name}",
   "clearing.print_route_transit_details": "جزئیات مسیر و ترانزیت چند مرحله‌ای",
   "clearing.col_stage": "مرحله",
   "clearing.col_country": "کشور",
@@ -122431,6 +122441,8 @@ const ps: Dict = {
   "locmaster.route_receiving_rail": "د ترلاسه کولو د اورګاډي ترمینل",
   "locmaster.route_select_country": "هېواد وټاکئ",
   "locmaster.route_saved_legacy": "خوندي شوی نوم (د ځای په ماسټر کې نشته)",
+  "tr.auto_name_chip": "اتومات",
+  "tr.auto_name_title": "له خوندي شوي نوم څخه په اتومات ډول بدل شو: {name}",
   "clearing.print_route_transit_details": "د لارې او څو مرحلې ټرانزیټ توضیحات",
   "clearing.col_stage": "مرحله",
   "clearing.col_country": "هیواد",

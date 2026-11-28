@@ -1,5 +1,6 @@
 "use client";
 
+import { localizeName } from "@/lib/i18n/transliteration";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -180,8 +181,8 @@ export function UnifiedDetailedLedgerView() {
           const options = Array.from(grouped.values()).map((g) => ({
             value: g.ids.join(","),
             label: g.label,
-            keywords: g.keywords,
-            primaryText: g.name,
+            keywords: `${g.keywords} ${localizeName(g.name, lang)}`,
+            primaryText: localizeName(g.name, lang),
             code: g.code,
             companyName: g.comp || undefined,
             category: g.kind,

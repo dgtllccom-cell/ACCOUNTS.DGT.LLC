@@ -1,5 +1,7 @@
 "use client";
 
+import { localizeName } from "@/lib/i18n/transliteration";
+import { SavedText } from "@/components/i18n/saved-text";
 import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -214,9 +216,10 @@ function normalizeForSearch(value: string) {
     .trim();
 }
 
-function buildLedgerOption(row: LedgerLookupRow): SearchSelectOption {
+function buildLedgerOption(row: LedgerLookupRow, lang = "en"): SearchSelectOption {
   const branch = row.cityBranchName || row.countryBranchName || row.countryName || "";
-  const label = `${row.accountCode || row.ledgerCode} · ${row.accountName || row.ledgerName}${branch ? ` · ${branch}` : ""}`;
+  const shownName = localizeName(row.accountName || row.ledgerName, lang);
+  const label = `${row.accountCode || row.ledgerCode} · ${shownName}${branch ? ` · ${branch}` : ""}`;
   const keywords = [
     row.ledgerCode,
     row.ledgerName,
@@ -236,7 +239,7 @@ function buildLedgerOption(row: LedgerLookupRow): SearchSelectOption {
     ? `${row.ledgerCurrency || ""} ${Number(row.currentBalance).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`.trim()
     : "";
   const details = [
-    [row.accountCode || row.ledgerCode, row.accountName || row.ledgerName].filter(Boolean).join(" · "),
+    [row.accountCode || row.ledgerCode, shownName].filter(Boolean).join(" · "),
     row.ledgerCode && row.ledgerCode !== row.accountCode ? row.ledgerCode : "",
     row.companyName,
     [row.accountKind, row.ledgerCurrency].filter(Boolean).join(" · "),
@@ -433,7 +436,7 @@ export function LedgerReportView({
     return list;
   }, [rows, selectedCountry, branchFilter]);
 
-  const ledgerOptions = useMemo(() => filteredLedgers.map((row) => buildLedgerOption(row)), [filteredLedgers]);
+  const ledgerOptions = useMemo(() => filteredLedgers.map((row) => buildLedgerOption(row, effectiveLang)), [filteredLedgers, effectiveLang]);
 
   const displayedLines = useMemo(() => {
     if (!statement?.lines) return [];
@@ -1757,7 +1760,7 @@ export function LedgerReportView({
               { key: "countryName", header: t(effectiveLang, "lgr.country", "Country"), render: (r) => r.countryName || "-" },
               { key: "branch", header: t(effectiveLang, "lgr.branch", "Branch"), render: (r) => buildBranchLabel(r) },
               { key: "accountCode", header: t(effectiveLang, "lgr.account_no", "Account No"), render: (r) => r.accountCode || r.ledgerCode },
-              { key: "accountName", header: t(effectiveLang, "lgr.account_name", "Account Name"), render: (r) => r.accountName || r.ledgerName },
+              { key: "accountName", header: t(effectiveLang, "lgr.account_name", "Account Name"), render: (r) => <SavedText value={r.accountName || r.ledgerName} lang={effectiveLang} kind="name" /> },
               { key: "entries", header: t(effectiveLang, "lgr.entries", "Entries"), align: "right" },
               {
                 key: "credit",

@@ -1,5 +1,6 @@
 "use client";
 
+import { SavedText } from "@/components/i18n/saved-text";
 import { HoverCellsArea } from "@/components/ui/hover-cells-area";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -1009,7 +1010,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                         {accNo}
                       </td>
                       <td className="px-2.5 py-2 font-black uppercase text-slate-900 dark:text-slate-100">
-                        {x.name}
+                        <SavedText value={x.name} lang={lang} kind="name" />
                       </td>
                       <td className="px-2.5 py-2 text-xs font-medium text-slate-600 dark:text-slate-300">
                         <span>{x.countryName && x.countryName !== "—" ? x.countryName : scopeCountry}</span>
@@ -1165,7 +1166,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                     {selectedLedgerAccount.code}
                   </span>
                   <h3 className="text-base font-black text-slate-900 dark:text-slate-100">
-                    {selectedLedgerAccount.name}
+                    <SavedText value={selectedLedgerAccount.name} lang={lang} kind="name" />
                   </h3>
                 </div>
                 <p className="mt-0.5 text-xs text-slate-500">

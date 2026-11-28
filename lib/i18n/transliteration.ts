@@ -214,7 +214,54 @@ const AUTHENTIC_NAMES_DICT: Record<string, Record<string, string>> = {
   "turkmenistan": { ur: "ترکمانستان", ar: "تركمانستان", fa: "ترکمنستان", ps: "ترکمنستان" },
   "uzbekistan": { ur: "ازبکستان", ar: "أوزبكستان", fa: "ازبکستان", ps: "ازبکستان" },
   "turkiye": { ur: "ترکیہ", ar: "تركيا", fa: "ترکیه", ps: "ترکیه" },
-  "turkey": { ur: "ترکی", ar: "تركيا", fa: "ترکیه", ps: "ترکیه" }
+  "turkey": { ur: "ترکی", ar: "تركيا", fa: "ترکیه", ps: "ترکیه" },
+  // ── Business words and places inside account / customer names (auto-converted names, owner decision 28-Nov) ──
+  "office": { ur: "آفس", ar: "مكتب", fa: "دفتر", ps: "دفتر" },
+  "sales": { ur: "سیلز", ar: "مبيعات", fa: "فروش", ps: "پلور" },
+  "sale": { ur: "سیل", ar: "بيع", fa: "فروش", ps: "پلور" },
+  "city": { ur: "سٹی", ar: "سيتي", fa: "سیتی", ps: "سټي" },
+  "branch": { ur: "برانچ", ar: "فرع", fa: "شعبه", ps: "څانګه" },
+  "account": { ur: "اکاؤنٹ", ar: "حساب", fa: "حساب", ps: "حساب" },
+  "goods": { ur: "گڈز", ar: "بضائع", fa: "کالا", ps: "توکي" },
+  "traders": { ur: "ٹریڈرز", ar: "تجار", fa: "بازرگانان", ps: "سوداګر" },
+  "demo": { ur: "ڈیمو", ar: "تجريبي", fa: "نمایشی", ps: "ډیمو" },
+  "personal": { ur: "پرسنل", ar: "شخصي", fa: "شخصی", ps: "شخصي" },
+  "general": { ur: "جنرل", ar: "عام", fa: "عمومی", ps: "عمومي" },
+  "main": { ur: "مین", ar: "رئيسي", fa: "اصلی", ps: "اصلي" },
+  "business": { ur: "بزنس", ar: "أعمال", fa: "تجارت", ps: "سوداګري" },
+  "customer": { ur: "کسٹمر", ar: "عميل", fa: "مشتری", ps: "پېرودونکی" },
+  "supplier": { ur: "سپلائر", ar: "مورد", fa: "تأمین‌کننده", ps: "عرضه کوونکی" },
+  "bank": { ur: "بینک", ar: "بنك", fa: "بانک", ps: "بانک" },
+  "cash": { ur: "کیش", ar: "نقد", fa: "نقد", ps: "نغدي" },
+  "store": { ur: "اسٹور", ar: "متجر", fa: "فروشگاه", ps: "هټۍ" },
+  "shop": { ur: "شاپ", ar: "محل", fa: "مغازه", ps: "دوکان" },
+  "transport": { ur: "ٹرانسپورٹ", ar: "نقل", fa: "حمل‌ونقل", ps: "ټرانسپورټ" },
+  "quetta": { ur: "کوئٹہ", ar: "كويتا", fa: "کویته", ps: "کوټه" },
+  "chaman": { ur: "چمن", ar: "تشمن", fa: "چمن", ps: "چمن" },
+  "kabul": { ur: "کابل", ar: "كابول", fa: "کابل", ps: "کابل" },
+  "karachi": { ur: "کراچی", ar: "كراتشي", fa: "کراچی", ps: "کراچۍ" },
+  "lahore": { ur: "لاہور", ar: "لاهور", fa: "لاهور", ps: "لاهور" },
+  "kumar": { ur: "کمار", ar: "كومار", fa: "کومار", ps: "کمار" },
+  "manish": { ur: "منیش", ar: "منيش", fa: "منیش", ps: "منیش" },
+  "haji": { ur: "حاجی", ar: "حاجي", fa: "حاجی", ps: "حاجي" },
+  "waqas": { ur: "وقاص", ar: "وقاص", fa: "وقاص", ps: "وقاص" },
+  "kamal": { ur: "کمال", ar: "كمال", fa: "کمال", ps: "کمال" },
+  "omar": { ur: "عمر", ar: "عمر", fa: "عمر", ps: "عمر" },
+  "adam": { ur: "آدم", ar: "آدم", fa: "آدم", ps: "آدم" },
+  "mama": { ur: "ماما", ar: "ماما", fa: "ماما", ps: "ماما" },
+  "wholesale": { ur: "ہول سیل", ar: "جملة", fa: "عمده‌فروشی", ps: "عمده پلور" },
+  "dry": { ur: "ڈرائی", ar: "مجففة", fa: "خشک", ps: "وچ" },
+  "fruit": { ur: "فروٹ", ar: "فواكه", fa: "میوه", ps: "مېوه" },
+  "fruits": { ur: "فروٹس", ar: "فواكه", fa: "میوه‌ها", ps: "مېوې" },
+  "desk": { ur: "ڈیسک", ar: "مكتب", fa: "میز", ps: "مېز" },
+  "al": { ur: "ال", ar: "ال", fa: "ال", ps: "ال" },
+  "nuts": { ur: "نٹس", ar: "مكسرات", fa: "آجیل", ps: "مغز" },
+  "walnut": { ur: "اخروٹ", ar: "جوز", fa: "گردو", ps: "غوز" },
+  "almond": { ur: "بادام", ar: "لوز", fa: "بادام", ps: "بادام" },
+  "group": { ur: "گروپ", ar: "مجموعة", fa: "گروه", ps: "ګروپ" },
+  "global": { ur: "گلوبل", ar: "عالمي", fa: "جهانی", ps: "نړیوال" },
+  "admin": { ur: "ایڈمن", ar: "مسؤول", fa: "مدیر", ps: "مدیر" },
+  "super": { ur: "سپر", ar: "سوبر", fa: "سوپر", ps: "سوپر" },
 };
 
 function romanizeToArabicSkeleton(word: string): string {
@@ -463,17 +510,95 @@ const LATIN_NAME_CORRECTIONS: Array<[RegExp, string]> = ([
   ["wly", "wali"], ["shahnwaz", "shahnawaz"], ["jhan", "jahan"],
 ] as Array<[string, string]>).map(([k, v]) => [new RegExp(`\\b${k}\\b`, "gi"), v]);
 
+const PERSO_ARABIC_RE = /[؀-ۿ]/;
+const LATIN_RE = /[A-Za-z]/;
+
+/** Urdu-only letters rewritten for an Arabic / Persian / Pashto reader (same script, their own letters). */
+const SCRIPT_ADAPT: Partial<Record<SupportedLanguage, Record<string, string>>> = {
+  ar: { "ٹ": "ت", "ڈ": "د", "ڑ": "ر", "ں": "ن", "ے": "ي", "ۓ": "ئ", "ی": "ي", "ہ": "ه", "ۂ": "ه", "ھ": "ه", "ک": "ك", "گ": "ج", "پ": "ب", "چ": "تش", "ژ": "ج" },
+  fa: { "ٹ": "ت", "ڈ": "د", "ڑ": "ر", "ں": "ن", "ے": "ی", "ۓ": "ئ", "ہ": "ه", "ۂ": "ه", "ھ": "ه" },
+  ps: { "ٹ": "ټ", "ڈ": "ډ", "ڑ": "ړ", "ں": "ن", "ے": "ې", "ۓ": "ئ", "ہ": "ه", "ۂ": "ه", "ھ": "ه" }
+};
+
+function adaptScript(text: string, lang: SupportedLanguage): string {
+  const table = SCRIPT_ADAPT[lang];
+  if (!table) return text;
+  let out = "";
+  for (const ch of text) out += table[ch] ?? ch;
+  return out;
+}
+
+const KEEP_ACRONYMS = new Set(["LLC", "FZE", "FZC", "FZCO", "FZ", "LTD", "PVT", "PLC", "INC", "CO", "DMCC", "JAFZA", "UAE", "USA", "UK", "KSA", "AE", "PK", "AF", "IR", "CN", "IN", "SA", "ACC", "GEN", "BC", "PS", "DR", "CR", "VAT", "TRN", "NTN", "ID", "PO", "CC"]);
+
+/** A token that is a code / reference ("AE-006", "ACC-000174", "LLC", "PK") — never converted. */
+function isCodeToken(token: string): boolean {
+  return /\d/.test(token) || KEEP_ACRONYMS.has(token.toUpperCase().replace(/\.$/, "")) && token === token.toUpperCase();
+}
+
+/** Latin name → target script, word by word: whole name / whole word from the curated dictionary first, codes kept. */
+function latinNameToScript(text: string, lang: SupportedLanguage): string {
+  const whole = AUTHENTIC_NAMES_DICT[text.trim().toLowerCase()]?.[lang];
+  if (whole) return whole;
+  return text
+    .split(/(\s+|[(),/&]+)/)
+    .map((part) => {
+      if (!part || !LATIN_RE.test(part)) return part;
+      if (isCodeToken(part)) return part;
+      return AUTHENTIC_NAMES_DICT[part.toLowerCase()]?.[lang] ?? transliterateProperNoun(part, lang);
+    })
+    .join("");
+}
+
+// Converted output → the saved name it came from, so SavedText can mark it "auto" wherever it is rendered.
+const AUTO_SOURCES = new Map<string, string>();
+const AUTO_SOURCES_MAX = 5000;
+function rememberAuto(lang: string, converted: string, saved: string) {
+  if (AUTO_SOURCES.size >= AUTO_SOURCES_MAX) AUTO_SOURCES.clear();
+  AUTO_SOURCES.set(`${lang}|${converted}`, saved);
+}
+
+/** The saved name an automatically converted name was made from (undefined when `text` is not an automatic conversion). */
+export function autoNameSource(text: string, lang: string): string | undefined {
+  return AUTO_SOURCES.get(`${lang}|${text}`);
+}
+
+export type LocalizedName = { text: string; auto: boolean; saved: string };
+
 /**
- * Display a NAME (account, company, bank, branch, customer, person, shipping line, clearing agent) in `lang`.
- * Owner rule: the original saved name stays unchanged — show an approved variant (a whole-name entry of the curated
- * dictionary above) when one exists, otherwise exactly the saved name. Never a phonetic re-spelling; a person's own
- * translation of a record comes from the API (record_translations), not from here.
+ * A NAME (account, customer, company, bank, branch, person) in the viewer's language.
+ * Owner decision 28-Nov (replaces Issue #36's "saved name only"): the saved name stays unchanged in the database, but it is
+ * shown in the viewer's script — an approved / curated variant when one exists, otherwise an automatic conversion through the
+ * local dictionary and translator, flagged `auto` so the UI marks it:
+ *   - English viewer, name typed in Urdu / Pashto / Persian / Arabic → Latin spelling ("حاجی نجیب اللہ" → "Haji Najibullah");
+ *   - Urdu / Arabic / Persian / Pashto viewer, name typed in English → that script ("Manish kumar" → "منیش کمار");
+ *   - Arabic / Persian / Pashto viewer, name typed in Urdu → the same name with their own letters (ٹ→ت, ے→ي …).
+ * Codes and references inside a name ("AE-006", "LLC") are kept as they are.
  */
+export function autoLocalizeName(val: string | null | undefined, lang: string = "en"): LocalizedName {
+  const saved = val == null ? "" : String(val);
+  const trimmed = saved.trim();
+  if (!trimmed) return { text: saved, auto: false, saved };
+  const curated = AUTHENTIC_NAMES_DICT[trimmed.toLowerCase()]?.[lang];
+  if (curated && lang !== "en") return { text: curated, auto: false, saved };
+  const target = lang as SupportedLanguage;
+  let text = saved;
+  if (lang === "en") {
+    if (PERSO_ARABIC_RE.test(trimmed)) text = suggestLatinName(trimmed);
+  } else if (PERSO_ARABIC_RE.test(trimmed)) {
+    text = adaptScript(trimmed, target);
+  } else if (LATIN_RE.test(trimmed)) {
+    text = latinNameToScript(trimmed, target);
+  }
+  const auto = Boolean(text) && text !== saved;
+  if (!auto) return { text: saved, auto: false, saved };
+  rememberAuto(lang, text, saved);
+  return { text, auto, saved };
+}
+
+/** Display a NAME in `lang` (see autoLocalizeName): curated variant, else the automatic conversion, else the saved name. */
 export function localizeName(val: string | null | undefined, lang: string = "en"): string {
   if (!val) return "";
-  const v = String(val);
-  if (lang === "en") return v;
-  return AUTHENTIC_NAMES_DICT[v.trim().toLowerCase()]?.[lang] || v;
+  return autoLocalizeName(val, lang).text;
 }
 
 /** Localize or transliterate any business/entity term dynamically into the target language. Not for names — use localizeName. */
@@ -515,6 +640,9 @@ const NAME_LEXICON: Record<string, string> = {
   "فروٹ": "Fruit", "کمپنی": "Company", "اینڈ": "&", "اور": "&", "ویش": "Wesh", "کریانہ": "Kiryana", "مرچنٹ": "Merchant",
   "بروکر": "Broker", "پنیر": "Paneer", "اناردانہ": "Anardana", "مارکہ": "Marka", "ٹرانسپورٹ": "Transport", "کسٹم": "Customs",
   "کلیرنگ": "Clearing", "اکاونٹ": "Account", "اکاؤنٹ": "Account", "کھاتہ": "Khata", "آفس": "Office", "ٹوٹل": "Total",
+  "خریداری": "Purchase", "فروخت": "Sales", "برنس": "Business", "بزنس": "Business", "پرسنل": "Personal", "ذاتی": "Personal",
+  "دفتر": "Office", "گڈز": "Goods", "سامان": "Goods", "کسٹمر": "Customer", "سپلائر": "Supplier", "شاخ": "Branch", "برانچ": "Branch",
+  "سٹی": "City", "شہر": "City", "بینک": "Bank", "کیش": "Cash", "نقد": "Cash",
   "سرمایہ": "Sarmaya", "کاری": "Kari", "دبی": "Dubai", "دبئی": "Dubai", "چمن": "Chaman", "کوئٹہ": "Quetta", "کندھار": "Kandahar",
   "قندھار": "Kandahar", "واھگہ": "Wahga", "واہگہ": "Wahga", "پاک": "Pak", "افغان": "Afghan", "شخص": "Shakhs", "درمان": "Darman",
   "وفا": "Wafa", "تیری": "Teri", "پٹہ": "Patta", "ڈوڈی": "Dodi", "ٹریڈرز": "Traders", "ٹریڈنگ": "Trading", "جنرل": "General"
