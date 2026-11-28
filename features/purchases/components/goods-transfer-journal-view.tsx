@@ -349,14 +349,12 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
   // Right-side "Transfer to" panel state
   const [transferMode, setTransferMode] = useState<"loading" | "warehouse" | "stock">("loading");
   const [selectedDestId, setSelectedDestId] = useState<string>("");
-  const [transferDate, setTransferDate] = useState<string>("2026-11-29");
+  const [transferDate, setTransferDate] = useState<string>("");
   const [transferNote, setTransferNote] = useState<string>("");
   const [chkPosted, setChkPosted] = useState(true);
   const [chkPayment, setChkPayment] = useState(true);
   const [chkGoods, setChkGoods] = useState(true);
   const [quickBusy, setQuickBusy] = useState(false);
-
-  const isCanonicalMock = purchaseId === "917086b9-24da-4cb9-8929-d5ad93a86ad7";
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -365,6 +363,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
       setData(r.data);
       setError("");
     } else {
+      setData(null);
       setError(r.error);
     }
     setLoading(false);
@@ -381,90 +380,11 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
     }
   }, [toast]);
 
-  const CANONICAL_FALLBACK = useMemo(() => ({
-    purchase: {
-      id: "917086b9-24da-4cb9-8929-d5ad93a86ad7",
-      status: "posted",
-      supplier: "Al Noor Trading Est.",
-      goods: "Black-Eyed Peas + Anise Powder",
-      paymentMode: "Cash / Bank",
-      finalCost: 5074545,
-      currency: "AED",
-      exchangeRate: 1,
-      advanceAmount: 0,
-      paidAmount: 0,
-      remainingBalance: 5074545,
-      journalSerialNo: "LP-91708",
-      manualBillNo: "LP-91708",
-      contractNo: "CNT-2026-0917",
-      postedAt: "2026-11-29T10:25:00Z",
-      transferDate: "2026-11-29",
-      purchaseAccountNo: "UAE-DUB-AC-0012",
-      purchaseAccountName: "Purchase Account (Local)",
-      salesAccountNo: "SUP-KSA-0008",
-      salesAccountName: "Saudi Arabia",
-      originCountryName: "Saudi Arabia (KSA)",
-      countryName: "United Arab Emirates",
-      branchName: "UAE - Main Branch",
-      shippingMode: "Road (Truck)",
-      quantityName: "Bags",
-      numbers: 3292,
-      quantityKgs: 176879.16,
-      totalGrossWeight: 177768,
-      netWeight: 176879.16,
-      purchaseRate: 28.5,
-      purchaseCost: 5074545,
-      hsCode: "071335",
-      brand: "–",
-      size: "–",
-      warehouseName: "Supplier Warehouse (KSA)",
-      remarks: "Local purchase for warehouse stock. Goods loaded as per agreed configuration and quantity.",
-      lineItems: [
-        {
-          goodsName: "Black-Eyed Peas + Anise Powder",
-          hsCode: "071335",
-          brand: "–",
-          size: "–",
-          qty: 3292,
-          numbers: 3292,
-          quantityName: "Bags",
-          unit: "Bags",
-          perQty: 54,
-          gross: 177768,
-          grossWeight: 177768,
-          totalGrossWeight: 177768,
-          wastePercent: 0.5,
-          wastePct: 0.5,
-          net: 176879.16,
-          netWeight: 176879.16,
-          price: 28.5,
-          rate: 28.5,
-          purchaseRate: 28.5,
-          amount: 5074545,
-          vatPercent: 0,
-          vatAmount: 0,
-          finalCost: 5074545,
-          finalAmt: 5074545,
-        },
-      ],
-    },
-    warehouses: [
-      { id: "wh-ware-001", warehouse_name: "Al Ras Warehouse", warehouse_code: "WARE-001" },
-    ],
-    branches: [
-      { id: "br-uae-main", name: "UAE - Main Branch" },
-    ],
-  }), []);
-
-  const purchase = data?.purchase || (isCanonicalMock || !data ? CANONICAL_FALLBACK.purchase : null);
-  const lots: Json[] = (data?.lots && data.lots.length > 0) ? data.lots : [];
+  const purchase = data?.purchase;
+  const lots: Json[] = data?.lots ?? [];
   const transfers: Json[] = data?.transfers ?? [];
-  const warehouses: Json[] = (data?.warehouses && data.warehouses.length > 0)
-    ? data.warehouses
-    : CANONICAL_FALLBACK.warehouses;
-  const branches: Json[] = (data?.branches && data.branches.length > 0)
-    ? data.branches
-    : CANONICAL_FALLBACK.branches;
+  const warehouses: Json[] = data?.warehouses ?? [];
+  const branches: Json[] = data?.branches ?? [];
   const lotById = useMemo(() => new Map(lots.map((l) => [l.id, l])), [lots]);
 
   const voucherNo = useMemo(() => {
@@ -526,11 +446,11 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
         return {
           sr: idx + 1,
           goodsName: it.goodsName || purchase.goods || "Goods",
-          hsCode: it.hsCode || it.chsCode || purchase.hsCode || "071335",
+          hsCode: it.hsCode || it.chsCode || purchase.hsCode || "—",
           brand: it.brand || purchase.brand || "–",
           size: it.size || purchase.size || "–",
           qty,
-          unit: it.quantityName || purchase.quantityName || "Bags",
+          unit: it.quantityName || purchase.quantityName || "—",
           perQty,
           gross,
           wastePct,
@@ -556,11 +476,11 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
         return {
           sr: idx + 1,
           goodsName: l.goods_name || purchase.goods || "Goods",
-          hsCode: purchase.hsCode || "071335",
+          hsCode: purchase.hsCode || "—",
           brand: l.brand || "–",
           size: l.size || "–",
           qty,
-          unit: l.unit_name || purchase.quantityName || "Bags",
+          unit: l.unit_name || purchase.quantityName || "—",
           perQty,
           gross,
           wastePct,
@@ -585,11 +505,11 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
       {
         sr: 1,
         goodsName: purchase.goods || "Goods",
-        hsCode: purchase.hsCode || "071335",
+        hsCode: purchase.hsCode || "—",
         brand: purchase.brand || "–",
         size: purchase.size || "–",
         qty,
-        unit: purchase.quantityName || "Bags",
+        unit: purchase.quantityName || "—",
         perQty,
         gross,
         wastePct,
@@ -620,7 +540,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
   }, [goodsLines]);
 
   const handleConfirmQuickTransfer = async () => {
-    if (quickBusy) return;
+    if (quickBusy || !transferDate || (transferMode === "warehouse" && !selectedDestId)) return;
     const firstLot = lots[0];
     const firstStock = firstLot?.stock?.find((st: Json) => st.state === "available") || firstLot?.stock?.[0];
     if (!firstLot || !firstStock) {
@@ -681,14 +601,14 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
     }
   };
 
-  if (loading && !data && !isCanonicalMock) {
+  if (loading && !data) {
     return (
       <div dir={s.dir} className="flex items-center justify-center gap-2 p-10 text-sm text-slate-500">
         <Loader2 className="h-4 w-4 animate-spin" /> {s.t("loading", "Loading…")}
       </div>
     );
   }
-  if (error && !data && !isCanonicalMock) {
+  if (error && !data) {
     return (
       <div dir={s.dir} className="m-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
         <AlertTriangle className="me-2 inline h-4 w-4" />
@@ -697,6 +617,8 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
     );
   }
 
+  if (!purchase) return null;
+
   const dest = data?.destinationTrade;
   const currency = purchase?.currency || "AED";
   const finalCost = Number(purchase?.finalCost ?? totals.finalAmt ?? 0);
@@ -704,11 +626,9 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
   const remainingAmt = Math.max(0, Number(purchase?.remainingBalance ?? finalCost - paidAmt));
   const isPaid = remainingAmt <= 0.005 && finalCost > 0;
   const isPartial = !isPaid && paidAmt > 0;
+  const advancePercent = finalCost > 0 ? Number(purchase.advanceAmount ?? 0) / finalCost * 100 : 0;
 
-  const selectedWarehouseObj = warehouses.find((w) => w.id === selectedDestId) || warehouses[0];
-  const selectedDestDisplay = selectedWarehouseObj
-    ? `UAE - ${selectedWarehouseObj.warehouse_name} (${selectedWarehouseObj.warehouse_code})`
-    : "UAE - Al Ras Warehouse (WARE-001)";
+  const selectedWarehouseObj = warehouses.find((w) => w.id === selectedDestId);
 
   return (
     <div
@@ -839,7 +759,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
               <div className="text-[11px] font-semibold text-slate-500">{s.t("kpi_voucher_no", "Voucher No.")}</div>
               <div className="flex items-center gap-2">
                 <span className="text-lg font-black tracking-tight text-[#0f2942]">{voucherNo}</span>
-                <StatusPill s={s} status={purchase?.status === "posted" ? "posted" : purchase?.status || "posted"} />
+                <StatusPill s={s} status={purchase.status} />
               </div>
               <div className="text-[11px] font-medium text-slate-500">{s.t("bc_local_purchase", "Local Purchase")}</div>
             </div>
@@ -866,7 +786,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
             <div className="min-w-0">
               <div className="text-[11px] font-semibold text-slate-500">{s.t("kpi_contract_no", "Contract No.")}</div>
               <div className="truncate text-sm font-black text-slate-900">
-                {purchase?.contractNo || purchase?.manualBillNo || purchase?.lotNo || "CNT-2026-0917"}
+                {purchase?.contractNo || purchase?.manualBillNo || purchase?.lotNo || "—"}
               </div>
             </div>
           </div>
@@ -879,7 +799,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
             <div className="min-w-0">
               <div className="text-[11px] font-semibold text-slate-500">{s.t("supplier", "Supplier")}</div>
               <div className="truncate text-sm font-black text-slate-900">
-                {purchase?.supplier || "Al Noor Trading Est."}
+                {purchase?.supplier || "—"}
               </div>
             </div>
           </div>
@@ -892,7 +812,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
             <div className="min-w-0">
               <div className="text-[11px] font-semibold text-slate-500">{s.t("kpi_branch", "Branch")}</div>
               <div className="truncate text-sm font-black text-slate-900">
-                {purchase?.branchName || purchase?.countryName || "UAE - Main Branch"}
+                {purchase?.branchName || purchase?.countryName || "—"}
               </div>
             </div>
           </div>
@@ -993,15 +913,15 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                   <div className="px-3 py-2">
                     <KVRow
                       label={s.t("lbl_account_code", "Account Code")}
-                      value={purchase?.purchaseAccountNo || "UAE-DUB-AC-0012"}
+                      value={purchase?.purchaseAccountNo || "—"}
                     />
                     <KVRow
                       label={s.t("lbl_account_name", "Account Name")}
-                      value={purchase?.purchaseAccountName || "Purchase Account (Local)"}
+                      value={purchase?.purchaseAccountName || "—"}
                     />
                     <KVRow
                       label={s.t("kpi_branch", "Branch")}
-                      value={purchase?.branchName || "United Arab Emirates Main Branch"}
+                      value={purchase?.branchName || "—"}
                     />
                     <KVRow label={s.t("lbl_currency", "Currency")} value={currency} />
                   </div>
@@ -1020,18 +940,17 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                   <div className="px-3 py-2">
                     <KVRow
                       label={s.t("lbl_account_code", "Account Code")}
-                      value={purchase?.salesAccountNo || "SUP-KSA-0008"}
+                      value={purchase?.salesAccountNo || "—"}
                     />
                     <KVRow
                       label={s.t("lbl_account_name", "Account Name")}
-                      value={purchase?.salesAccountName || purchase?.supplier || "Al Noor Trading Est."}
+                      value={purchase?.salesAccountName || purchase?.supplier || "—"}
                     />
                     <KVRow
                       label={s.t("lbl_country", "Country")}
-                      value={purchase?.originCountryName || purchase?.countryName || "Saudi Arabia (KSA)"}
+                      value={purchase?.originCountryName || purchase?.countryName || "—"}
                     />
                     <KVRow label={s.t("lbl_currency", "Currency")} value={currency} />
-                    <KVRow label={s.t("lbl_contact", "Contact")} value="+966 50 123 4567" />
                   </div>
                 </div>
 
@@ -1048,15 +967,12 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                   <div className="px-3 py-2">
                     <KVRow
                       label={s.t("lbl_supplier_name", "Supplier Name")}
-                      value={purchase?.supplier || "Al Noor Trading Est."}
+                      value={purchase?.supplier || "—"}
                     />
                     <KVRow
                       label={s.t("lbl_country", "Country")}
-                      value={purchase?.originCountryName || purchase?.countryName || "Saudi Arabia"}
+                      value={purchase?.originCountryName || purchase?.countryName || "—"}
                     />
-                    <KVRow label={s.t("lbl_contact_person", "Contact Person")} value="Mr. Khalid" />
-                    <KVRow label={s.t("lbl_phone", "Phone")} value="+966 50 123 4567" />
-                    <KVRow label={s.t("lbl_email", "Email")} value="sales@alnoortrading.com" />
                   </div>
                 </div>
               </div>
@@ -1236,9 +1152,9 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                   <div className="px-3 py-2">
                     <KVRow
                       label={s.t("lbl_payment_term", "Payment Term")}
-                      value={purchase?.paymentMode || "Cash / Bank"}
+                      value={purchase?.paymentMode || "—"}
                     />
-                    <KVRow label={s.t("lbl_advance_required", "Advance Required")} value="0%" />
+                    <KVRow label={s.t("lbl_advance_required", "Advance Required")} value={advancePercent > 0 ? `${fmt(advancePercent)}%` : "—"} />
                     <KVRow label={s.t("lbl_advance_paid", "Advance Paid")} value={`${currency} ${fmt(paidAmt)}`} />
                     <KVRow
                       label={s.t("lbl_remaining_amount", "Remaining Amount")}
@@ -1292,10 +1208,7 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                     />
                     <KVRow
                       label={s.t("lbl_loading_from", "Loading From")}
-                      value={
-                        purchase?.warehouseName ||
-                        `Supplier Warehouse (${purchase?.originCountryName || "KSA"})`
-                      }
+                      value={purchase?.warehouseName || "—"}
                     />
                     <KVRow
                       label={s.t("lbl_loading_date", "Loading Date")}
@@ -1303,12 +1216,12 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                     />
                     <KVRow
                       label={s.t("lbl_transport_mode", "Transport Mode")}
-                      value={purchase?.shippingMode || "Road (Truck)"}
+                      value={purchase?.shippingMode || "—"}
                     />
-                    <KVRow label={s.t("lbl_exit_border", "Exit Border")} value="Ghuwaifat (KSA → UAE)" />
+                    <KVRow label={s.t("lbl_exit_border", "Exit Border")} value={purchase?.loadingDetails?.exitBorder || "—"} />
                     <KVRow
                       label={s.t("lbl_receiving_at", "Receiving At")}
-                      value={selectedWarehouseObj?.warehouse_name || "Dubai – Al Ras Warehouse"}
+                      value={selectedWarehouseObj?.warehouse_name || "—"}
                     />
                   </div>
                 </div>
@@ -1459,15 +1372,12 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                     onChange={(e) => setSelectedDestId(e.target.value)}
                     className="h-10 w-full appearance-none rounded-xl border border-slate-300 bg-white ps-9 pe-8 text-xs font-bold text-slate-800 shadow-2xs outline-none focus:border-blue-600"
                   >
-                    {warehouses.length > 0 ? (
-                      warehouses.map((w) => (
-                        <option key={w.id} value={w.id}>
-                          UAE – {w.warehouse_name} ({w.warehouse_code})
-                        </option>
-                      ))
-                    ) : (
-                      <option value="default">{selectedDestDisplay}</option>
-                    )}
+                    <option value="">{s.t("select", "Select…")}</option>
+                    {warehouses.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.warehouse_name}{w.warehouse_code ? ` (${w.warehouse_code})` : ""}
+                      </option>
+                    ))}
                   </select>
                   <ChevronDown className="pointer-events-none absolute end-3 h-4 w-4 text-slate-500" />
                 </div>
@@ -1559,7 +1469,10 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
               <div className="grid grid-cols-[1fr_110px] gap-2.5 pt-1">
                 <button
                   type="button"
-                  disabled={quickBusy || !chkPosted || !chkPayment || !chkGoods}
+                  disabled={
+                    quickBusy || !chkPosted || !chkPayment || !chkGoods || !transferDate ||
+                    (transferMode === "warehouse" && !selectedDestId)
+                  }
                   onClick={() => void handleConfirmQuickTransfer()}
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#16a34a] to-[#15803d] px-4 text-xs font-black text-white shadow-md shadow-emerald-700/20 transition hover:from-[#15803d] hover:to-[#166534] disabled:opacity-50"
                 >
@@ -1615,10 +1528,10 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                       t.purpose === "third_party_warehouse"
                         ? `${t.provider_name} — ${t.provider_city}`
                         : t.dest_warehouse_name
-                        ? `UAE – ${t.dest_warehouse_name} (${t.dest_warehouse_code ?? "WARE-001"})`
+                        ? [t.dest_warehouse_name, t.dest_warehouse_code ? `(${t.dest_warehouse_code})` : ""].filter(Boolean).join(" ")
                         : sale
                         ? `${sale.sales_order_no} · ${sale.customer_name ?? ""}`
-                        : selectedDestDisplay;
+                        : "—";
                     const typeText =
                       t.purpose === "hold"
                         ? "Loading"
@@ -1646,36 +1559,17 @@ export function GoodsTransferJournalView({ purchaseId, lang }: { purchaseId: str
                           <StatusPill s={s} status={t.status} />
                         </td>
                         <td className="px-3 py-2.5 font-medium text-slate-700">
-                          {t.notes || s.t("default_history_note", "Initial transfer to Loading.")}
+                          {t.notes || "—"}
                         </td>
-                        <td className="px-3 py-2.5 font-semibold text-slate-800">SA (Super Admin)</td>
+                        <td className="px-3 py-2.5 font-semibold text-slate-800">{t.created_by_name || "—"}</td>
                       </tr>
                     );
                   })
                 ) : (
-                  <tr className="hover:bg-slate-50/80">
-                    <td className="px-3 py-2.5 text-center font-bold text-slate-700">1</td>
-                    <td className="px-3 py-2.5 font-semibold text-slate-800">
-                      {formatDisplayDateTime(purchase?.postedAt || purchase?.transferDate)}
+                  <tr>
+                    <td colSpan={10} className="px-3 py-5 text-center text-slate-500">
+                      {s.t("no_results", "No matching records.")}
                     </td>
-                    <td className="px-3 py-2.5 font-semibold text-slate-800">
-                      {voucherNo} ({s.t("bc_local_purchase", "Local Purchase")})
-                    </td>
-                    <td className="px-3 py-2.5 font-semibold text-slate-800">{selectedDestDisplay}</td>
-                    <td className="px-3 py-2.5 font-semibold text-slate-800">Loading</td>
-                    <td className="px-3 py-2.5 text-end font-black tabular-nums text-slate-900">
-                      {qtyFmt(totals.qty)}
-                    </td>
-                    <td className="px-3 py-2.5 text-end font-black tabular-nums text-slate-900">
-                      {fmt(totals.net)}
-                    </td>
-                    <td className="px-3 py-2.5 text-center">
-                      <StatusPill s={s} status="transferred" />
-                    </td>
-                    <td className="px-3 py-2.5 font-medium text-slate-700">
-                      {s.t("default_history_note", "Initial transfer to Loading.")}
-                    </td>
-                    <td className="px-3 py-2.5 font-semibold text-slate-800">SA (Super Admin)</td>
                   </tr>
                 )}
               </tbody>

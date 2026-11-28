@@ -160,7 +160,7 @@ export function CustomerOrderReviewSubmitView({
   const custCompany =
     selectedCustomerInfo?.company_name || partySelections?.supplier?.companyName || "ABC Trading LLC";
   const custPhone =
-    selectedCustomerInfo?.mobile || selectedCustomerInfo?.whatsapp || "+971 50 123 4567";
+    selectedCustomerInfo?.mobile || selectedCustomerInfo?.whatsapp || "—";
   const custEmail = selectedCustomerInfo?.email || "ops@abctrading.ae";
   const custAddress =
     selectedCustomerInfo?.address ||

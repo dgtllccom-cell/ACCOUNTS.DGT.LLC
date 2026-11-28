@@ -215,7 +215,7 @@ const DEFAULT_FORM = {
   showRemarksOnA4: true,
 
   // Tab 3 details
-  advancePercent: 10,
+  advancePercent: null,
   advancePaymentDate: new Date().toISOString().slice(0, 10),
   paymentDate: new Date().toISOString().slice(0, 10),
   paymentDaysAndMethodDetails: "",
@@ -246,21 +246,19 @@ const DEFAULT_FORM = {
   hsCode: "",
   allotName: "",
   qtyName: "BAGS",
-  qtyNo: 100,
-  qtyKgs: 50.00,
-  emptyKgs: 0.10,
-  netWeight: 4990.00,
+  qtyNo: 0,
+  qtyKgs: 0,
+  emptyKgs: 0,
+  netWeight: 0,
   divideType: "D/KGs",
   divideWeight: 1.0,
   priceType: "P/KGs",
-  coursePrice: 12.50,
-  secondaryCurrency: "PKR",
-  rate2: 280.00,
+  coursePrice: 0,
+  secondaryCurrency: "",
+  rate2: 0,
   operator: "*",
-  qualityReport: "Passed"
+  qualityReport: ""
 };
-
-// Seeded rows matching user's mock screenshots
 
 function calculateItemTotals(form) {
   const qtyNo = Number(form.qtyNo || 0);

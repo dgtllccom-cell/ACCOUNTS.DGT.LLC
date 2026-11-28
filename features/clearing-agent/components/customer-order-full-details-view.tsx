@@ -92,7 +92,7 @@ export function CustomerOrderFullDetailsView({
   const accountCode = linkedAcc?.code || linkedAcc?.account_number || "UCL-001";
   const customerName = order?.customer_name || linkedCust?.name || linkedCust?.customer_name || "United Customer Ledger";
   const contactPerson = linkedCust?.contact_person || o.contact_person || "Mr. Abdul Rahman";
-  const phone = linkedCust?.mobile || (linkedCust as any)?.phone || "+971 50 123 4567";
+  const phone = linkedCust?.mobile || (linkedCust as any)?.phone || "—";
   const email = linkedCust?.email || "customer@dgt.llc";
   const address = linkedCust?.address || "Dubai, UAE";
   const country = order?.country_name || linkedCust?.country_name || "United Arab Emirates";

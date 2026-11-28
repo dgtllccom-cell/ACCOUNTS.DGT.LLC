@@ -68,13 +68,13 @@ export function SalesBookingUpperCards({
   const [viewModalType, setViewModalType] = useState("customer");
 
   const bookingDateFormatted = formatDisplayDate(form.salesDate || form.bookingDate);
-  const bookingNo = form.salesOrderNo || "SB-2026-0001";
-  const serialNo = form.billNo || "SV-0001";
+  const bookingNo = form.salesOrderNo || "—";
+  const serialNo = form.billNo || "—";
   const paymentType = form.paymentType || "Cash";
   const shippingType = form.shippingMode || form.shipmentType || "By Sea";
-  const country = form.branchCountry || "United Arab Emirates";
-  const branch = form.branchName || "Dubai Main Branch";
-  const createdBy = form.userName || "Admin User";
+  const country = form.branchCountry || "—";
+  const branch = form.branchName || "—";
+  const createdBy = form.userName || "—";
   const operationType = form.saleMode === "export" ? "Export" : (form.operationType || "Export");
 
   const handleOpenAccountModal = (type) => {
@@ -120,26 +120,26 @@ export function SalesBookingUpperCards({
   };
 
   // Sales Account (CR)
-  const salesAccountCode = form.salesAccountNo || "SA-001";
-  const salesAccountName = form.salesAccountName || "Global Trading LLC";
+  const salesAccountCode = form.salesAccountNo || "—";
+  const salesAccountName = form.salesAccountName || "—";
   const salesBranch = form.salesAccountBranch || branch;
-  const salesBusinessName = form.salesAccountKind || "General Trading";
+  const salesBusinessName = form.salesAccountKind || "—";
   const salesCurrency = form.salesCurrency || form.currencyType || "AED";
   const salesCompany = form.salesCompanyName || salesAccountName;
-  const salesAddress = form.salesCompanyAddress || "Office 101, Business Bay, Dubai, UAE";
-  const salesLicense = form.salesLicenseNo || "TRN1234567890";
-  const salesGst = form.salesGstTrn || "100123456789003";
+  const salesAddress = form.salesCompanyAddress || "—";
+  const salesLicense = form.salesLicenseNo || "—";
+  const salesGst = form.salesGstTrn || "—";
 
   // Customer Account (DR)
-  const customerAccountCode = form.customerAccountNo || "CU-001";
-  const customerAccountName = form.customerAccountName || "Al Noor Imports";
+  const customerAccountCode = form.customerAccountNo || "—";
+  const customerAccountName = form.customerAccountName || "—";
   const customerBranch = form.customerAccountBranch || branch;
-  const customerBusinessName = form.customerAccountKind || "Import & Export";
+  const customerBusinessName = form.customerAccountKind || "—";
   const customerCurrency = form.customerAccountCurrency || form.salesCurrency || "AED";
   const customerCompany = form.customerCompanyName || customerAccountName;
-  const customerAddress = form.customerCompanyAddress || "Warehouse 5, Jebel Ali, Dubai, UAE";
-  const customerLicense = form.customerLicenseNo || "TRN0987654321";
-  const customerGst = form.customerGstTrn || "100987654321003";
+  const customerAddress = form.customerCompanyAddress || "—";
+  const customerLicense = form.customerLicenseNo || "—";
+  const customerGst = form.customerGstTrn || "—";
 
   // Handle currency change
   const handleCurrencyChange = (newCurr) => {

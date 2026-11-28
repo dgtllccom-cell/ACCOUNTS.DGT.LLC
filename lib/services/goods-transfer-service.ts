@@ -569,10 +569,12 @@ export async function getJournal(tx: Tx, purchaseId: string) {
       from public.purchase_lots l join public.purchase_lot_balance_v b on b.lot_id = l.id
       where l.local_purchase_id = ${purchaseId}::uuid order by l.created_at, l.line_key`,
     tx`
-      select t.*, sw.warehouse_name as source_warehouse_name, dw.warehouse_name as dest_warehouse_name, dw.warehouse_code as dest_warehouse_code
+      select t.*, sw.warehouse_name as source_warehouse_name, dw.warehouse_name as dest_warehouse_name,
+             dw.warehouse_code as dest_warehouse_code, pr.full_name as created_by_name
       from public.goods_transfers t
       left join public.warehouses sw on sw.id = t.source_warehouse_id
       left join public.warehouses dw on dw.id = t.dest_warehouse_id
+      left join public.profiles pr on pr.id = t.created_by
       where t.local_purchase_id = ${purchaseId}::uuid order by t.created_at desc`,
     p.inter_country_trade_id
       ? tx`
