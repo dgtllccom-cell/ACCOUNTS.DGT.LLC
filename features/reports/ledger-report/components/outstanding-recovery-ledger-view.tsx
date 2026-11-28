@@ -630,7 +630,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("BRANCH NAME:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{scopeBranch}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase"><SavedText value={scopeBranch} lang={lang} kind="name" /></span>
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("USER ID:")}</span>
@@ -638,7 +638,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("USER NAME:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{scopeUserName}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase"><SavedText value={scopeUserName} lang={lang} kind="name" /></span>
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("ROLE:")}</span>

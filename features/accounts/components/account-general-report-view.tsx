@@ -1727,10 +1727,10 @@ export function AccountGeneralReportView({
                 {branchCode !== "all"
                   ? branchCode
                   : isAllAccess
-                  ? "ALL NETWORK BRANCHES"
+                  ? t(lang, "acct.all_network_branches", "ALL NETWORK BRANCHES")
                   : isCountryAdmin
-                  ? `${filteredRows[0]?.countryName || "REGIONAL"} ALL BRANCHES`
-                  : (filteredRows[0]?.branchName || (session as any)?.branchDisplayName || "MAIN BRANCH")}
+                  ? `${filteredRows[0]?.countryName ? localizeTerm(filteredRows[0].countryName, lang) : t(lang, "acct.regional", "REGIONAL")} ${t(lang, "acct.all_branches_suffix", "ALL BRANCHES")}`
+                  : <SavedText value={filteredRows[0]?.branchName || (session as any)?.branchDisplayName || t(lang, "acct.main_branch", "MAIN BRANCH")} lang={lang} kind="name" />}
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -1742,7 +1742,7 @@ export function AccountGeneralReportView({
             <div className="flex justify-between items-center">
               <span>{tr("USER NAME:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
-                {(session as any)?.user?.fullName || (session as any)?.fullName || (session as any)?.user?.email || (session as any)?.email || "—"}
+                <SavedText value={(session as any)?.user?.fullName || (session as any)?.fullName || (session as any)?.user?.email || (session as any)?.email} lang={lang} kind="name" />
               </span>
             </div>
             <div className="flex justify-between items-center">

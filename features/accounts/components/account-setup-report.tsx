@@ -982,9 +982,9 @@ export function AccountSetupReport({
               </span>
             </div>
             <div className="space-y-1 text-xs">
-              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.branch", "Branch")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{reportContext.branchName}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.branch", "Branch")}:</span><span className="font-bold text-slate-800 dark:text-slate-200"><SavedText value={reportContext.branchName} lang={lang} kind="name" /></span></div>
               <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.country", "Country")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{translateCountry(reportContext.countryName, lang)}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.user_name", "User Name")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{reportContext.userName}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.user_name", "User Name")}:</span><span className="font-bold text-slate-800 dark:text-slate-200"><SavedText value={reportContext.userName} lang={lang} kind="name" /></span></div>
               <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.user_id", "User ID")}:</span><span className="font-mono text-[11px] font-bold text-blue-600">{reportContext.userId}</span></div>
               <div className="flex justify-between"><span className="text-slate-500 font-medium">{t(lang, "asr.role", "Role")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{reportContext.userRole}</span></div>
             </div>
@@ -1242,7 +1242,7 @@ export function AccountSetupReport({
                         </span>
                       </td>
                       <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">{translateCountry(row.countryName, lang)}</td>
-                      <td className="p-3 text-slate-700 dark:text-slate-300 font-medium">{row.branchName}</td>
+                      <td className="p-3 text-slate-700 dark:text-slate-300 font-medium"><SavedText value={row.branchName} lang={lang} kind="name" /></td>
                       <td className="p-3 font-mono font-bold text-slate-700 dark:text-slate-300">{row.currency}</td>
                       <td className="p-3 text-right font-mono font-semibold text-slate-700 dark:text-slate-300">
                         {fmtNum(row.openingBalance || 0)}
