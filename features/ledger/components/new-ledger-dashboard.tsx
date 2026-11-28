@@ -28,6 +28,7 @@ import {
   type LedgerStatementLine
 } from "@/features/reports/ledger-report/ledger-report-api";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+import { HoverCellsArea } from "@/components/ui/hover-cells-area";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
@@ -178,7 +179,23 @@ function buildLedgerOption(row: LedgerLookupRow): SearchSelectOption {
   ]
     .filter(Boolean)
     .join(" ");
-  return { value: row.ledgerId, label, keywords };
+  const balance = Number.isFinite(Number(row.currentBalance))
+    ? `${row.ledgerCurrency || ""} ${Number(row.currentBalance).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`.trim()
+    : "";
+  const details = [
+    [row.accountCode || row.ledgerCode, row.accountName || row.ledgerName].filter(Boolean).join(" · "),
+    row.ledgerCode && row.ledgerCode !== row.accountCode ? row.ledgerCode : "",
+    row.companyName,
+    [row.accountKind, row.ledgerCurrency].filter(Boolean).join(" · "),
+    [row.cityBranchName, row.countryBranchName, row.countryName].filter(Boolean).join(" · "),
+    [row.cityName, row.stateName].filter(Boolean).join(" · "),
+    row.address,
+    balance
+  ]
+    .map((v) => String(v ?? "").trim())
+    .filter(Boolean)
+    .join("\n");
+  return { value: row.ledgerId, label, keywords, details };
 }
 
 export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: string }) {
@@ -566,6 +583,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
               value={ledgerId}
               placeholder={t(activeLang, "ledger.nld_search_account_ph", "Search or select account...")}
               options={ledgerOptions}
+              optionHoverDetails
               onValueChange={(value) => {
                 setLedgerId(value);
                 void loadAccountById(value);
@@ -731,7 +749,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
 
       <Card className="overflow-hidden border bg-card shadow-sm">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <HoverCellsArea className="overflow-x-auto" data-testid="ledger-entries-area">
             <table className="w-full min-w-[1120px] text-xs">
               <thead className="bg-slate-900 text-white dark:bg-slate-800">
                 <tr>
@@ -802,7 +820,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
                 )}
               </tbody>
             </table>
-          </div>
+          </HoverCellsArea>
         </CardContent>
       </Card>
     </div>
