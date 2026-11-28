@@ -67,4 +67,25 @@ describe("ERP-wide hover details (root layout)", () => {
     Object.defineProperty(cut, "clientWidth", { configurable: true, value: 120 });
     expect(hoverDetailsTarget(cut)?.text).toBe("Najeebullah Abdullah Trading Company Quetta");
   });
+
+  it("a summary-card line at the top of a page shows its full label and value", () => {
+    render(
+      <div>
+        <GlobalHoverDetails />
+        <section>
+          <h3>1. Branch &amp; User Details</h3>
+          <div data-testid="row-branch" className="flex justify-between"><span>BRANCH NAME:</span><span>Dubai City Branch</span></div>
+          <div data-testid="row-user" className="grid"><span>User ID:</span><span className="truncate">BE3A6815-65C5-4D74-82AE-E956C02A5F07</span></div>
+          <dl><div data-testid="row-dl"><dt>Total Debit</dt><dd>2,000.00</dd></div></dl>
+          <label data-testid="row-form"><span>Country:</span><input aria-label="country" /></label>
+        </section>
+      </div>
+    );
+    fireEvent.mouseOver(screen.getByText("Dubai City Branch"));
+    expect(bubble()!.textContent).toBe("BRANCH NAME: Dubai City Branch");
+    expect(hoverDetailsTarget(screen.getByText("BE3A6815-65C5-4D74-82AE-E956C02A5F07"))?.text).toBe("User ID: BE3A6815-65C5-4D74-82AE-E956C02A5F07");
+    expect(hoverDetailsTarget(screen.getByText("2,000.00"))?.text).toBe("Total Debit: 2,000.00");
+    expect(hoverDetailsTarget(screen.getByLabelText("country"))).toBeNull(); // form field rows are not card lines
+    expect(hoverDetailsTarget(screen.getByText("1. Branch & User Details"))).toBeNull();
+  });
 });
