@@ -26,6 +26,7 @@ import {
 } from "@/lib/api/scope-middleware";
 import { withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { translateValue } from "@/lib/i18n/table-values";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { isGlobalSession } from "@/lib/permissions/middleware";
 import { localPurchaseBillNo, localPurchaseContractRef } from "@/lib/purchases/local-purchase-number";
@@ -288,6 +289,9 @@ export async function loadCanonicalPsStockChunks(
                lp.supplier_name, lp.quantity_name, lp.quantity_kgs, lp.numbers, lp.net_weight, lp.total_gross_weight,
                lp.status, lp.manual_bill_no, lp.contract_no, lp.lot_no, lp.truck_no, lp.warehouse_name,
                lp.origin_country_name, lp.purchase_account_no, lp.sales_account_no,
+               to_jsonb(lp)->>'purchase_account_name' AS purchase_account_name,
+               to_jsonb(lp)->>'sales_account_name' AS sales_account_name,
+               to_jsonb(lp)->>'sales_account_id' AS sales_account_id,
                lp.country_id::text AS country_id, lp.country_branch_id::text AS country_branch_id, lp.city_branch_id::text AS city_branch_id,
                lp.created_at,
                c.name AS country_name, coalesce(c.iso2, '') AS country_code,
@@ -456,23 +460,38 @@ export async function loadCanonicalPsStockChunks(
 
   if (!raw) throw new ApiClientError("Unable to load stock journal database records.", { status: 500 });
 
-  // Localize master names (goods & warehouses) in viewer's active language
+  // Localize master names (goods, warehouses, accounts) in viewer's active language
   const goodsMap = new Map<string, string>();
+  const acctMap = new Map<string, string>();
   const whNameMap = new Map<string, string>(raw.warehouses.map((w: Row) => [w.id, str(w.name)]));
+  const trVal = (val: string) => (opts.lang && val && val !== "—" ? translateValue(opts.lang, val) : val);
 
   if (opts.lang) {
     try {
       const uniqueGoods = new Map<string, { id: string; goods_name: string }>();
-      for (const lp of raw.lps) if (lp.goods_id && lp.goods_name) uniqueGoods.set(lp.goods_id, { id: lp.goods_id, goods_name: lp.goods_name });
+      const uniqueAccts = new Map<string, { id: string; name: string }>();
+      for (const lp of raw.lps) {
+        if (lp.goods_id && lp.goods_name) uniqueGoods.set(lp.goods_id, { id: lp.goods_id, goods_name: lp.goods_name });
+        if (lp.sales_account_id && (lp.supplier_name || lp.sales_account_name)) {
+          uniqueAccts.set(lp.sales_account_id, { id: lp.sales_account_id, name: lp.supplier_name || lp.sales_account_name });
+        }
+      }
       for (const l of raw.lots) if (l.goods_id && l.goods_name) uniqueGoods.set(l.goods_id, { id: l.goods_id, goods_name: l.goods_name });
       for (const p of raw.pibOpening) if (p.goods_id && p.goods_name) uniqueGoods.set(p.goods_id, { id: p.goods_id, goods_name: p.goods_name });
       for (const po of raw.pos) {
-        const { lines } = extractPoGoodsLines(po.form_data);
+        const { lines, form } = extractPoGoodsLines(po.form_data);
         for (const ln of lines) if (ln.goodsId && ln.goodsName) uniqueGoods.set(ln.goodsId, { id: ln.goodsId, goods_name: ln.goodsName });
+        const sAccId = cleanDash(form.salesAccountId ?? form.supplierAccountId);
+        const sAccName = cleanDash(form.salesAccountName ?? form.supplierName ?? form.supplierAccountName);
+        if (sAccId && sAccName) uniqueAccts.set(sAccId, { id: sAccId, name: sAccName });
       }
       if (uniqueGoods.size > 0) {
         const locG = await localizeRecordNames([...uniqueGoods.values()], "goods", "goods_name", opts.lang);
         for (const g of locG) goodsMap.set(g.id, g.goods_name);
+      }
+      if (uniqueAccts.size > 0) {
+        const locA = await localizeRecordNames([...uniqueAccts.values()], "enterprise_accounts", "name", opts.lang, { phraseFallback: true });
+        for (const a of locA) acctMap.set(a.id, a.name);
       }
       if (raw.warehouses.length > 0) {
         const locW = await localizeRecordNames(
@@ -535,8 +554,11 @@ export async function loadCanonicalPsStockChunks(
     const poBillNo = cleanDash(po.purchase_order_no) || `PO-${po.id.slice(0, 8)}`;
     const manualNo = cleanDash(form.manualBillNumber ?? form.billNo ?? po.purchase_contract_no);
     const poDate = dateOnly(form.purchaseDate ?? form.receiptDate ?? po.created_at);
+    const sAccId = cleanDash(form.salesAccountId ?? form.supplierAccountId);
     const supplierName =
-      cleanDash(form.salesAccountName ?? form.supplierName ?? form.supplierAccountName ?? form.purchaseAccountName) || "—";
+      (sAccId && acctMap.get(sAccId)) ||
+      cleanDash(form.salesAccountName ?? form.supplierName ?? form.supplierAccountName ?? form.purchaseAccountName) ||
+      "—";
     const supplierNo = cleanDash(form.salesAccountNo ?? form.supplierAccountNo ?? form.purchaseAccountNo) || "—";
     const formBl = cleanDash(form.blNumber ?? form.blNo);
     const formContainer = cleanDash(form.containerNo ?? form.containerNumber);
@@ -595,7 +617,22 @@ export async function loadCanonicalPsStockChunks(
         num(rawLine.netWeight) ||
         num(rawLine.qtyKgs) ||
         (num(rawLine.oneQtyKgs) > 0 ? num(line.booked) * num(rawLine.oneQtyKgs) : num(line.netWeight));
-      const lineOrigin = cleanDash(rawLine.origin ?? form.origin ?? form.originCountry ?? form.countryOfOrigin) || "—";
+      const lineOrigin = trVal(cleanDash(rawLine.origin ?? form.origin ?? form.originCountry ?? form.countryOfOrigin) || "—");
+      const lineBrand = trVal(cleanDash(line.brand));
+      const bookedLot = cleanDash(
+        rawLine.allotName ??
+          rawLine.lotName ??
+          rawLine.lot_name ??
+          rawLine.lotNo ??
+          rawLine.lot_no ??
+          rawLine.stockLotNo ??
+          rawLine.lotNumber ??
+          form.allotName ??
+          form.lotName ??
+          form.lot_name ??
+          form.lotNo ??
+          form.lotNumber,
+      );
       const localizedGoods = (line.goodsId && goodsMap.get(line.goodsId)) || cleanDash(line.goodsName) || "—";
       const unit = normalizeStockUnit(line.unit);
 
@@ -608,11 +645,9 @@ export async function loadCanonicalPsStockChunks(
 
       for (const lc of lineLoaded) {
         const plr = plrById.get(lc.loadingId);
-        const lotName =
-          cleanDash(plr?.lot_name) ||
-          cleanDash(plr?.loading_record_no) ||
-          `${poBillNo}-L${idx + 1}`;
-        const lotKey = `LOT:${lotName.toUpperCase()}`;
+        const explicitPlrLot = cleanDash(plr?.lot_name) || bookedLot || cleanDash(plr?.loading_record_no);
+        const lotName = explicitPlrLot || `${poBillNo}-L${idx + 1}`;
+        const lotKey = `LOT:${poBillNo.toUpperCase()}:${lotName.toUpperCase()}`;
         const whId = plr?.receiving_warehouse_id || null;
         const whName = (whId && whNameMap.get(whId)) || "";
         const blNo = cleanDash(plr?.bl_number) || formBl;
@@ -676,7 +711,7 @@ export async function loadCanonicalPsStockChunks(
               blNo: sh?.blNo || blNo,
               containerNo: sh?.containerNo || containerNo,
               goodsName: localizedGoods,
-              brand: cleanDash(line.brand),
+              brand: lineBrand,
               size: cleanDash(line.size),
               origin: lineOrigin,
               unit,
@@ -701,19 +736,23 @@ export async function loadCanonicalPsStockChunks(
           countryCode: str(po.country_code),
           countryBranchId: po.country_branch_id,
           cityBranchId: po.city_branch_id,
+          countryBranchCode: str(po.country_branch_code),
+          cityBranchCode: str(po.city_branch_code),
           branchId,
           branchName,
           warehouseId: whId,
           warehouseName: whName,
           lotKey,
           lotName,
+          entryNo: idx + 1,
+          hasExplicitLot: Boolean(explicitPlrLot),
           blNo,
           containerNo,
           supplierAccountNo: supplierNo,
           supplierAccountName: supplierName,
           goodsId: line.goodsId,
           goodsName: localizedGoods,
-          brand: cleanDash(line.brand),
+          brand: lineBrand,
           size: cleanDash(line.size),
           origin: lineOrigin,
           unit,
@@ -746,8 +785,8 @@ export async function loadCanonicalPsStockChunks(
       const unloadedQty = q4(Math.max(0, num(line.booked) - loadedSum));
       if (unloadedQty > EPS || lineLoaded.length === 0) {
         const uW = lineLoaded.length === 0 && unloadedQty <= EPS ? { gross: lineGross, net: lineNet } : weightFor(unloadedQty);
-        const lotName = effectiveLines.length > 1 ? `${poBillNo}#${idx + 1}` : poBillNo;
-        const lotKey = `LOT:${lotName.toUpperCase()}`;
+        const lotName = bookedLot || (effectiveLines.length > 1 ? `${poBillNo}#${idx + 1}` : poBillNo);
+        const lotKey = `LOT:${poBillNo.toUpperCase()}:${lotName.toUpperCase()}`;
         const chunk: PsStockChunk = {
           chunkId: `po:${po.id}:book:${line.lineKey}`,
           sourceKind: "purchase_booking",
@@ -762,19 +801,23 @@ export async function loadCanonicalPsStockChunks(
           countryCode: str(po.country_code),
           countryBranchId: po.country_branch_id,
           cityBranchId: po.city_branch_id,
+          countryBranchCode: str(po.country_branch_code),
+          cityBranchCode: str(po.city_branch_code),
           branchId,
           branchName,
           warehouseId: null,
           warehouseName: "",
           lotKey,
           lotName,
+          entryNo: idx + 1,
+          hasExplicitLot: Boolean(bookedLot),
           blNo: formBl,
           containerNo: formContainer,
           supplierAccountNo: supplierNo,
           supplierAccountName: supplierName,
           goodsId: line.goodsId,
           goodsName: localizedGoods,
-          brand: cleanDash(line.brand),
+          brand: lineBrand,
           size: cleanDash(line.size),
           origin: lineOrigin,
           unit,
@@ -809,8 +852,11 @@ export async function loadCanonicalPsStockChunks(
     const contractRef = localPurchaseContractRef(lp);
     const manualNo = cleanDash(lp.manual_bill_no) || contractRef;
     const lpDate = dateOnly(lp.created_at);
-    const supplierName = cleanDash(lp.supplier_name) || "—";
-    const supplierNo = cleanDash(lp.purchase_account_no || lp.sales_account_no) || "—";
+    const supplierName =
+      (lp.sales_account_id && acctMap.get(lp.sales_account_id)) ||
+      cleanDash(lp.supplier_name || lp.sales_account_name || lp.purchase_account_name) ||
+      "—";
+    const supplierNo = cleanDash(lp.sales_account_no || lp.purchase_account_no) || "—";
     const branchId = lp.city_branch_id || lp.country_branch_id || null;
     const branchName = cleanDash(lp.city_branch_name || lp.country_branch_name) || "—";
     const countryName = cleanDash(lp.country_name) || "—";
@@ -839,16 +885,18 @@ export async function loadCanonicalPsStockChunks(
             },
           ];
 
-    for (const lot of lotUnits) {
-      const lotName = cleanDash(lot.lot_no) || cleanDash(lot.lot_ref) || lpBillNo;
-      const lotKey = `LOT:${lotName.toUpperCase()}`;
+    for (const [lotIdx, lot] of lotUnits.entries()) {
+      const explicitLpLot = cleanDash(lot.lot_no) || cleanDash(lot.lot_ref);
+      const lotName = explicitLpLot || lpBillNo;
+      const lotKey = `LOT:${lpBillNo.toUpperCase()}:${lotName.toUpperCase()}`;
       const qty = q4(num(lot.qty_purchased));
       const gross = q4(num(lot.gross_weight_kg));
       const net = q4(num(lot.net_weight_kg));
       const unit = normalizeStockUnit(lot.unit_name || lp.quantity_name);
       const localizedGoods =
         (lot.goods_id && goodsMap.get(lot.goods_id)) || cleanDash(lot.goods_name || lp.goods_name) || "—";
-      const origin = cleanDash(lot.origin || lp.origin_country_name) || "Local";
+      const origin = trVal(cleanDash(lot.origin || lp.origin_country_name) || "Local");
+      const lpBrand = trVal(cleanDash(lot.brand || lp.brand));
 
       const wFor = (q: number) => ({
         gross: qty > EPS ? proportional(gross, q, qty) : 0,
@@ -907,7 +955,7 @@ export async function loadCanonicalPsStockChunks(
           blNo: sh?.blNo ?? "",
           containerNo: sh?.containerNo || cleanDash(lp.truck_no),
           goodsName: localizedGoods,
-          brand: cleanDash(lot.brand || lp.brand),
+          brand: lpBrand,
           size: cleanDash(lot.size || lp.size),
           origin,
           unit,
@@ -931,19 +979,23 @@ export async function loadCanonicalPsStockChunks(
         countryCode: str(lp.country_code),
         countryBranchId: lp.country_branch_id,
         cityBranchId: lp.city_branch_id,
+        countryBranchCode: str(lp.country_branch_code),
+        cityBranchCode: str(lp.city_branch_code),
         branchId,
         branchName,
         warehouseId: activeWhId,
         warehouseName: whName,
         lotKey,
         lotName,
+        entryNo: lotIdx + 1,
+        hasExplicitLot: Boolean(explicitLpLot),
         blNo: "",
         containerNo: cleanDash(lp.truck_no),
         supplierAccountNo: supplierNo,
         supplierAccountName: supplierName,
         goodsId: lot.goods_id ?? lp.goods_id ?? null,
         goodsName: localizedGoods,
-        brand: cleanDash(lot.brand || lp.brand),
+        brand: lpBrand,
         size: cleanDash(lot.size || lp.size),
         origin,
         unit,
@@ -1277,6 +1329,15 @@ export async function loadPsStockJournalEndpoint(
   }
 
   const view = buildPsJournalView(chunks, params.filters);
+  // Keep country/branch selector cards populated across all authorized places even when filtered to one country/branch
+  const placeOverview =
+    params.filters.countryId || params.filters.branchId
+      ? buildPsJournalView(chunks, { ...params.filters, countryId: undefined, branchId: undefined })
+      : view;
+  const branchOverview =
+    params.filters.branchId && params.filters.countryId
+      ? buildPsJournalView(chunks, { ...params.filters, branchId: undefined })
+      : placeOverview;
   const totalRecords = view.lots.length;
   const totalPages = Math.max(1, Math.ceil(totalRecords / params.limit));
   const offset = (params.page - 1) * params.limit;
@@ -1285,8 +1346,8 @@ export async function loadPsStockJournalEndpoint(
     mode: "ps_journal" as const,
     role: filterOptions.role,
     cards: view.cards,
-    countrySummary: view.countrySummary,
-    branchSummary: view.branchSummary,
+    countrySummary: placeOverview.countrySummary,
+    branchSummary: branchOverview.branchSummary,
     lots: view.lots.slice(offset, offset + params.limit),
     pagination: {
       page: params.page,

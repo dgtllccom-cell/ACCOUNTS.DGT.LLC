@@ -1,5 +1,7 @@
 "use client";
 
+import { SavedText } from "@/components/i18n/saved-text";
+import { HoverCellsArea } from "@/components/ui/hover-cells-area";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -628,7 +630,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("BRANCH NAME:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{scopeBranch}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase"><SavedText value={scopeBranch} lang={lang} kind="name" /></span>
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("USER ID:")}</span>
@@ -636,7 +638,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("USER NAME:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{scopeUserName}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase"><SavedText value={scopeUserName} lang={lang} kind="name" /></span>
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("ROLE:")}</span>
@@ -939,7 +941,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         </div>
 
         {/* Table Container */}
-        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+        <HoverCellsArea className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800" data-testid="outstanding-entries-area">
           <table className="ledger-table w-full min-w-[1450px] text-xs">
             <thead className="bg-slate-50/80 text-left font-bold uppercase text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">
               <tr className="border-b border-slate-200 dark:border-slate-700">
@@ -1008,7 +1010,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                         {accNo}
                       </td>
                       <td className="px-2.5 py-2 font-black uppercase text-slate-900 dark:text-slate-100">
-                        {x.name}
+                        <SavedText value={x.name} lang={lang} kind="name" />
                       </td>
                       <td className="px-2.5 py-2 text-xs font-medium text-slate-600 dark:text-slate-300">
                         <span>{x.countryName && x.countryName !== "—" ? x.countryName : scopeCountry}</span>
@@ -1096,7 +1098,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
               )}
             </tbody>
           </table>
-        </div>
+        </HoverCellsArea>
 
         {/* Pagination Footer */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs text-slate-500 dark:text-slate-400">
@@ -1164,7 +1166,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                     {selectedLedgerAccount.code}
                   </span>
                   <h3 className="text-base font-black text-slate-900 dark:text-slate-100">
-                    {selectedLedgerAccount.name}
+                    <SavedText value={selectedLedgerAccount.name} lang={lang} kind="name" />
                   </h3>
                 </div>
                 <p className="mt-0.5 text-xs text-slate-500">
@@ -1232,7 +1234,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                   </div>
 
                   {/* Statement Lines Table */}
-                  <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                  <HoverCellsArea className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800" data-testid="outstanding-statement-area">
                     <table className="w-full min-w-[800px] text-xs">
                       <thead className="bg-slate-100/80 text-left font-bold uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                         <tr>
@@ -1289,7 +1291,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                         )}
                       </tbody>
                     </table>
-                  </div>
+                  </HoverCellsArea>
                 </>
               )}
             </div>

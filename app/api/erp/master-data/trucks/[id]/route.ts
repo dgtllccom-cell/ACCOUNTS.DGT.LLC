@@ -11,8 +11,10 @@ import { ErpPermissionError } from "@/lib/permissions/middleware";
 const TEXT = [
   "truck_serial", "truck_number", "truck_name", "registration_number", "truck_type", "make", "model",
   "color", "fuel_type", "chassis_number", "engine_number", "capacity", "owner_name", "owner_mobile",
-  "transport_company", "driver_name", "driver_mobile", "driver_cnic_passport", "notes",
+  "transport_company", "driver_name", "driver_mobile", "driver_cnic_passport", "driver_address", "notes",
 ];
+const DRIVER_GEO = ["driver_country_id", "driver_state_province_id", "driver_district_id", "driver_city_id"] as const;
+const geoId = (v: unknown) => (typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v.trim()) ? v.trim() : null);
 const DATES = ["registration_expiry_date", "insurance_expiry_date", "driver_docs_expiry_date"];
 
 export async function GET(_req: Request, context: { params: Promise<{ id: string }> }) {
@@ -91,6 +93,8 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     if (body.base_state_province_id !== undefined) patch.base_state_province_id = body.base_state_province_id ?? null;
     if (body.base_district_id !== undefined) patch.base_district_id = body.base_district_id ?? null;
     if (body.base_city_id !== undefined) patch.base_city_id = body.base_city_id ?? null;
+    // temporary driver's physical address: Location Management ids only — never the truck's country/branch scope
+    for (const k of DRIVER_GEO) if (body[k] !== undefined) patch[k] = geoId(body[k]);
     if (body.status !== undefined && ["active", "inactive", "suspended", "expired"].includes(body.status)) patch.status = body.status;
     if (body.is_active !== undefined) patch.is_active = Boolean(body.is_active);
     if (body.owner_person_id !== undefined) patch.owner_person_id = body.owner_person_id || null;
@@ -108,7 +112,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
                   chassis_number, engine_number, capacity, owner_name, owner_mobile, owner_person_id,
                   transport_company, transport_company_id, transporter_person_id, driver_name, driver_mobile, driver_cnic_passport,
                   driver_person_id, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date,
-                  base_state_province_id, base_district_id, base_city_id, status, notes, is_active,
+                  base_state_province_id, base_district_id, base_city_id, driver_country_id, driver_state_province_id, driver_district_id, driver_city_id, driver_address, status, notes, is_active,
                   created_at, updated_at
       `;
       return rows[0];

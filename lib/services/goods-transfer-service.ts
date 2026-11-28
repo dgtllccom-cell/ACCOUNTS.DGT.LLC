@@ -343,6 +343,10 @@ export type TransferInput = {
     name?: string;
     address?: string;
     city?: string;
+    /** third-party warehouse location from the Location Management master */
+    countryId?: string | null;
+    stateProvinceId?: string | null;
+    cityId?: string | null;
     contractRef?: string;
     storageCharge?: number | null;
     chargeCurrency?: string | null;
@@ -442,6 +446,7 @@ export async function createTransfer(tx: Tx, input: TransferInput) {
       source_warehouse_id, source_location_label, source_rack_bin,
       dest_warehouse_id, dest_rack_bin, dest_country_id, dest_country_branch_id, dest_city_branch_id,
       provider_account_id, provider_name, provider_address, provider_city, contract_ref, storage_charge, charge_currency,
+      provider_country_id, provider_state_province_id, provider_city_id,
       transport, idempotency_key, notes, created_by, completed_at
     ) values (
       ${transferNo}, ${lot.local_purchase_id}::uuid, ${lot.id}::uuid, ${purpose}, ${status}, ${qty},
@@ -450,6 +455,7 @@ export async function createTransfer(tx: Tx, input: TransferInput) {
       ${input.dest?.countryBranchId ?? null}::uuid, ${input.dest?.cityBranchId ?? null}::uuid,
       ${input.provider?.accountId ?? null}::uuid, ${input.provider?.name ?? null}, ${input.provider?.address ?? null}, ${input.provider?.city ?? null},
       ${input.provider?.contractRef ?? null}, ${input.provider?.storageCharge ?? null}, ${input.provider?.chargeCurrency ?? null},
+      ${input.provider?.countryId ?? null}::uuid, ${input.provider?.stateProvinceId ?? null}::uuid, ${input.provider?.cityId ?? null}::uuid,
       ${tx.json((input.transport ?? {}) as any)}, ${input.idempotencyKey}, ${input.notes ?? null}, ${input.userId ?? null}::uuid,
       ${status === "completed" ? new Date().toISOString() : null}
     ) returning *`;

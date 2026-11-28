@@ -3,6 +3,7 @@
 import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useCellHoverTitles } from "@/lib/ui/use-cell-hover-titles";
 import { createPortal } from "react-dom";
 import { Download, Expand, Eye, FileSpreadsheet, FileText, MoreVertical, PencilLine, Printer, Search, Trash2, CalendarDays, RefreshCw, SlidersHorizontal, Landmark, CheckCircle2, ChevronDown, ChevronRight, PackageCheck, FileCheck2, Building, Building2, MapPin, Phone, MessageCircle, Mail, Plus, X, Globe, User, Coins, DollarSign, Wallet, Truck } from "lucide-react";
 import type { Route } from "next";
@@ -608,6 +609,9 @@ export function AccountGeneralReportView({
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const datePickerRef = useRef<HTMLDivElement | null>(null);
+  // Hover any registry cell to see its complete data (account no., full name, branch + created by …).
+  const registryTableRef = useRef<HTMLTableElement | null>(null);
+  useCellHoverTitles(registryTableRef);
   const [expandedView, setExpandedView] = useState(false);
   const [session, setSession] = useState<SessionInfo | null>(null);
   const [data, setData] = useState<AccountGeneralReportResponse | null>(null);
@@ -1723,10 +1727,10 @@ export function AccountGeneralReportView({
                 {branchCode !== "all"
                   ? branchCode
                   : isAllAccess
-                  ? "ALL NETWORK BRANCHES"
+                  ? t(lang, "acct.all_network_branches", "ALL NETWORK BRANCHES")
                   : isCountryAdmin
-                  ? `${filteredRows[0]?.countryName || "REGIONAL"} ALL BRANCHES`
-                  : (filteredRows[0]?.branchName || (session as any)?.branchDisplayName || "MAIN BRANCH")}
+                  ? `${filteredRows[0]?.countryName ? localizeTerm(filteredRows[0].countryName, lang) : t(lang, "acct.regional", "REGIONAL")} ${t(lang, "acct.all_branches_suffix", "ALL BRANCHES")}`
+                  : <SavedText value={filteredRows[0]?.branchName || (session as any)?.branchDisplayName || t(lang, "acct.main_branch", "MAIN BRANCH")} lang={lang} kind="name" />}
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -1738,7 +1742,7 @@ export function AccountGeneralReportView({
             <div className="flex justify-between items-center">
               <span>{tr("USER NAME:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
-                {(session as any)?.user?.fullName || (session as any)?.fullName || (session as any)?.user?.email || (session as any)?.email || "—"}
+                <SavedText value={(session as any)?.user?.fullName || (session as any)?.fullName || (session as any)?.user?.email || (session as any)?.email} lang={lang} kind="name" />
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -2172,7 +2176,7 @@ export function AccountGeneralReportView({
               <span>{t(lang, "acct.swipe_cols", "Swipe sideways to see all columns")}</span>
             </div>
             <div className={cn("overflow-auto", expandedView ? "max-h-[85vh]" : "max-h-[calc(100vh-340px)] min-h-[380px]")}>
-              <table className="min-w-[1700px] w-full text-xs text-left border-collapse">
+              <table ref={registryTableRef} data-testid="account-registry-table" className="min-w-[1700px] w-full text-xs text-left border-collapse">
                 <thead className="sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 shadow-xs">
                   <tr>
                     {[
@@ -2287,8 +2291,8 @@ export function AccountGeneralReportView({
                             ) : null}
                           </td>
 
-                          {/* 2. Account Name (with message-style detail popover & click modal) */}
-                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
+                          {/* 2. Account Name (with message-style detail popover & click modal) — keeps its own detail card, no extra bubble */}
+                          <td data-no-hover-title className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
                             <div
                               className="group/name relative inline-block cursor-pointer text-left"
                               onClick={(e) => {

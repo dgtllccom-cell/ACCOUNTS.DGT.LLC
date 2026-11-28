@@ -22,6 +22,9 @@ import {
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { fetchWarehouses, type WarehouseRecord } from "@/features/warehouses/warehouse-api";
+import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
+import { postalCodeAfterCityChange } from "@/features/locations/address-postal-code";
+import { formatFacilityAddress, savedFacilityPlace } from "@/features/clearing-agent/facility-address";
 
 export type WarehouseSelectionData = {
   warehouseSourceType: "company_warehouse" | "customer_warehouse" | "other";
@@ -29,6 +32,12 @@ export type WarehouseSelectionData = {
   warehouseAccountId?: string;
   warehouseName: string;
   warehouseAddressText: string;
+  /** customer premises / third-party facility location from the Location Management master */
+  facilityCountryId?: string;
+  facilityStateProvinceId?: string;
+  facilityCityId?: string;
+  facilityPostalCode?: string;
+  facilityAddressDetail?: string;
   contactPerson?: string;
   contactPhone?: string;
   remarks?: string;
@@ -44,6 +53,11 @@ interface CustomerOrderWarehouseModalProps {
     warehouseAccountId?: string;
     warehouseName?: string;
     warehouseAddressText?: string;
+    facilityCountryId?: string;
+    facilityStateProvinceId?: string;
+    facilityCityId?: string;
+    facilityPostalCode?: string;
+    facilityAddressDetail?: string;
     contactPerson?: string;
     contactPhone?: string;
     remarks?: string;
@@ -71,7 +85,8 @@ export function CustomerOrderWarehouseModal({
   const activeLang = useActiveLanguage();
   const lang = langProp && langProp !== "en" ? langProp : activeLang;
   const isRtl = lang === "ar" || lang === "ur" || lang === "fa" || lang === "ps";
-  const tt = (key: string, fallback: string) => t(lang as any, key as any, fallback);
+  // every popup label lives in the central dictionary under cowm.* (ported from #296: it rendered English in every language)
+  const tt = (key: string, fallback: string) => t(lang as any, (key.includes(".") ? key : `cowm.${key}`) as any, fallback);
 
   const initialType =
     initialValues.warehouseSourceType === "customer_warehouse"
@@ -140,7 +155,7 @@ export function CustomerOrderWarehouseModal({
       (selectedCustomer ? `${selectedCustomer.customer_name} Warehouse / Facility` : "")
   );
   const [custWhAddress, setCustWhAddress] = useState(
-    initialValues.warehouseAddressText || selectedCustomer?.address || ""
+    initialValues.facilityAddressDetail ?? (initialValues.warehouseAddressText || selectedCustomer?.address || "")
   );
   const [custContactPerson, setCustContactPerson] = useState(
     initialValues.contactPerson || selectedCustomer?.contact_person || ""
@@ -154,7 +169,7 @@ export function CustomerOrderWarehouseModal({
     initialType === "other" ? initialValues.warehouseName || "" : ""
   );
   const [otherWhAddress, setOtherWhAddress] = useState(
-    initialType === "other" ? initialValues.warehouseAddressText || "" : ""
+    initialType === "other" ? (initialValues.facilityAddressDetail ?? initialValues.warehouseAddressText ?? "") : ""
   );
   const [otherContactPerson, setOtherContactPerson] = useState(
     initialType === "other" ? initialValues.contactPerson || "" : ""
@@ -163,6 +178,53 @@ export function CustomerOrderWarehouseModal({
     initialType === "other" ? initialValues.contactPhone || "" : ""
   );
   const [otherRemarks, setOtherRemarks] = useState(initialValues.remarks || "");
+  // Delivery / facility location (customer premises or third-party facility): the shared Location Management master
+  const [facilityLoc, setFacilityLoc] = useState({
+    countryId: initialValues.facilityCountryId || "",
+    stateProvinceId: initialValues.facilityStateProvinceId || "",
+    districtId: "",
+    cityId: initialValues.facilityCityId || "",
+  });
+  const [facilityPlace, setFacilityPlace] = useState(() =>
+    savedFacilityPlace(initialValues.warehouseAddressText, initialValues.facilityAddressDetail, initialValues.facilityPostalCode)
+  );
+  const [facilityPostal, setFacilityPostal] = useState({ value: initialValues.facilityPostalCode ?? "", suggestion: "" });
+  const facilityFields = (street: string, fallback: string) => {
+    const detail = street.trim();
+    const postalCode = facilityPostal.value.trim();
+    const address = formatFacilityAddress(detail, facilityPlace, postalCode);
+    return {
+      warehouseAddressText: address || fallback,
+      facilityCountryId: facilityLoc.countryId,
+      facilityStateProvinceId: facilityLoc.stateProvinceId,
+      facilityCityId: facilityLoc.cityId,
+      facilityPostalCode: postalCode,
+      facilityAddressDetail: address ? detail : undefined,
+    };
+  };
+  const facilityPicker = (testId: string) => (
+    <div data-testid={testId} className="space-y-2 sm:col-span-2">
+      <LocationHierarchySelect
+        lang={lang}
+        showDistrict={false}
+        value={facilityLoc}
+        onChange={(v, meta) => {
+          setFacilityLoc({ countryId: v.countryId, stateProvinceId: v.stateProvinceId, districtId: "", cityId: v.cityId });
+          setFacilityPlace([meta.city?.name, meta.state?.name, meta.country?.name].filter(Boolean).join(", "));
+          setFacilityPostal((p) => postalCodeAfterCityChange(p.value, p.suggestion, meta.city?.zip_code));
+        }}
+      />
+      <label className="block space-y-1 text-[11px] font-bold text-slate-700 dark:text-slate-300 sm:max-w-56">
+        <span>{tt("locedit.postal_code", "Postal Code")}</span>
+        <input
+          dir="ltr"
+          value={facilityPostal.value}
+          onChange={(e) => setFacilityPostal({ value: e.target.value, suggestion: "" })}
+          className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-800"
+        />
+      </label>
+    </div>
+  );
 
   // Filtered company warehouses for dropdown & search
   const filteredCompanyWarehouses = useMemo(() => {
@@ -233,7 +295,7 @@ export function CustomerOrderWarehouseModal({
         warehouseId: "",
         warehouseAccountId: selectedCustAccountId,
         warehouseName: custWhName.trim() || tt("customer_warehouse_title", "Customer Warehouse"),
-        warehouseAddressText: custWhAddress.trim() || "Customer Premises / Yard",
+        ...facilityFields(custWhAddress, "Customer Premises / Yard"),
         contactPerson: custContactPerson.trim(),
         contactPhone: custContactPhone.trim(),
       });
@@ -242,7 +304,7 @@ export function CustomerOrderWarehouseModal({
         warehouseSourceType: "other",
         warehouseId: "",
         warehouseName: otherWhName.trim() || tt("other_warehouse_title", "Other Warehouse"),
-        warehouseAddressText: otherWhAddress.trim() || "Third-Party Facility",
+        ...facilityFields(otherWhAddress, "Third-Party Facility"),
         contactPerson: otherContactPerson.trim(),
         contactPhone: otherContactPhone.trim(),
         remarks: otherRemarks.trim(),
@@ -602,6 +664,7 @@ export function CustomerOrderWarehouseModal({
                     className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
+                {facilityPicker("customer-facility-location")}
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                     {tt("delivery_facility_address", "Delivery / Facility Address")} *
@@ -680,6 +743,7 @@ export function CustomerOrderWarehouseModal({
                     className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold dark:border-slate-700 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
+                {facilityPicker("other-facility-location")}
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                     {tt("other_warehouse_address_label", "Location / Port / Full Address")} *

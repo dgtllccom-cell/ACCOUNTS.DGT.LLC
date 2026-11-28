@@ -24,8 +24,10 @@ import { localizeJoinedNames } from "@/lib/i18n/localize-records";
 const TEXT = [
   "truck_serial", "truck_number", "truck_name", "registration_number", "truck_type", "make", "model",
   "color", "fuel_type", "chassis_number", "engine_number", "capacity", "owner_name", "owner_mobile",
-  "transport_company", "driver_name", "driver_mobile", "driver_cnic_passport", "notes",
+  "transport_company", "driver_name", "driver_mobile", "driver_cnic_passport", "driver_address", "notes",
 ];
+const DRIVER_GEO = ["driver_country_id", "driver_state_province_id", "driver_district_id", "driver_city_id"] as const;
+const geoId = (v: unknown) => (typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v.trim()) ? v.trim() : null);
 const DATES = ["registration_expiry_date", "insurance_expiry_date", "driver_docs_expiry_date"];
 
 export async function GET(req: Request) {
@@ -53,7 +55,7 @@ export async function GET(req: Request) {
                t.transport_company, t.transport_company_id, t.transporter_person_id,
                t.driver_name, t.driver_mobile, t.driver_cnic_passport,
                t.driver_person_id, t.registration_expiry_date, t.insurance_expiry_date, t.driver_docs_expiry_date,
-               t.base_state_province_id, t.base_district_id, t.base_city_id, t.status, t.notes, t.is_active,
+               t.base_state_province_id, t.base_district_id, t.base_city_id, t.driver_country_id, t.driver_state_province_id, t.driver_district_id, t.driver_city_id, t.driver_address, t.status, t.notes, t.is_active,
                t.created_at, t.updated_at,
                owner.customer_name as owner_display_name,
                driver.customer_name as driver_display_name,
@@ -138,6 +140,8 @@ export async function POST(req: Request) {
       base_state_province_id: body.base_state_province_id ?? null,
       base_district_id: body.base_district_id ?? null,
       base_city_id: body.base_city_id ?? null,
+      // temporary driver's physical address: Location Management ids only — never the truck's country/branch scope
+      ...Object.fromEntries(DRIVER_GEO.map((k) => [k, geoId(body[k])])),
       manufacturing_year: body.manufacturing_year ? Number(body.manufacturing_year) : null,
       owner_person_id: body.owner_person_id || null,
       driver_person_id: body.driver_person_id || null,
@@ -175,7 +179,7 @@ export async function POST(req: Request) {
                   chassis_number, engine_number, capacity, owner_name, owner_mobile, owner_person_id,
                   transport_company, transport_company_id, transporter_person_id, driver_name, driver_mobile, driver_cnic_passport,
                   driver_person_id, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date,
-                  base_state_province_id, base_district_id, base_city_id, status, notes, is_active,
+                  base_state_province_id, base_district_id, base_city_id, driver_country_id, driver_state_province_id, driver_district_id, driver_city_id, driver_address, status, notes, is_active,
                   created_at, updated_at
       `;
       return rows[0];

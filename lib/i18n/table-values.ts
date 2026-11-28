@@ -74,13 +74,20 @@ export const VALUE_TRANSLATIONS: Record<string, Row> = {
   "IN PROGRESS": { ur: "جاری ہے", ar: "قيد التنفيذ", fa: "در حال انجام", ps: "روان دی" },
   "PENDING": { ur: "زیر التواء", ar: "معلق", fa: "در انتظار", ps: "پاتې" },
 
-  // ── Quantity units ───────────────────────────────────────────────────────
+  // ── Quantity units & common trade brands ─────────────────────────────────
   "BAGS": { ur: "تھیلے", ar: "أكياس", fa: "کیسه‌ها", ps: "بوجۍ" },
   "BAG": { ur: "تھیلا", ar: "كيس", fa: "کیسه", ps: "بوجۍ" },
+  "BOX": { ur: "بوکس", ar: "بوکس", fa: "بوکس", ps: "بوکس" },
+  "BOXES": { ur: "ڈبے", ar: "صناديق", fa: "جعبه‌ها", ps: "بکسونه" },
+  "CARTON": { ur: "کارٹن", ar: "كرتون", fa: "کارتن", ps: "کارتن" },
   "CARTONS": { ur: "کارٹن", ar: "كراتين", fa: "کارتن‌ها", ps: "کارتنونه" },
+  "PALLET": { ur: "پیلٹ", ar: "طبلية", fa: "پالت", ps: "پیلټ" },
+  "PALLETS": { ur: "پیلٹس", ar: "طبليات", fa: "پالت‌ها", ps: "پیلټونه" },
   "CANS": { ur: "کین", ar: "علب", fa: "قوطی‌ها", ps: "کینونه" },
   "KGS": { ur: "کلوگرام", ar: "كجم", fa: "کیلوگرم", ps: "کیلوګرامه" },
   "PCS": { ur: "عدد", ar: "قطع", fa: "عدد", ps: "دانې" },
+  "DGT.LLC": { ur: "ڈی جی ٹی.ایل ایل سی", ar: "دي جي تي.ذ.م.م", fa: "دی جی تی.با مسئولیت محدود", ps: "ډي جي ټي.LLC" },
+  "DGT LLC": { ur: "ڈی جی ٹی ایل ایل سی", ar: "دي جي تي ذ.م.م", fa: "دی جی تی با مسئولیت محدود", ps: "ډي جي ټي LLC" },
 
   // ── Payment methods / conditions ─────────────────────────────────────────
   "BANK TRANSFER": { ur: "بینک ٹرانسفر", ar: "تحويل بنكي", fa: "انتقال بانکی", ps: "بانکي لېږد" },
@@ -270,7 +277,7 @@ let vocabularyIndex: Map<string, Map<string, VocabCandidate[]>> | null = null;
 let vocabularyBuiltWithUi = false;
 const registeredVocabulary: Array<{ entry: Partial<VocabularyEntry>; weight: number }> = [];
 
-const ACRONYMS = new Set(["VAT", "BL", "B/L", "CNIC", "NTN", "USD", "AED", "PKR", "AFN", "IRR", "SAR", "ID", "PO", "SO", "GD", "LC", "TT", "HR", "IT", "UAE", "KSA", "UK", "USA", "PDF", "SMS", "CEO", "ERP", "QR", "OTP", "KG", "MT", "CBM", "FOB", "CIF", "CFR"]);
+const ACRONYMS = new Set(["DGT", "LLC", "DGT.LLC", "VAT", "BL", "B/L", "CNIC", "NTN", "USD", "AED", "PKR", "AFN", "IRR", "SAR", "ID", "PO", "SO", "GD", "LC", "TT", "HR", "IT", "UAE", "KSA", "UK", "USA", "PDF", "SMS", "CEO", "ERP", "QR", "OTP", "KG", "MT", "CBM", "FOB", "CIF", "CFR"]);
 function displayEnglish(key: string): string {
   if (/[a-z]/.test(key)) return key;
   return key.split(" ").map((word) => (ACRONYMS.has(word) || /\d/.test(word) ? word : word.charAt(0) + word.slice(1).toLowerCase())).join(" ");

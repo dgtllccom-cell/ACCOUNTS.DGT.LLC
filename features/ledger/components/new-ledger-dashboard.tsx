@@ -1,5 +1,7 @@
 "use client";
 
+import { SavedText } from "@/components/i18n/saved-text";
+import { localizeName } from "@/lib/i18n/transliteration";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -28,6 +30,7 @@ import {
   type LedgerStatementLine
 } from "@/features/reports/ledger-report/ledger-report-api";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+import { HoverCellsArea } from "@/components/ui/hover-cells-area";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
@@ -160,9 +163,10 @@ function exportCsv(filename: string, rows: string[][]) {
   URL.revokeObjectURL(url);
 }
 
-function buildLedgerOption(row: LedgerLookupRow): SearchSelectOption {
+function buildLedgerOption(row: LedgerLookupRow, lang = "en"): SearchSelectOption {
   const branch = row.cityBranchName || row.countryBranchName || row.countryName || "";
-  const label = `${row.accountCode || row.ledgerCode} · ${row.accountName || row.ledgerName}${branch ? ` · ${branch}` : ""}`;
+  const shownName = localizeName(row.accountName || row.ledgerName, lang);
+  const label = `${row.accountCode || row.ledgerCode} · ${shownName}${branch ? ` · ${branch}` : ""}`;
   const keywords = [
     row.ledgerCode,
     row.ledgerName,
@@ -178,7 +182,23 @@ function buildLedgerOption(row: LedgerLookupRow): SearchSelectOption {
   ]
     .filter(Boolean)
     .join(" ");
-  return { value: row.ledgerId, label, keywords };
+  const balance = Number.isFinite(Number(row.currentBalance))
+    ? `${row.ledgerCurrency || ""} ${Number(row.currentBalance).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`.trim()
+    : "";
+  const details = [
+    [row.accountCode || row.ledgerCode, shownName].filter(Boolean).join(" · "),
+    row.ledgerCode && row.ledgerCode !== row.accountCode ? row.ledgerCode : "",
+    row.companyName,
+    [row.accountKind, row.ledgerCurrency].filter(Boolean).join(" · "),
+    [row.cityBranchName, row.countryBranchName, row.countryName].filter(Boolean).join(" · "),
+    [row.cityName, row.stateName].filter(Boolean).join(" · "),
+    row.address,
+    balance
+  ]
+    .map((v) => String(v ?? "").trim())
+    .filter(Boolean)
+    .join("\n");
+  return { value: row.ledgerId, label, keywords, details };
 }
 
 export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: string }) {
@@ -255,7 +275,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
     return list;
   }, [rawLedgers, selectedCountry, selectedBranch]);
 
-  const ledgerOptions = useMemo(() => filteredLedgers.map(buildLedgerOption), [filteredLedgers]);
+  const ledgerOptions = useMemo(() => filteredLedgers.map((row) => buildLedgerOption(row, activeLang)), [filteredLedgers, activeLang]);
 
   const linesWithRunningUsd = useMemo(() => {
     let runningUsd = 0;
@@ -566,6 +586,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
               value={ledgerId}
               placeholder={t(activeLang, "ledger.nld_search_account_ph", "Search or select account...")}
               options={ledgerOptions}
+              optionHoverDetails
               onValueChange={(value) => {
                 setLedgerId(value);
                 void loadAccountById(value);
@@ -689,7 +710,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
             </InfoPanel>
 
             <InfoPanel title={t(activeLang, "branch.section_company_details", "Company Details")} accent="blue">
-              <InfoRow label={t(activeLang, "branch.row_company_name", "Company Name")} value={account?.companyName ? account.companyName : (account ? "Not Assigned" : "-")} />
+              <InfoRow label={t(activeLang, "branch.row_company_name", "Company Name")} value={account?.companyName ? <SavedText value={account.companyName} lang={activeLang} kind="name" /> : (account ? t(activeLang, "ledger.not_assigned", "Not Assigned") : "-")} />
               <InfoRow label={t(activeLang, "report.country", "Country")} value={safeText(account?.countryName)} />
               <InfoRow label={t(activeLang, "report.scope_main_branch", "Main Branch")} value={safeText(account?.countryBranchName)} />
               <InfoRow label={t(activeLang, "report.scope_city_branch", "City Branch")} value={safeText(account?.cityBranchName)} />
@@ -718,7 +739,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
             </InfoPanel>
 
             <InfoPanel title={t(activeLang, "ledger.session_details", "Session / Login Details")} accent="violet">
-              <InfoRow label={t(activeLang, "ledger.session_branch", "Session Branch")} value={branchLabel(account)} strong />
+              <InfoRow label={t(activeLang, "ledger.session_branch", "Session Branch")} value={<SavedText value={branchLabel(account)} lang={activeLang} kind="name" />} strong />
               <InfoRow label={t(activeLang, "ledger.nld_login_date", "Login Date")} value={<span suppressHydrationWarning>{new Date().toLocaleDateString()}</span>} />
               <InfoRow label={t(activeLang, "ledger.nld_login_time", "Login Time")} value={<span suppressHydrationWarning>{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>} />
               <InfoRow label={t(activeLang, "purchase.user_name_label", "User Name")} value={safeText(session?.user?.fullName || (session as any)?.fullName || "—")} strong />
@@ -731,7 +752,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
 
       <Card className="overflow-hidden border bg-card shadow-sm">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <HoverCellsArea className="overflow-x-auto" data-testid="ledger-entries-area">
             <table className="w-full min-w-[1120px] text-xs">
               <thead className="bg-slate-900 text-white dark:bg-slate-800">
                 <tr>
@@ -802,7 +823,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
                 )}
               </tbody>
             </table>
-          </div>
+          </HoverCellsArea>
         </CardContent>
       </Card>
     </div>

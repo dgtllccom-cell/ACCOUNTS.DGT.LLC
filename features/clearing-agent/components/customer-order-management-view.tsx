@@ -1,5 +1,6 @@
 "use client";
 
+import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
 import { pl } from "@/lib/reports/print-label";
 import React, { Fragment, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { useSearchParams } from "next/navigation";
@@ -398,6 +399,12 @@ export type CustomerOrderGoodsItem = {
   warehouseAccountId?: string;
   warehouseName: string;
   warehouseAddressText: string;
+  /** delivery / facility location ids from the Location Management master */
+  facilityCountryId?: string;
+  facilityStateProvinceId?: string;
+  facilityCityId?: string;
+  facilityPostalCode?: string;
+  facilityAddressDetail?: string;
   contactPerson?: string;
   contactPhone?: string;
   photoUrl?: string;
@@ -740,9 +747,12 @@ const EMPTY_FORM = {
   // 1A Final Destination
   final_destination_country_id: "",
   final_destination_country_name: "",
-  final_destination_state: "Balochistan",
-  final_destination_city: "Quetta",
+  final_destination_state: "",
+  final_destination_city: "",
   final_destination_address: "",
+  final_destination_state_province_id: "",
+  final_destination_district_id: "",
+  final_destination_city_id: "",
 
   // 1B Truck & Pre-Carriage
   truck_assignment_mode: "permanent" as "permanent" | "hired" | "later",
@@ -2370,6 +2380,11 @@ export function CustomerOrderManagementView() {
               warehouseId: row.warehouse_id || "",
               warehouseName: row.warehouse_name || "",
               warehouseAddressText: row.source_location_text || "",
+              facilityCountryId: row.facility_country_id || "",
+              facilityStateProvinceId: row.facility_state_province_id || "",
+              facilityCityId: row.facility_city_id || "",
+              facilityPostalCode: row.facility_postal_code || "",
+              facilityAddressDetail: row.facility_address_detail ?? undefined,
               remarks: row.remarks || ""
             };
           })
@@ -2510,6 +2525,9 @@ export function CustomerOrderManagementView() {
       final_destination_state: o.final_destination_state || "",
       final_destination_city: o.final_destination_city || o.destination_city || "",
       final_destination_address: o.final_destination_address || "",
+      final_destination_state_province_id: o.final_destination_state_province_id || "",
+      final_destination_district_id: o.final_destination_district_id || "",
+      final_destination_city_id: o.final_destination_city_id || "",
       exit_point_type: (o.exit_point_type as "border" | "port") || (o.loading_port_id && !o.exit_border_port_id ? "port" : "border"),
       entry_point_type: (o.entry_point_type as "border" | "port") || (o.destination_port_id && !o.entry_border_port_id ? "port" : "border"),
       exit_border_port_id: o.exit_border_port_id || "",
@@ -2858,6 +2876,11 @@ export function CustomerOrderManagementView() {
         warehouseId: g.warehouseId || formData.loading_source_warehouse_id || null,
         warehouseName: g.warehouseName || (g.warehouseSourceType === "customer_warehouse" ? "Customer Warehouse" : "Company Warehouse"),
         sourceLocationText: g.warehouseAddressText || g.warehouseName || formData.loading_source_name || null,
+        facilityCountryId: g.warehouseSourceType === "company_warehouse" ? null : g.facilityCountryId || null,
+        facilityStateProvinceId: g.warehouseSourceType === "company_warehouse" ? null : g.facilityStateProvinceId || null,
+        facilityCityId: g.warehouseSourceType === "company_warehouse" ? null : g.facilityCityId || null,
+        facilityPostalCode: g.warehouseSourceType === "company_warehouse" ? null : g.facilityPostalCode || null,
+        facilityAddressDetail: g.warehouseSourceType === "company_warehouse" ? null : g.facilityAddressDetail ?? null,
         quantity: Number(g.quantity) || 0,
         unit: g.unit || "Bags",
         remarks: `${g.goodsName || 'Goods'}${g.kgPerQty ? ` (${g.kgPerQty} kg/${g.unit || 'unit'})` : ""} • Total: ${g.totalKg || 0} kg`
@@ -5684,7 +5707,7 @@ export function CustomerOrderManagementView() {
                         <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800">
                           <span className="text-slate-500">{tt("final_destination", "Final Destination")}</span>
                           <span className="font-bold text-slate-900 dark:text-white">
-                            {formData.final_destination_city || "Quetta"}
+                            {formData.final_destination_city || "—"}
                           </span>
                         </div>
                       </div>
@@ -5857,25 +5880,25 @@ export function CustomerOrderManagementView() {
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">{tt("country", "Country")}</span>
                           <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
-                            {formData.final_destination_country_name || formData.receiving_country_name || "Pakistan"}
+                            {formData.final_destination_country_name || formData.receiving_country_name || "—"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">{tt("state_province", "State / Province")}</span>
                           <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
-                            {formData.final_destination_state || "Balochistan"}
+                            {formData.final_destination_state || "—"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">{tt("city_star", "City")}</span>
                           <span className="font-bold text-slate-900 dark:text-white truncate max-w-[170px]">
-                            {formData.final_destination_city || formData.destination_city || "Quetta"}
+                            {formData.final_destination_city || formData.destination_city || "—"}
                           </span>
                         </div>
                         <div className="pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px]">
                           <span className="text-slate-500 block text-[11px]">{tt("full_delivery_address", "Delivery Address")}</span>
                           <p className="font-medium text-slate-800 dark:text-slate-200 line-clamp-2">
-                            {formData.final_destination_address || formData.final_delivery_location || "Quetta Central Warehouse"}
+                            {formData.final_destination_address || formData.final_delivery_location || "—"}
                           </p>
                         </div>
                       </div>
@@ -8539,56 +8562,30 @@ function Step1BookingCustomer({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {/* Field 1: Final Destination Country Picker */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {tt("country", "Country")} *
-                </label>
-                <select
-                  value={formData.final_destination_country_id || ""}
-                  onChange={(e) => {
-                    const cId = e.target.value;
-                    const cName = countries.find((c) => c.id === cId)?.name || "";
-                    setFormData((c) => ({
-                      ...c,
-                      final_destination_country_id: cId,
-                      final_destination_country_name: cName
-                    }));
+              {/* Country → State → District → City from the shared Location Management master (names kept for reports) */}
+              <div className="sm:col-span-2" data-testid="customer-order-final-destination">
+                <LocationHierarchySelect
+                  lang={lang as never}
+                  value={{
+                    countryId: formData.final_destination_country_id || "",
+                    stateProvinceId: formData.final_destination_state_province_id || "",
+                    districtId: formData.final_destination_district_id || "",
+                    cityId: formData.final_destination_city_id || ""
                   }}
-                  className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
-                >
-                  <option value="">{tt("choose_country", "Choose destination country...")}</option>
-                  {countries.map((c) => (
-                    <option key={c.id} value={c.id}>{getRouteCountryFlag(c.name)} {c.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Field 2: State / Province */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {tt("state_province", "State / Province")} *
-                </label>
-                <input
-                  type="text"
-                  value={formData.final_destination_state || ""}
-                  onChange={(e) => setFormData((c) => ({ ...c, final_destination_state: e.target.value }))}
-                  placeholder="e.g. Balochistan"
-                  className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
-                />
-              </div>
-
-              {/* Field 3: City */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {tt("city_star", "City")} *
-                </label>
-                <input
-                  type="text"
-                  value={formData.final_destination_city || formData.destination_city || ""}
-                  onChange={(e) => setFormData((c) => ({ ...c, final_destination_city: e.target.value, destination_city: e.target.value }))}
-                  placeholder="e.g. Quetta"
-                  className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                  onChange={(v, meta) => setFormData((c) => {
+                    const cityName = meta.city?.name ?? (v.cityId ? c.final_destination_city : "");
+                    return {
+                      ...c,
+                      final_destination_country_id: v.countryId,
+                      final_destination_country_name: meta.country?.name ?? (v.countryId ? c.final_destination_country_name : ""),
+                      final_destination_state_province_id: v.stateProvinceId,
+                      final_destination_state: meta.state?.name ?? (v.stateProvinceId ? c.final_destination_state : ""),
+                      final_destination_district_id: v.districtId,
+                      final_destination_city_id: v.cityId,
+                      final_destination_city: cityName,
+                      destination_city: cityName
+                    };
+                  })}
                 />
               </div>
 
@@ -8601,7 +8598,7 @@ function Step1BookingCustomer({
                   type="text"
                   value={formData.final_destination_address || formData.final_delivery_location || ""}
                   onChange={(e) => setFormData((c) => ({ ...c, final_destination_address: e.target.value, final_delivery_location: e.target.value }))}
-                  placeholder="e.g. Warehouse 4B, Industrial Area, Quetta"
+                  placeholder={tt("full_delivery_address", "Full Delivery Address")}
                   className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
@@ -10297,6 +10294,11 @@ function Step1BookingCustomer({
           warehouseAccountId: draftGoodsItem.warehouseAccountId,
           warehouseName: draftGoodsItem.warehouseName,
           warehouseAddressText: draftGoodsItem.warehouseAddressText,
+          facilityCountryId: draftGoodsItem.facilityCountryId,
+          facilityStateProvinceId: draftGoodsItem.facilityStateProvinceId,
+          facilityCityId: draftGoodsItem.facilityCityId,
+          facilityPostalCode: draftGoodsItem.facilityPostalCode,
+          facilityAddressDetail: draftGoodsItem.facilityAddressDetail,
           contactPerson: draftGoodsItem.contactPerson,
           contactPhone: draftGoodsItem.contactPhone,
           remarks: draftGoodsItem.remarks
@@ -10307,6 +10309,11 @@ function Step1BookingCustomer({
           if (data.warehouseAccountId) handleDraftGoodsChange("warehouseAccountId", data.warehouseAccountId);
           handleDraftGoodsChange("warehouseName", data.warehouseName);
           handleDraftGoodsChange("warehouseAddressText", data.warehouseAddressText);
+          handleDraftGoodsChange("facilityCountryId", data.facilityCountryId || "");
+          handleDraftGoodsChange("facilityStateProvinceId", data.facilityStateProvinceId || "");
+          handleDraftGoodsChange("facilityCityId", data.facilityCityId || "");
+          handleDraftGoodsChange("facilityPostalCode", data.facilityPostalCode || "");
+          handleDraftGoodsChange("facilityAddressDetail", data.facilityAddressDetail);
           if (data.contactPerson) handleDraftGoodsChange("contactPerson", data.contactPerson);
           if (data.contactPhone) handleDraftGoodsChange("contactPhone", data.contactPhone);
           if (data.remarks) handleDraftGoodsChange("remarks", data.remarks);
@@ -11979,7 +11986,7 @@ function Step4ReviewConfirm({
                 {tt("final_destination_country_field", "Final Destination Country")}
               </span>
               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">
-                {formData.receiving_country_name || "-"}
+                {formData.final_destination_country_name || formData.receiving_country_name || "-"}
               </span>
             </div>
           </div>
