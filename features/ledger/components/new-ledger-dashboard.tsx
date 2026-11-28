@@ -1,5 +1,6 @@
 "use client";
 
+import { SavedText } from "@/components/i18n/saved-text";
 import { localizeName } from "@/lib/i18n/transliteration";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import { useEffect, useMemo, useState } from "react";
@@ -709,7 +710,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
             </InfoPanel>
 
             <InfoPanel title={t(activeLang, "branch.section_company_details", "Company Details")} accent="blue">
-              <InfoRow label={t(activeLang, "branch.row_company_name", "Company Name")} value={account?.companyName ? account.companyName : (account ? "Not Assigned" : "-")} />
+              <InfoRow label={t(activeLang, "branch.row_company_name", "Company Name")} value={account?.companyName ? <SavedText value={account.companyName} lang={activeLang} kind="name" /> : (account ? t(activeLang, "ledger.not_assigned", "Not Assigned") : "-")} />
               <InfoRow label={t(activeLang, "report.country", "Country")} value={safeText(account?.countryName)} />
               <InfoRow label={t(activeLang, "report.scope_main_branch", "Main Branch")} value={safeText(account?.countryBranchName)} />
               <InfoRow label={t(activeLang, "report.scope_city_branch", "City Branch")} value={safeText(account?.cityBranchName)} />
@@ -738,7 +739,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
             </InfoPanel>
 
             <InfoPanel title={t(activeLang, "ledger.session_details", "Session / Login Details")} accent="violet">
-              <InfoRow label={t(activeLang, "ledger.session_branch", "Session Branch")} value={branchLabel(account)} strong />
+              <InfoRow label={t(activeLang, "ledger.session_branch", "Session Branch")} value={<SavedText value={branchLabel(account)} lang={activeLang} kind="name" />} strong />
               <InfoRow label={t(activeLang, "ledger.nld_login_date", "Login Date")} value={<span suppressHydrationWarning>{new Date().toLocaleDateString()}</span>} />
               <InfoRow label={t(activeLang, "ledger.nld_login_time", "Login Time")} value={<span suppressHydrationWarning>{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>} />
               <InfoRow label={t(activeLang, "purchase.user_name_label", "User Name")} value={safeText(session?.user?.fullName || (session as any)?.fullName || "—")} strong />

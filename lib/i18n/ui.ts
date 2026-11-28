@@ -12742,6 +12742,11 @@ export type UiKey =
   | "locmaster.route_saved_legacy"
   | "tr.auto_name_chip"
   | "tr.auto_name_title"
+  | "acct.all_network_branches"
+  | "acct.regional"
+  | "acct.all_branches_suffix"
+  | "acct.main_branch"
+  | "ledger.not_assigned"
   | "clearing.print_route_transit_details"
   | "clearing.col_stage"
   | "clearing.col_country"
@@ -13591,6 +13596,11 @@ const en: Dict = {
   "locmaster.route_saved_legacy": "Saved name (not in Location Master)",
   "tr.auto_name_chip": "auto",
   "tr.auto_name_title": "Converted automatically from the saved name: {name}",
+  "acct.all_network_branches": "ALL NETWORK BRANCHES",
+  "acct.regional": "REGIONAL",
+  "acct.all_branches_suffix": "ALL BRANCHES",
+  "acct.main_branch": "MAIN BRANCH",
+  "ledger.not_assigned": "Not Assigned",
   "clearing.print_route_transit_details": "Route & Multi-Stage Transit Details",
   "clearing.col_stage": "Stage",
   "clearing.col_country": "Country",
@@ -40827,6 +40837,11 @@ const ur: Dict = {
   "locmaster.route_saved_legacy": "محفوظ نام (لوکیشن ماسٹر میں نہیں)",
   "tr.auto_name_chip": "خودکار",
   "tr.auto_name_title": "محفوظ نام سے خودکار طور پر تبدیل کیا گیا: {name}",
+  "acct.all_network_branches": "تمام نیٹ ورک برانچز",
+  "acct.regional": "علاقائی",
+  "acct.all_branches_suffix": "تمام برانچز",
+  "acct.main_branch": "مین برانچ",
+  "ledger.not_assigned": "تفویض نہیں",
   "clearing.print_route_transit_details": "روٹ اور ملٹی اسٹیج ٹرانزٹ کی تفصیلات",
   "clearing.col_stage": "مرحلہ",
   "clearing.col_country": "ملک",
@@ -68032,6 +68047,11 @@ const ar: Dict = {
   "locmaster.route_saved_legacy": "الاسم المحفوظ (غير موجود في سجل المواقع)",
   "tr.auto_name_chip": "تلقائي",
   "tr.auto_name_title": "تم التحويل تلقائيًا من الاسم المحفوظ: {name}",
+  "acct.all_network_branches": "جميع فروع الشبكة",
+  "acct.regional": "إقليمي",
+  "acct.all_branches_suffix": "جميع الفروع",
+  "acct.main_branch": "الفرع الرئيسي",
+  "ledger.not_assigned": "غير معيّن",
   "clearing.print_route_transit_details": "تفاصيل المسار والترانزيت متعدد المراحل",
   "clearing.col_stage": "المرحلة",
   "clearing.col_country": "الدولة",
@@ -95238,6 +95258,11 @@ const fa: Dict = {
   "locmaster.route_saved_legacy": "نام ذخیره‌شده (در فهرست مکان‌ها نیست)",
   "tr.auto_name_chip": "خودکار",
   "tr.auto_name_title": "به‌طور خودکار از نام ذخیره‌شده تبدیل شد: {name}",
+  "acct.all_network_branches": "همه شعبه‌های شبکه",
+  "acct.regional": "منطقه‌ای",
+  "acct.all_branches_suffix": "همه شعبه‌ها",
+  "acct.main_branch": "شعبه اصلی",
+  "ledger.not_assigned": "تعیین نشده",
   "clearing.print_route_transit_details": "جزئیات مسیر و ترانزیت چند مرحله‌ای",
   "clearing.col_stage": "مرحله",
   "clearing.col_country": "کشور",
@@ -122443,6 +122468,11 @@ const ps: Dict = {
   "locmaster.route_saved_legacy": "خوندي شوی نوم (د ځای په ماسټر کې نشته)",
   "tr.auto_name_chip": "اتومات",
   "tr.auto_name_title": "له خوندي شوي نوم څخه په اتومات ډول بدل شو: {name}",
+  "acct.all_network_branches": "د شبکې ټولې څانګې",
+  "acct.regional": "سیمه‌ییز",
+  "acct.all_branches_suffix": "ټولې څانګې",
+  "acct.main_branch": "اصلي څانګه",
+  "ledger.not_assigned": "نه دی ټاکل شوی",
   "clearing.print_route_transit_details": "د لارې او څو مرحلې ټرانزیټ توضیحات",
   "clearing.col_stage": "مرحله",
   "clearing.col_country": "هیواد",
