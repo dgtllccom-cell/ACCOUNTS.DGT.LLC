@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+import { HoverCellsArea } from "@/components/ui/hover-cells-area";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
@@ -231,7 +232,23 @@ function buildLedgerOption(row: LedgerLookupRow): SearchSelectOption {
   ]
     .filter(Boolean)
     .join(" ");
-  return { value: row.ledgerId, label, keywords };
+  const balance = Number.isFinite(Number(row.currentBalance))
+    ? `${row.ledgerCurrency || ""} ${Number(row.currentBalance).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`.trim()
+    : "";
+  const details = [
+    [row.accountCode || row.ledgerCode, row.accountName || row.ledgerName].filter(Boolean).join(" · "),
+    row.ledgerCode && row.ledgerCode !== row.accountCode ? row.ledgerCode : "",
+    row.companyName,
+    [row.accountKind, row.ledgerCurrency].filter(Boolean).join(" · "),
+    [row.cityBranchName, row.countryBranchName, row.countryName].filter(Boolean).join(" · "),
+    [row.cityName, row.stateName].filter(Boolean).join(" · "),
+    row.address,
+    balance
+  ]
+    .map((v) => String(v ?? "").trim())
+    .filter(Boolean)
+    .join("\n");
+  return { value: row.ledgerId, label, keywords, details };
 }
 
 function buildBranchLabel(row: GeneralReportRow) {
@@ -997,6 +1014,7 @@ export function LedgerReportView({
                     value={ledgerId}
                     placeholder={t(effectiveLang, "ledger.select_account_ph")}
                     options={ledgerOptions}
+                    optionHoverDetails
                     onValueChange={(value) => {
                       setLedgerId(value);
                       void loadSelectedStatement(value);
@@ -1988,7 +2006,7 @@ export function LedgerReportView({
 
             <div className="space-y-2">
               <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">{t(lang, "ledger.lgrv_statement_entries", "Statement Entries")}</h3>
-              <div className="overflow-x-auto rounded-lg border dark:border-slate-800">
+              <HoverCellsArea className="overflow-x-auto rounded-lg border dark:border-slate-800" data-testid="ledger-statement-area">
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-900 text-white dark:bg-slate-800">
                     <tr>
@@ -2031,7 +2049,7 @@ export function LedgerReportView({
                     )}
                   </tbody>
                 </table>
-              </div>
+              </HoverCellsArea>
             </div>
 
             <div className="grid grid-cols-3 gap-3 bg-slate-50 p-4 rounded-xl border dark:bg-slate-900/30 dark:border-slate-800">
@@ -2168,7 +2186,7 @@ function KeyValue({ label, value, tone }: { label: string; value: string; tone?:
 
 function ReportTable({ headers, children }: { headers: string[]; children: React.ReactNode }) {
   return (
-    <div className="w-full overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+    <HoverCellsArea className="w-full overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm" data-testid="ledger-report-table-area">
       <table className="w-full min-w-[1200px] text-left text-xs">
         <thead>
           <tr className="border-b border-slate-200 bg-slate-50/80">
@@ -2181,7 +2199,7 @@ function ReportTable({ headers, children }: { headers: string[]; children: React
           {children}
         </tbody>
       </table>
-    </div>
+    </HoverCellsArea>
   );
 }
 

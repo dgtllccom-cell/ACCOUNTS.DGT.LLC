@@ -1,5 +1,6 @@
 "use client";
 
+import { HoverCellsArea } from "@/components/ui/hover-cells-area";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -939,7 +940,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         </div>
 
         {/* Table Container */}
-        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+        <HoverCellsArea className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800" data-testid="outstanding-entries-area">
           <table className="ledger-table w-full min-w-[1450px] text-xs">
             <thead className="bg-slate-50/80 text-left font-bold uppercase text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">
               <tr className="border-b border-slate-200 dark:border-slate-700">
@@ -1096,7 +1097,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
               )}
             </tbody>
           </table>
-        </div>
+        </HoverCellsArea>
 
         {/* Pagination Footer */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs text-slate-500 dark:text-slate-400">
@@ -1232,7 +1233,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                   </div>
 
                   {/* Statement Lines Table */}
-                  <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                  <HoverCellsArea className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800" data-testid="outstanding-statement-area">
                     <table className="w-full min-w-[800px] text-xs">
                       <thead className="bg-slate-100/80 text-left font-bold uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                         <tr>
@@ -1289,7 +1290,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                         )}
                       </tbody>
                     </table>
-                  </div>
+                  </HoverCellsArea>
                 </>
               )}
             </div>

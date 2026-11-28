@@ -63,24 +63,42 @@ function bubble(): HTMLDivElement {
   return el;
 }
 
-/** Show the bubble for `cell` just below it (above when there is no room), kept inside the viewport. */
-export function showCellBubble(cell: HTMLElement) {
-  const text = cell.getAttribute(HOVER_TEXT_ATTR);
+/**
+ * Show the message bubble with `text` next to `anchor`: "below" (table cells; above when there is no
+ * room) or "side" (dropdown options; on the end side, flipping when there is no room). Kept on screen.
+ */
+export function showHoverBubble(anchor: HTMLElement, text: string, placement: "below" | "side" = "below") {
   if (!text) return;
   const el = bubble();
   el.textContent = text;
   el.style.display = "block";
-  const r = cell.getBoundingClientRect();
+  const r = anchor.getBoundingClientRect();
   const b = el.getBoundingClientRect();
   const vw = window.innerWidth || document.documentElement.clientWidth;
   const vh = window.innerHeight || document.documentElement.clientHeight;
-  const rtl = getComputedStyle(cell).direction === "rtl";
-  let left = rtl ? r.right - b.width : r.left;
+  const rtl = getComputedStyle(anchor).direction === "rtl";
+  let left: number;
+  let top: number;
+  if (placement === "side") {
+    const after = rtl ? r.left - b.width - 8 : r.right + 8;
+    const before = rtl ? r.right + 8 : r.left - b.width - 8;
+    left = after >= 8 && after + b.width <= vw - 8 ? after : before;
+    top = r.top;
+  } else {
+    left = rtl ? r.right - b.width : r.left;
+    top = r.bottom + 6;
+    if (top + b.height > vh - 8) top = r.top - b.height - 6;
+  }
   left = Math.max(8, Math.min(left, vw - b.width - 8));
-  let top = r.bottom + 6;
-  if (top + b.height > vh - 8) top = Math.max(8, r.top - b.height - 6);
+  top = Math.max(8, Math.min(top, vh - b.height - 8));
   el.style.left = `${Math.round(left)}px`;
   el.style.top = `${Math.round(top)}px`;
+}
+
+/** Show the bubble for a table cell, using the full text stored on it. */
+export function showCellBubble(cell: HTMLElement) {
+  const text = cell.getAttribute(HOVER_TEXT_ATTR);
+  if (text) showHoverBubble(cell, text, "below");
 }
 
 export function hideCellBubble() {

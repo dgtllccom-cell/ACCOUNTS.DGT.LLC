@@ -9,6 +9,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t as uiText } from "@/lib/i18n/ui";
 import { SavedText } from "@/components/i18n/saved-text";
+import { hideCellBubble, showHoverBubble } from "@/lib/ui/use-cell-hover-titles";
 
 export type SearchSelectOption = {
   value: string;
@@ -34,7 +35,31 @@ export type SearchSelectOption = {
   avatarTextColor?: string;
   isAccountCard?: boolean;
   onEdit?: () => void;
+  /** Full multi-line detail shown in the hover message bubble (optionHoverDetails); composed from the fields above when absent. */
+  details?: string;
 };
+
+/** The complete detail of a dropdown option, one value per line (business data only, no labels). */
+export function searchOptionDetails(opt: SearchSelectOption): string {
+  if (opt.details && opt.details.trim()) return opt.details.trim();
+  const place = [opt.branch, opt.city, opt.country].filter(Boolean).join(" · ");
+  const lines = [
+    opt.primaryText || opt.label,
+    opt.code && !(opt.primaryText || opt.label || "").includes(opt.code) ? opt.code : "",
+    opt.secondaryText,
+    opt.companyName,
+    opt.category,
+    place,
+    opt.phone,
+    opt.email,
+    opt.address
+  ];
+  const seen = new Set<string>();
+  return lines
+    .map((v) => String(v ?? "").trim())
+    .filter((v) => v && !seen.has(v) && seen.add(v))
+    .join("\n");
+}
 
 export const ACCOUNT_AVATAR_PALETTE = [
   { bg: "bg-blue-100 dark:bg-blue-950/80", text: "text-blue-700 dark:text-blue-300" },
@@ -102,7 +127,8 @@ export function SearchSelect({
   // Off by default so every existing plain combobox usage is unaffected.
   richList = false,
   accountCards = false,
-  pageSize = 50
+  pageSize = 50,
+  optionHoverDetails = false
 }: {
   label?: string;
   value: string;
@@ -130,6 +156,8 @@ export function SearchSelect({
   richList?: boolean;
   accountCards?: boolean;
   pageSize?: number;
+  /** Hover an option to see its complete detail in a message bubble beside the list. */
+  optionHoverDetails?: boolean;
 }) {
   const footerCreate = createButtonPlacement === "footer";
   const labelId = React.useId();
@@ -205,6 +233,7 @@ export function SearchSelect({
   }, [uniqueOptions, value]);
 
   function setOpenSafe(next: boolean) {
+    if (!next && optionHoverDetails) hideCellBubble();
     setOpen(next);
     if (!next) setSearchQuery("");
     onOpenChange?.(next);
@@ -364,6 +393,8 @@ export function SearchSelect({
                         onValueChange(opt.value);
                         setOpenSafe(false);
                       }}
+                      onMouseEnter={optionHoverDetails ? (event) => showHoverBubble(event.currentTarget, searchOptionDetails(opt), "side") : undefined}
+                      onMouseLeave={optionHoverDetails ? () => hideCellBubble() : undefined}
                       className={cn(
                         "cursor-pointer transition-all",
                         isCard

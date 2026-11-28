@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+import { HoverCellsArea } from "@/components/ui/hover-cells-area";
 import { buildLedgerStatementPrintHtml, type LedgerPrintData, type LedgerPrintOrientation } from "@/lib/reports/ledger-statement-print";
 import { printStore } from "@/lib/store/print-store";
 import { renderPaginatedPdf } from "@/lib/reports/pdf-paginate";
@@ -551,6 +552,7 @@ export function UnifiedDetailedLedgerView() {
               value={selectedLedgerId ?? ""}
               accountCards
               richList
+              optionHoverDetails
               onValueChange={(v: string) => {
                 setSelectedLedgerId(v);
                 if (v) {
@@ -805,7 +807,7 @@ export function UnifiedDetailedLedgerView() {
           </span>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-amber-300 dark:border-amber-800/80 shadow-xs">
+        <HoverCellsArea className="overflow-x-auto rounded-xl border border-amber-300 dark:border-amber-800/80 shadow-xs" data-testid="detailed-ledger-entries-area">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-[#fef3c7] text-[#78350f] dark:bg-amber-950/80 dark:text-amber-200 border-b-2 border-amber-300 dark:border-amber-700 font-bold">
@@ -947,7 +949,7 @@ export function UnifiedDetailedLedgerView() {
               </tfoot>
             )}
           </table>
-        </div>
+        </HoverCellsArea>
       </div>
     </div>
   );
