@@ -4,6 +4,7 @@ import "./design-system.css";
 import "./cash-entry-styles.css";
 import { GoogleTranslateScript } from "@/components/layout/google-translate-script";
 import { PdfPreviewModal } from "@/components/ui/pdf-preview-modal";
+import { GlobalHoverDetails } from "@/components/ui/global-hover-details";
 import { legacyThemeMode, themeModes } from "@/lib/ui/theme-modes";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { getHtmlLanguage, getLanguageDirection } from "@/lib/i18n/languages";
@@ -199,6 +200,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <GoogleTranslateScript />
         {children}
         <PdfPreviewModal />
+        <GlobalHoverDetails />
       </body>
     </html>
   );

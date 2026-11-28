@@ -2,12 +2,13 @@
 
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
+import { autoLocalizeName, autoNameSource } from "@/lib/i18n/transliteration";
 
 /**
- * Saved business text shown as it was saved, with a small marker when it is NOT in the viewer's language and no approved
- * version exists yet (the API already resolved any approved translation into `value`). Issue #36: an English viewer of a name
- * typed in Urdu sees the saved name — honestly marked — instead of an unverified machine re-spelling; the marker's title says
- * why. The text is bidi-isolated so Urdu inside an English row (and English inside an RTL row) keeps its own direction.
+ * Saved business text in the viewer's language. Names (kind="name"): owner decision 28-Nov replaces Issue #36 — a name with no
+ * approved version is shown automatically converted into the viewer's script by the local dictionary / translator, with a
+ * small "auto" chip whose title gives the saved name (the database value is never changed). Free text (kind="text") keeps the
+ * Issue #36 behaviour: shown as saved with a language chip until an approved translation exists. Text is bidi-isolated.
  */
 
 const PERSO_ARABIC = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
@@ -55,6 +56,25 @@ export function SavedText({
 }) {
   const text = String(value ?? "").trim();
   if (!text) return <span className={className}>{fallback}</span>;
+  if (kind === "name") {
+    // Owner decision 28-Nov: a name is shown in the viewer's script — curated variant, else an automatic conversion marked
+    // "auto" (the saved name in the database is never changed). Callers may pass the saved name or an already-converted one.
+    const alreadyAuto = autoNameSource(text, lang);
+    const resolved = alreadyAuto === undefined ? autoLocalizeName(text, lang) : { text, auto: true, saved: alreadyAuto };
+    if (resolved.auto) {
+      return (
+        <span className={className} title={t(lang, "tr.auto_name_title", "Converted automatically from the saved name: {name}").replace("{name}", resolved.saved)} data-auto-name="true" data-saved-name={resolved.saved}>
+          <bdi dir="auto">{resolved.text}</bdi>
+          <span
+            aria-hidden="true"
+            data-chip={t(lang, "tr.auto_name_chip", "auto")}
+            className="ms-1 inline-flex select-none items-center rounded border border-sky-300 bg-sky-50 px-1 align-middle text-[10px] font-bold leading-4 text-sky-700 after:content-[attr(data-chip)] dark:border-sky-700 dark:bg-sky-950/40 dark:text-sky-300"
+          />
+        </span>
+      );
+    }
+    if (resolved.text.trim() && resolved.text.trim() !== text) return <bdi dir="auto" className={className}>{resolved.text}</bdi>; // curated variant
+  }
   if (!isOtherScriptValue(text, lang)) return <bdi dir="auto" className={className}>{text}</bdi>;
   const saved = savedValueLanguage(text) ?? "en";
   const title = (kind === "name"

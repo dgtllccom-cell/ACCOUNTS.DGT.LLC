@@ -1,5 +1,6 @@
 "use client";
 
+import { SavedText } from "@/components/i18n/saved-text";
 import { AlRasDemoImport } from "./al-ras-demo-import";
 import { getAppEnvironment } from "@/lib/env/environment";
 
@@ -1233,7 +1234,7 @@ export function AccountSetupReport({
                         </button>
                       </td>
                       <td className="p-3">
-                        <span className="font-bold text-slate-900 dark:text-white">{row.accountName}</span>
+                        <SavedText value={row.accountName} lang={lang} kind="name" className="font-bold text-slate-900 dark:text-white" />
                       </td>
                       <td className="p-3">
                         <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 whitespace-nowrap">

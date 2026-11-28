@@ -393,6 +393,7 @@ export function SearchSelect({
                         onValueChange(opt.value);
                         setOpenSafe(false);
                       }}
+                      data-hover-owned={optionHoverDetails ? "" : undefined}
                       onMouseEnter={optionHoverDetails ? (event) => showHoverBubble(event.currentTarget, searchOptionDetails(opt), "side") : undefined}
                       onMouseLeave={optionHoverDetails ? () => hideCellBubble() : undefined}
                       className={cn(
