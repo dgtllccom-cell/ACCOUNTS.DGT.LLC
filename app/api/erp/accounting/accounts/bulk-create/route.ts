@@ -6,8 +6,6 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { auditApiAction } from "@/lib/api/audit";
 import { POST as createSingleAccount } from "@/app/api/erp/accounting/accounts/route";
 
-import { processAlRasDemoBulk } from "@/lib/api/al-ras-demo-bulk";
-
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
@@ -50,7 +48,6 @@ export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
     const input = await request.json();
-    if (input?.mode === "al-ras-demo") return await processAlRasDemoBulk(session, input);
     const body = bodySchema.parse(input);
 
     authorizeApiScope(session, {
